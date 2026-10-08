@@ -66,7 +66,7 @@ export function resolveStorefrontConfig(): ResolvedStorefrontConfig {
     if (!mockShopFallbackWarned) {
       mockShopFallbackWarned = true;
       console.warn(
-        `[hydrogen-template-nextjs] Running against mock.shop (${storeDomain}). ` +
+        `[hydrogen-example-nextjs] Running against mock.shop (${storeDomain}). ` +
           `Other mock stores are listed at https://mock.shop/llms.txt. Set ` +
           `PRIVATE_STOREFRONT_API_TOKEN and NEXT_PUBLIC_STORE_DOMAIN to hit a real store.`,
       );

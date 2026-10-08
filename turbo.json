@@ -7,7 +7,7 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "build/**", ".next/**", "!.next/cache/**", ".output/**"]
     },
-    "@shopify/hydrogen-template-nextjs#build": {
+    "@shopify/hydrogen-example-nextjs#build": {
       "dependsOn": ["@shopify/hydrogen#build"],
       "outputs": [".next/**", "!.next/cache/**"]
     },

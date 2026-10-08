@@ -166,7 +166,7 @@ jobs:
             --exclude='*/.turbo' \
             --exclude='*/.react-router' \
             --exclude='*/.env' \
-            -C templates -cf - react-router nextjs | tar -C "$dist_root" -xf -
+            -C templates -cf - react-router | tar -C "$dist_root" -xf -
           echo "DIST_ROOT=$dist_root" >> "$GITHUB_ENV"
 
       - name: Generate React Router lockfile
@@ -176,29 +176,15 @@ jobs:
           npx --yes "npm@$npm_version" install --package-lock-only --ignore-scripts --no-audit --no-fund
           cp package-lock.json "$GITHUB_WORKSPACE/templates/react-router/package-lock.json"
 
-      - name: Generate Next.js lockfile
-        run: |
-          cd "$DIST_ROOT/nextjs"
-          pnpm install --lockfile-only --ignore-workspace --ignore-scripts
-          cp pnpm-lock.yaml "$GITHUB_WORKSPACE/templates/nextjs/pnpm-lock.yaml"
-
       - name: Validate preview templates
         run: pnpm validate:preview-dist "${{ steps.version.outputs.hydrogen }}"
 
       - name: Test standalone templates
         run: |
-          (
-            cd "$DIST_ROOT/react-router"
-            npm_version=$(node -p "require('./package.json').packageManager.split('@').at(-1)")
-            npx --yes "npm@$npm_version" ci --no-audit --no-fund
-            npm run build
-          )
-
-          (
-            cd "$DIST_ROOT/nextjs"
-            pnpm install --frozen-lockfile --ignore-workspace
-            pnpm run build
-          )
+          cd "$DIST_ROOT/react-router"
+          npm_version=$(node -p "require('./package.json').packageManager.split('@').at(-1)")
+          npx --yes "npm@$npm_version" ci --no-audit --no-fund
+          npm run build
 
       - name: Update dist-preview
         env:
@@ -209,11 +195,10 @@ jobs:
         run: |
           git add -u
           git add templates/react-router/.agents/skills templates/react-router/.claude/skills
-          git add templates/nextjs/.agents/skills templates/nextjs/.claude/skills
-          git add --force templates/react-router/package-lock.json templates/nextjs/pnpm-lock.yaml
-          git diff --cached --check -- templates/react-router/package.json templates/nextjs/package.json
+          git add --force templates/react-router/package-lock.json
+          git diff --cached --check -- templates/react-router/package.json
 
-          unexpected_paths=$(git diff --cached --name-only | grep -Ev '^templates/(react-router/((\.agents|\.claude)/skills/.*|__test__/.*|package\.json|package-lock\.json)|nextjs/((\.agents|\.claude)/skills/.*|__test__/.*|package\.json|pnpm-lock\.yaml))$' || true)
+          unexpected_paths=$(git diff --cached --name-only | grep -Ev '^templates/react-router/((\.agents|\.claude)/skills/.*|__test__/.*|package\.json|package-lock\.json)$' || true)
           if [ -n "$unexpected_paths" ]; then
             echo "Unexpected compiled changes:"
             echo "$unexpected_paths"

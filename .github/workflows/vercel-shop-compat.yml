@@ -1,0 +1,115 @@
+name: Vercel Shop Compatibility
+
+# Builds Vercel Shop (github.com/vercel/shop), the Next.js starter we recommend,
+# against this branch's @shopify/hydrogen. A failure means the change would
+# break Vercel Shop once released: fix the regression, or give Vercel notice of
+# the intentional breaking change. Keep this check out of required status checks.
+
+on:
+  pull_request:
+    branches: [preview]
+  push:
+    branches: [preview]
+  schedule:
+    # Daily, to catch new Vercel Shop commits. GitHub runs schedules only from
+    # the default branch, so this starts once the workflow lands on main.
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: vercel-shop-compat-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pack:
+    name: Pack @shopify/hydrogen
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      npm_config_registry: https://registry.npmjs.org/
+      TURBO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build @shopify/hydrogen
+        run: pnpm turbo run build --filter=@shopify/hydrogen
+
+      - name: Pack @shopify/hydrogen
+        run: |
+          pnpm --filter @shopify/hydrogen pack --pack-destination "$RUNNER_TEMP/hydrogen-pack"
+          mv "$RUNNER_TEMP"/hydrogen-pack/*.tgz "$RUNNER_TEMP/hydrogen-pack/shopify-hydrogen.tgz"
+
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: hydrogen-tarball
+          path: ${{ runner.temp }}/hydrogen-pack/shopify-hydrogen.tgz
+          if-no-files-found: error
+          retention-days: 1
+
+  vercel-shop:
+    name: Build Vercel Shop
+    needs: pack
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      npm_config_registry: https://registry.npmjs.org/
+      NEXT_TELEMETRY_DISABLED: "1"
+      # mock.shop needs no credentials. The token and shop ID only satisfy
+      # Vercel Shop's required environment check.
+      NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN: mock.shop
+      NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN: mock-shop
+      NEXT_PUBLIC_SHOPIFY_SHOP_ID: "1"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: vercel/shop
+          ref: main
+          persist-credentials: false
+
+      # Vercel Shop pins its own pnpm (packageManager) and Node (.nvmrc) versions
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: .nvmrc
+
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: hydrogen-tarball
+          path: ${{ runner.temp }}/hydrogen-pack
+
+      - name: Use this branch's @shopify/hydrogen
+        run: pnpm add "@shopify/hydrogen@file:$RUNNER_TEMP/hydrogen-pack/shopify-hydrogen.tgz"
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Summarize failure
+        if: failure()
+        run: |
+          {
+            echo "### Vercel Shop does not build against this @shopify/hydrogen"
+            echo
+            echo "Fix the regression, or, if the breaking change is intentional, give Vercel notice"
+            echo "so they can update [vercel/shop](https://github.com/vercel/shop) before the next preview release."
+          } >> "$GITHUB_STEP_SUMMARY"

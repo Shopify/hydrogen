@@ -44,15 +44,23 @@ The fastest way to get started is to deploy a starter template. If you'd rather 
 
 ### Deploy a starter template
 
-Pick the template that matches your framework. Each one comes ready to deploy to a managed host. The deploy links use compiled templates from `dist-preview`, with the exact published Hydrogen version, standalone lockfiles, and packaged skills.
+Pick the template that matches your framework. Each one comes ready to deploy to a managed host.
 
 **React Router** — Hydrogen + Oxygen
 
+The deploy link uses the compiled template from `dist-preview`, with the exact published Hydrogen version, a standalone lockfile, and packaged skills.
+
 <a href="https://admin.shopify.com/hydrogen/new?template=react-router"><img alt="Deploy to Oxygen" src=".github/images/deploy-to-oxygen.svg" width="182" height="46"></a>
 
-**Next.js** — Hydrogen + Vercel
+**Next.js** — [Vercel Shop](https://github.com/vercel/shop)
 
-<a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fdist-preview%2Ftemplates%2Fnextjs"><img alt="Deploy with Vercel" src="https://vercel.com/button" width="129" height="40"></a>
+Vercel builds and maintains Vercel Shop, a Next.js storefront built on Hydrogen. Scaffold it with:
+
+```bash
+pnpm create next-app@latest my-store --example https://github.com/vercel/shop
+```
+
+See [vercel.shop](https://vercel.shop) for setup and deployment docs.
 
 ### Set up in your own project
 
@@ -208,6 +216,7 @@ The [`examples/`](./examples) directory ports the same storefront across framewo
 | --- | --- |
 | `astro/` | Astro 6 SSR |
 | `hydrogen/` | Hydrogen + Oxygen-style request context |
+| `nextjs/` | Next.js 16 App Router (standalone design; not built from `core/`) |
 | `nuxt/` | Nuxt 3 on Hydrogen's Vue bindings |
 | `solid-start/` | SolidStart v1 |
 | `sveltekit/` | SvelteKit 2 + Svelte 5 |
@@ -226,7 +235,7 @@ pnpm dev        # every workspace example and template in parallel
 ```
 packages/hydrogen/     the @shopify/hydrogen toolkit + packaged skills
 packages/mini-oxygen/  the @shopify/mini-oxygen local Oxygen runtime + Vite plugin
-templates/             deployable starter templates (React Router, Next.js)
+templates/             deployable starter template (React Router)
 examples/              framework development examples
 scripts/               repository automation
 skills/                agent skills for working in this repo

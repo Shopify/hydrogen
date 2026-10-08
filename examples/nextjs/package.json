@@ -1,5 +1,5 @@
 {
-  "name": "@shopify/hydrogen-template-nextjs",
+  "name": "@shopify/hydrogen-example-nextjs",
   "version": "0.0.0",
   "private": true,
   "type": "module",
