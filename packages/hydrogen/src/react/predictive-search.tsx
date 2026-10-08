@@ -48,7 +48,7 @@ const PredictiveSearchContext = createContext<PredictiveSearchContextValue | nul
 export interface PredictiveSearchProviderProps extends CreatePredictiveSearchStoreOptions {
   /** Content that uses the predictive search hooks. */
   children?: ReactNode;
-  /** Search page path that forms from usePredictiveSearchForm submit to. Defaults to `"/search"`. */
+  /** Search page path that forms from `usePredictiveSearchForm` submit to. Defaults to `/search`. */
   searchAction?: string;
 }
 
@@ -110,13 +110,13 @@ export type PredictiveSearchFormResult = {
   /**
    * Returns the attributes for the search input, which searches as the customer types.
    *
-   * Pass `"query"`. Any other field name throws an error.
+   * Pass `query`. Any other field name throws an error.
    */
   register: PredictiveSearchFormRegister;
 };
 
 /**
- * Runs predictive search for the components inside the provider. Wrap your search UI in the provider. Inside the provider, usePredictiveSearch reads the results, usePredictiveSearchActions searches and clears, and usePredictiveSearchForm builds the search form.
+ * Runs predictive search for the components inside the provider. Wrap your search UI in the provider. Inside the provider, `usePredictiveSearch` reads the results, `usePredictiveSearchActions` searches and clears, and `usePredictiveSearchForm` builds the search form.
  *
  * The provider throws an error when you omit the `fetch` prop in a runtime without a global `fetch`.
  *
@@ -226,7 +226,7 @@ function useRequiredContext(hookName: string): PredictiveSearchContextValue {
  * Returns the search term, status, results, and error, and re-renders the component on each change.
  *
  * Pass a selector to read one value, such as the status, and re-render only when that value changes. The hook compares selected values by reference unless you pass an equality function.
- * The hook throws an error outside a PredictiveSearchProvider.
+ * The hook throws an error outside a `PredictiveSearchProvider`.
  *
  * @throws {Error} When you call the hook outside a PredictiveSearchProvider.
  * @publicDocs
@@ -290,7 +290,7 @@ export function usePredictiveSearch<
  * Returns methods that search for a term and clear the results of the provider's predictive search. Use the hook in components that start searches without reading results.
  *
  * The methods keep the same identity across re-renders and keep working after a store option changes.
- * The hook throws an error outside a PredictiveSearchProvider.
+ * The hook throws an error outside a `PredictiveSearchProvider`.
  *
  * @returns Methods that search for a term and clear the results.
  * @throws {Error} When you call the hook outside a PredictiveSearchProvider.
@@ -304,7 +304,7 @@ export function usePredictiveSearchActions(): PredictiveSearchActions {
  * Returns functions that connect a search form and its search input to the provider's predictive search. The form submits to the search page without JavaScript, and the search input searches as the customer types.
  *
  * Spread `formProps()` on the form and `register("query")` on the input. In the `onSubmit` and `onChange` callbacks, call `event.preventDefault()` to skip the automatic submission or search.
- * The hook throws an error outside a PredictiveSearchProvider.
+ * The hook throws an error outside a `PredictiveSearchProvider`.
  *
  * @returns Functions that return the search form attributes and the search input attributes.
  * @throws {Error} When you call the hook outside a PredictiveSearchProvider.
@@ -360,7 +360,7 @@ export function usePredictiveSearchForm(): PredictiveSearchFormResult {
  * Returns the search term, status, results, and error, and re-renders the component on each change.
  *
  * Pass a selector to read one value, such as the status, and re-render only when that value changes. The hook compares selected values by reference unless you pass an equality function.
- * The hook throws an error outside a PredictiveSearchProvider.
+ * The hook throws an error outside a `PredictiveSearchProvider`.
  *
  * @throws {Error} When you call the hook outside a PredictiveSearchProvider.
  * @publicDocs

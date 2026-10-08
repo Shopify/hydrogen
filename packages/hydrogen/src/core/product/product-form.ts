@@ -217,7 +217,7 @@ type ProductFormStoreContext<TProduct extends ProductInput> = {
 /**
  * Creates a store that tracks the customer's option selection for one product and adds the selected variant to the cart.
  *
- * The store resolves variants from the product data that you pass and leaves the URL to you. Build the product URL from the result of `selectOption()`. Call `destroy()` when the product form unmounts. The product provider from createProductComponents creates and destroys the store for you.
+ * The store resolves variants from the product data that you pass and leaves the URL to you. Build the product URL from the result of `selectOption()`. Call `destroy()` when the product form unmounts. The product provider from `createProductComponents` creates and destroys the store for you.
  *
  * @param product The product from your Storefront API query.
  * @param cartStore The cart store that the form adds variants to and reads cart errors from.
@@ -497,7 +497,7 @@ function invalid<TVariant extends ProductVariantInput>(
 /**
  * Creates a store that tracks the customer's option selection for one product and adds the selected variant to the cart.
  *
- * The store resolves variants from the product data that you pass and leaves the URL to you. Build the product URL from the result of `selectOption()`. Call `destroy()` when the product form unmounts. The product provider from createProductComponents creates and destroys the store for you.
+ * The store resolves variants from the product data that you pass and leaves the URL to you. Build the product URL from the result of `selectOption()`. Call `destroy()` when the product form unmounts. The product provider from `createProductComponents` creates and destroys the store for you.
  *
  * @example
  * ```ts

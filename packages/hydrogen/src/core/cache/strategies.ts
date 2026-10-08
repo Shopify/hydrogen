@@ -5,11 +5,11 @@ const PRIVATE = "private";
 
 /** The cache mode of a strategy, `public`, `private`, or `no-store`. A `no-store` strategy skips the cache. */
 export type CacheMode = typeof PUBLIC | typeof PRIVATE | typeof NO_STORE;
-/** The modes that a custom strategy accepts, `public` or `private`. Cache throws an error for any other mode. */
+/** The modes that a custom strategy accepts, `public` or `private`. `Cache` throws an error for any other mode. */
 export type ExpirableCacheMode = typeof PUBLIC | typeof PRIVATE;
 
 /**
- * A number of seconds, or an object such as `{ minutes: 10 }`. Cache throws an error for a duration that isn't a finite, non-negative number, and rounds fractional totals up to whole seconds.
+ * A number of seconds, or an object such as `{ minutes: 10 }`. `Cache` throws an error for a duration that isn't a finite, non-negative number, and rounds fractional totals up to whole seconds.
  */
 export type CacheDuration =
   | number
@@ -20,7 +20,7 @@ export type CacheDuration =
       days?: number;
     };
 
-/** A caching strategy, with every duration in whole seconds. Create a strategy with Cache. */
+/** A caching strategy, with every duration in whole seconds. Create a strategy with `Cache`. */
 export interface CachingStrategy {
   /** The cache mode. A `no-store` strategy skips the cache. */
   mode?: CacheMode;
@@ -57,7 +57,7 @@ type NoStoreStrategy = CachingStrategy & {
 
 /**
  * Creates caching strategies for Storefront API queries, cached fetches, and cached runs. Call
- * Cache with options for a custom strategy, or use the `none`, `short`, and `long` presets.
+ * `Cache` with options for a custom strategy, or use the `none`, `short`, and `long` presets.
  *
  * @publicDocs
  */
@@ -68,7 +68,7 @@ export const Cache = Object.assign(createCache, {
 });
 
 /**
- * Creates caching strategies for Storefront API queries, cached fetches, and cached runs. Call Cache with options for a custom strategy, or use the `short`, `long`, and `none` presets.
+ * Creates caching strategies for Storefront API queries, cached fetches, and cached runs. Call `Cache` with options for a custom strategy, or use the `short`, `long`, and `none` presets.
  *
  * @publicDocs
  */

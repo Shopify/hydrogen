@@ -1,13 +1,13 @@
 /**
- * A price with an amount and a currency code, in the MoneyV2 shape that the Storefront API and Customer Account API return.
+ * A price with an amount and a currency code, in the `MoneyV2` shape that the Storefront API and Customer Account API return.
  * The currency code accepts any string, including Customer Account API currencies such as USDC
  * that the Storefront API currency enum doesn't list.
  */
 export type MoneyV2 = {
-  /** Decimal amount as a string, such as `"19.99"`. formatMoney throws an error when the amount doesn't parse as a number. */
+  /** Decimal amount as a string, such as `19.99`. `formatMoney` throws an error when the amount doesn't parse as a number. */
   amount: string;
   /**
-   * Currency code, such as `"USD"`, in any letter case.
+   * Currency code, such as `USD`, in any letter case.
    *
    * A code that isn't three letters formats as a decimal amount followed by the code, such as `19.00 USDC`. An unrecognized three-letter code appears as the code, such as `XYZ 19.00`.
    */
@@ -17,9 +17,9 @@ export type MoneyV2 = {
 /** Locale and display settings for a formatted price or price range. */
 export type FormatMoneyOptions = {
   /**
-   * BCP 47 locale, such as `"en-US"`, `"fr-CA"`, or `"ja-JP"`.
+   * BCP 47 locale, such as `en-US`, `fr-CA`, or `ja-JP`.
    *
-   * In market-aware storefronts, pass the active market's locale. A hardcoded `"en-US"` formats every market as US English.
+   * In market-aware storefronts, pass the active market's locale. A hardcoded `en-US` formats every market as US English.
    */
   locale: string;
 
@@ -40,9 +40,9 @@ export type FormatMoneyOptions = {
   maximumFractionDigits?: number;
 
   /**
-   * How the currency appears: `"symbol"`, `"narrowSymbol"`, `"code"`, or `"name"`. Defaults to `"symbol"`.
+   * How the currency appears: `symbol`, `narrowSymbol`, `code`, or `name`. Defaults to `symbol`.
    *
-   * In the `en-US` locale, the `"symbol"` value tells dollar currencies apart, such as `CA$5.00`. The `"narrowSymbol"` value shows `$5.00` for every dollar currency.
+   * In the `en-US` locale, the `symbol` value tells dollar currencies apart, such as `CA$5.00`. The `narrowSymbol` value shows `$5.00` for every dollar currency.
    */
   currencyDisplay?: Intl.NumberFormatOptions["currencyDisplay"];
 };

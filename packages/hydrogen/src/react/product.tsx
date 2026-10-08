@@ -39,7 +39,7 @@ const log = getLogger("product");
 
 export type { ValidProductSelectionResult } from "../core/product";
 
-/** Options for the useProductForm hook. */
+/** Options for the `useProductForm` hook. */
 export interface UseProductFormOptions<TProduct extends ProductInput> {
   /** Runs after each resolved or unresolved selection. Invalid selections skip the callback. */
   onSelect?: (result: ValidProductSelectionResult<TProduct>) => void;
@@ -76,7 +76,7 @@ export interface UseProductFormResult<TProduct extends ProductInput> {
   ) => VariantSelectionResult<ProductVariantFrom<TProduct>>;
 }
 
-/** Props for the product provider from createProductComponents. */
+/** Props for the product provider from `createProductComponents`. */
 export interface ProductProviderProps<TProduct extends ProductInput> {
   /**
    * The product from your Storefront API query.
@@ -92,7 +92,7 @@ export interface ProductProviderProps<TProduct extends ProductInput> {
   children?: ReactNode;
 }
 
-/** Product state that the useProduct hook from createProductComponents returns. */
+/** Product state that the `useProduct` hook from `createProductComponents` returns. */
 export interface UseProductResult<TProduct extends ProductInput> {
   /** Each product option and its values, with the selection, existence, and availability of each value. */
   options: ProductFormOptions<TProduct>;
@@ -120,9 +120,9 @@ export interface UseProductResult<TProduct extends ProductInput> {
 /**
  * Returns product form state and bindings from a product form store that you manage, and re-renders when the state changes.
  *
- * Create the store with createProductFormStore. Call `connect()` on mount, `hydrate()` when the product data changes, and `destroy()` on unmount. To skip the store setup, use the product provider from createProductComponents.
+ * Create the store with `createProductFormStore`. Call `connect()` on mount, `hydrate()` when the product data changes, and `destroy()` on unmount. To skip the store setup, use the product provider from `createProductComponents`.
  *
- * @param store The store that createProductFormStore returns.
+ * @param store The store that `createProductFormStore` returns.
  * @param options An `onSelect` callback that runs after each resolved or unresolved selection.
  * @returns The option state, the selected variant, cart errors, the matching cart line, the pending state, the register function, and the form props.
  * @publicDocs
@@ -209,11 +209,11 @@ interface ProductContextValue<TProduct extends ProductInput> {
 /**
  * Creates a product provider and product hooks typed to your product query.
  *
- * The provider creates the product form store, reloads the product into the store when the product changes, and destroys the store on unmount. The useProduct hook returns the option state and variant selection. The useProductForm hook adds field props, form props, and the pending state.
+ * The provider creates the product form store, reloads the product into the store when the product changes, and destroys the store on unmount. The `useProduct` hook returns the option state and variant selection. The `useProductForm` hook adds field props, form props, and the pending state.
  *
  * Pass your Storefront API product query type as the type argument to type the selected variant and option values. Render the provider inside a cart provider. The provider throws an error without a cart provider ancestor, and each hook throws an error outside the product provider.
  *
- * @returns The typed ProductProvider component and the useProduct and useProductForm hooks.
+ * @returns The typed `ProductProvider` component and the `useProduct` and `useProductForm` hooks.
  *
  * @example
  * ```ts
@@ -311,13 +311,13 @@ export function createProductComponents<TProduct extends ProductInput>(): {
 /**
  * Returns product form state and bindings from a product form store that you manage, and re-renders when the state changes.
  *
- * Create the store with createProductFormStore. Call `connect()` on mount, `hydrate()` when the product data changes, and `destroy()` on unmount. To skip the store setup, use the product provider from createProductComponents.
+ * Create the store with `createProductFormStore`. Call `connect()` on mount, `hydrate()` when the product data changes, and `destroy()` on unmount. To skip the store setup, use the product provider from `createProductComponents`.
  *
  * @publicDocs
  */
 export type UseProductFormForDocs =
   /**
-   * @param store - The store that createProductFormStore returns.
+   * @param store - The store that `createProductFormStore` returns.
    * @param options - An `onSelect` callback that runs after each resolved or unresolved selection.
    * @returns The option state, the selected variant, cart errors, the matching cart line, the pending state, the register function, and the form props.
    */

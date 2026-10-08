@@ -373,7 +373,7 @@ class FormattedMoneyRangeValue implements FormattedMoneyRange {
 }
 
 /**
- * Formats a price or a price range for display. Pass a MoneyV2 price, or an array of MoneyV2 prices in one currency for a range, with the active market's locale.
+ * Formats a price or a price range for display. Pass a `MoneyV2` price, or an array of `MoneyV2` prices in one currency for a range, with the active market's locale.
  *
  * The returned object converts to the formatted string in template literals and string concatenation. For custom price layouts, read the parts of the formatted price. A range shows the lowest and highest prices. When every price in the range matches, the output shows one price.
  *

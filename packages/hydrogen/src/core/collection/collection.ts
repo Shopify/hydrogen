@@ -15,7 +15,7 @@ import {
 /** The collection handle and the search string that your loader fetched products for. */
 export type CollectionData = {
   /**
-   * Collection handle, such as `"shoes"`.
+   * Collection handle, such as `shoes`.
    *
    * On search pages, pass a handle such as `search:${term}` to keep separate filter and sort state for each search term. When the handle changes, the collection provider reads the filters and sort from the URL again.
    */
@@ -23,7 +23,7 @@ export type CollectionData = {
   /**
    * Search string that your loader used for the Storefront API query, with or without a leading `?`.
    *
-   * Pass the exact string. The status stays `"loading"` until this string and the URL search hold the same filters, sort key, and sort direction.
+   * Pass the exact string. The status stays `loading` until this string and the URL search hold the same filters, sort key, and sort direction.
    */
   dataSearch: string;
 };
@@ -31,7 +31,7 @@ export type CollectionData = {
 /**
  * Holds the customer's filter and sort choices for a collection or search page, and reports when new results are loading.
  *
- * Each change updates the state right away and sets the status to `"loading"`. Your app then navigates, your loader fetches the new products, and you call `settle()` when the data arrives. The collection provider navigates and settles the store for you.
+ * Each change updates the state right away and sets the status to `loading`. Your app then navigates, your loader fetches the new products, and you call `settle()` when the data arrives. The collection provider navigates and settles the store for you.
  *
  * The store keeps the sort direction only for the price, title, created, and ID sort keys. For other sort keys, `reverse` reads `false`. The store keeps at most one availability filter. Adding a second availability filter removes both availability filters.
  *
@@ -57,23 +57,23 @@ export type CollectionStore = {
   subscribe(listener: (state: CollectionState) => void): () => void;
 
   /**
-   * Replaces the active filters and sets the status to `"loading"`.
+   * Replaces the active filters and sets the status to `loading`.
    */
   setFilters(filters: ProductFilter[]): void;
 
   /**
-   * Adds the filter when it's inactive and removes the filter when it's active, then sets the status to `"loading"`.
+   * Adds the filter when it's inactive and removes the filter when it's active, then sets the status to `loading`.
    */
   toggleFilter(filter: ProductFilter): void;
 
   /**
-   * Changes the sort key and direction, then sets the status to `"loading"`.
+   * Changes the sort key and direction, then sets the status to `loading`.
    * Omit `reverse` to sort in ascending order.
    */
   setSortKey(sortKey: ProductCollectionSortKeys, reverse?: boolean): void;
 
   /**
-   * Clears all filters, restores the collection's default sort, and sets the status to `"loading"`.
+   * Clears all filters, restores the collection's default sort, and sets the status to `loading`.
    */
   reset(): void;
 
@@ -84,12 +84,12 @@ export type CollectionStore = {
 
   /**
    * Updates the store from URL search params that differ from the current state.
-   * Call the method when the URL changes outside the store, such as on back or forward navigation. The method sets the status to `"loading"` and skips the browse change callback.
+   * Call the method when the URL changes outside the store, such as on back or forward navigation. The method sets the status to `loading` and skips the browse change callback.
    */
   syncFromParams(searchParams: URLSearchParams): void;
 
   /**
-   * Sets the status to `"idle"`. Call the method when your loader returns the new products.
+   * Sets the status to `idle`. Call the method when your loader returns the new products.
    */
   settle(): void;
 
@@ -128,13 +128,13 @@ export type CollectionStore = {
   toggleFilterInput(input: string): void;
 
   /**
-   * Applies the sort key and direction from a Liquid-compatible `sort_by` value, such as `"price-ascending"`.
+   * Applies the sort key and direction from a Liquid-compatible `sort_by` value, such as `price-ascending`.
    * An unrecognized value sets the sort key to `COLLECTION_DEFAULT`.
    */
   setSortByValue(sortByValue: string): void;
 };
 
-/** Collection store methods that change the filters and sort. The useCollectionActions hook returns these methods. */
+/** Collection store methods that change the filters and sort. The `useCollectionActions` hook returns these methods. */
 export type CollectionActions = Pick<
   CollectionStore,
   | "setFilters"
@@ -146,7 +146,7 @@ export type CollectionActions = Pick<
   | "handleFormSubmit"
 >;
 
-/** Options for createCollectionStore. */
+/** Options for `createCollectionStore`. */
 export type CreateCollectionStoreOptions = {
   /** The collection handle and the search string that your loader fetched products for. */
   data: CollectionData;
@@ -171,7 +171,7 @@ type CollectionStoreContext = {
 /**
  * Creates a store that holds the customer's filter and sort choices for one collection. Your loader fetches the products.
  *
- * The store reads its starting filters and sort from `urlSearch`, or from `dataSearch` when you omit `urlSearch`. In React, use CollectionProvider, which creates the store for you and keeps the store in sync with the URL.
+ * The store reads its starting filters and sort from `urlSearch`, or from `dataSearch` when you omit `urlSearch`. In React, use `CollectionProvider`, which creates the store for you and keeps the store in sync with the URL.
  *
  * @param options The collection data, the current URL search string, and the browse change callback.
  * @returns A store with methods that change the filters and sort and report the loading status.

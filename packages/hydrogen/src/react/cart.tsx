@@ -42,7 +42,7 @@ export function getCartEndpoint(): string {
 }
 
 /**
- * Props for the cart provider that createCartComponents returns.
+ * Props for the cart provider that `createCartComponents` returns.
  */
 type TypedCartProviderProps<TData extends CartData> = {
   /**
@@ -93,7 +93,7 @@ interface CartFormBindings {
 }
 
 /**
- * The cart provider and hooks that createCartComponents returns, typed with the custom cart fields from your cart server handlers.
+ * The cart provider and hooks that `createCartComponents` returns, typed with the custom cart fields from your cart server handlers.
  */
 type TypedCartComponents<TData extends CartData> = {
   /** Creates the cart store and shares the store with the cart hooks inside the provider. The provider connects the store on mount and destroys the store on unmount. */
@@ -108,7 +108,7 @@ type TypedCartComponents<TData extends CartData> = {
    * Returns the slice of cart state that the selector picks, or `undefined` outside the provider. Use the hook in a component that also renders above the provider, such as a cart badge on an error page.
    */
   useOptionalCart: OptionalCartStateHook<TData>;
-  /** Returns the `refresh` action. Call `refresh` after a server-side cart change that skips cart forms. */
+  /** Returns the `refresh()` action. Call `refresh()` after a server-side cart change that skips cart forms. */
   useCartActions: typeof useCartActions;
   /** Returns form props and a register function for cart forms. */
   useCartForm: typeof useCartForm;
@@ -118,7 +118,7 @@ type TypedCartComponents<TData extends CartData> = {
  * Returns a cart provider and cart hooks typed to the cart fragment in your cart server handlers.
  * Pass `typeof cartServerHandlers` as the `THandlers` type argument. Every hook's cart state then includes your custom cart fields.
  *
- * On mount, the provider sends cart requests to `/api/cart` and connects the store. Every hook except useOptionalCart throws when you call it outside the provider.
+ * On mount, the provider sends cart requests to `/api/cart` and connects the store. Every hook except `useOptionalCart` throws when you call it outside the provider.
  *
  * @returns The cart provider, the cart state hooks, and the cart actions and form hooks.
  *
@@ -266,9 +266,9 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
 /**
  * Returns the cart action that reloads the cart after a cart change outside cart forms.
  *
- * Call `refresh` after a server-side cart change that skips cart forms, such as a server action that creates the cart.
+ * Call `refresh()` after a server-side cart change that skips cart forms, such as a server action that creates the cart.
  *
- * @returns The `refresh` action.
+ * @returns The `refresh()` action.
  *
  * @example
  * ```tsx
@@ -290,9 +290,9 @@ export function useCartActions(): CartActions {
 /**
  * Publishes cart analytics events when the customer's cart changes.
  *
- * Call the hook once near the root of your app, inside CartProvider. The hook starts tracking on mount and stops on unmount. The hook publishes `cart_updated`, `product_added_to_cart`, and `product_removed_from_cart` events.
+ * Call the hook once near the root of your app, inside `CartProvider`. The hook starts tracking on mount and stops on unmount. The hook publishes `cart_updated`, `product_added_to_cart`, and `product_removed_from_cart` events.
  *
- * The hook throws outside CartProvider, and when the Shopify analytics bus isn't available. Render ShopifyScripts before the hook runs.
+ * The hook throws outside `CartProvider`, and when the Shopify analytics bus isn't available. Render `ShopifyScripts` before the hook runs.
  *
  * @returns Nothing. The hook tracks cart analytics for the lifetime of the calling component.
  *
@@ -315,7 +315,7 @@ export function useCartAnalytics(): void {
  * Returns a selected slice of cart state, or `undefined` when the component renders outside the cart provider.
  *
  * Use the hook in a component that also renders above the provider, such as a header cart badge on an error page.
- * Wherever the provider always exists, use useCart, which throws when the provider is missing.
+ * Wherever the provider always exists, use `useCart`, which throws when the provider is missing.
  *
  * @param selector The function that picks a value from the cart state.
  * @param isEqual The function that compares the previous and next selected values. Return `true` to skip the re-render.

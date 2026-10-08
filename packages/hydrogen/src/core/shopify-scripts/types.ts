@@ -9,7 +9,7 @@ import type { ShopifyRouteTemplates } from "../standard-routes/index";
 
 /** The sales channel and custom data for the analytics bus. */
 export type ShopifyScriptsAnalyticsConfig = {
-  /** The sales channel that Shopify attributes analytics to. Defaults to `"hydrogen"`. */
+  /** The sales channel that Shopify attributes analytics to. Defaults to `hydrogen`. */
   channel?: ShopAnalyticsChannel;
   /** Extra values that analytics destinations can read from the bus configuration. */
   customData?: StorefrontAnalyticsConfig["customData"];
@@ -47,7 +47,7 @@ export type ShopifyScriptTagAttributes = ShopifyDataAttributes &
 
 /** The HTML attributes of a generated link tag. */
 export type ShopifyLinkTagAttributes = Partial<{
-  /** The resource type for a prefetch link. Always `"script"`. */
+  /** The resource type for a prefetch link. Always `script`. */
   as: "script";
   /** The CORS mode for fetching the linked resource. */
   crossorigin: ShopifyCrossOrigin;
@@ -59,7 +59,7 @@ export type ShopifyLinkTagAttributes = Partial<{
 
 /** A script tag to render in the document head. */
 export type ShopifyScriptDescriptor = {
-  /** Always `"script"` for a script tag. */
+  /** Always `script` for a script tag. */
   tagName: "script";
   /** The script tag's HTML attributes, such as its source URL and nonce. */
   attributes?: ShopifyScriptTagAttributes;
@@ -69,7 +69,7 @@ export type ShopifyScriptDescriptor = {
 
 /** A link tag to render in the document head. */
 export type ShopifyLinkDescriptor = {
-  /** Always `"link"` for a link tag. */
+  /** Always `link` for a link tag. */
   tagName: "link";
   attributes: ShopifyLinkTagAttributes;
   /** Link tags have no content. */
@@ -102,7 +102,7 @@ export type ShopifyScriptsShop = {
 /** The shop details and the features whose scripts to load. */
 export type ShopifyScriptTagsOptions = {
   /**
-   * Loads the customer account component. Render `<shopify-account>` where you want the account UI to appear.
+   * Loads the customer account component. Render `shopify-account` where you want the account UI to appear.
    * @see [shopify-account](https://shopify.dev/docs/api/storefront-web-components/components/shopify-account)
    */
   account?: boolean;
@@ -117,7 +117,7 @@ export type ShopifyScriptTagsOptions = {
   };
   /** The country, language, currency, and path prefix for Shopify's scripts. Defaults to US English. */
   i18n?: ShopifyScriptsI18n;
-  /** Loads Inbox. Render `<shopify-chat>` where you want the chat UI to appear. */
+  /** Loads Inbox. Render `shopify-chat` where you want the chat UI to appear. */
   inbox?: boolean;
   /**
    * Adds a `nonce` attribute to every script tag.
@@ -152,7 +152,7 @@ export interface InitializeShopifyScriptsOptions extends ShopifyRoutesOptions {
 }
 
 /**
- * Options for both getShopifyScriptTags and initializeShopifyScripts. Build one object and pass
+ * Options for both `getShopifyScriptTags` and `initializeShopifyScripts`. Build one object and pass
  * it to both functions.
  *
  * @publicDocs

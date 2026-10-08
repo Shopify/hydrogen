@@ -20,7 +20,7 @@ export interface ProductMerchandiseIdProps {
 export interface ProductQuantityProps {
   /** Field name that the cart reads as the quantity to add. */
   name: "quantity";
-  /** Quantity to add. Defaults to `"1"`. */
+  /** Quantity to add. Defaults to `1`. */
   value: string;
 }
 

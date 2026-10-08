@@ -14,9 +14,9 @@ const CUSTOMER_ACCOUNT_DOCUMENT = Symbol("CustomerAccountDocument");
 const VARIABLE_DEFINITION_RE = /\$([_A-Za-z][_0-9A-Za-z]*)\s*:/g;
 
 /**
- * A Customer Account API query or mutation that gql from `@shopify/hydrogen/customer-account` returns. TypeScript infers the result and variables types from the document's GraphQL source.
+ * A Customer Account API query or mutation that `gql` from `@shopify/hydrogen/customer-account` returns. TypeScript infers the result and variables types from the document's GraphQL source.
  *
- * Create documents only with the Customer Account gql function. The client throws a `TypeError` for any other object.
+ * Create documents only with the Customer Account `gql` function. The client throws a `TypeError` for any other object.
  */
 export type CustomerAccountDocument<
   Result = unknown,
@@ -83,9 +83,9 @@ type CustomerAccountGql = {
 } & CustomerAccountTadaGql;
 
 /**
- * Creates a typed Customer Account API query or mutation from a GraphQL source string. Pass the document to the Customer Account API client. Call gql as a regular function. Tagged template syntax doesn't work.
+ * Creates a typed Customer Account API query or mutation from a GraphQL source string. Pass the document to the Customer Account API client. Call `gql` as a regular function. Tagged template syntax doesn't work.
  *
- * Pass an array of fragment documents as the second argument to append the fragments to the operation. Each fragment must come from this gql function, or the call throws a `TypeError`.
+ * Pass an array of fragment documents as the second argument to append the fragments to the operation. Each fragment must come from this `gql` function, or the call throws a `TypeError`.
  *
  * @example
  * ```ts
@@ -168,9 +168,9 @@ function getVariableNames(source: string): ReadonlySet<string> {
 }
 
 /**
- * Creates a typed Customer Account API query or mutation from a GraphQL source string. Pass the document to the Customer Account API client. Call gql as a regular function.
+ * Creates a typed Customer Account API query or mutation from a GraphQL source string. Pass the document to the Customer Account API client. Call `gql` as a regular function.
  *
- * Pass an array of fragment documents as the second argument to append the fragments to the operation. Each fragment must come from this gql function, or the call throws a `TypeError`.
+ * Pass an array of fragment documents as the second argument to append the fragments to the operation. Each fragment must come from this `gql` function, or the call throws a `TypeError`.
  *
  * To validate documents, run `hydrogen gql check` in your `typecheck` script with the `@shopify/hydrogen/ts-plugin` setup. Framework typecheck commands don't validate the documents.
  *

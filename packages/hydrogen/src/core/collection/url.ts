@@ -56,7 +56,7 @@ const STANDARD_EVENTS_COLLECTION_SORT_KEY: Record<string, ProductCollectionSortK
  *
  * The function reads Liquid-compatible `filter.p.*` and `filter.v.*` keys and the `sort_by` param.
  *
- * A URL that sets availability to both in stock and out of stock produces no availability filter. The function recognizes the best-selling and manual sort values, plus created, price, and title with an ascending or descending suffix. Other sort values return an undefined sort key. The parseSortByValue function also recognizes relevance, collection default, and ID.
+ * A URL that sets availability to both in stock and out of stock produces no availability filter. The function recognizes the best-selling and manual sort values, plus created, price, and title with an ascending or descending suffix. For other sort values, the sort key is `undefined`. The `parseSortByValue` function also recognizes relevance, collection default, and ID.
  *
  * @param searchParams - URL search params to read.
  * @returns The filters, sort key, and sort direction from the URL.
@@ -76,7 +76,7 @@ export function parseCollectionParams(searchParams: URLSearchParams): Collection
  *
  * The result holds only the `filter.*` and `sort_by` keys. The function leaves out `sort_by` for the collection's default sort.
  *
- * Category filters convert to `filter.p.category`, which parseCollectionParams doesn't read. A price filter with a minimum and a maximum produces two params. To build a filter checkbox, parse a filter value's `input` string and convert the parsed filter. The resulting entries give the checkbox name and value.
+ * Category filters convert to `filter.p.category`, which `parseCollectionParams` doesn't read. A price filter with a minimum and a maximum produces two params. To build a filter checkbox, parse a filter value's `input` string and convert the parsed filter. The resulting entries give the checkbox name and value.
  *
  * @param state - The filters, sort key, and sort direction to convert.
  * @returns URL search params that hold the filters and sort.
@@ -174,7 +174,7 @@ export function collectionParamsMatchState(
  *
  * @param currentParams The current URL search params.
  * @param filter The filter to remove from the URL.
- * @returns A query string that starts with `?`. The string is `"?"` alone when no params remain.
+ * @returns A query string that starts with `?`. The string is `?` alone when no params remain.
  * @publicDocs
  */
 export function getFilterRemovalUrl(currentParams: URLSearchParams, filter: ProductFilter): string {
@@ -192,7 +192,7 @@ export function isDirectionalSortKey(sortKey: ProductCollectionSortKeys): boolea
 
 /**
  * Converts a Storefront API sort key and direction to a Liquid-compatible
- * `sort_by` value, such as `"price-ascending"` or `"best-selling"`.
+ * `sort_by` value, such as `price-ascending` or `best-selling`.
  *
  * Only the price, title, created, and ID sort keys get a direction suffix.
  * Other sort keys, such as best selling, ignore the direction.
@@ -212,11 +212,11 @@ export function getSortByValue(sortKey: ProductCollectionSortKeys, reverse: bool
 
 /**
  * Converts a Liquid-compatible `sort_by` value to a Storefront API
- * sort key and direction. The getSortByValue function does the opposite conversion.
+ * sort key and direction. The `getSortByValue` function does the opposite conversion.
  *
- * Unrecognized values return an undefined sort key.
+ * For unrecognized values, the sort key is `undefined`.
  *
- * @param value - A `sort_by` value, such as `"price-ascending"` or `"best-selling"`.
+ * @param value - A `sort_by` value, such as `price-ascending` or `best-selling`.
  * @returns The sort key and `reverse`, which reads `true` for descending values.
  * @publicDocs
  */
@@ -489,7 +489,7 @@ export function filterEquals(a: ProductFilter, b: ProductFilter): boolean {
 /**
  * Checks whether a filter value's `input` JSON string from the Storefront API matches an active filter. Use the result to set the checked state of a filter control.
  *
- * The function compares filters the same way as filterEquals.
+ * The function compares filters the same way as `filterEquals`.
  *
  * @param activeFilters The active filters, such as `filters` from the collection state.
  * @param input The filter value's `input` JSON string.

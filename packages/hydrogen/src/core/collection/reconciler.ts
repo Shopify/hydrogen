@@ -39,7 +39,7 @@ export type CollectionReconciler = {
 /**
  * Creates a reconciler that keeps the URL, your loader data, and a collection store in sync while the customer changes filters and sort.
  *
- * Use a reconciler to connect a collection store to a router that has no Hydrogen binding. In React, use CollectionProvider.
+ * Use a reconciler to connect a collection store to a router that has no Hydrogen binding. In React, use `CollectionProvider`.
  *
  * @param callbacks The functions that return the store and the URL search string and navigate your router.
  * @param initialPrevUrlSearch The current URL search string, which the first `reconcile()` call compares against. Defaults to an empty string.

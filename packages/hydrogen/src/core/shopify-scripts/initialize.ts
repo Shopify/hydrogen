@@ -9,7 +9,7 @@ const log = getLogger("consent");
 
 /**
  * Starts Shopify's scripts in the browser for frameworks without a Hydrogen binding. Call it after
- * hydration, with the consent configuration that you passed to getShopifyScriptTags.
+ * hydration, with the consent configuration that you passed to `getShopifyScriptTags`.
  *
  * The function sets up `window.Shopify.routes`, and sends a page view event on load and after each
  * navigation that changes the path or query. In the custom banner consent mode, Hydrogen calls your

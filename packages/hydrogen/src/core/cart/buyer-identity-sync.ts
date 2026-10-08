@@ -15,7 +15,7 @@ export type CartBuyerIdentitySyncContext = {
 /**
  * Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.
  *
- * Create the cart server handlers with `customerSession`, then pass the handlers to createCustomerAccountServerHandlers through the `cartServerHandlers` option. The customer account handlers then update the cart for you.
+ * Create the cart server handlers with `customerSession`, then pass the handlers to `createCustomerAccountServerHandlers` through the `cartServerHandlers` option. The customer account handlers then update the cart for you.
  */
 export type CartBuyerIdentitySync = {
   /** Attaches the customer to the cart in the request's `cart` cookie, or detaches the customer when the token is `null`. */

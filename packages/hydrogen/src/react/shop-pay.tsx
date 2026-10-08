@@ -9,7 +9,7 @@ import {
 } from "../core/shop-pay/shop-pay";
 
 /**
- * Props for the ShopPayButton component. The props match the options of createShopPayButton.
+ * Props for the `ShopPayButton` component. The props match the options of `createShopPayButton`.
  * The component doesn't accept `className` or `style` props.
  *
  * @publicDocs

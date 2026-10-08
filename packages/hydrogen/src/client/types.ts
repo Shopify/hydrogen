@@ -15,7 +15,7 @@ import type { InferOperationKind } from "../graphql/type-resolver";
 
 export type { I18nConfig } from "../core/request-context";
 
-/** A document that the client's GraphQL method accepts, from `gql` or from gql.tada. */
+/** A document that the client's GraphQL method accepts, from `gql` or from `gql`.tada. */
 type DocLike = TadaDocumentNode<any, any> | AnyStorefrontQueryString;
 /** The typed document that Hydrogen infers from a plain query string. */
 type InferredDoc<T extends string> = StorefrontQueryString<InferResult<T>, InferVariables<T>, T>;
@@ -27,7 +27,7 @@ type SourceText<Doc> = [SourceOf<Doc>] extends [never]
     ? Doc
     : never
   : SourceOf<Doc>;
-/** The operation kind of a document, such as `"query"`. Resolves to `"unknown"` when the query text isn't a string literal type. */
+/** The operation kind of a document, such as `query`. Resolves to `unknown` when the query text isn't a string literal type. */
 type OperationKindOfDoc<Doc> = [SourceText<Doc>] extends [never]
   ? "unknown"
   : string extends SourceText<Doc>
@@ -36,7 +36,7 @@ type OperationKindOfDoc<Doc> = [SourceText<Doc>] extends [never]
 /** Offers the `cache` option only for documents that TypeScript recognizes as queries. */
 type GraphqlExtraOptionsForDoc<Doc, Extra extends Record<string, unknown>> =
   OperationKindOfDoc<Doc> extends "query" ? Extra : Omit<Extra, "cache">;
-/** The result type of a `gql` document or a gql.tada document node. */
+/** The result type of a `gql` document or a `gql`.tada document node. */
 type ResultOfDoc<Doc> =
   Doc extends StorefrontQueryString<infer Result, infer _Variables, string>
     ? Result
@@ -69,8 +69,8 @@ export interface GraphQLFormattedError {
 
 type CommonOptions = {
   /**
-   * Your store's domain, such as `"my-store.myshopify.com"`. Hydrogen adds `https://` when the
-   * domain has no protocol, and removes trailing slashes. createStorefrontClient throws an error
+   * Your store's domain, such as `my-store.myshopify.com`. Hydrogen adds `https://` when the
+   * domain has no protocol, and removes trailing slashes. `createStorefrontClient` throws an error
    * for an empty domain.
    */
   storeDomain: string;
@@ -87,9 +87,9 @@ type CommonOptions = {
    */
   apiVersion?: string;
   /**
-   * How long a request can run before the client throws a StorefrontTimeoutError, in
+   * How long a request can run before the client throws a `StorefrontTimeoutError`, in
    * milliseconds. Defaults to `30000`. Set `0` to turn off the timeout. Stale-while-revalidate
-   * refreshes use the same timeout, or 30,000 when the timeout is `0`. createStorefrontClient
+   * refreshes use the same timeout, or 30,000 when the timeout is `0`. `createStorefrontClient`
    * throws an error for a negative value.
    */
   defaultTimeoutInMs?: number;
@@ -117,9 +117,9 @@ type AnyFetch = typeof globalThis.fetch | ((...args: never[]) => Promise<Respons
 export interface PublicClientOptions<
   Fetch extends AnyFetch | undefined = typeof globalThis.fetch,
 > extends CommonOptions {
-  /** The fetch function that the client calls. Defaults to `globalThis.fetch`. createStorefrontClient throws an error when neither exists. */
+  /** The fetch function that the client calls. Defaults to `globalThis.fetch`. `createStorefrontClient` throws an error when neither exists. */
   fetch?: Fetch;
-  /** Your public Storefront API access token. Omit the token for tokenless access. createStorefrontClient throws an error for an empty string. */
+  /** Your public Storefront API access token. Omit the token for tokenless access. `createStorefrontClient` throws an error for an empty string. */
   publicStorefrontToken?: string | undefined;
 }
 
@@ -131,9 +131,9 @@ export interface PublicClientOptions<
 export interface PrivateClientOptions<
   Fetch extends AnyFetch | undefined = typeof globalThis.fetch,
 > extends CommonOptions {
-  /** The fetch function that the client calls. Defaults to `globalThis.fetch`. createStorefrontClient throws an error when neither exists. */
+  /** The fetch function that the client calls. Defaults to `globalThis.fetch`. `createStorefrontClient` throws an error when neither exists. */
   fetch?: Fetch;
-  /** Your private Storefront API access token. Keep the token out of browser code. createStorefrontClient throws an error when the token is missing. */
+  /** Your private Storefront API access token. Keep the token out of browser code. `createStorefrontClient` throws an error when the token is missing. */
   privateStorefrontToken: string;
 }
 
@@ -144,9 +144,9 @@ export interface PrivateClientOptions<
 export interface PrivateNoBuyerContextClientOptions<
   Fetch extends AnyFetch | undefined = typeof globalThis.fetch,
 > extends CommonOptions {
-  /** The fetch function that the client calls. Defaults to `globalThis.fetch`. createStorefrontClient throws an error when neither exists. */
+  /** The fetch function that the client calls. Defaults to `globalThis.fetch`. `createStorefrontClient` throws an error when neither exists. */
   fetch?: Fetch;
-  /** Your private Storefront API access token. Keep the token out of browser code. createStorefrontClient throws an error when the token is missing. */
+  /** Your private Storefront API access token. Keep the token out of browser code. `createStorefrontClient` throws an error when the token is missing. */
   privateStorefrontToken: string;
 }
 
@@ -259,7 +259,7 @@ export type StorefrontGraphql =
   ) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>;
 
 /**
- * Chooses the kind of Storefront API client to create. Use `"public"` in the browser, with a public access token or none. Use `"private"` during server-side rendering, with a private token and the customer's IP address. Use `"private_no_buyer_context"` in background jobs and webhooks, with a private token and no customer.
+ * Chooses the kind of Storefront API client to create. Use `public` in the browser, with a public access token or none. Use `private` during server-side rendering, with a private token and the customer's IP address. Use `private_no_buyer_context` in background jobs and webhooks, with a private token and no customer.
  *
  * @publicDocs
  */
@@ -280,7 +280,7 @@ export type StorefrontClient<
   Type extends ClientType = ClientType,
   RequestContext extends ShopifyRequestContext = ShopifyRequestContext,
 > = {
-  /** The client type that you passed to createStorefrontClient. */
+  /** The client type that you passed to `createStorefrontClient`. */
   type: Type;
   /** The country and language that the client sends for `$country` and `$language` variables. */
   i18n: RequestContext["i18n"];
@@ -290,8 +290,8 @@ export type StorefrontClient<
    * variable from the request context and overrides any value you pass.
    *
    * The method throws an error when a query passes a `cache` strategy and the client has no cache,
-   * or when the strategy uses `private` mode. A catch block for StorefrontApiError doesn't catch
-   * this configuration error. To cache customer-specific data, use createRunWithCache with a key
+   * or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch
+   * this configuration error. To cache customer-specific data, use `createRunWithCache` with a key
    * unique to the customer.
    */
   graphql: <const Doc extends DocLike | string>(
@@ -300,11 +300,11 @@ export type StorefrontClient<
   ) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>;
   /** The Storefront API GraphQL endpoint that the client calls. */
   apiUrl: string;
-  /** Your store's URL with its protocol, such as `"https://my-store.myshopify.com"`. */
+  /** Your store's URL with its protocol, such as `https://my-store.myshopify.com`. */
   storeUrl: string;
   /** The storefront ID from the client options. */
   storefrontId?: string;
-  /** The request context that you passed to createStorefrontClient. */
+  /** The request context that you passed to `createStorefrontClient`. */
   requestContext: RequestContext;
 };
 

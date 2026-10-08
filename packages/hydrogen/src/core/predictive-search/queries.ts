@@ -224,7 +224,7 @@ const DEFAULT_QUERY_FRAGMENT = gql(`
 /**
  * GraphQL fragments that add fields to each type of predictive search result.
  *
- * Each fragment needs the name and type that its option lists, or makePredictiveSearchQueries throws an error.
+ * Each fragment needs the name and type that its option lists, or `makePredictiveSearchQueries` throws an error.
  * Results keep Hydrogen's built-in fields for links, tracking, and display.
  */
 export type PredictiveSearchFragments = {
@@ -311,7 +311,7 @@ function resolveFragments(fragments: PredictiveSearchFragments | undefined) {
 /**
  * Builds a predictive search query that adds the fields from your fragments to the results.
  *
- * Pass the query to queryPredictiveSearch, or pass the same fragments to createPredictiveSearchServerHandlers. TypeScript types the results from your fragments.
+ * Pass the query to `queryPredictiveSearch`, or pass the same fragments to `createPredictiveSearchServerHandlers`. TypeScript types the results from your fragments.
  * The function throws an error when a fragment doesn't use its required name and type.
  *
  * @throws {Error} When a custom fragment does not match its required name or target type.

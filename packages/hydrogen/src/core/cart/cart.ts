@@ -97,7 +97,7 @@ export class CartNetworkError extends Error {
   /** The HTTP status code that the cart endpoint returned. */
   readonly status: number;
 
-  /** Always `"CartNetworkError"`. */
+  /** Always `CartNetworkError`. */
   declare name: string;
   /** Always `"Something went wrong updating your cart. Please try again."`, including for a failed cart load. */
   declare message: string;
@@ -112,11 +112,11 @@ export class CartNetworkError extends Error {
 }
 
 /**
- * Holds the customer's cart and runs cart changes in any framework. In React, CartProvider creates the store for you.
+ * Holds the customer's cart and runs cart changes in any framework. In React, `CartProvider` creates the store for you.
  *
  * The store shows line and discount code changes before the server responds, then updates the cart from each server response. Cart costs change only when the server responds.
  *
- * Cart changes start from cart form submissions or from Standard Actions `shopify:cart:*` events. Cart changes need the Standard Actions script, which ShopifyScripts adds to the page. Cart loads and changes time out after 30 seconds.
+ * Cart changes start from cart form submissions or from Standard Actions `shopify:cart:*` events. Cart changes need the Standard Actions script, which `ShopifyScripts` adds to the page. Cart loads and changes time out after 30 seconds.
  *
  * @example
  * ```ts
@@ -158,7 +158,7 @@ export type CartStore = {
   /**
    * Loads the full cart from the server.
    *
-   * The promise rejects when the load fails, with a CartNetworkError when your cart endpoint returns a non-2xx status.
+   * The promise rejects when the load fails, with a `CartNetworkError` when your cart endpoint returns a non-2xx status.
    */
   fetch(): Promise<void>;
 
@@ -2427,7 +2427,7 @@ async function handleFormSubmitInStore(
 /**
  * Sends every cart load and cart change on the page to your cart endpoint. Without an endpoint, Standard Actions handles cart requests with its default handler.
  *
- * Call the function before you connect a cart store. The first cart load then goes to your endpoint. A later call with a different endpoint replaces the first endpoint and logs a warning. In React, CartProvider sets the endpoint to `/api/cart` when the provider mounts.
+ * Call the function before you connect a cart store. The first cart load then goes to your endpoint. A later call with a different endpoint replaces the first endpoint and logs a warning. In React, `CartProvider` sets the endpoint to `/api/cart` when the provider mounts.
  *
  * @param endpoint The URL path of your cart route.
  * @returns Nothing. Later cart loads and changes on the page go to the endpoint.

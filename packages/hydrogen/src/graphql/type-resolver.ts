@@ -491,7 +491,7 @@ export type InferResult<T extends string> = InferResultForSchema<T, StorefrontSc
  */
 export type InferVariables<T extends string> = InferVariablesForSchema<T, StorefrontSchema>;
 
-/** The operation kind of a query string, such as `"query"`. Resolves to `"unknown"` unless the query text has exactly one operation. */
+/** The operation kind of a query string, such as `query`. Resolves to `unknown` unless the query text has exactly one operation. */
 export type InferOperationKind<T extends string> =
   parseDocument<T> extends infer Doc
     ? [Doc] extends [never]

@@ -2,9 +2,9 @@ import type { CartErrorCode, CartWarningCode } from "../../graphql/generated/sto
 
 /** A monetary value from the Storefront API. */
 export interface Money {
-  /** The decimal amount as a string, such as `"29.99"`. */
+  /** The decimal amount as a string, such as `29.99`. */
   amount: string;
-  /** The ISO 4217 currency code, such as `"USD"`. */
+  /** The ISO 4217 currency code, such as `USD`. */
   currencyCode: string;
 }
 

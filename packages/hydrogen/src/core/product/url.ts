@@ -34,8 +34,8 @@ export function getVariantSearchParamValue(variantId: string): string | null {
 /**
  * How a product URL encodes the customer's variant selection.
  *
- * - `"options"`: one param per option, such as `?Color=Red&Size=M`.
- * - `"variant"`: a single `?variant=<numeric id>` param that matches Liquid storefront URLs.
+ * - `options`: one param per option, such as `?Color=Red&Size=M`.
+ * - `variant`: a single `?variant=<numeric id>` param that matches Liquid storefront URLs.
  */
 export type ProductSelectionLinkStyle = "options" | "variant";
 
@@ -46,7 +46,7 @@ export type ProductSelectionLinkStyle = "options" | "variant";
  *
  * The default options style writes one param per option. The variant style writes a single numeric variant ID param for shareable links.
  * The variant style falls back to option params when you pass no variant or when the variant ID isn't a numeric product variant GID.
- * The handleShopifyRoutes handler redirects variant links to option param URLs.
+ * The `handleShopifyRoutes` handler redirects variant links to option param URLs.
  *
  * @param input The selected options, the current product's option names, and an optional variant, link style, and base params.
  *

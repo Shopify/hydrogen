@@ -23,7 +23,7 @@ export type CartDataFromQuery<TQuery extends AnyStorefrontQueryString> =
     : CartData;
 
 /**
- * The cart that getCart returns, with any GraphQL errors and the Storefront API response headers.
+ * The cart that `getCart` returns, with any GraphQL errors and the Storefront API response headers.
  *
  * @publicDocs
  */
@@ -32,7 +32,7 @@ export type CartResult<TCart extends CartData = CartData> = {
   cart: TCart | null;
   /** GraphQL errors from the cart query. */
   errors?: Array<{ message: string }>;
-  /** The Storefront API response headers, such as cache directives. The headers are empty when getCart skips the request. */
+  /** The Storefront API response headers, such as cache directives. The headers are empty when `getCart` skips the request. */
   headers: Headers;
 };
 

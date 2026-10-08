@@ -38,7 +38,7 @@ type PredictiveSearchItemsForQuery<TQuery extends AnyStorefrontQueryString> = No
  *
  * The type parameter sets the shape of the results and defaults to the
  * results of Hydrogen's built-in query. For a custom query, use the awaited
- * return type of queryPredictiveSearch for that query.
+ * return type of `queryPredictiveSearch` for that query.
  *
  * @example
  * ```ts
@@ -66,25 +66,25 @@ export type PredictiveSearchDataForQuery<TQuery extends AnyStorefrontQueryString
 export type PredictiveSearchDataForOptions<TOptions extends CreatePredictiveSearchQueriesOptions> =
   PredictiveSearchDataForQuery<PredictiveSearchQueriesForOptions<TOptions>["predictiveSearch"]>;
 
-/** Storefront client, search term, custom query, and search settings for queryPredictiveSearch. */
+/** Storefront client, search term, custom query, and search settings for `queryPredictiveSearch`. */
 export type QueryPredictiveSearchOptions<
   TQuery extends AnyStorefrontQueryString = typeof predictiveSearchQueries.predictiveSearch,
 > = {
-  /** Storefront client that sends the query. Any object with a `graphql` method works. */
+  /** Storefront client that sends the query. Any object with a `graphql()` method works. */
   storefrontClient: Pick<StorefrontClient, "graphql">;
   /** Search term. A blank term returns empty results without a Storefront API request. */
   term: string;
-  /** Custom query, usually from makePredictiveSearchQueries. Defaults to Hydrogen's built-in query. A hand-written query receives the term, limit, limit scope, types, searchable fields, and unavailable products as variables. */
+  /** Custom query, usually from `makePredictiveSearchQueries`. Defaults to Hydrogen's built-in query. A hand-written query receives the term, limit, limit scope, types, searchable fields, and unavailable products as variables. */
   query?: TQuery;
   /** Maximum number of results, from 1 to 10. Predictive search clamps other values to that range. Defaults to `5`, which differs from the Storefront API default of 10. */
   limit?: number;
-  /** Whether the limit applies to each result type or to all result types combined. Defaults to `"EACH"`. */
+  /** Whether the limit applies to each result type or to all result types combined. Defaults to `EACH`. */
   limitScope?: PredictiveSearchLimitScope;
   /** Result types to include. */
   types?: PredictiveSearchType[];
   /** Fields to search for page, article, and collection results. Defaults to the title. Product results always search every product field. */
   searchableFields?: SearchableField[];
-  /** Whether results hide unavailable products, show them, or list them last. Defaults to `"HIDE"`, which differs from the Storefront API default of `"LAST"`. */
+  /** Whether results hide unavailable products, show them, or list them last. Defaults to `HIDE`, which differs from the Storefront API default of `LAST`. */
   unavailableProducts?: SearchUnavailableProductsType;
   /** Cancels the request when the signal aborts. */
   signal?: AbortSignal;
@@ -143,7 +143,7 @@ export function getEmptyPredictiveSearchResult(term = ""): PredictiveSearchData 
  *
  * The function throws an error when the Storefront API returns GraphQL errors or no predictive search data. Network failures and aborts from the Storefront client also throw.
  *
- * To serve results to the browser with the Storefront API response headers, use createPredictiveSearchServerHandlers.
+ * To serve results to the browser with the Storefront API response headers, use `createPredictiveSearchServerHandlers`.
  *
  * @param options - The Storefront client, the search term, a custom query, and search settings.
  * @returns The search term, the result count, and the results grouped by type.
@@ -252,7 +252,7 @@ function formatGraphQLErrors(errors: GraphQLFormattedError[]): string {
  *
  * The function throws an error when the Storefront API returns GraphQL errors or no predictive search data. Network failures and aborts from the Storefront client also throw.
  *
- * To serve results to the browser with the Storefront API response headers, use createPredictiveSearchServerHandlers.
+ * To serve results to the browser with the Storefront API response headers, use `createPredictiveSearchServerHandlers`.
  *
  * @throws {Error} When the Storefront API returns GraphQL errors.
  * @throws {Error} When the response contains no predictive search data.

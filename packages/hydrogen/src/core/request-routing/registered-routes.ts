@@ -31,9 +31,9 @@ const VALID_REDIRECT_STATUSES = [
 
 /**
  * Creates a custom endpoint in your app for one pathname and HTTP method. Collect handlers in an
- * object, and pass an array of handler objects to handleShopifyRoutes in its `handlers` option.
+ * object, and pass an array of handler objects to `handleShopifyRoutes` in its `handlers` option.
  *
- * Use paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, or error result from the handler. Hydrogen sends a JSON result with status 200, an error result with status 400 by default, and a redirect result with status 303 by default. When a redirect result uses a status other than 301, 302, 303, 307, or 308, the promise from handleShopifyRoutes rejects.
+ * Use paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, or error result from the handler. Hydrogen sends a JSON result with status `200`, an error result with status `400` by default, and a redirect result with status `303` by default. When a redirect result uses a status other than `301`, `302`, `303`, 307, or 308, the promise from `handleShopifyRoutes` rejects.
  *
  * @param pathname The exact URL pathname that the handler matches. Hydrogen doesn't match path parameters or prefixes.
  * @param method The HTTP method that the handler matches, in uppercase, such as `POST`.

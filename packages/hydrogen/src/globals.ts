@@ -21,7 +21,7 @@ export type ShopifyGlobal = {
       language?: string;
     };
   };
-  /** The customer's country code. Defaults to `"US"`. */
+  /** The customer's country code. Defaults to `US`. */
   country: I18nConfig["country"] | string;
   /** The active currency code, in uppercase. */
   currency?: {
@@ -46,7 +46,7 @@ export type ShopifyGlobal = {
     shouldShowBanner: () => boolean;
     shouldShowGDPRBanner: () => boolean;
   };
-  /** The customer's language code, in lowercase. Defaults to `"en"`. */
+  /** The customer's language code, in lowercase. Defaults to `en`. */
   locale: Lowercase<I18nConfig["language"]> | string;
   /**
    * Navigates to a storefront URL.

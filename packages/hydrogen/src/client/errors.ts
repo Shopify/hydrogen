@@ -15,7 +15,7 @@ interface StorefrontApiErrorOptions {
  *
  * When the request context's signal or the call's `signal` aborts before the call, the client
  * throws the abort reason and sends no request. An `AbortError` during the request reaches your
- * code unchanged. Other abort reasons during the request throw a StorefrontApiError.
+ * code unchanged. Other abort reasons during the request throw a `StorefrontApiError`.
  *
  * @publicDocs
  */
@@ -29,7 +29,7 @@ export class StorefrontApiError extends Error {
   /** The variables that the client sent with the request. Hydrogen sets the value only in development builds. */
   readonly variables?: Record<string, unknown>;
 
-  /** `"StorefrontApiError"`. `StorefrontTimeoutError` sets its own class name. */
+  /** `StorefrontApiError`. `StorefrontTimeoutError` sets its own class name. */
   declare name: string;
   /** Describes the failure, such as the HTTP status that the API returned. */
   declare message: string;
@@ -68,7 +68,7 @@ export class StorefrontApiError extends Error {
  * Signals that a Storefront API request ran longer than the client's `defaultTimeoutInMs` setting.
  * Aborts from the request context or the call's `signal` throw other errors.
  *
- * StorefrontTimeoutError extends StorefrontApiError. Check for StorefrontTimeoutError first when
+ * `StorefrontTimeoutError` extends `StorefrontApiError`. Check for `StorefrontTimeoutError` first when
  * you handle both errors.
  *
  * @publicDocs
@@ -77,7 +77,7 @@ export class StorefrontTimeoutError extends StorefrontApiError {
   /** The timeout that the request exceeded, in milliseconds. */
   readonly timeoutInMs: number;
 
-  /** Always `"StorefrontTimeoutError"`. */
+  /** Always `StorefrontTimeoutError`. */
   declare name: string;
   /** States the timeout, such as `"Storefront API request timed out after 30000ms"`. */
   declare message: string;

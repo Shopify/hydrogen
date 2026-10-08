@@ -24,9 +24,9 @@ export type WaitUntil =
 /** The cache that holds entries, either a Web Cache API cache or a key-value store. */
 export type CacheInstance = WebCacheLike | KeyValueCacheLike;
 
-/** The cache and the background-work function for createRunWithCache. */
+/** The cache and the background-work function for `createRunWithCache`. */
 export type CreateRunWithCacheOptions = {
-  /** The cache that holds entries. createRunWithCache throws a TypeError when the cache is neither a Web Cache API cache nor a key-value store. */
+  /** The cache that holds entries. `createRunWithCache` throws a `TypeError` when the cache is neither a Web Cache API cache nor a key-value store. */
   cache: CacheInstance;
   /**
    * Keeps the runtime alive for background cache writes and refreshes. Without `waitUntil`, each call waits for its cache write before it resolves.
@@ -37,7 +37,7 @@ export type CreateRunWithCacheOptions = {
 /** Options for one cached run. */
 export type RunWithCacheOptions = {
   /**
-   * Identifies the cache entry. runWithCache throws a TypeError for an array key with empty slots or with entries other than strings, numbers, booleans, and `null`.
+   * Identifies the cache entry. `runWithCache` throws a `TypeError` for an array key with empty slots or with entries other than strings, numbers, booleans, and `null`.
    */
   key: CacheKey;
   /** Sets how long the result stays fresh, how long the cache serves it stale while refreshing it, and how long the cache serves it stale after an error. */
@@ -117,7 +117,7 @@ export class StaleFallbackDisabledError extends Error {}
 
 /**
  * Creates a function that caches the result of any async work, such as data that several API calls
- * produce together. For a single fetch response, use createFetchWithCache.
+ * produce together. For a single fetch response, use `createFetchWithCache`.
  *
  * @param options - The cache, and the function that keeps the runtime alive for background cache writes.
  * @returns A function that returns cached data or runs your callback, and reports the cache status.
@@ -306,7 +306,7 @@ function getCacheState<T extends SerializableCacheValue>(
 /**
  * Returns cached data for the key, or runs the callback and caches the result.
  *
- * The callback returns an object with `data` and a boolean `shouldCache`. The function throws a TypeError for any other shape. During the `staleWhileRevalidate` window, the function returns the stale data right away and runs the callback in the background. During the `staleIfError` window, the function returns the stale data when the callback throws. A `no-store` strategy runs the callback and skips the cache.
+ * The callback returns an object with `data` and a boolean `shouldCache`. The function throws a `TypeError` for any other shape. During the `staleWhileRevalidate` window, the function returns the stale data right away and runs the callback in the background. During the `staleIfError` window, the function returns the stale data when the callback throws. A `no-store` strategy runs the callback and skips the cache.
  *
  * @publicDocs
  */

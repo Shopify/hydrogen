@@ -36,7 +36,7 @@ export type PredictiveSearchState<TData extends PredictiveSearchData = Predictiv
  */
 export type CreatePredictiveSearchStoreOptions = {
   /**
-   * Route that returns predictive search results as JSON, in the shape that createPredictiveSearchServerHandlers returns.
+   * Route that returns predictive search results as JSON, in the shape that `createPredictiveSearchServerHandlers` returns.
    *
    * Defaults to `/api/predictive-search`.
    */
@@ -78,7 +78,7 @@ export type PredictiveSearchStore<TData extends PredictiveSearchData = Predictiv
   /**
    * Searches for a term after the debounce delay. Call the method on every keystroke.
    *
-   * Each call cancels the previous pending search. A term shorter than the minimum length, after trimming, returns the store to `"idle"` with empty results. Otherwise, the status changes to `"loading"` until the search ends with `"success"` or `"error"`. Responses for earlier terms never replace newer results.
+   * Each call cancels the previous pending search. A term shorter than the minimum length, after trimming, returns the store to `idle` with empty results. Otherwise, the status changes to `loading` until the search ends with `success` or `error`. Responses for earlier terms never replace newer results.
    *
    * The returned promise resolves when the search ends, or when a later search, `clear()`, or `destroy()` cancels the search.
    */
@@ -129,9 +129,9 @@ type StoreSearchOptions = Pick<
 >;
 
 /**
- * Creates a store that searches as the customer types and holds the latest predictive search results. Use the store in DOM code or in UI frameworks without Hydrogen bindings. In React and Vue, use PredictiveSearchProvider.
+ * Creates a store that searches as the customer types and holds the latest predictive search results. Use the store in DOM code or in UI frameworks without Hydrogen bindings. In React and Vue, use `PredictiveSearchProvider`.
  *
- * Call `search()` with each new term, read results with `getState()` or `subscribe()`, and call `destroy()` when the search UI unmounts. By default, the store requests results from the route that createPredictiveSearchServerHandlers serves.
+ * Call `search()` with each new term, read results with `getState()` or `subscribe()`, and call `destroy()` when the search UI unmounts. By default, the store requests results from the route that `createPredictiveSearchServerHandlers` serves.
  *
  * The function throws an error when you omit the `fetch` option in a runtime without a global `fetch`.
  *

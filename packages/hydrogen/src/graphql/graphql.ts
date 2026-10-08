@@ -146,7 +146,7 @@ export const gql = ((source: string, fragments?: Array<string>) => {
 /**
  * Writes a typed Storefront API query, mutation, or fragment. At runtime, the function returns the query text with each fragment appended once.
  *
- * TypeScript infers the result and variables types from Hydrogen's bundled Storefront API schema, even when the client targets another `apiVersion`. Read the types with `StorefrontApi.ResultOf` and `StorefrontApi.VariablesOf`. To type a fragment on its own, compose the fragment into a query and read the type from the query. The FragmentOf helper from gql.tada doesn't accept `gql` documents.
+ * TypeScript infers the result and variables types from Hydrogen's bundled Storefront API schema, even when the client targets another `apiVersion`. Read the types with `StorefrontApi.ResultOf` and `StorefrontApi.VariablesOf`. To type a fragment on its own, compose the fragment into a query and read the type from the query. The `FragmentOf` helper from `gql`.tada doesn't accept `gql` documents.
  *
  * @publicDocs
  */

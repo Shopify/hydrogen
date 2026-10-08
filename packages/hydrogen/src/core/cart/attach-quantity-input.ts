@@ -5,7 +5,7 @@ const FIRST_SUBMIT_BUTTON_SELECTOR = "button:not([type=button])";
  *
  * Make the form's first submit button the set button from `register("set")`. The function throws when the first submit button is any other button.
  *
- * In React, register the quantity field with `interactive: true` in useCartForm, which calls the function for you. Call the function yourself in Vue and in frameworks without a binding.
+ * In React, register the quantity field with `interactive: true` in `useCartForm`, which calls the function for you. Call the function yourself in Vue and in frameworks without a binding.
  *
  * @param inputEl The quantity input that submits the form on change.
  * @param formEl The cart form that holds the input and the set button.

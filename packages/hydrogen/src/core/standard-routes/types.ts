@@ -135,9 +135,9 @@ export type ShopifyStandardRouteMatch<
   standardPathname: string;
   /** The decoded handle values from the matched URL. */
   params: StandardRouteParams;
-  /** The standard route name that the URL matched, or `"index"` for the home page. */
+  /** The standard route name that the URL matched, or `index` for the home page. */
   route: TRoute;
-  /** The page template name for the matched route, such as `"product"` or `"list-collections"`. */
+  /** The page template name for the matched route, such as `product` or `list-collections`. */
   pageTemplateName: ShopifyPageTemplateName<TRoute>;
   /** Shopify's default template for the matched route and your app's custom template, which falls back to the default. */
   templates: {

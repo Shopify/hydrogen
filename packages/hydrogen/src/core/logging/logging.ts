@@ -51,7 +51,7 @@ export const consoleLogger: HydrogenLogger = {
 export type ConfigureLoggingOptions = {
   /** Receives all entries at or above `level`. Defaults to the built-in console logger. */
   logger?: HydrogenLogger;
-  /** The minimum severity that Hydrogen forwards to the logger. Defaults to `"info"`. */
+  /** The minimum severity that Hydrogen forwards to the logger. Defaults to `info`. */
   level?: LogLevel;
 };
 

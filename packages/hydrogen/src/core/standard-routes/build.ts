@@ -10,7 +10,7 @@ import type {
 
 /**
  * Tells Hydrogen where your app serves products, collections, and other Shopify resources. Pass
- * the returned object to handleShopifyRoutes, handleShopifyRedirects, the ShopifyScripts `routes`
+ * the returned object to `handleShopifyRoutes`, `handleShopifyRedirects`, the `ShopifyScripts` `routes`
  * option, and the predictive search URL helpers.
  *
  * Add a key only for a route that your app serves at a non-standard path. Hydrogen uses Shopify's

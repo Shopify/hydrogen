@@ -55,7 +55,7 @@ export type {
  * Returns Shopify's storefront script and link tags as descriptors.
  *
  * Render the descriptors in the document head during server rendering, then call
- * initializeShopifyScripts in the browser. Keep the tags in the returned order. The inline
+ * `initializeShopifyScripts` in the browser. Keep the tags in the returned order. The inline
  * scripts set up globals that later scripts read.
  *
  * @param options - The shop details, the localization, the consent configuration, and the features whose scripts to load.

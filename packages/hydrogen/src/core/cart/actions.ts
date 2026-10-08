@@ -34,7 +34,7 @@ export type CartLineUpdateInput = {
 };
 
 /**
- * A cart change that parseCartRequest reads from a JSON or form request.
+ * A cart change that `parseCartRequest` reads from a JSON or form request.
  *
  * The `intent` field names the change and the Storefront API mutation that applies the change:
  *
@@ -59,7 +59,7 @@ export type CartAction =
   | { intent: "attributes-update"; attributes: CartAttributeInput[] }
   | { intent: "note-update"; note: string };
 
-/** The cart change and the cart ID that parseCartRequest reads from the request body. */
+/** The cart change and the cart ID that `parseCartRequest` reads from the request body. */
 type ParsedCartRequest = {
   action: CartAction;
   /** The cart GID from a JSON body, or `null` for a form submission or a JSON body without a cart ID. The function adds the `gid://shopify/Cart/` prefix to a bare cart token. */
@@ -79,7 +79,7 @@ class CartActionError extends Error {
  * The function accepts `application/json`, `application/x-www-form-urlencoded`, and
  * `multipart/form-data` requests. A JSON request can replace every discount code, and a form submission applies or removes one code.
  *
- * A form submission always returns a `null` cart ID. Read the cart ID for a form submission with getCartId.
+ * A form submission always returns a `null` cart ID. Read the cart ID for a form submission with `getCartId`.
  *
  * The function reads the request body, and you can't read the body again afterward. The function throws when the request has an unsupported content type, an unknown intent, or a missing required field, and when a JSON body mixes added, updated, and removed lines.
  *

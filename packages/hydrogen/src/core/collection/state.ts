@@ -17,7 +17,7 @@ interface BaseAvailableFilterValue {
   label: string;
   /** Number of products in the current results that match the value. */
   count: number;
-  /** Filter input as a JSON string. Pass the string to `toggleFilterInput` or `isFilterInputActive`. */
+  /** Filter input as a JSON string. Pass the string to `toggleFilterInput()` or `isFilterInputActive`. */
   input: string;
 }
 
@@ -65,7 +65,7 @@ export interface AvailableFilter<
  * Products, product counts, available filters, and the collection ID come from your loader data.
  */
 export interface CollectionState {
-  /** Collection handle, such as `"shoes"`. */
+  /** Collection handle, such as `shoes`. */
   handle: string;
 
   /** Active product filters, matching the `filter.*` URL params. */
@@ -74,14 +74,14 @@ export interface CollectionState {
   sortKey: ProductCollectionSortKeys | undefined;
   /** `true` for a descending sort. The URL's sort value then ends in `-descending`. */
   reverse: boolean;
-  /** Reads `"loading"` from a filter or sort change until the store settles, and `"idle"` when the results match the filters and sort. Show a loading state while the value is `"loading"`. */
+  /** Reads `loading` from a filter or sort change until the store settles, and `idle` when the results match the filters and sort. Show a loading state while the value is `loading`. */
   status: "idle" | "loading";
 }
 
 /**
  * Creates collection state with no filters and the default sort for a collection handle.
  *
- * @param handle - Collection handle, such as `"shoes"`.
+ * @param handle - Collection handle, such as `shoes`.
  * @returns A state with no filters, the collection's default sort, an ascending direction, and an idle status.
  * @publicDocs
  */

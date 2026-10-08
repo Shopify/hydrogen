@@ -40,14 +40,14 @@ type FetchCustomerAccountGraphqlParams = {
  * Options for creating a Customer Account API client.
  */
 export type CreateCustomerAccountClientOptions = {
-  /** Numeric Shopify shop ID as a string of digits, such as `"12345"`. */
+  /** Numeric Shopify shop ID as a string of digits, such as `12345`. */
   shopId: string;
   /**
    * Customer Account API version in `YYYY-MM` format. Defaults to `2026-10`.
    */
   customerApiVersion?: string;
   /**
-   * The context for the current request, from createShopifyRequestContext.
+   * The context for the current request, from `createShopifyRequestContext`.
    *
    * The context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.
    *
@@ -121,11 +121,11 @@ export type CustomerAccountClient = {
   /** The GraphQL endpoint, `https://shopify.com/{shopId}/account/customer/api/{version}/graphql`. */
   readonly apiUrl: string;
   /**
-   * Sends a Customer Account API query or mutation with the customer's access token, and returns the data, any GraphQL errors, and the response headers. Pass a document from the Customer Account gql function.
+   * Sends a Customer Account API query or mutation with the customer's access token, and returns the data, any GraphQL errors, and the response headers. Pass a document from the Customer Account `gql` function.
    *
    * The request makes the final response private and uncacheable when you call `applyResponseHeaders()`. When the document declares `$language` and you omit it, the client fills the variable from the request context's language.
    *
-   * The method throws a `TypeError` for a document from any other gql function, including the Storefront API gql function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. A missing or malformed access token throws CustomerAccountAuthenticationError, a timeout throws CustomerAccountTimeoutError, and other request failures throw CustomerAccountApiError.
+   * The method throws a `TypeError` for a document from any other `gql` function, including the Storefront API `gql` function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. A missing or malformed access token throws `CustomerAccountAuthenticationError`, a timeout throws `CustomerAccountTimeoutError`, and other request failures throw `CustomerAccountApiError`.
    *
    * @throws {TypeError} When another gql function created the document, or when the variables aren't an object.
    * @throws {CustomerAccountAuthenticationError} When the options object is missing or the access token fails validation.

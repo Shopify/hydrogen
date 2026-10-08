@@ -13,7 +13,7 @@ export type ShopAnalyticsChannel = "hydrogen" | "headless";
 /**
  * Identifies the shop and sales channel in every analytics payload.
  *
- * The `"hydrogen"` channel carries the storefront ID. The `"headless"` channel
+ * The `hydrogen` channel carries the storefront ID. The `headless` channel
  * omits the storefront ID.
  *
  * @publicDocs
@@ -72,13 +72,13 @@ export type ConsentSetup =
  * Chooses which Shopify consent script loads and when the analytics bus
  * releases events to destinations.
  *
- * - `"default-banner"` loads Shopify's hosted privacy banner. When the customer
+ * - `default-banner` loads Shopify's hosted privacy banner. When the customer
  *   must see the banner, destinations wait until the customer accepts or
  *   declines. Otherwise, events release as soon as the consent API loads.
- * - `"custom-banner"` loads only the Customer Privacy API and requires a
+ * - `custom-banner` loads only the Customer Privacy API and requires a
  *   `setup` callback that integrates a third-party consent provider.
  *   Events release once the callback resolves.
- * - `"no-banner"` loads only the Customer Privacy API and releases events
+ * - `no-banner` loads only the Customer Privacy API and releases events
  *   once the API loads. Omitting the mode has the same effect.
  *
  * In every mode, destinations receive events only while the Customer Privacy

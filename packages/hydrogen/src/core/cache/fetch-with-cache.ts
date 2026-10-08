@@ -59,7 +59,7 @@ type FetchWithCache = {
   (input: FetchInput, init: FetchInit | undefined, options: FetchCacheOptions): Promise<Response>;
 };
 
-/** Pass a cache and an optional `waitUntil` function, or pass `runWithCache` from createRunWithCache to share its cache. Set `fetch` to replace the global fetch function. */
+/** Pass a cache and an optional `waitUntil` function, or pass `runWithCache` from `createRunWithCache` to share its cache. Set `fetch` to replace the global fetch function. */
 type CreateFetchWithCacheOptions = (
   | CreateRunWithCacheOptions
   | {
@@ -99,9 +99,9 @@ class ServerResponseError extends Error {
  * without the third argument skip the cache. Return `false` from a `shouldCacheResponse` option to
  * skip caching one response.
  *
- * The function caches only OK responses with no body or with a JSON, text, XML, HTML, GraphQL, or JavaScript content type. Other responses skip the cache. The function removes the `set-cookie` and `server-timing` headers from each cached response, including the response that a cache miss returns. With `staleIfError`, the function serves a stale entry only after a 500, 502, 503, or 504 status, or when the fetch throws.
+ * The function caches only OK responses with no body or with a JSON, text, XML, HTML, GraphQL, or JavaScript content type. Other responses skip the cache. The function removes the `set-cookie` and `server-timing` headers from each cached response, including the response that a cache miss returns. With `staleIfError`, the function serves a stale entry only after a `500`, `502`, `503`, or `504` status, or when the fetch throws.
  *
- * @param options - A cache, or the function from createRunWithCache to share its cache, plus an optional fetch function.
+ * @param options - A cache, or the function from `createRunWithCache` to share its cache, plus an optional fetch function.
  * @returns A fetch function that adds a `Cache-Status` header to calls with cache options, unless `annotateCacheStatus` is `false`.
  * @publicDocs
  */

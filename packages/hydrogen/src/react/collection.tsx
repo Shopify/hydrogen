@@ -27,7 +27,7 @@ import type { CollectionState } from "../core/collection";
 const CollectionContext = createContext<CollectionStore | null>(null);
 
 /**
- * Props for CollectionProvider.
+ * Props for `CollectionProvider`.
  */
 export interface CollectionProviderProps {
   /** The collection handle and the search string that your loader fetched products for. */
@@ -50,7 +50,7 @@ export interface CollectionProviderProps {
 /**
  * Shares the customer's filter and sort choices with the collection hooks and keeps the choices in sync with the URL.
  *
- * The provider sets the status back to `"idle"` when your loader data matches the URL. When the collection handle changes, such as on navigation to a different collection, the provider reads the filters and sort from the URL again.
+ * The provider sets the status back to `idle` when your loader data matches the URL. When the collection handle changes, such as on navigation to a different collection, the provider reads the filters and sort from the URL again.
  *
  * @param props - The collection data, the URL search string, the change callback, and the content that uses the collection hooks.
  * @returns A provider for the collection hooks.
@@ -112,7 +112,7 @@ function useRequiredStore(hookName: string): CollectionStore {
 }
 
 /**
- * Returns the customer's filter and sort choices and the loading status, and re-renders the component when the state changes. The hook throws outside CollectionProvider.
+ * Returns the customer's filter and sort choices and the loading status, and re-renders the component when the state changes. The hook throws outside `CollectionProvider`.
  *
  * @returns The current collection state.
  *
@@ -125,7 +125,7 @@ function useRequiredStore(hookName: string): CollectionStore {
 export function useCollection(): CollectionState;
 /**
  * With a selector, the hook returns the selected value and re-renders the component when the selected value changes.
- * Pass an `isEqual` comparator to skip re-renders for equal values. The hook throws outside CollectionProvider.
+ * Pass an `isEqual` comparator to skip re-renders for equal values. The hook throws outside `CollectionProvider`.
  *
  * @returns The value your selector derives from the current collection state.
  *
@@ -187,9 +187,9 @@ export function useCollection<S>(
 }
 
 /**
- * Returns methods that change the filters and sort. After each change, CollectionProvider passes the new search string to its `onChange` callback.
+ * Returns methods that change the filters and sort. After each change, `CollectionProvider` passes the new search string to its `onChange` callback.
  *
- * The hook throws outside CollectionProvider.
+ * The hook throws outside `CollectionProvider`.
  *
  * @returns Methods that set, toggle, and reset filters, change the sort, and apply submitted filter forms.
  *
@@ -218,9 +218,9 @@ export function useCollectionActions(): CollectionActions {
  * Spread the result of `formProps()` on the form. On submit, the props cancel the browser submission and apply the form's filter and sort fields.
  * The `beforeSubmit` callback runs first, and calling `preventDefault()` in `beforeSubmit` skips the update. The `afterSubmit` callback runs after the update.
  *
- * Render the form with `method="get"` and an explicit `action`, which keeps the form working before JavaScript loads. On search pages, keep `q` as a hidden input inside the form. The hook throws outside CollectionProvider.
+ * Render the form with `method="get"` and an explicit `action`, which keeps the form working before JavaScript loads. On search pages, keep `q` as a hidden input inside the form. The hook throws outside `CollectionProvider`.
  *
- * @returns An object with a `formProps` function. Call the function with optional `beforeSubmit` and `afterSubmit` callbacks, and spread the result on the form.
+ * @returns An object with a `formProps()` function. Call the function with optional `beforeSubmit` and `afterSubmit` callbacks, and spread the result on the form.
  * @example
  * ```tsx
  * const { formProps } = useCollectionForm();

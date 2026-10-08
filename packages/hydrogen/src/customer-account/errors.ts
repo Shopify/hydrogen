@@ -13,7 +13,7 @@ export class CustomerAccountApiError extends Error {
   /** The `retry-after` header on a non-OK response. Use the value to schedule a retry of a rate-limited request. */
   readonly retryAfter?: string;
 
-  /** `"CustomerAccountApiError"`. Each subclass sets its own class name. */
+  /** `CustomerAccountApiError`. Each subclass sets its own class name. */
   declare name: string;
   /** Describes the failure, such as the HTTP status that the API returned. */
   declare message: string;
@@ -35,12 +35,12 @@ export class CustomerAccountApiError extends Error {
 /**
  * The error that a Customer Account API request throws when the access token is missing or malformed. The client throws this error before it sends the request when the token is empty, has leading or trailing whitespace, or contains control characters. The client also throws this error when you omit the options argument.
  *
- * When the API rejects a token, the client throws CustomerAccountApiError with the response status.
+ * When the API rejects a token, the client throws `CustomerAccountApiError` with the response status.
  *
  * @publicDocs
  */
 export class CustomerAccountAuthenticationError extends CustomerAccountApiError {
-  /** Always `"CustomerAccountAuthenticationError"`. */
+  /** Always `CustomerAccountAuthenticationError`. */
   declare name: string;
   /** Always `"Customer Account API access token is required"`. */
   declare message: string;
@@ -62,7 +62,7 @@ export class CustomerAccountTimeoutError extends CustomerAccountApiError {
   /** The timeout that the request exceeded, in milliseconds. */
   readonly timeoutInMs: number;
 
-  /** Always `"CustomerAccountTimeoutError"`. */
+  /** Always `CustomerAccountTimeoutError`. */
   declare name: string;
   /** States the timeout, such as `"Customer Account API request timed out after 30000ms"`. */
   declare message: string;
@@ -77,9 +77,9 @@ export class CustomerAccountTimeoutError extends CustomerAccountApiError {
 }
 
 /**
- * The error that the OAuth callback throws when customer sign-in fails. Sign-in fails when the callback doesn't match the sign-in that prepareLoginUrl started, when that sign-in started more than 10 minutes earlier, when the code exchange fails, or when Shopify's tokens fail validation. The authorize route catches this error and redirects the customer to the failed-login path. Token refreshes never throw this error, and a failed refresh returns `undefined`.
+ * The error that the OAuth callback throws when customer sign-in fails. Sign-in fails when the callback doesn't match the sign-in that `prepareLoginUrl()` started, when that sign-in started more than 10 minutes earlier, when the code exchange fails, or when Shopify's tokens fail validation. The authorize route catches this error and redirects the customer to the failed-login path. Token refreshes never throw this error, and a failed refresh returns `undefined`.
  *
- * Read `code` to handle each failure. The codes are `"missing_callback_params"`, `"state_mismatch"`, `"missing_pending_login"`, `"token_exchange_rejected"`, `"token_exchange_failed"`, `"invalid_token_response"`, `"nonce_mismatch"`, `"issuer_mismatch"`, `"audience_mismatch"`, `"expired_id_token"`, and `"invalid_id_token"`.
+ * Read `code` to handle each failure. The codes are `missing_callback_params`, `state_mismatch`, `missing_pending_login`, `token_exchange_rejected`, `token_exchange_failed`, `invalid_token_response`, `nonce_mismatch`, `issuer_mismatch`, `audience_mismatch`, `expired_id_token`, and `invalid_id_token`.
  *
  * @publicDocs
  */
@@ -87,7 +87,7 @@ export class CustomerAccountOAuthError extends Error {
   /** The failure code, one of the codes in the class description. */
   readonly code: string;
 
-  /** Always `"CustomerAccountOAuthError"`. */
+  /** Always `CustomerAccountOAuthError`. */
   declare name: string;
   /** Describes the sign-in failure. Read `code` to handle the failure. */
   declare message: string;

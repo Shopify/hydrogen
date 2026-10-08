@@ -39,7 +39,7 @@ export type I18nConfig = {
   /** The request's country. */
   country: ShopifyCountryCode;
   /**
-   * The URL prefix for localized routes, such as `"/es-es"`. Hydrogen adds the prefix to standard route redirects and product variant URLs.
+   * The URL prefix for localized routes, such as `/es-es`. Hydrogen adds the prefix to standard route redirects and product variant URLs.
    */
   pathPrefix?: string;
 };
@@ -69,7 +69,7 @@ type ShopifyRequestContextWithBuyerIpInput<I18n extends I18nConfig = I18nConfig>
 type ShopifyRequestContextBase = {
   // -- Private fields --
   /**
-   * A type-only marker. Create request contexts only with createShopifyRequestContext.
+   * A type-only marker. Create request contexts only with `createShopifyRequestContext`.
    * @internal
    */
   readonly __hydrogenShopifyRequestContextBrand: never;
@@ -117,7 +117,7 @@ type ShopifyRequestContextBase = {
   captureSubrequestHeaders(headers: Headers): void;
   /**
    * Saves the cookies from a proxied Storefront API response and removes the `set-cookie` header
-   * from that response. The API proxies in handleShopifyRoutes call the method for you.
+   * from that response. The API proxies in `handleShopifyRoutes` call the method for you.
    * @internal
    */
   consumeStorefrontResponseHeaders(headers: Headers): void;
@@ -140,7 +140,7 @@ type ShopifyRequestContextBase = {
   /** Returns the incoming request's headers with Shopify's request headers added. Pass the headers when you forward the request to a proxy or another origin. */
   getForwardedRequestHeaders(): Headers;
   /**
-   * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from handleShopifyRoutes and handleShopifyRedirects already carry these headers.
+   * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.
    *
    * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses that hold customer data private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.
    */
@@ -181,7 +181,7 @@ type Context<I18n extends I18nConfig = I18nConfig> = {
 
 /**
  * Creates the context for one incoming request. Pass the same context to the Storefront API
- * client, the Customer Account API client, and handleShopifyRoutes. The context forwards the
+ * client, the Customer Account API client, and `handleShopifyRoutes`. The context forwards the
  * customer's cookies, locale, and privacy signal to Shopify, and adds Shopify's cookies and cache
  * headers to your response.
  *

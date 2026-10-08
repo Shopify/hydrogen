@@ -31,16 +31,16 @@ export interface PredictiveSearchFormAttributes {
 /**
  * Returns the attributes for the search input of a predictive search form.
  *
- * Pass `"query"`. Any other field name throws an error. The attribute keys use React casing. In DOM code, set each value on the matching lowercase property, such as `autocomplete`.
+ * Pass `query`. Any other field name throws an error. The attribute keys use React casing. In DOM code, set each value on the matching lowercase property, such as `autocomplete`.
  */
 export type PredictiveSearchFormRegister = {
   (field: "query"): PredictiveSearchQueryInputAttributes;
 };
 
 /**
- * Creates a function that returns the attributes for the search input of a predictive search form. Use the function in DOM code or in UI frameworks without Hydrogen bindings. In React and Vue, use usePredictiveSearchForm.
+ * Creates a function that returns the attributes for the search input of a predictive search form. Use the function in DOM code or in UI frameworks without Hydrogen bindings. In React and Vue, use `usePredictiveSearchForm`.
  *
- * @returns A function that takes `"query"` and returns the search input attributes.
+ * @returns A function that takes `query` and returns the search input attributes.
  *
  * @publicDocs
  */

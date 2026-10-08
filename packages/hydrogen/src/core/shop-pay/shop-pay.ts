@@ -55,13 +55,13 @@ type ShopPayButtonBaseOptions = {
    */
   checkoutUrl?: string;
   /**
-   * Checkout payment mode. Defaults to `"shop_pay"`. Use
-   * `"shop_pay_installments"` to open Shop Pay Installments at checkout.
+   * Checkout payment mode. Defaults to `shop_pay`. Use
+   * `shop_pay_installments` to open Shop Pay Installments at checkout.
    */
   paymentOption?: "shop_pay" | "shop_pay_installments";
   /**
    * Attribution source that the checkout URL carries as `source`.
-   * Defaults to `"hydrogen"`. Most storefronts shouldn't change the source.
+   * Defaults to `hydrogen`. Most storefronts shouldn't change the source.
    */
   source?: string;
   /**
@@ -76,7 +76,7 @@ type ShopPayButtonBaseOptions = {
   nonce?: string;
   /**
    * Sales channel that the checkout URL carries as `channel`. Omit the channel unless
-   * checkout needs explicit `"headless"` or `"hydrogen"` attribution.
+   * checkout needs explicit `headless` or `hydrogen` attribution.
    */
   channel?: "headless" | "hydrogen";
   /**
@@ -85,13 +85,13 @@ type ShopPayButtonBaseOptions = {
    */
   disabled?: boolean;
   /**
-   * CSS width of the button, such as `"100%"`. Defaults to `260px`.
+   * CSS width of the button, such as `100%`. Defaults to `260px`.
    *
    * Pass a single CSS value. The Shop Pay functions throw an error when the width contains a semicolon or a curly brace.
    */
   width?: string;
   /**
-   * CSS border radius of the button, such as `"8px"`. Defaults to `12px`.
+   * CSS border radius of the button, such as `8px`. Defaults to `12px`.
    *
    * Pass a single CSS value. The Shop Pay functions throw an error when the radius contains a semicolon or a curly brace.
    */
@@ -187,7 +187,7 @@ export function renderShopPayButton(options: ShopPayButtonOptions): string {
 /**
  * Creates a Shop Pay button element in the browser. Append the element to the page.
  *
- * The function requires a DOM. Use renderShopPayButton during server rendering.
+ * The function requires a DOM. Use `renderShopPayButton` during server rendering.
  *
  * @param options The variants, checkout URL, and display settings for the button.
  * @returns The Shop Pay button element, ready to append to the page.
@@ -221,7 +221,7 @@ export function initializeShopPayButtonElement(
 /**
  * Registers the Shop Pay button custom element in the browser. Call the function when you use the `hydrogen-shop-pay-button` tag directly on a framework without a Hydrogen binding.
  *
- * The Hydrogen Shop Pay components, createShopPayButton, and renderShopPayButton register the element for you. The function does nothing during server rendering or when the browser already has the element.
+ * The Hydrogen Shop Pay components, `createShopPayButton`, and `renderShopPayButton` register the element for you. The function does nothing during server rendering or when the browser already has the element.
  *
  * @returns Nothing.
  * @publicDocs

@@ -31,9 +31,9 @@ export type ShopifyRouteHandlerContext = {
   requestContext: ShopifyRequestContext;
 };
 
-/** A route handler result that Hydrogen sends as a 200 JSON response. */
+/** A route handler result that Hydrogen sends as a `200` JSON response. */
 export type ShopifyRouteJsonResult<TData = unknown> = {
-  /** Set to `"json"` for a JSON response. */
+  /** Set to `json` for a JSON response. */
   type: "json";
   /** The value that Hydrogen serializes as the response body. */
   data: TData;
@@ -46,7 +46,7 @@ export type ShopifyRedirectStatus = 301 | 302 | 303 | 307 | 308;
 
 /** A route handler result that Hydrogen sends as a redirect response. */
 export type ShopifyRouteRedirectResult = {
-  /** Set to `"redirect"` for a redirect response. */
+  /** Set to `redirect` for a redirect response. */
   type: "redirect";
   /** The redirect target. Hydrogen resolves a relative path against the request's origin. */
   location: string;
@@ -70,7 +70,7 @@ export type ShopifyRouteError = {
 
 /** A route handler result that Hydrogen sends as a JSON error response. */
 export type ShopifyRouteErrorResult<TError extends ShopifyRouteError = ShopifyRouteError> = {
-  /** Set to `"error"` for an error response. */
+  /** Set to `error` for an error response. */
   type: "error";
   /** The error that Hydrogen serializes as the response body's `error` field. */
   error: TError;
@@ -104,7 +104,7 @@ export type ShopifyRouteHandler<
 > = CallableRouteHandler<ShopifyRouteHandlerContext, ShopifyRouteHandlerResult, TPathname, TMethod>;
 
 /**
- * An object of route handlers keyed by name. Pass an array of groups to handleShopifyRoutes as `handlers`.
+ * An object of route handlers keyed by name. Pass an array of groups to `handleShopifyRoutes` as `handlers`.
  *
  * @publicDocs
  */
