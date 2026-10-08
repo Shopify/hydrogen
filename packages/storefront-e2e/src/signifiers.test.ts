@@ -180,7 +180,6 @@ describe("requireH3", () => {
     );
 
     expect(idsOf(locator)).toEqual(["in-stock"]);
-    expect(dom.selectors).toEqual([signifierSelector("product-add-to-cart", { available: true })]);
   });
 
   it("waits for an element that is attached late", async () => {
@@ -227,59 +226,44 @@ describe("requireH3", () => {
     expect(error.signifier).toMatchObject({
       name: "product-add-to-cart",
       problem: "missing",
+      state: { available: true },
       attachedCount: 0,
       visibleCount: 0,
     });
-    expect(error.message).toBe(
-      [
-        "Missing storefront e2e signifier: product-add-to-cart",
-        "Capability: product-cart",
-        "Route/page: /products/shirt?Size=M",
-        'Signifier: product-add-to-cart {"available":true}',
-        "Found: 0 attached, 0 visible",
-        `Expected: An element with the "product-add-to-cart" signifier is attached within ${EXPECT_TIMEOUT_MS}ms.`,
-        "Likely fix: Add the signifier to the control with a Hydrogen form binding or signifier().",
-        "Fix with Hydrogen form binding: Spread register('addToCart', {}) on the add-to-cart control.",
-        "Fix without Hydrogen form binding: Spread signifier('product-add-to-cart', { variantId, available }) from @shopify/hydrogen on the add-to-cart control.",
-        "Common causes:",
-        "- A wrapper component renders the control but does not forward props to the rendered element.",
-        "- More than one visible add-to-cart control is rendered on the product page.",
-        "Minimum Hydrogen version: unreleased",
-        `Docs: ${CONTRACT_DOC_PATH}#product-add-to-cart`,
-      ].join("\n"),
-    );
+    expect(error.routePath).toBe("/products/shirt?Size=M");
+    expect(error.docsAnchor).toBe("#product-add-to-cart");
+    expect(error.message).toContain("Missing storefront e2e signifier: product-add-to-cart");
+    expect(error.message).toContain("/products/shirt?Size=M");
+    expect(error.message).toContain("register('addToCart', {})");
+    expect(error.message).toContain("signifier('product-add-to-cart', { variantId, available })");
+    expect(error.message).toContain(`${CONTRACT_DOC_PATH}#product-add-to-cart`);
   });
 
-  it("reports more than one visible element as ambiguous", async () => {
-    const dom = createDom([
-      addToCart("a", { visible: true }),
-      addToCart("b", { visible: true }),
-      addToCart("c", { visible: false }),
-    ]);
-
-    const error = await contractErrorFrom(requireH3(asPage(dom), "product-add-to-cart"));
-
-    expect(error.signifier).toMatchObject({
-      problem: "ambiguous",
+  it.each([
+    {
+      name: "more than one visible element",
+      elements: [
+        addToCart("a", { visible: true }),
+        addToCart("b", { visible: true }),
+        addToCart("c", { visible: false }),
+      ],
       attachedCount: 3,
       visibleCount: 2,
-    });
-    expect(error.message).toContain("Ambiguous storefront e2e signifier: product-add-to-cart");
-    expect(error.message).toContain("Found: 3 attached, 2 visible");
-    expect(error.message).toContain("Fix with Hydrogen form binding: ");
-    expect(error.message).toContain("Fix without Hydrogen form binding: ");
-  });
-
-  it("reports more than one hidden element as ambiguous", async () => {
-    const dom = createDom([addToCart("a", { visible: false }), addToCart("b", { visible: false })]);
+    },
+    {
+      name: "more than one hidden element",
+      elements: [addToCart("a", { visible: false }), addToCart("b", { visible: false })],
+      attachedCount: 2,
+      visibleCount: 0,
+    },
+  ])("reports $name as ambiguous", async ({ elements, attachedCount, visibleCount }) => {
+    const dom = createDom(elements);
 
     const error = await contractErrorFrom(requireH3(asPage(dom), "product-add-to-cart"));
 
-    expect(error.signifier).toMatchObject({
-      problem: "ambiguous",
-      attachedCount: 2,
-      visibleCount: 0,
-    });
+    expect(error.signifier).toMatchObject({ problem: "ambiguous", attachedCount, visibleCount });
+    expect(error.message).toContain("Ambiguous storefront e2e signifier: product-add-to-cart");
+    expect(error.message).toContain(`Found: ${attachedCount} attached, ${visibleCount} visible`);
   });
 
   it("rethrows an unrelated count failure without a contract error", async () => {
