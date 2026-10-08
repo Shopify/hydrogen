@@ -3981,6 +3981,40 @@ describe("variant swap", () => {
     },
   );
 
+  it("drops the old variant's fields when Shopify returns the swap under the same line ID", async () => {
+    const id = "gid://shopify/Cart/same-id-swap";
+    store.hydrate(
+      makeCartState({
+        id,
+        lines: [
+          makeLine({
+            id: "line-1",
+            quantity: 1,
+            merchandise: {
+              id: OLD,
+              title: "Small",
+              product: { title: "T-Shirt" },
+              quantityAvailable: 1,
+            },
+          }),
+          lineWithMerchandise("line-2", 1, OTHER),
+        ],
+        totalQuantity: 2,
+      }),
+    );
+    const response = dispatchSwapEvent();
+    response.resolve({ cart: { ...swappedCart("line-1"), id } });
+    await response.promise;
+    await nextTick();
+
+    const [swapped] = getCartLines(store.getState().data);
+    expect(swapped.merchandise).toEqual({
+      id: NEW,
+      title: "Small",
+      product: { title: "T-Shirt" },
+    });
+  });
+
   it("revalidates a swap that returns a new line ID while another change is in flight", async () => {
     mockGetCart.mockResolvedValue({ cart: swappedCart("line-replacement", 2) });
     const other = mockUpdateCart({ lines: [{ id: "line-2", quantity: 2 }] });
@@ -4037,6 +4071,32 @@ describe("variant swap", () => {
 
     await vi.waitFor(() => expect(store.getState().errors.network).toHaveLength(1));
     expect(merchandise()).toEqual([["line-1", OLD, 1]]);
+  });
+
+  it("takes the lines connection from a discount response", async () => {
+    const id = "gid://shopify/Cart/paginated";
+    const lines = getCartLines(store.getState().data);
+    store.hydrate(
+      makeCartState({
+        id,
+        lines: { nodes: lines, pageInfo: { hasNextPage: true } } as CartData["lines"],
+        totalQuantity: 2,
+      }),
+    );
+    const discount = mockUpdateCart({ discountCodes: ["SAVE"] });
+    resolveUpdate(0, {
+      cart: makeCartState({
+        id,
+        lines: { nodes: lines, pageInfo: { hasNextPage: false } } as CartData["lines"],
+        totalQuantity: 2,
+        discountCodes: [{ code: "SAVE", applicable: true }],
+      }),
+    });
+    await discount;
+    await nextTick();
+
+    expect(store.getState().data.lines).toMatchObject({ pageInfo: { hasNextPage: false } });
+    expect(store.getState().data.discountCodes).toEqual([{ code: "SAVE", applicable: true }]);
   });
 
   it("does not restore a removed line from a merged swap response that settles after the removal", async () => {
