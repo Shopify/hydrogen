@@ -1,5 +1,50 @@
 # @shopify/hydrogen
 
+## 2026.10.0-preview.5
+
+### Minor Changes
+
+- 1891913: `ProductPayload.price` is now `{ amount, currencyCode }`, the Storefront API `MoneyV2` shape, instead of a bare amount string. The hosted Shopify analytics script reads `currencyCode` as the event's currency, so `product_viewed` events no longer depend on `window.Shopify.currency.active` being set. Pass the variant's `price` object where you used to pass `price.amount`:
+  
+  ```ts
+  // before
+  price: variant.price.amount,
+  // after
+  price: variant.price,
+  ```
+  
+  This is a breaking type change for anyone publishing `product_viewed` with a string `price`. `price` is the generated `MoneyV2` type, so `currencyCode` is the Storefront API `CurrencyCode` union rather than any string. Import `MoneyV2` or `CurrencyCode` from `@shopify/hydrogen/storefront-api-types` when you type a payload by hand.
+- 94159a8: Storefront API stale-while-revalidate refreshes are no longer cancelled when the request or caller aborts, and are bounded by `defaultTimeoutInMs` instead (30 seconds when it is `0`). Custom `createFetchWithCache` runners can call `run({ background: true })` to use the new `backgroundSignal` cache option, and runners that call `run()` keep working.
+  
+  The `hydrogen-storefront-client` and `hydrogen-customer-account` skills now note that the Next.js edge sandbox lacks `AbortSignal.any`, so edge routes and middleware that call those clients need a polyfill. The `hydrogen-cart-ui` skill notes that Safari 16.0 through 17.3 lacks it too, so the browser cart store needs the polyfill there.
+
+### Patch Changes
+
+- 7094944: The cart route now keeps `merchandiseId` on line updates, so `{ id, merchandiseId, quantity }` swaps an existing line to another variant, as the Storefront API allows. `CartLineUpdateInput` has the new optional `merchandiseId` field, and the store shows the swapped variant once Shopify responds, without keeping fields from the old variant. When Shopify returns the line under a new line ID while other changes are in flight, the swapped line appears after the cart refresh that follows them.
+- 7094944: A settled cart mutation now replaces every non-line field its response returns, including discount codes and fields a custom `CartFragment` selects, such as `appliedGiftCards` or `buyerIdentity`. Before, the store only took the id, checkout URL, totals and cost, so other fields stayed stale and a cart created by the first add had none of them until a refresh.
+- 7094944: The cart route now rejects a JSON body that combines `lines`, `discountCodes`, `attributes` or `note` with an `invalid_cart_request` error, instead of running one of them and silently dropping the rest. Send one kind of change per request, for example one `Shopify.actions.updateCart` call per kind; the store rolls back the projections of a rejected call.
+- 7094944: The `hydrogen-cart-ui` skill now lists the Standard Actions runtime as a prerequisite and explains how to change the cart from code with `Shopify.actions.updateCart`.
+- e1cbafd: Fix `formatMoney().amount` keeping the space that separates the number from the currency symbol, so `19,99 €` in `fr-FR` yields `19,99` instead of `19,99 `. Right-to-left locales such as `he-IL` and `ar-EG` keep the marks that bind the minus sign to the digits and lose the trailing space and mark.
+- e1cbafd: Fix `formatMoney([min, max], { withoutTrailingZeros: true })` rounding the maximum when only the minimum is a whole number, so `$10.00` to `$19.99` renders as `$10.00 – $19.99` instead of `$10 – $20`. Whole-number detection now looks only at the rendered minimum and maximum, so values in between no longer affect the output.
+- 53c405f: Update the collection browser skill with currency-aware price inputs that use narrow currency symbols and accessible currency labels, and submit price inputs on change with a 350 ms debounce instead of on blur. Filter controls stay mounted and enabled while results load, checked and selected values bind to browse state instead of remounting on filter state, and native keyboard behavior is kept.
+- 980f4a4: Log Storefront API errors from the URL redirect lookup in `handleShopifyRedirects`, such as `THROTTLED`, through the Hydrogen logger, as network failures already are. Before, these errors were dropped silently and the request fell through to the 404 as if no redirect existed.
+- 8d2bfd1: The skills now describe where Shopify analytics reads the event currency. Product events take it from the event price's `currencyCode` and fall back to `window.Shopify.currency.active`, which `ShopifyScripts` `i18n.currency` sets. Page, collection, and search views take only the global. When it is unset, Shopify analytics sends them without a currency.
+- c0f7dbd: Serve Shopify's managed UCP business profile from headless storefront origins through `handleShopifyRoutes`.
+- bf16509: **Breaking:** Remove the standalone `useCartActions` export from `@shopify/hydrogen/vue`, matching the React entry after #4056. It dropped custom `CartFragment` types. Use the typed version from `createCartComponents()` instead:
+  
+  ```ts
+  import { createCartComponents } from "@shopify/hydrogen/vue";
+  
+  import type { cartHandlers } from "./cart-handlers";
+  
+  export const { CartProvider, useCart, useCartActions, useCartForm } =
+    createCartComponents<typeof cartHandlers>();
+  ```
+  
+  `useCartAnalytics` is still exported.
+- f43dace: Correct the `hydrogen-variant-form` skill's guidance for same-product option links. The skill said a hydrated click could run the registered handler and the link's own navigation together, and that the second navigation was a harmless no-op. It is not: the link's navigation refetches the loader that a resolved selection skipped, and a modifier click (new tab) also changes the current page. The skill and its React and Next.js references now run the registered handler only for a plain click and cancel the link's own navigation, so the provider's `onSelect` performs the only navigation. The skill also now requires focus to stay on the activated value across a combined-listing switch, and the React and Next.js references show how each framework keeps it.
+- b826e25: Update the `hydrogen-variant-form` skill so that progressive option links make one client navigation after hydration. Option links keep a real `href` for no-JS shoppers. A guarded click handler calls the registered handler, and the provider `onSelect` is the only navigation. Modifier-key and new-tab clicks stay native. The link `href` and `onSelect` use the same current-query base. The skill now shows the React Router, Next.js (`onNavigate`), and Nuxt (`NuxtLink` `custom`) patterns, and the same guarded-anchor pattern for SolidStart and SvelteKit apps that use the core store directly. The `hydrogen-setup` product detail page step now follows the same guidance.
+
 ## 2026.10.0-preview.4
 
 ### Minor Changes
