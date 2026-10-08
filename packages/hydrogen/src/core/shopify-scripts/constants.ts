@@ -13,6 +13,10 @@ export const SHOPIFY_PERF_KIT_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/shopifycloud/perf-
 export const SHOPIFY_CONSENT_API_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/shopifycloud/consent-tracking-api/v0.2/consent-tracking-api.js`;
 export const SHOPIFY_PRIVACY_BANNER_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/shopifycloud/privacy-banner/storefront-banner.js`;
 
+// Advertised without a `version` attribute: agents then use the latest stable profile, so storefronts
+// on older Hydrogen releases never advertise a stale version.
+export const UCP_PROFILE_PATH = "/.well-known/ucp";
+
 export const SHOPIFY_CONSENT_SCRIPT_ID = "shopify-consent";
 export const SHOPIFY_PERF_KIT_SCRIPT_ID = "shopify-perfkit";
 
