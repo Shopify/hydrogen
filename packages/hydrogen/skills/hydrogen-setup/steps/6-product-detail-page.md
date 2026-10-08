@@ -207,21 +207,27 @@ export const { ProductProvider, useProduct, useProductForm } =
 Wrap the purchase UI in `ProductProvider`. Put same-product URL navigation in `onSelect`, not inside each option control:
 
 ```tsx
+import { useLocation, useNavigate } from "react-router";
 import { ProductProvider, useProductForm } from "~/lib/product";
+import type { ProductData } from "~/lib/product-query";
 
 export function ProductDetails({ product }: { product: ProductData }) {
-  const navigate = useNavigate(); // or Next.js router.replace
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <ProductProvider
       product={product}
       onSelect={(result) => {
-        const targetHandle =
-          result.selectedVariant?.product?.handle ?? product.handle;
-        void navigate(variantUrl(targetHandle, result.selectedOptions), {
-          replace: true,
-          preventScrollReset: true,
-        });
+        void navigate(
+          variantUrl(
+            product,
+            result.selectedOptions,
+            result.selectedVariant?.product?.handle,
+            new URLSearchParams(location.search),
+          ),
+          { replace: true, preventScrollReset: true },
+        );
       }}
     >
       <ProductPurchasePanel product={product} />
@@ -229,6 +235,8 @@ export function ProductDetails({ product }: { product: ProductData }) {
   );
 }
 ```
+
+This sample uses React Router. `variantUrl(product, selectedOptions, handle, base)` is the URL builder from the `hydrogen-variant-form` React Router reference. Use the same current-query `base` for option link URLs. In Next.js, use `useRouter().replace` with the `useSearchParams()` base, as the `hydrogen-variant-form` Next.js reference shows.
 
 `useProduct` is for read-only selection state (price, gallery, analytics). `useProductForm` adds form bindings (`register`, `formProps`, `pending`):
 
@@ -272,8 +280,8 @@ function ProductPurchasePanel({ product }: { product: ProductData }) {
 
 Framework notes:
 
-- Next.js App Router: fetch in the server page; put `ProductProvider` and the form in a `"use client"` component. Use `router.replace(url, { scroll: false })` in `onSelect`. A cross-product combined-listing navigation remounts the page component, so restore focus to the activated value as the `hydrogen-variant-form` Next.js reference shows.
-- React Router: put URL sync in provider `onSelect`. Same-product option values are GET `<Link>`s whose plain click runs the `register("optionValue", ...)` handler and cancels the link's own navigation (no-JS fallback via `href`). Cross-product values use `<Link preventScrollReset>`. See the `hydrogen-variant-form` React reference.
+- Next.js App Router: fetch in the server page; put `ProductProvider` and the form in a `"use client"` component. Use `router.replace(url, { scroll: false })` in `onSelect`. For existing same-product values, render GET links and use `onNavigate` to prevent Link navigation before calling the registered handler. A cross-product combined-listing navigation remounts the page component, so restore focus to the activated value as the `hydrogen-variant-form` Next.js reference shows. A no-JS fallback also requires the product content to render without client-side scripts; a streamed Suspense boundary can prevent this.
+- React Router: put URL sync in provider `onSelect`. Same-product option values are GET `<Link>`s for the no-JS fallback. On an unmodified primary click, prevent Link navigation and call the registered `onClick`; leave modified and other-target clicks alone. Cross-product values use `<Link preventScrollReset>`. See the `hydrogen-variant-form` React Router reference.
 
 ### Vue
 
@@ -394,13 +402,15 @@ const addable = computed(() => canAddToCart(props.product, form.options));
 </template>
 ```
 
-Same-product option values should be `NuxtLink` (or the app's link component) GET links that `v-bind` `form.register('optionValue', ...)`. Cross-product combined-listing values navigate to the other product. See the `hydrogen-variant-form` Nuxt reference.
+For existing same-product option values, use `NuxtLink` custom mode to render a native anchor with its resolved `href`. On an unmodified primary click, prevent the anchor's default navigation and call the registered `onClick`; the provider's `onSelect` owns navigation. Leave modified and other-target clicks alone. Cross-product combined-listing values navigate to the other product without selecting in the current provider. See the `hydrogen-variant-form` Nuxt reference.
 
 ### Other Framework Gotchas
 
 - SvelteKit: if using the core store directly, create it once, hydrate on product identity changes, and destroy it on unmount.
 - Astro: only build this route when the app has server output or a server adapter. Put the interactive product form in a hydrated island or client script that owns the store lifecycle.
 - SolidStart: manage the core store lifecycle inside the client component unless a local binding already exists.
+
+For SolidStart and SvelteKit, render existing same-product options as GET anchors. On an unmodified primary click, prevent default navigation, select through the core store, and navigate once through the existing selection callback. Use the same query-parameter base for the anchor URL and the callback. Leave modified and other-target clicks alone. Keep nonexistent combinations as disabled buttons.
 
 ## Continue when
 
@@ -411,6 +421,6 @@ Same-product option values should be `NuxtLink` (or the app's link component) GE
 - [ ] An invalid or failing product query (e.g.: invalid field) logs the GraphQL error server-side and returns 500, not 404
 - [ ] A valid query for a missing product returns 404
 - [ ] Selecting a variant and refreshing the page persists the same variant selected
-- [ ] With javascript disabled, clicking on a variant option navigates to the selected variant
+- [ ] With JavaScript disabled, clicking a variant link loads its selected variant when the product page supports no-JS rendering; record any rendering limitation rather than claim a link alone provides that fallback
 - [ ] Cross-product option values use the framework's client-side link component when the app has one.
 - [ ] The product variants form passes the `hydrogen-variant-form` skill's user acceptance tests.
