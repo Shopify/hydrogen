@@ -144,6 +144,7 @@ describe("handleUcpProfileProxy", () => {
 
     expect(response.status).toBe(304);
     expect(response.headers.get("cache-control")).toBe(UCP_CACHE_CONTROL);
+    expect(response.headers.get("access-control-allow-origin")).toBe("*");
     expect(response.headers.get("etag")).toBe('"old-profile"');
     expect(response.headers.get("last-modified")).toBe(lastModified);
     expect(response.headers.get("vary")).toBeNull();
@@ -160,6 +161,7 @@ describe("handleUcpProfileProxy", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe(UCP_CACHE_CONTROL);
+    expect(response.headers.get("access-control-allow-origin")).toBe("*");
     expect(response.headers.get("content-type")).toBe("application/json");
     expect(response.headers.get("etag")).toBe('"profile-etag"');
     expect(response.headers.get("last-modified")).toBe("Thu, 27 Aug 2026 20:00:00 GMT");

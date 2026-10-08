@@ -31,6 +31,8 @@ const proxyUcpProfileRequest = createProxyInterceptor({
         "cache-control",
         response.ok || response.status === 304 ? UCP_CACHE_CONTROL : UCP_NO_CACHE_CONTROL,
       );
+      // The profile is public; match the Online Store so browser-based agents can read it.
+      headers.set("access-control-allow-origin", "*");
     },
   },
   responseValidation: (upstream) => {
