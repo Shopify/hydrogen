@@ -53,7 +53,7 @@ export function shopifyScriptOptionTypes() {
 }
 
 export function shopifyLinkDescriptorTypes(descriptors: ShopifyScriptTagDescriptors) {
-  // Consumer code written against the earlier link attribute shape keeps compiling.
+  // Reading `as`, `crossorigin` and `href`, and building existing descriptors, keep compiling.
   for (const { attributes } of descriptors.links) {
     expectTypeOf(attributes.as).toEqualTypeOf<"script" | undefined>();
     expectTypeOf(attributes.crossorigin).toEqualTypeOf<
