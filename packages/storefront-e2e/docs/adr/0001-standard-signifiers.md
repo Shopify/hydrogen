@@ -102,7 +102,18 @@ The minimum Hydrogen version is unreleased. It becomes known when the first chan
 
 One concrete allowlist records the specs and helpers that still use non-signifier locators. The list can only shrink. Later slices remove entries when they move to signifiers.
 
-The check runs in `test:unit`. Its allowlist is `src/selector-ratchet-allowlist.json`; `src/selector-ratchet.test.ts` checks for new and stale entries.
+Oxlint enforces the guardrail. The rule is `eslint-js/no-restricted-syntax` from the pinned `oxlint-plugin-eslint` 1.62.0 package. Its AST selectors find the banned locator methods, XPath, and DOM queries. Oxlint JS plugin support is alpha, so the version is pinned. The rule applies to `src/` and the specs in this package. It does not apply to `src/signifiers.ts` or `*.test.*` files. The root lint, the package lint, and the storefront CI lint step run the rule.
+
+The allowlist is `src/selector-ratchet-allowlist.json`. It is the only place for exceptions. Do not add inline lint exceptions. A small adapter, `scripts/oxlint-storefront-signifiers.mjs`, wraps the official rule:
+
+- It suppresses a diagnostic only when the file, the category (`rule`), and the trimmed source line (`code`) match an allowlist entry. Matching counts occurrences, so two equal lines need two entries.
+- It reports all other diagnostics as lint errors.
+- At the end of each file, it reports allowlist entries for that file that match no diagnostic as stale. A full-package lint is necessary for a complete stale check. The adapter cannot check entries for a file that lint ignores or excludes.
+- When it loads the allowlist, it reports entries whose file does not exist, for example after a delete or rename.
+
+The adapter does not scan source text or walk directories. It reads only the source line of a node that the rule already reported.
+
+Lint enforces the guardrail without Vitest. There is no regex source scanner and no Vitest test for the guardrail. Vitest stays the package test runner, and the other unit tests, such as `src/runtime-config.test.ts`, do not change.
 
 ### Readiness
 

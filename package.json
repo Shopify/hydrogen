@@ -46,6 +46,7 @@
     "lefthook": "^2.1.6",
     "oxfmt": "^0.47.0",
     "oxlint": "^1.62.0",
+    "oxlint-plugin-eslint": "1.62.0",
     "turbo": "^2.9.14",
     "typescript": "catalog:"
   },
