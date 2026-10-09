@@ -63,7 +63,7 @@
     "@types/body-parser": "1.19.5",
     "@types/connect": "^3.4.38",
     "@types/eventsource": "^1.1.15",
-    "@types/node": "catalog:",
+    "@types/node": "22.19.15",
     "@types/source-map-support": "^0.5.10",
     "@types/stack-trace": "^0.0.33",
     "@types/ws": "^8.5.14",
@@ -71,6 +71,8 @@
     "eventsource": "^3.0.5",
     "eventsource-parser": "^2.0.1",
     "tempy": "3.1.0",
+    "tsup": "^8.4.0",
+    "typescript": "catalog:",
     "vite": "^8.0.1",
     "vitest": "^3.2.4"
   },
