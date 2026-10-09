@@ -1,14 +1,12 @@
 import {createRequire} from 'node:module';
 
-import {outputNewline} from '@shopify/cli-kit/node/output';
 import {joinPath} from '@shopify/cli-kit/node/path';
-import {renderError} from '@shopify/cli-kit/node/ui';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 /**
- * Returns true if the command has been marked as disabled and we've shown an
- * error to the user.
+ * Rejects commands disabled by the installed Hydrogen version.
  */
-export function applyHydrogenCommandPolicy({
+export async function applyHydrogenCommandPolicy({
   id,
   projectPath,
 }: {
@@ -23,14 +21,11 @@ export function applyHydrogenCommandPolicy({
     return false;
   }
 
-  outputNewline();
-  renderError({
-    headline: `\`shopify ${id.replace(/:/g, ' ')}\` is not supported by this version of Hydrogen`,
-    body: 'The installed version of @shopify/hydrogen disables this command.',
-    nextSteps: ['Use your framework or package tooling instead.'],
-  });
-
-  return true;
+  throw new AbortError(
+    `\`shopify ${id.replace(/:/g, ' ')}\` is not supported by this version of Hydrogen`,
+    'The installed version of @shopify/hydrogen disables this command.',
+    ['Use your framework or package tooling instead.'],
+  );
 }
 
 export function isHydrogenCommandDisabled(projectPath: string, id: string) {

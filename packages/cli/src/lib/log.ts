@@ -1,3 +1,4 @@
+import {isJsonOutput} from './json-output.js';
 import {
   renderInfo,
   renderWarning,
@@ -267,6 +268,7 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
 }
 
 export function enhanceAuthLogs(hideInitialLog = false) {
+  if (isJsonOutput()) return;
   injectLogReplacer('log', warningDebouncer);
 
   addMessageReplacers(

@@ -25,25 +25,25 @@ describe('Hydrogen command policy', () => {
   });
 
   describe('applyHydrogenCommandPolicy()', () => {
-    it('continues when command id is missing', () => {
+    it('continues when command id is missing', async () => {
       writeProjectPackageJson({
         dependencies: {'@shopify/hydrogen': 'workspace:*'},
       });
       writeDisabledCommands('hydrogen:dev');
 
-      const isDisabled = applyHydrogenCommandPolicy({projectPath});
+      const isDisabled = await applyHydrogenCommandPolicy({projectPath});
 
       expect(isDisabled).toBe(false);
       expect(outputMock.output()).toBe('');
     });
 
-    it('continues when a command is not disabled', () => {
+    it('continues when a command is not disabled', async () => {
       writeProjectPackageJson({
         dependencies: {'@shopify/hydrogen': 'workspace:*'},
       });
       writeDisabledCommands('hydrogen:dev');
 
-      const isDisabled = applyHydrogenCommandPolicy({
+      const isDisabled = await applyHydrogenCommandPolicy({
         id: 'hydrogen:env:pull',
         projectPath,
       });
@@ -52,27 +52,21 @@ describe('Hydrogen command policy', () => {
       expect(outputMock.output()).toBe('');
     });
 
-    it('blocks commands listed in package metadata with generic guidance', () => {
+    it('blocks commands listed in package metadata with generic guidance', async () => {
       writeProjectPackageJson({
         dependencies: {'@shopify/hydrogen': 'workspace:*'},
       });
       writeDisabledCommands('hydrogen:setup:vite');
 
-      const isDisabled = applyHydrogenCommandPolicy({
-        id: 'hydrogen:setup:vite',
-        projectPath,
-      });
-
-      expect(isDisabled).toBe(true);
-      expect(outputMock.output()).toContain(
+      await expect(
+        applyHydrogenCommandPolicy({
+          id: 'hydrogen:setup:vite',
+          projectPath,
+        }),
+      ).rejects.toThrow(
         '`shopify hydrogen setup vite` is not supported by this version of Hydrogen',
       );
-      expect(outputMock.output()).toContain(
-        'The installed version of @shopify/hydrogen disables this command.',
-      );
-      expect(outputMock.output()).toContain(
-        'Use your framework or package tooling instead.',
-      );
+      expect(outputMock.output()).toBe('');
     });
   });
 

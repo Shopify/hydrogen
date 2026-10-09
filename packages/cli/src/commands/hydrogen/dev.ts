@@ -1,6 +1,6 @@
 import type {ViteDevServer} from 'vite';
 import {Flags, Config} from '@oclif/core';
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../lib/hydrogen-command.js';
 import colors from '@shopify/cli-kit/node/colors';
 import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {collectLog} from '@shopify/cli-kit/node/output';

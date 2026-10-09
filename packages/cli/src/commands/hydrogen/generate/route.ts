@@ -1,4 +1,4 @@
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../../lib/hydrogen-command.js';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
@@ -7,7 +7,7 @@ import {Flags, Args} from '@oclif/core';
 
 // Fix for a TypeScript bug:
 // https://github.com/microsoft/TypeScript/issues/42873
-import type {} from '@oclif/core/lib/interfaces/parser.js';
+import type {} from '@oclif/core/interfaces';
 import {
   ALL_ROUTE_CHOICES,
   generateRoutes,

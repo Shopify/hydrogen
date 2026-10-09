@@ -22,6 +22,7 @@ import {runCheckRoutes} from './check.js';
 import {runCodegen} from './codegen.js';
 import {setupTemplate} from '../../lib/onboarding/index.js';
 import path from 'node:path';
+import {realpath} from 'node:fs/promises';
 
 vi.mock('../../lib/check-cli-version.js');
 
@@ -110,9 +111,19 @@ describe('init', () => {
     });
 
     it('typechecks the project', async () => {
-      // This will throw if TSC fails
+      // Resolve the installed binaries before running them: pnpm's bin wrappers
+      // use relative paths that break when node_modules is linked into this fixture.
+      await exec(
+        await realpath(path.join(tmpDir, 'node_modules/.bin/react-router')),
+        ['typegen'],
+        {cwd: tmpDir},
+      );
       await expect(
-        exec('npm', ['run', 'typecheck'], {cwd: tmpDir}),
+        exec(
+          await realpath(path.join(tmpDir, 'node_modules/.bin/tsc')),
+          ['--noEmit'],
+          {cwd: tmpDir},
+        ),
       ).resolves.not.toThrow();
     });
 

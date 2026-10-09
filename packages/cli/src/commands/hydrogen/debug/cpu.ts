@@ -1,6 +1,6 @@
 import {Flags} from '@oclif/core';
 import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../../lib/hydrogen-command.js';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {writeFile} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
@@ -71,7 +71,7 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
 
   let times = 0;
   let sourceEntrypoint: string;
-  const profiler = await createCpuStartupProfiler(directory);
+  const profiler = await createCpuStartupProfiler();
 
   const hooks = {
     onServerBuildStart() {
@@ -130,7 +130,7 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
 
   return {
     async close() {
-      await Promise.allSettled([buildProcess.close(), profiler.close()]);
+      await buildProcess.close();
     },
   };
 }

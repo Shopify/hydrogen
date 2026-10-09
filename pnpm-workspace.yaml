@@ -11,8 +11,8 @@ packages:
   - templates/skeleton
 
 overrides:
-  '@oclif/core': '3.26.5'
-  '@shopify/cli-kit': '3.80.4'
+  '@oclif/core': '4.8.3'
+  '@shopify/cli-kit': '4.9.0'
   form-data: '>=4.0.4'
   '@types/node': 'catalog:'
   vite: '^8.0.1'

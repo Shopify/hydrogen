@@ -454,13 +454,16 @@ export async function handleDependencies(
   packageManagerFromFlag?: PackageManager,
   shouldInstallDeps?: boolean,
 ) {
-  const detectedPackageManager =
+  let detectedPackageManager =
     packageManagerFromFlag ?? packageManagerFromUserAgent();
-  let actualPackageManager: PackageManager = 'npm';
+  if (detectedPackageManager === 'homebrew') detectedPackageManager = 'npm';
+  let actualPackageManager: Exclude<PackageManager, 'homebrew'> = 'npm';
 
   if (shouldInstallDeps !== false) {
     if (detectedPackageManager === 'unknown') {
-      const result = await renderSelectPrompt<'no' | PackageManager>({
+      const result = await renderSelectPrompt<
+        'no' | Exclude<PackageManager, 'homebrew'>
+      >({
         message: `Select package manager to install dependencies`,
         choices: [
           {label: 'NPM', value: 'npm'},
