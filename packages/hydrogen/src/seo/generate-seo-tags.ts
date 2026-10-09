@@ -567,8 +567,8 @@ export function generateSeoTags(seoInput: SeoConfig): CustomHeadTagObject[] {
           noSnippet && 'nosnippet',
           noTranslate && `notranslate`,
           maxImagePreview && `max-image-preview:${maxImagePreview}`,
-          maxSnippet && `max-snippet:${maxSnippet}`,
-          maxVideoPreview && `max-video-preview:${maxVideoPreview}`,
+          maxSnippet != null && `max-snippet:${maxSnippet}`,
+          maxVideoPreview != null && `max-video-preview:${maxVideoPreview}`,
           unavailableAfter && `unavailable_after:${unavailableAfter}`,
         ];
 
