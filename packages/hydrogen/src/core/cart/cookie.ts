@@ -16,7 +16,13 @@ export function getCartIdFromCookie(input: CartCookieSource): string | null {
   const match = header.match(new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]*)`));
   if (!match || !match[1]) return null;
 
-  const token = decodeURIComponent(match[1]);
+  let token: string;
+  try {
+    token = decodeURIComponent(match[1]);
+  } catch {
+    // Treat a malformed cookie value as a missing cart instead of failing the request.
+    return null;
+  }
   if (!token) return null;
 
   return normalizeCartId(token);
