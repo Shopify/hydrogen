@@ -1,3 +1,6 @@
+import {writeJsonResult} from '../../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {setupViteJsonOutputSchema} from '../../../lib/setups/types.js';
 import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import Command from '../../../lib/hydrogen-command.js';
 import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
@@ -22,11 +25,20 @@ import {formatCode, getCodeFormatOptions} from '../../../lib/format-code.js';
 import {hasViteConfig} from '../../../lib/vite-config.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputNewline} from '@shopify/cli-kit/node/output';
+import {createRequire} from 'node:module';
 
 export default class SetupVite extends Command {
-  static description = 'EXPERIMENTAL: Upgrades the project to use Vite.';
+  static get jsonOutputSchema(): typeof setupViteJsonOutputSchema {
+    return setupViteJsonOutputSchema;
+  }
+
+  static descriptionWithMarkdown =
+    'EXPERIMENTAL: Upgrades the project to use Vite.';
+
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
   };
 
@@ -34,10 +46,13 @@ export default class SetupVite extends Command {
     const {flags} = await this.parse(SetupVite);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
-    await runSetupVite({
-      ...flagsToCamelObject(flags),
-      directory,
-    });
+    await runSetupVite(
+      {
+        ...flagsToCamelObject(flags),
+        directory,
+      },
+      flags.json,
+    );
   }
 }
 
@@ -49,10 +64,21 @@ const tailwindPostCSSConfig = `export default {
 };
 `;
 
-export async function runSetupVite({directory}: {directory: string}) {
+export async function executeSetupVite({directory}: {directory: string}) {
   outputNewline();
   if (await hasViteConfig(directory)) {
     throw new AbortError('This project already has a Vite config file.');
+  }
+
+  try {
+    createRequire(joinPath(directory, 'package.json')).resolve(
+      '@shopify/hydrogen/vite',
+    );
+  } catch {
+    throw new AbortError(
+      'The installed Hydrogen version does not include Vite support.',
+      'Upgrade Hydrogen and install your dependencies before running `shopify hydrogen setup vite`.',
+    );
   }
 
   const [rawRemixConfig, pkgJson, formatOptions] = await Promise.all([
@@ -132,7 +158,10 @@ export async function runSetupVite({directory}: {directory: string}) {
       })
       .catch(handlePartialIssue),
 
-    // Adjust dependencies:
+    // This classic Remix migration targets Vite 5 and MiniOxygen 3.1.1.
+    // vite-tsconfig-paths 5.1.4 publishes an optional `vite: "*"` peer.
+    // The Vite 8 peer in this monorepo's lockfile comes from its workspace
+    // override, which is not copied into the migrated project's package.json.
     mergePackageJson(viteAssets, directory, {
       onResult(pkgJson) {
         if (pkgJson.dependencies) {
@@ -398,14 +427,57 @@ export async function runSetupVite({directory}: {directory: string}) {
     },
   ]);
 
+  return {
+    directory,
+    viteConfig: resolvePath(directory, 'vite.config.' + fileExt.slice(0, 2)),
+    serverEntryPoint: resolvePath(directory, serverEntry),
+    dependenciesInstalled: true as const,
+    needsMdxSetup: Boolean(rawRemixConfig.mdx),
+  };
+}
+
+export async function runSetupVite(
+  options: {directory: string},
+  json?: boolean,
+) {
+  const result = await executeSetupVite(options);
+  presentSetupVite(result, json);
+  return result;
+}
+
+export function renderSetupVite({
+  needsMdxSetup,
+}: Awaited<ReturnType<typeof executeSetupVite>>) {
   renderSuccess({
     headline: `Your Vite project is ready!`,
     body: `We've modified your project to use Vite.\nPlease use Git to review the changes.`,
     nextSteps: [
-      rawRemixConfig.mdx
+      needsMdxSetup
         ? 'Setup MDX support in Vite: https://remix.run/docs/en/main/future/vite#add-mdx-plugin'
         : '',
       `See more information about Vite in Remix at https://remix.run/docs/en/main/future/vite`,
     ].filter(Boolean),
   });
+}
+
+export function presentSetupVite(
+  result: Awaited<ReturnType<typeof executeSetupVite>>,
+  json?: boolean,
+) {
+  if (
+    !writeJsonResult(
+      setupViteJsonOutputSchema,
+      {
+        status: 'success',
+        changed: true,
+        directory: resolvePath(result.directory),
+        viteConfigPath: resolvePath(result.viteConfig),
+        serverPath: resolvePath(result.serverEntryPoint),
+        dependenciesInstalled: result.dependenciesInstalled,
+        needsMdxSetup: result.needsMdxSetup,
+      },
+      json,
+    )
+  )
+    renderSetupVite(result);
 }
