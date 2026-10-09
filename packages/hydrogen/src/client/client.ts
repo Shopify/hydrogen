@@ -261,6 +261,9 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
         method: "POST",
         headers: new Headers(requestHeaders),
         body: JSON.stringify({ query: queryText, variables }),
+        // Never follow redirects: runtimes forward custom Shopify credential headers across
+        // origins, so a 3xx fails closed through the redirect check below.
+        redirect: "manual",
         signal: externalSignals.length > 0 ? AbortSignal.any(externalSignals) : undefined,
       };
 
@@ -275,13 +278,27 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       const response = await (resolvedFetch as ResolvedStorefrontFetch)(apiUrl, init, cacheOptions);
 
       responseHeaders = response.headers;
+      requestId = responseHeaders.get("x-request-id") ?? undefined;
+      status = response.status;
+
+      // Reject redirects before capturing headers so a rejected response can't set cookies.
+      // Browsers hide a manual redirect's status behind an opaque response, so leave it out.
+      const isOpaqueRedirect = response.type === "opaqueredirect";
+      if (isOpaqueRedirect || (status >= 300 && status < 400)) {
+        // Don't await: a cancel waits on any unread clone (tee) a custom fetch kept.
+        void response.body?.cancel().catch(() => {});
+        throw new StorefrontApiError(
+          isOpaqueRedirect
+            ? "SFAPI responded with a redirect; redirects are not followed"
+            : `SFAPI responded with a redirect (${status}); redirects are not followed`,
+          { status: isOpaqueRedirect ? undefined : status, requestId, queryText, variables },
+        );
+      }
+
       const hydrogenCacheStatus = getHydrogenCacheStatus(responseHeaders);
       if (hydrogenCacheStatus !== "hit") {
         requestContext.captureSubrequestHeaders(responseHeaders);
       }
-
-      requestId = responseHeaders.get("x-request-id") ?? undefined;
-      status = response.status;
 
       if (!response.ok) {
         const bodyHint = await response.text().catch(() => "");
