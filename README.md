@@ -195,6 +195,10 @@ You won't hand‑write most of this — your agent will. Setup copies these skil
 | `hydrogen-analytics` | Storefront analytics & consent |
 | `hydrogen-oxygen` | Making a storefront Oxygen‑compatible |
 | `hydrogen-smoke-test` | Runtime verification of the wired storefront |
+| `hydrogen-customer-account` | Customer Account API sessions, login/OAuth handlers, account data |
+| `hydrogen-cart-metafields` | Reading and writing cart metafields |
+| `hydrogen-local-https` | Trusted local HTTPS for Customer Account development |
+| `migrate-to-hydrogen-2026-10` | Migrating a classic Hydrogen storefront to the 2026-10 library |
 
 Browse them in [`packages/hydrogen/skills`](./packages/hydrogen/skills).
 
