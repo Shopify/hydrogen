@@ -1371,7 +1371,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@19600",
+          "name": "__@toStringTag@19344",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         }
@@ -1452,7 +1452,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@19600",
+          "name": "__@toStringTag@19344",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         }
@@ -3920,7 +3920,7 @@
     "src/core/request-routing/handle-shopify-routes.ts": {
       "filePath": "src/core/request-routing/handle-shopify-routes.ts",
       "name": "HandleShopifyRoutesForDocs",
-      "description": "Serves Shopify's storefront endpoints and your custom route handlers from your app. Call the function at the start of request handling, before your framework's router.\n\nWhen a route matches, the function returns a promise for the response. Return that response as is, because the response already carries the request context's headers. When no route matches, the function returns `null` synchronously, and your framework's router handles the request. The function throws when `requestContext` differs from the Storefront API client's request context. When a route handler throws, the returned promise rejects. Inside a `try` block, use `return await` on the result.\n\nThe function checks these routes in order and returns the first match: the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.\n\nSome routes answer unsupported methods with a `405` response. A registered handler path returns `405` for any method that no handler on that path registers. Checkout and cart permalinks accept only `GET` and `HEAD`. Buy permalinks accept only `GET`, and the UCP MCP proxy accepts only `POST`.\n\nWhen your bundler resolves the package's `development` export condition, the function also serves the GraphiQL explorer at `/graphiql` for GET requests that match no other route, and accepts a `graphiql` option. Set `graphiql.customerAccount` to an object with `apiUrl`, `accessToken`, and `schemaUrl` to add a Customer Account API tab. The explorer skips the tab when it can't fetch the schema.",
+      "description": "Serves Shopify's storefront endpoints and your custom route handlers from your app. Call the function at the start of request handling, before your framework's router.\n\nWhen a route matches, the function returns a promise for the response. Return that response as is, because the response already carries the request context's headers. When no route matches, the function returns `null` synchronously, and your framework's router handles the request. The function throws when `requestContext` differs from the Storefront API client's request context. When a route handler throws, the returned promise rejects. Inside a `try` block, use `return await` on the result.\n\nThe function checks these routes in order and returns the first match: the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, the UCP business profile at `/.well-known/ucp`, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.\n\nSome routes answer unsupported methods with a `405` response. A registered handler path returns `405` for any method that no handler on that path registers. Checkout and cart permalinks accept only `GET` and `HEAD`. Buy permalinks accept only `GET`, and the UCP MCP proxy accepts only `POST`.\n\nWhen your bundler resolves the package's `development` export condition, the function also serves the GraphiQL explorer at `/graphiql` for GET requests that match no other route, and accepts a `graphiql` option. Set `graphiql.customerAccount` to an object with `apiUrl`, `accessToken`, and `schemaUrl` to add a Customer Account API tab. The explorer skips the tab when it can't fetch the schema.",
       "isPublicDocs": true,
       "params": [
         {
@@ -6957,7 +6957,7 @@
         {
           "filePath": "src/core/cart/buyer-identity-sync.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@22178",
+          "name": "__@cartBuyerIdentitySync@21922",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to `createCustomerAccountServerHandlers` through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         }
@@ -7366,7 +7366,7 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@23708",
+          "name": "__@cartServerHandlersCartQuery@23509",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -7416,14 +7416,14 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@22178",
+          "name": "__@cartBuyerIdentitySync@21922",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to `createCustomerAccountServerHandlers` through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         },
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@23708",
+          "name": "__@cartServerHandlersCartQuery@23509",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -10079,7 +10079,7 @@
         {
           "filePath": "src/core/predictive-search/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@predictiveSearchServerHandlersQuery@26634",
+          "name": "__@predictiveSearchServerHandlersQuery@26435",
           "value": "PredictiveSearchQueryForOptions<TOptions>",
           "description": "Query that the handlers run, with any custom fragments."
         },
