@@ -3,6 +3,7 @@ import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {inTemporaryDirectory, writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {
+  isTTY,
   renderConfirmationPrompt,
   renderSelectPrompt,
 } from '@shopify/cli-kit/node/ui';
@@ -23,6 +24,7 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
   >('@shopify/cli-kit/node/ui');
   return {
     ...original,
+    isTTY: vi.fn(),
     renderConfirmationPrompt: vi.fn(),
     renderSelectPrompt: vi.fn(),
   };
@@ -61,6 +63,7 @@ const processExit = vi.spyOn(process, 'exit');
 
 describe('pushVariables', () => {
   beforeEach(async () => {
+    vi.mocked(isTTY).mockReturnValue(true);
     processExit.mockImplementation((() => {
       throw 'mockExit';
     }) as any);
@@ -259,39 +262,42 @@ describe('pushVariables', () => {
     });
   });
 
-  it('exits if variables are identical', async () => {
-    vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
-      id: SHOPIFY_CONFIG.storefront.id,
-      environmentVariables: [
-        {
-          id: '1',
-          key: 'EXISTING_TOKEN',
-          value: '1',
-          isSecret: false,
-          readOnly: false,
-        },
-        {
-          id: '2',
-          key: 'SECOND_TOKEN',
-          value: '2',
-          isSecret: false,
-          readOnly: false,
-        },
-      ],
-    });
+  it.each([false, true])(
+    'exits if variables are identical (dryRun: %s)',
+    async (dryRun) => {
+      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+        id: SHOPIFY_CONFIG.storefront.id,
+        environmentVariables: [
+          {
+            id: '1',
+            key: 'EXISTING_TOKEN',
+            value: '1',
+            isSecret: false,
+            readOnly: false,
+          },
+          {
+            id: '2',
+            key: 'SECOND_TOKEN',
+            value: '2',
+            isSecret: false,
+            readOnly: false,
+          },
+        ],
+      });
 
-    await inTemporaryDirectory(async (tmpDir) => {
-      const filePath = joinPath(tmpDir, envFile);
-      await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
-      await expect(
-        runEnvPush({path: tmpDir, env: 'preview', envFile}),
-      ).resolves.not.toThrow();
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, envFile);
+        await writeFile(filePath, 'EXISTING_TOKEN=1\nSECOND_TOKEN=2');
+        await expect(
+          runEnvPush({path: tmpDir, env: 'preview', envFile, dryRun}),
+        ).resolves.not.toThrow();
 
-      expect(outputMock.info()).toMatch(
-        /No changes to your environment variables/,
-      );
-    });
-  });
+        expect(outputMock.info()).toMatch(
+          /No changes to your environment variables/,
+        );
+      });
+    },
+  );
 
   it('renders a diff when a variable is updated', async () => {
     vi.mocked(renderConfirmationPrompt).mockResolvedValue(true);

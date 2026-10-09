@@ -9,7 +9,7 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
-import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
+import {isTTY, renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 
 import {type AdminSession, login} from '../../../lib/auth.js';
 import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environments.js';
@@ -26,6 +26,7 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
   >('@shopify/cli-kit/node/ui');
   return {
     ...original,
+    isTTY: vi.fn(),
     renderConfirmationPrompt: vi.fn(),
   };
 });
@@ -55,6 +56,7 @@ describe('pullVariables', () => {
   };
 
   beforeEach(async () => {
+    vi.mocked(isTTY).mockReturnValue(true);
     vi.mocked(login).mockResolvedValue({
       session: ADMIN_SESSION,
       config: SHOPIFY_CONFIG,
@@ -313,7 +315,6 @@ describe('pullVariables', () => {
       BACKSLASH: 'a\\b',
       DOUBLE_QUOTES: 'value"with"quotes',
       SINGLE_QUOTE: "it's",
-      SINGLE_QUOTE_AND_DOLLAR: "it's $5",
       HASH: 'a#b',
       SPACES: '  padded value  ',
       TAB: 'a\tb',
@@ -324,6 +325,8 @@ describe('pullVariables', () => {
       MULTILINE_KEY:
         '-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA04up8hoqzS1...\n-----END RSA PRIVATE KEY-----',
       TABS_AND_RETURNS: 'line1\tcolumn2\rreturn\nline2',
+      MULTILINE_QUOTES_AND_HASH:
+        'snapshot test # "quoted" $literal\\path\nsecond line',
     };
 
     beforeEach(() => {
@@ -340,6 +343,30 @@ describe('pullVariables', () => {
 
         const {variables} = await readAndParseDotEnv(filePath);
         expect(variables).toEqual(ROUND_TRIP_VALUES);
+      });
+    });
+
+    it.each([
+      'private-value \' " ` #\r',
+      "it's $5",
+      'it\'s "quoted" # literal',
+      "it's a literal \\n, not a newline",
+      'touch pwned; echo "\'"',
+      "it's $(touch pwned)",
+      "it's `touch pwned`",
+    ])('rejects unsafe or unsupported quoting (%#)', async (value) => {
+      mockVariables({KEY: value});
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, envFile);
+        await writeFile(filePath, 'LOCAL_ONLY=keep-me');
+        await expect(runEnvPull({path: tmpDir, envFile})).rejects.toThrow(
+          'An environment variable cannot be represented in dotenv format without changing its value.',
+        );
+        expect(await readFile(filePath)).toBe('LOCAL_ONLY=keep-me');
+        if (process.platform !== 'win32') {
+          execFileSync('sh', ['-c', `set -a; . ./${envFile}`], {cwd: tmpDir});
+          expect(await fileExists(joinPath(tmpDir, 'pwned'))).toBe(false);
+        }
       });
     });
 

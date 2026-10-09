@@ -928,7 +928,7 @@
     "hydrogen:env:list": {
       "aliases": [],
       "args": {},
-      "description": "List the environments on your linked Hydrogen storefront.",
+      "description": "Lists all environments available on the linked Hydrogen storefront.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenEnvListResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"partial\",\n        \"skipped\",\n        \"cancelled\"\n      ]\n    },\n    \"storefront\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/definitions/Storefront\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    },\n    \"environments\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Environment\"\n      }\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"storefront\",\n    \"environments\"\n  ],\n  \"additionalProperties\": false,\n  \"description\": \"The complete environment list for the linked storefront.\",\n  \"title\": \"HydrogenEnvListResult\",\n  \"definitions\": {\n    \"Environment\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefrontEnvironment\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefrontEnvironment GID.\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"handle\": {\n          \"type\": \"string\"\n        },\n        \"branch\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        },\n        \"createdAt\": {\n          \"type\": \"string\",\n          \"format\": \"date-time\"\n        },\n        \"type\": {\n          \"type\": \"string\",\n          \"description\": \"Upstream environment type; known values are PREVIEW, PRODUCTION, CUSTOM.\"\n        },\n        \"url\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"format\": \"uri\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"name\",\n        \"handle\",\n        \"branch\",\n        \"createdAt\",\n        \"type\",\n        \"url\"\n      ],\n      \"additionalProperties\": false\n    },\n    \"Storefront\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefront\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefront GID.\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"productionUrl\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"format\": \"uri\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"name\",\n        \"productionUrl\"\n      ],\n      \"additionalProperties\": false\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -957,6 +957,15 @@
           "env": "SHOPIFY_FLAG_VERBOSE",
           "hidden": false,
           "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -990,7 +999,7 @@
     "hydrogen:env:pull": {
       "aliases": [],
       "args": {},
-      "description": "Populate your .env with variables from your Hydrogen storefront.",
+      "description": "Pulls environment variables from the linked Hydrogen storefront and writes them to an `.env` file.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenEnvPullResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"partial\",\n        \"skipped\",\n        \"cancelled\"\n      ]\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"path\": {\n      \"type\": \"string\"\n    },\n    \"storefrontGid\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefront\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefront GID.\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ],\n      \"description\": \"A Shopify HydrogenStorefront GID.\"\n    },\n    \"storefrontName\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"environment\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"variables\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Variable\"\n      }\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"path\",\n    \"storefrontGid\",\n    \"storefrontName\",\n    \"environment\",\n    \"variables\"\n  ],\n  \"additionalProperties\": false,\n  \"description\": \"The dotenv file keeps its native format. The result reports variable metadata without values.\",\n  \"title\": \"HydrogenEnvPullResult\",\n  \"definitions\": {\n    \"Variable\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"id\": {\n          \"type\": \"string\",\n          \"pattern\": \"^\\\\d+$\",\n          \"description\": \"The decimal HydrogenStorefrontEnvironmentVariable ID, not a GID.\"\n        },\n        \"isSecret\": {\n          \"type\": \"boolean\"\n        },\n        \"readOnly\": {\n          \"type\": \"boolean\"\n        }\n      },\n      \"required\": [\n        \"name\"\n      ],\n      \"additionalProperties\": false,\n      \"description\": \"Metadata only: variable spelling is preserved and values are never included. Unknown metadata is omitted.\"\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -1019,6 +1028,15 @@
           "env": "SHOPIFY_FLAG_VERBOSE",
           "hidden": false,
           "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1091,7 +1109,7 @@
     "hydrogen:env:push": {
       "aliases": [],
       "args": {},
-      "description": "Push environment variables from the local .env file to your linked Hydrogen storefront.",
+      "description": "Push environment variables from the local .env file to your linked Hydrogen storefront.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenEnvPushResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"partial\",\n        \"skipped\",\n        \"cancelled\"\n      ]\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"dryRun\": {\n      \"type\": \"boolean\"\n    },\n    \"path\": {\n      \"type\": \"string\"\n    },\n    \"environment\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/definitions/Environment\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    },\n    \"variables\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Variable\"\n      }\n    },\n    \"skipped\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Variable\"\n      }\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"dryRun\",\n    \"path\",\n    \"environment\",\n    \"variables\",\n    \"skipped\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenEnvPushResult\",\n  \"definitions\": {\n    \"Environment\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefrontEnvironment\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefrontEnvironment GID.\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"handle\": {\n          \"type\": \"string\"\n        },\n        \"branch\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        },\n        \"createdAt\": {\n          \"type\": \"string\",\n          \"format\": \"date-time\"\n        },\n        \"type\": {\n          \"type\": \"string\",\n          \"description\": \"Upstream environment type; known values are PREVIEW, PRODUCTION, CUSTOM.\"\n        },\n        \"url\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"format\": \"uri\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"name\",\n        \"handle\",\n        \"branch\",\n        \"createdAt\",\n        \"type\",\n        \"url\"\n      ],\n      \"additionalProperties\": false\n    },\n    \"Variable\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"id\": {\n          \"type\": \"string\",\n          \"pattern\": \"^\\\\d+$\",\n          \"description\": \"The decimal HydrogenStorefrontEnvironmentVariable ID, not a GID.\"\n        },\n        \"isSecret\": {\n          \"type\": \"boolean\"\n        },\n        \"readOnly\": {\n          \"type\": \"boolean\"\n        }\n      },\n      \"required\": [\n        \"name\"\n      ],\n      \"additionalProperties\": false,\n      \"description\": \"Metadata only: variable spelling is preserved and values are never included. Unknown metadata is omitted.\"\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -1120,6 +1138,15 @@
           "env": "SHOPIFY_FLAG_VERBOSE",
           "hidden": false,
           "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1177,6 +1204,7 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
+      "descriptionWithMarkdown": "Push environment variables from the local .env file to your linked Hydrogen storefront.",
       "isESM": true,
       "relativePath": [
         "dist",
