@@ -712,13 +712,17 @@ describe("handleShopifyRoutes", () => {
       },
     });
 
-    await handleShopifyRoutes({ request, storefrontClient });
+    const result = await handleShopifyRoutes({ request, storefrontClient });
 
     const [, init] = mockFetch.mock.calls[0];
     const headers = new Headers(init.headers);
     expect(headers.get("Shopify-Storefront-Private-Token")).toBe("test-private-token");
     expect(headers.get("Shopify-Storefront-Buyer-IP")).toBe("10.0.0.2");
     expect(headers.get("X-Shopify-Storefront-Access-Token")).toBeNull();
+    // The private cache policy must survive `safeApplyResponseHeaders()`.
+    expect(result?.headers.get("cache-control")).toBe(
+      "private, no-store, max-age=0, must-revalidate",
+    );
   });
 
   it.each([
