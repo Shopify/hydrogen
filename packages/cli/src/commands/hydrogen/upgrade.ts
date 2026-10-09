@@ -1,3 +1,10 @@
+import {outputWarn} from '@shopify/cli-kit/node/output';
+import {writeJsonResult} from '../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {
+  upgradeJsonOutputSchema,
+  type UpgradeResult,
+} from '../../lib/maintenance/types.js';
 import {createRequire} from 'node:module';
 import semver from 'semver';
 import cliTruncate from 'cli-truncate';
@@ -90,12 +97,17 @@ function getAllRemovedPackages(release: CumulativeRelease): string[] {
 const INSTRUCTIONS_FOLDER = '.hydrogen';
 
 export default class Upgrade extends Command {
+  static get jsonOutputSchema(): typeof upgradeJsonOutputSchema {
+    return upgradeJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown =
     'Upgrade Hydrogen project dependencies, preview features, fixes and breaking changes. The command also generates an instruction file for each upgrade.';
 
-  static description = 'Upgrade Remix and Hydrogen npm dependencies.';
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
     version: Flags.string({
       description: 'A target hydrogen version to update to',
@@ -113,10 +125,13 @@ export default class Upgrade extends Command {
   async run(): Promise<void> {
     const {flags} = await this.parse(Upgrade);
 
-    await runUpgrade({
-      ...flagsToCamelObject(flags),
-      appPath: flags.path ? resolvePath(flags.path) : process.cwd(),
-    });
+    await runUpgrade(
+      {
+        ...flagsToCamelObject(flags),
+        appPath: flags.path ? resolvePath(flags.path) : process.cwd(),
+      },
+      flags.json,
+    );
   }
 }
 
@@ -128,11 +143,40 @@ type UpgradeOptions = {
   force?: boolean;
 };
 
-export async function runUpgrade({
+type UpgradeExecution =
+  | {result: UpgradeResult & {changed: false}}
+  | {result: UpgradeResult & {changed: true}; selectedRelease: Release};
+
+export async function runUpgrade(options: UpgradeOptions, json?: boolean) {
+  const execution = await executeUpgrade(options);
+  await presentUpgradeResult(execution, json);
+}
+
+export async function presentUpgradeResult(
+  execution: UpgradeExecution,
+  json?: boolean,
+) {
+  const {result} = execution;
+  if (writeJsonResult(upgradeJsonOutputSchema, result, json)) return;
+  if ('selectedRelease' in execution) {
+    await displayUpgradeSummary({
+      appPath: result.directory,
+      currentVersion: result.previousVersion,
+      selectedRelease: execution.selectedRelease,
+      instrunctionsFilePath: result.instructionsPath ?? undefined,
+    });
+  } else {
+    renderSuccess({
+      headline: `You are on the latest Hydrogen version: ${result.version}`,
+    });
+  }
+}
+
+export async function executeUpgrade({
   appPath,
   version: targetVersion,
   force = false,
-}: UpgradeOptions) {
+}: UpgradeOptions): Promise<UpgradeExecution> {
   // --version=next is only available when running from monorepo, tests, or CI
   if (targetVersion === 'next') {
     const isInTests = process.env.SHOPIFY_UNIT_TEST === '1';
@@ -188,13 +232,19 @@ export async function runUpgrade({
   });
 
   if (!availableUpgrades?.length) {
-    renderSuccess({
-      headline: `You are on the latest Hydrogen version: ${getAbsoluteVersion(
-        currentVersion,
-      )}`,
-    });
-
-    return;
+    const version = getAbsoluteVersion(currentVersion);
+    return {
+      result: {
+        status: 'success',
+        changed: false,
+        directory: resolvePath(appPath),
+        previousVersion: version,
+        instructionsPath: null,
+        version,
+        packages: [],
+        removedPackages: [],
+      },
+    };
   }
 
   let confirmed = false;
@@ -254,13 +304,34 @@ export async function runUpgrade({
 
   const instrunctionsFilePath = await instrunctionsFilePathPromise;
 
-  // Display a summary of the upgrade and next steps
-  await displayUpgradeSummary({
-    appPath,
-    currentVersion,
-    instrunctionsFilePath,
+  return {
     selectedRelease,
-  });
+    result: {
+      status: 'success',
+      changed: true,
+      directory: resolvePath(appPath),
+      previousVersion: getAbsoluteVersion(currentVersion),
+      version: getPackageVersion(
+        '@shopify/hydrogen',
+        selectedRelease.version,
+        targetVersion,
+      ),
+      instructionsPath: instrunctionsFilePath
+        ? resolvePath(appPath, instrunctionsFilePath)
+        : null,
+      packages: buildUpgradeCommandArgs({
+        selectedRelease,
+        currentDependencies,
+        targetVersion,
+        cumulativeDependencies: cumulativeRelease.dependencies,
+        cumulativeDevDependencies: cumulativeRelease.devDependencies,
+      }),
+      removedPackages: [
+        ...cumulativeRelease.removeDependencies,
+        ...cumulativeRelease.removeDevDependencies,
+      ].filter((name) => name in currentDependencies),
+    },
+  };
 }
 
 /**
@@ -409,9 +480,8 @@ export async function getChangelog(): Promise<ChangeLog> {
       CACHED_CHANGELOG = changelog;
       return changelog;
     } catch (error) {
-      console.warn(
-        `Failed to load local changelog from ${localChangelogPath}:`,
-        (error as Error).message,
+      outputWarn(
+        `Failed to load local changelog from ${localChangelogPath}: ${(error as Error).message}`,
       );
       // Fall through to remote fetch if local fails and not explicitly forced
       if (process.env.FORCE_CHANGELOG_SOURCE === 'local') {
