@@ -95,7 +95,7 @@ export const combinedListingsSettings = {
 
 Create a new `combined-listings.ts` file that contains utilities and settings for handling combined listings.
 
-#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
+#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
 
 ~~~ts
 // Edit these values to customize combined listings' behavior
@@ -540,7 +540,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
    "prettier": "@shopify/prettier-config",
    "dependencies": {
 -    "@shopify/hydrogen": "workspace:*",
-+    "@shopify/hydrogen": "2026.4.0",
++    "@shopify/hydrogen": "2026.4.7",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
      "isbot": "^5.1.22",
@@ -548,17 +548,16 @@ Since it's not possible to directly apply query filters when retrieving collecti
 -    "react-dom": "catalog:",
 +    "react": "^18.3.1",
 +    "react-dom": "^18.3.1",
-     "react-router": "7.14.0",
-     "react-router-dom": "7.14.0"
+     "react-router": "7.16.0",
+     "react-router-dom": "7.16.0"
    },
 @@ -31,14 +31,14 @@
-     "@react-router/dev": "7.14.0",
-     "@react-router/fs-routes": "7.14.0",
+     "@react-router/dev": "7.16.0",
+     "@react-router/fs-routes": "7.16.0",
      "@shopify/cli": "3.93.2",
 -    "@shopify/hydrogen-codegen": "workspace:*",
--    "@shopify/mini-oxygen": "workspace:*",
 +    "@shopify/hydrogen-codegen": "0.3.3",
-+    "@shopify/mini-oxygen": "4.0.2",
+     "@shopify/mini-oxygen": "4.2.3",
      "@shopify/oxygen-workers-types": "^4.1.6",
 -    "@shopify/prettier-config": "catalog:",
 +    "@shopify/prettier-config": "^1.1.2",

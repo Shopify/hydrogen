@@ -71,13 +71,13 @@ Update the README file with custom cart method documentation and an implementati
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Custom Cart Method
  
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
-+This Hydrogen template demonstrates how to implement custom cart methods for inline product option editing. Hydrogen is Shopify's stack for headless commerce, designed to work with [Remix](https://remix.run/), Shopify's full stack web framework.
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the modern multi-strategy router for React. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++This Hydrogen template demonstrates how to implement custom cart methods for inline product option editing. Hydrogen is Shopify's stack for headless commerce, designed to work with [React Router](https://reactrouter.com/), the modern multi-strategy router for React.
 +
 +This template shows how to enable users to change product variants (size, color, etc.) directly within the cart without removing and re-adding items, providing a smoother shopping experience.
  
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
+ [Get familiar with React Router](https://reactrouter.com/start/framework/routing)
 @@ -16,7 +18,29 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
  - Prettier
  - GraphQL generator
@@ -156,9 +156,7 @@ Update the README file with custom cart method documentation and an implementati
 +
  ## Setup for using Customer Account API (`/account` section)
  
--Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
-+Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
-\ No newline at end of file
+ Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 ~~~
 
 ### Step 2: Let customers change variants directly in the cart
@@ -325,7 +323,7 @@ Extend HydrogenCart context with updateLineByOptions method for variant switchin
 #### File: /app/lib/context.ts
 
 ~~~diff
-@@ -1,6 +1,15 @@
+@@ -1,7 +1,16 @@
 -import {createHydrogenContext} from '@shopify/hydrogen';
 +import {
 +  createHydrogenContext,
@@ -336,6 +334,7 @@ Extend HydrogenCart context with updateLineByOptions method for variant switchin
  import {AppSession} from '~/lib/session';
 -import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 +import {CART_QUERY_FRAGMENT, PRODUCT_VARIANT_QUERY} from '~/lib/fragments';
+ import type {CartApiQueryFragment} from 'storefrontapi.generated';
 +import type {
 +  SelectedOptionInput,
 +  CartLineUpdateInput,
@@ -343,11 +342,11 @@ Extend HydrogenCart context with updateLineByOptions method for variant switchin
  
  // Define the additional context object
  const additionalContext = {
-@@ -16,6 +25,15 @@ type AdditionalContextType = typeof additionalContext;
- 
- declare global {
-   interface HydrogenAdditionalContext extends AdditionalContextType {}
-+  
+@@ -21,6 +30,15 @@ declare global {
+   // Augment HydrogenCustomCartFragment with the codegen'd cart fragment type so
+   // that context.cart.get() and all cart mutations return the extended cart type.
+   interface HydrogenCustomCartFragment extends CartApiQueryFragment {}
++
 +  // @description Augment the cart with custom methods for variant selection
 +  interface HydrogenCustomCartMethods {
 +    updateLineByOptions: (
@@ -359,7 +358,7 @@ Extend HydrogenCart context with updateLineByOptions method for variant switchin
  }
  
  /**
-@@ -40,7 +58,8 @@ export async function createHydrogenRouterContext(
+@@ -45,7 +63,8 @@ export async function createHydrogenRouterContext(
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
  
@@ -369,7 +368,7 @@ Extend HydrogenCart context with updateLineByOptions method for variant switchin
      {
        env,
        request,
-@@ -51,6 +70,33 @@ export async function createHydrogenRouterContext(
+@@ -56,6 +75,33 @@ export async function createHydrogenRouterContext(
        i18n: {language: 'EN', country: 'US'},
        cart: {
          queryFragment: CART_QUERY_FRAGMENT,
@@ -527,7 +526,7 @@ Implement the CustomUpdateLineByOptions action handler for processing variant ch
    "prettier": "@shopify/prettier-config",
    "dependencies": {
 -    "@shopify/hydrogen": "workspace:*",
-+    "@shopify/hydrogen": "2026.4.0",
++    "@shopify/hydrogen": "2026.4.7",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
      "isbot": "^5.1.22",
@@ -535,17 +534,16 @@ Implement the CustomUpdateLineByOptions action handler for processing variant ch
 -    "react-dom": "catalog:",
 +    "react": "^18.3.1",
 +    "react-dom": "^18.3.1",
-     "react-router": "7.14.0",
-     "react-router-dom": "7.14.0"
+     "react-router": "7.16.0",
+     "react-router-dom": "7.16.0"
    },
 @@ -31,14 +31,14 @@
-     "@react-router/dev": "7.14.0",
-     "@react-router/fs-routes": "7.14.0",
+     "@react-router/dev": "7.16.0",
+     "@react-router/fs-routes": "7.16.0",
      "@shopify/cli": "3.93.2",
 -    "@shopify/hydrogen-codegen": "workspace:*",
--    "@shopify/mini-oxygen": "workspace:*",
 +    "@shopify/hydrogen-codegen": "0.3.3",
-+    "@shopify/mini-oxygen": "4.0.2",
+     "@shopify/mini-oxygen": "4.2.3",
      "@shopify/oxygen-workers-types": "^4.1.6",
 -    "@shopify/prettier-config": "catalog:",
 +    "@shopify/prettier-config": "^1.1.2",

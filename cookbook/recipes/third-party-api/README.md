@@ -51,7 +51,7 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/lib/createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts) | A GraphQL client factory for third-party APIs with Oxygen caching support |
+| [app/lib/createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts) | A GraphQL client factory for third-party APIs with Oxygen caching support |
 
 ## Steps
 
@@ -59,23 +59,23 @@ _New files added to the template by this recipe._
 
 Add documentation explaining how to integrate external GraphQL APIs with Oxygen caching.
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/templates/skeleton/README.md)
 
 <details>
 
 ~~~diff
-index c584e5370..4c8dceadf 100644
+index d4701706..719873ac 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
 @@ -1,6 +1,6 @@
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Skeleton with Third-party API Integration
  
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
-+Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify's full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, plus an example of integrating third-party GraphQL APIs with Oxygen caching.
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the modern multi-strategy router for React. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the modern multi-strategy router for React. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, plus an example of integrating third-party GraphQL APIs with Oxygen caching.
  
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
+ [Get familiar with React Router](https://reactrouter.com/start/framework/routing)
 @@ -40,6 +40,46 @@ npm run build
  npm run dev
  ```
@@ -132,7 +132,7 @@ index c584e5370..4c8dceadf 100644
 Create a new GraphQL client factory that integrates with Oxygen's caching system.
 This client handles query minification, error handling, and cache key generation.
 
-#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
+#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
 
 <details>
 
@@ -142,6 +142,8 @@ import {
   CacheLong,
   type CachingStrategy,
 } from '@shopify/hydrogen';
+
+export const OPERATION_NAME_PATTERN = /^(query|mutation)\s\w+/;
 
 export function createRickAndMortyClient({
   cache,
@@ -177,7 +179,7 @@ export function createRickAndMortyClient({
           shouldCacheResponse: (body) => !body?.error,
           cacheKey: ['r&m', body],
           displayName:
-            'Rick & Morty - ' + query.match(/^(query|mutation)\s\w+/)?.[0],
+            'Rick & Morty - ' + query.match(OPERATION_NAME_PATTERN)?.[0],
         },
       );
 
@@ -193,12 +195,13 @@ export function createRickAndMortyClient({
   };
 }
 
-function minifyQuery<T extends string>(string: T) {
+export function minifyQuery<T extends string>(string: T) {
   return string
     .replace(/\s*#.*$/gm, '') // Remove GQL comments
     .replace(/\s+/gm, ' ') // Minify spaces
     .trim() as T;
 }
+
 ~~~
 
 </details>
@@ -208,18 +211,18 @@ function minifyQuery<T extends string>(string: T) {
 Import the Rick and Morty client and add it to the Hydrogen context so it's available
 in all routes. Also update TypeScript declarations for proper type support.
 
-#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/lib/context.ts)
+#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/templates/skeleton/app/lib/context.ts)
 
 <details>
 
 ~~~diff
-index 692d5ae17..0635384ad 100644
+index 5a2de1f3..b314aaa6 100644
 --- a/templates/skeleton/app/lib/context.ts
 +++ b/templates/skeleton/app/lib/context.ts
-@@ -1,25 +1,10 @@
- import {createHydrogenContext} from '@shopify/hydrogen';
+@@ -2,29 +2,10 @@ import {createHydrogenContext} from '@shopify/hydrogen';
  import {AppSession} from '~/lib/session';
  import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
+ import type {CartApiQueryFragment} from 'storefrontapi.generated';
 -
 -// Define the additional context object
 -const additionalContext = {
@@ -235,6 +238,10 @@ index 692d5ae17..0635384ad 100644
 -
 -declare global {
 -  interface HydrogenAdditionalContext extends AdditionalContextType {}
+-
+-  // Augment HydrogenCustomCartFragment with the codegen'd cart fragment type so
+-  // that context.cart.get() and all cart mutations return the extended cart type.
+-  interface HydrogenCustomCartFragment extends CartApiQueryFragment {}
 -}
 +import {createRickAndMortyClient} from '~/lib/createRickAndMortyClient.server';
  
@@ -244,7 +251,7 @@ index 692d5ae17..0635384ad 100644
   * Returns HydrogenRouterContextProvider with hybrid access patterns
   * */
  export async function createHydrogenRouterContext(
-@@ -40,6 +25,19 @@ export async function createHydrogenRouterContext(
+@@ -45,6 +26,19 @@ export async function createHydrogenRouterContext(
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
  
@@ -264,7 +271,7 @@ index 692d5ae17..0635384ad 100644
    const hydrogenContext = createHydrogenContext(
      {
        env,
-@@ -58,3 +56,12 @@ export async function createHydrogenRouterContext(
+@@ -63,3 +57,13 @@ export async function createHydrogenRouterContext(
  
    return hydrogenContext;
  }
@@ -276,8 +283,8 @@ index 692d5ae17..0635384ad 100644
 +
 +declare global {
 +  interface HydrogenAdditionalContext extends AdditionalContextType {}
++  interface HydrogenCustomCartFragment extends CartApiQueryFragment {}
 +}
-\ No newline at end of file
 ~~~
 
 </details>
@@ -287,12 +294,12 @@ index 692d5ae17..0635384ad 100644
 Update the homepage to fetch data from the third-party API and display it alongside
 Shopify data. This demonstrates parallel data fetching and proper caching strategies.
 
-#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/_index.tsx)
+#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/templates/skeleton/app/routes/_index.tsx)
 
 <details>
 
 ~~~diff
-index 237edc911..d65e12537 100644
+index 237edc91..d65e1253 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
 @@ -1,7 +1,7 @@
@@ -405,10 +412,10 @@ index 237edc911..d65e12537 100644
 
 
 
-#### File: [package.json](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/package.json)
+#### File: [package.json](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/templates/skeleton/package.json)
 
 ~~~diff
-index 0bb332639..651bbfffa 100644
+index 1a438632..dd657f97 100644
 --- a/templates/skeleton/package.json
 +++ b/templates/skeleton/package.json
 @@ -14,12 +14,12 @@
@@ -416,7 +423,7 @@ index 0bb332639..651bbfffa 100644
    "prettier": "@shopify/prettier-config",
    "dependencies": {
 -    "@shopify/hydrogen": "workspace:*",
-+    "@shopify/hydrogen": "2026.4.0",
++    "@shopify/hydrogen": "2026.4.7",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
      "isbot": "^5.1.22",
@@ -424,17 +431,16 @@ index 0bb332639..651bbfffa 100644
 -    "react-dom": "catalog:",
 +    "react": "^18.3.1",
 +    "react-dom": "^18.3.1",
-     "react-router": "7.14.0",
-     "react-router-dom": "7.14.0"
+     "react-router": "7.16.0",
+     "react-router-dom": "7.16.0"
    },
 @@ -31,14 +31,14 @@
-     "@react-router/dev": "7.14.0",
-     "@react-router/fs-routes": "7.14.0",
+     "@react-router/dev": "7.16.0",
+     "@react-router/fs-routes": "7.16.0",
      "@shopify/cli": "3.93.2",
 -    "@shopify/hydrogen-codegen": "workspace:*",
--    "@shopify/mini-oxygen": "workspace:*",
 +    "@shopify/hydrogen-codegen": "0.3.3",
-+    "@shopify/mini-oxygen": "4.0.2",
+     "@shopify/mini-oxygen": "4.2.3",
      "@shopify/oxygen-workers-types": "^4.1.6",
 -    "@shopify/prettier-config": "catalog:",
 +    "@shopify/prettier-config": "^1.1.2",

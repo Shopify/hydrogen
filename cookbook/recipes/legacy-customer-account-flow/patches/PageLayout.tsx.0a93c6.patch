@@ -1,0 +1,13 @@
+index ed7843be..ab1f2d0c 100644
+--- a/templates/skeleton/app/components/PageLayout.tsx
++++ b/templates/skeleton/app/components/PageLayout.tsx
+@@ -19,7 +19,8 @@ interface PageLayoutProps {
+   cart: Promise<CartApiQueryFragment | null>;
+   footer: Promise<FooterQuery | null>;
+   header: HeaderQuery;
+-  isLoggedIn: Promise<boolean>;
++  // @description Use boolean instead of Promise for legacy authentication
++  isLoggedIn: boolean;
+   publicStoreDomain: string;
+   children?: React.ReactNode;
+ }

@@ -26,25 +26,25 @@ Key features:
 
 Update the README file with custom cart method documentation and an implementation guide.
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/templates/skeleton/README.md)
 
 <details>
 
 ~~~diff
-index c584e5370..d40091392 100644
+index d4701706..d175aba5 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
 @@ -1,6 +1,8 @@
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Custom Cart Method
  
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
-+This Hydrogen template demonstrates how to implement custom cart methods for inline product option editing. Hydrogen is Shopify's stack for headless commerce, designed to work with [Remix](https://remix.run/), Shopify's full stack web framework.
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the modern multi-strategy router for React. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++This Hydrogen template demonstrates how to implement custom cart methods for inline product option editing. Hydrogen is Shopify's stack for headless commerce, designed to work with [React Router](https://reactrouter.com/), the modern multi-strategy router for React.
 +
 +This template shows how to enable users to change product variants (size, color, etc.) directly within the cart without removing and re-adding items, providing a smoother shopping experience.
  
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
+ [Get familiar with React Router](https://reactrouter.com/start/framework/routing)
 @@ -16,7 +18,29 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
  - Prettier
  - GraphQL generator
@@ -123,9 +123,7 @@ index c584e5370..d40091392 100644
 +
  ## Setup for using Customer Account API (`/account` section)
  
--Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
-+Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
-\ No newline at end of file
+ Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 ~~~
 
 </details>
@@ -134,12 +132,12 @@ index c584e5370..d40091392 100644
 
 Add variant selector functionality to cart line items for changing product options.
 
-#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/components/CartLineItem.tsx)
+#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/templates/skeleton/app/components/CartLineItem.tsx)
 
 <details>
 
 ~~~diff
-index 63a0ecd9d..4cf222237 100644
+index 63a0ecd9..4cf22223 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
 @@ -1,6 +1,13 @@
@@ -298,15 +296,15 @@ index 63a0ecd9d..4cf222237 100644
 
 Extend HydrogenCart context with updateLineByOptions method for variant switching.
 
-#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/lib/context.ts)
+#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/templates/skeleton/app/lib/context.ts)
 
 <details>
 
 ~~~diff
-index 692d5ae17..c2dc8b338 100644
+index 5a2de1f3..172e91d1 100644
 --- a/templates/skeleton/app/lib/context.ts
 +++ b/templates/skeleton/app/lib/context.ts
-@@ -1,6 +1,15 @@
+@@ -1,7 +1,16 @@
 -import {createHydrogenContext} from '@shopify/hydrogen';
 +import {
 +  createHydrogenContext,
@@ -317,6 +315,7 @@ index 692d5ae17..c2dc8b338 100644
  import {AppSession} from '~/lib/session';
 -import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 +import {CART_QUERY_FRAGMENT, PRODUCT_VARIANT_QUERY} from '~/lib/fragments';
+ import type {CartApiQueryFragment} from 'storefrontapi.generated';
 +import type {
 +  SelectedOptionInput,
 +  CartLineUpdateInput,
@@ -324,11 +323,11 @@ index 692d5ae17..c2dc8b338 100644
  
  // Define the additional context object
  const additionalContext = {
-@@ -16,6 +25,15 @@ type AdditionalContextType = typeof additionalContext;
- 
- declare global {
-   interface HydrogenAdditionalContext extends AdditionalContextType {}
-+  
+@@ -21,6 +30,15 @@ declare global {
+   // Augment HydrogenCustomCartFragment with the codegen'd cart fragment type so
+   // that context.cart.get() and all cart mutations return the extended cart type.
+   interface HydrogenCustomCartFragment extends CartApiQueryFragment {}
++
 +  // @description Augment the cart with custom methods for variant selection
 +  interface HydrogenCustomCartMethods {
 +    updateLineByOptions: (
@@ -340,7 +339,7 @@ index 692d5ae17..c2dc8b338 100644
  }
  
  /**
-@@ -40,7 +58,8 @@ export async function createHydrogenRouterContext(
+@@ -45,7 +63,8 @@ export async function createHydrogenRouterContext(
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
  
@@ -350,7 +349,7 @@ index 692d5ae17..c2dc8b338 100644
      {
        env,
        request,
-@@ -51,6 +70,33 @@ export async function createHydrogenRouterContext(
+@@ -56,6 +75,33 @@ export async function createHydrogenRouterContext(
        i18n: {language: 'EN', country: 'US'},
        cart: {
          queryFragment: CART_QUERY_FRAGMENT,
@@ -392,12 +391,12 @@ index 692d5ae17..c2dc8b338 100644
 
 Add product options to cart fragments and create PRODUCT_VARIANT_QUERY for fetching variants.
 
-#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/lib/fragments.ts)
+#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/templates/skeleton/app/lib/fragments.ts)
 
 <details>
 
 ~~~diff
-index f6b6b2a36..a289365b3 100644
+index f6b6b2a3..a289365b 100644
 --- a/templates/skeleton/app/lib/fragments.ts
 +++ b/templates/skeleton/app/lib/fragments.ts
 @@ -40,13 +40,19 @@ export const CART_QUERY_FRAGMENT = `#graphql
@@ -467,10 +466,10 @@ index f6b6b2a36..a289365b3 100644
 
 Implement the CustomUpdateLineByOptions action handler for processing variant changes in cart.
 
-#### File: [app/routes/cart.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/app/routes/cart.tsx)
+#### File: [app/routes/cart.tsx](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/templates/skeleton/app/routes/cart.tsx)
 
 ~~~diff
-index 983f6505d..483814267 100644
+index 983f6505..48381426 100644
 --- a/templates/skeleton/app/routes/cart.tsx
 +++ b/templates/skeleton/app/routes/cart.tsx
 @@ -2,6 +2,10 @@ import {useLoaderData, data, type HeadersFunction} from 'react-router';
@@ -512,10 +511,10 @@ index 983f6505d..483814267 100644
 
 
 
-#### File: [package.json](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/templates/skeleton/package.json)
+#### File: [package.json](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/templates/skeleton/package.json)
 
 ~~~diff
-index 0bb332639..651bbfffa 100644
+index 1a438632..dd657f97 100644
 --- a/templates/skeleton/package.json
 +++ b/templates/skeleton/package.json
 @@ -14,12 +14,12 @@
@@ -523,7 +522,7 @@ index 0bb332639..651bbfffa 100644
    "prettier": "@shopify/prettier-config",
    "dependencies": {
 -    "@shopify/hydrogen": "workspace:*",
-+    "@shopify/hydrogen": "2026.4.0",
++    "@shopify/hydrogen": "2026.4.7",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
      "isbot": "^5.1.22",
@@ -531,17 +530,16 @@ index 0bb332639..651bbfffa 100644
 -    "react-dom": "catalog:",
 +    "react": "^18.3.1",
 +    "react-dom": "^18.3.1",
-     "react-router": "7.14.0",
-     "react-router-dom": "7.14.0"
+     "react-router": "7.16.0",
+     "react-router-dom": "7.16.0"
    },
 @@ -31,14 +31,14 @@
-     "@react-router/dev": "7.14.0",
-     "@react-router/fs-routes": "7.14.0",
+     "@react-router/dev": "7.16.0",
+     "@react-router/fs-routes": "7.16.0",
      "@shopify/cli": "3.93.2",
 -    "@shopify/hydrogen-codegen": "workspace:*",
--    "@shopify/mini-oxygen": "workspace:*",
 +    "@shopify/hydrogen-codegen": "0.3.3",
-+    "@shopify/mini-oxygen": "4.0.2",
+     "@shopify/mini-oxygen": "4.2.3",
      "@shopify/oxygen-workers-types": "^4.1.6",
 -    "@shopify/prettier-config": "catalog:",
 +    "@shopify/prettier-config": "^1.1.2",

@@ -53,7 +53,7 @@ steps:
       and volume pricing implementation
     diffs:
       - file: README.md
-        patchFile: README.md.1764cd.patch
+        patchFile: README.md.baf43c.patch
   - type: NEW_FILE
     step: "2"
     name: Create a React context provider to manage company location state across
@@ -72,7 +72,7 @@ steps:
       requirements
     diffs:
       - file: app/components/CartLineItem.tsx
-        patchFile: CartLineItem.tsx.c12ba7.patch
+        patchFile: CartLineItem.tsx.1dcec7.patch
   - type: NEW_FILE
     step: "4"
     name: Build a modal that lets customers choose which company location to use for
@@ -90,7 +90,7 @@ steps:
       customers to easily switch between their company's different locations
     diffs:
       - file: app/components/Header.tsx
-        patchFile: Header.tsx.00776f.patch
+        patchFile: Header.tsx.f04911.patch
   - type: NEW_FILE
     step: "6"
     name: Display volume pricing tiers that show bulk purchase discounts
@@ -108,7 +108,7 @@ steps:
       adding products to cart
     diffs:
       - file: app/components/ProductForm.tsx
-        patchFile: ProductForm.tsx.aa8a24.patch
+        patchFile: ProductForm.tsx.5c1ed6.patch
   - type: NEW_FILE
     step: "8"
     name: Show minimum, maximum, and increment quantity requirements for B2B products
@@ -124,14 +124,14 @@ steps:
       data needed for B2B functionality in cart queries
     diffs:
       - file: app/lib/fragments.ts
-        patchFile: fragments.ts.e564c1.patch
+        patchFile: fragments.ts.b1be1f.patch
   - type: PATCH
     step: "10"
     name: package.json
     description: null
     diffs:
       - file: package.json
-        patchFile: package.json.8e0ff5.patch
+        patchFile: package.json.4f0df2.patch
   - type: NEW_FILE
     step: "10"
     name: Query company locations from the Customer Account API for B2B customers
@@ -146,7 +146,7 @@ steps:
       TypeScript type definitions for company location data
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.8f1e92.patch
+        patchFile: root.tsx.ea707e.patch
   - type: NEW_FILE
     step: "12"
     name: Handle location selection and automatically set location if customer has
@@ -164,7 +164,7 @@ steps:
       in the session and the b2blocations loader can read it back via getBuyer()
     diffs:
       - file: app/routes/cart.tsx
-        patchFile: cart.tsx.825f67.patch
+        patchFile: cart.tsx.49d3d9.patch
   - type: PATCH
     step: "14"
     name: Clear company location and customer data from cart when logging out
@@ -172,7 +172,7 @@ steps:
       selected company location and customer context from the cart session
     diffs:
       - file: app/routes/account_.logout.tsx
-        patchFile: account_.logout.tsx.2930de.patch
+        patchFile: account_.logout.tsx.1ecf7b.patch
   - type: PATCH
     step: "15"
     name: Contextualize product queries with buyer information and display B2B
@@ -182,9 +182,9 @@ steps:
       volume discounts on product pages
     diffs:
       - file: app/routes/products.$handle.tsx
-        patchFile: products.$handle.tsx.30ba8d.patch
+        patchFile: products.$handle.tsx.c96f17.patch
 nextSteps: null
 llms:
   userQueries: []
   troubleshooting: []
-commit: 1040066d20b52667756fd1ebffd8607602a735b4
+commit: a99adac243e092fb19161c5c8e8143ec5f96bbbf

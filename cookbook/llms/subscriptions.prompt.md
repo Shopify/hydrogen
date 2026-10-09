@@ -115,7 +115,7 @@ In this step we'll implement the ability to display subscription options on  pro
 
 Create a new `SellingPlanSelector` component that displays the available subscription options for a product.
 
-##### File: [SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
+##### File: [SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
 
 ~~~tsx
 import type {
@@ -230,7 +230,7 @@ export function SellingPlanSelector({
 
 Add styles for the `SellingPlanSelector` component.
 
-##### File: [selling-plan.css](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css)
+##### File: [selling-plan.css](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css)
 
 ~~~css
 .selling-plan-group {
@@ -759,7 +759,7 @@ In this step we'll implement support for subscription management through an acco
 
 Create GraphQL queries that retrieve the subscription info from the customer account client.
 
-##### File: [CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
+##### File: [CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
 
 ~~~ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
@@ -828,7 +828,7 @@ export const SUBSCRIPTIONS_CONTRACTS_QUERY = `#graphql
 
 Create a GraqhQL mutation to cancel an existing subscription.
 
-##### File: [CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
+##### File: [CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
 
 ~~~ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
@@ -853,7 +853,7 @@ export const SUBSCRIPTION_CANCEL_MUTATION = `#graphql
 
 Create a new account subpage that lets customers manage their existing  subscriptions based on the new GraphQL queries and mutations.
 
-##### File: [account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
+##### File: [account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
 
 ~~~tsx
 import type {
@@ -1078,7 +1078,7 @@ Add a `Subscriptions` link to the account menu so customers can easily access th
 
 Add styles for the Subscriptions page.
 
-##### File: [account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
+##### File: [account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
 
 ~~~css
 .account-subscriptions {
@@ -1146,7 +1146,7 @@ Add styles for the Subscriptions page.
    "prettier": "@shopify/prettier-config",
    "dependencies": {
 -    "@shopify/hydrogen": "workspace:*",
-+    "@shopify/hydrogen": "2026.4.0",
++    "@shopify/hydrogen": "2026.4.7",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
      "isbot": "^5.1.22",
@@ -1154,17 +1154,16 @@ Add styles for the Subscriptions page.
 -    "react-dom": "catalog:",
 +    "react": "^18.3.1",
 +    "react-dom": "^18.3.1",
-     "react-router": "7.14.0",
-     "react-router-dom": "7.14.0"
+     "react-router": "7.16.0",
+     "react-router-dom": "7.16.0"
    },
 @@ -31,14 +31,14 @@
-     "@react-router/dev": "7.14.0",
-     "@react-router/fs-routes": "7.14.0",
+     "@react-router/dev": "7.16.0",
+     "@react-router/fs-routes": "7.16.0",
      "@shopify/cli": "3.93.2",
 -    "@shopify/hydrogen-codegen": "workspace:*",
--    "@shopify/mini-oxygen": "workspace:*",
 +    "@shopify/hydrogen-codegen": "0.3.3",
-+    "@shopify/mini-oxygen": "4.0.2",
+     "@shopify/mini-oxygen": "4.2.3",
      "@shopify/oxygen-workers-types": "^4.1.6",
 -    "@shopify/prettier-config": "catalog:",
 +    "@shopify/prettier-config": "^1.1.2",

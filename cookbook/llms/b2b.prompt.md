@@ -127,7 +127,7 @@ Update the README file with comprehensive B2B commerce documentation, explaining
 
 Create a React context provider that manages the selected company location state and provides location switching functionality throughout the B2B application
 
-#### File: [B2BLocationProvider.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationProvider.tsx)
+#### File: [B2BLocationProvider.tsx](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationProvider.tsx)
 
 ~~~tsx
 import {createContext, useContext, useEffect, useState, useMemo} from 'react';
@@ -232,7 +232,7 @@ Update cart line item quantity controls to honor B2B quantity rules including mi
 
 Create a modal component that displays available company locations and allows B2B customers to select the appropriate location for contextualized pricing
 
-#### File: [B2BLocationSelector.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationSelector.tsx)
+#### File: [B2BLocationSelector.tsx](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationSelector.tsx)
 
 ~~~tsx
 import React from 'react';
@@ -370,7 +370,7 @@ Add a location selector button to the site header that allows B2B customers to e
 
 Create a component that displays volume pricing breaks, showing customers the discounted prices they'll receive for bulk purchases at different quantity thresholds
 
-#### File: [PriceBreaks.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/PriceBreaks.tsx)
+#### File: [PriceBreaks.tsx](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/PriceBreaks.tsx)
 
 ~~~tsx
 import {Money} from '@shopify/hydrogen';
@@ -453,7 +453,7 @@ Update the ProductForm component to accept and handle quantity parameters that e
 
 Create a component that displays B2B quantity rules to customers, showing minimum order quantities, maximum limits, and required increments for business products
 
-#### File: [QuantityRules.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/QuantityRules.tsx)
+#### File: [QuantityRules.tsx](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/QuantityRules.tsx)
 
 ~~~tsx
 import type {Maybe} from '@shopify/hydrogen/customer-account-api-types';
@@ -567,7 +567,7 @@ Update GraphQL fragments to include quantity rules and price break data needed f
    "prettier": "@shopify/prettier-config",
    "dependencies": {
 -    "@shopify/hydrogen": "workspace:*",
-+    "@shopify/hydrogen": "2026.4.0",
++    "@shopify/hydrogen": "2026.4.7",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
      "isbot": "^5.1.22",
@@ -575,17 +575,16 @@ Update GraphQL fragments to include quantity rules and price break data needed f
 -    "react-dom": "catalog:",
 +    "react": "^18.3.1",
 +    "react-dom": "^18.3.1",
-     "react-router": "7.14.0",
-     "react-router-dom": "7.14.0"
+     "react-router": "7.16.0",
+     "react-router-dom": "7.16.0"
    },
 @@ -31,14 +31,14 @@
-     "@react-router/dev": "7.14.0",
-     "@react-router/fs-routes": "7.14.0",
+     "@react-router/dev": "7.16.0",
+     "@react-router/fs-routes": "7.16.0",
      "@shopify/cli": "3.93.2",
 -    "@shopify/hydrogen-codegen": "workspace:*",
--    "@shopify/mini-oxygen": "workspace:*",
 +    "@shopify/hydrogen-codegen": "0.3.3",
-+    "@shopify/mini-oxygen": "4.0.2",
+     "@shopify/mini-oxygen": "4.2.3",
      "@shopify/oxygen-workers-types": "^4.1.6",
 -    "@shopify/prettier-config": "catalog:",
 +    "@shopify/prettier-config": "^1.1.2",
@@ -604,7 +603,7 @@ Update GraphQL fragments to include quantity rules and price break data needed f
 
 Create a GraphQL query that fetches all available company locations for B2B customers from the Customer Account API
 
-#### File: [CustomerLocationsQuery.ts](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/b2b/ingredients/templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts)
+#### File: [CustomerLocationsQuery.ts](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/b2b/ingredients/templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts)
 
 ~~~ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/objects/Customer
@@ -712,7 +711,7 @@ Wrap the application with the B2B location provider context and add TypeScript t
 
 Create a route handler that processes location selection requests and automatically sets the location if a B2B customer only has access to one company location
 
-#### File: [b2blocations.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/b2b/ingredients/templates/skeleton/app/routes/b2blocations.tsx)
+#### File: [b2blocations.tsx](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/b2b/ingredients/templates/skeleton/app/routes/b2blocations.tsx)
 
 ~~~tsx
 import {useLoaderData} from 'react-router';

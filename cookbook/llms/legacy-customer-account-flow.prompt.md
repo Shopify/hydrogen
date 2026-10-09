@@ -100,11 +100,11 @@ Update the README file to document the legacy customer account flow.
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Skeleton with Legacy Customer Account Flow
  
--Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
-+Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify's full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, enhanced with legacy customer account authentication flow.
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the modern multi-strategy router for React. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the modern multi-strategy router for React. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, enhanced with legacy customer account authentication flow.
  
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
- [Get familiar with Remix](https://remix.run/docs/en/v1)
+ [Get familiar with React Router](https://reactrouter.com/start/framework/routing)
  
 +## Legacy Customer Account Flow
 +
@@ -124,7 +124,7 @@ Update the README file to document the legacy customer account flow.
 +
  ## What's included
  
- - Remix
+ - React Router
 ~~~
 
 ### Step 2: Add account link to header navigation
@@ -164,7 +164,7 @@ Add an account link to the header navigation.
 
 Add an account activation route for email verification.
 
-#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
+#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
 
 ~~~tsx
 import {Form, useActionData, data, redirect} from 'react-router';
@@ -345,7 +345,7 @@ Update PageLayout to handle account routes.
 
 Add a password recovery form.
 
-#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
+#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
 
 ~~~tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -608,7 +608,7 @@ Add customer access token validation to the root loader.
 
 Add a customer registration form.
 
-#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.register.tsx)
+#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.register.tsx)
 
 ~~~tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -844,7 +844,7 @@ Convert the catch-all route to use Storefront API authentication.
 
 Add a password reset form with token validation.
 
-#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/1040066d20b52667756fd1ebffd8607602a735b4/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
+#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/a99adac243e092fb19161c5c8e8143ec5f96bbbf/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
 
 ~~~tsx
 import {Form, useActionData, data, redirect} from 'react-router';
@@ -2514,7 +2514,7 @@ Convert the customer profile page to use Storefront API queries.
    "prettier": "@shopify/prettier-config",
    "dependencies": {
 -    "@shopify/hydrogen": "workspace:*",
-+    "@shopify/hydrogen": "2026.4.0",
++    "@shopify/hydrogen": "2026.4.7",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
      "isbot": "^5.1.22",
@@ -2522,17 +2522,16 @@ Convert the customer profile page to use Storefront API queries.
 -    "react-dom": "catalog:",
 +    "react": "^18.3.1",
 +    "react-dom": "^18.3.1",
-     "react-router": "7.14.0",
-     "react-router-dom": "7.14.0"
+     "react-router": "7.16.0",
+     "react-router-dom": "7.16.0"
    },
 @@ -31,14 +31,14 @@
-     "@react-router/dev": "7.14.0",
-     "@react-router/fs-routes": "7.14.0",
+     "@react-router/dev": "7.16.0",
+     "@react-router/fs-routes": "7.16.0",
      "@shopify/cli": "3.93.2",
 -    "@shopify/hydrogen-codegen": "workspace:*",
--    "@shopify/mini-oxygen": "workspace:*",
 +    "@shopify/hydrogen-codegen": "0.3.3",
-+    "@shopify/mini-oxygen": "4.0.2",
+     "@shopify/mini-oxygen": "4.2.3",
      "@shopify/oxygen-workers-types": "^4.1.6",
 -    "@shopify/prettier-config": "catalog:",
 +    "@shopify/prettier-config": "^1.1.2",

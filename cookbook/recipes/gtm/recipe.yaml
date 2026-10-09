@@ -50,14 +50,14 @@ steps:
       instructions.
     diffs:
       - file: README.md
-        patchFile: README.md.1764cd.patch
+        patchFile: README.md.baf43c.patch
   - type: PATCH
     step: "2"
     name: Add GTM domains to Content Security Policy
     description: Configure CSP headers to allow Google Tag Manager and Analytics scripts.
     diffs:
       - file: app/entry.server.tsx
-        patchFile: entry.server.tsx.a8386e.patch
+        patchFile: entry.server.tsx.b7b48d.patch
   - type: NEW_FILE
     step: "3"
     name: Create the analytics component
@@ -71,14 +71,14 @@ steps:
     description: Insert Google Tag Manager tracking code in the head and body sections.
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.8f1e92.patch
+        patchFile: root.tsx.ea707e.patch
   - type: PATCH
     step: "4"
     name: package.json
     description: null
     diffs:
       - file: package.json
-        patchFile: package.json.8e0ff5.patch
+        patchFile: package.json.4f0df2.patch
 nextSteps: |
   After applying this recipe:
 
@@ -104,4 +104,4 @@ nextSteps: |
 llms:
   userQueries: []
   troubleshooting: []
-commit: 1040066d20b52667756fd1ebffd8607602a735b4
+commit: a99adac243e092fb19161c5c8e8143ec5f96bbbf
