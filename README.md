@@ -2,23 +2,23 @@
 
 Hydrogen (`@shopify/hydrogen`) is Shopify's toolkit for building headless storefronts in the JavaScript framework you already use. It ships with agent skills that teach coding agents how to use it.
 
-[Changelog](./packages/hydrogen/CHANGELOG.md)
+[Documentation](https://shopify.dev/docs/storefronts/headless) · [API reference](https://shopify.dev/docs/api/hydrogen/2026-10) · [Changelog](./packages/hydrogen/CHANGELOG.md)
 
 > [!NOTE]
-> This README covers Hydrogen 2026-10 or later. Hydrogen 2026-04 and earlier are on the [`2026-04` branch](https://github.com/Shopify/hydrogen/tree/2026-04).
+> This README covers Hydrogen 2026-10 or later. Hydrogen 2026-04 and earlier are on the [`2026-04` branch](https://github.com/Shopify/hydrogen/tree/2026-04), with docs in [Legacy Hydrogen](https://shopify.dev/docs/storefronts/headless/legacy). To migrate a storefront, follow [Migrate to the latest version of Hydrogen](https://shopify.dev/docs/storefronts/headless/migrate).
 
 ## What's included
 
-- **Storefront API client**: typed `gql()` queries, caching, and typed errors.
-- **Request handlers**: the routes a Shopify storefront needs, such as the Storefront API proxy, `/api/cart`, checkout and cart permalinks, URL redirects, and the MCP endpoints for agents.
-- **Cart**: server handlers, HTML forms that work before JavaScript loads, and a store that shows line changes before the server responds.
-- **Products and collections**: variant selection, collection filters, sorting, and pagination.
-- **Predictive search**: a search store with server handlers and form helpers.
+- **Storefront API client**: typed `gql()` queries, caching, and typed errors. See [Data fetching](https://shopify.dev/docs/storefronts/headless/data-fetching).
+- **Request handlers**: the routes a Shopify storefront needs, such as the Storefront API proxy, `/api/cart`, checkout and cart permalinks, URL redirects, and the MCP endpoints for agents. See [Request handlers](https://shopify.dev/docs/storefronts/headless/request-handlers).
+- **Cart**: server handlers, HTML forms that work before JavaScript loads, and a store that shows line changes before the server responds. See [Cart](https://shopify.dev/docs/storefronts/headless/cart).
+- **Products and collections**: variant selection, collection filters, sorting, and pagination. See [Products](https://shopify.dev/docs/storefronts/headless/products) and [Collections and search](https://shopify.dev/docs/storefronts/headless/collections-search).
+- **Predictive search**: a search store with server handlers and form helpers. See [Collections and search](https://shopify.dev/docs/storefronts/headless/collections-search).
 - **Money**: formats Shopify `MoneyV2` amounts for the buyer's locale and currency.
-- **Markets**: country and language context for Shopify Markets.
-- **Analytics**: Shopify storefront analytics with consent handling.
-- **Shop Pay**: Shop Pay buttons.
-- **Customer accounts**: the Customer Account API client, login and logout handlers, and sessions.
+- **Markets**: country and language context for Shopify Markets. See [Markets](https://shopify.dev/docs/storefronts/headless/markets).
+- **Analytics**: Shopify storefront analytics with consent handling. See [Analytics](https://shopify.dev/docs/storefronts/headless/analytics).
+- **Shop Pay**: Shop Pay buttons. See [Shop Pay](https://shopify.dev/docs/storefronts/headless/shop-pay).
+- **Customer accounts**: the Customer Account API client, login and logout handlers, and sessions. See [Customer accounts](https://shopify.dev/docs/storefronts/headless/customer-accounts).
 
 ## Get started
 
@@ -26,13 +26,15 @@ You need a Shopify store with Storefront API access from the [Headless channel](
 
 ### Deploy a template
 
-**React Router on Oxygen.** Shopify's starter template, [`templates/react-router`](./templates/react-router), deployed to Oxygen from your Shopify admin.
+**React Router on Oxygen.** Shopify's starter template, [`templates/react-router`](./templates/react-router), deployed to [Oxygen](https://shopify.dev/docs/storefronts/headless/deploy/oxygen) from your Shopify admin.
 
 <a href="https://admin.shopify.com/hydrogen/new?template=react-router"><img alt="Deploy to Oxygen" src=".github/images/deploy-to-oxygen.svg" width="182" height="46"></a>
 
 **Next.js on Vercel.** [Vercel Shop](https://github.com/vercel/shop) is a Next.js storefront built on Hydrogen and maintained by Vercel.
 
 <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fshop&project-name=shop&repository-name=shop&demo-title=Vercel+Shop&demo-url=https%3A%2F%2Ftemplate.vercel.shop&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22shopify%22%2C%22productSlug%22%3A%22shopify%22%2C%22protocol%22%3A%22other%22%7D%5D"><img alt="Deploy with Vercel" src="https://vercel.com/button" width="129" height="40"></a>
+
+For a walkthrough of both templates, see [Deploy a template](https://shopify.dev/docs/storefronts/headless/getting-started/deploy-a-template).
 
 ### Add Hydrogen to your project
 
@@ -51,6 +53,8 @@ Set up my store with Shopify.
 ```
 
 The agent follows the `hydrogen-setup` skill. It adds a Storefront API client and request handlers, then builds a home page, collection and search pages, a product page, a cart page and cart drawer, an account page, and consent-gated analytics. It runs your typecheck after each step and smoke-tests the storefront at the end.
+
+To wire Hydrogen in by hand instead, follow [Add Hydrogen to an existing project](https://shopify.dev/docs/storefronts/headless/getting-started/add-to-existing-project).
 
 ### After you upgrade Hydrogen
 
@@ -151,7 +155,7 @@ Hydrogen works in any JavaScript framework that renders on the server. Framework
 
 The projects in [`examples/`](./examples) test Hydrogen across frameworks. They aren't starters and aren't versioned for reuse.
 
-The core depends on web platform APIs (`fetch`, `Request`, `Response`, and Web Crypto) rather than on a specific runtime. It targets Oxygen, Node.js, Cloudflare Workers, Deno, and other runtimes that provide those APIs, including Vercel's. The template and examples in this repository run on Oxygen and Node.js.
+The core depends on web platform APIs (`fetch`, `Request`, `Response`, and Web Crypto) rather than on a specific runtime. It targets Oxygen, Node.js, Cloudflare Workers, Deno, and other runtimes that provide those APIs, including Vercel's. The template and examples in this repository run on Oxygen and Node.js. See [About deploying Hydrogen storefronts](https://shopify.dev/docs/storefronts/headless/deploy), and before you go live, work through the [production checklist](https://shopify.dev/docs/storefronts/headless/production-checklist).
 
 ## Agent skills
 
