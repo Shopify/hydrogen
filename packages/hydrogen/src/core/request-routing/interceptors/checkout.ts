@@ -1,7 +1,8 @@
 import type { StorefrontClient } from "../../../client";
 import { getCart, getCartId } from "../../cart/get-cart";
+import { applyPrivateResponseCacheHeaders } from "../../headers";
 import { getLogger } from "../../logging";
-import { BUY_PERMALINK_RE, CHECKOUT_RE, isHydrogenServerHandoffPath } from "../../url";
+import { BUY_PERMALINK_RE, CART_PERMALINK_RE, CHECKOUT_RE } from "../../url";
 import type { HydrogenRouteInterceptor } from "../route-types";
 
 const log = getLogger("checkout");
@@ -11,7 +12,10 @@ export const handleCheckoutRedirect: HydrogenRouteInterceptor = (
   url,
   { request, storefrontClient },
 ) => {
-  if (!isHydrogenServerHandoffPath(url.pathname)) {
+  // Match only checkout and cart permalinks. Customer account handoff paths belong to the app
+  // router or registered customer account handlers, which run before or after this interceptor.
+  const isCheckout = CHECKOUT_RE.test(url.pathname);
+  if (!isCheckout && !CART_PERMALINK_RE.test(url.pathname)) {
     return null;
   }
 
@@ -19,7 +23,7 @@ export const handleCheckoutRedirect: HydrogenRouteInterceptor = (
     return Promise.resolve(new Response("Method Not Allowed", { status: 405 }));
   }
 
-  const redirectUrlPromise = CHECKOUT_RE.test(url.pathname)
+  const redirectUrlPromise = isCheckout
     ? getCheckoutRedirectUrl(request, storefrontClient)
     : getCartRedirectUrl(request, storefrontClient);
 
@@ -30,10 +34,10 @@ export const handleCheckoutRedirect: HydrogenRouteInterceptor = (
         redirectUrl.searchParams.set("payment", url.searchParams.get("payment") ?? "shop_pay");
       }
 
-      return new Response(null, {
-        status: 302,
-        headers: { location: redirectUrl.toString() },
-      });
+      // The location can carry a buyer-specific checkout URL, so shared caches must never store it.
+      const headers = new Headers({ location: redirectUrl.toString() });
+      applyPrivateResponseCacheHeaders(headers);
+      return new Response(null, { status: 302, headers });
     })
     .catch((error) => {
       log.error("checkout redirect request failed", { error });
