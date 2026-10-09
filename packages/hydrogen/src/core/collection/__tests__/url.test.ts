@@ -82,7 +82,8 @@ describe("parseCollectionParams", () => {
 
     it.each([
       ["filter.v.option.%25FF=Red", { variantOption: { name: "%FF", value: "Red" } }],
-      ["filter.v.option.Big+%ZZ=Red", { variantOption: { name: "Big %ZZ", value: "Red" } }],
+      // `%2B` survives URLSearchParams as a literal `+`, so the fallback must still turn it into a space.
+      ["filter.v.option.Big%2B%ZZ=Red", { variantOption: { name: "Big %ZZ", value: "Red" } }],
       [
         "filter.p.m.%25ZZ.material=leather",
         { productMetafield: { namespace: "%ZZ", key: "material", value: "leather" } },
