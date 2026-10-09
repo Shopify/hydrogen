@@ -1,3 +1,6 @@
+import {writeJsonResult} from '../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {checkJsonOutputSchema} from '../../lib/check/types.js';
 import Command from '../../lib/hydrogen-command.js';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {commonFlags} from '../../lib/flags.js';
@@ -12,12 +15,16 @@ import {
 import {Args} from '@oclif/core';
 
 export default class GenerateRoute extends Command {
+  static get jsonOutputSchema(): typeof checkJsonOutputSchema {
+    return checkJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown = `Checks whether your Hydrogen app includes a set of standard Shopify routes.`;
 
-  static description =
-    'Returns diagnostic information about a Hydrogen storefront.';
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
   };
 
@@ -35,15 +42,36 @@ export default class GenerateRoute extends Command {
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
     if (args.resource === 'routes') {
-      await runCheckRoutes({directory});
+      await runCheckRoutes({directory}, flags.json);
     } else {
       throw new Error('Invalid command argument.');
     }
   }
 }
 
-export async function runCheckRoutes({directory}: {directory: string}) {
+export async function runCheckRoutes(
+  options: {directory: string},
+  json?: boolean,
+) {
+  const result = await checkRoutes(options);
+  if (!writeJsonResult(checkJsonOutputSchema, result, json)) {
+    logMissingRoutes(result.missingRoutes);
+    warnReservedRoutes(result.reservedRoutes);
+  }
+  return result;
+}
+
+export async function checkRoutes({
+  directory,
+}: {
+  directory: string;
+}): Promise<import('../../lib/check/types.js').CheckResult> {
   const remixConfig = await getRemixConfig(directory);
-  logMissingRoutes(findMissingRoutes(remixConfig));
-  warnReservedRoutes(findReservedRoutes(remixConfig));
+  const missingRoutes = findMissingRoutes(remixConfig);
+  const reservedRoutes = findReservedRoutes(remixConfig);
+  return {
+    valid: missingRoutes.length === 0 && reservedRoutes.length === 0,
+    missingRoutes,
+    reservedRoutes,
+  };
 }

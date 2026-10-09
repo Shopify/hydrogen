@@ -1,3 +1,4 @@
+import {isJsonOutput} from './json-output.js';
 import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
@@ -188,7 +189,7 @@ export async function executeReactRouterCodegen(options: {
   } else {
     execSync('npx react-router typegen', {
       cwd: options.rootDirectory,
-      stdio: 'inherit',
+      stdio: isJsonOutput() ? 'pipe' : 'inherit',
     });
   }
 }
