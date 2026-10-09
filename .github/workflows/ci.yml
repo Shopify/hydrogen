@@ -3,7 +3,7 @@ on:
   pull_request:
   push:
     branches:
-      - main
+      - 2026-04
 
 jobs:
   check-node-version:
