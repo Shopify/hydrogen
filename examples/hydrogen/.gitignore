@@ -1,0 +1,11 @@
+node_modules
+/.cache
+/build
+/dist
+/public/build
+/.mf
+.env
+.shopify
+.react-router
+test-results
+playwright-report
