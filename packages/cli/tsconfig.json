@@ -10,7 +10,6 @@
     "types": ["node", "react-router"],
     "outDir": "dist",
     "paths": {
-      "~/mini-oxygen/*": ["../mini-oxygen/src/*"],
       "~/hydrogen/*": ["../hydrogen/src/*"]
     }
   }

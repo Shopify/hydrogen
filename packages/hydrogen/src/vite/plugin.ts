@@ -8,7 +8,7 @@ import type {HydrogenPluginOptions} from './types.js';
 import {type RequestEventPayload, emitRequestEvent} from './request-events.js';
 
 // Do not import JS from here, only types
-import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
+import type {OxygenPlugin} from '@shopify/mini-oxygen/vite';
 import {getCompatDate} from './compat-date.js';
 
 export type {HydrogenPluginOptions};

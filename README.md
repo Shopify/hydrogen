@@ -56,7 +56,6 @@ Hydrogen is organized as a [monorepo](https://monorepo.tools/), which includes m
 | [`@shopify/cli-hydrogen`](/packages/cli/)                  | [![Latest badge](https://img.shields.io/npm/v/@shopify/cli-hydrogen/latest.svg)](https://www.npmjs.com/package/@shopify/cli-hydrogen)         | Hydrogen extension for [Shopify CLI](https://shopify.dev/docs/custom-storefronts/hydrogen/cli).                | [Readme](/packages/cli#readme)              |
 | [`@shopify/create-hydrogen`](/packages/create-hydrogen/)   | [![Latest badge](https://img.shields.io/npm/v/@shopify/create-hydrogen/latest.svg)](https://www.npmjs.com/package/@shopify/create-hydrogen)   | Generate a new Hydrogen project from the command line.                                                         | [Readme](/packages/create-hydrogen#readme)  |
 | [`@shopify/hydrogen-codegen`](/packages/hydrogen-codegen/) | [![Latest badge](https://img.shields.io/npm/v/@shopify/hydrogen-codegen/latest.svg)](https://www.npmjs.com/package/@shopify/hydrogen-codegen) | Generate types for Storefront API and Customer Account API queries automatically.                              | [Readme](/packages/hydrogen-codegen#readme) |
-| [`@shopify/mini-oxygen`](/packages/mini-oxygen/)           | [![Latest badge](https://img.shields.io/npm/v/@shopify/mini-oxygen/latest.svg)](https://www.npmjs.com/package/@shopify/mini-oxygen)           | A local runtime for Hydrogen apps that simulates the Oxygen production environment.                            | [Readme](/packages/mini-oxygen#readme)      |
 
 ## Versioning
 

@@ -11,8 +11,7 @@
     "jsx": "react-jsx",
     "types": ["node", "vite/client", "vitest/globals"],
     "paths": {
-      "@shopify/hydrogen": ["./src"],
-      "~/mini-oxygen/*": ["../mini-oxygen/src/*"]
+      "@shopify/hydrogen": ["./src"]
     }
   }
 }

@@ -8,6 +8,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import {readFile} from 'node:fs/promises';
+import {createRequire} from 'node:module';
 import {tmpdir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
@@ -53,7 +54,7 @@ function createSkeletonFixture({
       .replace(
         "from '@shopify/mini-oxygen/vite'",
         `from '${sourceImport(
-          join(repoRoot, 'packages/mini-oxygen/src/vite/plugin.ts'),
+          createRequire(import.meta.url).resolve('@shopify/mini-oxygen/vite'),
         )}'`,
       ),
   );

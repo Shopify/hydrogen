@@ -32,7 +32,7 @@
     "@react-router/fs-routes": "7.16.0",
     "@shopify/cli": "3.93.2",
     "@shopify/hydrogen-codegen": "workspace:*",
-    "@shopify/mini-oxygen": "workspace:*",
+    "@shopify/mini-oxygen": "4.2.3",
     "@shopify/oxygen-workers-types": "^4.1.6",
     "@shopify/prettier-config": "catalog:",
     "@total-typescript/ts-reset": "^0.6.1",

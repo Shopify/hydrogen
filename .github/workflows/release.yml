@@ -483,7 +483,6 @@ jobs:
             '@shopify/hydrogen',
             '@shopify/hydrogen-codegen',
             '@shopify/hydrogen-react',
-            '@shopify/mini-oxygen',
             '@shopify/remix-oxygen',
           ]);
           const SNAPSHOT_VERSION = /^0\.0\.0-snapshot-\d{14}$/;
@@ -639,7 +638,7 @@ jobs:
             let body;
             if (PUBLISH_RESULT === 'success') {
               const published = JSON.parse(PUBLISHED);
-              const highlighted = ['@shopify/hydrogen', '@shopify/cli-hydrogen', '@shopify/hydrogen-codegen', '@shopify/mini-oxygen'];
+              const highlighted = ['@shopify/hydrogen', '@shopify/cli-hydrogen', '@shopify/hydrogen-codegen'];
               const shown = published.filter(({name}) => highlighted.includes(name));
               const versions = (shown.length ? shown : published)
                 .map(({name, version}) => `"${name}": "${version}"`)

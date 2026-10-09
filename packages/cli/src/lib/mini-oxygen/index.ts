@@ -7,7 +7,7 @@ export type MiniOxygen = MiniOxygenInstance;
 export {DEFAULT_INSPECTOR_PORT} from './common.js';
 
 export async function buildAssetsUrl(port: number, root: string) {
-  type MiniOxygenType = typeof import('~/mini-oxygen/worker/index.js');
+  type MiniOxygenType = typeof import('@shopify/mini-oxygen');
   const {buildAssetsUrl: _buildAssetsUrl} = await importLocal<MiniOxygenType>(
     '@shopify/mini-oxygen',
     root,

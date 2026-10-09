@@ -6,7 +6,6 @@ packages:
   - packages/hydrogen-codegen
   - packages/hydrogen-react
   - packages/hydrogen
-  - packages/mini-oxygen
   - packages/remix-oxygen
   - templates/skeleton
 

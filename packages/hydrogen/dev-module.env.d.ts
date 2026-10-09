@@ -25,11 +25,6 @@ declare global {
   interface ExecutionContext {
     waitUntil: WaitUntil;
   }
-
-  /**
-   * This type is used to import types from mini-oxygen
-   */
-  type ExportedHandlerFetchHandler = Function;
 }
 
 declare module 'react-router' {

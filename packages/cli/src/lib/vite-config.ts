@@ -9,7 +9,7 @@ import {importVite} from './import-utils.js';
 
 // Do not import JS from here, only types
 import type {HydrogenPlugin} from '~/hydrogen/vite/plugin.js';
-import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
+import type {OxygenPlugin} from '@shopify/mini-oxygen/vite';
 import {
   hasRemixConfigFile,
   ResolvedRRConfig,

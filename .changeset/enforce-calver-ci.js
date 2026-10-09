@@ -361,7 +361,7 @@ function main() {
   const versions = readPackageVersions();
 
   // Skip CalVer enforcement if no CalVer packages were bumped by changesets
-  // This prevents semver-only releases (CLI, mini-oxygen) from touching CalVer packages
+  // This prevents semver-only releases (CLI) from touching CalVer packages
   let hasCalVerChanges = false;
   for (const [pkgName, data] of Object.entries(versions)) {
     if (data.pkg.version !== data.oldVersion) {

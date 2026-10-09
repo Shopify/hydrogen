@@ -98,6 +98,7 @@
     "@react-router/dev": "7.16.0",
     "@shopify/generate-docs": "catalog:",
     "@shopify/hydrogen-codegen": "workspace:*",
+    "@shopify/mini-oxygen": "4.2.3",
     "@testing-library/jest-dom": "^6.6.3",
     "@types/node": "catalog:",
     "@types/react": "catalog:",

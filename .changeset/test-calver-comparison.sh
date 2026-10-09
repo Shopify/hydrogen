@@ -118,7 +118,6 @@ INITIAL_HYDROGEN=$(grep '"version"' packages/hydrogen/package.json | cut -d'"' -
 INITIAL_HYDROGEN_REACT=$(grep '"version"' packages/hydrogen-react/package.json | cut -d'"' -f4)
 INITIAL_CLI=$(grep '"version"' packages/cli/package.json | cut -d'"' -f4)
 INITIAL_CREATE=$(grep '"version"' packages/create-hydrogen/package.json | cut -d'"' -f4)
-INITIAL_MINIOXY=$(grep '"version"' packages/mini-oxygen/package.json 2>/dev/null | cut -d'"' -f4 || echo "N/A")
 INITIAL_SKELETON=$(grep '"version"' templates/skeleton/package.json 2>/dev/null | cut -d'"' -f4 || echo "N/A")
 
 echo -e "${BOLD}Current Package Versions:${NC}"
@@ -129,9 +128,6 @@ printf "│ %-31s │ %-12s │\n" "@shopify/hydrogen" "$INITIAL_HYDROGEN"
 printf "│ %-31s │ %-12s │\n" "@shopify/hydrogen-react" "$INITIAL_HYDROGEN_REACT"
 printf "│ %-31s │ %-12s │\n" "@shopify/cli-hydrogen" "$INITIAL_CLI"
 printf "│ %-31s │ %-12s │\n" "@shopify/create-hydrogen" "$INITIAL_CREATE"
-if [ "$INITIAL_MINIOXY" != "N/A" ]; then
-    printf "│ %-31s │ %-12s │\n" "@shopify/mini-oxygen" "$INITIAL_MINIOXY"
-fi
 if [ "$INITIAL_SKELETON" != "N/A" ]; then
     printf "│ %-31s │ %-12s │\n" "skeleton" "$INITIAL_SKELETON"
 fi
@@ -322,7 +318,6 @@ STANDARD_HYDROGEN=$(grep '"version"' packages/hydrogen/package.json | cut -d'"' 
 STANDARD_HYDROGEN_REACT=$(grep '"version"' packages/hydrogen-react/package.json | cut -d'"' -f4)
 STANDARD_CLI=$(grep '"version"' packages/cli/package.json | cut -d'"' -f4)
 STANDARD_CREATE=$(grep '"version"' packages/create-hydrogen/package.json | cut -d'"' -f4)
-STANDARD_MINIOXY=$(grep '"version"' packages/mini-oxygen/package.json 2>/dev/null | cut -d'"' -f4 || echo "N/A")
 STANDARD_SKELETON=$(grep '"version"' templates/skeleton/package.json 2>/dev/null | cut -d'"' -f4 || echo "N/A")
 
 print_info "Resetting and running CalVer version (with enforcement)..."
@@ -369,7 +364,6 @@ CALVER_HYDROGEN=$(grep '"version"' packages/hydrogen/package.json | cut -d'"' -f
 CALVER_HYDROGEN_REACT=$(grep '"version"' packages/hydrogen-react/package.json | cut -d'"' -f4)
 CALVER_CLI=$(grep '"version"' packages/cli/package.json | cut -d'"' -f4)
 CALVER_CREATE=$(grep '"version"' packages/create-hydrogen/package.json | cut -d'"' -f4)
-CALVER_MINIOXY=$(grep '"version"' packages/mini-oxygen/package.json 2>/dev/null | cut -d'"' -f4 || echo "N/A")
 CALVER_SKELETON=$(grep '"version"' templates/skeleton/package.json 2>/dev/null | cut -d'"' -f4 || echo "N/A")
 
 echo -e "${GREEN}✓${NC} Both versioning methods complete"
@@ -421,18 +415,6 @@ if [ "$STANDARD_CREATE" != "$CALVER_CREATE" ]; then
 else
     printf "│ %-27s │ %-8s │ %-8s │ %-8s │ %-8s │ %-15s │\n" \
         "@shopify/create-hydrogen" "$INITIAL_CREATE" "$CREATE_BUMP" "$STANDARD_CREATE" "$CALVER_CREATE" "Same"
-fi
-
-# Compare mini-oxygen if it exists and has changes
-MINIOXY_BUMP="${BUMP_TYPE__shopify_mini_oxygen:-none}"
-if [ "$INITIAL_MINIOXY" != "N/A" ] && [ "$MINIOXY_BUMP" != "none" ]; then
-    if [ "$STANDARD_MINIOXY" != "$CALVER_MINIOXY" ]; then
-        printf "│ %-27s │ %-8s │ %-8s │ ${RED}%-8s${NC} │ ${GREEN}%-8s${NC} │ %-15s │\n" \
-            "@shopify/mini-oxygen" "$INITIAL_MINIOXY" "$MINIOXY_BUMP" "$STANDARD_MINIOXY" "$CALVER_MINIOXY" "Preserved minor"
-    else
-        printf "│ %-27s │ %-8s │ %-8s │ %-8s │ %-8s │ %-15s │\n" \
-            "@shopify/mini-oxygen" "$INITIAL_MINIOXY" "$MINIOXY_BUMP" "$STANDARD_MINIOXY" "$CALVER_MINIOXY" "Same"
-    fi
 fi
 
 # Compare skeleton if it exists and has changes

@@ -407,7 +407,6 @@ jobs:
           ---
           "@shopify/hydrogen": patch
           "@shopify/cli-hydrogen": minor
-          "@shopify/mini-oxygen": patch
           ---
 
           Test: Mixed CalVer and semver packages
@@ -435,12 +434,6 @@ jobs:
             echo "✅ @shopify/cli-hydrogen uses semver format (not CalVer)"
           else
             echo "⚠️  @shopify/cli-hydrogen version format - check output"
-          fi
-
-          if grep -q "@shopify/mini-oxygen.*[^2025]\.[0-9]*\.[0-9]" test-output.log; then
-            echo "✅ @shopify/mini-oxygen uses semver format (not CalVer)"
-          else
-            echo "⚠️  @shopify/mini-oxygen version format - check output"
           fi
 
           # Clean up

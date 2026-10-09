@@ -426,18 +426,6 @@ function setupMonorepoReload(
       monorepoPackagesPath + 'hydrogen/dist/vite/plugin.js',
     );
 
-    // Any change in MiniOxygen will overwrite every file in `dist`.
-    // We watch the plugin file for example and restart Vite server,
-    // which also restarts the MiniOxygen worker.
-    // The only exception is worker-entry because it follows a separate
-    // build in TSUP.
-    viteServer.watcher.add(
-      monorepoPackagesPath + 'mini-oxygen/dist/vite/plugin.js',
-    );
-    viteServer.watcher.add(
-      monorepoPackagesPath + 'mini-oxygen/dist/vite/worker-entry.js',
-    );
-
     // Watch any file in hydrogen-codegen to restart the codegen process.
     viteServer.watcher.add(
       monorepoPackagesPath + 'hydrogen-codegen/dist/esm/index.js',
