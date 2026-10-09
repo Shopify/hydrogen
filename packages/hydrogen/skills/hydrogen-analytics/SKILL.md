@@ -47,6 +47,22 @@ Read `shop` and `i18n` values on the server and pass them to `ShopifyScripts`. D
 
 In the ShopifyScripts `analytics` config, `channel` is optional and defaults to `"hydrogen"`. The `"hydrogen"` channel is the one that requires `storefrontId` — it is pulled from the ShopifyScripts `shop` config into analytics payloads. Headless storefronts pass `channel: "headless"` in the ShopifyScripts `analytics` config; the analytics payload then omits `storefrontId`, but `shop.storefrontId` itself is still required (pass `"0"` when the app has no storefront ID).
 
+## Reopening the Shopify banner
+
+For headless storefronts using `consent: { mode: "default-banner" }`, pass the public Storefront API token and both root domains when calling `window.privacyBanner.showBanner()` or `showPreferences()`. Loading `ShopifyScripts` does not supply these options to the banner. Pass `locale` and `country` when overriding the banner's market. Use a public token; never expose a private Storefront API token in browser code.
+
+```ts
+await window.privacyBanner?.showPreferences({
+  storefrontAccessToken: publicStorefrontToken,
+  checkoutRootDomain: "checkout.example.com",
+  storefrontRootDomain: "example.com",
+  locale: "fr",
+  country: "ca",
+});
+```
+
+The same options apply to `showBanner()`. See the [Customer Privacy API custom storefront setup](https://shopify.dev/docs/api/customer-privacy#installation-on-a-custom-storefront).
+
 ## Publish Events
 
 Publish these from route/page boundaries:
