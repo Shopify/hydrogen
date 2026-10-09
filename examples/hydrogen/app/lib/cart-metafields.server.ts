@@ -1,0 +1,190 @@
+import {
+  createShopifyRouteHandler,
+  getCartId,
+  gql,
+  type ShopifyRouteErrorResult,
+  type ShopifyRouteHandlerContext,
+  type ShopifyRouteHandlerResult,
+} from "@shopify/hydrogen";
+
+import { CART_METAFIELDS_PATH } from "~/lib/cart-metafields-path";
+
+// App-owned cart metafield endpoint.
+//
+// Cart metafields are not part of Standard Actions (the cart ajax API), so they
+// cannot flow through Hydrogen's optimistic cart store the way line/discount/note
+// mutations do. Instead of teaching the core cart API about metafields, this
+// example owns the mutation itself and relies on two composable Hydrogen pieces:
+//
+//   1. A custom `CartFragment` (see cart-handlers.ts) so metafields are *read*
+//      back through the normal cart query.
+//   2. `useCartActions().refresh()` on the client so the store re-syncs after a
+//      successful write (see CartDeliveryInstructions.tsx).
+//
+// The mutation and the re-sync are intentionally decoupled: this route returns
+// only the mutation's `userErrors`, never a refetched cart. A failed re-sync is
+// therefore reported as a soft cart-refresh error, never as a failed save.
+//
+// The route path is defined in the client-safe cart-metafields-path module so
+// the client form can reference it without importing this server-only module.
+
+const HTTP_BAD_GATEWAY_STATUS = 502;
+
+const CART_METAFIELDS_SET_MUTATION = gql(`
+  mutation ExampleCartMetafieldsSet(
+    $metafields: [CartMetafieldsSetInput!]!
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    cartMetafieldsSet(metafields: $metafields) {
+      userErrors {
+        code
+        elementIndex
+        field
+        message
+      }
+    }
+  }
+`);
+
+const CART_METAFIELD_DELETE_MUTATION = gql(`
+  mutation ExampleCartMetafieldDelete(
+    $input: CartMetafieldDeleteInput!
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    cartMetafieldDelete(input: $input) {
+      userErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`);
+
+type CartMetafieldInput = { key: string; type: string; value: string };
+
+type CartMetafieldRequest =
+  | { intent: "set"; metafields: CartMetafieldInput[] }
+  | { intent: "delete"; key: string };
+
+// Thrown for malformed request bodies so the handler can answer 400 rather than
+// letting an unexpected shape reach the Storefront API.
+class CartMetafieldRequestError extends Error {}
+
+// Hand-rolled validation mirrors the core cart action parser's style rather than
+// pulling a schema library into the example. Swap in Zod here if the app already
+// depends on it.
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseCartMetafieldRequest(body: unknown): CartMetafieldRequest {
+  if (!isRecord(body)) {
+    throw new CartMetafieldRequestError("Request body must be a JSON object.");
+  }
+
+  if ("deleteMetafield" in body) {
+    const key = body.deleteMetafield;
+    if (typeof key !== "string" || key === "") {
+      throw new CartMetafieldRequestError('"deleteMetafield" must be a non-empty metafield key.');
+    }
+    return { intent: "delete", key };
+  }
+
+  if ("metafields" in body && Array.isArray(body.metafields)) {
+    if (body.metafields.length === 0) {
+      throw new CartMetafieldRequestError('"metafields" must not be empty.');
+    }
+    return { intent: "set", metafields: body.metafields.map(parseMetafieldEntry) };
+  }
+
+  throw new CartMetafieldRequestError('Body must contain "metafields" or "deleteMetafield".');
+}
+
+function parseMetafieldEntry(raw: unknown): CartMetafieldInput {
+  if (!isRecord(raw)) {
+    throw new CartMetafieldRequestError("Each metafield must be an object.");
+  }
+  if (
+    typeof raw.key !== "string" ||
+    typeof raw.type !== "string" ||
+    typeof raw.value !== "string"
+  ) {
+    throw new CartMetafieldRequestError('Each metafield needs string "key", "type", and "value".');
+  }
+  return { key: raw.key, type: raw.type, value: raw.value };
+}
+
+function requestError(message: string): ShopifyRouteErrorResult {
+  return { type: "error", error: { code: "invalid_cart_metafield_request", message } };
+}
+
+function storefrontError(message = "Storefront request failed."): ShopifyRouteErrorResult {
+  return {
+    type: "error",
+    status: HTTP_BAD_GATEWAY_STATUS,
+    error: { code: "storefront_error", message },
+  };
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
+type StorefrontClient = ShopifyRouteHandlerContext["storefrontClient"];
+
+async function deleteCartMetafield(
+  storefrontClient: StorefrontClient,
+  cartId: string,
+  key: string,
+): Promise<ShopifyRouteHandlerResult> {
+  const result = await storefrontClient.graphql(CART_METAFIELD_DELETE_MUTATION, {
+    variables: { input: { ownerId: cartId, key } },
+  });
+  if (result.errors || !result.data) return storefrontError(result.errors?.[0]?.message);
+  return { type: "json", data: { userErrors: result.data.cartMetafieldDelete?.userErrors ?? [] } };
+}
+
+async function setCartMetafields(
+  storefrontClient: StorefrontClient,
+  cartId: string,
+  metafields: CartMetafieldInput[],
+): Promise<ShopifyRouteHandlerResult> {
+  const result = await storefrontClient.graphql(CART_METAFIELDS_SET_MUTATION, {
+    variables: { metafields: metafields.map((metafield) => ({ ...metafield, ownerId: cartId })) },
+  });
+  if (result.errors || !result.data) return storefrontError(result.errors?.[0]?.message);
+  return { type: "json", data: { userErrors: result.data.cartMetafieldsSet?.userErrors ?? [] } };
+}
+
+async function handleCartMetafieldsPost(
+  context: ShopifyRouteHandlerContext,
+): Promise<ShopifyRouteHandlerResult> {
+  const { request, storefrontClient } = context;
+
+  let parsed: CartMetafieldRequest;
+  try {
+    parsed = parseCartMetafieldRequest(await request.json());
+  } catch (error) {
+    return requestError(getErrorMessage(error, "Bad Request"));
+  }
+
+  const cartId = getCartId(request);
+  // This route mutates an existing cart; it never creates one. Creating a cart
+  // here would let two empty-cart writes each call cartCreate and race — the last
+  // Set-Cookie wins, orphaning one cart and silently dropping its write. Callers
+  // add a line item first (the UI only shows this form once the cart has items).
+  if (!cartId) {
+    return { type: "error", error: { code: "missing_cart", message: "No cart exists." } };
+  }
+
+  return parsed.intent === "delete"
+    ? deleteCartMetafield(storefrontClient, cartId, parsed.key)
+    : setCartMetafields(storefrontClient, cartId, parsed.metafields);
+}
+
+export const cartMetafieldHandlers = {
+  post: createShopifyRouteHandler(CART_METAFIELDS_PATH, "POST", handleCartMetafieldsPost),
+};

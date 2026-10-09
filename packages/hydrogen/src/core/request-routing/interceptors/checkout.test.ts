@@ -1,0 +1,363 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { createStorefrontClient } from "../../../client/client";
+import { configureLogging } from "../../logging";
+import { createShopifyRequestContext } from "../../request-context";
+import { createTestLogger } from "../../test-utils";
+import {
+  handleBuyPermalinkRedirect as handleBuyPermalinkRedirectImpl,
+  handleCheckoutRedirect as handleCheckoutRedirectImpl,
+} from "./checkout";
+
+type TestStorefrontConfig = {
+  storeDomain: string;
+};
+
+const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
+
+const defaultConfig: TestStorefrontConfig = {
+  storeDomain: "test-store.myshopify.com",
+};
+
+const MOCK_CART = {
+  id: "gid://shopify/Cart/123",
+  checkoutUrl: "https://test-store.myshopify.com/checkouts/cn/abc?key=value",
+  totalQuantity: 1,
+  note: "",
+  cost: { totalAmount: { amount: "10.00", currencyCode: "USD" } },
+  lines: { nodes: [] },
+  discountCodes: [],
+};
+
+function mockGqlResponse(data: unknown): Response {
+  return new Response(JSON.stringify({ data }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+}
+
+function createPrivateStorefrontClient(
+  request: Request,
+  fixture: TestStorefrontConfig = defaultConfig,
+) {
+  return createStorefrontClient({
+    type: "private",
+    requestContext: createShopifyRequestContext({
+      request,
+      i18n: DEFAULT_I18N,
+      buyerIp: "127.0.0.1",
+    }),
+    config: {
+      storeDomain: fixture.storeDomain,
+      privateStorefrontToken: "test-private-token",
+    },
+  });
+}
+
+function createInterceptorOptions(request: Request, fixture: TestStorefrontConfig) {
+  const storefrontClient = createPrivateStorefrontClient(request, fixture);
+  return {
+    request,
+    requestContext: storefrontClient.requestContext,
+    sessionManager: createTestSessionManager(request),
+    storefrontClient,
+  };
+}
+
+function handleCheckoutRedirect(request: Request, fixture: TestStorefrontConfig = defaultConfig) {
+  return handleCheckoutRedirectImpl(
+    new URL(request.url),
+    createInterceptorOptions(request, fixture),
+  );
+}
+
+function handleBuyPermalinkRedirect(
+  request: Request,
+  fixture: TestStorefrontConfig = defaultConfig,
+) {
+  return handleBuyPermalinkRedirectImpl(
+    new URL(request.url),
+    createInterceptorOptions(request, fixture),
+  );
+}
+
+function createTestSessionManager(request: Request) {
+  const data = new Map<string, unknown>();
+  const origin = new URL(request.url).origin;
+
+  return {
+    getSessionOrigin: () => origin,
+    getSessionItem: (key: string) => data.get(key),
+    setSessionItem: (key: string, value: unknown) => {
+      data.set(key, value);
+    },
+    removeSessionItem: (key: string) => {
+      data.delete(key);
+    },
+  };
+}
+
+describe("handleCheckoutRedirect", () => {
+  let mockFetch: ReturnType<typeof vi.fn>;
+
+  afterEach(() => {
+    configureLogging({});
+  });
+
+  beforeEach(() => {
+    mockFetch = vi.fn();
+    vi.stubGlobal("fetch", mockFetch);
+  });
+
+  it("returns null synchronously for unrelated routes", () => {
+    const result = handleCheckoutRedirect(
+      new Request("https://my-app.com/products/snowboard"),
+      defaultConfig,
+    );
+
+    expect(result).toBeNull();
+  });
+
+  it("returns null synchronously for non-cart-permalink subroutes", () => {
+    const result = handleCheckoutRedirect(
+      new Request("https://my-app.com/cart/recommendations"),
+      defaultConfig,
+    );
+
+    expect(result).toBeNull();
+  });
+
+  it("redirects checkout mode to the current cart checkout URL", async () => {
+    mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
+
+    const result = await handleCheckoutRedirect(
+      new Request("https://my-app.com/checkout?payment=shop_pay&source=hydrogen", {
+        headers: { cookie: "cart=123" },
+      }),
+      defaultConfig,
+    );
+
+    expect(result?.status).toBe(302);
+    expect(result?.headers.get("location")).toBe(
+      "https://test-store.myshopify.com/checkouts/cn/abc?key=value&payment=shop_pay&source=hydrogen",
+    );
+    expect(() => result?.headers.set("x-test", "1")).not.toThrow();
+  });
+
+  it("redirects checkout mode to the root route without a cart", async () => {
+    const result = await handleCheckoutRedirect(
+      new Request("https://my-app.com/checkout?payment=shop_pay"),
+      defaultConfig,
+    );
+
+    expect(result?.status).toBe(302);
+    expect(result?.headers.get("location")).toBe("https://my-app.com/");
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("redirects checkout mode to the root route when the cart has no checkout URL", async () => {
+    mockFetch.mockResolvedValueOnce(
+      mockGqlResponse({
+        cart: {
+          ...MOCK_CART,
+          checkoutUrl: null,
+        },
+      }),
+    );
+
+    const result = await handleCheckoutRedirect(
+      new Request("https://my-app.com/checkout?payment=shop_pay", {
+        headers: { cookie: "cart=123" },
+      }),
+      defaultConfig,
+    );
+
+    expect(result?.status).toBe(302);
+    expect(result?.headers.get("location")).toBe("https://my-app.com/");
+  });
+
+  it("returns 502 when checkout mode cannot load the cart", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const error = new Error("Connection refused");
+    mockFetch.mockRejectedValueOnce(error);
+
+    const result = await handleCheckoutRedirect(
+      new Request("https://my-app.com/checkout?payment=shop_pay", {
+        headers: { cookie: "cart=123" },
+      }),
+      defaultConfig,
+    );
+
+    expect(result?.status).toBe(502);
+    expect(await result?.json()).toEqual({ error: "SFAPI request failed" });
+    expect(logger.error).toHaveBeenCalledWith("checkout redirect request failed", {
+      scope: "checkout",
+      error: expect.any(Error),
+    });
+  });
+
+  it("redirects variant cart permalinks to the configured store domain", async () => {
+    const result = await handleCheckoutRedirect(
+      new Request(
+        "https://my-app.com/cart/123:2,456:1?discount=SAVE10&payment=shop_pay&source=hydrogen",
+      ),
+      defaultConfig,
+    );
+
+    expect(result?.status).toBe(302);
+    expect(result?.headers.get("location")).toBe(
+      "https://test-store.myshopify.com/cart/123:2,456:1?discount=SAVE10&payment=shop_pay&source=hydrogen",
+    );
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("redirects mock.shop variant cart permalinks to the demo store", async () => {
+    const result = await handleCheckoutRedirect(
+      new Request("https://my-app.com/cart/123:2?payment=shop_pay&source=hydrogen"),
+      { storeDomain: "mock.shop" },
+    );
+
+    expect(result?.status).toBe(302);
+    expect(result?.headers.get("location")).toBe(
+      "https://demostore.mock.shop/cart/123:2?payment=shop_pay&source=hydrogen",
+    );
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("redirects cart permalinks for a per-store mock.shop host to the demo store", async () => {
+    const result = await handleCheckoutRedirect(
+      new Request("https://my-app.com/cart/123:2?payment=shop_pay&source=hydrogen"),
+      { storeDomain: "pets.mock.shop" },
+    );
+
+    expect(result?.status).toBe(302);
+    expect(result?.headers.get("location")).toBe(
+      "https://demostore.mock.shop/cart/123:2?payment=shop_pay&source=hydrogen",
+    );
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("merges checkout URL search params into variant cart permalinks when a cart exists", async () => {
+    mockFetch.mockResolvedValueOnce(
+      mockGqlResponse({
+        cart: {
+          ...MOCK_CART,
+          checkoutUrl:
+            "https://test-store.myshopify.com/checkouts/cn/abc?_shopify_y=unique&_shopify_s=visit&discount=OLD",
+        },
+      }),
+    );
+
+    const result = await handleCheckoutRedirect(
+      new Request(
+        "https://my-app.com/cart/123:2?discount=SAVE10&payment=shop_pay&source=hydrogen",
+        {
+          headers: { cookie: "cart=123" },
+        },
+      ),
+      defaultConfig,
+    );
+
+    expect(result?.headers.get("location")).toBe(
+      "https://test-store.myshopify.com/cart/123:2?_shopify_y=unique&_shopify_s=visit&discount=OLD&payment=shop_pay&source=hydrogen",
+    );
+  });
+
+  it("still redirects variant cart permalinks when cart tracking params cannot be loaded", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const error = new Error("Connection refused");
+    mockFetch.mockRejectedValueOnce(error);
+
+    const result = await handleCheckoutRedirect(
+      new Request("https://my-app.com/cart/123:2?payment=shop_pay", {
+        headers: { cookie: "cart=123" },
+      }),
+      defaultConfig,
+    );
+
+    expect(result?.status).toBe(302);
+    expect(result?.headers.get("location")).toBe(
+      "https://test-store.myshopify.com/cart/123:2?payment=shop_pay",
+    );
+    expect(logger.warn).toHaveBeenCalledWith(
+      "checkout redirect could not load cart permalink tracking params",
+      { scope: "checkout", error: expect.any(Error) },
+    );
+  });
+
+  it("sets shop_pay as the default payment option when missing", async () => {
+    const result = await handleCheckoutRedirect(
+      new Request("https://my-app.com/cart/123:1?source=hydrogen"),
+      defaultConfig,
+    );
+
+    expect(result?.headers.get("location")).toBe(
+      "https://test-store.myshopify.com/cart/123:1?source=hydrogen&payment=shop_pay",
+    );
+  });
+});
+
+describe("handleBuyPermalinkRedirect", () => {
+  let mockFetch: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    mockFetch = vi.fn();
+    vi.stubGlobal("fetch", mockFetch);
+  });
+
+  it("returns null synchronously for bare /buy", () => {
+    const result = handleBuyPermalinkRedirect(new Request("https://my-app.com/buy"), defaultConfig);
+
+    expect(result).toBeNull();
+  });
+
+  it("forwards buy permalinks to the configured store domain with the query string unchanged", async () => {
+    const result = await handleBuyPermalinkRedirect(
+      new Request(
+        "https://my-app.com/buy/123:2,~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1?continue_to=/collections/all&buyer/email=buyer%40example.com",
+      ),
+      defaultConfig,
+    );
+
+    expect(result?.status).toBe(303);
+    expect(result?.headers.get("location")).toBe(
+      "https://test-store.myshopify.com/buy/123:2,~Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0VmFyaWFudC80NTY:1?continue_to=/collections/all&buyer/email=buyer%40example.com",
+    );
+    expect(result?.headers.get("cache-control")).toBe("no-store");
+    expect(result?.headers.get("referrer-policy")).toBe("no-referrer");
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("forwards buy permalinks without loading the existing cart or adding payment params", async () => {
+    mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
+
+    const result = await handleBuyPermalinkRedirect(
+      new Request("https://my-app.com/buy/123:1", { headers: { cookie: "cart=123" } }),
+      defaultConfig,
+    );
+
+    expect(result?.headers.get("location")).toBe("https://test-store.myshopify.com/buy/123:1");
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("forwards mock.shop buy permalinks to the demo store", async () => {
+    const result = await handleBuyPermalinkRedirect(new Request("https://my-app.com/buy/123:1"), {
+      storeDomain: "mock.shop",
+    });
+
+    expect(result?.status).toBe(303);
+    expect(result?.headers.get("location")).toBe("https://demostore.mock.shop/buy/123:1");
+  });
+
+  it.each(["HEAD", "POST"])("returns 405 for %s requests to buy permalinks", async (method) => {
+    const result = await handleBuyPermalinkRedirect(
+      new Request("https://my-app.com/buy/123:1", { method }),
+      defaultConfig,
+    );
+
+    expect(result?.status).toBe(405);
+    expect(result?.headers.get("location")).toBeNull();
+  });
+});

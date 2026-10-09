@@ -1,62 +1,43 @@
 {
-  "$schema": "./node_modules/turbo/schema.json",
-  "globalEnv": ["SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK"],
-  "ui": "stream",
+  "$schema": "https://turborepo.dev/schema.json",
+  "ui": "tui",
+  "globalPassThroughEnv": ["TEC_PNPM_BIN_DIR", "WRAPPER_DIR", "PNPM_HOME"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**/*.ts", "src/**/*.tsx"],
-      "outputs": ["dist/**", "build/**"]
+      "outputs": ["dist/**", "build/**", ".next/**", "!.next/cache/**", ".output/**"]
+    },
+    "@shopify/hydrogen-template-nextjs#build": {
+      "dependsOn": ["@shopify/hydrogen#build"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "@shopify/hydrogen-template-react-router#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/mini-oxygen#build"],
+      "outputs": ["dist/**"]
     },
     "dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },
-    "build-docs": {
-      "outputs": ["docs/**/*.json"]
-    },
-    "preview-docs": {
-      "outputs": ["docs/**/*.json"]
-    },
-    "lint": {
-      "outputs": []
-    },
     "typecheck": {
-      "outputs": [],
+      "dependsOn": ["@shopify/hydrogen#build", "^build"]
+    },
+    "libcheck": {
       "dependsOn": ["build"]
     },
-    "//#format": {},
-    "//#format:check": {},
     "test": {
-      "dependsOn": ["build"]
+      "dependsOn": ["^build"]
     },
-    "test:watch": {
-      "cache": false
-    },
-    "@shopify/cli-hydrogen#build": {
-      "dependsOn": [
-        "@shopify/hydrogen-codegen#build",
-        "@shopify/mini-oxygen#build"
+    "test:e2e": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "passThroughEnv": [
+        "PLAYWRIGHT_BROWSER_CHANNEL",
+        "STOREFRONT_BASE_URL",
+        "STOREFRONT_E2E_WORKERS",
+        "STOREFRONT_SKIP_NO_JS_VARIANTS"
       ]
-    },
-    "@shopify/create-hydrogen#build": {
-      "dependsOn": ["@shopify/cli-hydrogen#build"]
-    },
-    "@shopify/create-hydrogen#test": {
-      "dependsOn": ["@shopify/create-hydrogen#build"]
-    },
-    "@shopify/remix-oxygen#build": {
-      "dependsOn": ["@shopify/hydrogen#build"]
-    },
-    "@shopify/hydrogen#build": {
-      "dependsOn": ["@shopify/hydrogen-react#build"]
-    },
-    "skeleton#build": {
-      "dependsOn": [
-        "@shopify/hydrogen#build",
-        "@shopify/cli-hydrogen#build"
-      ],
-      "outputs": ["dist/**"]
     }
   }
 }
