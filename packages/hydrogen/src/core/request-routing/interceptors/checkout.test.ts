@@ -13,6 +13,7 @@ type TestStorefrontConfig = {
   storeDomain: string;
 };
 
+const PRIVATE_CACHE_CONTROL = "private, no-store, max-age=0, must-revalidate";
 const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
 
 const defaultConfig: TestStorefrontConfig = {
@@ -141,6 +142,7 @@ describe("handleCheckoutRedirect", () => {
     expect(result?.headers.get("location")).toBe(
       "https://test-store.myshopify.com/checkouts/cn/abc?key=value&payment=shop_pay&source=hydrogen",
     );
+    expect(result?.headers.get("cache-control")).toBe(PRIVATE_CACHE_CONTROL);
     expect(() => result?.headers.set("x-test", "1")).not.toThrow();
   });
 
@@ -209,6 +211,7 @@ describe("handleCheckoutRedirect", () => {
     expect(result?.headers.get("location")).toBe(
       "https://test-store.myshopify.com/cart/123:2,456:1?discount=SAVE10&payment=shop_pay&source=hydrogen",
     );
+    expect(result?.headers.get("cache-control")).toBe(PRIVATE_CACHE_CONTROL);
     expect(mockFetch).not.toHaveBeenCalled();
   });
 

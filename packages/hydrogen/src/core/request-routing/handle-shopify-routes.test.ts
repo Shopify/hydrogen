@@ -721,6 +721,17 @@ describe("handleShopifyRoutes", () => {
     expect(headers.get("X-Shopify-Storefront-Access-Token")).toBeNull();
   });
 
+  it.each([
+    ["GET", "/account/login"],
+    ["POST", "/account/logout"],
+  ])("leaves unregistered %s %s to the app router", async (method, path) => {
+    const result = await handleShopifyRoutes({
+      request: new Request(`https://my-app.com${path}`, { method }),
+    });
+
+    expect(result).toBeNull();
+  });
+
   it("forwards buy permalinks to the configured store domain", async () => {
     const result = await handleShopifyRoutes({
       request: new Request("https://my-app.com/buy/123:1"),
