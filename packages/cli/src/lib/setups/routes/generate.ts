@@ -154,13 +154,16 @@ export async function generateRoutes(
   }
 
   if (localePrefix) {
-    await copyLocaleNamelessRoute({
-      typescript,
-      localePrefix,
-      routesDirectory,
-      formatOptions,
-      adapter: options.adapter,
-    });
+    routes.push(
+      await copyLocaleNamelessRoute({
+        typescript,
+        localePrefix,
+        routesDirectory,
+        rootDirectory,
+        formatOptions,
+        adapter: options.adapter,
+      }),
+    );
   }
 
   return {
@@ -244,13 +247,14 @@ export async function generateProjectFile(
       (typescript ? extension : extension.replace('.ts', '.js')),
   );
 
+  const exists = await fileExists(routeDestinationPath);
   const result: GenerateRoutesResult = {
-    operation: 'created',
+    operation: exists ? 'replaced' : 'created',
     sourceRoute: routeFrom,
     destinationRoute: relativizePath(routeDestinationPath, rootDirectory),
   };
 
-  if (!force && (await fileExists(routeDestinationPath))) {
+  if (!force && exists) {
     const shouldOverwrite = await renderConfirmationPrompt({
       message: `The file ${result.destinationRoute} already exists. Do you want to replace it?`,
       defaultValue: false,
@@ -260,8 +264,6 @@ export async function generateProjectFile(
     });
 
     if (!shouldOverwrite) return {...result, operation: 'skipped'};
-
-    result.operation = 'replaced';
   }
 
   const routeTemplatePath = await getTemplateAppFile(
@@ -456,6 +458,7 @@ function copyLocaleNamelessRoute({
 }
 
 type RouteTemplateOptions = {
+  rootDirectory: string;
   routesDirectory: string;
   templateName: string;
   routeName: string;
@@ -463,15 +466,21 @@ type RouteTemplateOptions = {
 } & Pick<GenerateProjectFileOptions, 'adapter' | 'typescript'>;
 
 async function copyRouteTemplate({
+  rootDirectory,
   templateName,
   routeName,
   routesDirectory,
   formatOptions,
   typescript,
   adapter,
-}: RouteTemplateOptions) {
+}: RouteTemplateOptions): Promise<GenerateRoutesResult> {
   const routePath = joinPath(routesDirectory, routeName);
-  if (await fileExists(routePath)) return;
+  const result: GenerateRoutesResult = {
+    sourceRoute: 'routes/' + templateName.replace(/\.tsx?$/, ''),
+    destinationRoute: relativizePath(routePath, rootDirectory),
+    operation: 'created',
+  };
+  if (await fileExists(routePath)) return {...result, operation: 'skipped'};
 
   const templatePath = await getAssetsDir('routes', templateName);
 
@@ -492,4 +501,5 @@ async function copyRouteTemplate({
   templateContent = await formatCode(templateContent, formatOptions, routePath);
 
   await writeFile(routePath, templateContent);
+  return result;
 }

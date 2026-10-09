@@ -1,3 +1,6 @@
+import {writeJsonResult} from '../../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {generateRoutesJsonOutputSchema} from '../../../lib/setups/routes/types.js';
 import Command from '../../../lib/hydrogen-command.js';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
@@ -15,9 +18,14 @@ import {
 import {isV1RouteConventionInstalled} from '../../../lib/remix-version-interop.js';
 
 export default class GenerateRoute extends Command {
+  static get jsonOutputSchema(): typeof generateRoutesJsonOutputSchema {
+    return generateRoutesJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown = `Generates a set of default routes from the starter template.`;
-  static description = 'Generates a standard Shopify route.';
+  static description = this.descriptionForHelp();
   static flags = {
+    ...jsonFlag,
     adapter: Flags.string({
       description:
         'React Router adapter used in the route. The default is `react-router`.',
@@ -56,28 +64,51 @@ export default class GenerateRoute extends Command {
 
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
-    await runGenerate({
-      ...flags,
-      directory,
-      routeName,
-      localePrefix: flags['locale-param'],
-    });
+    await runGenerate(
+      {
+        ...flags,
+        directory,
+        routeName,
+        localePrefix: flags['locale-param'],
+      },
+      flags.json,
+    );
   }
 }
 
-export async function runGenerate(options: {
-  routeName: string;
-  directory: string;
-  adapter?: string;
-  typescript?: boolean;
-  force?: boolean;
-  localePrefix?: string;
-}) {
-  const {routes} = await generateRoutes({
+export async function runGenerate(
+  options: {
+    routeName: string;
+    directory: string;
+    adapter?: string;
+    typescript?: boolean;
+    force?: boolean;
+    localePrefix?: string;
+  },
+  json?: boolean,
+) {
+  const {routes, routeGroups, isTypescript} = await generateRoutes({
     ...options,
     v1RouteConvention: isV1RouteConventionInstalled(),
   });
 
+  const changed = routes.some(({operation}) => operation !== 'skipped');
+  const result = {
+    status:
+      !changed && routes.length ? ('skipped' as const) : ('success' as const),
+    changed,
+    routes,
+    routeGroups,
+    isTypescript,
+  };
+  if (!writeJsonResult(generateRoutesJsonOutputSchema, result, json))
+    renderGeneratedRoutes(result);
+  return result;
+}
+
+export function renderGeneratedRoutes({
+  routes,
+}: import('../../../lib/setups/routes/types.js').GenerateRoutesResult) {
   const padEnd =
     3 +
     routes.reduce(
