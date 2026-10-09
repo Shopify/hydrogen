@@ -57,8 +57,9 @@ This keeps the canonical template wired to the Hydrogen code under development, 
 cover package and template changes together.
 
 The source template is not the standalone distribution artifact. This repository's release flow replaces
-`workspace:*` with the published preview version before generating the standalone lockfile. The distributed package
-must expose the template's required APIs, subpaths, TypeScript plugin, and schemas.
+`workspace:*` with the published version in `packages/hydrogen/package.json`, which must be a stable `YYYY.Q.P`
+release, before generating the standalone lockfile. The distributed package must expose the template's required APIs,
+subpaths, TypeScript plugin, and schemas.
 
 ## Config
 
@@ -269,7 +270,7 @@ shopify-dev):
 
 The button's `repository-url` points at `templates/nextjs` on the **`dist-preview`** branch of `Shopify/hydrogen`.
 Keep that exact branch/path because it contains the compiled template with a published Hydrogen version, standalone
-lockfile, and packaged skills. Do not point it at `preview`, whose source template uses `workspace:*`, or at the
+lockfile, and packaged skills. Do not point it at `main`, whose source template uses `workspace:*`, or at the
 repository root, which is not a deployable Next.js project.
 
 ## Validation
@@ -282,8 +283,8 @@ Before finishing:
    emitting the `*-graphql-env.d.ts` files on disk (they're gitignored, generated on demand) — that is expected.
 4. Run `next build`. The source build can infer the repository workspace root; the standalone distribution should infer the template directory after installing its generated lockfile.
 5. For distribution validation, copy the template to a temporary directory, replace `workspace:*` with the published
-   Hydrogen preview version, generate `pnpm-lock.yaml` with `--ignore-workspace`, and verify it uses registry
-   dependencies. Leave the source template lockfile-free.
+   Hydrogen version, generate `pnpm-lock.yaml` with `--ignore-workspace`, and verify it uses registry dependencies.
+   Leave the source template lockfile-free.
 6. **Actually drive the app, don't just check that it starts:** `next dev` (or `next start` after a build) and request
    `/`, a product, a collection, `/search`, `/account`, `/cart` — expect HTTP 200 and live data. Confirm `.env` is loaded.
    There is no `curl` in some environments — Node's global `fetch` works. To get a valid product/collection handle for
