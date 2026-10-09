@@ -1494,7 +1494,7 @@
     "hydrogen:init": {
       "aliases": [],
       "args": {},
-      "description": "Creates a new Hydrogen storefront.",
+      "description": "Creates a new Hydrogen storefront.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenInitResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"partial\",\n        \"skipped\",\n        \"cancelled\"\n      ]\n    },\n    \"project\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/definitions/Project\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ],\n      \"description\": \"All projected fields are present; unavailable settings are null. Route values are relative route names.\"\n    },\n    \"failures\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\",\n        \"enum\": [\n          \"dependencies\",\n          \"markets\",\n          \"routes\"\n        ]\n      }\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"project\",\n    \"failures\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenInitResult\",\n  \"definitions\": {\n    \"Project\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"directory\": {\n          \"type\": \"string\"\n        },\n        \"storefrontName\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        },\n        \"language\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"enum\": [\n                \"js\",\n                \"ts\"\n              ]\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"packageManager\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"npm\",\n            \"pnpm\",\n            \"yarn\",\n            \"bun\",\n            \"unknown\"\n          ]\n        },\n        \"dependenciesInstalled\": {\n          \"type\": \"boolean\"\n        },\n        \"cssStrategy\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"enum\": [\n                \"none\",\n                \"tailwind\",\n                \"vanilla-extract\",\n                \"css-modules\",\n                \"postcss\"\n              ]\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"i18n\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"enum\": [\n                \"none\",\n                \"subfolders\",\n                \"domains\",\n                \"subdomains\"\n              ]\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"routes\": {\n          \"anyOf\": [\n            {\n              \"type\": \"object\",\n              \"additionalProperties\": {\n                \"anyOf\": [\n                  {\n                    \"type\": \"string\"\n                  },\n                  {\n                    \"type\": \"array\",\n                    \"items\": {\n                      \"type\": \"string\"\n                    }\n                  }\n                ]\n              }\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"name\",\n        \"directory\",\n        \"storefrontName\",\n        \"language\",\n        \"packageManager\",\n        \"dependenciesInstalled\",\n        \"cssStrategy\",\n        \"i18n\",\n        \"routes\"\n      ],\n      \"additionalProperties\": false,\n      \"description\": \"All projected fields are present; unavailable settings are null. Route values are relative route names.\"\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -1523,6 +1523,15 @@
           "env": "SHOPIFY_FLAG_VERBOSE",
           "hidden": false,
           "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1644,7 +1653,7 @@
     "hydrogen:link": {
       "aliases": [],
       "args": {},
-      "description": "Link a local project to one of your shop's Hydrogen storefronts.",
+      "description": "Links your local development environment to a remote Hydrogen storefront. You can link an unlimited number of development environments to a single Hydrogen storefront.\n\n  Linking to a Hydrogen storefront enables you to run \"dev\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-dev) and automatically inject your linked Hydrogen storefront's environment variables directly into the server runtime.\n\n  After you run the `link` command, you can access the \"env list\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-list), \"env pull\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-pull), and \"unlink\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-unlink) commands.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenLinkResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"partial\",\n        \"skipped\",\n        \"cancelled\"\n      ]\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"storeDomain\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\",\n          \"pattern\": \"^[a-z0-9][a-z0-9-]*\\\\.myshopify\\\\.com$\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    },\n    \"storefront\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/definitions/Storefront\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ],\n      \"description\": \"All projected fields are present; unavailable productionUrl is null.\"\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"storeDomain\",\n    \"storefront\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenLinkResult\",\n  \"definitions\": {\n    \"Storefront\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefront\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefront GID.\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"productionUrl\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"format\": \"uri\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"name\",\n        \"productionUrl\"\n      ],\n      \"additionalProperties\": false,\n      \"description\": \"All projected fields are present; unavailable productionUrl is null.\"\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -1673,6 +1682,15 @@
           "env": "SHOPIFY_FLAG_VERBOSE",
           "hidden": false,
           "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1755,7 +1773,7 @@
     "hydrogen:list": {
       "aliases": [],
       "args": {},
-      "description": "Returns a list of Hydrogen storefronts available on a given shop.",
+      "description": "Lists all remote Hydrogen storefronts available to link to your local development environment.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenListResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"storeDomain\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\",\n          \"pattern\": \"^[a-z0-9][a-z0-9-]*\\\\.myshopify\\\\.com$\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    },\n    \"storefronts\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Storefront\"\n      }\n    }\n  },\n  \"required\": [\n    \"storeDomain\",\n    \"storefronts\"\n  ],\n  \"additionalProperties\": false,\n  \"description\": \"The complete list of Hydrogen storefronts for the store.\",\n  \"title\": \"HydrogenListResult\",\n  \"definitions\": {\n    \"Storefront\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefront\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefront GID.\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"productionUrl\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"format\": \"uri\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"currentProductionDeployment\": {\n          \"anyOf\": [\n            {\n              \"$ref\": \"#/definitions/Deployment\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"name\",\n        \"productionUrl\",\n        \"currentProductionDeployment\"\n      ],\n      \"additionalProperties\": false,\n      \"description\": \"All projected fields are present; unavailable productionUrl is null.\"\n    },\n    \"Deployment\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefrontDeployment\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefrontDeployment GID.\"\n        },\n        \"createdAt\": {\n          \"type\": \"string\",\n          \"format\": \"date-time\"\n        },\n        \"commitMessage\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"createdAt\",\n        \"commitMessage\"\n      ],\n      \"additionalProperties\": false\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -1784,6 +1802,15 @@
           "env": "SHOPIFY_FLAG_VERBOSE",
           "hidden": false,
           "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1816,7 +1843,7 @@
     "hydrogen:login": {
       "aliases": [],
       "args": {},
-      "description": "Login to your Shopify account.",
+      "description": "Logs in to the specified shop and saves the shop domain to the project.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenLoginResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"storeDomain\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\",\n          \"pattern\": \"^[a-z0-9][a-z0-9-]*\\\\.myshopify\\\\.com$\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    },\n    \"name\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"email\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\",\n          \"format\": \"email\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    }\n  },\n  \"required\": [\n    \"storeDomain\",\n    \"name\",\n    \"email\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenLoginResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -1845,6 +1872,15 @@
           "env": "SHOPIFY_FLAG_VERBOSE",
           "hidden": false,
           "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -1886,7 +1922,7 @@
     "hydrogen:logout": {
       "aliases": [],
       "args": {},
-      "description": "Logout of your local session.",
+      "description": "Log out from the current shop.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenLogoutResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"const\": \"success\"\n    },\n    \"loggedOut\": {\n      \"type\": \"boolean\",\n      \"const\": true\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"loggedOut\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenLogoutResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -1915,6 +1951,15 @@
           "env": "SHOPIFY_FLAG_VERBOSE",
           "hidden": false,
           "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },
@@ -2473,7 +2518,7 @@
     "hydrogen:unlink": {
       "aliases": [],
       "args": {},
-      "description": "Unlink a local project from a Hydrogen storefront.",
+      "description": "Unlinks your local development environment from a remote Hydrogen storefront.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenUnlinkResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"const\": \"success\"\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"storefront\": {\n      \"anyOf\": [\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"gid\": {\n              \"type\": \"string\",\n              \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefront\\\\/\\\\d+$\",\n              \"description\": \"A Shopify HydrogenStorefront GID.\"\n            },\n            \"name\": {\n              \"type\": \"string\"\n            }\n          },\n          \"required\": [\n            \"gid\",\n            \"name\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"storefront\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenUnlinkResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -2502,6 +2547,15 @@
           "env": "SHOPIFY_FLAG_VERBOSE",
           "hidden": false,
           "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
           "allowNo": false,
           "type": "boolean"
         },

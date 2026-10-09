@@ -1,3 +1,4 @@
+import {presentTemplateResult} from './result.js';
 import {AbortController} from '@shopify/cli-kit/node/abort';
 import {setupLocalStarterTemplate} from './local.js';
 import {setupRemoteTemplate} from './remote.js';
@@ -9,12 +10,16 @@ export async function setupTemplate(options: InitOptions) {
   const controller = new AbortController();
 
   try {
-    const template = options.template;
+    const template =
+      options.template === 'skeleton' ? undefined : options.template;
 
-    // `skeleton` is the starter bundled with the CLI, the same one used without a template
-    return template && template !== 'skeleton'
+    // `skeleton` is the starter bundled with the CLI.
+    const result = template
       ? await setupRemoteTemplate({...options, template}, controller)
       : await setupLocalStarterTemplate(options, controller);
+
+    await presentTemplateResult(result, template);
+    return result;
   } catch (error) {
     controller.abort();
     throw error;

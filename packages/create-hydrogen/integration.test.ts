@@ -6,6 +6,58 @@ import {temporaryDirectoryTask} from 'tempy';
 import {describe, it, expect} from 'vitest';
 
 describe('create-hydrogen', () => {
+  it.each([
+    ['markets', 'Invalid URL structure strategy'],
+    ['styling', 'Invalid styling strategy'],
+  ])(
+    'reports invalid --%s as JSON with a failing exit code',
+    async (flag, message) => {
+      const bin = path.resolve(
+        createRequire(import.meta.url)('./package.json').bin,
+      );
+      const {stdout, stderr, exitCode} = await execa(
+        process.execPath,
+        ['--no-warnings', bin, '--json', `--${flag}`, 'bad-value'],
+        {reject: false},
+      );
+      expect(exitCode).toBe(1);
+      expect(JSON.parse(stdout)).toMatchObject({
+        error: {type: 'abort', message: expect.stringContaining(message)},
+      });
+      expect(stderr).toBe('');
+    },
+  );
+
+  it('writes JSON progress to stderr and one project result to stdout', async () => {
+    const bin = path.resolve(
+      createRequire(import.meta.url)('./package.json').bin,
+    );
+    await temporaryDirectoryTask(async (tmpDir) => {
+      const {stdout, stderr} = await execa(process.execPath, [
+        '--no-warnings',
+        bin,
+        '--quickstart',
+        '--no-install-deps',
+        '--no-shortcut',
+        '--no-git',
+        '--path',
+        tmpDir,
+        '--json',
+      ]);
+      expect(JSON.parse(stdout)).toMatchObject({status: 'success'});
+      const events = stderr
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line));
+      expect(events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({type: 'progress', status: 'started'}),
+          expect.objectContaining({type: 'progress', status: 'completed'}),
+        ]),
+      );
+    });
+  });
+
   it('creates a quickstart project using the compiled files', async () => {
     const packageJson = createRequire(import.meta.url)('./package.json');
     const bin = path.resolve(packageJson.bin);

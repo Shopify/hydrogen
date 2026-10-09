@@ -1,3 +1,9 @@
+import {isJsonOutput} from '../json-output.js';
+import {errorHandler} from '@shopify/cli-kit/node/error-handler';
+import {
+  outputDebug,
+  formatPackageManagerCommand,
+} from '@shopify/cli-kit/node/output';
 import {readdir, symlink} from 'node:fs/promises';
 import {
   installNodeModules,
@@ -10,7 +16,6 @@ import {
   renderSelectPrompt,
   renderTextPrompt,
   renderConfirmationPrompt,
-  renderFatalError,
   renderWarning,
 } from '@shopify/cli-kit/node/ui';
 import {capitalize, hyphenate} from '@shopify/cli-kit/common/string';
@@ -29,10 +34,6 @@ import {
   writeFile,
   copyFile,
 } from '@shopify/cli-kit/node/fs';
-import {
-  outputDebug,
-  formatPackageManagerCommand,
-} from '@shopify/cli-kit/node/output';
 import {currentProcessIsGlobal} from '@shopify/cli-kit/node/is-global';
 import colors from '@shopify/cli-kit/node/colors';
 import {type AdminSession, login, renderLoginSuccess} from '../auth.js';
@@ -51,7 +52,6 @@ import {
   CSS_STRATEGY_NAME_MAP,
   setupCssStrategy,
   renderCssPrompt,
-  type CssStrategy,
   type StylingChoice,
 } from '../setups/css/index.js';
 import {
@@ -225,7 +225,7 @@ export async function handleStorefrontLink(
 ): Promise<StorefrontInfo> {
   enhanceAuthLogs(true);
   const {session, config} = await login();
-  renderLoginSuccess(config);
+  if (!isJsonOutput()) renderLoginSuccess(config);
 
   const storefronts = await getStorefronts(session);
 
@@ -574,11 +574,11 @@ export async function commitAll(directory: string, message: string) {
 export type SetupSummary = {
   language?: Language;
   packageManager: 'npm' | 'pnpm' | 'yarn' | 'bun' | 'unknown';
-  cssStrategy?: CssStrategy;
+  cssStrategy?: StylingChoice;
   cliCommand: CliCommand;
   depsInstalled: boolean;
   depsError?: Error;
-  i18n?: I18nStrategy;
+  i18n?: I18nChoice;
   i18nError?: Error;
   routes?: Record<string, string | string[]>;
   routesError?: Error;
@@ -613,11 +613,11 @@ export async function renderProjectReady(
     bodyLines.push(['Language', LANGUAGES[language]]);
   }
 
-  if (cssStrategy) {
+  if (cssStrategy && cssStrategy !== 'none') {
     bodyLines.push(['Styling', CSS_STRATEGY_NAME_MAP[cssStrategy]]);
   }
 
-  if (!i18nError && i18n) {
+  if (!i18nError && i18n && i18n !== 'none') {
     bodyLines.push(['Markets', I18N_STRATEGY_NAME_MAP[i18n].split(' (')[0]!]);
   }
 
@@ -742,12 +742,11 @@ export function createAbortHandler(
       await rmdir(project!.directory, {force: true}).catch(() => {});
     }
 
-    renderFatalError(
-      new AbortError(
-        'Failed to initialize project: ' + (error?.message ?? ''),
-        error?.tryMessage ?? error?.stack,
-      ),
+    const abortError = new AbortError(
+      'Failed to initialize project: ' + (error?.message ?? ''),
+      error?.tryMessage ?? error?.stack,
     );
+    await errorHandler(abortError);
 
     if (process.env.SHOPIFY_UNIT_TEST && process.exit.name !== 'spy') {
       // This is not an artificial error for testing, print it and
