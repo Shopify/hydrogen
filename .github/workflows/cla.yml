@@ -20,7 +20,7 @@ jobs:
         && !contains(github.event.commits.*.message, '[ci] Update pnpm-lock.yaml')
       )
     steps:
-      - uses: Shopify/shopify-cla-action@v1
+      - uses: Shopify/shopify-cla-action@1af529ae29b29b6083963ff22425ea64749261bc # v1.9.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cla-token: ${{ secrets.CLA_TOKEN }}
