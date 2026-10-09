@@ -103,9 +103,7 @@ describe("setupHydrogen", () => {
       env: {},
     });
 
-    expect(runCommand.calls).toEqual([
-      ["pnpm", ["add", "@shopify/hydrogen@preview"], { cwd: appRoot }],
-    ]);
+    expect(runCommand.calls).toEqual([["pnpm", ["add", "@shopify/hydrogen"], { cwd: appRoot }]]);
     for (const harness of [".claude", ".agents"]) {
       expect(existsSync(join(appRoot, harness, "skills/hydrogen-setup/SKILL.md"))).toBe(true);
       expect(existsSync(join(appRoot, harness, "skills/hydrogen-cart-ui/SKILL.md"))).toBe(true);
@@ -133,9 +131,7 @@ describe("setupHydrogen", () => {
       env: {},
     });
 
-    expect(runCommand.calls).toEqual([
-      ["pnpm", ["add", "@shopify/hydrogen@preview"], { cwd: appRoot }],
-    ]);
+    expect(runCommand.calls).toEqual([["pnpm", ["add", "@shopify/hydrogen"], { cwd: appRoot }]]);
   });
 
   it("detects npm from npm_config_user_agent when no package manager metadata exists", async () => {
@@ -155,9 +151,7 @@ describe("setupHydrogen", () => {
       env: { npm_config_user_agent: "npm/11.0.0 node/v24.0.0 darwin arm64" },
     });
 
-    expect(runCommand.calls).toEqual([
-      ["npm", ["install", "@shopify/hydrogen@preview"], { cwd: appRoot }],
-    ]);
+    expect(runCommand.calls).toEqual([["npm", ["install", "@shopify/hydrogen"], { cwd: appRoot }]]);
   });
 
   it("skips installation when Hydrogen is already installed", async () => {

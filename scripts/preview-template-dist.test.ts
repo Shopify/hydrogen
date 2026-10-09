@@ -5,31 +5,23 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 
 import {
-  assertPublishedPreviewVersion,
   preparePreviewTemplateDist,
-  resolvePublishedHydrogenVersion,
   validatePreviewTemplateDist,
 } from "./preview-template-dist.ts";
 
-const VERSION = "2026.10.0-preview.3";
+const VERSION = "2026.10.0";
 const MINI_OXYGEN_VERSION = "4.2.3";
 
-test("resolves the exact published Hydrogen preview version", () => {
-  const publishedPackages = JSON.stringify([
-    { name: "unrelated-package", version: "1.0.0" },
-    { name: "@shopify/hydrogen", version: VERSION },
-  ]);
-
-  assert.equal(resolvePublishedHydrogenVersion(publishedPackages), VERSION);
-});
-
-test("rejects missing, old, and unpublished preview versions", () => {
-  assert.throws(() => resolvePublishedHydrogenVersion("[]"), /Expected one published/);
-  assert.throws(
-    () => assertPublishedPreviewVersion("0.0.0-preview-deadbee-20260730120000"),
-    /2026\.10\.0-preview/,
-  );
-  assert.throws(() => assertPublishedPreviewVersion("2026.10.0-preview.0"), /published/);
+test("rejects prerelease and snapshot Hydrogen versions", async () => {
+  await withFixture(async (repoRoot) => {
+    for (const version of ["2026.10.0-preview.3", "0.0.0-next-deadbee-20260730120000"]) {
+      await assert.rejects(
+        preparePreviewTemplateDist({ repoRoot, version, log: () => {} }),
+        /Expected a stable YYYY\.Q\.P/,
+      );
+    }
+    assert.equal(readHydrogenDependency(repoRoot, "react-router"), "workspace:*");
+  });
 });
 
 test("prepares manifests and synchronizes skills", async () => {

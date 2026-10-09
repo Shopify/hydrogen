@@ -111,6 +111,8 @@ Use these levels for `@shopify/hydrogen`:
 - **minor**: new exports, helpers, or supported patterns that are additive for consumers
 - **major**: breaking changes to public exports or taught patterns
 
+Hydrogen is versioned `YYYY.Q.P` (CalVer), so these levels don't map straight onto the version number. At release time, `scripts/calver.ts` turns minor and patch into the next `P` (2026.10.0 → 2026.10.1) and major into the next quarter (2026.10.3 → 2027.1.0). While Hydrogen is on a prerelease, CI rejects major changesets.
+
 This is an example of the level of detail expected. Do not force every PR into this exact wording.
 
 ```md

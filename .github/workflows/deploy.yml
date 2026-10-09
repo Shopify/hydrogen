@@ -1,22 +1,28 @@
 # Don't change the line below!
 #! oxygen_storefront_id: 1000014875
 
-# Deploys to the same storefront as main's skeleton. `--preview` below keeps these
-# deployments in its Preview environment, so they never replace main's Production.
+# Pushes to main deploy to the storefront's Production environment. Pull requests deploy with
+# `--preview`, so they stay in its Preview environment.
 #
-# Keep this file at main's path, .github/workflows/deploy.yml. The Shopify GitHub App only
-# comments preview links for runs of workflow files that exist on the default branch, so
-# renaming either copy silently stops those comments on pull requests.
+# Keep this file at .github/workflows/deploy.yml. The Shopify GitHub App only comments preview
+# links for runs of workflow files that exist on the default branch, so renaming it silently
+# stops those comments on pull requests.
 name: React Router deploy
 
 on:
   push:
-    branches: [preview]
+    branches: [main]
   pull_request:
-    branches: [preview]
+    branches: [main]
 
 permissions:
   contents: read
+
+concurrency:
+  # One deploy per ref at a time, so Production never ends up on an older push that
+  # finished last. A newer commit replaces a pull request's in-progress deploy
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   deploy:
@@ -53,6 +59,6 @@ jobs:
 
       - name: Build and deploy to Oxygen
         working-directory: templates/react-router
-        run: pnpm run deploy --preview
+        run: pnpm run deploy ${{ github.event_name == 'pull_request' && '--preview' || '' }}
         env:
           SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014875 }}

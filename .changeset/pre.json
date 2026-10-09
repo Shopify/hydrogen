@@ -1,21 +1,4 @@
 {
-  "mode": "pre",
-  "tag": "preview",
-  "changesets": [
-    "analytics-product-price-money",
-    "cart-line-variant-swap",
-    "cart-mutation-custom-fields",
-    "cart-one-mutation-per-request",
-    "cart-ui-skill-code-driven",
-    "money-amount-currency-spacer",
-    "money-range-without-trailing-zeros",
-    "price-range-currency-skill",
-    "redirect-lookup-graphql-errors",
-    "skills-analytics-currency-source",
-    "stale-while-revalidate-refresh-lifetime",
-    "ucp-business-profile-proxy",
-    "unexport-vue-cart-actions",
-    "variant-form-link-click-guard",
-    "variant-form-progressive-links"
-  ]
+  "mode": "exit",
+  "tag": "preview"
 }

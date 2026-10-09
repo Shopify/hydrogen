@@ -6,12 +6,12 @@ Read `package.json` in the current directory.
 
 If it does not exist, stop and tell the user this skill must run in a javascript application with a `package.json` at its root.
 
-If it does not contain `@shopify/hydrogen@preview` (or a more specific hash) in its dependencies, ask the user to install it. Do not assume package managers or install for the user.
+If it does not contain `@shopify/hydrogen` 2026.10.0 or later in its dependencies, ask the user to install it. Do not assume package managers or install for the user.
 
 ### Continue when
 
 - [ ] Current directory has `package.json`
-- [ ] Current project includes `@shopify/hydrogen@preview` or similar in its dependencies
+- [ ] Current project includes `@shopify/hydrogen` 2026.10.0 or later in its dependencies
 
 ## Styling
 
