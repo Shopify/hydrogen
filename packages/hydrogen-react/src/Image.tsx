@@ -259,12 +259,12 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
      */
     const imageWidths = React.useMemo(() => {
       return generateImageWidths(
-        width,
+        normalizedProps.width,
         intervals,
         startingWidth,
         incrementSize,
       );
-    }, [width, intervals, startingWidth, incrementSize]);
+    }, [normalizedProps.width, intervals, startingWidth, incrementSize]);
 
     const fixedWidth = isFixedWidth(normalizedProps.width);
 
