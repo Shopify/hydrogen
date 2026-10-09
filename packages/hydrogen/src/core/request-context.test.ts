@@ -601,6 +601,7 @@ describe("createShopifyRequestContext", () => {
       "cdn-cache-control": "public, s-maxage=600",
       "cloudflare-cdn-cache-control": "public, s-maxage=600",
       "netlify-cdn-cache-control": "public, s-maxage=600",
+      "oxygen-cache-control": "public, max-age=3600",
       "surrogate-control": "max-age=600",
     });
 
@@ -611,6 +612,7 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("cdn-cache-control")).toBeNull();
     expect(headers.get("cloudflare-cdn-cache-control")).toBeNull();
     expect(headers.get("netlify-cdn-cache-control")).toBeNull();
+    expect(headers.get("oxygen-cache-control")).toBeNull();
     expect(headers.get("surrogate-control")).toBeNull();
   });
 
