@@ -80,6 +80,17 @@ describe("parseCollectionParams", () => {
       expect(result.filters).toEqual([{ variantOption: { name: "Color", value: "Red" } }]);
     });
 
+    it.each([
+      ["filter.v.option.%25FF=Red", { variantOption: { name: "%FF", value: "Red" } }],
+      ["filter.v.option.Big+%ZZ=Red", { variantOption: { name: "Big %ZZ", value: "Red" } }],
+      [
+        "filter.p.m.%25ZZ.material=leather",
+        { productMetafield: { namespace: "%ZZ", key: "material", value: "leather" } },
+      ],
+    ])("keeps malformed percent sequences literal in %s", (query, filter) => {
+      expect(parseCollectionParams(params(query)).filters).toEqual([filter]);
+    });
+
     it("parses lowercase variant option key (mock.shop color facet)", () => {
       const result = parseCollectionParams(params("filter.v.option.color=Beige"));
       expect(result.filters).toEqual([{ variantOption: { name: "color", value: "Beige" } }]);
