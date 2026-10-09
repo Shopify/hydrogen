@@ -1,4 +1,5 @@
-import {renderFatalError, renderInfo} from '@shopify/cli-kit/node/ui';
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import type {AdminSession} from './auth.js';
 
@@ -16,14 +17,9 @@ export function renderMissingStorefront({
   storefront,
   cliCommand,
 }: MissingStorefront) {
-  renderFatalError({
-    name: 'NoStorefrontError',
-    type: 0,
-    message: outputContent`${outputToken.errorText(
-      'Couldn’t find Hydrogen storefront.',
-    )}`.value,
-    skipOclifErrorHandling: true,
-    tryMessage: outputContent`Couldn’t find ${storefront.title} (ID: ${parseGid(
+  throw new AbortError(
+    'Couldn’t find Hydrogen storefront.',
+    outputContent`Couldn’t find ${storefront.title} (ID: ${parseGid(
       storefront.id,
     )}) on ${
       session.storeFqdn
@@ -33,7 +29,7 @@ export function renderMissingStorefront({
       'Hydrogen Storefronts Admin',
       hydrogenStorefrontsUrl(session),
     )}`.value,
-  });
+  );
 }
 
 export function renderMissingLink({noStorefronts = false}) {
