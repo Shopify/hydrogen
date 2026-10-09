@@ -1,4 +1,4 @@
-# Hydrogen dev-preview development notes
+# Hydrogen development notes
 
 ## When designing APIs
 - Deep modules, small API surface: the fewest amount of arguments/options necessary for functions and constructors

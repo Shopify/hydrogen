@@ -43,7 +43,7 @@ test.describe("Consent Tracking - No Banner (Declined by Default)", () => {
     storefront.expectNoMonorailRequests();
 
     // 10. Verify checkout URLs contain no tracking params (consent declined)
-    // TODO: Re-enable once Hydrogen dev-preview can strip or replace checkoutUrl tracking params from SFAPI.
+    // TODO: Re-enable once Hydrogen can strip or replace the `_y` and `_s` tracking params in Storefront API checkout URLs.
     // await storefront.expectNoCheckoutUrlTrackingParams(
     //   "in cart drawer with consent declined by default",
     // );

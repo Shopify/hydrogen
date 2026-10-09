@@ -1,15 +1,14 @@
 # Hydrogen Cart Parity
 
-This example is incrementally replacing old Hydrogen cart primitives with Hydrogen dev-preview. The current migration keeps the basic cart flows: SSR cart state, cart count, line add, line quantity changes, line removal, discount apply/remove, checkout link, `/cart/:lines` permalinks, and `/discount/:code` links.
+This example is moving from the cart in Hydrogen 2026-04 and earlier (`CartForm` and its `/cart` route action) to the cart store and form helpers in Hydrogen 2026-10. The migration keeps the basic cart flows: SSR cart state, cart count, line add, line quantity changes, line removal, bundle child lines, discount apply/remove, checkout link, `/cart/:lines` permalinks, and `/discount/:code` links.
 
-Known gaps compared to the old Hydrogen cart client:
+Known gaps compared to the cart in Hydrogen 2026-04 and earlier:
 
-- **Applied gift cards**: Hydrogen dev-preview cart state and form helpers do not model `appliedGiftCards`, gift card add, or gift card removal yet. The previous Hydrogen example could display applied gift cards, add gift card codes, and remove applied gift cards through the old `CartForm`; that behavior is intentionally omitted during this transition until Hydrogen dev-preview owns it.
-- **Bundle/component child lines**: Hydrogen dev-preview cart state does not model `parentRelationship` or `lineComponents` yet. The Hydrogen example no longer renders nested child lines under parent cart lines.
-- **Buyer identity cart mutations**: the previous `/cart` action handled `BuyerIdentityUpdate`; the Hydrogen dev-preview form helpers used here do not expose that flow yet.
-- **Old Hydrogen `CartForm` action responses**: cart forms now post to Hydrogen dev-preview's `/api/cart` route and update through Standard Actions. The example no longer returns old Hydrogen action payloads with `warnings`, `errors`, and cart analytics metadata from its `/cart` route.
+- **Applied gift cards**: Hydrogen's cart state and form helpers don't model `appliedGiftCards`, gift card add, or gift card removal yet. The earlier example could display applied gift cards, add gift card codes, and remove applied gift cards through `CartForm`. This example omits that behavior until Hydrogen supports it.
+- **Buyer identity cart mutations**: the earlier `/cart` action handled `BuyerIdentityUpdate`. The Hydrogen form helpers used here don't expose that flow yet.
+- **`CartForm` action responses**: cart forms now post to Hydrogen's `/api/cart` route and update through Standard Actions. The example no longer returns the earlier action payloads with `warnings`, `errors`, and cart analytics metadata from its `/cart` route.
 
 Routes checked during migration:
 
-- `/discount/:code` is still needed. Hydrogen dev-preview middleware handles `/api/cart` and Shopify/Ajax proxy routes, but it does not handle the example's discount-link route.
-- `/cart/:lines` is still needed. It creates a cart from permalink-style line input and redirects to checkout; Hydrogen dev-preview middleware does not replace that route.
+- `/discount/:code` is still needed. Hydrogen's request handlers serve `/api/cart` and the Shopify and AJAX proxy routes, but not the example's discount-link route.
+- `/cart/:lines` is still needed for locale-prefixed permalinks. Hydrogen's request handlers answer unprefixed cart permalinks, such as `/cart/<variant_id>:<quantity>`, before the router runs.

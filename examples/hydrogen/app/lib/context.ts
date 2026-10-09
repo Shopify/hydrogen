@@ -18,10 +18,8 @@ type HydrogenRouterContext = {
 /**
  * Creates the React Router context for the Hydrogen example.
  *
- * This intentionally avoids `createHydrogenContext()` because cart and storefront
- * data now come from the dev-preview Hydrogen package. Calling the old Hydrogen
- * full context factory would still instantiate its storefront and cart handlers
- * even though routes no longer use them.
+ * Hydrogen 2026-10 has no `createHydrogenContext()`, so the example builds the
+ * context from its own Storefront API client, session, and customer account context.
  * */
 export async function createHydrogenRouterContext(
   request: Request,
