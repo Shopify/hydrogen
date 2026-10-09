@@ -618,11 +618,15 @@ describe("createShopifyRequestContext", () => {
 
   it("keeps cache headers for non-personalized responses", () => {
     const context = createTestRequestContext(new Request("https://example.com/products"));
-    const headers = new Headers({ "cache-control": "public, s-maxage=600" });
+    const headers = new Headers({
+      "cache-control": "public, s-maxage=600",
+      "oxygen-cache-control": "public, max-age=3600",
+    });
 
     context.applyResponseHeaders(headers);
 
     expect(headers.get("cache-control")).toBe("public, s-maxage=600");
+    expect(headers.get("oxygen-cache-control")).toBe("public, max-age=3600");
   });
 
   it("preserves captured cookies when applying personalized cache safety", () => {

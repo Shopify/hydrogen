@@ -622,6 +622,7 @@ describe("handleShopifyRoutes", () => {
         headers: {
           "cache-control": "public, s-maxage=600",
           "cdn-cache-control": "public, s-maxage=600",
+          "oxygen-cache-control": "public, max-age=3600",
         },
       };
     });
@@ -637,6 +638,7 @@ describe("handleShopifyRoutes", () => {
       "private, no-store, max-age=0, must-revalidate",
     );
     expect(result?.headers.get("cdn-cache-control")).toBeNull();
+    expect(result?.headers.get("oxygen-cache-control")).toBeNull();
   });
 
   it("maps registered handler relative redirects to absolute same-origin Location headers", async () => {
