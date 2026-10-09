@@ -1,105 +1,104 @@
 # Hydrogen
 
-**Shopify's headless toolkit — framework‑agnostic, runtime‑agnostic, built for agents.**
+Hydrogen (`@shopify/hydrogen`) is Shopify's toolkit for building headless storefronts in the JavaScript framework you already use. It ships with agent skills that teach coding agents how to use it.
 
-Bring your own framework. Deploy to any runtime. Let your coding agent wire it up to Shopify.
+[Changelog](./packages/hydrogen/CHANGELOG.md)
 
----
+> [!NOTE]
+> This README covers Hydrogen 2026-10 or later. Hydrogen 2026-04 and earlier are on the [`2026-04` branch](https://github.com/Shopify/hydrogen/tree/2026-04).
 
-> **🧪 Developer Preview** — Hydrogen is being rebuilt in the open. APIs will change and some pieces are still landing. Build with it, tell us what breaks, and help shape the release in [Discussions](https://github.com/Shopify/hydrogen/discussions).
+## What's included
 
-The old Hydrogen was a framework you adopted whole. The new Hydrogen is a **toolkit** you bring to the framework you already use — a plain‑JavaScript core of Shopify storefront primitives, with thin bindings for React and Vue (and more on the way). We redesigned it in partnership with the Next.js team at Vercel.
-
-You bring the framework. Hydrogen brings the commerce.
-
-```js
-import { createCartStore } from "@shopify/hydrogen";
-
-const cart = createCartStore({ initialData });
-cart.connect(); // stay in sync with cart updates from your UI, installed apps, and agents
-
-// React to a change — no framework, no re-render gymnastics.
-cart.subscribe((state) => {
-  document.querySelector("#cart-count").textContent = String(state.data.totalQuantity);
-});
-```
-
-## Why Hydrogen changed
-
-Headless commerce has always been about choice — build your storefront your way. The original Hydrogen was a full‑stack framework built hand‑in‑hand with React Router. We designed it to give developers flexibility and control without making them rethink the fundamentals — but that still meant one framework, on one runtime (Oxygen). The most common question we heard was the one it couldn't answer well: *how do I use this with Next.js? With Nuxt? With the stack I already have?*
-
-Then agents changed how stores get built. It's never been easier to stand up a headless storefront — but agents still get the commerce details wrong, and reinventing those from scratch wastes tokens and puts your conversion rate at risk. The cart, money formatting, analytics, the events apps depend on — you don't want a fresh guess at those on every build.
-
-So we went back to the start and rebuilt Hydrogen as a lightweight, framework‑agnostic toolkit of commerce primitives that deploys to any JavaScript runtime. Everything that made Hydrogen good is still here; it just no longer dictates how you build. And you're not going to hand‑write a cart drawer or a variant selector — your agent is, so Hydrogen ships the skills that teach it how, behind an API small enough to fit in a prompt.
-
-## How it's built
-
-A plain‑JavaScript core holds all the logic — the Storefront API client, the cart, collections, search, and localization. Framework bindings are a thin layer on top that re‑expose the same core; the React package mostly maps hooks onto it. New framework or new runtime, the core doesn't move — only the thin binding around it does.
-
-The parts of a storefront that change at runtime — cart contents, applied filters, the active market, search results — live in **observables**: a small, signals‑style reactive model. You subscribe with a selector, and your code runs only when that slice changes. In React that's a hook; anywhere else it's `.subscribe()`. No `useMemo` everywhere, no wasted re‑renders.
+- **Storefront API client**: typed `gql()` queries, caching, and typed errors.
+- **Request handlers**: the routes a Shopify storefront needs, such as the Storefront API proxy, `/api/cart`, checkout and cart permalinks, URL redirects, and the MCP endpoints for agents.
+- **Cart**: server handlers, HTML forms that work before JavaScript loads, and a store that shows line changes before the server responds.
+- **Products and collections**: variant selection, collection filters, sorting, and pagination.
+- **Predictive search**: a search store with server handlers and form helpers.
+- **Money**: formats Shopify `MoneyV2` amounts for the buyer's locale and currency.
+- **Markets**: country and language context for Shopify Markets.
+- **Analytics**: Shopify storefront analytics with consent handling.
+- **Shop Pay**: Shop Pay buttons.
+- **Customer accounts**: the Customer Account API client, login and logout handlers, and sessions.
 
 ## Get started
 
-The fastest way to get started is to deploy a starter template. If you'd rather use a different framework or runtime, or add Hydrogen to an existing project, set it up in your own project instead.
+You need a Shopify store with Storefront API access from the [Headless channel](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/manage-headless-channels). Until you connect one, the template and the setup skill fall back to [mock.shop](https://mock.shop), a public Storefront API with demo data.
 
-### Deploy a starter template
+### Deploy a template
 
-Pick the template that matches your framework. Each one comes ready to deploy to a managed host. The deploy links use compiled templates from `dist-preview`, with the exact published Hydrogen version, standalone lockfiles, and packaged skills.
-
-**React Router** — Hydrogen + Oxygen
+**React Router on Oxygen.** Shopify's starter template, [`templates/react-router`](./templates/react-router), deployed to Oxygen from your Shopify admin.
 
 <a href="https://admin.shopify.com/hydrogen/new?template=react-router"><img alt="Deploy to Oxygen" src=".github/images/deploy-to-oxygen.svg" width="182" height="46"></a>
 
-**Next.js** — Hydrogen + Vercel
+**Next.js on Vercel.** [Vercel Shop](https://github.com/vercel/shop) is a Next.js storefront built on Hydrogen and maintained by Vercel.
 
-<a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fdist-preview%2Ftemplates%2Fnextjs"><img alt="Deploy with Vercel" src="https://vercel.com/button" width="129" height="40"></a>
+<a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fshop&project-name=shop&repository-name=shop&demo-title=Vercel+Shop&demo-url=https%3A%2F%2Ftemplate.vercel.shop&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22shopify%22%2C%22productSlug%22%3A%22shopify%22%2C%22protocol%22%3A%22other%22%7D%5D"><img alt="Deploy with Vercel" src="https://vercel.com/button" width="129" height="40"></a>
 
-### Set up in your own project
+### Add Hydrogen to your project
 
-Use this path to build with any JavaScript framework, or to add Hydrogen to an existing project. Start with your framework's own CLI — here, Next.js:
-
-```bash
-npx create-next-app@latest
-```
-
-Then add Hydrogen from your project directory:
+From your project's root directory, run:
 
 ```bash
-npx @shopify/hydrogen setup
+npx @shopify/hydrogen@latest setup
 ```
 
-`setup` installs `@shopify/hydrogen` with your project's package manager and copies Hydrogen's agent skills into your project's skills directory — matched to the version you just installed. After upgrading Hydrogen later, run `npx @shopify/hydrogen skills sync` to bring the skills back in line, and `npx @shopify/hydrogen skills check` to verify they are (it exits non-zero when they are not, so it can run in CI). See the [package README](packages/hydrogen/README.md#keeping-skills-in-sync).
+`setup` installs `@shopify/hydrogen` with your project's package manager, and copies Hydrogen's agent skills into `.claude/skills` (read by Claude Code) and `.agents/skills` (read by Codex, Cursor, and OpenCode), matched to the installed version. In an empty directory, it offers to create a project from the React Router template.
 
-Now ask your coding agent to build the storefront:
+Then ask your coding agent to build the storefront:
 
 ```text
-You ›  Can you set up my store with Shopify?
+Set up my store with Shopify.
 ```
 
-It picks up the installed skills and wires commerce into your app:
+The agent follows the `hydrogen-setup` skill. It adds a Storefront API client and request handlers, then builds a home page, collection and search pages, a product page, a cart page and cart drawer, an account page, and consent-gated analytics. It runs your typecheck after each step and smoke-tests the storefront at the end.
 
-```text
-Hydrogen skills detected — setting up your storefront.
+### After you upgrade Hydrogen
 
-  ✓ Detected Next.js (App Router)
-  ✓ Storefront API client            lib/storefront.ts
-  ✓ Request handlers (cart, SFAPI)   proxy.ts
-  ✓ Home, collection & product pages app/…
-  ✓ Cart drawer + line‑item forms    components/…
-  ✓ First‑party analytics + consent  lib/analytics.ts
+Skills describe the API of the installed version, so sync them after each upgrade:
 
-Set NEXT_PUBLIC_STORE_DOMAIN and PRIVATE_STOREFRONT_API_TOKEN, then run your dev server.
+```bash
+npx @shopify/hydrogen skills sync
 ```
 
-You'll need Storefront API access for the store you're connecting — create one and manage credentials through the [Headless channel](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/manage-headless-channels).
+`npx @shopify/hydrogen skills check` exits non-zero when the skills are out of date, so you can run it in CI. See [Keeping skills in sync](./packages/hydrogen/README.md#keeping-skills-in-sync).
 
-## What the code looks like
+## How it works
 
-Below is the kind of code the skills produce.
+Hydrogen has a framework-independent core, plus bindings for React and Vue:
 
-**A typed Storefront API client** — works anywhere you can `fetch`:
+| Entry point | Contains |
+| --- | --- |
+| `@shopify/hydrogen` | The core. It includes the Storefront API client, `gql`, request handlers, route templates, money formatting, analytics, Shop Pay, caching, and the stores for the cart, product form, collections, and predictive search. |
+| `@shopify/hydrogen/react` | React components and hooks built on the core, such as `createCartComponents()`, `createProductComponents()`, `ShopifyScripts`, and `ShopPayButton`. |
+| `@shopify/hydrogen/vue` | The same components for Vue, with composables in place of hooks. |
 
-Implement `getBuyerIp` using trusted request data exposed by your deployment platform.
+The package has three more entry points:
+
+- `@shopify/hydrogen/customer-account`: the Customer Account API client and customer session helpers.
+- `@shopify/hydrogen/vite`: a Vite plugin for trusted local HTTPS during development.
+- `@shopify/hydrogen/ts-plugin`: a TypeScript plugin that flags unknown fields in `gql()` queries in your editor.
+
+On the server, the request handlers run before your framework's router. `handleShopifyRoutes()` answers the routes that Hydrogen owns and passes every other request to your router. When your router returns a 404, `handleShopifyRedirects()` checks the store's URL redirects.
+
+In the browser, state that changes while a customer is on the page lives in observable stores: the cart, the product form's selected variant, collection filters, and predictive search results. Each store has `getState()` and `subscribe(listener)`, and the listener receives the full state on every change. The React and Vue bindings wrap the stores in hooks and composables. The cart, collection, and predictive search hooks take a selector, so a component updates only when the selected value changes:
+
+```tsx
+import { createCartComponents } from "@shopify/hydrogen/react";
+import type { cartHandlers } from "./cart-handlers"; // your cart server handlers
+
+export const { CartProvider, useCart } = createCartComponents<typeof cartHandlers>();
+
+function CartCount() {
+  const totalQuantity = useCart((cart) => cart.data.totalQuantity);
+  return <span>{totalQuantity}</span>;
+}
+```
+
+Hydrogen emits and handles Shopify's [standard storefront events and actions](https://shopify.dev/docs/api/storefront-events-and-actions), the same ones that Liquid themes use. Apps can integrate with a Hydrogen storefront the same way they integrate with a theme, and the cart store applies `shopify:cart:*` events from any source, including apps and agents that call Standard Actions. Cart changes need Shopify's runtime scripts on the page: render `ShopifyScripts` in React or Vue, or use `renderShopifyScriptTags()` in other frameworks.
+
+## Query the Storefront API
+
+Create a Storefront API client for each request, in server code. `getBuyerIp()` is yours to implement: return the buyer's IP address from a header that your host sets.
 
 ```ts
 import {
@@ -108,19 +107,20 @@ import {
   gql,
 } from "@shopify/hydrogen";
 
-const buyerIp = getBuyerIp(request.headers);
+const storeDomain = process.env.PUBLIC_STORE_DOMAIN;
+const privateStorefrontToken = process.env.PRIVATE_STOREFRONT_API_TOKEN;
+if (!storeDomain || !privateStorefrontToken) {
+  throw new Error("Set PUBLIC_STORE_DOMAIN and PRIVATE_STOREFRONT_API_TOKEN.");
+}
 
 const storefront = createStorefrontClient({
   type: "private",
   requestContext: createShopifyRequestContext({
     request,
     i18n: { country: "US", language: "EN" },
-    buyerIp,
+    buyerIp: getBuyerIp(request.headers),
   }),
-  config: {
-    storeDomain: process.env.NEXT_PUBLIC_STORE_DOMAIN,
-    privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN,
-  },
+  config: { storeDomain, privateStorefrontToken },
 });
 
 const { data } = await storefront.graphql(
@@ -134,107 +134,52 @@ const { data } = await storefront.graphql(
 );
 ```
 
-The private Storefront API token is server‑only — it lives in this server code and must never reach the browser. (Browser‑safe reads use a public token.)
+`data` is typed from the Storefront API schema that ships with Hydrogen. To check queries in your editor and in CI, see [GraphQL tooling](./packages/hydrogen/README.md#graphql-tooling).
 
-Queries written with `gql()` are checked against the Storefront API schema — your editor infers `data` and flags a bad field inline. That check runs in the editor, not in `tsc`, so the skills also wire up a `hydrogen gql check` step to catch a renamed field in CI before it ships as an empty result. No codegen to babysit.
+## Frameworks and runtimes
 
-**The same cart, in React** — read one slice, re‑render only when it changes:
+Hydrogen works in any JavaScript framework that renders on the server. Frameworks without a packaged binding use the core directly.
 
-```tsx
-import { createCartComponents } from "@shopify/hydrogen/react";
-import type { cartHandlers } from "./cart-handlers";
+| Framework | Uses | Starter or example |
+| --- | --- | --- |
+| React Router | `@shopify/hydrogen/react` | [`templates/react-router`](./templates/react-router) (starter) |
+| Next.js | `@shopify/hydrogen/react` | [Vercel Shop](https://github.com/vercel/shop) (starter), [`examples/nextjs`](./examples/nextjs) |
+| Nuxt | `@shopify/hydrogen/vue` | [`examples/nuxt`](./examples/nuxt) |
+| Astro | `@shopify/hydrogen` | [`examples/astro`](./examples/astro) |
+| SvelteKit | `@shopify/hydrogen` | [`examples/sveltekit`](./examples/sveltekit) |
+| SolidStart | `@shopify/hydrogen` | [`examples/solid-start`](./examples/solid-start) |
 
-export const { CartProvider, useCart, useCartForm } =
-  createCartComponents<typeof cartHandlers>();
+The projects in [`examples/`](./examples) test Hydrogen across frameworks. They aren't starters and aren't versioned for reuse.
 
-function CartCount() {
-  const totalQuantity = useCart((cart) => cart.data.totalQuantity);
-  return <span>{totalQuantity}</span>;
-}
-```
-
-Cart amounts are always returned by Shopify — never compute currency on the client. When a value is updating, show pending UI rather than a stale number, and never block optimistic interactions like incrementing a line item.
-
-## Standard events & actions
-
-Hydrogen emits Shopify's [standard storefront events and actions](https://shopify.dev/docs/storefronts/themes/best-practices/standard-events-and-actions) — the same contract Liquid storefronts use. Because they're identical across both, apps can integrate with your headless store the same way they integrate with a theme, with no special‑casing, and agents can read state and update the cart through a known interface. Load the Standard Actions runtime once, and your cart drawer, installed apps, analytics, and agentic shopping flows all speak the same language.
-
-## What's included
-
-- **Typed Storefront API client** — `gql()` queries inferred straight from the schema
-- **Cart** — server handlers, optimistic line‑item forms, and a reactive store
-- **Product & collection primitives** — variant selection, options, filtering, pagination
-- **Money formatting** — locale‑ and currency‑correct, never computed on the client
-- **First‑party analytics** — Shopify storefront events with consent handling built in
-- **Shop Pay** — accelerated checkout buttons
-- **Predictive search** — a reactive search store with server handlers and form helpers
-- **Customer accounts** — Customer Account API client and session handling
-- **Request handlers** — proxy the Storefront API, cart, checkout, redirects, and the MCP & agent endpoints your store exposes
-
-> **Coming soon:** packaged bindings for Svelte and Remix 3.
+The core depends on web platform APIs (`fetch`, `Request`, `Response`, and Web Crypto) rather than on a specific runtime. It targets Oxygen, Node.js, Cloudflare Workers, Deno, and other runtimes that provide those APIs, including Vercel's. The template and examples in this repository run on Oxygen and Node.js.
 
 ## Agent skills
 
-You won't hand‑write most of this — your agent will. Setup copies these skills into your project so your coding agent always works from instructions that match your installed version. Each is a focused, framework‑aware guide:
+`setup` and `skills sync` copy these skills into your project. Each skill covers one part of a storefront:
 
-| Skill | What it covers |
+- **Setup and verification**: `hydrogen-setup`, `hydrogen-smoke-test`
+- **Data and requests**: `hydrogen-storefront-client`, `hydrogen-request-handlers`, `hydrogen-routing`, `hydrogen-markets`
+- **Cart**: `hydrogen-cart-ui`, `hydrogen-cart-drawer`, `hydrogen-cart-metafields`
+- **Products, collections, and search**: `hydrogen-variant-form`, `hydrogen-collection-browser`, `hydrogen-predictive-search`, `hydrogen-image`, `hydrogen-money`
+- **Checkout, accounts, and analytics**: `hydrogen-shop-pay`, `hydrogen-customer-account`, `hydrogen-analytics`
+- **Hosting and local development**: `hydrogen-oxygen`, `hydrogen-local-https`
+
+Read them in [`packages/hydrogen/skills`](./packages/hydrogen/skills).
+
+## Versioning
+
+Hydrogen `2026.10.x` uses version `2026-10` of the Storefront API and the Customer Account API. Hydrogen 2026-04 and earlier are also published as `@shopify/hydrogen`, so a caret range such as `^2026.4.0` can resolve to 2026-10. To stay on a version, use a tilde range, such as `~2026.4.0`.
+
+## Packages
+
+| Package | Description |
 | --- | --- |
-| `hydrogen-setup` | End‑to‑end storefront setup orchestrator |
-| `hydrogen-storefront-client` | Typed Storefront API client & `gql()` queries |
-| `hydrogen-request-handlers` | Wiring `handleShopifyRoutes` / `handleShopifyRedirects` |
-| `hydrogen-cart-ui` | Cart route & progressive line‑item forms |
-| `hydrogen-cart-drawer` | Accessible cart drawer + Standard Actions |
-| `hydrogen-collection-browser` | Collection & search browsing, filters, sort |
-| `hydrogen-variant-form` | Product detail page & variant selection |
-| `hydrogen-predictive-search` | Typeahead search with the predictive search store |
-| `hydrogen-routing` | Storefront routes and navigation wiring |
-| `hydrogen-image` | Storefront images and responsive loading |
-| `hydrogen-money` | Currency‑correct money formatting |
-| `hydrogen-shop-pay` | Shop Pay buttons |
-| `hydrogen-markets` | Localization with Shopify Markets |
-| `hydrogen-analytics` | Storefront analytics & consent |
-| `hydrogen-oxygen` | Making a storefront Oxygen‑compatible |
-| `hydrogen-smoke-test` | Runtime verification of the wired storefront |
+| [`@shopify/hydrogen`](./packages/hydrogen) | The Hydrogen toolkit and its agent skills. |
+| [`@shopify/mini-oxygen`](./packages/mini-oxygen) | A local Oxygen runtime and Vite plugin, for developing and previewing storefronts that deploy to Oxygen. |
 
-Browse them in [`packages/hydrogen/skills`](./packages/hydrogen/skills).
+## Help
 
-## Frameworks & runtimes
-
-React and Vue ship with packaged bindings today; vanilla JavaScript uses the core directly. Every other framework uses the same core primitives too — and because the core only needs `fetch`, it runs on any JavaScript runtime: Oxygen, Node, Vercel, Cloudflare Workers, or Deno.
-
-The [`examples/`](./examples) directory ports the same storefront across frameworks, so you can see how the primitives fit. Every port is built from `core/`, a frozen framework‑agnostic design source, on top of the shared request helpers in `shared/`:
-
-| Example | Stack |
-| --- | --- |
-| `astro/` | Astro 6 SSR |
-| `hydrogen/` | Hydrogen + Oxygen-style request context |
-| `nuxt/` | Nuxt 3 on Hydrogen's Vue bindings |
-| `solid-start/` | SolidStart v1 |
-| `sveltekit/` | SvelteKit 2 + Svelte 5 |
-
-> **These are development examples, not starter kits.** They exist to validate the API across frameworks and surface integration friction. The starters we version and distribute live in [`templates/`](./templates). The canonical path to a real storefront is **agent skills + docs**, generating code tailored to your store, framework, and requirements.
-
-Run them all from the repo root:
-
-```bash
-pnpm install
-pnpm dev        # every workspace example and template in parallel
-```
-
-## Repository layout
-
-```
-packages/hydrogen/     the @shopify/hydrogen toolkit + packaged skills
-packages/mini-oxygen/  the @shopify/mini-oxygen local Oxygen runtime + Vite plugin
-templates/             deployable starter templates (React Router, Next.js)
-examples/              framework development examples
-scripts/               repository automation
-skills/                agent skills for working in this repo
-```
-
-## Feedback
-
-This is a developer preview, and your feedback shapes it directly. Found a rough edge, an awkward API, or a missing skill? Let us know in [Discussions](https://github.com/Shopify/hydrogen/discussions).
+Report bugs in [Issues](https://github.com/Shopify/hydrogen/issues/new/choose), and report security vulnerabilities through [Shopify's bug bounty program](https://hackerone.com/shopify).
 
 ## License
 

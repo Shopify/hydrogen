@@ -29,12 +29,6 @@ const templates = [
     lockfile: "package-lock.json",
     distributionPackageManager: "npm@11.17.0",
   },
-  {
-    name: "Next.js",
-    directory: "nextjs",
-    lockfile: "pnpm-lock.yaml",
-    distributionPackageManager: "pnpm@10.33.0",
-  },
 ] as const;
 
 interface PreviewDistOptions {

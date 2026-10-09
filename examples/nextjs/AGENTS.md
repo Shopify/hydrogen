@@ -10,7 +10,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Shopify Hydrogen development
 
-This storefront is scaffolded from Shopify's Hydrogen Next.js template. See the README for framework-specific details.
+This is a Hydrogen development example for Next.js, used for integration coverage in this repository. It is not a supported starter; for that, use [Vercel Shop](https://github.com/vercel/shop). See the README for framework-specific details.
 
 Use the [Shopify AI Toolkit](https://shopify.dev/docs/apps/build/ai-toolkit) for all Shopify API and platform work. If missing, install it in the agent host per that page (or `npx skills add Shopify/shopify-ai-toolkit --list` for skill-compatible hosts).
 

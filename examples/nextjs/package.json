@@ -1,5 +1,5 @@
 {
-  "name": "@shopify/hydrogen-template-nextjs",
+  "name": "@shopify/hydrogen-example-nextjs",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,8 @@
     "build": "next build --debug-prerender",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit && hydrogen gql check --fail-on-warn"
+    "typecheck": "tsc --noEmit && hydrogen gql check --fail-on-warn",
+    "test": "node --test __test__/*.test.ts"
   },
   "dependencies": {
     "@shopify/hydrogen": "workspace:*",

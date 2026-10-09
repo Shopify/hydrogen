@@ -9,6 +9,7 @@ These projects are development examples for exercising Hydrogen across framework
 - `solid-start/` — SolidStart v1 with `query`, `createAsync`, and signal-driven product state.
 - `sveltekit/` — SvelteKit 2 and Svelte 5 with server `load`.
 - `hydrogen/` — mirror of the Hydrogen Skeleton template, kept for parity with Hydrogen classic and its E2E suite.
+- `nextjs/` — Next.js 16 App Router, also used by the storefront E2E suite.
 
 Shared infrastructure:
 
@@ -37,7 +38,7 @@ Nuxt and SolidStart may need the command restarted once after first-run provisio
 
 Outside CI, the local HTTPS plugin also uses Shopify CLI to link an unlinked Hydrogen storefront and push the Customer Account callback, JavaScript origin, and logout URLs. It prints the values for manual configuration when automatic setup is unavailable.
 
-The Next.js template provisions its own development certificate and does not use the Hydrogen certificates.
+The Next.js example provisions its own development certificate and does not use the Hydrogen certificates.
 
 ## What examples are
 
@@ -52,7 +53,7 @@ The Next.js template provisions its own development certificate and does not use
 - Starter kits that we intend to version and distribute.
 - A promise that every framework integration shown here is production-ready.
 
-The React Router and Next.js starter sources live under [`templates/`](../templates/) and are prepared for standalone distribution through the Hydrogen release flow.
+The React Router starter source lives under [`templates/`](../templates/) and is prepared for standalone distribution through the Hydrogen release flow. For a Next.js starter, use [Vercel Shop](https://github.com/vercel/shop).
 
 ## Guidelines for adding examples
 

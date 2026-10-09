@@ -104,9 +104,6 @@
         "templates/react-router/app/lib/money.ts",
         "templates/react-router/app/lib/search.ts",
         "templates/react-router/server.ts",
-        "templates/nextjs/lib/filters.tsx",
-        "templates/nextjs/app/collections/**/page.tsx",
-        "templates/nextjs/app/search/page.tsx",
         "examples/shared/private-env.ts",
         "packages/hydrogen/src/cli/setup.ts",
         "packages/hydrogen/src/core/analytics/bus.ts",
@@ -152,11 +149,6 @@
         "templates/react-router/app/routes/collection.tsx",
         "templates/react-router/app/routes/product.tsx",
         "templates/react-router/app/routes/search.tsx",
-        "templates/nextjs/components/CollectionBrowser.tsx",
-        "templates/nextjs/components/ProductDetails.tsx",
-        "templates/nextjs/components/ProductCard.tsx",
-        "templates/nextjs/components/CartLineItem.tsx",
-        "templates/nextjs/app/search/page.tsx",
         "packages/hydrogen/src/client/client.ts",
         "packages/hydrogen/src/core/analytics/cart-tracker.ts",
         "packages/hydrogen/src/core/analytics/cdn/shopify-analytics.ts",
@@ -178,11 +170,7 @@
       }
     },
     {
-      "files": [
-        "templates/nextjs/components/ProductViewedTracker.tsx",
-        "templates/nextjs/components/CartViewedTracker.tsx",
-        "templates/react-router/app/components/AnalyticsTrackers.tsx"
-      ],
+      "files": ["templates/react-router/app/components/AnalyticsTrackers.tsx"],
       "rules": {
         // Analytics view trackers intentionally key their effect on route
         // identity (product handle / cart id), not every field they read, so a
