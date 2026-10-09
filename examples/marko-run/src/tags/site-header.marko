@@ -1,0 +1,97 @@
+import { CART_DRAWER_ID, openCartDrawer, supportsDialogCommands } from "./cart-drawer.marko";
+import { subscribeCartState } from "../lib/cart.client";
+server import { loadHeaderCollections } from "../lib/loaders";
+
+<let/totalQuantity=0>
+<let/isCartLoaded=false>
+<script>
+  const unsubscribe = subscribeCartState((state) => {
+    totalQuantity = state.data.totalQuantity;
+    isCartLoaded = true;
+  });
+  $signal.addEventListener("abort", unsubscribe);
+</script>
+
+<const/collectionsPromise=loadHeaderCollections($global)>
+<const/rendersCartPage=$global.url.pathname === "/cart">
+<const/cartLabel=(totalQuantity === 0 ? "Cart, empty" : `Cart, ${totalQuantity > 99 ? "99 or more" : totalQuantity} ${totalQuantity === 1 ? "item" : "items"}`)>
+
+<header class="border-border bg-surface sticky top-0 z-40 border-b">
+  <div class="max-w-page px-margin mx-auto flex h-16 items-center justify-between gap-4">
+    <div class="flex min-w-0 items-center gap-4">
+      <details class="md:hidden">
+        <summary
+          aria-label="Menu"
+          class="focus-visible:outline-accent flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </summary>
+        <nav aria-label="Mobile navigation" class="border-border bg-surface absolute inset-x-0 top-full border-b px-4 py-3 shadow-sm">
+          <a href="/collections" class="focus-visible:outline-accent block min-h-11 rounded-sm py-3 text-base focus-visible:outline-2 focus-visible:outline-offset-2">Collections</a>
+          <await|collections| value=collectionsPromise>
+            <for|collection| of=collections>
+              <a href=`/collections/${collection.handle}` class="focus-visible:outline-accent block min-h-11 rounded-sm py-3 text-base focus-visible:outline-2 focus-visible:outline-offset-2">${collection.title}</a>
+            </for>
+          </await>
+          <a href="/blogs/news" class="focus-visible:outline-accent block min-h-11 rounded-sm py-3 text-base focus-visible:outline-2 focus-visible:outline-offset-2">News</a>
+        </nav>
+      </details>
+      <a href="/" class="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-lg font-semibold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2">MOCK.SHOP</a>
+    </div>
+
+    <nav aria-label="Main navigation" class="hidden min-w-0 flex-1 items-center gap-6 overflow-x-auto md:flex">
+      <a href="/collections" class="focus-visible:outline-accent shrink-0 rounded-sm text-sm hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2">Collections</a>
+      <await|collections| value=collectionsPromise>
+        <for|collection| of=collections>
+          <a href=`/collections/${collection.handle}` class="focus-visible:outline-accent shrink-0 rounded-sm text-sm hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2">${collection.title}</a>
+        </for>
+      </await>
+      <a href="/blogs/news" class="focus-visible:outline-accent shrink-0 rounded-sm text-sm hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2">News</a>
+    </nav>
+
+    <if=!isCartLoaded || rendersCartPage>
+      <a
+        href="/cart"
+        aria-label=cartLabel
+        aria-current=(rendersCartPage ? "page" : undefined)
+        class="focus-visible:outline-accent relative flex h-11 w-11 shrink-0 items-center justify-center rounded-sm hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2"
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 7h14l-1.5 12a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8L5 7Z" />
+          <path d="M9 7V5a3 3 0 0 1 6 0v2" />
+        </svg>
+        <if=(totalQuantity > 0)>
+          <span class="bg-interactive text-white absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full px-1 text-xs font-medium" aria-hidden="true">
+            ${totalQuantity > 99 ? "99+" : totalQuantity}
+          </span>
+        </if>
+      </a>
+    </if>
+    <else>
+      <button
+        type="button"
+        aria-label=cartLabel
+        aria-controls=CART_DRAWER_ID
+        aria-haspopup="dialog"
+        command="show-modal"
+        commandfor=CART_DRAWER_ID
+        class="focus-visible:outline-accent relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-sm hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2"
+        onClick() {
+          if (!supportsDialogCommands()) openCartDrawer();
+        }
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 7h14l-1.5 12a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8L5 7Z" />
+          <path d="M9 7V5a3 3 0 0 1 6 0v2" />
+        </svg>
+        <if=(totalQuantity > 0)>
+          <span class="bg-interactive text-white absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full px-1 text-xs font-medium" aria-hidden="true">
+            ${totalQuantity > 99 ? "99+" : totalQuantity}
+          </span>
+        </if>
+      </button>
+    </else>
+  </div>
+</header>
