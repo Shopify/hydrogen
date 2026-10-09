@@ -347,25 +347,25 @@ describe("createFetchWithCache", () => {
   });
 
   it.each([
-    ["a cache strategy", strategy],
-    ["Cache.none()", Cache.none()],
-  ])(
-    "returns opaque redirects unchanged without caching them with %s",
-    async (_name, cacheStrategy) => {
-      const cache = new MemoryKeyValueCache();
-      const fetch = vi.fn(async () => createOpaqueResponse("opaqueredirect"));
-      const fetchWithCache = createFetchWithCache({ cache, fetch });
+    ["an opaque redirect with a cache strategy", "opaqueredirect", strategy],
+    ["an opaque redirect with Cache.none()", "opaqueredirect", Cache.none()],
+    ["an opaque response with a cache strategy", "opaque", strategy],
+  ] as const)("returns %s unchanged without caching it", async (_name, type, cacheStrategy) => {
+    const cache = new MemoryKeyValueCache();
+    const opaqueResponse = createOpaqueResponse(type);
+    const fetchWithCache = createFetchWithCache({
+      cache,
+      fetch: vi.fn(async () => opaqueResponse),
+    });
 
-      const response = await fetchWithCache("https://example.com/redirect", undefined, {
-        key: "opaque-redirect",
-        strategy: cacheStrategy,
-      });
+    const response = await fetchWithCache("https://example.com/redirect", undefined, {
+      key: "opaque",
+      strategy: cacheStrategy,
+    });
 
-      expect(response.type).toBe("opaqueredirect");
-      expect(response.status).toBe(0);
-      expect(cache.store.size).toBe(0);
-    },
-  );
+    expect(response).toBe(opaqueResponse);
+    expect(cache.store.size).toBe(0);
+  });
 
   it("supports annotation opt-out", async () => {
     const fetchWithCache = createFetchWithCache({
