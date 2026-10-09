@@ -285,7 +285,8 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       // Browsers hide a manual redirect's status behind an opaque response, so leave it out.
       const isOpaqueRedirect = response.type === "opaqueredirect";
       if (isOpaqueRedirect || (status >= 300 && status < 400)) {
-        await response.body?.cancel().catch(() => {});
+        // Don't await: a cancel waits on any unread clone (tee) a custom fetch kept.
+        void response.body?.cancel().catch(() => {});
         throw new StorefrontApiError(
           isOpaqueRedirect
             ? "SFAPI responded with a redirect; redirects are not followed"
