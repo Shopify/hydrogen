@@ -3,6 +3,73 @@
   "version": "1",
   "releases": [
     {
+      "title": "Customer account login and token refresh reliability",
+      "version": "2026.4.5",
+      "date": "2026-08-14",
+      "hash": "2a2738ba20487ccc07006815fe40e93b24cb5f08",
+      "commit": "https://github.com/Shopify/hydrogen/pull/3912/commits/2a2738ba20487ccc07006815fe40e93b24cb5f08",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3912",
+      "dependencies": {
+        "@shopify/hydrogen": "2026.4.5"
+      },
+      "devDependencies": {},
+      "removeDependencies": [
+        "@shopify/hydrogen"
+      ],
+      "features": [
+        {
+          "title": "Add an explicit `~` app alias to new Hydrogen projects",
+          "info": "Newly scaffolded storefronts define the `~` path alias explicitly instead of relying on an implicit default, making imports resolve consistently across editors and build tools.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3852",
+          "id": "3852"
+        },
+        {
+          "title": "Recommend the Shopify AI Toolkit in newly scaffolded storefronts",
+          "info": "New projects now point coding agents at the Shopify AI Toolkit for Shopify API and platform work.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3887",
+          "id": "3887"
+        }
+      ],
+      "fixes": [
+        {
+          "title": "Recover customer account login from OAuth state mismatches",
+          "info": "Customer account login now recovers when switching browser contexts or opening multiple login tabs, and OAuth state values use cryptographically secure randomness.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3856",
+          "id": "3856"
+        },
+        {
+          "title": "Keep customers logged in when a token refresh fails transiently",
+          "info": "The session is now only cleared when the refresh token is missing or the token endpoint returns `invalid_grant`. Other OAuth errors, HTTP failures, and network failures can be retried on a subsequent request instead of logging the customer out.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3916",
+          "id": "3916"
+        }
+      ]
+    },
+    {
+      "title": "Reduced PerfKit resource timing sampling",
+      "version": "2026.4.4",
+      "date": "2026-06-15",
+      "hash": "b4df055281f6ce279a690766405b4291e5cec77c",
+      "commit": "https://github.com/Shopify/hydrogen/pull/3791/commits/b4df055281f6ce279a690766405b4291e5cec77c",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3791",
+      "dependencies": {
+        "@shopify/hydrogen": "2026.4.4"
+      },
+      "devDependencies": {},
+      "removeDependencies": [
+        "@shopify/hydrogen"
+      ],
+      "features": [],
+      "fixes": [
+        {
+          "title": "Reduce PerfKit resource timing sampling rate",
+          "info": "PerfKit now sets a resource timing sampling rate of 10 instead of 100, so storefronts report performance timings for a smaller sample of requests.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3790",
+          "id": "3790"
+        }
+      ]
+    },
+    {
       "title": "Cart, redirect, Image, and React Router compatibility fixes",
       "version": "2026.4.3",
       "date": "2026-06-08",
