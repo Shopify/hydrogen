@@ -10,6 +10,7 @@ These projects are development examples for exercising Hydrogen across framework
 - `sveltekit/` — SvelteKit 2 and Svelte 5 with server `load`.
 - `hydrogen/` — mirror of the Hydrogen Skeleton template, kept for parity with Hydrogen classic and its E2E suite.
 - `nextjs/` — Next.js 16 App Router, also used by the storefront E2E suite.
+- `marko-run/` — Marko 6 and `@marko/run` with route-local handlers and streamed layout data.
 
 Shared infrastructure:
 
