@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { localHttps, provisionLocalHttps } from ".";
+import { hydrogen, localHttps, provisionLocalHttps } from ".";
 import { assert } from "../core/test-utils";
 
 const fsCalls = vi.hoisted(() => ({
@@ -658,3 +658,13 @@ function createResponse() {
 
   return { removeHeader, value, writeHead };
 }
+
+describe("hydrogen", () => {
+  it("throws the Hydrogen 2 pin instructions instead of an ESM export error", () => {
+    const message = captureErrorMessage(() => hydrogen());
+
+    expect(message).toContain("@shopify/hydrogen 0.0.0-test is Hydrogen 3");
+    expect(message).toContain('pin "@shopify/hydrogen" to "~2026.4.0"');
+    expect(message).toContain("https://github.com/Shopify/hydrogen/tree/2026-04");
+  });
+});
