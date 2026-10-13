@@ -6,9 +6,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
-      - 'packages/hydrogen/docs/generated/generated_docs_data_v2.json'
-      - 'packages/hydrogen/package.json'
-      - 'packages/hydrogen/docs/screenshots/**'
+      - "packages/hydrogen/docs/generated/generated_docs_data_v2.json"
+      - "packages/hydrogen/package.json"
+      - "packages/hydrogen/docs/screenshots/**"
 
 concurrency:
   group: shopify-dev-preview-label-${{ github.event.pull_request.number }}
