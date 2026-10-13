@@ -47,7 +47,7 @@ Hydrogen migration:
 4. **`react-router.config.ts`** — add it (React Router framework config + future flags; `v8_middleware: true` is required for the middleware skeleton below). Set `buildDirectory: 'dist'` — React Router defaults to `build/`, and the deploy script's `--assets-dir dist/client --worker-dir dist/server` flags silently point at nothing without it. Explicit `routes.ts` route config and flat routes via `@react-router/fs-routes` both work — for a migration, fs-routes preserves the existing flat route filenames with the least churn.
 5. **Request wiring** — in your server entry or a root middleware, build the request context and clients (mental-model step 1) and expose the storefront client to loaders via typed React Router contexts. If you already thread Oxygen `env`/`executionContext` through a context provider, keep it — the library does not force a specific context shape.
 6. **Routes & imports** — *(skip the import swap if already on React Router)* swap `@remix-run/*` imports to `react-router`; migrate `json()`/`defer()` loader/action return helpers.
-7. **Connect a store** — set `PUBLIC_STORE_DOMAIN`, `PUBLIC_STOREFRONT_ID` and `PRIVATE_STOREFRONT_API_TOKEN` in `.env` (on Oxygen, a linked storefront injects them); customer accounts add `SHOP_ID`, `PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID` and `SESSION_SECRET` (full list in `references/dependencies-and-tooling.md`). With no token, or with `MOCK_SHOP=1`, the skeleton's client factory falls back to the tokenless mock.shop demo store — useful to verify the migration before the user supplies credentials. mock.shop only accepts a **tokenless public client** (it rejects the private-token header with a 401), and it is a catalog of fictional stores: https://mock.shop/llms.txt lists them.
+7. **Connect a store** — set `PUBLIC_STORE_DOMAIN`, `PUBLIC_STOREFRONT_ID` and `PRIVATE_STOREFRONT_API_TOKEN` in `.env` (on Oxygen, a linked storefront injects them); a store with only `PUBLIC_STOREFRONT_API_TOKEN` still uses the real store through the public client. Customer accounts add `SHOP_ID`, `PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID` and `SESSION_SECRET` (full list in `references/dependencies-and-tooling.md`). With `MOCK_SHOP=1`, or no store domain at all, the skeleton's client factory falls back to the tokenless mock.shop demo store — useful to verify the migration before the user supplies credentials. mock.shop only accepts a **tokenless public client** (it rejects the private-token header with a 401), and it is a catalog of fictional stores: https://mock.shop/llms.txt lists them.
 8. **Verify** — build/typecheck gate, then the `hydrogen-smoke-test` skill, then hand off to the user (see Verification).
 
 The exact config, version pins, and handler signatures change between builds — read them from the installed package (`node_modules/@shopify/hydrogen`, its `skills/`, and its `.d.ts`), not from this doc. The two things that are **not in the installed package** — the version seed and the React Router wiring skeleton — are below.
@@ -121,6 +121,7 @@ declare global {
     MOCK_SHOP?: string;
     PUBLIC_STORE_DOMAIN?: string;
     PUBLIC_STOREFRONT_ID?: string;
+    PUBLIC_STOREFRONT_API_TOKEN?: string;
     PRIVATE_STOREFRONT_API_TOKEN?: string;
   }
 }
@@ -133,12 +134,13 @@ declare module 'react-router' {
 }
 ```
 
-`app/lib/storefront.ts` — typed RR contexts plus a per-request client factory (replaces the old `AppLoadContext`). `buyerIp` goes on the **request context**; `cache`/`waitUntil`/`storefrontId` go in the **client config**. The factory returns the tokenless **public** client for mock.shop and the **private** client for a real store:
+`app/lib/storefront.ts` — typed RR contexts plus a per-request client factory (replaces the old `AppLoadContext`). `buyerIp` goes on the **request context**; `cache`/`waitUntil`/`storefrontId` go in the **client config**. The factory picks the **private** client when a private token exists, the **public** client against the real store otherwise (a public token works; tokenless can't read some fields), and the tokenless **public** client for mock.shop only when `MOCK_SHOP=1` or no store domain is set:
 
 ```ts
 import {createContext} from 'react-router';
 import {
   type CacheInstance,
+  type CachingStrategy,
   createShopifyRequestContext,
   createStorefrontClient,
   type PublicStorefrontClient,
@@ -146,8 +148,15 @@ import {
   type ShopifyRequestContext,
 } from '@shopify/hydrogen';
 
-// mock.shop is auth-free and 401s any private token, so it gets the public client.
-export type RequestStorefrontClient = RequestScopedPrivateStorefrontClient | PublicStorefrontClient;
+// The bare client types default `Extra` to `{}`, which erases the per-call `cache`
+// option from `graphql()` — every `Cache.long()` call-site then fails typecheck
+// with an opaque "cache does not exist in type 'MergedOptions'". Carry the
+// option through the alias instead.
+type CacheOptions = {cache?: CachingStrategy};
+
+export type RequestStorefrontClient =
+  | RequestScopedPrivateStorefrontClient<CacheOptions>
+  | PublicStorefrontClient<CacheOptions>;
 
 export const envContext = createContext<Env>();
 export const storefrontClientContext = createContext<RequestStorefrontClient>();
@@ -171,7 +180,8 @@ export function createRequestStorefrontClient(
 ): RequestStorefrontClient {
   const i18n = {country: 'US', language: 'EN'} as const;             // or derive from the URL/domain
 
-  if (env.MOCK_SHOP === '1' || !env.PRIVATE_STOREFRONT_API_TOKEN || !env.PUBLIC_STORE_DOMAIN) {
+  // mock.shop is auth-free and 401s any token header, so it always gets the tokenless public client.
+  if (env.MOCK_SHOP === '1' || !env.PUBLIC_STORE_DOMAIN) {
     return createStorefrontClient({
       type: 'public',
       requestContext: createShopifyRequestContext({request, i18n}),
@@ -179,12 +189,28 @@ export function createRequestStorefrontClient(
     });
   }
 
+  if (env.PRIVATE_STOREFRONT_API_TOKEN) {
+    return createStorefrontClient({
+      type: 'private',
+      requestContext: createShopifyRequestContext({request, i18n, buyerIp: getBuyerIp(request.headers)}),
+      config: {
+        storeDomain: env.PUBLIC_STORE_DOMAIN,
+        privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
+        storefrontId: env.PUBLIC_STOREFRONT_ID,
+        cache,
+        waitUntil,
+      },
+    });
+  }
+
+  // Many stores run locally with only a public token — don't send them to mock.shop.
+  // Tokenless access can't read some fields (product tags, metaobjects, metafields, menus).
   return createStorefrontClient({
-    type: 'private',
-    requestContext: createShopifyRequestContext({request, i18n, buyerIp: getBuyerIp(request.headers)}),
+    type: 'public',
+    requestContext: createShopifyRequestContext({request, i18n}),
     config: {
       storeDomain: env.PUBLIC_STORE_DOMAIN,
-      privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
+      publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
       storefrontId: env.PUBLIC_STOREFRONT_ID,
       cache,
       waitUntil,
