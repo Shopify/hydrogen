@@ -39,7 +39,7 @@ Hydrogen migration:
 - [ ] CSP/nonce: classic's utilities are gone — port CSP/nonce as app code, then check the browser console for CSP violations
 - [ ] 7. Connect a store — env vars in .env (private token, or public token), or MOCK_SHOP=1 for the tokenless mock.shop demo
 - [ ] Optional subsystems: detect each → migrate or skip, and report every skip
-- [ ] 8. Verify (build/typecheck gate, then hydrogen-smoke-test), then hand off to the user
+- [ ] 8. Verify (build/typecheck gate, hydrogen-smoke-test, browser console on the home page), then hand off to the user
 ```
 
 1. **Dependencies** — *(Remix swap only if not already on React Router)* replace `@remix-run/react`, `@remix-run/node`, `@remix-run/server-runtime`, `@remix-run/dev` and `@shopify/remix-oxygen` with `react-router` + `@react-router/dev` (pin all React Router packages to one version; `react-router-dom` is not needed). Add `@shopify/hydrogen`, `@shopify/mini-oxygen`, `vite`, the `@types/*` packages and `@shopify/cli` at the versions in the seed below. Remove `@shopify/cli-hydrogen` and any `@shopify/hydrogen-classic`-style alias if present. Align versions to the seed rather than picking latest of each independently, and never pin React Router below the version the app already runs.
@@ -49,7 +49,7 @@ Hydrogen migration:
 5. **Request wiring** — in your server entry or a root middleware, build the request context and clients (mental-model step 1) and expose the storefront client to loaders via typed React Router contexts. If you already thread Oxygen `env`/`executionContext` through a context provider, keep it — the library does not force a specific context shape.
 6. **Routes & imports** — *(skip the import swap if already on React Router)* swap `@remix-run/*` imports to `react-router`; migrate `json()`/`defer()` loader/action return helpers.
 7. **Connect a store** — set `PUBLIC_STORE_DOMAIN`, `PUBLIC_STOREFRONT_ID` and `PRIVATE_STOREFRONT_API_TOKEN` in `.env` (on Oxygen, a linked storefront injects them); a store with only `PUBLIC_STOREFRONT_API_TOKEN` still uses the real store through the public client. Customer accounts add `SHOP_ID`, `PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID` and `SESSION_SECRET` (full list in `references/dependencies-and-tooling.md`). With `MOCK_SHOP=1`, or no store domain at all, the skeleton's client factory falls back to the tokenless mock.shop demo store — useful to verify the migration before the user supplies credentials. mock.shop only accepts a **tokenless public client** (it rejects the private-token header with a 401), and it is a catalog of fictional stores: https://mock.shop/llms.txt lists them.
-8. **Verify** — build/typecheck gate, then the `hydrogen-smoke-test` skill, then hand off to the user (see Verification).
+8. **Verify** — build/typecheck gate, then the `hydrogen-smoke-test` skill, then the browser console check, then hand off to the user (see Verification).
 
 The exact config, version pins, and handler signatures change between builds — read them from the installed package (`node_modules/@shopify/hydrogen`, its `skills/`, and its `.d.ts`), not from this doc. The two things that are **not in the installed package** — the version seed and the React Router wiring skeleton — are below.
 
@@ -323,7 +323,7 @@ Each file is a short list of the specific "it renders but is wrong" traps for th
 
 Don't trust "it renders." Gate on the build first: `react-router build` and `react-router typegen && tsc && hydrogen gql check --fail-on-warn` must both exit 0 (most import/return-helper and gql traps surface here — fix the root cause, don't suppress it; a red build makes everything downstream meaningless). Then run the local `hydrogen-smoke-test` skill for functional/runtime verification — request handlers, product, cart, collection/search, analytics, money, and the production pass. That skill owns "does the storefront work"; don't restate its checks here.
 
-After the build gate and smoke test pass, **hand off to the user rather than running the dev server yourself.** Tell them they can test the migrated code with `npm run dev` (or `npm run dev:https` when they need customer login locally), and to pay special attention to the areas a migration most often gets subtly wrong while still compiling:
+After the build gate and smoke test pass, **keep the dev server running and load the home page in a browser.** Fix every console error and warning before handing off. If you have no browser tool, say so in the handoff and ask the user to check the console themselves. Then hand off to the user. Tell them to test the migrated code with `npm run dev` (or `npm run dev:https` when they need customer login locally), and to pay special attention to the areas a migration most often gets subtly wrong while still compiling:
 
 - **CSP/nonce** — classic Hydrogen's `createContentSecurityPolicy`/`NonceProvider`/`useNonce` are gone; CSP is app-owned now, so port it as your own app code. A dropped nonce leaves pages rendering fine while hydration (cart, variant picker, analytics) is silently dead — check the browser console for CSP violations after migrating.
 - **Analytics** — the commerce funnel (`view_item`/`add_to_cart`/…) silently dropping while page views still fire (`references/analytics.md`).
