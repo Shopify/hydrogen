@@ -33,7 +33,7 @@ test.describe("Privacy Banner - Session Migration", () => {
 
       // 4. Remove ONLY the analytics HTTP-only cookies (simulate migration scenario)
       // Keep: _shopify_y, _shopify_s (old tracking cookies)
-      // Keep: _shopify_essential(s), because Hydrogen dev-preview persists consent in cookies.
+      // Keep: _shopify_essential(s), because Hydrogen persists consent in cookies.
       // Remove: _shopify_analytics, _shopify_marketing
       await storefront.removeCookies(["_shopify_analytics", "_shopify_marketing"]);
 
@@ -93,7 +93,7 @@ test.describe("Privacy Banner - Session Migration", () => {
       // === MIGRATION: Remove new cookies AND old tracking cookies ===
 
       // 5. Remove analytics cookies AND _shopify_y and _shopify_s.
-      // Keep _shopify_essential(s), because Hydrogen dev-preview persists declined consent in cookies.
+      // Keep _shopify_essential(s), because Hydrogen persists declined consent in cookies.
       // This simulates a migration where user had declined consent and
       // we're testing the system handles missing tracking cookies correctly
       await storefront.removeCookies([

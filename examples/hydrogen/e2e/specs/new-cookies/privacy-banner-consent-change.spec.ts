@@ -65,7 +65,7 @@ test.describe("Privacy Banner - Consent Change", () => {
       await storefront.addToCart();
       storefront.expectNoMonorailRequests();
 
-      // TODO: Re-enable once Hydrogen dev-preview can strip or replace checkoutUrl tracking params from SFAPI.
+      // TODO: Re-enable once Hydrogen can strip or replace the `_y` and `_s` tracking params in Storefront API checkout URLs.
       // await storefront.expectNoCheckoutUrlTrackingParams("after revoking consent");
 
       // 11. Reload the page to verify persistence

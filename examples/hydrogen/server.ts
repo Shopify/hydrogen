@@ -105,8 +105,9 @@ export default {
       }
 
       /**
-       * Create a React Router request handler directly. Hydrogen dev-preview handles
-       * Shopify-owned routes above, so Hydrogen's SFAPI/MCP proxy wrapper is redundant.
+       * Use React Router's request handler directly. `handleShopifyRoutes()` above already
+       * answers the Storefront API, MCP, and other Shopify-owned routes, so this example doesn't
+       * need the request handler wrapper from Hydrogen 2026-04 and earlier.
        */
       const handleRequest = createRequestHandler(serverBuild, process.env.NODE_ENV);
 

@@ -49,7 +49,7 @@ test.describe("Privacy Banner - Decline Flow", () => {
     storefront.expectNoMonorailRequests();
 
     // 10. Verify checkout URLs contain no tracking params (consent declined)
-    // TODO: Re-enable once Hydrogen dev-preview can strip or replace checkoutUrl tracking params from SFAPI.
+    // TODO: Re-enable once Hydrogen can strip or replace the `_y` and `_s` tracking params in Storefront API checkout URLs.
     // await storefront.expectNoCheckoutUrlTrackingParams("in cart drawer after declining consent");
 
     // 11. Reload the page to verify persistence

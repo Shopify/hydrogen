@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 /**
- * Next.js 16 config for the Hydrogen template.
+ * Next.js 16 config for the Hydrogen Next.js example.
  *
  * `cacheComponents: true` enables Cache Components / `use cache`.
  *

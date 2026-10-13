@@ -28,15 +28,15 @@ jobs:
       matrix:
         template:
           - name: React Router
-            directory: react-router
+            directory: templates/react-router
             package: "@shopify/hydrogen-template-react-router"
             port: 4201
             devCommand: "pnpm --filter @shopify/hydrogen-template-react-router exec vite dev --port 4201"
           - name: Next.js
-            directory: nextjs
-            package: "@shopify/hydrogen-template-nextjs"
+            directory: examples/nextjs
+            package: "@shopify/hydrogen-example-nextjs"
             port: 4202
-            devCommand: "pnpm --filter @shopify/hydrogen-template-nextjs exec next dev -p 4202"
+            devCommand: "pnpm --filter @shopify/hydrogen-example-nextjs exec next dev -p 4202"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -59,7 +59,7 @@ jobs:
         run: pnpm run build:pkgs
 
       - name: Configure ${{ matrix.template.name }}
-        run: cp templates/${{ matrix.template.directory }}/.env.example templates/${{ matrix.template.directory }}/.env
+        run: cp ${{ matrix.template.directory }}/.env.example ${{ matrix.template.directory }}/.env
 
       - name: Build ${{ matrix.template.name }}
         run: pnpm --filter ${{ matrix.template.package }} build
@@ -78,7 +78,7 @@ jobs:
         run: pnpm test:e2e:storefront
         env:
           STOREFRONT_BASE_URL: http://localhost:${{ matrix.template.port }}/
-          STOREFRONT_SKIP_NO_JS_VARIANTS: ${{ matrix.template.directory == 'nextjs' }}
+          STOREFRONT_SKIP_NO_JS_VARIANTS: ${{ matrix.template.directory == 'examples/nextjs' }}
 
       - name: Stop dev server
         if: always()

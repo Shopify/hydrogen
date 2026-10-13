@@ -1,11 +1,11 @@
 import { setTestStore, test, expect, getRequiredSecret } from "../../fixtures";
 
-// TODO-HYDROGEN-E2E: re-enable when Hydrogen dev-preview models applied gift cards and
+// TODO-HYDROGEN-E2E: re-enable when the Hydrogen cart models applied gift cards and
 // gift-card cart mutations, or when these specs are rewritten for current UX.
 const GIFT_CARD_E2E_DISABLED = true;
 test.skip(
   GIFT_CARD_E2E_DISABLED,
-  "TODO-HYDROGEN-E2E: gift-card UI was removed during Hydrogen dev-preview cart migration.",
+  "TODO-HYDROGEN-E2E: gift-card UI was removed when this example moved to the Hydrogen 2026-10 cart.",
 );
 
 if (!GIFT_CARD_E2E_DISABLED) {

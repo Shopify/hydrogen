@@ -137,13 +137,13 @@ export function SearchView({ searchResults, searchTerm }: Omit<SearchViewPayload
 }
 
 /**
- * Convert dev-preview Hydrogen cart state into the current analytics cart payload.
+ * Convert the cart store's state into the `AnalyticsCart` payload that the
+ * analytics bus publishes.
  *
- * The core analytics bus still publishes Hydrogen-compatible cart payloads
- * (`updatedAt` plus connection-shaped `lines`) while we decide whether the
- * public analytics contract should become Hydrogen-native. Keep that
- * compatibility concern at this example boundary instead of changing cart
- * state to match analytics.
+ * The analytics bus still uses the cart shape from Hydrogen 2026-04 and earlier
+ * (`updatedAt` plus connection-shaped `lines`) while we decide whether the public
+ * analytics contract should match the cart store instead. Keep that conversion at
+ * this example boundary instead of changing cart state to match analytics.
  */
 type AnalyticsCartInput = CartData & Partial<Pick<CartState, "pending" | "revalidating">>;
 

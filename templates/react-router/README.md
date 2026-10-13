@@ -38,6 +38,8 @@ analytics, and a consent banner wired up.
 
 ## Run it
 
+Requires Node.js 22 (22.12 or later) or Node.js 24.
+
 ```bash
 npm install
 ```

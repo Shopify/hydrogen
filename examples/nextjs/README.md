@@ -1,8 +1,10 @@
-# Next.js Hydrogen Storefront
+# Next.js Hydrogen Example
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fdist-preview%2Ftemplates%2Fnextjs)
+> **This is a development example, not a starter.** For a Next.js starter, use [Vercel Shop](https://github.com/vercel/shop):
+>
+> [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fshop&project-name=shop&repository-name=shop&demo-title=Vercel+Shop&demo-url=https%3A%2F%2Ftemplate.vercel.shop&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22shopify%22%2C%22productSlug%22%3A%22shopify%22%2C%22protocol%22%3A%22other%22%7D%5D)
 
-A Next.js 16 App Router storefront starter built on [`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen) for Vercel.
+A Next.js 16 App Router storefront built on [`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen).
 
 It includes home, collections, product pages, search, cart, customer accounts, sitemap, robots, Shopify analytics, and a consent banner. With no private token it falls back to `mock.shop` so the app can render before you connect a store.
 
@@ -13,9 +15,11 @@ It includes home, collections, product pages, search, cart, customer accounts, s
 
 ## Run Locally
 
+From the repository root:
+
 ```sh
 pnpm install
-pnpm dev
+pnpm dev:next
 ```
 
 Open <http://localhost:3000>.
@@ -23,7 +27,7 @@ Open <http://localhost:3000>.
 Customer Accounts require an HTTPS origin because Shopify OAuth rejects `http`. Run the HTTPS development server and open <https://local.tryhydrogen.dev:5173>:
 
 ```sh
-pnpm dev:https
+pnpm --filter @shopify/hydrogen-example-nextjs dev:https
 ```
 
 Next.js provisions and reuses a trusted development certificate under `certificates/`. On first run, it may prompt to install the local certificate authority.
@@ -35,7 +39,7 @@ Next.js does not use Hydrogen's Vite plugin, so configure the Customer Account c
 Copy `.env.example` to `.env` when you are ready to connect a real store:
 
 ```sh
-cp .env.example .env
+cp examples/nextjs/.env.example examples/nextjs/.env
 ```
 
 Server-only values:
@@ -64,6 +68,8 @@ If `PRIVATE_STOREFRONT_API_TOKEN` is unset, the app uses `mock.shop`. If you set
 
 ## Scripts
 
+Run these from `examples/nextjs`, or from the repository root with `pnpm --filter @shopify/hydrogen-example-nextjs <script>`.
+
 | Script | Does |
 | --- | --- |
 | `pnpm dev` | Start the Next.js dev server. |
@@ -85,19 +91,6 @@ If `PRIVATE_STOREFRONT_API_TOKEN` is unset, the app uses `mock.shop`. If you set
 - `/sitemap.xml`: product and collection sitemap.
 - `/robots.txt`: crawler rules for the storefront.
 
-## Deploy to Vercel
-
-The fastest path is one click:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FShopify%2Fhydrogen%2Ftree%2Fdist-preview%2Ftemplates%2Fnextjs)
-
-1. Click **Deploy with Vercel** above. Vercel clones this template into a new repository on your Git provider.
-2. Keep the auto-detected Next.js settings.
-3. Deploy. The app renders with `mock.shop` until you add store env vars.
-4. Connect your store in **Project Settings -> Environment Variables**, then redeploy.
-
-Prefer to wire it up yourself? Push this project to a Git provider, import it in Vercel, keep the detected Next.js settings, and deploy.
-
 ## Where to Start
 
 - Pages live in `app/`.
@@ -107,4 +100,4 @@ Prefer to wire it up yourself? Push this project to a Git provider, import it in
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+MIT. See the repository [LICENSE](../../LICENSE.md).

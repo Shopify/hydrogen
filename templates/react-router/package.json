@@ -36,7 +36,7 @@
     "vite": "^8.0.3"
   },
   "engines": {
-    "node": "^22 || ^24"
+    "node": "^22.12 || ^24"
   },
   "packageManager": "pnpm@10.33.0"
 }

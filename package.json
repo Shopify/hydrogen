@@ -9,7 +9,7 @@
     "dev": "turbo run dev",
     "dev:pkgs": "turbo run dev --filter='./packages/*'",
     "dev:rr": "turbo run dev --filter=@shopify/hydrogen-template-react-router...",
-    "dev:next": "turbo run dev --filter=@shopify/hydrogen-template-nextjs...",
+    "dev:next": "turbo run dev --filter=@shopify/hydrogen-example-nextjs...",
     "dev:astro": "turbo run dev --filter=@shopify/hydrogen-example-astro...",
     "dev:nuxt": "turbo run dev --filter=@shopify/hydrogen-example-nuxt...",
     "dev:solid": "turbo run dev --filter=@shopify/hydrogen-example-solid-start...",

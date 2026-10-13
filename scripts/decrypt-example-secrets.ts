@@ -29,6 +29,18 @@ const privateStorefrontTokenSourceKeys = new Set<string>([
   "PRIVATE_STOREFRONT_API_TOKEN_OXYGEN_COOKIE",
 ]);
 
+// Examples whose env files use framework-specific public variable names.
+const exampleEnvValues: Record<string, Record<string, string>> = {
+  nextjs: {
+    SESSION_SECRET: customerAccountConfig.sessionSecret,
+    NEXT_PUBLIC_STORE_DOMAIN: storefrontConfig.storeDomain,
+    NEXT_PUBLIC_STOREFRONT_API_TOKEN: storefrontConfig.publicStorefrontToken || "",
+    NEXT_PUBLIC_SHOP_ID: customerAccountConfig.shopId,
+    NEXT_PUBLIC_STOREFRONT_ID: shop.storefrontId,
+    NEXT_PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: customerAccountConfig.customerAccountApiClientId,
+  },
+};
+
 type EnvFileTarget = {
   path: string;
   examplePath: string;
@@ -107,7 +119,9 @@ function getExampleEnvFileTargets(): EnvFileTarget[] {
       scripts?: Record<string, string>;
     };
     if (packageJson.scripts?.dev) {
-      envFileTargets.push(createEnvFileTarget(resolve(examplesDir, entry.name)));
+      envFileTargets.push(
+        createEnvFileTarget(resolve(examplesDir, entry.name), exampleEnvValues[entry.name]),
+      );
     }
   }
 
@@ -121,14 +135,6 @@ function getTemplateEnvFileTargets(): EnvFileTarget[] {
     createEnvFileTarget(resolve(templatesDir, "react-router"), {
       PUBLIC_STORE_DOMAIN: storefrontConfig.storeDomain,
       PUBLIC_STOREFRONT_ID: shop.storefrontId,
-    }),
-    createEnvFileTarget(resolve(templatesDir, "nextjs"), {
-      SESSION_SECRET: customerAccountConfig.sessionSecret,
-      NEXT_PUBLIC_STORE_DOMAIN: storefrontConfig.storeDomain,
-      NEXT_PUBLIC_STOREFRONT_API_TOKEN: storefrontConfig.publicStorefrontToken || "",
-      NEXT_PUBLIC_SHOP_ID: customerAccountConfig.shopId,
-      NEXT_PUBLIC_STOREFRONT_ID: shop.storefrontId,
-      NEXT_PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: customerAccountConfig.customerAccountApiClientId,
     }),
   ];
 }

@@ -13,8 +13,9 @@ if (!oxygenPlugin?.api) {
   throw new Error("MiniOxygen plugin API is unavailable.");
 }
 
-// MiniOxygen infers 2026-10-01 from the preview package before that date.
-// Remove this override after MiniOxygen handles future inferred dates.
+// MiniOxygen infers the compatibility date 2026-10-01 from Hydrogen 2026.10.x, but its
+// runtime doesn't support that date yet. Remove this override after MiniOxygen handles
+// inferred dates that its runtime doesn't support.
 oxygenPlugin.api.registerPluginOptions({ compatibilityDate: "2026-04-01" });
 
 export default defineConfig({
