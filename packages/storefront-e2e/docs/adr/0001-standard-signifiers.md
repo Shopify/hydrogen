@@ -68,7 +68,7 @@ Example output:
 
 ### Binding path
 
-React, Vue, and core `register('addToCart', {})` add the attributes. The attributes are live: they change when the selected variant changes. When `selectedVariant` is `null`, the state is `variantId = ''` and `available = false`.
+`register('addToCart', {})` adds the attributes. The React and Vue bindings recreate `register` when the product form state changes, so the attributes follow the current selected variant. Core `createProductFormRegister()` returns a snapshot of the variant that you pass. Create it again after each state change. When `selectedVariant` is `null`, the state is `variantId = ''` and `available = false`.
 
 ### Non-binding path
 
@@ -100,9 +100,9 @@ The minimum Hydrogen version is unreleased. It becomes known when the first chan
 
 ### Guardrail
 
-One concrete allowlist records the specs and helpers that still use non-signifier locators. The list can only shrink. Later slices remove entries when they move to signifiers.
+One concrete allowlist records the specs and helpers that still use non-signifier locators. This change sets the baseline at 38 entries. Later slices remove entries when they move to signifiers. The list must only shrink from this baseline. This rule and the ban on inline lint exceptions below are review policy. Lint does not enforce them.
 
-Oxlint enforces the guardrail. The rule is `eslint-js/no-restricted-syntax` from the pinned `oxlint-plugin-eslint` 1.62.0 package. Its AST selectors find the banned locator methods, XPath, and DOM queries. Oxlint JS plugin support is alpha, so the version is pinned. The rule applies to `src/` and the specs in this package. It does not apply to `src/signifiers.ts` or `*.test.*` files. The root lint, the package lint, and the storefront CI lint step run the rule.
+Oxlint enforces the guardrail. The rule is `eslint-js/no-restricted-syntax` from the pinned `oxlint-plugin-eslint` 1.62.0 package. Its AST selectors find the banned locator methods, XPath, and DOM queries in the syntax forms that the selectors name. They do not find every possible form of a selector. Oxlint JS plugin support is alpha, so the version is pinned. The rule applies to `src/` and the specs in this package. It does not apply to `src/signifiers.ts` or `*.test.*` files. The root lint, the package lint, and the storefront CI lint step run the rule.
 
 The allowlist is `src/selector-ratchet-allowlist.json`. It is the only place for exceptions. Do not add inline lint exceptions. A small adapter, `scripts/oxlint-storefront-signifiers.mjs`, wraps the official rule:
 

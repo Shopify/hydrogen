@@ -28,7 +28,7 @@ Labels, roles, and link paths change when copy or markup changes. Signifiers giv
 
 ## Requirements
 
-- The minimum `@shopify/hydrogen` version is not released yet. Check the changelog for the first release that adds signifiers.
+- Check the `@shopify/hydrogen` changelog for the first release that adds signifiers.
 - Import from the root entry point: `@shopify/hydrogen`.
 
 ## Rules
@@ -37,7 +37,7 @@ Labels, roles, and link paths change when copy or markup changes. Signifiers giv
 - Use `signifierSelector(name, partialState)` to find elements. Do not build selectors by hand.
 - Give all required state fields. TypeScript tells you which fields are required.
 - If a wrapper component renders the control, make sure the wrapper forwards props to the rendered element. A wrapper can drop props, and then the signifier is missing.
-- Put one signifier on one element. Do not render two visible elements with the same signifier and state on one page.
+- Put one signifier on one element. In the scope that a test searches, do not render two visible elements that match the state the test supplies. Hidden copies are allowed. For example, two visible available buttons with different variant IDs both match `{ available: true }`.
 
 ## Entries
 
@@ -49,7 +49,7 @@ State: `{ variantId: string; available: boolean }`. Both fields are required.
 
 #### With binding
 
-`register('addToCart', {})` adds the attributes. This is true for the React and Vue bindings and for the core form store. The attributes change when the selected variant changes. Do not add `signifier()` to this element.
+`register('addToCart', {})` adds the attributes. The React and Vue bindings give a register function for the current state, so the attributes change when the selected variant changes. If you use the core `createProductFormRegister` directly, create it again after each state change. Do not add `signifier()` to this element.
 
 React:
 
@@ -57,11 +57,13 @@ React:
 <button {...register('addToCart', {})}>Add to cart</button>
 ```
 
-Vue:
+Vue (`form` is the object that `useProductForm` returns):
 
 ```vue
-<button v-bind="register('addToCart', {})">Add to cart</button>
+<button v-bind="form.register('addToCart', {})">Add to cart</button>
 ```
+
+Do not destructure `register` one time during setup. The destructured function keeps the state from that time.
 
 When no variant is selected, the state is `variantId = ''` and `available = false`.
 
@@ -83,5 +85,5 @@ Use `''` for `variantId` and `false` for `available` when no variant is selected
 
 ## Troubleshooting
 
-- **Missing signifier**: Make sure the control uses `register('addToCart', {})` or `signifier('product-add-to-cart', ...)`. Then make sure each wrapper component forwards props to the rendered element. A wrapper can drop props.
-- **Ambiguous signifier**: More than one visible element has the same signifier. Or no element is visible and more than one hidden element has the signifier. One visible element plus hidden copies is not ambiguous. Keep one control per signifier on the page, or remove the extra copy.
+- **Missing signifier**: Make sure the control uses `register('addToCart', {})` or `signifier('product-add-to-cart', ...)`. Then make sure each wrapper component forwards props to the rendered element. A wrapper can drop props. The attributes can exist but not match the requested state, for example `available: false` when the test asks for `available: true`, so check the selected variant state, not only the markup.
+- **Ambiguous signifier**: In the searched scope, more than one visible element matches the signifier and the supplied state. Or no element is visible and more than one hidden element matches. One visible match plus hidden copies is not ambiguous. Elements with different state can all match a partial state. Keep one visible matching control in the scope, or remove the extra copy.
