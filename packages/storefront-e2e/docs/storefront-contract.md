@@ -98,6 +98,7 @@ Fix a missing or ambiguous signifier:
 - Without bindings: spread `signifier('product-add-to-cart', { variantId, available })` from `@shopify/hydrogen` on the control.
 - If a wrapper component renders the control, make sure it forwards props to the rendered element.
 - Keep only one visible add-to-cart control per product page.
+- If a query finds no matching signifier, check that existing attributes match its state filters, such as `available: true`.
 
 ## Checkout Handoff
 
