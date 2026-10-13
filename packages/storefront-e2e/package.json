@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "lint": "cd ../.. && oxlint --config .oxlintrc.json packages/storefront-e2e",
-    "test": "pnpm run test:unit",
+    "test": "pnpm run test:run",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "test:unit": "vitest run --dir src"
+    "test:run": "vitest run --dir src"
   },
   "dependencies": {
     "@shopify/hydrogen": "workspace:*"

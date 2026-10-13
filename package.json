@@ -31,7 +31,7 @@
     "format:check": "oxfmt --check",
     "changeset": "changeset",
     "version-packages": "node scripts/calver.ts version",
-    "test": "pnpm run test:scripts && turbo run test",
+    "test": "pnpm run test:scripts && turbo run test:run",
     "test:scripts": "node --test scripts/*.test.ts templates/*/__test__/*.test.ts",
     "test:local-https": "node --use-system-ca scripts/test-local-https.ts",
     "test:benchmark-harness": "tsc -p scripts/storefront-benchmark-harness/tsconfig.json && node --test scripts/storefront-benchmark-harness/*.test.ts",
