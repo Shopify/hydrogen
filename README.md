@@ -163,6 +163,7 @@ The core depends on web platform APIs (`fetch`, `Request`, `Response`, and Web C
 - **Products, collections, and search**: `hydrogen-variant-form`, `hydrogen-collection-browser`, `hydrogen-predictive-search`, `hydrogen-image`, `hydrogen-money`
 - **Checkout, accounts, and analytics**: `hydrogen-shop-pay`, `hydrogen-customer-account`, `hydrogen-analytics`
 - **Hosting and local development**: `hydrogen-oxygen`, `hydrogen-local-https`
+- **Migration from classic Hydrogen**: `migrate-to-hydrogen-2026-10`
 
 Read them in [`packages/hydrogen/skills`](./packages/hydrogen/skills).
 
