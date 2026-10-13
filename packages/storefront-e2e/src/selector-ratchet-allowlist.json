@@ -117,7 +117,17 @@
   {
     "file": "specs/product-variant/product-variant.spec.ts",
     "rule": "get-by-locator",
-    "code": "page.getByText(selectedVariant.variantLabel, { exact: false }).first(),"
+    "code": "await expect(page.getByRole(\"heading\", { level: 1, name: variant.productTitle })).toBeVisible();"
+  },
+  {
+    "file": "specs/product-variant/product-variant.spec.ts",
+    "rule": "get-by-locator",
+    "code": "const control = page.getByRole(\"listitem\").nth(index).getByRole(item.role);"
+  },
+  {
+    "file": "specs/product-variant/product-variant.spec.ts",
+    "rule": "get-by-locator",
+    "code": "const control = page.getByRole(\"listitem\").nth(index).getByRole(item.role);"
   },
   {
     "file": "specs/product-variant/product-variant.spec.ts",
@@ -127,7 +137,17 @@
   {
     "file": "specs/product-variant/product-variant.spec.ts",
     "rule": "get-by-locator",
-    "code": "await expect(page.getByText(variantLabel, { exact: false }).first()).toBeVisible();"
+    "code": "await expect(page.getByRole(\"heading\", { level: 1, name: product.title })).toBeVisible();"
+  },
+  {
+    "file": "specs/product-variant/product-variant.spec.ts",
+    "rule": "get-by-locator",
+    "code": "const states = await page.getByRole(\"link\", { name, exact: true }).evaluateAll((elements) =>"
+  },
+  {
+    "file": "specs/product-variant/product-variant.spec.ts",
+    "rule": "get-by-locator",
+    "code": "return page.getByRole(\"button\", { name, exact: true, pressed: true });"
   },
   {
     "file": "specs/product-variant/product-variant.spec.ts",
