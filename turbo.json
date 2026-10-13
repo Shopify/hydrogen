@@ -26,8 +26,11 @@
     "libcheck": {
       "dependsOn": ["build"]
     },
-    "test": {
+    "test:run": {
       "dependsOn": ["^build"]
+    },
+    "@shopify/hydrogen#test:run": {
+      "dependsOn": ["build"]
     },
     "test:e2e": {
       "dependsOn": ["^build"],
