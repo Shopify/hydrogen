@@ -262,6 +262,24 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     expect(developmentShopifyScripts).toContain(STANDARD_EVENTS_INSPECTOR_ID);
   });
 
+  it("shares cart buyer identity sync between development package exports", () => {
+    execFileSync(
+      process.execPath,
+      [
+        "--conditions=development",
+        "--input-type=module",
+        "-e",
+        `import { createCartServerHandlers } from "@shopify/hydrogen";
+import { createCustomerAccountServerHandlers, createCustomerSession } from "@shopify/hydrogen/customer-account";
+
+const customerSession = createCustomerSession({ shopId: "123", customerAccountApiClientId: "client" });
+const cartServerHandlers = createCartServerHandlers({ customerSession });
+createCustomerAccountServerHandlers({ customerSession, cartServerHandlers });`,
+      ],
+      { cwd: PACKAGE_ROOT },
+    );
+  });
+
   it("preserves the standard events URL as a literal dynamic import", () => {
     const pageViewScript = readFileSync(
       resolve(PACKAGE_ROOT, "dist/core/shopify-scripts/page-view.mjs"),
