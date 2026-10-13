@@ -229,6 +229,8 @@ export const routeTemplates = createShopifyRouteTemplates({
 });
 ```
 
+**Classic data-layer call-sites map mechanically:** `storefront.query()` → `client.graphql(QUERY, {variables, cache})`, which returns `{data, errors, headers}` instead of merging errors into the result — check `errors` before reading `data`; `$country`/`$language` are auto-injected, so passing them in `variables` is now a type error; `storefront.CacheLong()` → the per-call `Cache.long()` (classic's implicit default caching is **gone** — an un-`cache`d query always hits the API); `storefront.i18n` → `client.i18n`.
+
 Root **middleware** in `app/root.tsx` (needs `future.v8_middleware`) — the request lifecycle from mental-model step 1:
 
 ```ts
@@ -308,6 +310,7 @@ Most "builds fine but silently broken at runtime" failures live in the `referenc
 | Dependencies, scripts, Vite config, `.gitignore` | `references/dependencies-and-tooling.md` |
 | Routes, loaders, `@remix-run`→`react-router` sweep, `useMatches` handles | `references/routing-and-loaders.md` |
 | TypeScript + gql (these surface at `tsc` / `hydrogen gql check`) | `references/typescript-and-gql-tada.md` |
+| Data layer call-sites: `storefront.query`, `CacheLong()`, i18n variables, generated types | this page's mapping above + `references/typescript-and-gql-tada.md` + the `hydrogen-storefront-client` packaged skill |
 | Cart drawer, `/cart` page, optimistic lines, `initialData` | `references/cart.md` |
 | Customer accounts, OAuth, login | `references/customer-account.md` |
 | Analytics + consent | `references/analytics.md` |
