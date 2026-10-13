@@ -36,7 +36,8 @@ Hydrogen migration:
 - [ ] 4. react-router.config.ts added (v8_middleware on, buildDirectory 'dist')
 - [ ] 5. Request wiring (request context + storefront client + route templates + session manager)
 - [ ] 6. Route filename + import + json()/defer() sweep
-- [ ] 7. Connect a store — env vars in .env, or MOCK_SHOP=1 for the tokenless mock.shop demo
+- [ ] CSP/nonce: classic's utilities are gone — port CSP/nonce as app code, then check the browser console for CSP violations
+- [ ] 7. Connect a store — env vars in .env (private token, or public token), or MOCK_SHOP=1 for the tokenless mock.shop demo
 - [ ] Optional subsystems: detect each → migrate or skip, and report every skip
 - [ ] 8. Verify (build/typecheck gate, then hydrogen-smoke-test), then hand off to the user
 ```
@@ -321,6 +322,7 @@ Don't trust "it renders." Gate on the build first: `react-router build` and `rea
 
 After the build gate and smoke test pass, **hand off to the user rather than running the dev server yourself.** Tell them they can test the migrated code with `npm run dev` (or `npm run dev:https` when they need customer login locally), and to pay special attention to the areas a migration most often gets subtly wrong while still compiling:
 
+- **CSP/nonce** — classic Hydrogen's `createContentSecurityPolicy`/`NonceProvider`/`useNonce` are gone; CSP is app-owned now, so port it as your own app code. A dropped nonce leaves pages rendering fine while hydration (cart, variant picker, analytics) is silently dead — check the browser console for CSP violations after migrating.
 - **Analytics** — the commerce funnel (`view_item`/`add_to_cart`/…) silently dropping while page views still fire (`references/analytics.md`).
 - **Cart actions** — add / remove / quantity edits and the drawer opening on add (`references/cart.md`).
 - **Customer login** — the full OAuth round-trip, which needs an HTTPS origin locally (`references/customer-account.md`).
