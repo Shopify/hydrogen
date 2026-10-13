@@ -1,0 +1,36 @@
+# Labels Shopify staff PRs for shopify.dev docs previews.
+
+name: Shopify Dev preview label
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'packages/hydrogen/docs/generated/generated_docs_data_v2.json'
+      - 'packages/hydrogen/package.json'
+      - 'packages/hydrogen/docs/screenshots/**'
+
+concurrency:
+  group: shopify-dev-preview-label-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  label:
+    name: Add the shopify.dev preview label
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Only same-repo PRs. Fork PRs get a read-only token, so skip them.
+    if: github.repository_owner == 'Shopify' && github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Add the label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr edit "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --add-label 'shopify.dev preview'
