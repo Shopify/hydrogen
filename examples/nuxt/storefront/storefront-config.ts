@@ -16,24 +16,19 @@ export type ResolvedStorefrontConfig =
 export function resolveStorefrontConfig(env: RuntimeEnv): ResolvedStorefrontConfig {
   const configuredDomain = env.PUBLIC_STORE_DOMAIN;
   const privateStorefrontToken = env.PRIVATE_STOREFRONT_API_TOKEN;
+  const mockDomain =
+    configuredDomain && isMockShopDomain(configuredDomain) ? configuredDomain : undefined;
 
-  if (
-    env.MOCK_SHOP === "1" ||
-    !privateStorefrontToken ||
-    (configuredDomain && isMockShopDomain(configuredDomain))
-  ) {
+  if (env.MOCK_SHOP === "1" || !privateStorefrontToken || mockDomain) {
     return {
       mode: "mock",
-      storeDomain:
-        configuredDomain && isMockShopDomain(configuredDomain)
-          ? configuredDomain
-          : MOCK_SHOP_DOMAIN,
+      storeDomain: mockDomain || MOCK_SHOP_DOMAIN,
     };
   }
 
   return {
     mode: "private",
-    storeDomain: configuredDomain || storefrontConfig.storeDomain,
+    storeDomain: storefrontConfig.storeDomain,
     privateStorefrontToken,
   };
 }

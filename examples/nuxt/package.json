@@ -8,6 +8,7 @@
     "dev:https": "nuxt dev",
     "build": "nuxt build",
     "start": "node .output/server/index.mjs",
+    "test:run": "node --test __test__/*.test.ts",
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {

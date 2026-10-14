@@ -10,12 +10,6 @@ const httpsPlugin = localHttps(httpsOptions);
 
 export default defineNuxtConfig({
   compatibilityDate: "2025-05-08",
-  runtimeConfig: {
-    public: {
-      storefrontMode: "mock",
-      storeDomain: "mock.shop",
-    },
-  },
   devServer: httpsPlugin.api.getDevServerConfig(),
   alias: {
     "@shared": new URL("../shared", import.meta.url).pathname,
