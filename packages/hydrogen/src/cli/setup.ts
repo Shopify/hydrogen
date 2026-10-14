@@ -242,21 +242,24 @@ async function ensureHydrogenInstalled(
   env: Record<string, string | undefined>,
   runCommand: RunCommand,
   log: (message: string) => void,
-): Promise<void> {
+): Promise<{ addedHydrogen: boolean }> {
   const packageJson = readPackageJson(appRoot);
 
-  if (hasHydrogenDependency(packageJson) && getInstalledPackageRoot(appRoot)) return;
+  if (hasHydrogenDependency(packageJson) && getInstalledPackageRoot(appRoot)) {
+    return { addedHydrogen: false };
+  }
 
   if (hasHydrogenDependency(packageJson)) {
     const packageManager = detectPackageManager(appRoot, packageJson, env);
     log(`${PACKAGE_NAME} is declared but not installed. Running ${packageManager} install...`);
     await runCommand(packageManager, ["install"], { cwd: appRoot });
-    return;
+    return { addedHydrogen: false };
   }
 
   const packageManager = detectPackageManager(appRoot, packageJson, env);
   log(`Installing ${PACKAGE_NAME} with ${packageManager}...`);
   await installHydrogen(appRoot, packageManager, runCommand);
+  return { addedHydrogen: true };
 }
 
 interface ResolvedSetupOptions {
@@ -286,9 +289,10 @@ function isEmptyDirectory(dir: string): boolean {
 
 export async function setupHydrogen(options: SetupHydrogenOptions = {}): Promise<void> {
   const { appRoot, env, runCommand, log, prompt } = resolveSetupOptions(options);
+  let addedHydrogen = false;
 
   if (hasPackageJson(appRoot)) {
-    await ensureHydrogenInstalled(appRoot, env, runCommand, log);
+    ({ addedHydrogen } = await ensureHydrogenInstalled(appRoot, env, runCommand, log));
   } else if (isEmptyDirectory(appRoot)) {
     let choice: SetupChoice;
     if (prompt) {
@@ -309,4 +313,8 @@ export async function setupHydrogen(options: SetupHydrogenOptions = {}): Promise
   }
 
   await syncSkills({ force: options.force, cwd: appRoot, packageRoot: options.packageRoot, log });
+
+  if (addedHydrogen) {
+    log("Setup is ready. Next: ask your agent to use the hydrogen-setup skill.");
+  }
 }
