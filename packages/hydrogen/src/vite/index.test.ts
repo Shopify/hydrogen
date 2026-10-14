@@ -665,6 +665,6 @@ describe("hydrogen", () => {
 
     expect(message).toContain("not compatible with @shopify/hydrogen 0.0.0-test");
     expect(message).toContain('pin "@shopify/hydrogen" to "~2026.4.0"');
-    expect(message).toContain("https://github.com/Shopify/hydrogen/tree/2026-04");
+    expect(message).toContain("https://shopify.dev/docs/storefronts/hydrogen/migrate");
   });
 });
