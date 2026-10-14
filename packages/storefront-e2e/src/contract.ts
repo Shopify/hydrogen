@@ -16,12 +16,12 @@ export const CONTRACT_CAPABILITIES = [
 
 export type ContractCapability = (typeof CONTRACT_CAPABILITIES)[number];
 
-export type SignifierName = keyof SignifierStates;
+export type SignifierTestId = keyof SignifierStates;
 
 export type SignifierProblem = "missing" | "ambiguous";
 
 export type ContractSignifierDetails = {
-  readonly name: SignifierName;
+  readonly name: SignifierTestId;
   readonly problem: SignifierProblem;
   readonly state: Readonly<Record<string, unknown>>;
   readonly attachedCount: number;

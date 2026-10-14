@@ -2,7 +2,7 @@
 name: hydrogen-signifiers
 description: >
   Guide for standard signifiers in Hydrogen storefronts. Use when adding,
-  checking, or debugging `data-h3` attributes on storefront controls, or when
+  checking, or debugging `data-shopify-testid` attributes on storefront controls, or when
   a storefront E2E check reports a missing or ambiguous signifier.
 ---
 
@@ -12,12 +12,12 @@ description: >
 
 A signifier is a stable attribute on a storefront control. It tells a test runner what the control is and what state it has.
 
-- The `data-h3` attribute holds the signifier name.
-- `data-h3-*` attributes hold the state.
+- The `data-shopify-testid` attribute holds the signifier name. Ordinary `data-testid` attributes are separate.
+- State attributes use the `data-shopify-` namespace, not `data-shopify-testid-`.
 - One element has one signifier. State narrows the match.
 
 ```html
-<button data-h3="product-add-to-cart" data-h3-variant-id="gid://shopify/ProductVariant/1" data-h3-available="true">
+<button data-shopify-testid="product-add-to-cart" data-shopify-variant-id="gid://shopify/ProductVariant/1" data-shopify-available="true">
   Add to cart
 </button>
 ```
@@ -33,8 +33,8 @@ Labels, roles, and link paths change when copy or markup changes. Signifiers giv
 
 ## Rules
 
-- Use `signifier(name, state)` to write attributes. Do not write `data-h3*` attributes by hand.
-- Use `signifierSelector(name, partialState)` to find elements. Do not build selectors by hand.
+- Use `signifier(testId, state)` to write signifier attributes. Do not write them by hand.
+- Use `signifierSelector(testId, partialState)` to find elements. Do not build selectors by hand.
 - Give all required state fields. TypeScript tells you which fields are required.
 - If a wrapper component renders the control, make sure the wrapper forwards props to the rendered element. A wrapper can drop props, and then the signifier is missing.
 - Put one signifier on one element. In the scope that a test searches, do not render two visible elements that match the state the test supplies. Hidden copies are allowed. For example, two visible available buttons with different variant IDs both match `{ available: true }`.

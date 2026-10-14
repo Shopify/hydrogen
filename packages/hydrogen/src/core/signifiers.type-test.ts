@@ -1,8 +1,7 @@
 import { describe, expectTypeOf, it } from "vitest";
 
 import {
-  SIGNIFIER_ATTRIBUTE,
-  SIGNIFIER_NAMES,
+  SIGNIFIER_TEST_IDS,
   signifier,
   signifierSelector,
   type SignifierAttributes,
@@ -11,23 +10,31 @@ import {
 
 describe("signifier types", () => {
   it("derives names and state types from the schema", () => {
-    expectTypeOf<typeof SIGNIFIER_ATTRIBUTE>().toEqualTypeOf<"data-h3">();
-    expectTypeOf(SIGNIFIER_NAMES).toEqualTypeOf<readonly "product-add-to-cart"[]>();
+    expectTypeOf(SIGNIFIER_TEST_IDS).toEqualTypeOf<readonly "product-add-to-cart"[]>();
     expectTypeOf<SignifierStates>().toEqualTypeOf<{
       "product-add-to-cart": { variantId: string; available: boolean };
     }>();
+  });
+
+  it("omits private and legacy exports", () => {
+    expectTypeOf<
+      Extract<keyof typeof import("./index"), "SIGNIFIER_ATTRIBUTE" | "SIGNIFIER_NAMES">
+    >().toEqualTypeOf<never>();
   });
 
   it("returns literal attribute names", () => {
     const attributes = signifier("product-add-to-cart", { variantId: "v", available: true });
 
     expectTypeOf(attributes).toEqualTypeOf<SignifierAttributes<"product-add-to-cart">>();
-    expectTypeOf(attributes["data-h3"]).toEqualTypeOf<"product-add-to-cart">();
-    expectTypeOf(attributes["data-h3-variant-id"]).toEqualTypeOf<string>();
-    expectTypeOf(attributes["data-h3-available"]).toEqualTypeOf<string>();
+    expectTypeOf(attributes["data-shopify-testid"]).toEqualTypeOf<"product-add-to-cart">();
+    expectTypeOf(attributes["data-shopify-variant-id"]).toEqualTypeOf<string>();
+    expectTypeOf(attributes["data-shopify-available"]).toEqualTypeOf<string>();
     expectTypeOf<keyof SignifierAttributes<"product-add-to-cart">>().toEqualTypeOf<
-      "data-h3" | "data-h3-variant-id" | "data-h3-available"
+      "data-shopify-testid" | "data-shopify-variant-id" | "data-shopify-available"
     >();
+    expectTypeOf<
+      Extract<keyof typeof attributes, `data-shopify-testid-${string}` | "data-testid">
+    >().toEqualTypeOf<never>();
     expectTypeOf(signifierSelector("product-add-to-cart", { available: true })).toEqualTypeOf<string>();
   });
 

@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { signifierSelector, type SignifierStates } from "@shopify/hydrogen";
 
-import { createContractError, type SignifierName, type SignifierProblem } from "./contract";
+import { createContractError, type SignifierProblem, type SignifierTestId } from "./contract";
 import { SIGNIFIER_REMEDIATION } from "./signifier-remediation";
 import { EXPECT_TIMEOUT_MS } from "./timeouts";
 
@@ -18,12 +18,12 @@ type MatchResolution = "visible" | "attached" | SignifierProblem;
  * Returns a locator for every element with the signifier inside `scope`.
  * State fields narrow the match. The selector comes only from Hydrogen.
  */
-export function h3<Name extends SignifierName>(
+export function locateSignifier<TestId extends SignifierTestId>(
   scope: SignifierScope,
-  name: Name,
-  state: Partial<SignifierStates[Name]> = {},
+  testId: TestId,
+  state: Partial<SignifierStates[TestId]> = {},
 ): Locator {
-  return scope.locator(signifierSelector(name, state));
+  return scope.locator(signifierSelector(testId, state));
 }
 
 /**
@@ -34,12 +34,12 @@ export function h3<Name extends SignifierName>(
  * - More than one visible element, or more than one hidden element, is ambiguous.
  * - No attached element is missing.
  */
-export async function requireH3<Name extends SignifierName>(
+export async function requireSignifier<TestId extends SignifierTestId>(
   scope: SignifierScope,
-  name: Name,
-  state: Partial<SignifierStates[Name]> = {},
+  testId: TestId,
+  state: Partial<SignifierStates[TestId]> = {},
 ): Promise<Locator> {
-  const all = h3(scope, name, state);
+  const all = locateSignifier(scope, testId, state);
   const visible = all.filter({ visible: true });
   let counts: MatchCounts = { attached: 0, visible: 0 };
   let countFailure: { readonly error: unknown } | undefined;
@@ -57,13 +57,13 @@ export async function requireH3<Name extends SignifierName>(
           return isResolved(resolveMatch(counts)) ? "resolved" : "pending";
         },
         {
-          message: `Waiting for one resolvable "${name}" signifier.`,
+          message: `Waiting for one resolvable "${testId}" signifier.`,
           timeout: EXPECT_TIMEOUT_MS,
         },
       )
       .not.toBe("pending");
   } catch (pollError) {
-    throw signifierError(scope, name, state, counts, { cause: pollError });
+    throw signifierError(scope, testId, state, counts, { cause: pollError });
   }
 
   if (countFailure !== undefined) throw countFailure.error;
@@ -71,7 +71,7 @@ export async function requireH3<Name extends SignifierName>(
   const resolution = resolveMatch(counts);
   if (resolution === "visible") return visible;
   if (resolution === "attached") return all;
-  throw signifierError(scope, name, state, counts);
+  throw signifierError(scope, testId, state, counts);
 }
 
 function resolveMatch(counts: MatchCounts): MatchResolution {
@@ -88,12 +88,12 @@ function isResolved(resolution: MatchResolution): boolean {
 
 function signifierError(
   scope: SignifierScope,
-  name: SignifierName,
+  testId: SignifierTestId,
   state: Readonly<Record<string, unknown>>,
   counts: MatchCounts,
   options?: ErrorOptions,
 ): Error {
-  const remediation = SIGNIFIER_REMEDIATION[name];
+  const remediation = SIGNIFIER_REMEDIATION[testId];
   const resolution = resolveMatch(counts);
   const problem: SignifierProblem = resolution === "ambiguous" ? "ambiguous" : "missing";
 
@@ -103,15 +103,15 @@ function signifierError(
       routePath: routePathOf(scope),
       expectation:
         problem === "missing"
-          ? `An element with the "${name}" signifier is attached within ${EXPECT_TIMEOUT_MS}ms.`
-          : `Exactly one visible element, or exactly one attached element when none is visible, has the "${name}" signifier.`,
+          ? `An element with the "${testId}" signifier is attached within ${EXPECT_TIMEOUT_MS}ms.`
+          : `Exactly one visible element, or exactly one attached element when none is visible, has the "${testId}" signifier.`,
       likelyFix:
         problem === "missing"
           ? "Add the signifier to the control with a Hydrogen form binding or signifier()."
           : "Keep only one visible control with this signifier on the page.",
       docsAnchor: remediation.docsAnchor,
       signifier: {
-        name,
+        name: testId,
         problem,
         state,
         attachedCount: counts.attached,

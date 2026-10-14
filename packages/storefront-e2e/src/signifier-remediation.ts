@@ -1,4 +1,4 @@
-import type { ContractCapability, SignifierName } from "./contract";
+import type { ContractCapability, SignifierTestId } from "./contract";
 
 /**
  * `unreleased` until the first changeset that adds signifiers is published.
@@ -28,8 +28,8 @@ export const SIGNIFIER_REMEDIATION = {
     commonCauses: [
       "A wrapper component renders the control but does not forward props to the rendered element.",
       "More than one visible add-to-cart control is rendered on the product page.",
-      "The signifier attributes exist but do not match the requested state, for example data-h3-available is false when the query asks for true, or the variant ID is stale.",
+      "The signifier attributes exist but do not match the requested state, for example data-shopify-available is false when the query asks for true, or the variant ID is stale.",
     ],
     docsAnchor: "#product-add-to-cart",
   },
-} as const satisfies { readonly [Name in SignifierName]: SignifierRemediation };
+} as const satisfies { readonly [TestId in SignifierTestId]: SignifierRemediation };

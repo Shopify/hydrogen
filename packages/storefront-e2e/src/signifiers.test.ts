@@ -3,7 +3,7 @@ import { signifierSelector } from "@shopify/hydrogen";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CONTRACT_DOC_PATH, StorefrontContractError } from "./contract";
-import { h3, requireH3 } from "./signifiers";
+import { locateSignifier, requireSignifier } from "./signifiers";
 import { EXPECT_TIMEOUT_MS } from "./timeouts";
 
 type FakeElement = {
@@ -101,9 +101,9 @@ function addToCart(
     id,
     visible: options.visible,
     attributes: {
-      "data-h3": "product-add-to-cart",
-      "data-h3-variant-id": `gid://shopify/ProductVariant/${id}`,
-      "data-h3-available": String(options.available ?? true),
+      "data-shopify-testid": "product-add-to-cart",
+      "data-shopify-variant-id": `gid://shopify/ProductVariant/${id}`,
+      "data-shopify-available": String(options.available ?? true),
     },
   };
 }
@@ -138,21 +138,21 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("h3", () => {
+describe("locateSignifier", () => {
   it("builds the locator only from signifierSelector", () => {
     const dom = createDom();
 
-    h3(asPage(dom), "product-add-to-cart", { available: true });
+    locateSignifier(asPage(dom), "product-add-to-cart", { available: true });
 
     expect(dom.selectors).toEqual([signifierSelector("product-add-to-cart", { available: true })]);
   });
 });
 
-describe("requireH3", () => {
+describe("requireSignifier", () => {
   it("returns the only attached element when it is visually hidden", async () => {
     const dom = createDom([addToCart("1", { visible: false })]);
 
-    const locator = await settle(requireH3(asPage(dom), "product-add-to-cart"));
+    const locator = await settle(requireSignifier(asPage(dom), "product-add-to-cart"));
 
     expect(idsOf(locator)).toEqual(["1"]);
   });
@@ -164,7 +164,7 @@ describe("requireH3", () => {
       addToCart("hidden-b", { visible: false }),
     ]);
 
-    const locator = await settle(requireH3(asPage(dom), "product-add-to-cart"));
+    const locator = await settle(requireSignifier(asPage(dom), "product-add-to-cart"));
 
     expect(idsOf(locator)).toEqual(["shown"]);
   });
@@ -176,7 +176,7 @@ describe("requireH3", () => {
     ]);
 
     const locator = await settle(
-      requireH3(asPage(dom), "product-add-to-cart", { available: true }),
+      requireSignifier(asPage(dom), "product-add-to-cart", { available: true }),
     );
 
     expect(idsOf(locator)).toEqual(["in-stock"]);
@@ -190,7 +190,7 @@ describe("requireH3", () => {
       if (countCalls === 5) dom.elements.push(addToCart("late", { visible: true }));
     };
 
-    const locator = await settle(requireH3(asPage(dom), "product-add-to-cart"));
+    const locator = await settle(requireSignifier(asPage(dom), "product-add-to-cart"));
 
     expect(idsOf(locator)).toEqual(["late"]);
   });
@@ -207,11 +207,11 @@ describe("requireH3", () => {
     ]);
     const scope = new FakePage(dom).locator('[role="dialog"]') as unknown as Locator;
 
-    const locator = await settle(requireH3(scope, "product-add-to-cart"));
+    const locator = await settle(requireSignifier(scope, "product-add-to-cart"));
     expect(idsOf(locator)).toEqual(["inside"]);
 
     const error = await contractErrorFrom(
-      requireH3(scope, "product-add-to-cart", { available: false }),
+      requireSignifier(scope, "product-add-to-cart", { available: false }),
     );
     expect(error.routePath).toBe("/products/shirt?Size=M");
   });
@@ -220,7 +220,7 @@ describe("requireH3", () => {
     const dom = createDom([addToCart("sold-out", { visible: true, available: false })]);
 
     const error = await contractErrorFrom(
-      requireH3(asPage(dom), "product-add-to-cart", { available: true }),
+      requireSignifier(asPage(dom), "product-add-to-cart", { available: true }),
     );
 
     expect(error.signifier).toMatchObject({
@@ -259,7 +259,7 @@ describe("requireH3", () => {
   ])("reports $name as ambiguous", async ({ elements, attachedCount, visibleCount }) => {
     const dom = createDom(elements);
 
-    const error = await contractErrorFrom(requireH3(asPage(dom), "product-add-to-cart"));
+    const error = await contractErrorFrom(requireSignifier(asPage(dom), "product-add-to-cart"));
 
     expect(error.signifier).toMatchObject({ problem: "ambiguous", attachedCount, visibleCount });
     expect(error.message).toContain("Ambiguous storefront e2e signifier: product-add-to-cart");
@@ -273,6 +273,8 @@ describe("requireH3", () => {
       throw failure;
     };
 
-    await expect(settle(requireH3(asPage(dom), "product-add-to-cart"))).rejects.toBe(failure);
+    await expect(settle(requireSignifier(asPage(dom), "product-add-to-cart"))).rejects.toBe(
+      failure,
+    );
   });
 });

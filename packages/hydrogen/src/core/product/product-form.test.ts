@@ -1606,25 +1606,25 @@ describe("createProductFormRegister — addToCart", () => {
     expect(createProductFormRegister(RED, noop)("addToCart", {})).toEqual({
       name: "add-to-cart",
       type: "submit",
-      "data-h3": "product-add-to-cart",
-      "data-h3-variant-id": "v-red",
-      "data-h3-available": "true",
+      "data-shopify-testid": "product-add-to-cart",
+      "data-shopify-variant-id": "v-red",
+      "data-shopify-available": "true",
     });
   });
 
   it("marks an unavailable selected variant", () => {
     const props = createProductFormRegister(BLUE, noop)("addToCart", {});
-    expect(props["data-h3-variant-id"]).toBe("v-blue");
-    expect(props["data-h3-available"]).toBe("false");
+    expect(props["data-shopify-variant-id"]).toBe("v-blue");
+    expect(props["data-shopify-available"]).toBe("false");
   });
 
   it("uses an empty variant id and false when no variant is selected", () => {
     expect(createProductFormRegister(null, noop)("addToCart", {})).toEqual({
       name: "add-to-cart",
       type: "submit",
-      "data-h3": "product-add-to-cart",
-      "data-h3-variant-id": "",
-      "data-h3-available": "false",
+      "data-shopify-testid": "product-add-to-cart",
+      "data-shopify-variant-id": "",
+      "data-shopify-available": "false",
     });
   });
 
@@ -1633,13 +1633,13 @@ describe("createProductFormRegister — addToCart", () => {
     const register = () =>
       createProductFormRegister(store.getState().selectedVariant, store.selectOption);
 
-    expect(register()("addToCart", {})["data-h3-variant-id"]).toBe("v-red");
+    expect(register()("addToCart", {})["data-shopify-variant-id"]).toBe("v-red");
 
     store.selectOption("Color", "Blue");
 
     expect(register()("addToCart", {})).toMatchObject({
-      "data-h3-variant-id": "v-blue",
-      "data-h3-available": "false",
+      "data-shopify-variant-id": "v-blue",
+      "data-shopify-available": "false",
     });
   });
 });
