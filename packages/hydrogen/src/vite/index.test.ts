@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { localHttps, provisionLocalHttps } from ".";
+import { hydrogen, localHttps, provisionLocalHttps } from ".";
 import { assert } from "../core/test-utils";
 
 const fsCalls = vi.hoisted(() => ({
@@ -658,3 +658,13 @@ function createResponse() {
 
   return { removeHeader, value, writeHead };
 }
+
+describe("hydrogen", () => {
+  it("throws pin instructions for 2026.4 projects instead of an ESM export error", () => {
+    const message = captureErrorMessage(() => hydrogen());
+
+    expect(message).toContain("not compatible with @shopify/hydrogen 0.0.0-test");
+    expect(message).toContain('pin "@shopify/hydrogen" to "~2026.4.0"');
+    expect(message).toContain("https://shopify.dev/docs/storefronts/hydrogen/migrate");
+  });
+});
