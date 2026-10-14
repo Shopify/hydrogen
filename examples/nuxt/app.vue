@@ -7,10 +7,29 @@ import { routeTemplates } from "~/utils/route-templates";
 
 const route = useRoute();
 const router = useRouter();
+const runtimeConfig = useRuntimeConfig();
+const storefrontConfig = useState("storefront-config", () => {
+  const requestConfig = useRequestEvent()?.context.storefrontConfig;
+  if (requestConfig) return requestConfig;
+
+  return {
+    mode: runtimeConfig.public.storefrontMode === "private" ? "private" : "mock",
+    storeDomain: runtimeConfig.public.storeDomain,
+  } as const;
+});
+const isMockStorefront = storefrontConfig.value.mode === "mock";
 const shopifyScriptTags = getShopifyScriptTags({
-  consent: analyticsConsent,
+  analytics: isMockStorefront ? { channel: "headless" } : undefined,
+  consent: isMockStorefront ? undefined : analyticsConsent,
   i18n: defaultI18n,
-  shop,
+  shop: isMockStorefront
+    ? {
+        shopId: "0",
+        storefrontId: "",
+        myshopifyDomain: storefrontConfig.value.storeDomain,
+      }
+    : shop,
+  shopifyAnalytics: !isMockStorefront,
 });
 
 const navigate = async (url: string) => {
