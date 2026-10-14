@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { createContractError } from "../../src/contract";
-import { requireH3 } from "../../src/signifiers";
+import { requireSignifier } from "../../src/signifiers";
 import { test, type CheckoutTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
@@ -48,7 +48,7 @@ async function addVariantToCart(
     productTitle: product.productTitle,
     variantLabel: product.variantLabel,
   };
-  const addToCart = await requireH3(page, "product-add-to-cart", { available: true });
+  const addToCart = await requireSignifier(page, "product-add-to-cart", { available: true });
   await addToCart.click();
   await expect(cartOverlayLineFor(page, expectation.productTitle)).toBeVisible({
     timeout: CART_SETTLE_TIMEOUT_MS,

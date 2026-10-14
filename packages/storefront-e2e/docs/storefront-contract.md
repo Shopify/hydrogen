@@ -76,7 +76,7 @@ Accessible labels are preferred. Broad data-testid attributes should only be use
 
 ## Signifiers
 
-Some controls use a standard signifier: a `data-h3` attribute with the signifier name, plus `data-h3-*` state attributes. Signifiers are present in production too. Use `signifier()` or a Hydrogen form binding to write them. Do not write them by hand. See [ADR 0001](adr/0001-standard-signifiers.md) for the design.
+Some controls use a standard signifier: a `data-shopify-testid` attribute with the signifier name, plus `data-shopify-variant-id` and `data-shopify-available` state attributes. Signifiers are present in production too. Use `signifier()` or a Hydrogen form binding to write them. Do not write them by hand. See [ADR 0001](adr/0001-standard-signifiers.md) for the design.
 
 The suite finds a signifier like this:
 
@@ -90,7 +90,7 @@ The minimum Hydrogen version with signifiers is not released yet.
 
 The add-to-cart submit control on product detail pages.
 
-State: `variantId` (string) and `available` (boolean). Both are required. When no variant is selected, the state is `variantId: ''` and `available: false` (boolean). The DOM then has `data-h3-variant-id=""` and `data-h3-available="false"` (string).
+State: `variantId` (string) and `available` (boolean). Both are required. When no variant is selected, the state is `variantId: ''` and `available: false` (boolean). The DOM then has `data-shopify-variant-id=""` and `data-shopify-available="false"` (string).
 
 Fix a missing or ambiguous signifier:
 

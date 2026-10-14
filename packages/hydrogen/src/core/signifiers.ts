@@ -1,9 +1,6 @@
-/**
- * Attribute that names the signifier on an element. State attributes use it as a prefix.
- *
- * @publicDocs
- */
-export const SIGNIFIER_ATTRIBUTE = "data-h3";
+const SIGNIFIER_ATTRIBUTE = "data-shopify-testid";
+
+const SIGNIFIER_NAMESPACE = "data-shopify";
 
 // The canonical schema. The sample values only give each state field its widened type.
 const SIGNIFIER_SCHEMA = {
@@ -15,25 +12,25 @@ type SignifierValue = string | number | boolean;
 /** The state that each signifier must carry, by signifier name. */
 export type SignifierStates = typeof SIGNIFIER_SCHEMA;
 
-type SignifierName = keyof SignifierStates;
+type SignifierTestId = keyof SignifierStates;
 
 /**
  * All signifier names.
  *
  * @publicDocs
  */
-export const SIGNIFIER_NAMES: readonly SignifierName[] = keysOf(SIGNIFIER_SCHEMA);
+export const SIGNIFIER_TEST_IDS: readonly SignifierTestId[] = keysOf(SIGNIFIER_SCHEMA);
 
 type KebabCase<S extends string> = S extends `${infer Head}${infer Tail}`
   ? `${Head extends Lowercase<Head> ? Head : `-${Lowercase<Head>}`}${KebabCase<Tail>}`
   : S;
 
 /** The attributes that {@link signifier} returns for a signifier name. */
-export type SignifierAttributes<Name extends SignifierName> = {
-  [SIGNIFIER_ATTRIBUTE]: Name;
+export type SignifierAttributes<TestId extends SignifierTestId> = {
+  [SIGNIFIER_ATTRIBUTE]: TestId;
 } & {
-  [Key in keyof SignifierStates[Name] &
-    string as `${typeof SIGNIFIER_ATTRIBUTE}-${KebabCase<Key>}`]: string;
+  [Key in keyof SignifierStates[TestId] &
+    string as `${typeof SIGNIFIER_NAMESPACE}-${KebabCase<Key>}`]: string;
 };
 
 function keysOf<T extends object>(object: T): Array<keyof T & string> {
@@ -42,15 +39,15 @@ function keysOf<T extends object>(object: T): Array<keyof T & string> {
 
 // Converts a signifier to attribute entries. Only schema keys with a defined value are included.
 function toAttributeEntries(
-  name: SignifierName,
+  testId: SignifierTestId,
   state: Partial<Record<string, SignifierValue>>,
 ): Array<[string, string]> {
-  const entries: Array<[string, string]> = [[SIGNIFIER_ATTRIBUTE, name]];
-  for (const key of keysOf(SIGNIFIER_SCHEMA[name])) {
+  const entries: Array<[string, string]> = [[SIGNIFIER_ATTRIBUTE, testId]];
+  for (const key of keysOf(SIGNIFIER_SCHEMA[testId])) {
     const value = state[key];
     if (value === undefined) continue;
     const suffix = key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
-    entries.push([`${SIGNIFIER_ATTRIBUTE}-${suffix}`, String(value)]);
+    entries.push([`${SIGNIFIER_NAMESPACE}-${suffix}`, String(value)]);
   }
   return entries;
 }
@@ -60,15 +57,15 @@ function toAttributeEntries(
  *
  * @publicDocs
  */
-export function signifier<Name extends SignifierName>(
-  name: Name,
-  state: SignifierStates[Name],
-): SignifierAttributes<Name>;
+export function signifier<TestId extends SignifierTestId>(
+  testId: TestId,
+  state: SignifierStates[TestId],
+): SignifierAttributes<TestId>;
 export function signifier(
-  name: SignifierName,
-  state: SignifierStates[SignifierName],
+  testId: SignifierTestId,
+  state: SignifierStates[SignifierTestId],
 ): Record<string, string> {
-  return Object.fromEntries(toAttributeEntries(name, state));
+  return Object.fromEntries(toAttributeEntries(testId, state));
 }
 
 // Escapes a value for a double-quoted CSS string. Control characters use hex escapes.
@@ -88,11 +85,11 @@ function escapeCssString(value: string): string {
  *
  * @publicDocs
  */
-export function signifierSelector<Name extends SignifierName>(
-  name: Name,
-  state: Partial<SignifierStates[Name]> = {},
+export function signifierSelector<TestId extends SignifierTestId>(
+  testId: TestId,
+  state: Partial<SignifierStates[TestId]> = {},
 ): string {
-  return toAttributeEntries(name, state)
+  return toAttributeEntries(testId, state)
     .map(([attribute, value]) => `[${attribute}="${escapeCssString(value)}"]`)
     .join("");
 }

@@ -1,24 +1,23 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from "vitest";
 
-import { SIGNIFIER_ATTRIBUTE, SIGNIFIER_NAMES, signifier, signifierSelector } from "./signifiers";
+import { SIGNIFIER_TEST_IDS, signifier, signifierSelector } from "./signifiers";
 
 describe("signifiers", () => {
   it("names every signifier in the schema", () => {
-    expect(SIGNIFIER_ATTRIBUTE).toBe("data-h3");
-    expect(SIGNIFIER_NAMES).toEqual(["product-add-to-cart"]);
+    expect(SIGNIFIER_TEST_IDS).toEqual(["product-add-to-cart"]);
   });
 
   it("converts camelCase state keys to kebab-case attributes and values to strings", () => {
     expect(signifier("product-add-to-cart", { variantId: "gid://v/1", available: true })).toEqual({
-      "data-h3": "product-add-to-cart",
-      "data-h3-variant-id": "gid://v/1",
-      "data-h3-available": "true",
+      "data-shopify-testid": "product-add-to-cart",
+      "data-shopify-variant-id": "gid://v/1",
+      "data-shopify-available": "true",
     });
     expect(signifier("product-add-to-cart", { variantId: "", available: false })).toEqual({
-      "data-h3": "product-add-to-cart",
-      "data-h3-variant-id": "",
-      "data-h3-available": "false",
+      "data-shopify-testid": "product-add-to-cart",
+      "data-shopify-variant-id": "",
+      "data-shopify-available": "false",
     });
   });
 
@@ -28,9 +27,9 @@ describe("signifiers", () => {
       available: boolean;
     };
 
-    expect(signifier("product-add-to-cart", state)["data-h3-variant-id"]).toBe("42");
+    expect(signifier("product-add-to-cart", state)["data-shopify-variant-id"]).toBe("42");
     expect(signifierSelector("product-add-to-cart", state)).toBe(
-      '[data-h3="product-add-to-cart"][data-h3-variant-id="42"][data-h3-available="true"]',
+      '[data-shopify-testid="product-add-to-cart"][data-shopify-variant-id="42"][data-shopify-available="true"]',
     );
   });
 
@@ -38,28 +37,46 @@ describe("signifiers", () => {
     const state = { variantId: "v", available: true, extra: "x" };
 
     expect(Object.keys(signifier("product-add-to-cart", state))).toEqual([
-      "data-h3",
-      "data-h3-variant-id",
-      "data-h3-available",
+      "data-shopify-testid",
+      "data-shopify-variant-id",
+      "data-shopify-available",
     ]);
   });
 
+  it("keeps namespace-based state separate from test IDs", () => {
+    const attributes = {
+      "data-testid": "custom-add-to-cart",
+      ...signifier("product-add-to-cart", { variantId: "v", available: true }),
+    };
+
+    expect(attributes).toEqual({
+      "data-testid": "custom-add-to-cart",
+      "data-shopify-testid": "product-add-to-cart",
+      "data-shopify-variant-id": "v",
+      "data-shopify-available": "true",
+    });
+    expect(attributes).not.toHaveProperty("data-shopify-testid-variant-id");
+    expect(attributes).not.toHaveProperty("data-shopify-testid-available");
+  });
+
   it("builds selectors from the name and the given state fields", () => {
-    expect(signifierSelector("product-add-to-cart")).toBe('[data-h3="product-add-to-cart"]');
+    expect(signifierSelector("product-add-to-cart")).toBe(
+      '[data-shopify-testid="product-add-to-cart"]',
+    );
     expect(signifierSelector("product-add-to-cart", { available: false })).toBe(
-      '[data-h3="product-add-to-cart"][data-h3-available="false"]',
+      '[data-shopify-testid="product-add-to-cart"][data-shopify-available="false"]',
     );
     expect(signifierSelector("product-add-to-cart", { variantId: "v-1", available: true })).toBe(
-      '[data-h3="product-add-to-cart"][data-h3-variant-id="v-1"][data-h3-available="true"]',
+      '[data-shopify-testid="product-add-to-cart"][data-shopify-variant-id="v-1"][data-shopify-available="true"]',
     );
   });
 
   it("escapes quotes, backslashes, newlines, and control characters in selector values", () => {
     expect(signifierSelector("product-add-to-cart", { variantId: 'a"b\\c' })).toBe(
-      '[data-h3="product-add-to-cart"][data-h3-variant-id="a\\"b\\\\c"]',
+      '[data-shopify-testid="product-add-to-cart"][data-shopify-variant-id="a\\"b\\\\c"]',
     );
     expect(signifierSelector("product-add-to-cart", { variantId: "a\nb\rc\td\0e\x7ff" })).toBe(
-      '[data-h3="product-add-to-cart"][data-h3-variant-id="a\\a b\\d c\\9 d\\0 e\\7f f"]',
+      '[data-shopify-testid="product-add-to-cart"][data-shopify-variant-id="a\\a b\\d c\\9 d\\0 e\\7f f"]',
     );
   });
 

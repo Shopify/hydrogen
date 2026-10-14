@@ -255,7 +255,7 @@ export type {
   QueryPredictiveSearchOptions,
 } from "./predictive-search";
 
-export { SIGNIFIER_ATTRIBUTE, SIGNIFIER_NAMES, signifier, signifierSelector } from "./signifiers";
+export { SIGNIFIER_TEST_IDS, signifier, signifierSelector } from "./signifiers";
 export type { SignifierAttributes, SignifierStates } from "./signifiers";
 
 export { formatMoney } from "./money";

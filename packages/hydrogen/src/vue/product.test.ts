@@ -464,9 +464,9 @@ describe("useProductForm", () => {
         expect(result.register("addToCart", {})).toEqual({
           name: "add-to-cart",
           type: "submit",
-          "data-h3": "product-add-to-cart",
-          "data-h3-variant-id": "v-red",
-          "data-h3-available": "true",
+          "data-shopify-testid": "product-add-to-cart",
+          "data-shopify-variant-id": "v-red",
+          "data-shopify-available": "true",
         });
       });
 
@@ -489,8 +489,8 @@ describe("useProductForm", () => {
         selectOption?.("Color", "Green");
         await nextTick();
 
-        expect(button.attributes("data-h3-variant-id")).toBe("v-green");
-        expect(button.attributes("data-h3-available")).toBe("false");
+        expect(button.attributes("data-shopify-variant-id")).toBe("v-green");
+        expect(button.attributes("data-shopify-available")).toBe("false");
         expect(
           wrapper
             .find(
