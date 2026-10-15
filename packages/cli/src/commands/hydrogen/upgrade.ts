@@ -3,7 +3,7 @@ import semver from 'semver';
 import cliTruncate from 'cli-truncate';
 import {Flags} from '@oclif/core';
 import {isClean, ensureInsideGitDirectory} from '@shopify/cli-kit/node/git';
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../lib/hydrogen-command.js';
 import {
   renderConfirmationPrompt,
   renderInfo,
@@ -1034,7 +1034,9 @@ export async function upgradeNodeModules({
       task: async () => {
         await uninstallNodeModules({
           directory: appPath,
-          packageManager: await getPackageManager(appPath),
+          packageManager: resolvePackageManagerName(
+            await getPackageManager(appPath),
+          ),
           args: depsToRemove,
         });
       },
@@ -1097,9 +1099,11 @@ export async function upgradeNodeModules({
  * Normalizes the package manager name, falling back to npm for 'unknown'.
  */
 function resolvePackageManagerName(
-  packageManager: 'npm' | 'yarn' | 'pnpm' | 'unknown' | 'bun',
+  packageManager: 'npm' | 'yarn' | 'pnpm' | 'unknown' | 'bun' | 'homebrew',
 ): 'npm' | 'yarn' | 'pnpm' | 'bun' {
-  return packageManager === 'unknown' ? 'npm' : packageManager;
+  return packageManager === 'unknown' || packageManager === 'homebrew'
+    ? 'npm'
+    : packageManager;
 }
 
 /**

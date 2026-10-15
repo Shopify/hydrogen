@@ -1,4 +1,4 @@
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../lib/hydrogen-command.js';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {commonFlags} from '../../lib/flags.js';
 import {getRemixConfig} from '../../lib/remix-config.js';

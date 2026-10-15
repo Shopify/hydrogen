@@ -1,5 +1,5 @@
 import GenerateRoute from './route.js';
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../../lib/hydrogen-command.js';
 
 export default class GenerateRoutes extends Command {
   static description = 'Generates all supported standard shopify routes.';

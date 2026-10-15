@@ -1,32 +1,57 @@
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {Session, type Profiler} from 'node:inspector';
 import type {SourceMapConsumer} from 'source-map';
-import {handleMiniOxygenImportFail} from './mini-oxygen/common.js';
-import {importLocal} from './import-utils.js';
+import vm from 'node:vm';
+import {isBuiltin} from 'node:module';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
-export async function createCpuStartupProfiler(root: string) {
-  type MiniOxygenType = typeof import('~/mini-oxygen/node/index.js');
-  const {createMiniOxygen} = await importLocal<MiniOxygenType>(
-    '@shopify/mini-oxygen/node',
-    root,
-  ).catch(handleMiniOxygenImportFail);
+// Only expose built-ins that cannot perform host I/O. This Node profiler runs
+// trusted project code (the build already loads its Vite config); a vm.Context
+// isolates globals between runs but is not a security sandbox.
+const STARTUP_BUILTINS = new Set([
+  'assert',
+  'assert/strict',
+  'buffer',
+  'events',
+  'path',
+  'path/posix',
+  'path/win32',
+  'querystring',
+  'string_decoder',
+  'url',
+  'util',
+  'util/types',
+]);
 
-  const miniOxygen = createMiniOxygen({
-    script: 'export default {}',
-    modules: true,
-    log: () => {},
-  });
-
+export async function createCpuStartupProfiler() {
   return {
     async run(scriptPath: string, sourceEntrypoint?: string) {
-      const [script] = await Promise.all([
-        readFile(scriptPath),
-        miniOxygen.ready(),
-      ]);
-
+      const script = await readFile(scriptPath);
+      const context = createStartupContext();
+      const linkBuiltin = (specifier: string) =>
+        importBuiltin(specifier, context);
       const stopProfiler = await startProfiler();
-      await miniOxygen.reload({script});
-      const rawProfile = await stopProfiler();
+      let rawProfile: Profiler.Profile;
+      try {
+        // The inspector samples this Node process. Workerd runs in another
+        // process, so loading the worker there cannot measure its startup.
+        // Use a fresh Worker-like global scope on every build so module-level
+        // memoization cannot turn subsequent profiles into warm starts.
+        const module = new vm.SourceTextModule(script, {
+          identifier: '<script>',
+          context,
+          importModuleDynamically: async (specifier) => {
+            const dependency = await linkBuiltin(specifier);
+            await dependency.link(linkBuiltin);
+            await dependency.evaluate();
+            return dependency;
+          },
+        });
+        await module.link(linkBuiltin);
+        await module.evaluate();
+      } finally {
+        rawProfile = await stopProfiler();
+      }
 
       return enhanceProfileNodes(
         rawProfile,
@@ -34,10 +59,86 @@ export async function createCpuStartupProfiler(root: string) {
         sourceEntrypoint,
       );
     },
-    async close() {
-      await miniOxygen.dispose();
-    },
   };
+}
+
+function createStartupContext() {
+  // This profiles module initialization, not request handling. Expose the web
+  // APIs used by Worker bundles, but reject request-only I/O at startup.
+  // Oxygen's workerd runtime also rejects setTimeout/setInterval in global
+  // scope: timers are available only inside a request handler.
+  const requestOnly = () => {
+    throw new AbortError(
+      'Asynchronous I/O and timers are unavailable during Worker startup.',
+    );
+  };
+  const context = vm.createContext({
+    console,
+    performance,
+    crypto,
+    URL,
+    URLSearchParams,
+    Request,
+    Response,
+    Headers,
+    FormData,
+    Blob,
+    File,
+    TextEncoder,
+    TextDecoder,
+    TextEncoderStream,
+    TextDecoderStream,
+    ReadableStream,
+    WritableStream,
+    TransformStream,
+    CompressionStream,
+    DecompressionStream,
+    AbortController,
+    AbortSignal,
+    DOMException,
+    Event,
+    EventTarget,
+    atob,
+    btoa,
+    structuredClone,
+    queueMicrotask,
+    fetch: requestOnly,
+    setTimeout: requestOnly,
+    setInterval: requestOnly,
+    clearTimeout: () => {},
+    clearInterval: () => {},
+    caches: {
+      default: {match: requestOnly, put: requestOnly, delete: requestOnly},
+      open: requestOnly,
+    },
+  });
+  vm.runInContext('globalThis.self = globalThis', context);
+  return context;
+}
+
+async function importBuiltin(specifier: string, context: vm.Context) {
+  if (!isBuiltin(specifier)) {
+    throw new AbortError(
+      `Cannot profile an unbundled import: ${specifier}`,
+      'Bundle this dependency into the server build before profiling startup.',
+    );
+  }
+  const name = specifier.replace(/^node:/, '');
+  if (!STARTUP_BUILTINS.has(name)) {
+    throw new AbortError(
+      `Cannot profile unsupported Node built-in: ${specifier}`,
+      'CPU startup profiling supports only built-ins without host I/O.',
+    );
+  }
+  const namespace = await import(`node:${name}`);
+  const exports = Object.keys(namespace);
+  return new vm.SyntheticModule(
+    exports,
+    function () {
+      for (const name of exports) this.setExport(name, namespace[name]);
+    },
+    {context},
+  );
 }
 
 function startProfiler(): Promise<
@@ -91,7 +192,13 @@ async function enhanceProfileNodes(
 
     if (scriptDescendants.has(node.id)) {
       // Enhance paths with sourcemaps of known files.
-      augmentNode(node, smc);
+      if (
+        node.callFrame.url === '<script>' &&
+        node.callFrame.lineNumber >= 0 &&
+        node.callFrame.columnNumber >= 0
+      ) {
+        augmentNode(node, smc);
+      }
 
       if (
         node.callFrame.url === '<script>' &&
