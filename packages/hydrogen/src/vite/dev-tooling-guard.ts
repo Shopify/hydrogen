@@ -36,7 +36,7 @@ function hostFromHeader(raw: string | undefined): string {
 }
 
 function isTunnelHost(hostname: string): boolean {
-  const lower = hostname.toLowerCase();
+  const lower = hostname.toLowerCase().replace(/\.$/, '');
   return TUNNEL_HOST_SUFFIXES.some((suffix) => lower.endsWith(suffix));
 }
 
@@ -66,18 +66,32 @@ export function isRemoteDevToolingRequest(params: {
 
 export function createDevToolingGuard(): Connect.NextHandleFunction {
   return (req: IncomingMessage, res: ServerResponse, next: () => void) => {
-    const rawPath = req.url?.split('?')[0] ?? '';
+    const raw = req.url ?? '';
+
+    // Reject absolute-form and authority-form request targets.
+    // A dev server is not an HTTP proxy — legitimate requests always
+    // use origin-form (/path) or asterisk-form (*).
+    if (raw !== '' && !raw.startsWith('/') && !raw.startsWith('?')) {
+      res.writeHead(400, {'Content-Type': 'text/plain'});
+      res.end('Bad Request');
+      return;
+    }
+
+    const rawPath = raw.split('?')[0] ?? '';
 
     let resolvedPath: string;
     try {
-      const canonical = new URL(req.url ?? '/', 'http://n').pathname;
+      const canonical = new URL(raw || '/', 'http://n').pathname;
       try {
         resolvedPath = decodeURIComponent(canonical);
       } catch {
         resolvedPath = canonical;
       }
     } catch {
-      resolvedPath = rawPath;
+      // Unparseable URL — fail closed rather than allowing through unguarded
+      res.writeHead(400, {'Content-Type': 'text/plain'});
+      res.end('Bad Request');
+      return;
     }
 
     const check = {

@@ -258,6 +258,7 @@ export async function runDev({
                   debug,
                   inspectorPort,
                   finalHost,
+                  localHost: tunnel?.host ? publicUrl.origin : undefined,
                   storefrontTitle,
                 }),
             }),
@@ -354,6 +355,7 @@ export async function runDev({
     debug,
     inspectorPort,
     finalHost,
+    localHost: tunnel?.host ? publicUrl.origin : undefined,
     storefrontTitle,
   });
 
@@ -381,15 +383,17 @@ function showSuccessBanner({
   debug,
   inspectorPort,
   finalHost,
+  localHost,
   storefrontTitle,
 }: Pick<DevOptions, 'disableVirtualRoutes' | 'debug' | 'inspectorPort'> & {
   finalHost: string;
+  localHost?: string;
   storefrontTitle?: string;
 }) {
   const customSections: AlertCustomSection[] = [];
 
   if (!disableVirtualRoutes) {
-    customSections.push({body: getUtilityBannerlines(finalHost)});
+    customSections.push({body: getUtilityBannerlines(finalHost, localHost)});
   }
 
   if (debug && inspectorPort) {

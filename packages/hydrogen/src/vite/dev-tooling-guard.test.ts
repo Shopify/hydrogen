@@ -46,6 +46,9 @@ describe('createDevToolingGuard', () => {
     ['/debug-network-server', LOOPBACK, 'abc.trycloudflare.com:443'],
     ['/debug-network-server', LOOPBACK, 'abc.TRYCLOUDFLARE.COM'],
     ['/debug-network-server', LOOPBACK, 'ABC.TRYHYDROGEN.DEV'],
+    ['/debug-network-server', LOOPBACK, 'abc.trycloudflare.com.'],
+    ['/debug-network-server', LOOPBACK, 'abc.tryhydrogen.dev.'],
+    ['/graphiql', LOOPBACK, 'abc.trycloudflare.com.:443'],
     ['/debug-network-server', undefined, undefined],
     ['/debug-network-server/', LAN, undefined],
     ['/debug-network-server/x', LAN, undefined],
@@ -64,8 +67,6 @@ describe('createDevToolingGuard', () => {
     ['/%67raphiql', LAN, undefined],
     ['/subrequest%2dprofiler', LAN, undefined],
     ['/%64ebug-network-server', LAN, undefined],
-    ['http://192.168.86.52:3000/graphiql', LAN, undefined],
-    ['http://192.168.86.52:3000/debug-network-server', LAN, undefined],
   ])('blocks %s from %s with Host %s', (url, remoteAddress, host) => {
     const {res, next} = run({url, remoteAddress, host});
 
@@ -74,5 +75,24 @@ describe('createDevToolingGuard', () => {
       'Content-Type': 'text/plain',
     });
     expect(res.end).toHaveBeenCalledWith(BLOCKED_BODY);
+  });
+
+  it.each([
+    // Absolute-form targets — parser mismatch between WHATWG and Connect
+    ['http:///debug-network-server', LOOPBACK],
+    ['http:///graphiql', LOOPBACK],
+    ['http:///subrequest-profiler', LOOPBACK],
+    ['http://192.168.86.52:3000/graphiql', LAN],
+    ['http://192.168.86.52:3000/debug-network-server', LAN],
+    // Malformed URLs that fail URL parsing
+    ['//[::1/../../graphiql', LAN],
+  ])('rejects %s with 400', (url, remoteAddress) => {
+    const {res, next} = run({url, remoteAddress});
+
+    expect(next).not.toHaveBeenCalled();
+    expect(res.writeHead).toHaveBeenCalledWith(400, {
+      'Content-Type': 'text/plain',
+    });
+    expect(res.end).toHaveBeenCalledWith('Bad Request');
   });
 });
