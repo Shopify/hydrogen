@@ -19,6 +19,10 @@ describe("cart transaction payloads", () => {
       lineId: string;
       quantity: number;
     }>();
+
+    expectTypeOf(CART_TRANSACTION_TYPES.change_lines_quantity.payload).toEqualTypeOf<{
+      lines: Array<{ lineId: string; quantity: number }>;
+    }>();
   });
 
   it("prevents absolute line batches at the type boundary", () => {
