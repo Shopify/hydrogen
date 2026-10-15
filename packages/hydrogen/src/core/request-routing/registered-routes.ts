@@ -1,10 +1,10 @@
 import type {
   CallableRouteHandler,
   HydrogenRouteInterceptor,
-  ShopifyRouteHandler,
   ShopifyRouteHandlerContext,
   ShopifyRouteHandlerResult,
   ShopifyRedirectStatus,
+  ShopifyRouteSessionManager,
 } from "./route-types";
 
 export type {
@@ -35,6 +35,10 @@ const VALID_REDIRECT_STATUSES = [
  *
  * Use paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, or error result from the handler. Hydrogen sends a JSON result with status `200`, an error result with status `400` by default, and a redirect result with status `303` by default. When a redirect result uses a status other than `301`, `302`, `303`, 307, or 308, the promise from `handleShopifyRoutes` rejects.
  *
+ * Annotate the handler's context parameter with only the fields the handler reads, for example
+ * `Omit<ShopifyRouteHandlerContext, "sessionManager">`, so apps without a session manager can
+ * register it.
+ *
  * @param pathname The exact URL pathname that the handler matches. Hydrogen doesn't match path parameters or prefixes.
  * @param method The HTTP method that the handler matches, in uppercase, such as `POST`.
  * @param handler The function that receives the request, its context, the session, and the Storefront API client, and returns a JSON, redirect, or error result.
@@ -44,11 +48,12 @@ const VALID_REDIRECT_STATUSES = [
 export function createShopifyRouteHandler<
   const TPathname extends string,
   const TMethod extends string,
+  TContext extends Partial<ShopifyRouteHandlerContext> = ShopifyRouteHandlerContext,
 >(
   pathname: TPathname,
   method: TMethod,
-  handler: (context: ShopifyRouteHandlerContext) => Promise<ShopifyRouteHandlerResult>,
-): ShopifyRouteHandler<TPathname, TMethod> {
+  handler: (context: TContext) => Promise<ShopifyRouteHandlerResult>,
+): CallableRouteHandler<TContext, ShopifyRouteHandlerResult, TPathname, TMethod> {
   return createCallableRouteHandler(pathname, method, handler);
 }
 
@@ -69,7 +74,6 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
   url,
   { request, sessionManager, storefrontClient, requestContext, handlers = [] },
 ) => {
-  const context = { request, sessionManager, storefrontClient, requestContext };
   const routeHandlers = handlers.flatMap((group) => Object.values(group));
   if (routeHandlers.length === 0) return null;
 
@@ -82,8 +86,30 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
       new Response("Method Not Allowed", { status: HTTP_METHOD_NOT_ALLOWED_STATUS }),
     );
 
+  const context = {
+    request,
+    sessionManager: sessionManager ?? createMissingSessionManager(url.pathname),
+    storefrontClient,
+    requestContext,
+  };
   return match(context).then((result) => createShopifyRouteResponse(result, request));
 };
+
+// The types already require `sessionManager` for handlers that read it; this
+// covers untyped callers, which would otherwise read `undefined` deep inside a handler.
+function createMissingSessionManager(pathname: string): ShopifyRouteSessionManager {
+  const fail = (): never => {
+    throw new Error(
+      `The ${pathname} handler needs a session. Pass sessionManager to handleShopifyRoutes.`,
+    );
+  };
+  return {
+    getSessionOrigin: fail,
+    getSessionItem: fail,
+    setSessionItem: fail,
+    removeSessionItem: fail,
+  };
+}
 
 function createShopifyRouteResponse(result: ShopifyRouteHandlerResult, request: Request): Response {
   if (result.type === "redirect") {

@@ -1,6 +1,6 @@
 import { extractHeaders } from "../../headers";
 import { getLogger } from "../../logging";
-import type { HydrogenRouteInterceptor, HydrogenRoutesOptions } from "../route-types";
+import type { HydrogenRouteInterceptor, HydrogenRouteInterceptorOptions } from "../route-types";
 
 const PROXY_TIMEOUT_MS = 30_000;
 
@@ -9,7 +9,7 @@ const PROXY_ERROR_CACHE_CONTROL = "no-store";
 
 type ScopedLogger = ReturnType<typeof getLogger>;
 
-type ProxyHeaderContext = HydrogenRoutesOptions & { url: URL };
+type ProxyHeaderContext = HydrogenRouteInterceptorOptions & { url: URL };
 
 type PrepareHeaders<ExtraContext extends object = object> = (
   headers: Headers,
@@ -45,7 +45,7 @@ type ProxyResponseRejection = {
 
 type ProxyResponseValidation = (
   upstream: ProxyUpstreamInfo,
-  options: HydrogenRoutesOptions,
+  options: HydrogenRouteInterceptorOptions,
   url: URL,
 ) => ProxyResponseRejection | null;
 
@@ -139,7 +139,7 @@ export function createProxyInterceptor(descriptor: ProxyDescriptor): HydrogenRou
 
 function createProxyRequestInit(
   descriptor: ProxyDescriptor,
-  options: HydrogenRoutesOptions,
+  options: HydrogenRouteInterceptorOptions,
   url: URL,
 ): ProxyRequestInit {
   const { request, storefrontClient } = options;
@@ -162,7 +162,7 @@ function createProxyRequestInit(
 function buildProxyResponse(
   upstreamResponse: Response,
   descriptor: ProxyDescriptor,
-  options: HydrogenRoutesOptions,
+  options: HydrogenRouteInterceptorOptions,
   url: URL,
   log: ScopedLogger,
 ): Response {
