@@ -36,7 +36,8 @@ function hostFromHeader(raw: string | undefined): string {
 }
 
 function isTunnelHost(hostname: string): boolean {
-  return TUNNEL_HOST_SUFFIXES.some((suffix) => hostname.endsWith(suffix));
+  const lower = hostname.toLowerCase();
+  return TUNNEL_HOST_SUFFIXES.some((suffix) => lower.endsWith(suffix));
 }
 
 // The dev routes are mounted with connect's `use(route, handler)`, which
@@ -65,14 +66,28 @@ export function isRemoteDevToolingRequest(params: {
 
 export function createDevToolingGuard(): Connect.NextHandleFunction {
   return (req: IncomingMessage, res: ServerResponse, next: () => void) => {
-    const pathname = req.url?.split('?')[0] ?? '';
+    const rawPath = req.url?.split('?')[0] ?? '';
+
+    let resolvedPath: string;
+    try {
+      const canonical = new URL(req.url ?? '/', 'http://n').pathname;
+      try {
+        resolvedPath = decodeURIComponent(canonical);
+      } catch {
+        resolvedPath = canonical;
+      }
+    } catch {
+      resolvedPath = rawPath;
+    }
+
+    const check = {
+      host: req.headers.host,
+      remoteAddress: req.socket?.remoteAddress,
+    };
 
     if (
-      isRemoteDevToolingRequest({
-        pathname,
-        host: req.headers.host,
-        remoteAddress: req.socket?.remoteAddress,
-      })
+      isRemoteDevToolingRequest({pathname: rawPath, ...check}) ||
+      isRemoteDevToolingRequest({pathname: resolvedPath, ...check})
     ) {
       res.writeHead(404, {'Content-Type': 'text/plain'});
       res.end('Hydrogen dev tooling is only available from localhost.');

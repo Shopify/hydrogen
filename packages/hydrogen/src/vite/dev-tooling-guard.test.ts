@@ -31,6 +31,8 @@ describe('createDevToolingGuard', () => {
     ['/products/foo', LAN, undefined],
     ['/debug-network-serverx', LAN, undefined],
     ['/graphiql-docs', LAN, undefined],
+    ['/%67raphiql', LOOPBACK, undefined],
+    ['/debug-network-server/..', LOOPBACK, undefined],
   ])('passes %s from %s with Host %s', (url, remoteAddress, host) => {
     const {res, next} = run({url, remoteAddress, host});
 
@@ -42,6 +44,8 @@ describe('createDevToolingGuard', () => {
     ['/debug-network-server', LAN, undefined],
     ['/debug-network-server', LOOPBACK, 'abc.tryhydrogen.dev'],
     ['/debug-network-server', LOOPBACK, 'abc.trycloudflare.com:443'],
+    ['/debug-network-server', LOOPBACK, 'abc.TRYCLOUDFLARE.COM'],
+    ['/debug-network-server', LOOPBACK, 'ABC.TRYHYDROGEN.DEV'],
     ['/debug-network-server', undefined, undefined],
     ['/debug-network-server/', LAN, undefined],
     ['/debug-network-server/x', LAN, undefined],
@@ -50,6 +54,18 @@ describe('createDevToolingGuard', () => {
     ['/debug-network-server?x=1', LAN, undefined],
     ['/graphiql/customer-account.schema.json', LAN, undefined],
     ['/GraphiQL', LAN, undefined],
+    ['/x/../graphiql', LAN, undefined],
+    ['/x/../subrequest-profiler', LAN, undefined],
+    ['/x/../debug-network-server', LAN, undefined],
+    ['/./graphiql', LAN, undefined],
+    ['/debug-network-server/..', LAN, undefined],
+    ['/debug-network-server/../', LAN, undefined],
+    ['/graphiql/..', LAN, undefined],
+    ['/%67raphiql', LAN, undefined],
+    ['/subrequest%2dprofiler', LAN, undefined],
+    ['/%64ebug-network-server', LAN, undefined],
+    ['http://192.168.86.52:3000/graphiql', LAN, undefined],
+    ['http://192.168.86.52:3000/debug-network-server', LAN, undefined],
   ])('blocks %s from %s with Host %s', (url, remoteAddress, host) => {
     const {res, next} = run({url, remoteAddress, host});
 
