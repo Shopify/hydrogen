@@ -1,13 +1,19 @@
-import {Flags} from '@oclif/core';
-import Command from '../../lib/hydrogen-command.js';
-import colors from '@shopify/cli-kit/node/colors';
+import {writeJsonResult, isJsonOutput} from '../../lib/json-output.js';
 import {
+  flushStdout,
   outputContent,
   outputInfo,
   outputWarn,
+  unstyled,
   Logger,
   LogLevel,
 } from '@shopify/cli-kit/node/output';
+import {emitCommandEvent} from '@shopify/cli-kit/node/command-events';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {deployJsonOutputSchema} from '../../lib/deployment/types.js';
+import {Flags} from '@oclif/core';
+import Command from '../../lib/hydrogen-command.js';
+import colors from '@shopify/cli-kit/node/colors';
 import {type PackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import {AbortError} from '@shopify/cli-kit/node/error';
@@ -73,9 +79,14 @@ export const deploymentLogger: Logger = (
 };
 
 export default class Deploy extends Command {
+  static get jsonOutputSchema(): typeof deployJsonOutputSchema {
+    return deployJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown = `Builds and deploys your Hydrogen storefront to Oxygen. Requires an Oxygen deployment token to be set with the \`--token\` flag or an environment variable (\`SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN\`). If the storefront is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) then the Oxygen deployment token for the linked storefront will be used automatically.`;
-  static description = 'Builds and deploys a Hydrogen storefront to Oxygen.';
-  static flags: any = {
+  static description = this.descriptionForHelp();
+  static flags = {
+    ...jsonFlag,
     ...commonFlags.entry,
     ...commonFlags.env,
     ...commonFlags.envBranch,
@@ -190,6 +201,7 @@ export default class Deploy extends Command {
     // The Remix compiler hangs due to a bug in ESBuild:
     // https://github.com/evanw/esbuild/issues/2727
     // The actual build has already finished so we can kill the process
+    await flushStdout();
     process.exit(0);
   }
 
@@ -207,6 +219,7 @@ export default class Deploy extends Command {
 }
 
 interface OxygenDeploymentOptions {
+  json?: boolean;
   authBypassTokenDuration?: string;
   authBypassToken: boolean;
   buildCommand?: string;
@@ -255,9 +268,82 @@ function createUnexpectedAbortError(message?: string): AbortError {
   );
 }
 
-export async function runDeploy(
+export async function runDeploy(options: OxygenDeploymentOptions) {
+  const completedDeployment = await executeDeploy(options);
+  const isCI = ciPlatform().isCI;
+  const {jsonOutput} = options;
+  if (!completedDeployment) {
+    writeJsonResult(
+      deployJsonOutputSchema,
+      {status: 'cancelled', deployment: null},
+      options.json,
+    );
+    return;
+  }
+  let wroteDeploymentLog = false;
+  if (isCI && jsonOutput) {
+    try {
+      await writeFile(
+        DEPLOY_OUTPUT_FILE_HANDLE,
+        JSON.stringify(completedDeployment),
+      );
+      wroteDeploymentLog = true;
+    } catch {
+      outputWarn(
+        `Deployment succeeded, but could not write ${DEPLOY_OUTPUT_FILE_HANDLE}.`,
+      );
+    }
+  }
+  if (
+    !writeJsonResult(
+      deployJsonOutputSchema,
+      {
+        status: 'success',
+        deployment: {
+          url: completedDeployment.url,
+          authBypassToken: completedDeployment.authBypassToken ?? null,
+        },
+      },
+      options.json,
+    )
+  ) {
+    const nextSteps: (string | {subdued: string} | {link: {url: string}})[][] =
+      [];
+
+    if (isCI) {
+      if (wroteDeploymentLog) {
+        nextSteps.push([
+          'View the deployment information in',
+          {subdued: DEPLOY_OUTPUT_FILE_HANDLE},
+        ]);
+      }
+    } else {
+      nextSteps.push([
+        'Open',
+        {link: {url: completedDeployment!.url}},
+        'in your browser to view your deployment.',
+      ]);
+
+      if (completedDeployment?.authBypassToken) {
+        nextSteps.push([
+          'Use the',
+          {subdued: completedDeployment.authBypassToken},
+          'token to perform end-to-end tests against the deployment.',
+        ]);
+      }
+    }
+
+    renderSuccess({
+      body: ['Successfully deployed to Oxygen'],
+      nextSteps,
+    });
+  }
+  return completedDeployment;
+}
+
+export async function executeDeploy(
   options: OxygenDeploymentOptions,
-): Promise<void> {
+): Promise<CompletedDeployment | undefined> {
   const {
     authBypassTokenDuration,
     authBypassToken: generateAuthBypassToken,
@@ -585,9 +671,9 @@ Continue?`.value,
 
   let deployError: AbortError | null = null;
   let buildError: Error | null = null;
-  let resolveDeploy: () => void;
+  let resolveDeploy: (result: CompletedDeployment) => void;
   let rejectDeploy: (reason?: AbortError) => void;
-  const deployPromise = new Promise<void>((resolve, reject) => {
+  const deployPromise = new Promise<CompletedDeployment>((resolve, reject) => {
     resolveDeploy = resolve;
     rejectDeploy = reject;
   });
@@ -622,7 +708,7 @@ Continue?`.value,
 
   if (buildCommand || shouldUseDefaultBuildCommand) {
     if (forceClientSourcemap) {
-      console.log('');
+      if (!isJsonOutput()) console.log('');
       renderInfo({
         headline:
           'The `--force-client-sourcemap` flag is not supported with a custom build command',
@@ -630,6 +716,42 @@ Continue?`.value,
       });
     }
     config.buildCommand = buildCommand ?? DEFAULT_BUILD_COMMAND;
+    if (isJsonOutput()) {
+      hooks.buildFunction = async (assetPath) => {
+        let output: {stdout?: string; stderr?: string} = {};
+        try {
+          output = await execAsync(config.buildCommand!, {
+            cwd: root,
+            env: {
+              ...process.env,
+              ...(assetPath ? {HYDROGEN_ASSET_BASE_URL: assetPath} : {}),
+            },
+            maxBuffer: 64 * 1024 * 1024,
+          });
+        } catch (error) {
+          buildError = new AbortError(
+            'Build command failed.',
+            'Check the build output above for details.',
+          );
+          // Node's exec rejection carries the output collected before failure.
+          output = error as typeof output;
+          throw buildError;
+        } finally {
+          if (output.stdout?.trim())
+            emitCommandEvent({
+              type: 'diagnostic',
+              level: 'info',
+              message: unstyled(output.stdout.trim()),
+            });
+          if (output.stderr?.trim())
+            emitCommandEvent({
+              type: 'diagnostic',
+              level: 'warning',
+              message: unstyled(output.stderr.trim()),
+            });
+        }
+      };
+    }
   } else {
     hooks.buildFunction = async (
       assetPath: string | undefined,
@@ -688,47 +810,7 @@ Continue?`.value,
         return;
       }
 
-      const nextSteps: (
-        | string
-        | {subdued: string}
-        | {link: {url: string}}
-      )[][] = [];
-
-      if (isCI) {
-        if (jsonOutput) {
-          nextSteps.push([
-            'View the deployment information in',
-            {subdued: DEPLOY_OUTPUT_FILE_HANDLE},
-          ]);
-        }
-      } else {
-        nextSteps.push([
-          'Open',
-          {link: {url: completedDeployment!.url}},
-          'in your browser to view your deployment.',
-        ]);
-
-        if (completedDeployment?.authBypassToken) {
-          nextSteps.push([
-            'Use the',
-            {subdued: completedDeployment.authBypassToken},
-            'token to perform end-to-end tests against the deployment.',
-          ]);
-        }
-      }
-
-      renderSuccess({
-        body: ['Successfully deployed to Oxygen'],
-        nextSteps,
-      });
-      // in CI environments, output to a file so consequent steps can access the deployment details
-      if (isCI && jsonOutput) {
-        await writeFile(
-          DEPLOY_OUTPUT_FILE_HANDLE,
-          JSON.stringify(completedDeployment),
-        );
-      }
-      resolveDeploy();
+      resolveDeploy(completedDeployment);
     })
     .catch((error) => {
       rejectDeploy(deployError || buildError || error);
