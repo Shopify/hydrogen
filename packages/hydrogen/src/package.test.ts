@@ -12,6 +12,7 @@ import { assert } from "./core/test-utils";
 const require = createRequire(import.meta.url);
 const PACKAGE_ROOT = resolve(import.meta.dirname, "..");
 const TS_PLUGIN_EXPORT_PATH = "./ts-plugin";
+const EXPORTS_WITHOUT_DEVELOPMENT_BUILD = new Set(["./vite", "./ts-plugin"]);
 // pack + tar + spawn on a cold CI runner can exceed vitest's 5s default.
 const TS_PLUGIN_PACK_TIMEOUT_MS = 30_000;
 const STANDARD_EVENTS_SCRIPT_URL = "https://cdn.shopify.com/storefront/standard-events.js";
@@ -44,6 +45,8 @@ const PUBLIC_ENTRY_DECLARATIONS = [
   "dist/customer-account/index.d.mts",
 ] as const;
 
+type PackageExportTarget = string | Record<string, string | Record<string, string>>;
+
 describe("package metadata", () => {
   it("ships a CLI wrapper that exists before the package is built", () => {
     expect(packageJson.bin.hydrogen).toBe("./bin/hydrogen.mjs");
@@ -52,6 +55,32 @@ describe("package metadata", () => {
 
   it("exports package metadata", () => {
     expect(packageJson.exports["./package.json"]).toBe("./package.json");
+  });
+
+  it("ships development builds for every runtime export", () => {
+    const packageExports = packageJson.exports as Record<string, PackageExportTarget>;
+
+    for (const [subpath, target] of Object.entries(packageExports)) {
+      if (typeof target === "string" || EXPORTS_WITHOUT_DEVELOPMENT_BUILD.has(subpath)) {
+        continue;
+      }
+
+      const importConditions = target.import;
+      if (typeof importConditions !== "object" || importConditions === null) {
+        throw new Error(`${subpath} has no conditional import export`);
+      }
+      const developmentImport = importConditions.development;
+      assert(typeof developmentImport === "string", `${subpath} has no development import`);
+      expect(existsSync(resolve(PACKAGE_ROOT, developmentImport)), subpath).toBe(true);
+
+      const typeConditions = target.types;
+      if (typeof typeConditions !== "object" || typeConditions === null) {
+        throw new Error(`${subpath} has no conditional type export`);
+      }
+      const developmentTypes = typeConditions.development;
+      assert(typeof developmentTypes === "string", `${subpath} has no development types`);
+      expect(existsSync(resolve(PACKAGE_ROOT, developmentTypes)), subpath).toBe(true);
+    }
   });
 
   it("exports copied generated GraphQL assets from dist", () => {

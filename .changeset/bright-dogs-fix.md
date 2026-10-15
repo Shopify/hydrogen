@@ -2,4 +2,4 @@
 "@shopify/hydrogen": patch
 ---
 
-Fix customer account and cart handler interoperability when using the development exports.
+Fix `createCustomerAccountServerHandlers` rejecting cart handlers from `createCartServerHandlers` during `vite dev`.
