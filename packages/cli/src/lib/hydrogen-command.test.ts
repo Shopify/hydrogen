@@ -6,6 +6,7 @@ import type {Config} from '@oclif/core';
 import {isTerminalInteractive} from '@shopify/cli-kit/node/context/local';
 import {terminalSupportsPrompting} from '@shopify/cli-kit/node/system';
 import {renderTextPrompt} from '@shopify/cli-kit/node/ui';
+import {runWithCommandEventsForCommand} from '@shopify/cli-kit/node/command-events';
 import {jsonFlag} from '@shopify/cli-kit/node/cli';
 import {outputResult} from '@shopify/cli-kit/node/output';
 import {AbortError} from '@shopify/cli-kit/node/error';
@@ -257,6 +258,37 @@ it.each(['--json', '-j', 'environment'])(
       expect(stderr()).toBe('');
       expect(subject.ran).toBe(false);
       expect(process.exitCode).toBe(1);
+    });
+  },
+);
+
+it.each(['True', 'tRuE', 'YeS', 'y', 'Y'])(
+  'uses JSON for early project errors with SHOPIFY_FLAG_JSON=%s',
+  async (value) => {
+    vi.stubEnv('SHOPIFY_FLAG_JSON', value);
+    const subject = command();
+    await withCapturedStandardStreams(async ({stdout, stderr}) => {
+      await runWithCommandEventsForCommand([], () => subject.execute());
+      expect(JSON.parse(stdout()).error.message).toContain(
+        'outside of a Hydrogen project',
+      );
+      expect(stderr()).toBe('');
+      expect(subject.ran).toBe(false);
+    });
+  },
+);
+
+it.each(['False', '0', 'No', 'n'])(
+  'keeps early project errors as text with SHOPIFY_FLAG_JSON=%s',
+  async (value) => {
+    vi.stubEnv('SHOPIFY_FLAG_JSON', value);
+    const subject = command();
+    await withCapturedStandardStreams(async ({stdout, stderr}) => {
+      await subject.execute();
+      expect(stdout()).toBe('');
+      expect(stderr().replaceAll('│', '').replace(/\s+/g, ' ')).toContain(
+        'outside of a Hydrogen project',
+      );
     });
   },
 );

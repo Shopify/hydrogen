@@ -1,3 +1,4 @@
+import {isJsonOutput} from './json-output.js';
 import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
@@ -188,7 +189,7 @@ export async function executeReactRouterCodegen(options: {
   } else {
     execSync('npx react-router typegen', {
       cwd: options.rootDirectory,
-      stdio: 'inherit',
+      stdio: isJsonOutput() ? 'pipe' : 'inherit',
     });
   }
 }
@@ -239,19 +240,40 @@ async function runGraphQLCodegen({
 
   codegenContext.cwd = dirs.rootDirectory;
 
-  await generate(codegenContext, true);
+  const outputs: {filename: string}[] = await generate(codegenContext, true);
+  // Watch mode returns a watcher rather than a finite set of generated files.
+  if (watch) return {} as Record<string, string[]>;
 
-  return Object.entries(codegenConfig.generates).reduce(
-    (acc, [key, value]) => {
-      if ('documents' in value) {
-        acc[key] = (
-          Array.isArray(value.documents) ? value.documents : [value.documents]
-        ).filter((document) => typeof document === 'string') as string[];
-      }
-
-      return acc;
-    },
-    {} as Record<string, string[]>,
+  const configuredOutputs = Object.entries(codegenConfig.generates);
+  return Object.fromEntries(
+    outputs.map(({filename}) => {
+      const path = resolvePath(dirs.rootDirectory, filename);
+      const configuration =
+        configuredOutputs.find(
+          ([key]) => resolvePath(dirs.rootDirectory, key) === path,
+        ) ??
+        configuredOutputs
+          .filter(
+            ([key, value]) =>
+              !Array.isArray(value) &&
+              value.preset &&
+              path.startsWith(resolvePath(dirs.rootDirectory, key) + '/'),
+          )
+          .sort(([left], [right]) => right.length - left.length)[0];
+      const options = configuration?.[1];
+      const documents = [
+        codegenConfig.documents,
+        options && !Array.isArray(options) ? options.documents : undefined,
+      ].flat();
+      const sources = documents.flatMap((document) =>
+        typeof document === 'string'
+          ? [document]
+          : document
+            ? Object.keys(document)
+            : [],
+      );
+      return [filename, [...new Set(sources)]];
+    }),
   );
 }
 

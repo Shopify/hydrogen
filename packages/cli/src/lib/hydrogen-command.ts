@@ -1,5 +1,11 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {globalFlags} from '@shopify/cli-kit/node/cli';
+import {Parser} from '@oclif/core';
+import {
+  commandEventOutputMode,
+  renderCommandEventAsJson,
+  runWithCommandEvents,
+} from '@shopify/cli-kit/node/command-events';
+import {globalFlags, jsonFlag} from '@shopify/cli-kit/node/cli';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {cwd, resolvePath} from '@shopify/cli-kit/node/path';
 import {isTruthy} from '@shopify/cli-kit/node/context/utilities';
@@ -13,7 +19,19 @@ export default abstract class HydrogenCommand extends Command {
   static baseFlags = {...Command.baseFlags, ...globalFlags};
 
   async _run<T>() {
-    return withJsonConsole(() => super._run<T>());
+    const execute = () => withJsonConsole(() => super._run<T>());
+    // Match oclif's environment boolean parsing before init or error handling.
+    // CLI Kit 4.9 does not recognize mixed-case values such as "True" or "y".
+    const {flags} = await Parser.parse([], {flags: jsonFlag});
+    // The error handler and child processes also read the environment directly.
+    if (flags.json) process.env.SHOPIFY_FLAG_JSON = 'true';
+    if (flags.json && commandEventOutputMode() !== 'json') {
+      return runWithCommandEvents(
+        {outputMode: 'json', sink: renderCommandEventAsJson},
+        execute,
+      );
+    }
+    return execute();
   }
 
   protected async init(): Promise<unknown> {
