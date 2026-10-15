@@ -2,7 +2,11 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {type AdminSession, login} from '../../lib/auth.js';
 import {replaceCustomerApplicationUrls} from '../../lib/graphql/admin/customer-application-update.js';
 import {setCustomerAccountConfig} from '../../lib/shopify-config.js';
-import {runCustomerAccountPush} from './customer-account-push.js';
+import CustomerAccountPush, {
+  runCustomerAccountPush,
+  pushCustomerAccountConfig,
+} from './customer-account-push.js';
+import {captureJsonOutput} from '../../../tests/output.js';
 
 vi.mock('../../lib/auth.js');
 vi.mock('../../lib/graphql/admin/customer-application-update.js');
@@ -45,6 +49,151 @@ describe('runCustomerAccountPush', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('writes configured URLs as one JSON document through the command', async () => {
+    const command = new CustomerAccountPush([], {} as any);
+    const parse = vi.spyOn(command as any, 'parse').mockResolvedValue({
+      flags: {
+        json: true,
+        'dev-origin': DEV_ORIGIN,
+        'javascript-origin': JAVASCRIPT_ORIGIN,
+        'relative-redirect-uri': '/custom/callback',
+        'relative-logout-uri': '/logout',
+      },
+    });
+    try {
+      const {stdout, stderr} = await captureJsonOutput(() => command.run());
+      expect(JSON.parse(stdout)).toEqual({
+        storefrontGid: STOREFRONT_ID,
+        redirectUri: `${DEV_ORIGIN}/custom/callback`,
+        javascriptOrigin: JAVASCRIPT_ORIGIN,
+        logoutUri: `${DEV_ORIGIN}/logout`,
+      });
+      expect(stderr).toBe('');
+    } finally {
+      parse.mockRestore();
+    }
+  });
+
+  it('retains the dev server cleanup callback', async () => {
+    const cleanup = await runCustomerAccountPush({devOrigin: DEV_ORIGIN});
+    vi.mocked(replaceCustomerApplicationUrls).mockClear();
+    await cleanup?.();
+    expect(replaceCustomerApplicationUrls).toHaveBeenCalledWith(
+      ADMIN_SESSION,
+      STOREFRONT_ID,
+      {
+        redirectUri: {removeRegex: `${DEV_ORIGIN}/account/authorize`},
+        javascriptOrigin: {removeRegex: DEV_ORIGIN},
+        logoutUris: {removeRegex: DEV_ORIGIN},
+      },
+    );
+  });
+
+  describe.each([true, false])('input validation with json=%s', (json) => {
+    it.each([
+      ['invalid storefront ID', {'storefront-id': '1'}],
+      ['invalid JavaScript origin', {'javascript-origin': 'not-a-url'}],
+      ['empty JavaScript origin', {'javascript-origin': ''}],
+      ['invalid development origin', {'dev-origin': 'not-a-url'}],
+      [
+        'empty development origin and redirect path',
+        {'dev-origin': '', 'relative-redirect-uri': ''},
+      ],
+    ])('rejects %s before changing configuration', async (_name, overrides) => {
+      const command = new CustomerAccountPush([], {} as any);
+      const parse = vi.spyOn(command as any, 'parse').mockResolvedValue({
+        flags: {
+          json,
+          'storefront-id': STOREFRONT_ID,
+          'dev-origin': DEV_ORIGIN,
+          ...overrides,
+        },
+      });
+
+      try {
+        const {stdout} = await captureJsonOutput(async () => {
+          await expect(command.run()).rejects.toThrow('setup update fail');
+        });
+        expect(stdout).toBe('');
+        expect(replaceCustomerApplicationUrls).not.toHaveBeenCalled();
+        expect(setCustomerAccountConfig).not.toHaveBeenCalled();
+      } finally {
+        parse.mockRestore();
+      }
+    });
+  });
+
+  it('validates the storefront ID from project configuration before updating', async () => {
+    vi.mocked(login).mockResolvedValue({
+      session: ADMIN_SESSION,
+      config: {
+        ...SHOPIFY_CONFIG,
+        storefront: {...SHOPIFY_CONFIG.storefront, id: 'invalid'},
+      },
+    });
+
+    await expect(
+      pushCustomerAccountConfig({devOrigin: DEV_ORIGIN}),
+    ).rejects.toThrow('setup update fail');
+    expect(replaceCustomerApplicationUrls).not.toHaveBeenCalled();
+    expect(setCustomerAccountConfig).not.toHaveBeenCalled();
+  });
+
+  it('allows empty relative paths when the development origin is valid', async () => {
+    const {result} = await pushCustomerAccountConfig({
+      devOrigin: DEV_ORIGIN,
+      redirectUriRelativeUrl: '',
+      logoutUriRelativeUrl: '',
+    });
+
+    expect(result).toEqual({
+      storefrontGid: STOREFRONT_ID,
+      redirectUri: DEV_ORIGIN,
+      javascriptOrigin: DEV_ORIGIN,
+      logoutUri: DEV_ORIGIN,
+    });
+    expect(replaceCustomerApplicationUrls).toHaveBeenCalledWith(
+      ADMIN_SESSION,
+      STOREFRONT_ID,
+      {
+        redirectUri: {
+          add: [DEV_ORIGIN],
+          removeRegex: PREVIOUS_CONFIG.redirectUri,
+        },
+        javascriptOrigin: {
+          add: [DEV_ORIGIN],
+          removeRegex: PREVIOUS_CONFIG.javascriptOrigin,
+        },
+        logoutUris: {add: [DEV_ORIGIN], removeRegex: PREVIOUS_CONFIG.logoutUri},
+      },
+    );
+  });
+
+  it('propagates mutation errors without producing a success result', async () => {
+    vi.mocked(replaceCustomerApplicationUrls).mockResolvedValue({
+      success: false,
+      userErrors: [],
+    });
+    await expect(
+      pushCustomerAccountConfig({devOrigin: DEV_ORIGIN}),
+    ).rejects.toThrow('setup update fail');
+  });
+
+  it('validates the public schema and advertises it in help', () => {
+    expect(CustomerAccountPush.flags.json).toBeDefined();
+    expect(CustomerAccountPush.description).toContain(
+      CustomerAccountPush.jsonOutputSchema.name,
+    );
+    expect(() =>
+      CustomerAccountPush.jsonOutputSchema.encode({
+        storefrontId: 1,
+        redirectUri: DEV_ORIGIN,
+        javascriptOrigin: DEV_ORIGIN,
+        logoutUri: DEV_ORIGIN,
+      } as any),
+    ).toThrow();
   });
 
   it('defaults the JavaScript origin to the development origin', async () => {
