@@ -128,7 +128,7 @@ The root `pnpm test:e2e:storefront` command uses Turbo. `turbo.json` forwards th
 | `PLAYWRIGHT_BROWSER_CHANNEL` | Optional installed browser channel, such as `chrome` |
 | `STOREFRONT_SKIP_NO_JS_VARIANTS` | Set to `true` only for the explicit no-JavaScript variant opt-out |
 
-The Nuxt reference run uses a production build without a private token, so the server uses mock.shop. Its runtime configuration is separate from the E2E variables above. Production Node start does not load `.env`. See the [README](../README.md#run-the-nuxt-reference) for root commands and supported store configuration. The one-time Nuxt baseline and its exact live-data skip reasons are in [PR #4184](https://github.com/Shopify/hydrogen/pull/4184#nuxt-baseline-by-group).
+See the [README](../README.md) for the runner command. Start and configure the storefront separately.
 
 Operational expectations:
 
