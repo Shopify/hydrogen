@@ -37,15 +37,19 @@ function keysOf<T extends object>(object: T): Array<keyof T & string> {
   return Object.keys(object).filter((key): key is keyof T & string => key in object);
 }
 
-// Converts a signifier to attribute entries. Only schema keys with a defined value are included.
+// Converts a signifier to attribute entries. Omitted schema keys are skipped. A schema key that is
+// present with an undefined value throws, so a selector cannot silently match more elements.
 function toAttributeEntries(
   testId: SignifierTestId,
   state: Partial<Record<string, SignifierValue>>,
 ): Array<[string, string]> {
   const entries: Array<[string, string]> = [[SIGNIFIER_ATTRIBUTE, testId]];
   for (const key of keysOf(SIGNIFIER_SCHEMA[testId])) {
+    if (!(key in state)) continue;
     const value = state[key];
-    if (value === undefined) continue;
+    if (value === undefined) {
+      throw new TypeError(`Signifier "${testId}" field "${key}" is undefined.`);
+    }
     const suffix = key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
     entries.push([`${SIGNIFIER_NAMESPACE}-${suffix}`, String(value)]);
   }
@@ -82,6 +86,7 @@ function escapeCssString(value: string): string {
 
 /**
  * Returns a CSS selector for the named signifier. Each given state field narrows the match.
+ * To match any value for a field, omit the field. Do not set it to `undefined`.
  *
  * @publicDocs
  */

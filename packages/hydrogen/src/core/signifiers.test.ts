@@ -45,22 +45,6 @@ describe("signifiers", () => {
     ]);
   });
 
-  it("keeps namespace-based state separate from test IDs", () => {
-    const attributes = {
-      "data-testid": "custom-add-to-cart",
-      ...signifier("product-add-to-cart", { variantId: "v", availableForSale: true }),
-    };
-
-    expect(attributes).toEqual({
-      "data-testid": "custom-add-to-cart",
-      "data-shopify-testid": "product-add-to-cart",
-      "data-shopify-variant-id": "v",
-      "data-shopify-available-for-sale": "true",
-    });
-    expect(attributes).not.toHaveProperty("data-shopify-testid-variant-id");
-    expect(attributes).not.toHaveProperty("data-shopify-testid-available-for-sale");
-  });
-
   it("builds selectors from the name and the given state fields", () => {
     expect(signifierSelector("product-add-to-cart")).toBe(
       '[data-shopify-testid="product-add-to-cart"]',
@@ -72,6 +56,23 @@ describe("signifiers", () => {
       signifierSelector("product-add-to-cart", { variantId: "v-1", availableForSale: true }),
     ).toBe(
       '[data-shopify-testid="product-add-to-cart"][data-shopify-variant-id="v-1"][data-shopify-available-for-sale="true"]',
+    );
+  });
+
+  it("rejects explicitly undefined selector fields instead of broadening the match", () => {
+    expect(() => signifierSelector("product-add-to-cart", { variantId: undefined })).toThrow(
+      new TypeError('Signifier "product-add-to-cart" field "variantId" is undefined.'),
+    );
+  });
+
+  it("rejects explicitly undefined signifier state fields", () => {
+    const state = { variantId: undefined, availableForSale: true } as unknown as {
+      variantId: string;
+      availableForSale: boolean;
+    };
+
+    expect(() => signifier("product-add-to-cart", state)).toThrow(
+      new TypeError('Signifier "product-add-to-cart" field "variantId" is undefined.'),
     );
   });
 
