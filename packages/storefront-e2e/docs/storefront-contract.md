@@ -41,18 +41,23 @@ The suite discovers a live product title, searches for it, and verifies that pro
 
 ## Variant Options
 
-At least one probed product must expose a selectable variant control.
+At least one probed product must expose a selectable per-value control with the `product-option-value` signifier. Discovery includes variant IDs and options so the selected add-to-cart variant can be checked against Storefront API data.
+
+Discovery samples at most 20 products and 20 variants per product; full catalog coverage is not guaranteed. Product option metadata identifies single-value options that a picker can omit. Each editable option still needs a selected per-value control. The rendered selection, with omitted singleton values filled from option metadata, must match exactly one sampled variant. Missing or ambiguous matches fail rather than taking the expected variant ID from the add-to-cart control.
 
 Supported controls:
 
 - Same-product links whose href is a product URL with selected option query params. The selected link has `aria-current="true"`.
 - Buttons with `aria-pressed`. The selected button has `aria-pressed="true"`. Buttons work only with JavaScript; the no-JavaScript check needs links.
+- Radio or checkbox inputs with native checked state. Clipped, focusable inputs use keyboard activation, not forced clicks.
+
+Select pickers are not supported in this phase. A signifier on `select` or `option` does not create a supported per-value control. See [ADR 0003](adr/0003-product-signifiers.md).
 
 With JavaScript, selecting a value must put the selection in the URL (for a link, the link's href) and mark the value as selected. Loading that URL directly must render the product heading and show the same value as selected. Selection must keep unrelated non-option query params (the suite uses `storefront_e2e_ref=variant-check`).
 
 Without JavaScript, the product heading must render, and at least one probed product must expose a same-product variant link for an unselected value. A native click on that link must load its href, keep unrelated query params, and the server-rendered page must mark that value as selected.
 
-Selected values should also be visibly indicated (styling or text). The suite does not check this. It also does not check that hydration is complete before it clicks, how many navigations or document loads a selection makes, or the visible appearance, price, or merchandise of the selected variant.
+Selected values should also be visibly indicated (styling or text). The suite does not check this. It also does not check that hydration is complete before it clicks, how many navigations or document loads a selection makes, or the visible appearance or price of the selected variant. It checks that the add-to-cart signifier's variant ID and availability agree with the discovered selected variant.
 
 Set STOREFRONT_SKIP_NO_JS_VARIANTS=true to skip the no-JavaScript check for a storefront that cannot render the product page without JavaScript or does not render variant links. A skip is an expected opt-out, not a pass. The Next.js example sets it in CI because its product content streams behind a Suspense fallback.
 
@@ -76,7 +81,7 @@ Accessible labels are preferred. Broad data-testid attributes should only be use
 
 ## Signifiers
 
-Some controls use a standard signifier: a `data-shopify-testid` attribute with the signifier name, plus `data-shopify-variant-id` and `data-shopify-available` state attributes. Signifiers are present in production too. Use `signifier()` or a Hydrogen form binding to write them. Do not write them by hand. See [ADR 0001](adr/0001-standard-signifiers.md) for the design.
+Some controls use a standard signifier: a `data-shopify-testid` attribute with the signifier name, plus `data-shopify-` state attributes from its schema. Signifiers are present in production too. Use `signifier()` or a Hydrogen form binding to write them. Do not write them by hand. See [ADR 0001](adr/0001-standard-signifiers.md) for the design.
 
 The suite finds a signifier like this:
 
@@ -99,6 +104,25 @@ Fix a missing or ambiguous signifier:
 - If a wrapper component renders the control, make sure it forwards props to the rendered element.
 - Keep only one visible add-to-cart control per product page.
 - If a query finds no matching signifier, check that existing attributes match its state filters, such as `available: true`.
+
+### product-option-value
+
+State: `{ optionName: string; optionValue: string; selected: boolean }`. All three fields are required. They become `data-shopify-option-name`, `data-shopify-option-value`, and `data-shopify-selected`. Keep native checked state, `aria-current`, or `aria-pressed` on the control as applicable.
+
+- With bindings: spread `register('optionValue', { optionName, value })` on buttons or inputs, never on links.
+- For all option links, including hydrated same-product and combined-listing links: spread `getProductOptionValueAttributes(optionName, value)` from `@shopify/hydrogen`. It returns only signifier attributes. Keep the URL, native/ARIA state, and guarded same-product selection handler. A registered handler can be called from that guard without spreading registration props onto the link.
+- Without bindings: buttons or inputs can use `signifier('product-option-value', { optionName, optionValue, selected })`.
+- Core register callers must pass `state.selectedOptions` from `store.getState()` as the optional third argument for unresolved selections and recreate the register function after state changes. Without that argument, a null selected variant marks all values unselected. React and Vue pass current selected options automatically.
+- Keep one visible control for each option name/value in the searched scope. Make wrappers forward attributes.
+
+### product-quantity
+
+State: `{}`. Put this signifier on a visible, buyer-editable product quantity input, not a hidden quantity field, stepper wrapper, or button.
+
+- With bindings: spread `register('quantity', { value })` or `register('quantity', { defaultValue })`.
+- Without bindings: spread `signifier('product-quantity', {})` and keep native input props yourself.
+
+The product-page check edits this input to `2`, with an idempotent fill/value retry if hydration restores the initial value. The combined quantity-to-cart assertion requires the cart-line signifier change; editing the input alone does not prove cart settlement.
 
 ## Checkout Handoff
 
@@ -143,4 +167,4 @@ Operational expectations:
 
 When the storefront contract changes, update the relevant spec matcher, shared helper, and this document together.
 
-The suite consumes the `product-add-to-cart` signifier. Other areas still use label strings and semantic roles. Generated examples should migrate toward explicit storefront-owned signifiers for product results, variant options, cart lines, and checkout summaries. Add a signifier only when a spec consumes it, and update the [Signifiers](#signifiers) section in the same change.
+The product suite consumes `product-add-to-cart`, `product-option-value`, and `product-quantity`. Other areas still use label strings and semantic roles. Generated examples should migrate toward explicit storefront-owned signifiers for product results, cart lines, and checkout summaries. Add a signifier only when a spec consumes it, and update the [Signifiers](#signifiers) section in the same change.

@@ -47,9 +47,11 @@ const location = useLocation();
 
 `defaultShouldRevalidate: false` is optional. Use it only for `resolved` selections, only when no other UI on the route needs fresh loader data, and only if the installed React Router supports it. Leave it out for `unresolved` selections, so the loader resolves the exact variant. A route `shouldRevalidate` export still makes the final decision.
 
-Same-product option values are GET links so selection works without JavaScript. The `to` is the option URL built from `value.selectedOptions` with the same base as `onSelect`. Do not spread the registration onto `Link`. Pass a guarded `onClick` instead: for a plain primary click it calls `event.preventDefault()` and then `registered.onClick()`. React Router's `Link` does not navigate when the event is already prevented, so the provider `onSelect` is the only navigation. Other clicks keep native link behavior. Keep sold-out-but-existing values interactive and derive their visual treatment from `value.available`:
+Same-product option values are GET links so selection works without JavaScript. The `to` is the option URL built from `value.selectedOptions` with the same base as `onSelect`. Spread `getProductOptionValueAttributes` on every option link, never the registration props. Keep a guarded `onClick`: for a plain primary click it calls `event.preventDefault()` and then `registered.onClick()`. React Router's `Link` does not navigate when the event is already prevented, so the provider `onSelect` is the only navigation. Other clicks keep native link behavior. Keep sold-out-but-existing values interactive and derive their visual treatment from `value.available`:
 
 ```tsx
+import { getProductOptionValueAttributes } from "@shopify/hydrogen";
+
 const location = useLocation();
 const baseParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
 
@@ -73,6 +75,7 @@ const onSelectLink = (event: MouseEvent<HTMLAnchorElement>) => {
 };
 
 <Link
+  {...getProductOptionValueAttributes(option.name, value)}
   to={toRouterLocation(variantUrl(product, value.selectedOptions, value.handle, baseParams))}
   replace
   preventScrollReset
@@ -88,7 +91,10 @@ const onSelectLink = (event: MouseEvent<HTMLAnchorElement>) => {
 Non-existent combinations (`exists: false`) render as a disabled `<button>` instead of a `<Link>`:
 
 ```tsx
-<button type="button" disabled aria-pressed={value.selected}>
+<button
+  {...register("optionValue", { optionName: option.name, value: value.name })}
+  type="button" disabled aria-pressed={value.selected}
+>
   {value.name}
 </button>
 ```
@@ -97,6 +103,7 @@ Cross-product option values are framework links that reuse the same URL helper a
 
 ```tsx
 <Link
+  {...getProductOptionValueAttributes(option.name, value)}
   to={toRouterLocation(variantUrl(product, value.selectedOptions, value.handle, baseParams))}
   preventScrollReset
   data-available={value.available ? "true" : "false"}

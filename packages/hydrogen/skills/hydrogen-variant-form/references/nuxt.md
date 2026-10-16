@@ -47,12 +47,14 @@ function handleSelect(result: ValidProductSelectionResult<ProductData>) {
 
 Same-product option values are GET links so selection degrades without JavaScript; non-existent combinations render as a disabled `<button>`, and cross-product combined-listing values are normal `NuxtLink` links. See the skill's GET-links and Accessibility rules for the no-JS fallback and `aria-current`, and its "provider `onSelect` is the only client navigation" rule for `onSelect`.
 
-For existing same-product values, use `NuxtLink` with `custom` and render the anchor yourself from the slot `href`. Put a guarded `@click` on that anchor: for a plain primary click it calls `event.preventDefault()` and then `onClick()` from `form.register("optionValue", ...)`, so the provider `onSelect` is the only navigation. Other clicks keep native link behavior. Do not call the slot `navigate`. Do not put `@click` on a regular `NuxtLink` to cancel its navigation, and do not `v-bind` the registration onto it; the order of your listener and the link's own navigation is not something to rely on.
+For existing same-product values, use `NuxtLink` with `custom` and render the anchor yourself from the slot `href`. Bind `getProductOptionValueAttributes` to every option link: the custom link's rendered anchor and each regular cross-product `NuxtLink`. Keep a guarded `@click` on the same-product anchor: for a plain primary click it calls `event.preventDefault()` and then `onClick()` from `form.register("optionValue", ...)`, so the provider `onSelect` is the only navigation. Other clicks keep native link behavior. Do not call the slot `navigate`. Do not put `@click` on a regular `NuxtLink` to cancel its navigation, and never `v-bind` registration props onto a link; the order of your listener and the link's own navigation is not something to rely on.
 
 This custom-link guard has not been verified in a running Nuxt storefront. Check plain-click, modified-click, and no-JavaScript behavior in your app before treating this path as verified.
 
 ```vue
 <script setup lang="ts">
+import { getProductOptionValueAttributes } from "@shopify/hydrogen";
+
 const form = useProductForm();
 
 function handleOptionClick(event: MouseEvent, optionName: string, value: string) {
@@ -82,6 +84,7 @@ function handleOptionClick(event: MouseEvent, optionName: string, value: string)
   <!-- cross-product: navigate to a different product -->
   <NuxtLink
     v-if="value.handle !== product.handle"
+    v-bind="getProductOptionValueAttributes(option.name, value)"
     :to="variantRoute(value.selectedOptions, value.handle)"
     replace
   >
@@ -91,6 +94,7 @@ function handleOptionClick(event: MouseEvent, optionName: string, value: string)
   <!-- same-product, non-existent combination: no option URL to degrade to -->
   <button
     v-else-if="!value.exists"
+    v-bind="form.register('optionValue', { optionName: option.name, value: value.name })"
     type="button"
     disabled
     :aria-pressed="value.selected"
@@ -106,6 +110,7 @@ function handleOptionClick(event: MouseEvent, optionName: string, value: string)
     custom
   >
     <a
+      v-bind="getProductOptionValueAttributes(option.name, value)"
       :href="href"
       :aria-current="value.selected ? 'true' : undefined"
       @click="handleOptionClick($event, option.name, value.name)"
