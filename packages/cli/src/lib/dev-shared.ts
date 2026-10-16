@@ -121,14 +121,15 @@ export function getDebugBannerLine(publicInspectorPort: number) {
     .value;
 }
 
-export function getUtilityBannerlines(host: string) {
+export function getUtilityBannerlines(host: string, localHost?: string) {
   host = host.endsWith('/') ? host.slice(0, -1) : host;
+  const toolHost = localHost ? localHost.replace(/\/$/, '') : host;
 
   return [
     `View GraphiQL API browser: \n${getGraphiQLUrl({
-      host,
+      host: toolHost,
     })}`,
-    `View server network requests: \n${host}/subrequest-profiler`,
+    `View server network requests: \n${toolHost}/subrequest-profiler`,
   ].map((value, index) => ({
     subdued: `${index === 0 ? '' : '\n\n'}${value}`,
   }));
