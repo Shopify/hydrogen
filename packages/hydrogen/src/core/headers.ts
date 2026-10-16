@@ -86,8 +86,8 @@ export function applyPrivateResponseCacheHeaders(headers: Headers): void {
   headers.set(CACHE_CONTROL_HEADER, "private, no-store, max-age=0, must-revalidate");
   for (const header of Array.from(headers.keys())) {
     // Delete every vendor `*-Cache-Control` header (`CDN-`, `Cloudflare-CDN-`, `Oxygen-`, ...):
-    // targeted caches such as Oxygen's full-page cache read only their own header and ignore
-    // `Cache-Control`, so leaving one would keep the response shared-cacheable.
+    // targeted caches such as Oxygen's full-page cache prefer their own header over
+    // `Cache-Control`, so leaving one in place would override the private value set above.
     if (
       /^.+-cache-control$/i.test(header) ||
       header.toLowerCase() === SURROGATE_CONTROL_HEADER.toLowerCase()
