@@ -15,7 +15,7 @@ const lines = useCart((s) => s.data.lines.nodes);
 const loading = useCart((s) => s.loading);
 const pendingLines = useCart((s) => s.pending.lines);
 const lineErrors = useCart((s) => s.errors.lines);
-const { formProps, register } = useCartForm();
+const { formProps, register, lineProps } = useCartForm();
 const cartLinesRegion = ref<HTMLElement | null>(null);
 
 watch(
@@ -85,7 +85,7 @@ function errorIdForLine(lineId: string) {
   </div>
 
   <ul v-else ref="cartLinesRegion" class="mt-8 divide-y divide-black/10">
-    <li v-for="line in lines" :key="line.id" class="py-6">
+    <li v-for="line in lines" :key="line.id" v-bind="lineProps(line)" class="py-6">
       <form
         v-bind="formProps()"
         :aria-describedby="

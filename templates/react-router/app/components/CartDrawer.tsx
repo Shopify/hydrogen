@@ -70,6 +70,7 @@ type CartLineView = {
   cost: { totalAmount: { amount: string; currencyCode: string } };
   attributes?: Array<{ key: string; value: string | null }>;
   merchandise?: {
+    id: string;
     title?: string | null;
     selectedOptions?: Array<{ name: string; value: string }> | null;
     image?: { url: string; altText?: string | null } | null;
@@ -84,7 +85,7 @@ export function CartLineItem({
   line: CartLineView;
   emptyCartFocusId: string;
 }) {
-  const { formProps, register } = useCartForm();
+  const { formProps, register, lineProps } = useCartForm();
   const pendingLines = useCart((state) => state.pending.lines);
   const lineError = useCart((state) => state.errors.lines.get(line.id));
   const merchandise = line.merchandise;
@@ -120,7 +121,7 @@ export function CartLineItem({
     <li
       className={`flex gap-3 py-4 transition-opacity ${pending ? "opacity-60" : ""}`}
       data-testid="cart-line"
-      {...(pending ? { "aria-busy": "true" } : {})}
+      {...lineProps(line)}
     >
       <div className="bg-surface-secondary size-20 shrink-0 overflow-hidden">
         {merchandise?.image ? (
