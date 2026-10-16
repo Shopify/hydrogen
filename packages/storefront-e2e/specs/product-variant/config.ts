@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 import { gql } from "@shopify/hydrogen";
 
 import { AbortSuiteError, SkipTestGroupError, createTest } from "../../src/matcher-fixture";
+import type { ProductVariantSelectionData } from "../../src/product-variant-selection";
 import {
   abortOnGraphQLErrors,
   assertRouteAvailable,
@@ -20,8 +21,13 @@ const PRODUCT_VARIANTS_QUERY = gql(`
       nodes {
         handle
         title
+        options {
+          name
+          optionValues { name }
+        }
         variants(first: $variantCount) {
           nodes {
+            id
             availableForSale
             title
             selectedOptions {
@@ -39,7 +45,7 @@ const PRODUCT_COUNT = 20;
 const VARIANT_COUNT = 20;
 const MINIMUM_VARIANT_COUNT = 2;
 
-export type ProductVariantProduct = {
+export type ProductVariantProduct = ProductVariantSelectionData & {
   readonly handle: string;
   readonly optionNames: readonly string[];
   readonly title: string;
@@ -67,15 +73,17 @@ export const test = createTest({
       );
       if (availableVariants.length < MINIMUM_VARIANT_COUNT) return [];
 
-      const optionNames = [
-        ...new Set(
-          availableVariants.flatMap((variant) =>
-            variant.selectedOptions.map((option) => option.name),
-          ),
-        ),
-      ];
+      const optionNames = product.options.map((option) => option.name);
 
-      return [{ handle: product.handle, optionNames, title: product.title }];
+      return [
+        {
+          handle: product.handle,
+          optionNames,
+          title: product.title,
+          options: product.options,
+          variants: product.variants.nodes,
+        },
+      ];
     });
     const firstProduct = products[0];
 
