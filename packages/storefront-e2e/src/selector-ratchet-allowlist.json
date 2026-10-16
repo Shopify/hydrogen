@@ -60,16 +60,6 @@
     "code": "const wrappingLabel = filter.control.locator(\"xpath=ancestor::label[1]\");"
   },
   {
-    "file": "specs/collection-filter/collection-filter.spec.ts",
-    "rule": "dom-query",
-    "code": "const links = [...document.querySelectorAll<HTMLAnchorElement>(\"a[href]\")].slice("
-  },
-  {
-    "file": "specs/collection-filter/collection-filter.spec.ts",
-    "rule": "get-by-locator",
-    "code": "const controls = page.getByRole(\"checkbox\");"
-  },
-  {
     "file": "specs/collection/collection-page.spec.ts",
     "rule": "get-by-locator",
     "code": "page.getByRole(\"link\", { name: new RegExp(escapeRegExp(firstProduct.title), \"i\") }).first(),"

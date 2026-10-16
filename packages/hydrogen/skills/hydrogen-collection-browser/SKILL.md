@@ -53,7 +53,9 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 - Show stale products with a pending visual state while `state.status === "loading"`; do not replace the grid with a skeleton.
 - Serialize active filter chips from `serializeCollectionParams(state)` and remove filters with `getFilterRemovalUrl(...)`.
 - Use `isFilterInputActive(state.filters, value.input)` to mark checked filter inputs.
-- Treat each Storefront API `FilterValue.input` JSON string as the authoritative filter identity. To render one checkbox, parse that JSON into a `ProductFilter`, wrap it as `{ filters: [filter], sortKey: undefined, reverse: false }`, and pass it to `serializeCollectionParams(...)` for the field name/value. Do not derive filter shapes or param names from filter IDs, labels, or types.
+- Put `getFilterValueAttributes(value)` on the actual checkbox, not its label. Pass the full API value: `filterId` is the value's `id`, not the parent filter ID. Keep native checked state, name, value, handlers, and labeling.
+- Put `getProductCardAttributes(product)` on each card root and keep its native product link. These stateless getters are exported from core, React, and Vue. See [standard signifiers](../hydrogen-signifiers/SKILL.md) for placement and diagnostics.
+- Use each Storefront API `FilterValue.input` JSON string for filter submission. To render one checkbox, parse that JSON into a `ProductFilter`, wrap it as `{ filters: [filter], sortKey: undefined, reverse: false }`, and pass it to `serializeCollectionParams(...)` for the field name/value. Do not derive filter shapes or param names from filter IDs, labels, or types.
 - Build sort option values with `getSortByValue(...)`; it emits the Liquid-compatible `sort_by` strings that `parseCollectionParams()` understands.
 - Treat availability and other single-choice filters as mutually exclusive when the Storefront filter input serializes to the same param name.
 

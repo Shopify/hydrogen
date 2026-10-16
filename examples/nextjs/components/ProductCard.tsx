@@ -1,4 +1,4 @@
-import type { StorefrontApi } from "@shopify/hydrogen";
+import { getProductCardAttributes, type StorefrontApi } from "@shopify/hydrogen";
 import Link from "next/link";
 
 import type { PRODUCT_CARD_QUERY } from "@/lib/fragments";
@@ -41,7 +41,11 @@ export function ProductCard({
   const soldOut = !product.availableForSale;
 
   return (
-    <article className="group card flex flex-col gap-2" aria-label={product.title}>
+    <article
+      {...getProductCardAttributes(product)}
+      className="group card flex flex-col gap-2"
+      aria-label={product.title}
+    >
       <div className="rounded-card relative block aspect-square overflow-hidden">
         {primaryImage ? (
           <div className="h-full w-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.04]">

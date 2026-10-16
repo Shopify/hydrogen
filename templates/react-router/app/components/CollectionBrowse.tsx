@@ -1,6 +1,7 @@
 import {
   formatMoney,
   getFilterRemovalUrl,
+  getFilterValueAttributes,
   getSortByValue,
   isFilterInputActive,
   parseCollectionParams,
@@ -286,6 +287,7 @@ function ListFacet({
           className="min-h-touch-target text-on-surface flex cursor-pointer items-center gap-2 py-1 text-sm motion-safe:transition-transform motion-safe:active:scale-[0.97]"
         >
           <input
+            {...getFilterValueAttributes({ ...value, input: value.input })}
             type="checkbox"
             name={name}
             value={paramValue}
@@ -470,6 +472,7 @@ function ColorSwatchFacet({
           title={`${value.label} (${value.count})`}
         >
           <input
+            {...getFilterValueAttributes({ ...value, input: value.input })}
             type="checkbox"
             name={name}
             value={paramValue}

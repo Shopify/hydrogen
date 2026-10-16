@@ -145,7 +145,11 @@ export type {
   ShopifyScriptsI18n,
 } from "./shopify-scripts/index";
 
-export { createCollectionReconciler, createCollectionStore } from "./collection";
+export {
+  createCollectionReconciler,
+  createCollectionStore,
+  getFilterValueAttributes,
+} from "./collection";
 export type {
   CollectionActions,
   CollectionReconciler,
@@ -179,6 +183,7 @@ export {
   createProductFormRegister,
   createProductFormStore,
   findCartLineByMerchandiseId,
+  getProductCardAttributes,
   getProductOptionValueAttributes,
   getSelectedVariant,
 } from "./product";

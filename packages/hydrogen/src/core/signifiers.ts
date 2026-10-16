@@ -12,6 +12,8 @@ const SIGNIFIER_SCHEMA = {
   "cart-line-increase": {},
   "cart-line-decrease": {},
   "cart-line-remove": {},
+  "product-card": { productHandle: "" },
+  "collection-filter-value": { filterId: "" },
 };
 
 type SignifierValue = string | number | boolean;

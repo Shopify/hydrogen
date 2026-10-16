@@ -127,6 +127,46 @@ Each control takes `{}` state. Cart form registers add these attributes automati
 
 Without bindings, put `signifier(controlName, {})` on the native quantity input or matching action control. Keep all four controls inside their `cart-line` container, including a remove control in a separate form. Forward attributes through wrappers. Keep accessible labels, native form behavior, inline errors, and pending visuals. `pending=false` alone does not prove mutation success. See [hydrogen-cart-ui](../hydrogen-cart-ui/SKILL.md) for line forms and pending/error handling.
 
+### `product-card`
+
+The product card root. State: `{ productHandle: string }`. Use the product handle, not its ID.
+
+```tsx
+import { getProductCardAttributes } from '@shopify/hydrogen';
+
+<article {...getProductCardAttributes(product)}>
+  <a href={`/products/${product.handle}`}>{product.title}</a>
+</article>
+```
+
+Keep the native product link. If the card root is already a link, put the attributes on that link without adding a wrapper. The getter returns only signifier attributes, not an `href` or click handler.
+
+### `collection-filter-value`
+
+The actual checkbox for one Storefront API filter value, not its wrapping label. State: `{ filterId: string }`. `filterId` is the **value** `id`, not the parent filter `id`.
+
+```tsx
+import { getFilterValueAttributes } from '@shopify/hydrogen';
+
+<label>
+  <input
+    {...getFilterValueAttributes(value)}
+    type="checkbox"
+    name={name}
+    value={paramValue}
+    checked={isActive}
+    onChange={onChange}
+  />
+  {value.label}
+</label>
+```
+
+Pass the full API value to the getter so TypeScript can reject a parent filter. The caller keeps the native checked state, form fields, handlers, disabled state, and accessible label. Do not copy checked state into a signifier attribute.
+
+Both getters are also re-exported from `@shopify/hydrogen/react` and `@shopify/hydrogen/vue`. They do not require a provider or state hook. In Vue, use `v-bind="getFilterValueAttributes(value)"` or `v-bind="getProductCardAttributes(product)"` on the rendered element.
+
+Without the getters, use `signifier('product-card', { productHandle: product.handle })` or `signifier('collection-filter-value', { filterId: value.id })`. Do not add a second signifier to the same element.
+
 ## Troubleshooting
 
 - **Missing signifier**: Make sure the control uses `register('addToCart', {})` or `signifier('product-add-to-cart', ...)`. Then make sure each wrapper component forwards props to the rendered element. A wrapper can drop props. The attributes can exist but not match the requested state, for example `available: false` when the test asks for `available: true`, so check the selected variant state, not only the markup.

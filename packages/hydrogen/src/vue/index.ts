@@ -1,6 +1,8 @@
 export { createCartComponents, useCartAnalytics } from "./cart";
 export type { CartActions } from "./cart";
 export type { ShopifyGlobal } from "../globals";
+export { getProductCardAttributes } from "../core/product/card";
+export { getFilterValueAttributes } from "../core/collection/form";
 export {
   CollectionProvider,
   useCollection,
