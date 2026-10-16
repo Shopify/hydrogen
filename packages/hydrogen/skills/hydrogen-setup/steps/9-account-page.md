@@ -41,7 +41,7 @@ Invoke the `hydrogen-customer-account` skill for the session/token rules (read-o
 
 ## OAuth Caveat
 
-Completing a real login requires a public HTTPS origin whose `/account/authorize` callback is registered in the Customer Account app configuration. When the local origin is not registered, verify the signed-out rendering and handler wiring; skip the signed-in checks and say so instead of faking them.
+Completing a real login requires a public HTTPS origin whose `/account/authorize` callback is registered in the Customer Account app configuration. When account routes fail with "Customer Account OAuth origin must use HTTPS", follow the `hydrogen-local-https` skill: its `dev:https` script serves a trusted local HTTPS origin and, outside CI, registers that origin's Customer Account URLs through Shopify CLI. When the local origin is still not registered, verify the signed-out rendering and handler wiring; skip the signed-in checks and say so instead of faking them.
 
 ## Continue when
 
