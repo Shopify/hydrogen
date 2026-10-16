@@ -20,6 +20,7 @@ import {
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,
   SHOPIFY_STOREFRONT_WEBMCP_SCRIPT,
 } from "./shopify-scripts/index";
+import { getPerfKitScript } from "./shopify-scripts/perfkit";
 import { createShopifyRouteTemplates } from "./standard-routes/index";
 import { assert } from "./test-utils";
 import { loadScript } from "./utils/load-script";
@@ -742,6 +743,34 @@ describe("shopify scripts", () => {
     }).join("\n");
     expect(renderedTags).toContain(`<script id="shopify-perfkit" async`);
     expect(renderedTags).toContain(`data-application="hydrogen"`);
+  });
+
+  it("adds production-only PerfKit attributes in production builds", () => {
+    const script = getPerfKitScript(
+      {
+        shopId: TEST_SHOP_GID,
+        storefrontId: TEST_STOREFRONT_ID,
+        myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
+      },
+      undefined,
+      { shs: true },
+    );
+
+    expect(script?.attributes).toMatchObject({
+      "data-shs": "true",
+      "data-shs-beacon-endpoint": "/__shopify/api/collect",
+    });
+  });
+
+  it("omits production-only PerfKit attributes in development builds", () => {
+    const script = getPerfKitScript({
+      shopId: TEST_SHOP_GID,
+      storefrontId: TEST_STOREFRONT_ID,
+      myshopifyDomain: TEST_MYSHOPIFY_DOMAIN,
+    });
+
+    expect(script?.attributes).not.toHaveProperty("data-shs");
+    expect(script?.attributes).not.toHaveProperty("data-shs-beacon-endpoint");
   });
 
   it("accepts numeric PerfKit shop IDs", () => {
