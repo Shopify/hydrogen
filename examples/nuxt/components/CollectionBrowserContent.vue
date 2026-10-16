@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { AvailableFilter, ProductFilter } from "@shopify/hydrogen";
 import {
+  getFilterValueAttributes,
   getSortByValue,
   getFilterRemovalUrl,
   isFilterInputActive,
@@ -261,6 +262,7 @@ function visibleFilters(filters: AvailableFilter[]) {
                 class="flex cursor-pointer items-center gap-2 text-sm"
               >
                 <input
+                  v-bind="getFilterValueAttributes(value)"
                   type="checkbox"
                   :name="filterInputToParamEntries(value.input)[0]?.name"
                   :value="filterInputToParamEntries(value.input)[0]?.value"

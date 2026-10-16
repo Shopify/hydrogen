@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { getProductCardAttributes } from "@shopify/hydrogen/vue";
+
 import { formatMoney } from "~/storefront/money";
 
 export type ProductCardData = {
@@ -14,7 +16,11 @@ defineProps<{ product: ProductCardData }>();
 </script>
 
 <template>
-  <NuxtLink :to="`/products/${product.handle}`" class="group block">
+  <NuxtLink
+    v-bind="getProductCardAttributes(product)"
+    :to="`/products/${product.handle}`"
+    class="group block"
+  >
     <div class="aspect-square overflow-hidden bg-neutral-100">
       <img
         v-if="product.featuredImage"

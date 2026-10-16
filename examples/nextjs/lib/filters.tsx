@@ -1,4 +1,5 @@
 import {
+  getFilterValueAttributes,
   isFilterInputActive,
   parseCollectionParams,
   serializeCollectionParams,
@@ -81,6 +82,7 @@ export function FilterValueInput({
   return (
     <label className="min-h-touch-target flex items-center gap-2 text-sm">
       <input
+        {...getFilterValueAttributes(value)}
         type="checkbox"
         name={name}
         value={paramValue}

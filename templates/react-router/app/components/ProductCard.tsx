@@ -1,4 +1,4 @@
-import { gql, type StorefrontApi } from "@shopify/hydrogen";
+import { getProductCardAttributes, gql, type StorefrontApi } from "@shopify/hydrogen";
 import { Link } from "react-router";
 
 import { compareMoney, formatPrice } from "~/lib/money";
@@ -60,6 +60,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
   return (
     <article
+      {...getProductCardAttributes(product)}
       className="group card flex flex-col gap-2"
       aria-label={product.title}
       data-testid="product-card"
