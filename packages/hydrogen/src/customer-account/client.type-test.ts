@@ -153,7 +153,7 @@ describe("Customer Account API type boundary", () => {
       import("../graphql/generated/customer-account-graphql-env").introspection["types"]["LanguageCode"]["enumValues"];
     const LANGUAGE_DOC = null as unknown as CustomerAccountDocument<
       { customer: { id: string } },
-      { language?: Language | null },
+      { language: Language },
       string
     >;
     const STRING_DOC = null as unknown as CustomerAccountDocument<
