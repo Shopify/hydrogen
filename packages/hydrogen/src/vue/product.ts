@@ -145,7 +145,11 @@ function useProductFormImpl<TProduct extends ProductInput>(
       return state.value.selectedVariant;
     },
     get register() {
-      return createProductFormRegister(state.value.selectedVariant, selectOption);
+      return createProductFormRegister(
+        state.value.selectedVariant,
+        selectOption,
+        state.value.selectedOptions,
+      );
     },
     formProps,
     get errors() {

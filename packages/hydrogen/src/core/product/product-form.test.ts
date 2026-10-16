@@ -10,7 +10,7 @@ import {
   type CartState,
 } from "../cart/state";
 import { createObservable } from "../observable";
-import { createProductFormRegister } from "./form";
+import { createProductFormRegister, getProductOptionValueAttributes } from "./form";
 import {
   canAddToCart,
   createProductFormStore,
@@ -1640,6 +1640,99 @@ describe("createProductFormRegister — addToCart", () => {
     expect(register()("addToCart", {})).toMatchObject({
       "data-shopify-variant-id": "v-blue",
       "data-shopify-available": "false",
+    });
+  });
+});
+
+describe("product option and quantity signifiers", () => {
+  it("returns only signifier attributes for server-rendered or combined-listing links", () => {
+    expect(getProductOptionValueAttributes("Color", { name: "Red", selected: true })).toEqual({
+      "data-shopify-testid": "product-option-value",
+      "data-shopify-option-name": "Color",
+      "data-shopify-option-value": "Red",
+      "data-shopify-selected": "true",
+    });
+  });
+
+  it("adds option identity and selected state without native or ARIA props", () => {
+    const select = vi.fn();
+    const props = createProductFormRegister(RED, select)("optionValue", {
+      optionName: "Color",
+      value: "Red",
+    });
+    expect(props).toEqual({
+      name: "Color",
+      value: "Red",
+      onChange: expect.any(Function),
+      onClick: expect.any(Function),
+      ...getProductOptionValueAttributes("Color", { name: "Red", selected: true }),
+    });
+    expect(props.onChange).toBe(props.onClick);
+    props.onClick();
+    expect(select).toHaveBeenCalledWith("Color", "Red");
+    expect(
+      createProductFormRegister(RED, select)("optionValue", { optionName: "Color", value: "Blue" })[
+        "data-shopify-selected"
+      ],
+    ).toBe("false");
+  });
+
+  it("uses the last duplicate option key, including an explicit selection override", () => {
+    const register = createProductFormRegister(RED, noop, [
+      { name: "Color", value: "Red" },
+      { name: "Color", value: "Blue" },
+    ]);
+    expect(
+      register("optionValue", { optionName: "Color", value: "Red" })["data-shopify-selected"],
+    ).toBe("false");
+    expect(
+      register("optionValue", { optionName: "Color", value: "Blue" })["data-shopify-selected"],
+    ).toBe("true");
+  });
+
+  it("marks unresolved selections when passed, and keeps the two-argument fallback", () => {
+    const opts = { optionName: "Color", value: "Blue" };
+    expect(
+      createProductFormRegister(null, noop)("optionValue", opts)["data-shopify-selected"],
+    ).toBe("false");
+    expect(
+      createProductFormRegister(null, noop, [{ name: "Color", value: "Blue" }])(
+        "optionValue",
+        opts,
+      )["data-shopify-selected"],
+    ).toBe("true");
+  });
+
+  it("retains selected signifier state after an invalid selection", () => {
+    const store = createStore(makeSingleOptionProduct());
+    expect(store.selectOption("Color", "Unknown").status).toBe("invalid");
+    const state = store.getState();
+    expect(
+      createProductFormRegister(
+        state.selectedVariant,
+        store.selectOption,
+        state.selectedOptions,
+      )("optionValue", { optionName: "Color", value: "Red" })["data-shopify-selected"],
+    ).toBe("true");
+  });
+
+  it("adds only the quantity signifier to controlled, uncontrolled, and default quantity values", () => {
+    const register = createProductFormRegister(RED, noop);
+    expect(register("quantity", { value: 2 })).toEqual({
+      name: "quantity",
+      value: "2",
+      "data-shopify-testid": "product-quantity",
+    });
+    expect(register("quantity", { defaultValue: 3 })).toEqual({
+      name: "quantity",
+      defaultValue: "3",
+      "data-shopify-testid": "product-quantity",
+    });
+    // Runtime callers without a value keep the existing default of one.
+    expect((register as (field: string, opts: {}) => unknown)("quantity", {})).toEqual({
+      name: "quantity",
+      value: "1",
+      "data-shopify-testid": "product-quantity",
     });
   });
 });

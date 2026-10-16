@@ -2,6 +2,7 @@ import {
   AnalyticsEvent,
   buildProductSelectionSearchParams,
   canAddToCart,
+  getProductOptionValueAttributes,
   getSelectedProductOptions,
   gql,
   type SelectedOption,
@@ -506,6 +507,7 @@ function VariantOptions({ product }: { product: ProductData }) {
                   return (
                     <button
                       key={valueName}
+                      {...getProductOptionValueAttributes(option.name, variantOption)}
                       type="button"
                       disabled
                       className={className}
@@ -525,6 +527,7 @@ function VariantOptions({ product }: { product: ProductData }) {
                 return (
                   <Link
                     key={valueName}
+                    {...getProductOptionValueAttributes(option.name, variantOption)}
                     to={toRouterLocation(linkTarget)}
                     replace={!isCrossProduct}
                     preventScrollReset

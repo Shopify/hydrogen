@@ -179,6 +179,7 @@ export {
   createProductFormRegister,
   createProductFormStore,
   findCartLineByMerchandiseId,
+  getProductOptionValueAttributes,
   getSelectedVariant,
 } from "./product";
 export type {

@@ -83,6 +83,29 @@ import { signifier } from '@shopify/hydrogen';
 
 Use `''` for `variantId` and `false` for `available` when no variant is selected.
 
+### `product-option-value`
+
+State: `{ optionName: string; optionValue: string; selected: boolean }`. All fields are required.
+
+Spread `register('optionValue', { optionName, value })` on buttons or inputs. Keep native checked state or `aria-pressed` for buttons. For **all** option links, including hydrated same-product and combined-listing links, use the pure getter instead:
+
+```tsx
+import { getProductOptionValueAttributes } from '@shopify/hydrogen';
+
+<a href={url} {...getProductOptionValueAttributes(option.name, value)}
+  aria-current={value.selected ? 'true' : undefined}>{value.name}</a>
+```
+
+The getter returns only signifier attributes. Keep the URL, `aria-current`, and guarded same-product selection handler on the link. Never spread registration props onto a link; call the registered handler only inside the native guarded click hook or the framework's equivalent. Without bindings, buttons or inputs can use `signifier('product-option-value', { optionName, optionValue, selected })`.
+
+React and Vue bindings track unresolved selections. Core callers must pass `state.selectedOptions` from `store.getState()` as the optional third argument to `createProductFormRegister` for unresolved selections, and recreate the register function after state changes. The two-argument call still works, but falls back to the selected variant's options or an empty selection. Duplicate option names use the last value.
+
+The portable contract supports links, buttons, radios, and checkboxes. Select pickers are not supported. Keep links for no-JavaScript selection. Do not hide the only activatable control with `display: none`; clipped, focusable controls can use native keyboard activation.
+
+### `product-quantity`
+
+State: `{}`. Spread `register('quantity', { value })` or `register('quantity', { defaultValue })` on the visible, buyer-editable quantity input. Without bindings, use `signifier('product-quantity', {})`. A hidden quantity field is not a valid target. A stepper must forward the attributes to its input, not its wrapper or increment button. The native value is the quantity source; there is no quantity state attribute.
+
 ## Troubleshooting
 
 - **Missing signifier**: Make sure the control uses `register('addToCart', {})` or `signifier('product-add-to-cart', ...)`. Then make sure each wrapper component forwards props to the rendered element. A wrapper can drop props. The attributes can exist but not match the requested state, for example `available: false` when the test asks for `available: true`, so check the selected variant state, not only the markup.

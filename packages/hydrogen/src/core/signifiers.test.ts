@@ -5,7 +5,11 @@ import { SIGNIFIER_TEST_IDS, signifier, signifierSelector } from "./signifiers";
 
 describe("signifiers", () => {
   it("names every signifier in the schema", () => {
-    expect(SIGNIFIER_TEST_IDS).toEqual(["product-add-to-cart"]);
+    expect(SIGNIFIER_TEST_IDS).toEqual([
+      "product-add-to-cart",
+      "product-option-value",
+      "product-quantity",
+    ]);
   });
 
   it("converts camelCase state keys to kebab-case attributes and values to strings", () => {

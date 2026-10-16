@@ -72,7 +72,7 @@ interface ProductFormStoreState<TVariant> {
 
 ## Register API
 
-The `register` function binds product form identity and activation handlers. It covers product-relevant fields. It intentionally does not emit option control UI props like `checked`, `disabled`, or `aria-pressed`; derive those from `options`, `selectedVariant`, and caller-owned state.
+The `register` function binds product form identity, activation handlers, and signifier attributes. It intentionally does not emit option control UI props like `checked`, `disabled`, or `aria-pressed`; derive those from `options`, `selectedVariant`, and caller-owned state.
 
 ### `register("merchandiseId", opts)`
 
@@ -80,11 +80,13 @@ Returns `{ name: "merchandiseId", value: selectedVariantId }`. The `value` is an
 
 ### `register("quantity", opts)`
 
-Accepts `{ value: number }` for a controlled input or `{ defaultValue: number }` for an uncontrolled input. Returns the appropriate `{ name, value }` or `{ name, defaultValue }` props, with numeric values stringified for HTML form submission.
+Accepts a controlled value or an uncontrolled default value. Returns the quantity input props, with numeric values stringified for HTML form submission, plus the `product-quantity` signifier. Put them on a visible, editable input.
 
 ### `register("optionValue", opts)`
 
-Requires `{ optionName, value }`. Returns `{ name, value, onChange, onClick }` — form identity plus activation handlers. Derive caller-owned UI props from the matching option value state, such as `value.exists`, `value.available`, and `value.selected`.
+Requires `{ optionName, value }`. Returns form identity and activation handlers plus the `product-option-value` signifier. Spread these props on buttons or inputs, never on links. Derive caller-owned UI props from the matching option value state.
+
+For **all** option links, including hydrated same-product and combined-listing links, spread `getProductOptionValueAttributes(option.name, value)`. It returns only signifier attributes. Keep the URL, native/ARIA state, and guarded selection handler on the link; the handler may call `registered.onClick()` without spreading registration props.
 
 ### `register("attributeValue", opts)`
 
@@ -189,7 +191,7 @@ Pass `style: "variant"` with a resolved `variant` to emit a shareable `?variant=
 
 - **ALWAYS use `canAddToCart(product, options)` to determine if the add-to-cart button should be enabled.** This checks three conditions: a variant is selected, it is available for sale, and the product does not require a selling plan. Checking only `selectedVariant !== null` misses the selling-plan and availability constraints.
 - **The add-to-cart form is separate from the variant selector.** Variant selection uses buttons and links — not form submissions. The add-to-cart form contains `merchandiseId` (the selected variant ID), `quantity`, and optionally `attributeValue` fields for line-item attributes. Do not put variant selection controls inside the cart form.
-- **Use `register` to bind form fields.** `register("merchandiseId", {})` returns the hidden input props with the current variant ID. `register("quantity", { value: 1 })` returns the quantity input props. `register("attributeValue", { key: "Engraving", value })` returns a hidden input for a line-item attribute. `register("addToCart", {})` returns the submit props plus the selected-variant signifier attributes. Framework bindings keep these synchronized with store state automatically. If you use the core `createProductFormRegister` directly, create a new register function after each state change.
+- **Use `register` to bind form fields.** Quantity and add-to-cart props include their signifiers. Framework bindings keep these synchronized with store state automatically. Core callers must create a new register function after each state change and pass `state.selectedOptions` as the third argument for unresolved selections: `createProductFormRegister(state.selectedVariant, store.selectOption, state.selectedOptions)`. The two-argument call remains valid, but falls back to the selected variant's options or an empty selection.
 - **Use the local `hydrogen-shop-pay` skill** when adding accelerated checkout near the add-to-cart form.
 - **Show contextual CTA text.** When `canAddToCart` is `true`: "Add to cart". When no variant is selected (`selectedVariant === null`): "Select options" unless a navigation or submission is actually pending. When a variant is selected but unavailable: "Unavailable" or "Sold out".
 - **Surface cart errors from `errors` state.** After form submission, user errors, warnings, and network errors relevant to the current product form are available on `state.errors`. Display these to the buyer.
@@ -256,9 +258,9 @@ Pass `style: "variant"` with a resolved `variant` to emit a shareable `?variant=
 
 ### Register API
 
-27. **Option value registration** — `register("optionValue", { optionName: "Color", value: "Red" })` returns `{ name, value, onChange, onClick }`. Calling `onChange` or `onClick` triggers `selectOption`.
-28. **Caller-owned option attributes** — `register("optionValue", { optionName: "Color", value: "Red" })` returns only `{ name, value, onChange, onClick }`. Derive `disabled`, `aria-pressed`, and visual state from the matching `options` value.
-29. **Quantity registration** — `register("quantity", { value: 1 })` returns `{ name: "quantity", value: "1" }`. `register("quantity", { defaultValue: 1 })` returns `{ name: "quantity", defaultValue: "1" }`.
+27. **Option value registration** — Registration on a button or input includes the `product-option-value` signifier. Calling `onChange` or `onClick` triggers `selectOption`. The signifier's selected state follows resolved and unresolved selections.
+28. **Caller-owned option attributes** — Registration adds no native or ARIA selection state. Derive those props from the matching `options` value. All links use `getProductOptionValueAttributes` and keep their guarded handlers; never spread registration props onto links.
+29. **Quantity registration** — Both controlled and uncontrolled quantity props include `product-quantity` and the stringified quantity. Forward the attributes to the visible, editable input.
 30. **Add-to-cart registration** — `register("addToCart", {})` returns `name: "add-to-cart"` and `type: "submit"` plus the `product-add-to-cart` signifier attributes for the selected variant. After a selection change, the signifier state follows the new selected variant.
 31. **Attribute value registration** — `register("attributeValue", { key: "Engraving", value: "Hello" })` returns `{ name: "attributes.Engraving", value: "Hello" }`. `register("attributeValue", { key: "Engraving", defaultValue: "" })` returns `{ name: "attributes.Engraving", defaultValue: "" }`. An empty `key` throws a `TypeError`.
 32. **Attribute in add-to-cart** — When `register("attributeValue", { key: "Engraving", value: "Hello" })` is included as a hidden input in the add-to-cart form, the submitted cart line carries the attribute. The attribute appears on the matched line item in the cart drawer (with `_`-prefixed internal attributes filtered out).
@@ -284,7 +286,7 @@ Pass `style: "variant"` with a resolved `variant` to emit a shareable `?variant=
 
 - **Using reactive effects on state to sync selection to URL.** The `selectOption` return value provides the selection result synchronously. Reacting to `state.selectedOptions` instead introduces an extra update cycle and can fire with stale values.
 - **Navigating inside same-product option controls.** Do not call `navigate()` in an option click handler and then also call the registered handler. This bypasses the provider `onSelect` contract and can navigate from stale or invalid data. A guarded link handler that calls `event.preventDefault()` and then only `registered.onClick()` is correct.
-- **Spreading `register("optionValue", ...)` onto a link unguarded.** The link runs the registered handler and then its own navigation. The second navigation refetches the loader a resolved selection skipped, and a Cmd- or Ctrl-click both opens a new tab and changes the current page. Run the handler only for a plain primary click and cancel the link's navigation.
+- **Spreading `register("optionValue", ...)` onto any link.** Use `getProductOptionValueAttributes` instead. The registration handler is not a link guard: a spread can navigate twice or change the current page on a Cmd/Ctrl click. Call the handler only from the framework's guarded click hook and cancel same-product link navigation there.
 - **Button-/onClick-only same-product option values.** A same-product option value rendered as `<button onClick={selectOption}>` with no `href` is dead without JavaScript — a no-JS shopper cannot switch variants and is stuck on the default. Render it as a GET link to the option URL and let the registered handler enhance it; the `href` is the progressive-enhancement fallback.
 - **Using raw anchors when the framework has a client-side link component.** Raw `<a>` tags lose client-router behavior such as scroll preservation, pending navigation state, prefetching, and route transitions. Use the app's established link component unless raw anchors are the framework convention.
 - **Putting variant selection inside the add-to-cart form.** Variant selection is button/link interactions that update store state. The add-to-cart form submits `merchandiseId` and `quantity` to the cart. Mixing them creates ambiguous form semantics and breaks progressive enhancement.

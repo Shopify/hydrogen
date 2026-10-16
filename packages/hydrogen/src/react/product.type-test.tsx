@@ -6,6 +6,9 @@ import type {
   ProductAddToCartProps,
   ProductFormStore,
   ProductInput,
+  ProductOptionValueProps,
+  ProductQuantityProps,
+  ProductQuantityDefaultProps,
   ProductVariantInput,
 } from "../core/product";
 import { useProductForm } from "./product";
@@ -89,6 +92,23 @@ describe("react product form types", () => {
       expectTypeOf(addToCart["data-shopify-variant-id"]).toEqualTypeOf<string>();
       expectTypeOf(addToCart["data-shopify-available"]).toEqualTypeOf<string>();
       expectTypeOf<ProductAddToCartProps>().toExtend<SignifierAttributes<"product-add-to-cart">>();
+      const optionValue = register("optionValue", { optionName: "Color", value: "Red" });
+      expectTypeOf(optionValue).toEqualTypeOf<ProductOptionValueProps>();
+      expectTypeOf(optionValue["data-shopify-testid"]).toEqualTypeOf<"product-option-value">();
+      expectTypeOf<ProductOptionValueProps>().toExtend<
+        SignifierAttributes<"product-option-value">
+      >();
+      expectTypeOf(register("quantity", { value: 2 })).toEqualTypeOf<ProductQuantityProps>();
+      expectTypeOf(
+        register("quantity", { defaultValue: 2 }),
+      ).toEqualTypeOf<ProductQuantityDefaultProps>();
+      expectTypeOf(
+        register("quantity", { value: 2 })["data-shopify-testid"],
+      ).toEqualTypeOf<"product-quantity">();
+      expectTypeOf<ProductQuantityProps>().toExtend<SignifierAttributes<"product-quantity">>();
+      expectTypeOf<ProductQuantityDefaultProps>().toExtend<
+        SignifierAttributes<"product-quantity">
+      >();
 
       // @ts-expect-error product register only accepts product-relevant fields
       register("add");

@@ -16,7 +16,7 @@ export type {
 export { getSelectedProductOptions } from "./options";
 export { buildProductSelectionSearchParams } from "./url";
 export type { ProductSelectionLinkStyle } from "./url";
-export { createProductFormRegister } from "./form";
+export { createProductFormRegister, getProductOptionValueAttributes } from "./form";
 export type {
   ProductAddToCartProps,
   ProductAttributeDefaultValueProps,

@@ -364,6 +364,32 @@ describe("useProductForm", () => {
   });
 
   describe("register", () => {
+    it("keeps unresolved selections in the option signifier and ignores invalid selections", () => {
+      const product = {
+        ...makeProduct(null),
+        options: [{ name: "Color", optionValues: [{ name: "Red" }, { name: "Blue" }] }],
+      };
+      const { store } = makeStore(product);
+      const { result } = renderHook(() => useProductForm(store));
+      act(() => {
+        expect(result.current.selectOption("Color", "Blue").status).toBe("unresolved");
+      });
+      expect(result.current.selectedVariant).toBeNull();
+      expect(
+        result.current.register("optionValue", { optionName: "Color", value: "Blue" })[
+          "data-shopify-selected"
+        ],
+      ).toBe("true");
+      act(() => {
+        expect(result.current.selectOption("Color", "Unknown").status).toBe("invalid");
+      });
+      expect(
+        result.current.register("optionValue", { optionName: "Color", value: "Blue" })[
+          "data-shopify-selected"
+        ],
+      ).toBe("true");
+    });
+
     describe('"optionValue"', () => {
       it("returns form identity and activation handlers", () => {
         const { store } = makeStore();
@@ -376,6 +402,12 @@ describe("useProductForm", () => {
 
         expect(props.name).toBe("Color");
         expect(props.value).toBe("Red");
+        expect(props).toMatchObject({
+          "data-shopify-testid": "product-option-value",
+          "data-shopify-option-name": "Color",
+          "data-shopify-option-value": "Red",
+          "data-shopify-selected": "true",
+        });
         expect(props.onChange).toEqual(expect.any(Function));
         expect(props.onClick).toEqual(expect.any(Function));
         expect("type" in props).toBe(false);
@@ -393,6 +425,16 @@ describe("useProductForm", () => {
         });
 
         expect(getColorValue(result.current, "Blue")?.selected).toBe(true);
+        expect(
+          result.current.register("optionValue", { optionName: "Color", value: "Blue" })[
+            "data-shopify-selected"
+          ],
+        ).toBe("true");
+        expect(
+          result.current.register("optionValue", { optionName: "Color", value: "Red" })[
+            "data-shopify-selected"
+          ],
+        ).toBe("false");
 
         act(() => {
           result.current.register("optionValue", { optionName: "Color", value: "Red" }).onClick();
@@ -442,6 +484,7 @@ describe("useProductForm", () => {
         expect(result.current.register("quantity", { value: 2 })).toEqual({
           name: "quantity",
           value: "2",
+          "data-shopify-testid": "product-quantity",
         });
       });
 
@@ -452,6 +495,7 @@ describe("useProductForm", () => {
         expect(result.current.register("quantity", { defaultValue: 3 })).toEqual({
           name: "quantity",
           defaultValue: "3",
+          "data-shopify-testid": "product-quantity",
         });
       });
     });

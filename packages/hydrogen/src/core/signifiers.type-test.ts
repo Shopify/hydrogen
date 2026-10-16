@@ -2,6 +2,7 @@ import { describe, expectTypeOf, it } from "vitest";
 
 import {
   SIGNIFIER_TEST_IDS,
+  getProductOptionValueAttributes,
   signifier,
   signifierSelector,
   type SignifierAttributes,
@@ -10,9 +11,11 @@ import {
 
 describe("signifier types", () => {
   it("derives names and state types from the schema", () => {
-    expectTypeOf(SIGNIFIER_TEST_IDS).toEqualTypeOf<readonly "product-add-to-cart"[]>();
+    expectTypeOf(SIGNIFIER_TEST_IDS).toEqualTypeOf<readonly ("product-add-to-cart" | "product-option-value" | "product-quantity")[]>();
     expectTypeOf<SignifierStates>().toEqualTypeOf<{
       "product-add-to-cart": { variantId: string; available: boolean };
+      "product-option-value": { optionName: string; optionValue: string; selected: boolean };
+      "product-quantity": {};
     }>();
   });
 
@@ -20,6 +23,17 @@ describe("signifier types", () => {
     expectTypeOf<
       Extract<keyof typeof import("./index"), "SIGNIFIER_ATTRIBUTE" | "SIGNIFIER_NAMES">
     >().toEqualTypeOf<never>();
+  });
+
+  it("exports an attribute-only product option getter with literal types", () => {
+    const attributes = getProductOptionValueAttributes("Color", { name: "Red", selected: true });
+    expectTypeOf(attributes).toEqualTypeOf<SignifierAttributes<"product-option-value">>();
+    expectTypeOf(attributes["data-shopify-testid"]).toEqualTypeOf<"product-option-value">();
+    expectTypeOf<keyof typeof attributes>().toEqualTypeOf<
+      "data-shopify-testid" | "data-shopify-option-name" | "data-shopify-option-value" | "data-shopify-selected"
+    >();
+    expectTypeOf(signifier("product-quantity", {})).toEqualTypeOf<SignifierAttributes<"product-quantity">>();
+    expectTypeOf<keyof SignifierAttributes<"product-quantity">>().toEqualTypeOf<"data-shopify-testid">();
   });
 
   it("returns literal attribute names", () => {
