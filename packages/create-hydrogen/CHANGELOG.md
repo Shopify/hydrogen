@@ -1,5 +1,15 @@
 # @shopify/create-hydrogen
 
+## 5.1.0
+
+### Minor Changes
+
+- Add --no-input to disable prompts and browser authentication independently of JSON output. ([#4095](https://github.com/Shopify/hydrogen/pull/4095)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+### Patch Changes
+
+- Report Hydrogen project and disabled-command failures through the standard CLI error handler. ([#4095](https://github.com/Shopify/hydrogen/pull/4095)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
 ## 5.0.40
 
 ### Patch Changes
