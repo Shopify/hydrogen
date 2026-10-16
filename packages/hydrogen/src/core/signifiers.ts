@@ -7,6 +7,11 @@ const SIGNIFIER_SCHEMA = {
   "product-add-to-cart": { variantId: "", available: false },
   "product-option-value": { optionName: "", optionValue: "", selected: false },
   "product-quantity": {},
+  "cart-line": { merchandiseId: "", quantity: 0, pending: false },
+  "cart-line-quantity": {},
+  "cart-line-increase": {},
+  "cart-line-decrease": {},
+  "cart-line-remove": {},
 };
 
 type SignifierValue = string | number | boolean;

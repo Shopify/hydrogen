@@ -22,7 +22,11 @@ import {
   type CartActions,
   type CartStore,
 } from "../core/cart/cart";
-import { createCartFormRegister, type CartFormRegister } from "../core/cart/form";
+import {
+  createCartFormRegister,
+  getCartLineAttributes,
+  type CartFormRegister,
+} from "../core/cart/form";
 import type { CartDataFromHandlers } from "../core/cart/server-handlers";
 import { type CartData, type CartState } from "../core/cart/state";
 
@@ -89,8 +93,12 @@ interface CartFormPropsOptions {
   afterSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;
 }
 
-/** The form props function and the register function for a cart form. */
+/** The form props, line props, and register functions for a cart form. */
 interface CartFormBindings {
+  /** Returns attributes for the line container. Keep the line controls inside this container. Attributes follow the current pending line state. */
+  lineProps: (
+    line: Parameters<typeof getCartLineAttributes>[0],
+  ) => ReturnType<typeof getCartLineAttributes>;
   /** Returns the `method`, `action`, and `onSubmit` props to spread on the form. The form posts to the cart endpoint, and the cart store handles each submission. */
   formProps: (opts?: CartFormPropsOptions) => FormHTMLAttributes<HTMLFormElement>;
   /** Returns the attributes for a cart field or action button. Register the quantity field with `interactive: true` to submit the form when the quantity changes. The interactive input takes the quantity as a default value and stays uncontrolled. */
@@ -455,15 +463,15 @@ function useSuspenseCartSelector<TData extends CartData, S>(
  *
  * Register the quantity field with `interactive: true` to submit the form when the quantity changes. The interactive input takes the quantity as a default value and stays uncontrolled.
  *
- * @returns The form props function and the register function.
+ * @returns The form props, line props, and register functions. Put line controls inside the container with `lineProps(line)`.
  *
  * @example
  * ```tsx
  * function LineItem({ line }) {
- *   const { formProps, register } = useCartForm();
+ *   const { formProps, register, lineProps } = useCartForm();
  *
  *   return (
- *     <form {...formProps()}>
+ *     <form {...formProps()} {...lineProps(line)}>
  *       <input {...register("lineId", { value: line.id })} />
  *       <input {...register("quantity", { value: line.quantity, interactive: true })} />
  *       <button {...register("set")} />
@@ -478,6 +486,9 @@ function useSuspenseCartSelector<TData extends CartData, S>(
  */
 export function useCartForm(): CartFormBindings {
   const store = useCartStore("useCartForm");
+  const pendingLines = useCart((state) => state.pending.lines);
+  const lineProps: CartFormBindings["lineProps"] = (line) =>
+    getCartLineAttributes(line, { pending: { ...store.getState().pending, lines: pendingLines } });
   const coreRegister = useMemo(() => createCartFormRegister(), []);
 
   const register = useMemo(() => {
@@ -517,5 +528,5 @@ export function useCartForm(): CartFormBindings {
     action: cartEndpoint,
   });
 
-  return { formProps, register };
+  return { formProps, register, lineProps };
 }

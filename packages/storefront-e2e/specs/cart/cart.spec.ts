@@ -1,22 +1,19 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { createContractError } from "../../src/contract";
-import { requireSignifier } from "../../src/signifiers";
+import { locateSignifier, requireSignifier } from "../../src/signifiers";
+import { EXPECT_TIMEOUT_MS } from "../../src/timeouts";
 import { test, type CartTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
 const CART_CONTROL_NAME = /^(?:open |view )?cart\b/i;
-const REMOVE_CONTROL_NAME = /remove/i;
-const INCREASE_CONTROL_NAME = /increase|^\+$/i;
-const DECREASE_CONTROL_NAME = /decrease|^[-−]$/i;
 const CART_ENDPOINT_PATTERN = "**/api/cart";
 const CART_TOTALS_UPDATING_TEXT = "Updating cart totals";
 const CART_TOTALS_UPDATED_TEXT = "Cart totals updated";
 
 type CartExpectation = {
   readonly cartPath: string;
-  readonly productTitle: string;
-  readonly variantLabel: string;
+  readonly variantId: string;
 };
 
 test("cart accepts selected variant", async ({ data, page }) => {
@@ -27,6 +24,15 @@ test("cart page shows added product", async ({ data, page }) => {
   const expectation = await addProductToCart(page, data.products, data.paths.cart);
 
   await expectCartLine(page, expectation);
+});
+
+test("cart accepts the product quantity", async ({ data, page }) => {
+  const expectation = await addProductToCart(page, data.products, data.paths.cart, 2);
+
+  const line = await expectCartLine(page, expectation);
+  await expect(line).toHaveAttribute("data-shopify-quantity", "2");
+  await expect(line).toHaveAttribute("data-shopify-pending", "false");
+  await expect(await quantityInputFor(line, expectation.cartPath)).toHaveValue("2");
 });
 
 test("cart quantity increases and decreases", async ({ data, page }) => {
@@ -59,12 +65,14 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
     await route.continue();
   });
 
-  const addToCart = await requireSignifier(page, "product-add-to-cart", { available: true });
+  const addToCart = await requireSignifier(page, "product-add-to-cart", {
+    variantId: product.variantId,
+    available: true,
+  });
 
   try {
     await addToCart.click();
-    const line = await openCartOverlayFor(page, product.productTitle);
-    await expect(line).toBeVisible({ timeout: CART_SETTLE_TIMEOUT_MS });
+    const line = await openCartOverlayFor(page, product.variantId);
     const quantityInput = await quantityInputFor(line, product.path);
     await expect
       .poll(() => numericInputValue(quantityInput), {
@@ -72,14 +80,19 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
       })
       .toBe(product.maxQuantity + 1);
     await expectCartTotalsStatus(page, CART_TOTALS_UPDATING_TEXT, data.paths.cart);
+    await expect(line).toHaveAttribute("data-shopify-quantity", String(product.maxQuantity + 1));
+    await expect(line).toHaveAttribute("data-shopify-pending", "true");
 
     requestGate.release();
+    await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT, data.paths.cart);
+    await expect(line).toHaveAttribute("data-shopify-pending", "false");
     await expect
       .poll(() => numericInputValue(quantityInput), {
         message: `Expected cart line quantity to roll back to the stock limit of ${product.maxQuantity}.`,
       })
       .toBe(product.maxQuantity);
-    await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT, data.paths.cart);
+    await expect(line).toHaveAttribute("data-shopify-quantity", String(product.maxQuantity));
+    await expect(quantityInput).toHaveValue(String(product.maxQuantity));
   } finally {
     requestGate.release();
     await page.unroute(CART_ENDPOINT_PATTERN);
@@ -98,9 +111,10 @@ async function addProductToCart(
   page: Page,
   products: readonly CartTestProduct[],
   cartPath: string,
+  quantity?: number,
 ): Promise<CartExpectation> {
   const [product] = products;
-  if (product !== undefined) return addVariantToCart(page, product, cartPath);
+  if (product !== undefined) return addVariantToCart(page, product, cartPath, quantity);
 
   throw createContractError({
     capability: "product-cart",
@@ -115,25 +129,37 @@ async function addVariantToCart(
   page: Page,
   product: CartTestProduct,
   cartPath: string,
+  quantity?: number,
 ): Promise<CartExpectation> {
   await page.goto(product.path);
 
   const expectation = {
     cartPath,
-    productTitle: product.productTitle,
-    variantLabel: product.variantLabel,
+    variantId: product.variantId,
   };
-  const addToCart = await requireSignifier(page, "product-add-to-cart", { available: true });
-  await addToCart.click();
-  const line = cartOverlayLineFor(page, expectation.productTitle);
-  await expect(line).toBeVisible({
-    timeout: CART_SETTLE_TIMEOUT_MS,
+  if (quantity !== undefined) await fillProductQuantity(page, quantity);
+  const addToCart = await requireSignifier(page, "product-add-to-cart", {
+    variantId: product.variantId,
+    available: true,
   });
+  await addToCart.click();
+  await cartOverlayLineFor(page, expectation.variantId);
   await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT, cartPath);
   await page.goto(cartPath);
   await expectCartLine(page, expectation);
 
   return expectation;
+}
+
+async function fillProductQuantity(page: Page, quantity: number): Promise<void> {
+  const input = await requireSignifier(page, "product-quantity");
+  await expect(input, "product-quantity must mark a visible input").toBeVisible();
+  await expect(input, "product-quantity must mark a buyer-editable input").toBeEditable();
+  await expect(async () => {
+    // Hydration can restore the initial value. Filling the same value is safe to retry.
+    await input.fill(String(quantity));
+    expect(await input.inputValue()).toBe(String(quantity));
+  }).toPass({ timeout: EXPECT_TIMEOUT_MS });
 }
 
 async function setCartLineQuantity(
@@ -154,12 +180,15 @@ async function setCartLineQuantity(
     await quantityInput.press("Tab");
     await expectCartTotalsStatus(page, CART_TOTALS_UPDATING_TEXT, expectation.cartPath);
     requestGate.release();
+    await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT, expectation.cartPath);
+    await expect(line).toHaveAttribute("data-shopify-pending", "false");
     await expect
       .poll(() => numericInputValue(quantityInput), {
         message: `Expected cart line quantity to settle at the discovered stock limit of ${quantity}.`,
       })
       .toBe(quantity);
-    await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT, expectation.cartPath);
+    await expect(line).toHaveAttribute("data-shopify-quantity", String(quantity));
+    await expect(quantityInput).toHaveValue(String(quantity));
   } finally {
     requestGate.release();
     await page.unroute(CART_ENDPOINT_PATTERN);
@@ -167,13 +196,13 @@ async function setCartLineQuantity(
 }
 
 async function expectCartLine(page: Page, expectation: CartExpectation): Promise<Locator> {
-  const line = cartLineFor(page, expectation.productTitle);
-  await expect(line).toBeVisible({ timeout: CART_SETTLE_TIMEOUT_MS });
-
-  if (shouldAssertVariant(expectation.variantLabel)) {
-    await expect(line.getByText(expectation.variantLabel, { exact: false })).toBeVisible();
-  }
-
+  const line = await requireCartLine(page, expectation.variantId);
+  await expect(line).toHaveAttribute("data-shopify-pending", "false");
+  const quantity = await quantityInputFor(line, expectation.cartPath);
+  await expect(line).toHaveAttribute(
+    "data-shopify-quantity",
+    String(await numericInputValue(quantity)),
+  );
   return line;
 }
 
@@ -181,12 +210,7 @@ async function increaseCartLineQuantity(page: Page, expectation: CartExpectation
   const line = await expectCartLine(page, expectation);
   const quantityInput = await quantityInputFor(line, expectation.cartPath);
   const initialQuantity = await numericInputValue(quantityInput);
-  const increase = await lineButton(
-    line,
-    INCREASE_CONTROL_NAME,
-    "increase quantity",
-    expectation.cartPath,
-  );
+  const increase = await requireSignifier(line, "cart-line-increase");
 
   await increase.click();
   await expect
@@ -194,18 +218,17 @@ async function increaseCartLineQuantity(page: Page, expectation: CartExpectation
       message: `Expected cart line quantity to increase from ${initialQuantity} to ${initialQuantity + 1}.`,
     })
     .toBe(initialQuantity + 1);
+  await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT, expectation.cartPath);
+  await expect(line).toHaveAttribute("data-shopify-pending", "false");
+  await expect(line).toHaveAttribute("data-shopify-quantity", String(initialQuantity + 1));
+  await expect(quantityInput).toHaveValue(String(initialQuantity + 1));
 }
 
 async function decreaseCartLineQuantity(page: Page, expectation: CartExpectation): Promise<void> {
   const line = await expectCartLine(page, expectation);
   const quantityInput = await quantityInputFor(line, expectation.cartPath);
   const initialQuantity = await numericInputValue(quantityInput);
-  const decrease = await lineButton(
-    line,
-    DECREASE_CONTROL_NAME,
-    "decrease quantity",
-    expectation.cartPath,
-  );
+  const decrease = await requireSignifier(line, "cart-line-decrease");
 
   await decrease.click();
   await expect
@@ -213,31 +236,48 @@ async function decreaseCartLineQuantity(page: Page, expectation: CartExpectation
       message: `Expected cart line quantity to decrease from ${initialQuantity} to ${initialQuantity - 1} after quantity increase succeeded.`,
     })
     .toBe(initialQuantity - 1);
+  await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT, expectation.cartPath);
+  await expect(line).toHaveAttribute("data-shopify-pending", "false");
+  await expect(line).toHaveAttribute("data-shopify-quantity", String(initialQuantity - 1));
+  await expect(quantityInput).toHaveValue(String(initialQuantity - 1));
 }
 
 async function removeCartLine(page: Page, expectation: CartExpectation): Promise<void> {
   const line = await expectCartLine(page, expectation);
-  const remove = await lineButton(
-    line,
-    REMOVE_CONTROL_NAME,
-    "remove line item",
-    expectation.cartPath,
-  );
+  const remove = await requireSignifier(line, "cart-line-remove");
 
   await remove.click();
   await expect(line).not.toBeVisible({ timeout: CART_SETTLE_TIMEOUT_MS });
+  await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT, expectation.cartPath);
+  await expect(
+    locateSignifier(page, "cart-line", { merchandiseId: expectation.variantId }),
+  ).toHaveCount(0);
 }
 
-function cartOverlayLineFor(page: Page, productTitle: string): Locator {
-  return page.getByRole("dialog").getByRole("listitem").filter({ hasText: productTitle }).first();
+function cartOverlayFor(page: Page): Locator {
+  return page.getByRole("dialog");
 }
 
-async function openCartOverlayFor(page: Page, productTitle: string): Promise<Locator> {
-  const line = cartOverlayLineFor(page, productTitle);
-  if (await line.isVisible().catch(() => false)) return line;
+async function cartOverlayLineFor(page: Page, variantId: string): Promise<Locator> {
+  return requireCartLine(cartOverlayFor(page), variantId);
+}
+
+async function requireCartLine(scope: Page | Locator, variantId: string): Promise<Locator> {
+  return requireSignifier(
+    scope,
+    "cart-line",
+    { merchandiseId: variantId },
+    { timeout: CART_SETTLE_TIMEOUT_MS, visible: true },
+  );
+}
+
+async function openCartOverlayFor(page: Page, variantId: string): Promise<Locator> {
+  const line = locateSignifier(cartOverlayFor(page), "cart-line", { merchandiseId: variantId });
+  if ((await line.filter({ visible: true }).count()) > 0)
+    return cartOverlayLineFor(page, variantId);
 
   await page.getByRole("button", { name: CART_CONTROL_NAME }).first().click();
-  return line;
+  return cartOverlayLineFor(page, variantId);
 }
 
 async function expectCartTotalsStatus(
@@ -261,50 +301,14 @@ async function expectCartTotalsStatus(
   }
 }
 
-function cartLineFor(page: Page, productTitle: string): Locator {
-  return page.getByRole("main").getByRole("listitem").filter({ hasText: productTitle }).first();
-}
-
 async function quantityInputFor(line: Locator, cartPath: string): Promise<Locator> {
-  const textbox = line.getByRole("textbox").first();
-  if (await textbox.isVisible().catch(() => false)) return textbox;
-
-  const spinbutton = line.getByRole("spinbutton").first();
-  if (await spinbutton.isVisible().catch(() => false)) return spinbutton;
-
-  throw createContractError({
-    capability: "cart-line",
-    routePath: cartPath,
-    expectation: "Cart line item exposes a visible quantity input.",
-    likelyFix: "Label the cart line quantity control and keep it inside the line item.",
-    docsAnchor: "#cart-line-items",
-  });
+  const input = await requireSignifier(line, "cart-line-quantity");
+  await expect(input, `Cart line quantity input on ${cartPath} is visible.`).toBeVisible();
+  return input;
 }
 
 async function numericInputValue(input: Locator): Promise<number> {
   const value = await input.inputValue();
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function shouldAssertVariant(variantLabel: string): boolean {
-  return variantLabel !== "" && variantLabel.toLowerCase() !== "default title";
-}
-
-async function lineButton(
-  line: Locator,
-  name: RegExp,
-  purpose: string,
-  cartPath: string,
-): Promise<Locator> {
-  const button = line.getByRole("button", { name }).first();
-  if (await button.isVisible().catch(() => false)) return button;
-
-  throw createContractError({
-    capability: "cart-line",
-    routePath: cartPath,
-    expectation: "Cart line item exposes a visible button for " + purpose + ".",
-    likelyFix: "Add accessible names to cart line quantity and remove controls.",
-    docsAnchor: "#cart-line-items",
-  });
 }

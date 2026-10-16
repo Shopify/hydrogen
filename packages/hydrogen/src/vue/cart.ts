@@ -22,7 +22,11 @@ import {
   type CartActions,
   type CartStore,
 } from "../core/cart/cart";
-import { createCartFormRegister, type CartFormRegister } from "../core/cart/form";
+import {
+  createCartFormRegister,
+  getCartLineAttributes,
+  type CartFormRegister,
+} from "../core/cart/form";
 import type { CartDataFromHandlers } from "../core/cart/server-handlers";
 import type { CartData, CartState } from "../core/cart/state";
 
@@ -280,16 +284,16 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
  *
  * Registering the quantity field with `interactive: true` returns numeric input attributes without auto-submit. Call attachQuantityInput on the input to submit the form when the quantity changes.
  *
- * @returns The form props function, the register function, and the pending state.
+ * @returns The form props, line props, register function, and pending state. Put line controls inside the container with `lineProps(line)`.
  *
  * @example
  * ```vue
  * <script setup>
- * const { formProps, register, isPending } = useCartForm();
+ * const { formProps, register, isPending, lineProps } = useCartForm();
  * </script>
  *
  * <template>
- *   <form v-bind="formProps()">
+ *   <form v-bind="{ ...formProps(), ...lineProps(line) }">
  *     <input v-bind="register('lineId', { value: line.id })" />
  *     <input v-bind="register('quantity', { value: line.quantity })" />
  *     <button v-bind="register('set')" />
@@ -302,6 +306,10 @@ function useCartSelector<TData extends CartData = CartData, S = unknown>(
  * @publicDocs
  */
 export function useCartForm(): {
+  /** Returns attributes for the line container. Keep the line controls inside this container. Attributes follow the current pending line state. */
+  lineProps: (
+    line: Parameters<typeof getCartLineAttributes>[0],
+  ) => ReturnType<typeof getCartLineAttributes>;
   formProps: (opts?: {
     beforeSubmit?: (e: SubmitEvent) => void;
     afterSubmit?: (e: SubmitEvent) => void;
@@ -316,6 +324,10 @@ export function useCartForm(): {
   const loading = useCart((s) => s.loading);
   const pendingLines = useCart((s) => s.pending.lines);
   const register = createCartFormRegister();
+  const lineProps = (line: Parameters<typeof getCartLineAttributes>[0]) =>
+    getCartLineAttributes(line, {
+      pending: { ...store.getState().pending, lines: pendingLines.value },
+    });
 
   const formProps = (opts?: {
     beforeSubmit?: (e: SubmitEvent) => void;
@@ -338,7 +350,7 @@ export function useCartForm(): {
       lineId ? pendingLines.value.has(lineId) : pendingLines.value.size > 0,
   };
 
-  return { formProps, register, isPending };
+  return { formProps, register, isPending, lineProps };
 }
 
 /**

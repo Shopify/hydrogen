@@ -55,6 +55,22 @@ describe("createCartComponents", () => {
       () => void
     >();
   });
+
+  it("keeps literal signifier props through the typed factory", () => {
+    function Consumer() {
+      const { lineProps, register } = typedCart.useCartForm();
+      const props = lineProps({ id: "line", quantity: 2, merchandise: { id: "variant" } });
+      expectTypeOf(props["data-shopify-testid"]).toEqualTypeOf<"cart-line">();
+      expectTypeOf(props["aria-busy"]).toEqualTypeOf<"true" | undefined>();
+      expectTypeOf(register("quantity", { value: 2 })["data-shopify-testid"]).toEqualTypeOf<"cart-line-quantity">();
+      expectTypeOf(register("quantity", { value: 2, interactive: true })["data-shopify-testid"]).toEqualTypeOf<"cart-line-quantity">();
+      expectTypeOf(register("quantity", { defaultValue: 2 })["data-shopify-testid"]).toEqualTypeOf<"cart-line-quantity">();
+      expectTypeOf(register("increase")["data-shopify-testid"]).toEqualTypeOf<"cart-line-increase">();
+      expectTypeOf(register("decrease")["data-shopify-testid"]).toEqualTypeOf<"cart-line-decrease">();
+      expectTypeOf(register("remove")["data-shopify-testid"]).toEqualTypeOf<"cart-line-remove">();
+    }
+    void Consumer;
+  });
 });
 
 describe("@shopify/hydrogen/vue cart exports", () => {

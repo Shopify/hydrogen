@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { mount } from "@vue/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { defineComponent, h, nextTick } from "vue";
+import { defineComponent, h, nextTick, shallowRef } from "vue";
 
 import {
   configureCartEndpoint as configureCoreCartEndpoint,
@@ -10,7 +10,7 @@ import {
   type CartStore,
 } from "../core/cart/cart";
 import type { CartData, CartState } from "../core/cart/state";
-import { EMPTY_CART_DATA, EMPTY_CART_STATE } from "../core/cart/state";
+import { EMPTY_CART_DATA, EMPTY_CART_STATE, createEmptyCartErrors } from "../core/cart/state";
 import { assert } from "../core/test-utils";
 import {
   CartProvider,
@@ -401,6 +401,52 @@ describe("useOptionalCart", () => {
 });
 
 describe("useCartForm", () => {
+  it("lineProps follows live pending and line props without rendering for unrelated state", async () => {
+    let renders = 0;
+    const line = shallowRef({ id: "line-1", quantity: 1, merchandise: { id: "variant-1" } });
+    const Consumer = defineComponent({
+      setup() {
+        const { lineProps } = useCartForm();
+        return () => {
+          renders++;
+          return h("div", lineProps(line.value));
+        };
+      },
+    });
+    const wrapper = mount(CartProvider, { slots: { default: () => h(Consumer) } });
+    const element = wrapper.get("div");
+    expect(element.attributes("data-shopify-testid")).toBe("cart-line");
+    expect(element.attributes("data-shopify-pending")).toBe("false");
+    expect(element.attributes("aria-busy")).toBeUndefined();
+    const initialRenders = renders;
+    latestStore.setState(makeCartState({ errors: createEmptyCartErrors() }));
+    await nextTick();
+    expect(renders).toBe(initialRenders);
+
+    line.value = { ...line.value, quantity: 2 };
+    await nextTick();
+    expect(element.attributes("data-shopify-quantity")).toBe("2");
+    expect(element.attributes("data-shopify-pending")).toBe("false");
+    latestStore.setState(
+      makeCartState({
+        pending: { ...EMPTY_CART_STATE.pending, lines: new Set([line.value.id]) },
+      }),
+    );
+    await nextTick();
+    expect(element.attributes("data-shopify-pending")).toBe("true");
+    expect(element.attributes("data-shopify-quantity")).toBe("2");
+    expect(element.attributes("aria-busy")).toBe("true");
+
+    line.value = { ...line.value, id: "line-2", quantity: 3, merchandise: { id: "variant-2" } };
+    latestStore.setState(makeCartState());
+    await nextTick();
+    expect(element.attributes("data-shopify-merchandise-id")).toBe("variant-2");
+    expect(element.attributes("data-shopify-quantity")).toBe("3");
+    expect(element.attributes("data-shopify-pending")).toBe("false");
+    expect(element.attributes("aria-busy")).toBeUndefined();
+    wrapper.unmount();
+  });
+
   it("formProps returns onSubmit, method, and action", () => {
     const result = mountWithConsumer(() => {
       const { formProps } = useCartForm();
@@ -518,10 +564,24 @@ describe("useCartForm", () => {
       readOnly: true,
     });
     expect(registerFn("increase")).toEqual({
+      "data-shopify-testid": "cart-line-increase",
       name: "intent",
       value: "increase",
     });
-    expect(registerFn("remove")).toEqual({ name: "intent", value: "remove" });
+    expect(registerFn("remove")).toEqual({
+      name: "intent",
+      value: "remove",
+      "data-shopify-testid": "cart-line-remove",
+    });
+    expect(registerFn("quantity", { value: 2 })).toMatchObject({
+      "data-shopify-testid": "cart-line-quantity",
+    });
+    expect(registerFn("quantity", { value: 2, interactive: true })).toMatchObject({
+      "data-shopify-testid": "cart-line-quantity",
+    });
+    expect(registerFn("quantity", { defaultValue: 2 })).toMatchObject({
+      "data-shopify-testid": "cart-line-quantity",
+    });
   });
 
   it("isPending.initial is true while loading", () => {

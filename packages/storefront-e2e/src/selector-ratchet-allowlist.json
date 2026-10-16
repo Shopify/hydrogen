@@ -2,17 +2,7 @@
   {
     "file": "specs/cart/cart.spec.ts",
     "rule": "get-by-locator",
-    "code": "await expect(line.getByText(expectation.variantLabel, { exact: false })).toBeVisible();"
-  },
-  {
-    "file": "specs/cart/cart.spec.ts",
-    "rule": "get-by-locator",
-    "code": "return page.getByRole(\"dialog\").getByRole(\"listitem\").filter({ hasText: productTitle }).first();"
-  },
-  {
-    "file": "specs/cart/cart.spec.ts",
-    "rule": "get-by-locator",
-    "code": "return page.getByRole(\"dialog\").getByRole(\"listitem\").filter({ hasText: productTitle }).first();"
+    "code": "return page.getByRole(\"dialog\");"
   },
   {
     "file": "specs/cart/cart.spec.ts",
@@ -23,31 +13,6 @@
     "file": "specs/cart/cart.spec.ts",
     "rule": "get-by-locator",
     "code": "await expect(page.getByRole(\"status\").filter({ hasText: message }).first()).toBeAttached({"
-  },
-  {
-    "file": "specs/cart/cart.spec.ts",
-    "rule": "get-by-locator",
-    "code": "return page.getByRole(\"main\").getByRole(\"listitem\").filter({ hasText: productTitle }).first();"
-  },
-  {
-    "file": "specs/cart/cart.spec.ts",
-    "rule": "get-by-locator",
-    "code": "return page.getByRole(\"main\").getByRole(\"listitem\").filter({ hasText: productTitle }).first();"
-  },
-  {
-    "file": "specs/cart/cart.spec.ts",
-    "rule": "get-by-locator",
-    "code": "const textbox = line.getByRole(\"textbox\").first();"
-  },
-  {
-    "file": "specs/cart/cart.spec.ts",
-    "rule": "get-by-locator",
-    "code": "const spinbutton = line.getByRole(\"spinbutton\").first();"
-  },
-  {
-    "file": "specs/cart/cart.spec.ts",
-    "rule": "get-by-locator",
-    "code": "const button = line.getByRole(\"button\", { name }).first();"
   },
   {
     "file": "specs/checkout/checkout.spec.ts",

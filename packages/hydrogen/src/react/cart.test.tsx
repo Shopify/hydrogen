@@ -535,6 +535,46 @@ describe("useOptionalCart", () => {
 });
 
 describe("useCartForm", () => {
+  it("lineProps follows pending and current line props without subscribing to unrelated state", () => {
+    let renders = 0;
+    let line = { id: "line-1", quantity: 1, merchandise: { id: "variant-1" } };
+    function Consumer() {
+      const { lineProps } = useCartForm();
+      renders++;
+      return createElement("div", { ...lineProps(line), "data-testid": "signified-line" });
+    }
+    const view = render(createElement(CartProvider, null, createElement(Consumer)));
+    const element = screen.getByTestId("signified-line");
+    expect(element.getAttribute("data-shopify-testid")).toBe("cart-line");
+    expect(element.getAttribute("data-shopify-pending")).toBe("false");
+    expect(element.hasAttribute("aria-busy")).toBe(false);
+    const initialRenders = renders;
+    act(() => latestStore.setState(makeCartState({ errors: createEmptyCartErrors() })));
+    expect(renders).toBe(initialRenders);
+
+    line = { ...line, quantity: 2 };
+    view.rerender(createElement(CartProvider, null, createElement(Consumer)));
+    expect(element.getAttribute("data-shopify-quantity")).toBe("2");
+    expect(element.getAttribute("data-shopify-pending")).toBe("false");
+    act(() =>
+      latestStore.setState(
+        makeCartState({
+          pending: { ...EMPTY_CART_STATE.pending, lines: new Set([line.id]) },
+        }),
+      ),
+    );
+    expect(element.getAttribute("data-shopify-pending")).toBe("true");
+    expect(element.getAttribute("data-shopify-quantity")).toBe("2");
+    expect(element.getAttribute("aria-busy")).toBe("true");
+
+    line = { ...line, id: "line-2", quantity: 3, merchandise: { id: "variant-2" } };
+    act(() => latestStore.setState(makeCartState()));
+    expect(element.getAttribute("data-shopify-merchandise-id")).toBe("variant-2");
+    expect(element.getAttribute("data-shopify-quantity")).toBe("3");
+    expect(element.getAttribute("data-shopify-pending")).toBe("false");
+    expect(element.hasAttribute("aria-busy")).toBe(false);
+  });
+
   it("formProps returns method, action, and onSubmit", () => {
     let result: ReturnType<ReturnType<typeof useCartForm>["formProps"]> | undefined;
 
@@ -652,11 +692,22 @@ describe("useCartForm", () => {
       readOnly: true,
     });
     expect(register("increase")).toEqual({
+      "data-shopify-testid": "cart-line-increase",
       name: "intent",
       value: "increase",
     });
     expect(register("add")).toEqual({ name: "intent", value: "add" });
-    expect(register("remove")).toEqual({ name: "intent", value: "remove" });
+    expect(register("quantity", { value: 2 })).toMatchObject({
+      "data-shopify-testid": "cart-line-quantity",
+    });
+    expect(register("quantity", { defaultValue: 2 })).toMatchObject({
+      "data-shopify-testid": "cart-line-quantity",
+    });
+    expect(register("remove")).toEqual({
+      name: "intent",
+      value: "remove",
+      "data-shopify-testid": "cart-line-remove",
+    });
   });
 
   it("interactive quantity register returns defaultValue instead of value", () => {
@@ -679,6 +730,7 @@ describe("useCartForm", () => {
     expect(result.name).toBe("quantity");
     expect(result.type).toBe("text");
     expect(result.ref).toBeTypeOf("function");
+    expect(result["data-shopify-testid"]).toBe("cart-line-quantity");
   });
 });
 

@@ -1,3 +1,6 @@
+import { signifier, type SignifierAttributes } from "../signifiers";
+import type { CartState } from "./state";
+
 /**
  * HTML attributes for the hidden submit button that sets a line to the quantity in the form's quantity input.
  *
@@ -23,7 +26,7 @@ export interface SetButtonAttributes {
  *
  * @publicDocs
  */
-export interface QuantityInputAttributes {
+export interface QuantityInputAttributes extends SignifierAttributes<"cart-line-quantity"> {
   /** The form field that holds the quantity. */
   name: "quantity";
   /** The current quantity as a string. */
@@ -78,8 +81,11 @@ export type CartFormRegister = {
   (
     field: "quantity",
     opts: { value: number | string; interactive?: false },
-  ): { name: "quantity"; value: string };
-  (field: "quantity", opts: { defaultValue: number }): { name: "quantity"; defaultValue: string };
+  ): { name: "quantity"; value: string } & SignifierAttributes<"cart-line-quantity">;
+  (
+    field: "quantity",
+    opts: { defaultValue: number },
+  ): { name: "quantity"; defaultValue: string } & SignifierAttributes<"cart-line-quantity">;
   (field: "discountCode", opts: { value: string }): { name: "discountCode"; value: string };
   (
     field: "discountCode",
@@ -98,9 +104,13 @@ export type CartFormRegister = {
   ): { name: AttributeValueName; defaultValue: string };
   (field: "sellingPlanId", opts: { value: string }): { name: "sellingPlanId"; value: string };
   (action: "add"): { name: "intent"; value: "add" };
-  (action: "increase"): { name: "intent"; value: "increase" };
-  (action: "decrease"): { name: "intent"; value: "decrease" };
-  (action: "remove"): { name: "intent"; value: "remove" };
+  (
+    action: "increase",
+  ): { name: "intent"; value: "increase" } & SignifierAttributes<"cart-line-increase">;
+  (
+    action: "decrease",
+  ): { name: "intent"; value: "decrease" } & SignifierAttributes<"cart-line-decrease">;
+  (action: "remove"): { name: "intent"; value: "remove" } & SignifierAttributes<"cart-line-remove">;
   (action: "set"): SetButtonAttributes;
   (action: "discount-apply"): { name: "intent"; value: "discount-apply" };
   (action: "discount-remove"): { name: "intent"; value: "discount-remove" };
@@ -122,7 +132,7 @@ const ATTRIBUTE_VALUE_NAME_PREFIX = "attributes.";
 type RegisterOptions = {
   key?: string;
   value?: string | number;
-  defaultValue?: string;
+  defaultValue?: string | number;
   interactive?: boolean;
 };
 
@@ -147,14 +157,16 @@ function createAttributeValueAttributes(opts?: RegisterOptions) {
 }
 
 function createFieldAttributes(name: string, opts?: RegisterOptions) {
+  const signifierAttributes = name === "quantity" ? signifier("cart-line-quantity", {}) : {};
   if (opts && "defaultValue" in opts) {
-    return { name, defaultValue: String(opts.defaultValue) };
+    return { ...signifierAttributes, name, defaultValue: String(opts.defaultValue) };
   }
 
   const value = String(opts?.value ?? "");
 
   if (name === "quantity" && opts?.interactive) {
     return {
+      ...signifier("cart-line-quantity", {}),
       name: "quantity",
       value,
       type: "text",
@@ -165,7 +177,7 @@ function createFieldAttributes(name: string, opts?: RegisterOptions) {
     } satisfies QuantityInputAttributes;
   }
 
-  const attrs: Record<string, string | boolean> = { name, value };
+  const attrs: Record<string, string | boolean> = { ...signifierAttributes, name, value };
   if (name === "lineId") attrs.readOnly = true;
   return attrs;
 }
@@ -176,6 +188,7 @@ function createFieldAttributes(name: string, opts?: RegisterOptions) {
  * Use the function to build cart forms without a framework binding. In React, `useCartForm` returns a register function and form props for you. To submit an interactive quantity input on change, call `attachQuantityInput`.
  *
  * The register function holds no state. Share one register function across components.
+ * Quantity fields and increase, decrease, and remove controls include their cart-line signifiers. Keep these controls inside a container marked with `getCartLineAttributes`.
  *
  * @example
  * ```ts
@@ -209,6 +222,34 @@ export function createCartFormRegister(): CartFormRegister {
       } satisfies SetButtonAttributes;
     }
 
-    return { name: "intent", value: nameOrAction };
+    const attributes =
+      nameOrAction === "increase" || nameOrAction === "decrease" || nameOrAction === "remove"
+        ? signifier(`cart-line-${nameOrAction}`, {})
+        : {};
+    return { ...attributes, name: "intent", value: nameOrAction };
   }) as CartFormRegister;
+}
+
+/**
+ * Returns signifier attributes for a cart line container and `aria-busy="true"` while that line is pending.
+ *
+ * Put the quantity, increase, decrease, and remove controls inside this container.
+ * Missing merchandise metadata produces an empty merchandise ID. Call again with the current line and cart state after each update.
+ * Pending state is not proof that a cart change succeeded. Read cart errors and settled data as well.
+ *
+ * @publicDocs
+ */
+export function getCartLineAttributes(
+  line: { id: string; quantity: number; merchandise?: { id: string } | null },
+  cartState: Pick<CartState, "pending">,
+): SignifierAttributes<"cart-line"> & { "aria-busy"?: "true" } {
+  const pending = cartState.pending.lines.has(line.id);
+  return {
+    ...signifier("cart-line", {
+      merchandiseId: line.merchandise?.id ?? "",
+      quantity: line.quantity,
+      pending,
+    }),
+    ...(pending ? { "aria-busy": "true" as const } : {}),
+  };
 }

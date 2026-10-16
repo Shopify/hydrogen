@@ -47,6 +47,75 @@ export const SIGNIFIER_REMEDIATION = {
     ],
     docsAnchor: "#product-quantity",
   },
+  "cart-line": {
+    capability: "cart-line",
+    bindingFix:
+      "Spread lineProps(line) from useCartForm() on the line container, with its quantity, increase, decrease, and remove controls inside it.",
+    nonBindingFix:
+      "Spread getCartLineAttributes(line, cartState) from @shopify/hydrogen on the line container, or signifier('cart-line', { merchandiseId, quantity, pending }) without the cart store.",
+    minimumHydrogenVersion: "unreleased",
+    commonCauses: [
+      "A wrapper does not forward lineProps to the rendered container.",
+      "The merchandise ID must be the product variant ID, not the cart line ID. Missing merchandise metadata produces an empty ID.",
+      "More than one visible line has the same merchandise ID. Keep hidden drawer copies hidden and do not choose the first visible match.",
+    ],
+    docsAnchor: "#cart-line",
+  },
+  "cart-line-quantity": {
+    capability: "cart-line",
+    bindingFix:
+      "Spread register('quantity', { value: line.quantity }) on the native quantity input inside its cart-line container. The interactive and defaultValue overloads also add the signifier.",
+    nonBindingFix:
+      "Spread signifier('cart-line-quantity', {}) from @shopify/hydrogen on the native quantity input inside its cart-line container.",
+    minimumHydrogenVersion: "unreleased",
+    commonCauses: [
+      "The quantity control is outside its cart-line container; a page-level signifier cannot replace a line-scoped control.",
+      "An input wrapper does not forward the registered attributes to the native input.",
+      "More than one quantity input is visible inside the same line container.",
+    ],
+    docsAnchor: "#cart-line-controls",
+  },
+  "cart-line-increase": {
+    capability: "cart-line",
+    bindingFix:
+      "Spread register('increase') on the increase control inside its cart-line container.",
+    nonBindingFix:
+      "Spread signifier('cart-line-increase', {}) from @shopify/hydrogen on the increase control inside its cart-line container.",
+    minimumHydrogenVersion: "unreleased",
+    commonCauses: [
+      "The increase control is outside its cart-line container.",
+      "A button wrapper does not forward the registered attributes to the rendered control.",
+      "More than one increase control is visible inside the same line container.",
+    ],
+    docsAnchor: "#cart-line-controls",
+  },
+  "cart-line-decrease": {
+    capability: "cart-line",
+    bindingFix:
+      "Spread register('decrease') on the decrease control inside its cart-line container.",
+    nonBindingFix:
+      "Spread signifier('cart-line-decrease', {}) from @shopify/hydrogen on the decrease control inside its cart-line container.",
+    minimumHydrogenVersion: "unreleased",
+    commonCauses: [
+      "The decrease control is outside its cart-line container.",
+      "A button wrapper does not forward the registered attributes to the rendered control.",
+      "More than one decrease control is visible inside the same line container.",
+    ],
+    docsAnchor: "#cart-line-controls",
+  },
+  "cart-line-remove": {
+    capability: "cart-line",
+    bindingFix: "Spread register('remove') on the remove control inside its cart-line container.",
+    nonBindingFix:
+      "Spread signifier('cart-line-remove', {}) from @shopify/hydrogen on the remove control inside its cart-line container.",
+    minimumHydrogenVersion: "unreleased",
+    commonCauses: [
+      "The remove control is outside its cart-line container, for example in a sibling form instead of a form within the container.",
+      "A button wrapper does not forward the registered attributes to the rendered control.",
+      "More than one remove control is visible inside the same line container.",
+    ],
+    docsAnchor: "#cart-line-controls",
+  },
   "product-add-to-cart": {
     capability: "product-cart",
     bindingFix: "Spread register('addToCart', {}) on the add-to-cart control.",

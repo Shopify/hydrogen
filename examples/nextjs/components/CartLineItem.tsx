@@ -28,9 +28,7 @@ export function CartLineItem({
   line: CartLine;
   onRemoveIntent?: () => void;
 }) {
-  const { formProps, register } = useCartForm();
-  const pendingLines = useCart((state) => state.pending.lines);
-  const isPending = pendingLines.has(line.id);
+  const { formProps, register, lineProps } = useCartForm();
 
   const merchandise = line.merchandise;
   const productTitle = merchandise?.product?.title ?? merchandise?.title ?? "Product";
@@ -45,7 +43,7 @@ export function CartLineItem({
   return (
     <div
       className="grid grid-cols-[var(--spacing-cart-line-thumbnail-width)_1fr_auto] items-stretch gap-3 py-4"
-      {...(isPending ? { "aria-busy": "true" } : {})}
+      {...lineProps(line)}
     >
       <div className="bg-surface-secondary h-full w-full overflow-hidden">
         {merchandise?.image ? (
