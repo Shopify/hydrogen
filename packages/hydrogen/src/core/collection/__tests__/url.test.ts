@@ -80,6 +80,18 @@ describe("parseCollectionParams", () => {
       expect(result.filters).toEqual([{ variantOption: { name: "Color", value: "Red" } }]);
     });
 
+    it.each([
+      ["filter.v.option.%25FF=Red", { variantOption: { name: "%FF", value: "Red" } }],
+      // `%2B` survives URLSearchParams as a literal `+`, so the fallback must still turn it into a space.
+      ["filter.v.option.Big%2B%ZZ=Red", { variantOption: { name: "Big %ZZ", value: "Red" } }],
+      [
+        "filter.p.m.%25ZZ.material=leather",
+        { productMetafield: { namespace: "%ZZ", key: "material", value: "leather" } },
+      ],
+    ])("keeps malformed percent sequences literal in %s", (query, filter) => {
+      expect(parseCollectionParams(params(query)).filters).toEqual([filter]);
+    });
+
     it("parses lowercase variant option key (mock.shop color facet)", () => {
       const result = parseCollectionParams(params("filter.v.option.color=Beige"));
       expect(result.filters).toEqual([{ variantOption: { name: "color", value: "Beige" } }]);
