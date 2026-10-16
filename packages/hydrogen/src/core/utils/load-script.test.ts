@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from "vitest";
 
 import { loadScript } from "./load-script";
 
 describe("loadScript", () => {
-  let appendChildSpy: ReturnType<typeof vi.spyOn>;
+  let appendChildSpy: MockInstance<typeof document.body.appendChild>;
 
   beforeEach(() => {
     appendChildSpy = vi.spyOn(document.body, "appendChild").mockImplementation((node) => node);
@@ -20,7 +20,7 @@ describe("loadScript", () => {
   it("sets attributes before inserting the script into the DOM", async () => {
     let capturedAttributes: Record<string, string | null> = {};
 
-    appendChildSpy.mockImplementation((node: Node) => {
+    appendChildSpy.mockImplementation((node) => {
       const el = node as HTMLScriptElement;
       capturedAttributes = {
         integrity: el.getAttribute("integrity"),
