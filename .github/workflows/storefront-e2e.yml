@@ -31,12 +31,17 @@ jobs:
             directory: templates/react-router
             package: "@shopify/hydrogen-template-react-router"
             port: 4201
-            devCommand: "pnpm --filter @shopify/hydrogen-template-react-router exec vite dev --port 4201"
+            startCommand: "pnpm --filter @shopify/hydrogen-template-react-router exec vite dev --port 4201"
           - name: Next.js
             directory: examples/nextjs
             package: "@shopify/hydrogen-example-nextjs"
             port: 4202
-            devCommand: "pnpm --filter @shopify/hydrogen-example-nextjs exec next dev -p 4202"
+            startCommand: "pnpm --filter @shopify/hydrogen-example-nextjs exec next dev -p 4202"
+          - name: Nuxt
+            directory: examples/nuxt
+            package: "@shopify/hydrogen-example-nuxt"
+            port: 4203
+            startCommand: "PORT=4203 pnpm --filter @shopify/hydrogen-example-nuxt start"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -62,14 +67,15 @@ jobs:
         run: pnpm run build:pkgs
 
       - name: Configure ${{ matrix.template.name }}
+        if: matrix.template.directory != 'examples/nuxt'
         run: cp ${{ matrix.template.directory }}/.env.example ${{ matrix.template.directory }}/.env
 
       - name: Build ${{ matrix.template.name }}
         run: pnpm --filter ${{ matrix.template.package }} build
 
-      - name: Start ${{ matrix.template.name }} dev server
+      - name: Start ${{ matrix.template.name }} server
         run: |
-          ${{ matrix.template.devCommand }} > template-dev.log 2>&1 &
+          ${{ matrix.template.startCommand }} > template-dev.log 2>&1 &
           echo $! > template-dev.pid
 
       - name: Wait for ${{ matrix.template.name }}
@@ -83,7 +89,7 @@ jobs:
           STOREFRONT_BASE_URL: http://localhost:${{ matrix.template.port }}/
           STOREFRONT_SKIP_NO_JS_VARIANTS: ${{ matrix.template.directory == 'examples/nextjs' }}
 
-      - name: Stop dev server
+      - name: Stop server
         if: always()
         run: |
           if [ -f template-dev.pid ]; then

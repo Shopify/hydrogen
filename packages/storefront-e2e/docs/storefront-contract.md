@@ -54,7 +54,7 @@ Without JavaScript, the product heading must render, and at least one probed pro
 
 Selected values should also be visibly indicated (styling or text). The suite does not check this. It also does not check that hydration is complete before it clicks, how many navigations or document loads a selection makes, or the visible appearance, price, or merchandise of the selected variant.
 
-Set STOREFRONT_SKIP_NO_JS_VARIANTS=true to skip the no-JavaScript check for a storefront that cannot render the product page without JavaScript or does not render variant links. A skip is an expected opt-out, not a pass. The Next.js template sets it in CI because its product content streams behind a Suspense fallback.
+Set STOREFRONT_SKIP_NO_JS_VARIANTS=true to skip the no-JavaScript check for a storefront that cannot render the product page without JavaScript or does not render variant links. A skip is an expected opt-out, not a pass. The Next.js example sets it in CI because its product content streams behind a Suspense fallback.
 
 ## Cart Line Items
 
@@ -112,10 +112,23 @@ If the storefront does not start checkout navigation, the test fails as a contra
 
 Run with:
 
+```sh
 STOREFRONT_BASE_URL=https://your-storefront.example pnpm test:e2e:storefront
+```
 
 Set STOREFRONT_E2E_WORKERS to override the default parallel worker count.
 The worker override must be an integer from 1 to 12.
+
+The root `pnpm test:e2e:storefront` command uses Turbo. `turbo.json` forwards these variables in strict environment mode:
+
+| Variable | Use |
+| --- | --- |
+| `STOREFRONT_BASE_URL` | Required HTTP or HTTPS URL of the running storefront |
+| `STOREFRONT_E2E_WORKERS` | Optional worker count; defaults to 4 locally and 2 when `CI=true` |
+| `PLAYWRIGHT_BROWSER_CHANNEL` | Optional installed browser channel, such as `chrome` |
+| `STOREFRONT_SKIP_NO_JS_VARIANTS` | Set to `true` only for the explicit no-JavaScript variant opt-out |
+
+See the [README](../README.md) for the runner command. Start and configure the storefront separately.
 
 Operational expectations:
 
