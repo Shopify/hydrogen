@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
 import { gql } from "@shopify/hydrogen";
 
+import { getNarrowingFilterValues } from "../../src/collection-results";
 import { AbortSuiteError, SkipTestGroupError, createTest } from "../../src/matcher-fixture";
 import {
   abortOnGraphQLErrors,
@@ -12,7 +13,6 @@ export { expect };
 
 const COLLECTION_FILTER_PATHS = {
   collection: (handle: string) => `/collections/${handle}`,
-  product: "/products/",
 };
 
 const COLLECTIONS_WITH_FILTERS_QUERY = gql(`
@@ -23,8 +23,12 @@ const COLLECTIONS_WITH_FILTERS_QUERY = gql(`
         title
         products(first: $productCount) {
           filters {
+            id
             label
+            type
             values {
+              id
+              input
               count
               label
             }
@@ -55,10 +59,9 @@ export const test = createTest({
     const collections = result.data.collections.nodes.filter((collection) => {
       if (collection.products.nodes.length === 0) return false;
 
-      return collection.products.filters.some((filter) =>
-        filter.values.some(
-          (value) => value.count > 0 && value.count < collection.products.nodes.length,
-        ),
+      return (
+        getNarrowingFilterValues(collection.products.filters, collection.products.nodes.length)
+          .length > 0
       );
     });
     const firstCollection = collections[0];

@@ -1,3 +1,4 @@
+import { requireSignifier } from "../../src/signifiers";
 import { expect, test } from "./config";
 
 test("collection page shows products", async ({ data, page }) => {
@@ -9,6 +10,9 @@ test("collection page shows products", async ({ data, page }) => {
 
   await page.goto(data.paths.collection(firstCollection.handle));
 
+  const card = await requireSignifier(page, "product-card", { productHandle: firstProduct.handle });
+  await expect(card).toBeVisible();
+  await expect(card).toContainText(firstProduct.title);
   await expect(
     page.getByRole("link", { name: new RegExp(escapeRegExp(firstProduct.title), "i") }).first(),
   ).toBeVisible();
