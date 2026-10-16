@@ -3,6 +3,7 @@
 import {
   buildProductSelectionSearchParams,
   canAddToCart,
+  getProductOptionValueAttributes,
   type SelectedOption,
 } from "@shopify/hydrogen";
 import { ShopPayButton } from "@shopify/hydrogen/react";
@@ -151,6 +152,7 @@ function ProductPage({ product }: { product: ProductData }) {
                         // a Cmd-click that opens a new tab records nothing.
                         <Link
                           key={value.name}
+                          {...getProductOptionValueAttributes(option.name, value)}
                           href={variantUrl(
                             product,
                             value.selectedOptions,
@@ -183,6 +185,7 @@ function ProductPage({ product }: { product: ProductData }) {
                         // marks the selected link (`aria-pressed` is invalid on a link).
                         <Link
                           key={value.name}
+                          {...getProductOptionValueAttributes(option.name, value)}
                           href={variantUrl(
                             product,
                             value.selectedOptions,
@@ -215,6 +218,7 @@ function ProductPage({ product }: { product: ProductData }) {
                         // `aria-pressed` (hydrogen-variant-form).
                         <button
                           key={value.name}
+                          {...getProductOptionValueAttributes(option.name, value)}
                           type="button"
                           aria-pressed={value.selected}
                           disabled

@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { buildProductSelectionSearchParams } from "@shopify/hydrogen";
+import {
+  buildProductSelectionSearchParams,
+  getProductOptionValueAttributes,
+} from "@shopify/hydrogen";
 
 import type { ProductData } from "~/storefront/product";
 import { useProductForm } from "~/storefront/product";
@@ -103,6 +106,7 @@ function searchParamsToQuery(params: URLSearchParams) {
         <template v-for="value in option.values" :key="value.name">
           <NuxtLink
             v-if="value.handle !== product.handle"
+            v-bind="getProductOptionValueAttributes(option.name, value)"
             :to="variantRoute(value.selectedOptions, value.handle)"
             replace
             :aria-label="isColor(option.name) ? value.name : undefined"
@@ -123,6 +127,7 @@ function searchParamsToQuery(params: URLSearchParams) {
             custom
           >
             <a
+              v-bind="getProductOptionValueAttributes(option.name, value)"
               :href="href"
               :aria-current="value.selected ? 'true' : undefined"
               :aria-label="isColor(option.name) ? value.name : undefined"
