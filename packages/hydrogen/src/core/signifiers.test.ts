@@ -9,6 +9,11 @@ describe("signifiers", () => {
       "product-add-to-cart",
       "product-option-value",
       "product-quantity",
+      "cart-line",
+      "cart-line-quantity",
+      "cart-line-increase",
+      "cart-line-decrease",
+      "cart-line-remove",
     ]);
   });
 
@@ -26,15 +31,21 @@ describe("signifiers", () => {
   });
 
   it("converts number values to strings", () => {
-    const state = { variantId: 42, available: true } as unknown as {
-      variantId: string;
-      available: boolean;
-    };
-
-    expect(signifier("product-add-to-cart", state)["data-shopify-variant-id"]).toBe("42");
-    expect(signifierSelector("product-add-to-cart", state)).toBe(
-      '[data-shopify-testid="product-add-to-cart"][data-shopify-variant-id="42"][data-shopify-available="true"]',
+    const state = { merchandiseId: "v", quantity: 42, pending: false };
+    expect(signifier("cart-line", state)["data-shopify-quantity"]).toBe("42");
+    expect(signifierSelector("cart-line", state)).toBe(
+      '[data-shopify-testid="cart-line"][data-shopify-merchandise-id="v"][data-shopify-quantity="42"][data-shopify-pending="false"]',
     );
+  });
+
+  it.each([
+    "cart-line-quantity",
+    "cart-line-increase",
+    "cart-line-decrease",
+    "cart-line-remove",
+  ] as const)("serializes the stateless %s control", (testId) => {
+    expect(signifier(testId, {})).toEqual({ "data-shopify-testid": testId });
+    expect(signifierSelector(testId)).toBe(`[data-shopify-testid="${testId}"]`);
   });
 
   it("only emits attributes for schema state keys", () => {

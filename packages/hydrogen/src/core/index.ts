@@ -82,7 +82,7 @@ export {
   STANDARD_ACTION_TIMEOUT_IN_MS,
 } from "./cart";
 export type { CartActions, CartStore, CreateCartStoreOptions } from "./cart";
-export { createCartFormRegister } from "./cart";
+export { createCartFormRegister, getCartLineAttributes } from "./cart";
 export type { CartFormRegister, QuantityInputAttributes, SetButtonAttributes } from "./cart";
 export { attachQuantityInput } from "./cart";
 export { parseCartRequest } from "./cart";
