@@ -466,7 +466,7 @@ describe("useProductForm", () => {
           type: "submit",
           "data-shopify-testid": "product-add-to-cart",
           "data-shopify-variant-id": "v-red",
-          "data-shopify-available": "true",
+          "data-shopify-available-for-sale": "true",
         });
       });
 
@@ -480,7 +480,7 @@ describe("useProductForm", () => {
         }
         const { container } = render(createElement(Consumer));
         const button = container.querySelector(
-          signifierSelector("product-add-to-cart", { variantId: "v-red", available: true }),
+          signifierSelector("product-add-to-cart", { variantId: "v-red", availableForSale: true }),
         );
         assert(button, "expected the add-to-cart button to carry the RED signifier");
 
@@ -489,10 +489,13 @@ describe("useProductForm", () => {
         });
 
         expect(button.getAttribute("data-shopify-variant-id")).toBe("v-green");
-        expect(button.getAttribute("data-shopify-available")).toBe("false");
+        expect(button.getAttribute("data-shopify-available-for-sale")).toBe("false");
         expect(
           container.querySelector(
-            signifierSelector("product-add-to-cart", { variantId: "v-green", available: false }),
+            signifierSelector("product-add-to-cart", {
+              variantId: "v-green",
+              availableForSale: false,
+            }),
           ),
         ).toBe(button);
       });

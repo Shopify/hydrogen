@@ -48,7 +48,7 @@ async function addVariantToCart(
     productTitle: product.productTitle,
     variantLabel: product.variantLabel,
   };
-  const addToCart = await requireSignifier(page, "product-add-to-cart", { available: true });
+  const addToCart = await requireSignifier(page, "product-add-to-cart", { availableForSale: true });
   await addToCart.click();
   await expect(cartOverlayLineFor(page, expectation.productTitle)).toBeVisible({
     timeout: CART_SETTLE_TIMEOUT_MS,

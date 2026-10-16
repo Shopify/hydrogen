@@ -1608,14 +1608,14 @@ describe("createProductFormRegister — addToCart", () => {
       type: "submit",
       "data-shopify-testid": "product-add-to-cart",
       "data-shopify-variant-id": "v-red",
-      "data-shopify-available": "true",
+      "data-shopify-available-for-sale": "true",
     });
   });
 
   it("marks an unavailable selected variant", () => {
     const props = createProductFormRegister(BLUE, noop)("addToCart", {});
     expect(props["data-shopify-variant-id"]).toBe("v-blue");
-    expect(props["data-shopify-available"]).toBe("false");
+    expect(props["data-shopify-available-for-sale"]).toBe("false");
   });
 
   it("uses an empty variant id and false when no variant is selected", () => {
@@ -1624,7 +1624,7 @@ describe("createProductFormRegister — addToCart", () => {
       type: "submit",
       "data-shopify-testid": "product-add-to-cart",
       "data-shopify-variant-id": "",
-      "data-shopify-available": "false",
+      "data-shopify-available-for-sale": "false",
     });
   });
 
@@ -1639,7 +1639,7 @@ describe("createProductFormRegister — addToCart", () => {
 
     expect(register()("addToCart", {})).toMatchObject({
       "data-shopify-variant-id": "v-blue",
-      "data-shopify-available": "false",
+      "data-shopify-available-for-sale": "false",
     });
   });
 });

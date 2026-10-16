@@ -21,7 +21,7 @@ A signifier is a stable attribute that a storefront puts on a control. A signifi
 These points set the long-term direction. This slice does not implement all of them.
 
 - Checks will eventually use Shopify standard events to know what happened.
-- Runner actions use signifiers to know where to act: a `data-shopify-testid` attribute plus `data-shopify-variant-id` and `data-shopify-available` state attributes.
+- Runner actions use signifiers to know where to act: a `data-shopify-testid` attribute plus `data-shopify-variant-id` and `data-shopify-available-for-sale` state attributes.
 - Hydrogen core `register()` adds signifier attributes automatically.
 - Future headless helpers will add signifiers to controls that Hydrogen does not render.
 - Signifiers are always present, also in production builds. They are not test-only attributes.
@@ -42,7 +42,7 @@ Based on the [naming discussion](https://shopify.slack.com/archives/C0B1506P5H8/
 ### Vocabulary
 
 - The first entry is `product-add-to-cart`.
-- Its state is `{ variantId: string; available: boolean }`. Both fields are required.
+- Its state is `{ variantId: string; availableForSale: boolean }`. Both fields are required.
 - Signifier names are append-only. Do not rename or remove a name after release.
 - Do not add a signifier unless a spec consumes it.
 - One element has one signifier. State narrows the match. Do not put two signifiers on one element.
@@ -71,21 +71,21 @@ There is one shared serialization for writing and reading:
 Example output:
 
 ```html
-<button data-shopify-testid="product-add-to-cart" data-shopify-variant-id="gid://shopify/ProductVariant/1" data-shopify-available="true">
+<button data-shopify-testid="product-add-to-cart" data-shopify-variant-id="gid://shopify/ProductVariant/1" data-shopify-available-for-sale="true">
   Add to cart
 </button>
 ```
 
 ### Binding path
 
-`register('addToCart', {})` adds the attributes. The React and Vue bindings recreate `register` when the product form state changes, so the attributes follow the current selected variant. Core `createProductFormRegister()` returns a snapshot of the variant that you pass. Create it again after each state change. When `selectedVariant` is `null`, the state is `variantId = ''` and `available = false`.
+`register('addToCart', {})` adds the attributes. The React and Vue bindings recreate `register` when the product form state changes, so the attributes follow the current selected variant. Core `createProductFormRegister()` returns a snapshot of the variant that you pass. Create it again after each state change. When `selectedVariant` is `null`, the state is `variantId = ''` and `availableForSale = false`.
 
 ### Non-binding path
 
 A storefront that does not use the Hydrogen form bindings spreads the helper on its own control:
 
 ```tsx
-<button type="submit" {...signifier('product-add-to-cart', { variantId, available })}>
+<button type="submit" {...signifier('product-add-to-cart', { variantId, availableForSale })}>
   Add to cart
 </button>
 ```
@@ -147,5 +147,5 @@ These items are decided as direction but not implemented in this slice:
 ## Consequences
 
 - Storefronts get a stable, documented contract for the add-to-cart control.
-- Storefront markup has extra `data-shopify-testid`, `data-shopify-variant-id`, and `data-shopify-available` attributes in production.
+- Storefront markup has extra `data-shopify-testid`, `data-shopify-variant-id`, and `data-shopify-available-for-sale` attributes in production.
 - Hydrogen must keep names stable. A wrong name stays forever because names are append-only.

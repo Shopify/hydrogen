@@ -9,65 +9,69 @@ describe("signifiers", () => {
   });
 
   it("converts camelCase state keys to kebab-case attributes and values to strings", () => {
-    expect(signifier("product-add-to-cart", { variantId: "gid://v/1", available: true })).toEqual({
+    expect(
+      signifier("product-add-to-cart", { variantId: "gid://v/1", availableForSale: true }),
+    ).toEqual({
       "data-shopify-testid": "product-add-to-cart",
       "data-shopify-variant-id": "gid://v/1",
-      "data-shopify-available": "true",
+      "data-shopify-available-for-sale": "true",
     });
-    expect(signifier("product-add-to-cart", { variantId: "", available: false })).toEqual({
+    expect(signifier("product-add-to-cart", { variantId: "", availableForSale: false })).toEqual({
       "data-shopify-testid": "product-add-to-cart",
       "data-shopify-variant-id": "",
-      "data-shopify-available": "false",
+      "data-shopify-available-for-sale": "false",
     });
   });
 
   it("converts number values to strings", () => {
-    const state = { variantId: 42, available: true } as unknown as {
+    const state = { variantId: 42, availableForSale: true } as unknown as {
       variantId: string;
-      available: boolean;
+      availableForSale: boolean;
     };
 
     expect(signifier("product-add-to-cart", state)["data-shopify-variant-id"]).toBe("42");
     expect(signifierSelector("product-add-to-cart", state)).toBe(
-      '[data-shopify-testid="product-add-to-cart"][data-shopify-variant-id="42"][data-shopify-available="true"]',
+      '[data-shopify-testid="product-add-to-cart"][data-shopify-variant-id="42"][data-shopify-available-for-sale="true"]',
     );
   });
 
   it("only emits attributes for schema state keys", () => {
-    const state = { variantId: "v", available: true, extra: "x" };
+    const state = { variantId: "v", availableForSale: true, extra: "x" };
 
     expect(Object.keys(signifier("product-add-to-cart", state))).toEqual([
       "data-shopify-testid",
       "data-shopify-variant-id",
-      "data-shopify-available",
+      "data-shopify-available-for-sale",
     ]);
   });
 
   it("keeps namespace-based state separate from test IDs", () => {
     const attributes = {
       "data-testid": "custom-add-to-cart",
-      ...signifier("product-add-to-cart", { variantId: "v", available: true }),
+      ...signifier("product-add-to-cart", { variantId: "v", availableForSale: true }),
     };
 
     expect(attributes).toEqual({
       "data-testid": "custom-add-to-cart",
       "data-shopify-testid": "product-add-to-cart",
       "data-shopify-variant-id": "v",
-      "data-shopify-available": "true",
+      "data-shopify-available-for-sale": "true",
     });
     expect(attributes).not.toHaveProperty("data-shopify-testid-variant-id");
-    expect(attributes).not.toHaveProperty("data-shopify-testid-available");
+    expect(attributes).not.toHaveProperty("data-shopify-testid-available-for-sale");
   });
 
   it("builds selectors from the name and the given state fields", () => {
     expect(signifierSelector("product-add-to-cart")).toBe(
       '[data-shopify-testid="product-add-to-cart"]',
     );
-    expect(signifierSelector("product-add-to-cart", { available: false })).toBe(
-      '[data-shopify-testid="product-add-to-cart"][data-shopify-available="false"]',
+    expect(signifierSelector("product-add-to-cart", { availableForSale: false })).toBe(
+      '[data-shopify-testid="product-add-to-cart"][data-shopify-available-for-sale="false"]',
     );
-    expect(signifierSelector("product-add-to-cart", { variantId: "v-1", available: true })).toBe(
-      '[data-shopify-testid="product-add-to-cart"][data-shopify-variant-id="v-1"][data-shopify-available="true"]',
+    expect(
+      signifierSelector("product-add-to-cart", { variantId: "v-1", availableForSale: true }),
+    ).toBe(
+      '[data-shopify-testid="product-add-to-cart"][data-shopify-variant-id="v-1"][data-shopify-available-for-sale="true"]',
     );
   });
 
@@ -84,7 +88,7 @@ describe("signifiers", () => {
     const variantId = "gid://shopify/ProductVariant/1";
     const button = document.createElement("button");
     for (const [name, value] of Object.entries(
-      signifier("product-add-to-cart", { variantId, available: true }),
+      signifier("product-add-to-cart", { variantId, availableForSale: true }),
     )) {
       button.setAttribute(name, value);
     }
@@ -94,7 +98,7 @@ describe("signifiers", () => {
       button,
     );
     expect(
-      document.querySelector(signifierSelector("product-add-to-cart", { available: false })),
+      document.querySelector(signifierSelector("product-add-to-cart", { availableForSale: false })),
     ).toBeNull();
     button.remove();
   });

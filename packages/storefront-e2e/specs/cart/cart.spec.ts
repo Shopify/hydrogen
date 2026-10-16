@@ -59,7 +59,7 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
     await route.continue();
   });
 
-  const addToCart = await requireSignifier(page, "product-add-to-cart", { available: true });
+  const addToCart = await requireSignifier(page, "product-add-to-cart", { availableForSale: true });
 
   try {
     await addToCart.click();
@@ -123,7 +123,7 @@ async function addVariantToCart(
     productTitle: product.productTitle,
     variantLabel: product.variantLabel,
   };
-  const addToCart = await requireSignifier(page, "product-add-to-cart", { available: true });
+  const addToCart = await requireSignifier(page, "product-add-to-cart", { availableForSale: true });
   await addToCart.click();
   const line = cartOverlayLineFor(page, expectation.productTitle);
   await expect(line).toBeVisible({

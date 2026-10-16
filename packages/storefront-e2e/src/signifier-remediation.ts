@@ -23,12 +23,12 @@ export const SIGNIFIER_REMEDIATION = {
     capability: "product-cart",
     bindingFix: "Spread register('addToCart', {}) on the add-to-cart control.",
     nonBindingFix:
-      "Spread signifier('product-add-to-cart', { variantId, available }) from @shopify/hydrogen on the add-to-cart control.",
+      "Spread signifier('product-add-to-cart', { variantId, availableForSale }) from @shopify/hydrogen on the add-to-cart control.",
     minimumHydrogenVersion: "unreleased",
     commonCauses: [
       "A wrapper component renders the control but does not forward props to the rendered element.",
       "More than one visible add-to-cart control is rendered on the product page.",
-      "The signifier attributes exist but do not match the requested state, for example data-shopify-available is false when the query asks for true, or the variant ID is stale.",
+      "The signifier attributes exist but do not match the requested state, for example data-shopify-available-for-sale is false when the query asks for true, or the variant ID is stale.",
     ],
     docsAnchor: "#product-add-to-cart",
   },
