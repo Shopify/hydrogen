@@ -1,3 +1,4 @@
+export { getProductCardAttributes } from "./card";
 export {
   canAddToCart,
   createProductFormStore,

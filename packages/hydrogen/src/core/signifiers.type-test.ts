@@ -21,6 +21,8 @@ describe("signifier types", () => {
         | "cart-line-increase"
         | "cart-line-decrease"
         | "cart-line-remove"
+        | "product-card"
+        | "collection-filter-value"
       )[]
     >();
     expectTypeOf<SignifierStates>().toEqualTypeOf<{
@@ -32,6 +34,8 @@ describe("signifier types", () => {
       "cart-line-increase": {};
       "cart-line-decrease": {};
       "cart-line-remove": {};
+      "product-card": { productHandle: string };
+      "collection-filter-value": { filterId: string };
     }>();
   });
 

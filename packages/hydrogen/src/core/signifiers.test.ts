@@ -14,6 +14,8 @@ describe("signifiers", () => {
       "cart-line-increase",
       "cart-line-decrease",
       "cart-line-remove",
+      "product-card",
+      "collection-filter-value",
     ]);
   });
 

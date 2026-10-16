@@ -116,6 +116,33 @@ export const SIGNIFIER_REMEDIATION = {
     ],
     docsAnchor: "#cart-line-controls",
   },
+  "product-card": {
+    capability: "product-results",
+    bindingFix: "Spread getProductCardAttributes(product) on the product card root.",
+    nonBindingFix:
+      "Spread signifier('product-card', { productHandle: product.handle }) from @shopify/hydrogen on the product card root.",
+    minimumHydrogenVersion: "unreleased",
+    commonCauses: [
+      "The signifier is on an image or title instead of the card root.",
+      "A wrapper component does not forward the attributes to the rendered element.",
+      "The product handle is missing, stale, or replaced by a product ID.",
+      "More than one visible card has the requested product handle in the searched scope.",
+    ],
+    docsAnchor: "#product-card",
+  },
+  "collection-filter-value": {
+    capability: "collection-filter",
+    bindingFix: "Spread getFilterValueAttributes(value) on the filter value checkbox.",
+    nonBindingFix:
+      "Spread signifier('collection-filter-value', { filterId: value.id }) from @shopify/hydrogen on the filter value control.",
+    minimumHydrogenVersion: "unreleased",
+    commonCauses: [
+      "The signifier is on a wrapping label instead of the checkbox.",
+      "The filterId comes from the parent filter instead of the Storefront API filter value ID.",
+      "More than one visible checkbox has the requested filter value ID.",
+    ],
+    docsAnchor: "#collection-filter-value",
+  },
   "product-add-to-cart": {
     capability: "product-cart",
     bindingFix: "Spread register('addToCart', {}) on the add-to-cart control.",
