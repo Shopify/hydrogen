@@ -33,10 +33,10 @@ Discovery includes variant IDs, availability, and selected options. Variant test
 
 The variant sample is bounded to 20 variants per product, not the full catalog. Product option metadata, not the sampled variant values, establishes whether an omitted option is a singleton. Editable options still need selected controls. A rendered selection must match exactly one sampled variant; an absent or ambiguous match fails instead of guessing the variant ID.
 
-The product-page test edits quantity to `2` and checks the native value. This is not evidence that a quantity of two reaches a settled cart line. After the cart-line change is combined, the coordinator must extend the cart journey: fill `product-quantity` with `2`, use the UI add-to-cart control, wait for the existing cart totals/status settlement, and assert the matching rendered cart line has quantity `2`. Do not inject cart state or replace settlement with an event wait.
+The product-page test edits quantity to `2` and checks the native value. That check alone is not evidence that a quantity of two reaches a settled cart line. The cart journey supplies that evidence: it fills `product-quantity` with `2` (with the same idempotent fill/value retry), uses the UI add-to-cart control, waits for the existing cart totals/status settlement, and asserts that the matching rendered `cart-line` has quantity `2`, `pending: false`, and a native quantity input value of `2`. It does not inject cart state or replace settlement with an event or network wait.
 
 ## Consequences
 
 - Variant control discovery does not depend on copy or accessible names.
 - Semantic, URL, and native-state checks remain independent evidence.
-- Select pickers and the combined quantity-to-cart journey remain explicit boundaries, not claimed passes.
+- Select pickers remain an explicit boundary, not a claimed pass.

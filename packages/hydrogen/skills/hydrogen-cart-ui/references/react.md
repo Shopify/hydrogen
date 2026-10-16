@@ -198,17 +198,21 @@ function CustomCartEditor() {
 
 ## Mutating Cart State
 
-Use `useCartForm()` for existing cart forms: line quantity changes, line removal, discount codes, order notes, and cart attributes. It returns `formProps()` and `register()` helpers that encode Hydrogen's cart action contract.
+Use `useCartForm()` for existing cart forms: line quantity changes, line removal, discount codes, order notes, and cart attributes. It returns `formProps()`, `lineProps(line)`, and `register()` helpers that encode Hydrogen's cart action contract.
 
 Line item quantity forms must keep this shape even when the surrounding markup, styling, or component boundaries differ:
 
 ```tsx
-function LineItemQuantity({ line }: { line: { id: string; quantity: number } }) {
-  const { formProps, register } = useCartForm();
+function LineItemQuantity({
+  line,
+}: {
+  line: { id: string; quantity: number; merchandise: { id: string } };
+}) {
+  const { formProps, register, lineProps } = useCartForm();
   const pendingLines = useCart((state) => state.pending.lines);
 
   return (
-    <form {...formProps()}>
+    <form {...formProps()} {...lineProps(line)}>
       <button type="submit" {...register("set")} hidden />
       <input type="hidden" {...register("lineId", { value: line.id })} />
       <button type="submit" {...register("decrease")}>
@@ -231,6 +235,7 @@ function LineItemQuantity({ line }: { line: { id: string; quantity: number } }) 
 
 Important React form fields:
 
+- `lineProps(line)` marks the line container with the variant's `line.merchandise.id`, current quantity, and live pending state. Keep the quantity, increase, decrease, and remove controls inside it.
 - `formProps()` wires `method`, `action`, and submit handling to the cart store.
 - `register("set")` is the default submit control for explicit line quantity updates; it already returns `{ type: "submit", hidden: true }`. Render it on a `<button>` as shown (see the `set` control rule in the skill's Form structure).
 - `register("lineId", { value })` scopes the form to one line.

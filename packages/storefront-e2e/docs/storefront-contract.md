@@ -63,21 +63,26 @@ Set STOREFRONT_SKIP_NO_JS_VARIANTS=true to skip the no-JavaScript check for a st
 
 ## Cart Line Items
 
-Cart lines must be visible list items containing the product title.
+Each cart line must have a visible `cart-line` container with its merchandise ID, quantity, and pending state. Keep product information, native controls, accessible names, and line errors in the UI. The runner matches merchandise identity, not product or variant text.
+
+Checkout checks still need the [checkout-only semantic markup](#checkout-handoff). Cart signifiers do not replace those requirements.
 
 After Add to cart, the suite must be able to inspect the added line in a cart drawer dialog before navigating to the cart page. Either open the drawer immediately with the optimistic line, or expose a visible page-level button whose accessible name begins with Cart, Open cart, or View cart so the suite can open the drawer while the update is pending.
 
 Each line must expose:
 
-- Variant text when the product has a non-default variant
-- A quantity input
-- A visible increase control named Increase or +
-- A visible decrease control named Decrease or -
-- A visible remove control named Remove
+- A native quantity input with `cart-line-quantity`
+- A visible increase control with `cart-line-increase`
+- A visible decrease control with `cart-line-decrease`
+- A visible remove control with `cart-line-remove`
+
+All four controls must be descendants of their `cart-line` container. A separate remove form is supported inside the container. Keep accessible labels; signifiers do not replace them. A control outside the container is reported as missing for that line.
 
 Cart totals must expose a `role="status"` region that says `Updating cart totals` while cart totals are stale, then `Cart totals updated` after mutation settlement. Do not announce `Cart totals updated` on initial idle render before a mutation cycle. The region may be visually hidden if it remains available to assistive technology.
 
 Accessible labels are preferred. Broad data-testid attributes should only be used when a semantic role or label cannot express the user-facing concept.
+
+The suite still checks rendered quantity, removal, and stock-limit rollback, plus settlement status. `pending=false` alone does not prove success. Without a finite-stock discovery fixture, the rollback check is skipped and remains unverified. Setup uses buyer UI, not injected cookies or storage.
 
 ## Signifiers
 
@@ -122,11 +127,31 @@ State: `{}`. Put this signifier on a visible, buyer-editable product quantity in
 - With bindings: spread `register('quantity', { value })` or `register('quantity', { defaultValue })`.
 - Without bindings: spread `signifier('product-quantity', {})` and keep native input props yourself.
 
-The product-page check edits this input to `2`, with an idempotent fill/value retry if hydration restores the initial value. The combined quantity-to-cart assertion requires the cart-line signifier change; editing the input alone does not prove cart settlement.
+The product-page check edits this input to `2`, with an idempotent fill/value retry if hydration restores the initial value. Editing the input alone does not prove cart settlement. The cart suite fills this input with `2`, adds the product through the UI, waits for the cart totals status to settle, and checks that the matching `cart-line` has quantity `2`, `pending: false`, and a native quantity input value of `2`.
+
+### cart-line
+
+State: `{ merchandiseId: string, quantity: number, pending: boolean }`. All fields are required. Use the product variant ID as `merchandiseId`, not the cart line ID. State attributes are `data-shopify-merchandise-id`, `data-shopify-quantity`, and `data-shopify-pending`.
+
+- With React or Vue cart bindings: spread `lineProps(line)` from `useCartForm()` on the line container. It follows live pending state.
+- With the core cart store: spread `getCartLineAttributes(line, cartState)` from `@shopify/hydrogen`. Call it again with the current line and state after updates.
+- Without the cart store: spread `signifier('cart-line', { merchandiseId, quantity, pending })` and manage pending accessibility yourself.
+- The core getter needs only `{ id, quantity, merchandise?: { id } | null }` and `Pick<CartState, 'pending'>`. Missing merchandise metadata produces an empty ID. The getter adds `aria-busy="true"` while that line is pending and omits it otherwise.
+- Keep only one visible line for the requested merchandise. Hidden cart drawer copies are supported; multiple visible matches fail as ambiguous.
+
+### cart-line-controls
+
+The `cart-line-quantity`, `cart-line-increase`, `cart-line-decrease`, and `cart-line-remove` signifiers each take `{}` state.
+
+`register('quantity', { value: line.quantity })` adds the quantity signifier. The `interactive: true` and `defaultValue` overloads also add it. `register('increase')`, `register('decrease')`, and `register('remove')` add their respective signifiers. Without bindings, use `signifier('cart-line-quantity', {})` and the matching control names.
+
+Put the attributes on the native input or actionable control, not a wrapper. All controls must be nested inside their `cart-line` container. For missing controls, check placement and prop forwarding. For ambiguous controls, keep only one visible match of that control inside the line. Keep optimistic controls interactive, existing form submission behavior, inline errors, and pending visuals. See [ADR 0004](adr/0004-cart-line-signifiers.md).
 
 ## Checkout Handoff
 
 The checkout test verifies only the storefront-owned side of the checkout handoff.
+
+**Checkout-only semantic requirements:** Checkout has not migrated to cart-line signifiers. Its existing checks still need visible list items containing the product title in the cart drawer dialog and within the cart page's main landmark. The cart-page line must also show the discovered variant text when its label is non-empty and not `Default Title`. These list-item/title/variant-text requirements apply to checkout checks only; cart tests use the signifiers described above. Checkout also needs a visible checkout link with an accessible name containing Checkout or Continue to checkout.
 
 It verifies the added product and variant in the storefront cart, clicks the visible checkout link, and waits for a checkout URL. It does not depend on the external checkout document loading, enter customer data, payment data, or perform any irreversible checkout step.
 
@@ -167,4 +192,4 @@ Operational expectations:
 
 When the storefront contract changes, update the relevant spec matcher, shared helper, and this document together.
 
-The product suite consumes `product-add-to-cart`, `product-option-value`, and `product-quantity`. Other areas still use label strings and semantic roles. Generated examples should migrate toward explicit storefront-owned signifiers for product results, cart lines, and checkout summaries. Add a signifier only when a spec consumes it, and update the [Signifiers](#signifiers) section in the same change.
+The suite consumes `product-add-to-cart`, `product-option-value`, `product-quantity`, `cart-line`, and the four cart-line control signifiers. Other areas still use label strings and semantic roles. Generated examples should migrate toward explicit storefront-owned signifiers for product results and checkout summaries. Add a signifier only when a spec consumes it, and update the [Signifiers](#signifiers) section in the same change.

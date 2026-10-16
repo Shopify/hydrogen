@@ -165,7 +165,7 @@ async function save() {
 
 ## Mutating Cart State
 
-Use `useCartForm()` for forms. It returns `formProps()` and `register()` helpers that encode Hydrogen's cart action contract. In Vue templates, apply them with `v-bind`.
+Use `useCartForm()` for forms. It returns `formProps()`, `lineProps(line)`, and `register()` helpers that encode Hydrogen's cart action contract. In Vue templates, apply them with `v-bind`.
 
 Line item quantity forms must keep this shape even when the surrounding markup, styling, or component boundaries differ:
 
@@ -174,15 +174,15 @@ Line item quantity forms must keep this shape even when the surrounding markup, 
 import { useCart, useCartForm } from "~/lib/cart";
 
 const pendingLines = useCart((state) => state.pending.lines);
-const { formProps, register } = useCartForm();
+const { formProps, register, lineProps } = useCartForm();
 
 defineProps<{
-  line: { id: string; quantity: number };
+  line: { id: string; quantity: number; merchandise: { id: string } };
 }>();
 </script>
 
 <template>
-  <form v-bind="formProps()">
+  <form v-bind="{ ...formProps(), ...lineProps(line) }">
     <button type="submit" v-bind="register('set')" hidden />
     <input type="hidden" v-bind="register('lineId', { value: line.id })" />
     <button type="submit" v-bind="register('decrease')">-</button>
@@ -199,6 +199,7 @@ defineProps<{
 
 Important Vue form fields:
 
+- `lineProps(line)` marks the line container with the variant's `line.merchandise.id`, current quantity, and live pending state. Keep the quantity, increase, decrease, and remove controls inside it.
 - `formProps()` wires `method`, `action`, and submit handling to the cart store.
 - `register("set")` is the default submit control for explicit line quantity updates; it already returns `{ type: "submit", hidden: true }`. Render it on a `<button>` as shown (see the `set` control rule in the skill's Form structure).
 - `register("lineId", { value })` scopes the form to one line.

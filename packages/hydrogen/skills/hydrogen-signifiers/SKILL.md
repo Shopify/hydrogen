@@ -106,7 +106,29 @@ The portable contract supports links, buttons, radios, and checkboxes. Select pi
 
 State: `{}`. Spread `register('quantity', { value })` or `register('quantity', { defaultValue })` on the visible, buyer-editable quantity input. Without bindings, use `signifier('product-quantity', {})`. A hidden quantity field is not a valid target. A stepper must forward the attributes to its input, not its wrapper or increment button. The native value is the quantity source; there is no quantity state attribute.
 
+### `cart-line`
+
+The container for one cart line. State: `{ merchandiseId: string; quantity: number; pending: boolean }`. Use the product variant ID as `merchandiseId`, not the cart line ID.
+
+- With React/Vue cart bindings, spread `lineProps(line)` from `useCartForm()` on the container. It follows live pending state.
+- With the core cart store, spread `getCartLineAttributes(line, cartState)` from `@shopify/hydrogen` on the container after each update. The line needs `id`, `quantity`, and `merchandise: { id }`. Missing merchandise metadata produces an empty merchandise ID. The getter adds `aria-busy="true"` only while that line is pending.
+- Without the cart store, spread `signifier('cart-line', { merchandiseId, quantity, pending })` and manage pending accessibility yourself.
+
+### Cart line controls
+
+Each control takes `{}` state. Cart form registers add these attributes automatically, including all quantity overloads.
+
+| Signifier | Register |
+| --- | --- |
+| `cart-line-quantity` | `register('quantity', { value: line.quantity })` |
+| `cart-line-increase` | `register('increase')` |
+| `cart-line-decrease` | `register('decrease')` |
+| `cart-line-remove` | `register('remove')` |
+
+Without bindings, put `signifier(controlName, {})` on the native quantity input or matching action control. Keep all four controls inside their `cart-line` container, including a remove control in a separate form. Forward attributes through wrappers. Keep accessible labels, native form behavior, inline errors, and pending visuals. `pending=false` alone does not prove mutation success. See [hydrogen-cart-ui](../hydrogen-cart-ui/SKILL.md) for line forms and pending/error handling.
+
 ## Troubleshooting
 
 - **Missing signifier**: Make sure the control uses `register('addToCart', {})` or `signifier('product-add-to-cart', ...)`. Then make sure each wrapper component forwards props to the rendered element. A wrapper can drop props. The attributes can exist but not match the requested state, for example `available: false` when the test asks for `available: true`, so check the selected variant state, not only the markup.
 - **Ambiguous signifier**: In the searched scope, more than one visible element matches the signifier and the supplied state. Or no element is visible and more than one hidden element matches. One visible match plus hidden copies is not ambiguous. Elements with different state can all match a partial state. Keep one visible matching control in the scope, or remove the extra copy.
+- **Missing cart line control**: Check that the native control is inside its `cart-line` container and receives the registered attributes. A signifier outside that container cannot identify a control for that line.
