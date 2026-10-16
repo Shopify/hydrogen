@@ -9,6 +9,7 @@ import { EMPTY_CART_DATA, EMPTY_CART_STATE, createEmptyCartErrors } from "../cor
 import { configureLogging } from "../core/logging";
 import { createProductFormStore } from "../core/product/product-form";
 import type { ProductInput, ProductVariantInput } from "../core/product/state";
+import { signifierSelector } from "../core/signifiers";
 import { assert, createTestLogger } from "../core/test-utils";
 import { CartProvider, configureCartEndpoint } from "./cart";
 import { createProductComponents, useProductForm } from "./product";
@@ -463,7 +464,44 @@ describe("useProductForm", () => {
         expect(result.register("addToCart", {})).toEqual({
           name: "add-to-cart",
           type: "submit",
+          "data-shopify-testid": "product-add-to-cart",
+          "data-shopify-variant-id": "v-red",
+          "data-shopify-available-for-sale": "true",
         });
+      });
+
+      it("renders the live selected variant signifier on the button", async () => {
+        const { store } = makeStore();
+        let selectOption: ((name: string, value: string) => unknown) | undefined;
+        const Consumer = defineComponent({
+          setup() {
+            const form = useProductForm(store);
+            selectOption = form.selectOption;
+            return () => h("button", form.register("addToCart", {}));
+          },
+        });
+        const wrapper = mount(CartProvider, { slots: { default: () => h(Consumer) } });
+        const button = wrapper.find(
+          signifierSelector("product-add-to-cart", { variantId: "v-red", availableForSale: true }),
+        );
+        expect(button.exists()).toBe(true);
+
+        selectOption?.("Color", "Green");
+        await nextTick();
+
+        expect(button.attributes("data-shopify-variant-id")).toBe("v-green");
+        expect(button.attributes("data-shopify-available-for-sale")).toBe("false");
+        expect(
+          wrapper
+            .find(
+              signifierSelector("product-add-to-cart", {
+                variantId: "v-green",
+                availableForSale: false,
+              }),
+            )
+            .exists(),
+        ).toBe(true);
+        wrapper.unmount();
       });
     });
   });

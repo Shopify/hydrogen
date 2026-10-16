@@ -10,7 +10,7 @@ description: >
 
 ### The Golden Rules
 
-1. **Use role-based locators** - Never CSS classes unless absolutely necessary
+1. **Use role-based locators** - Never CSS classes unless absolutely necessary. Exception: in `packages/storefront-e2e`, target storefront controls with `requireSignifier` signifiers
 2. **Assert absence broadly, presence specifically** - Wide net for "not there", scoped for "is there"
 3. **Never use timeouts or networkidle** - Wait for visible effects only
 4. **Improve accessibility while testing** - Tests drive better markup
@@ -116,6 +116,8 @@ test('increases quantity', async ({storefront}) => {
 ### DOM Elements over CSS
 
 Always choose selectors based on **DOM elements and semantic structure**, NOT CSS classes or styles. Tests should reflect how a user perceives and interacts with the page.
+
+**`packages/storefront-e2e` exception:** new and migrated storefront control targeting uses `requireSignifier` from `src/signifiers.ts`. Existing locators in `src/selector-ratchet-allowlist.json` are legacy. Outside that package, use the priority order below.
 
 **Priority order for selectors:**
 

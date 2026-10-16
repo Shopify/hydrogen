@@ -1600,3 +1600,46 @@ describe("createProductFormRegister — attributeValue", () => {
     expect(props.value).toBe("5");
   });
 });
+
+describe("createProductFormRegister — addToCart", () => {
+  it("returns submit props with the selected variant signifier", () => {
+    expect(createProductFormRegister(RED, noop)("addToCart", {})).toEqual({
+      name: "add-to-cart",
+      type: "submit",
+      "data-shopify-testid": "product-add-to-cart",
+      "data-shopify-variant-id": "v-red",
+      "data-shopify-available-for-sale": "true",
+    });
+  });
+
+  it("marks an unavailable selected variant", () => {
+    const props = createProductFormRegister(BLUE, noop)("addToCart", {});
+    expect(props["data-shopify-variant-id"]).toBe("v-blue");
+    expect(props["data-shopify-available-for-sale"]).toBe("false");
+  });
+
+  it("uses an empty variant id and false when no variant is selected", () => {
+    expect(createProductFormRegister(null, noop)("addToCart", {})).toEqual({
+      name: "add-to-cart",
+      type: "submit",
+      "data-shopify-testid": "product-add-to-cart",
+      "data-shopify-variant-id": "",
+      "data-shopify-available-for-sale": "false",
+    });
+  });
+
+  it("follows the live selected variant of a product form store", () => {
+    const store = createStore(makeSingleOptionProduct(RED));
+    const register = () =>
+      createProductFormRegister(store.getState().selectedVariant, store.selectOption);
+
+    expect(register()("addToCart", {})["data-shopify-variant-id"]).toBe("v-red");
+
+    store.selectOption("Color", "Blue");
+
+    expect(register()("addToCart", {})).toMatchObject({
+      "data-shopify-variant-id": "v-blue",
+      "data-shopify-available-for-sale": "false",
+    });
+  });
+});

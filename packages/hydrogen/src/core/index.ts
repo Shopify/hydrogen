@@ -255,6 +255,9 @@ export type {
   QueryPredictiveSearchOptions,
 } from "./predictive-search";
 
+export { SIGNIFIER_TEST_IDS, signifier, signifierSelector } from "./signifiers";
+export type { SignifierAttributes, SignifierStates } from "./signifiers";
+
 export { formatMoney } from "./money";
 export { flattenConnection } from "./analytics/utils/flatten-connection";
 export type { FormatMoneyOptions, FormattedMoney, FormattedMoneyRange, MoneyV2 } from "./money";

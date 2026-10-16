@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit && hydrogen gql check --fail-on-warn",
-    "test": "node --test __test__/*.test.ts"
+    "test": "pnpm run test:run",
+    "test:run": "node --test __test__/*.test.ts"
   },
   "dependencies": {
     "@shopify/hydrogen": "workspace:*",

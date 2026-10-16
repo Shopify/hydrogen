@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "lint": "oxlint .",
-    "test": "pnpm run test:unit",
+    "lint": "cd ../.. && oxlint --config .oxlintrc.json packages/storefront-e2e",
+    "test": "pnpm run test:run",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "test:unit": "vitest run src/runtime-config.test.ts"
+    "test:run": "vitest run --dir src"
   },
   "dependencies": {
     "@shopify/hydrogen": "workspace:*"
