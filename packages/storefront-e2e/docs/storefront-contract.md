@@ -23,15 +23,15 @@ Required groups fail on route HTTP failures; optional groups skip.
 
 ## Product Results
 
-Collection and search pages must expose product cards as accessible links to product detail pages.
-
-Current first-pass discovery assumes standard label strings and link paths. A future contract should add explicit storefront-owned signifiers so the suite can distinguish product results from unrelated product links without relying on labels alone.
+Collection and search pages must expose product cards with native links to product detail pages. The collection checks find card roots with the `product-card` signifier and the discovered product handle. The root can be the link itself or contain the link. Search discovery is unchanged by this collection migration.
 
 ## Collection Filters
 
-At least one probed collection must expose a visible, enabled checkbox filter that changes the URL, returns products, and reduces the visible product-link count when selected. Filters may auto-submit or use a visible Apply filters/Show results button.
+At least one probed collection must expose an enabled native checkbox with the `collection-filter-value` signifier. Its `filterId` is the Storefront API filter **value** ID, not the parent filter ID. The checkbox needs its native accessible label and live checked state. A visible wrapping label can make a visually hidden checkbox usable. Filters may auto-submit or use the existing visible Apply filters/Show results button fallback.
 
-Filter labels must include a count like Color Red (4). The suite uses that count to choose a filter that narrows the visible product links, then asserts the filtered result count does not exceed the label count. Browser Back after a filter selection must restore the previous URL and show the same filter unchecked. Missing Storefront API filter data skips the collection filter group.
+Discovery uses API value IDs and counts, not English labels or counts in label text. Selecting a known narrowing value must change the URL, return non-empty product cards, and reduce the visible unique signified product-handle count. The rendered count must not exceed that value's API count; it does not have to equal an API total because results can be paginated. Browser Back must restore the URL, unchecked state of the same value ID, and the initial rendered count. Missing API filter data or no value that can narrow the rendered page is a prerequisite skip, not a pass. Missing or ambiguous signifiers fail the contract.
+
+A storefront may render only some API filter values. The runner probes all known narrowing values for an enabled, unchecked native checkbox with a visible control or wrapping label. If none is usable, the contract error lists each candidate ID and its missing, misplaced, unsupported, hidden-only, disabled, selected, or duplicate-control reason. This is a contract failure, not a data skip.
 
 ## Search
 
@@ -86,7 +86,7 @@ The suite still checks rendered quantity, removal, and stock-limit rollback, plu
 
 ## Signifiers
 
-Some controls use a standard signifier: a `data-shopify-testid` attribute with the signifier name, plus `data-shopify-` state attributes from its schema. Signifiers are present in production too. Use `signifier()` or a Hydrogen form binding to write them. Do not write them by hand. See [ADR 0001](adr/0001-standard-signifiers.md) for the design.
+Some controls use a standard signifier: a `data-shopify-testid` attribute with the signifier name, plus its `data-shopify-` state attributes. Signifiers are present in production too. Use a Hydrogen getter, form binding, or `signifier()` to write them. Do not write them by hand. See [ADR 0001](adr/0001-standard-signifiers.md) for the design.
 
 The suite finds a signifier like this:
 
@@ -147,6 +147,28 @@ The `cart-line-quantity`, `cart-line-increase`, `cart-line-decrease`, and `cart-
 
 Put the attributes on the native input or actionable control, not a wrapper. All controls must be nested inside their `cart-line` container. For missing controls, check placement and prop forwarding. For ambiguous controls, keep only one visible match of that control inside the line. Keep optimistic controls interactive, existing form submission behavior, inline errors, and pending visuals. See [ADR 0004](adr/0004-cart-line-signifiers.md).
 
+### product-card
+
+The product card root. State: `{ productHandle: string }`, written as `data-shopify-product-handle`. Keep the native product link and its accessible name.
+
+- Spread `getProductCardAttributes(product)` from `@shopify/hydrogen`, `@shopify/hydrogen/react`, or `@shopify/hydrogen/vue` on the card root.
+- Without the getter, use `signifier('product-card', { productHandle: product.handle })`.
+- Use the handle, not the product ID. Forward attributes through wrappers. Keep one visible matching card per handle in the searched scope.
+- An empty or missing handle fails with `product-results` remediation at this anchor. Load `product.handle` and forward `data-shopify-product-handle` to the root.
+
+### collection-filter-value
+
+The actual checkbox for one Storefront API filter value. State: `{ filterId: string }`, written as `data-shopify-filter-id`.
+
+- Spread `getFilterValueAttributes(value)` from the core, React, or Vue entry point on the checkbox, not its label.
+- Without the getter, use `signifier('collection-filter-value', { filterId: value.id })`.
+- Pass the full API value to the getter. Do not pass its parent filter or substitute its parent ID.
+- Keep native checked state, name, value, change handler, and accessible label. The getter does not supply them.
+- Keep one visible matching checkbox per value ID. Hidden responsive copies follow the shared match rules.
+- For a placement or non-checkbox error, move the getter from the label or button onto the native checkbox. For a hidden-only error, show the control or its wrapping label. Keep at least one narrowing value enabled and unchecked so a buyer can select it.
+
+See [ADR 0005](adr/0005-collection-filter-signifiers.md). No apply-button signifier is added in this migration.
+
 ## Checkout Handoff
 
 The checkout test verifies only the storefront-owned side of the checkout handoff.
@@ -192,4 +214,4 @@ Operational expectations:
 
 When the storefront contract changes, update the relevant spec matcher, shared helper, and this document together.
 
-The suite consumes `product-add-to-cart`, `product-option-value`, `product-quantity`, `cart-line`, and the four cart-line control signifiers. Other areas still use label strings and semantic roles. Generated examples should migrate toward explicit storefront-owned signifiers for product results and checkout summaries. Add a signifier only when a spec consumes it, and update the [Signifiers](#signifiers) section in the same change.
+The suite consumes `product-add-to-cart`, `product-option-value`, `product-quantity`, `cart-line`, the four cart-line control signifiers, `product-card`, and `collection-filter-value`. Other areas still use label strings and semantic roles. Generated examples should migrate toward explicit storefront-owned signifiers for checkout summaries. Add a signifier only when a spec consumes it, and update the [Signifiers](#signifiers) section in the same change.

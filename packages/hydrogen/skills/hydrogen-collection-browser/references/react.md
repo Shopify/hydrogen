@@ -14,6 +14,8 @@ Use the React binding:
 import {
   formatMoney,
   getFilterRemovalUrl,
+  getFilterValueAttributes,
+  getProductCardAttributes,
   getSortByValue,
   isFilterInputActive,
   parseCollectionParams,
@@ -157,6 +159,14 @@ function requestFormSubmit(event: React.ChangeEvent<HTMLInputElement | HTMLSelec
 Pass `method="get"` and an explicit `action={collectionPath}` (the current `/collections/:handle` or `/search` route URL) literally — `formProps()` only wires the submit handler (see the SKILL.md UI rule).
 
 Keep every filter control mounted and enabled during submission and loading, and show loading on the product grid (`pending`). Keep the filter subtree key stable across filter updates, so focused controls stay mounted. Bind the sort `value` and checkbox `checked` to browse state so chips and back/forward navigation update them in place. Keep price inputs uncontrolled and sync external bounds through input refs, as below.
+
+Inside `ProductGrid`, put the getter on each card root, not its image or title. Keep the native link:
+
+```tsx
+<article {...getProductCardAttributes(product)}>
+  <a href={`/products/${product.handle}`}>{product.title}</a>
+</article>
+```
 
 ## Filters
 
@@ -342,18 +352,22 @@ function CheckboxFilterValue({
   const [{ name, value: paramValue }] = entries;
 
   return (
-    <input
-      type="checkbox"
-      name={name}
-      value={paramValue}
-      checked={isFilterInputActive(activeFilters, value.input)}
-      onChange={(event) => {
-        if (isMutuallyExclusive(filter) && event.currentTarget.checked) {
-          uncheckSiblings(event.currentTarget);
-        }
-        requestFormSubmit(event);
-      }}
-    />
+    <label>
+      <input
+        {...getFilterValueAttributes(value)}
+        type="checkbox"
+        name={name}
+        value={paramValue}
+        checked={isFilterInputActive(activeFilters, value.input)}
+        onChange={(event) => {
+          if (isMutuallyExclusive(filter) && event.currentTarget.checked) {
+            uncheckSiblings(event.currentTarget);
+          }
+          requestFormSubmit(event);
+        }}
+      />
+      {value.label}
+    </label>
   );
 }
 ```

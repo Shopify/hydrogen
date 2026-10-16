@@ -97,6 +97,8 @@ const isLoading = computed(() => state.value.status === "loading");
 
 Apply form helper props with `v-bind`. Branch on `filter.type`: render min/max number inputs for `PRICE_RANGE`, and value checkboxes for `LIST` and `BOOLEAN`. Submit price inputs on change with a 350 ms debounce. Share one timer between the min and max inputs, clear any pending timer before scheduling a submission, and clear the timer when the component unmounts. Preserve native Enter behavior, and cancel the pending timer whenever the form submits. Submit checkboxes and the sort `<select>` immediately on change. Keep all filter controls mounted and enabled while `isLoading` is true, and use it for a pending visual state. Bind `:checked` and the select `:value` to browse state, and keep `:key` values stable across filter updates, so external changes update the controls in place.
 
+Import `getFilterValueAttributes` and `getProductCardAttributes` from `@shopify/hydrogen/vue`. Add `v-bind="getFilterValueAttributes(value)"` to the checkbox input, not its label; keep its name, value, `:checked`, and change handler. Pass the full API value, not its parent filter. Add `v-bind="getProductCardAttributes(product)"` to the card root; if that root is a `NuxtLink`, keep it as the root. See [standard signifiers](../../hydrogen-signifiers/SKILL.md).
+
 ## Search Pages
 
 Use `handle = computed(() => \`search:${term.value}\`)` for provider data. Include a hidden `q` input inside the filter/sort form. When the term changes, suppress stale query watchers while refreshing data.

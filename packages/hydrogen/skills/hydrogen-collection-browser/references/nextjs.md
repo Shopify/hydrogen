@@ -75,6 +75,8 @@ export function CollectionBrowser(props: Props) {
 
 Build the actual `BrowserContent` controls from the React reference patterns, including its filter-group dispatch: `PRICE_RANGE` uses min/max inputs, while `LIST` and `BOOLEAN` use checkboxes. Checkbox names/values come from parsing `FilterValue.input` and passing that exact parsed filter through `serializeCollectionParams(...)`. Keep filter controls mounted and enabled while loading. Bind checkbox `checked` and sort `value` to browse state, and sync price inputs through refs. Keep the filter subtree key stable across filter updates, so focused controls stay mounted.
 
+Copy `getFilterValueAttributes(value)` onto the checkbox input from the React reference, not onto its label. Put `getProductCardAttributes(product)` on the card root and keep `next/link`. Import the stateless getters from `@shopify/hydrogen` in Server Components; they need no client provider. See [standard signifiers](../../hydrogen-signifiers/SKILL.md).
+
 ```tsx
 function filterValueInputParamEntries(input: string): Array<{ name: string; value: string }> {
   let filter: ProductFilter;
