@@ -186,8 +186,8 @@ export async function handleCliShortcut(
   return {
     createShortcut: async () => {
       try {
-        const shortcuts = await createPlatformShortcut();
-        return shortcuts.length > 0;
+        const {shells} = await createPlatformShortcut();
+        return shells.length > 0;
       } catch (error: any) {
         // Ignore errors.
         // We'll inform the user to create the

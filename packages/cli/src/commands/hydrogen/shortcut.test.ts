@@ -1,5 +1,6 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {runCreateShortcut} from './shortcut.js';
+import {handler} from '@shopify/cli-kit/node/error';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {createPlatformShortcut} from '../../lib/shell.js';
 
@@ -18,11 +19,10 @@ describe('shortcut', () => {
 
   it('shows created aliases', async () => {
     // Given
-    vi.mocked(createPlatformShortcut).mockResolvedValue([
-      'zsh',
-      'bash',
-      'fish',
-    ]);
+    vi.mocked(createPlatformShortcut).mockResolvedValue({
+      shells: ['zsh', 'bash', 'fish'],
+      changed: true,
+    });
 
     // When
     await runCreateShortcut();
@@ -31,12 +31,15 @@ describe('shortcut', () => {
     expect(outputMock.info()).toMatch(`zsh, bash, fish`);
   });
 
-  it('warns when not finding shells', async () => {
+  it('reports an error when not finding shells', async () => {
     // Given
-    vi.mocked(createPlatformShortcut).mockResolvedValue([]);
+    vi.mocked(createPlatformShortcut).mockResolvedValue({
+      shells: [],
+      changed: false,
+    });
 
     // When
-    await runCreateShortcut();
+    await runCreateShortcut().catch(handler);
 
     // Then
     expect(outputMock.info()).toBeFalsy();
