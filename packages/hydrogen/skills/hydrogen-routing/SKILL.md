@@ -73,7 +73,6 @@ Pass `routeTemplates` to `handleShopifyRoutes()` before framework routing so Liq
 const shopifyRoute = handleShopifyRoutes({
   request,
   requestContext,
-  sessionManager,
   storefrontClient,
   routeTemplates,
   handlers: [cartHandlers],
