@@ -57,10 +57,15 @@ const customerAccountHandlers = createCustomerAccountServerHandlers({
 With this wiring, Hydrogen owns the whole loop:
 
 - New carts are created with the current customer's buyer identity when the session has a usable access token or successfully refreshed access token, and authenticated cart reads mark checkout URLs with `logged_in=true` (from the cart handlers' `customerSession` option).
-- Authorization and refresh attach the customer to the cart from the request's cart cookie; a definitive refresh rejection detaches it. Transient refresh failures leave the cart untouched.
-- Logout detaches the customer from the cart.
+- Authorization and refresh attach the customer only when the visible cart cookie matches Hydrogen's server-issued `__Host-hydrogen-cart` binding. A definitive refresh rejection detaches it; transient refresh failures leave the cart untouched.
+- Logout and definitive refresh rejection detach the protected cart and any different, unambiguous visible cart, covering legacy carts and out-of-band cart changes.
+- If the visible cart cookie is missing, malformed, or duplicated, ordinary cart operations recover the existing protected cart instead of replacing its binding. Login/refresh still require an unambiguous visible cookie matching the binding before attaching identity.
 
-Sync is best-effort: a failed cart mutation never blocks the route's redirect. Attach failures are logged and can be retried by a later refresh. If detach fails during logout or definitive refresh rejection, the handler expires the cart cookie so a shared device never keeps a cart bound to the previous customer.
+Hydrogen establishes the binding only when its cart handlers create a new cart on the app's trusted HTTPS origin, and keeps it in step when an already-bound cart rotates. When TLS terminates at a proxy, the request-scoped session manager's `getSessionOrigin()` must return the trusted public origin; never derive it from untrusted forwarded headers. The binding is host-only, `Secure`, and `HttpOnly`; preserve both cart `Set-Cookie` headers on the returned response. Never copy a cart ID from request cookies, query parameters, JSON bodies, browser state, or a successful cart read/mutation into the binding.
+
+Legacy carts, carts created over HTTP, and carts created outside these handlers still work for ordinary cart operations, but are not automatically linked to a customer on login/refresh. Do not backfill their binding: let the shopper finish the existing cart without automatic identity transfer, or create a fresh cart through the handlers. `createCartCookie()` alone does not establish an ownership binding. New carts created over HTTP are not given customer identity.
+
+Sync is best-effort: a failed cart mutation never blocks the route's redirect. Attach failures are logged and can be retried by a later refresh. If detach fails during logout or definitive refresh rejection, the handler expires both the visible cart cookie and its binding. This removes the browser's active cart association; it does not revoke previously issued cart or checkout capabilities.
 
 `cartServerHandlers` requires both handler groups to share the `customerSession` returned by `createCustomerSession`; TypeScript rejects cart handlers created without `customerSession`.
 
