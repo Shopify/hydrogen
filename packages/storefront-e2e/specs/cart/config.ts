@@ -84,6 +84,7 @@ type CartDiscoveryProduct = {
 
 export type CartTestProduct = {
   readonly path: string;
+  readonly variantId: string;
   readonly productTitle: string;
   readonly variantLabel: string;
 };
@@ -118,6 +119,7 @@ export const test = createTest({
         return [
           {
             path: productPath(product.handle, variant.selectedOptions),
+            variantId: variant.id,
             productTitle: product.title,
             variantLabel: variant.title,
           },
@@ -197,6 +199,7 @@ async function discoverStockLimitProduct(
     return {
       maxQuantity: seededLine.quantity,
       path: productPath(product.handle, variant.selectedOptions),
+      variantId: variant.id,
       productTitle: product.title,
       variantLabel: variant.title,
     };

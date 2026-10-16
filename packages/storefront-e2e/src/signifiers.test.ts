@@ -1,5 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
-import { signifierSelector } from "@shopify/hydrogen";
+import { signifier, signifierSelector } from "@shopify/hydrogen";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CONTRACT_DOC_PATH, StorefrontContractError } from "./contract";
@@ -108,19 +108,22 @@ function addToCart(
   };
 }
 
-async function settle<T>(promise: Promise<T>): Promise<T> {
+async function settle<T>(promise: Promise<T>, timeout = EXPECT_TIMEOUT_MS): Promise<T> {
   const settled = promise.then(
     (value) => ({ value }),
     (error: unknown) => ({ error }),
   );
-  await vi.advanceTimersByTimeAsync(EXPECT_TIMEOUT_MS + 1_000);
+  await vi.advanceTimersByTimeAsync(timeout + 1_000);
   const result = await settled;
   if ("error" in result) throw result.error;
   return result.value;
 }
 
-async function contractErrorFrom(promise: Promise<unknown>): Promise<StorefrontContractError> {
-  const error = await settle(promise).then(
+async function contractErrorFrom(
+  promise: Promise<unknown>,
+  timeout = EXPECT_TIMEOUT_MS,
+): Promise<StorefrontContractError> {
+  const error = await settle(promise, timeout).then(
     () => undefined,
     (reason: unknown) => reason,
   );
@@ -149,6 +152,148 @@ describe("locateSignifier", () => {
 });
 
 describe("requireSignifier", () => {
+  it("finds the unique visible merchandise line among hidden drawer copies", async () => {
+    const attributes = signifier("cart-line", {
+      merchandiseId: "variant-1",
+      quantity: 2,
+      pending: false,
+    });
+    const dom = createDom([
+      { id: "drawer", attributes, visible: false },
+      { id: "page", attributes, visible: true },
+    ]);
+    const line = await settle(
+      requireSignifier(asPage(dom), "cart-line", { merchandiseId: "variant-1" }),
+    );
+    expect(idsOf(line)).toEqual(["page"]);
+    expect(dom.selectors).toEqual([signifierSelector("cart-line", { merchandiseId: "variant-1" })]);
+  });
+
+  it("waits through a hidden-only hydration state and returns a live visible locator", async () => {
+    const attributes = signifier("cart-line", {
+      merchandiseId: "variant-1",
+      quantity: 1,
+      pending: false,
+    });
+    const dom = createDom([{ id: "drawer", attributes, visible: false }]);
+    let resolved = false;
+    const lookup = requireSignifier(
+      asPage(dom),
+      "cart-line",
+      { merchandiseId: "variant-1" },
+      { timeout: 15_000, visible: true },
+    ).then((line) => {
+      resolved = true;
+      return line;
+    });
+
+    await vi.advanceTimersByTimeAsync(12_000);
+    expect(resolved).toBe(false);
+    dom.elements.push({ id: "page", attributes, visible: true });
+
+    const line = await settle(lookup, 3_000);
+    expect(dom.elements).toHaveLength(2);
+    expect(idsOf(line)).toEqual(["page"]);
+    dom.elements.push({ id: "another-hidden-copy", attributes, visible: false });
+    expect(await line.count()).toBe(1);
+    expect(idsOf(line)).toEqual(["page"]);
+  });
+
+  it.each([1, 2])(
+    "reports a visibility contract error when %i attached cart lines never become visible",
+    async (attachedCount) => {
+      const attributes = signifier("cart-line", {
+        merchandiseId: "variant-1",
+        quantity: 1,
+        pending: false,
+      });
+      const dom = createDom(
+        Array.from({ length: attachedCount }, (_, index) => ({
+          id: `hidden-${index}`,
+          attributes,
+          visible: false,
+        })),
+      );
+      const error = await contractErrorFrom(
+        requireSignifier(
+          asPage(dom),
+          "cart-line",
+          { merchandiseId: "variant-1" },
+          { timeout: 15_000, visible: true },
+        ),
+        15_000,
+      );
+
+      expect(error.signifier).toMatchObject({
+        name: "cart-line",
+        problem: "missing",
+        attachedCount,
+        visibleCount: 0,
+      });
+      expect(error.message).toContain("Exactly one visible element");
+      expect(error.message).toContain("15000ms");
+      expect(error.message).toContain("Make the matching element visible");
+      expect(error.message).toContain("lineProps(line)");
+    },
+  );
+
+  it("rejects multiple visible lines for the same merchandise instead of taking the first", async () => {
+    const attributes = signifier("cart-line", {
+      merchandiseId: "variant-1",
+      quantity: 1,
+      pending: false,
+    });
+    const dom = createDom([
+      { id: "a", attributes, visible: true },
+      { id: "b", attributes, visible: true },
+    ]);
+    const error = await contractErrorFrom(
+      requireSignifier(
+        asPage(dom),
+        "cart-line",
+        { merchandiseId: "variant-1" },
+        { timeout: 15_000, visible: true },
+      ),
+      15_000,
+    );
+    expect(error.signifier).toMatchObject({
+      name: "cart-line",
+      problem: "ambiguous",
+      visibleCount: 2,
+    });
+    expect(error.message).toContain("Ambiguous storefront e2e signifier: cart-line");
+    expect(error.message).toContain("Keep only one visible control");
+  });
+
+  it.each([
+    "cart-line-quantity",
+    "cart-line-increase",
+    "cart-line-decrease",
+    "cart-line-remove",
+  ] as const)("requires %s inside its line and explains misplaced controls", async (testId) => {
+    const attributes = signifier("cart-line", {
+      merchandiseId: "variant-1",
+      quantity: 1,
+      pending: false,
+    });
+    const control = { id: "control", attributes: signifier(testId, {}), visible: true };
+    const dom = createDom([
+      { id: "line", attributes, visible: true, children: [control] },
+      { ...control, id: "outside" },
+    ]);
+    const line = await settle(
+      requireSignifier(asPage(dom), "cart-line", { merchandiseId: "variant-1" }),
+    );
+    expect(idsOf(await settle(requireSignifier(line, testId)))).toEqual(["control"]);
+
+    dom.elements = [{ id: "line", attributes, visible: true }, control];
+    const error = await contractErrorFrom(requireSignifier(line, testId));
+    expect(error.signifier).toMatchObject({ name: testId, problem: "missing" });
+    expect(error.message).toContain("outside its cart-line container");
+    expect(error.message).toContain(`signifier('${testId}', {})`);
+    expect(error.docsAnchor).toBe("#cart-line-controls");
+  });
+
   it("returns the only attached element when it is visually hidden", async () => {
     const dom = createDom([addToCart("1", { visible: false })]);
 
@@ -193,6 +338,59 @@ describe("requireSignifier", () => {
     const locator = await settle(requireSignifier(asPage(dom), "product-add-to-cart"));
 
     expect(idsOf(locator)).toEqual(["late"]);
+  });
+
+  it("allows a cart line to appear after 10 seconds within the supplied 15-second budget", async () => {
+    const dom = createDom();
+    const startedAt = Date.now();
+    dom.onCount = () => {
+      if (Date.now() - startedAt >= 12_000 && dom.elements.length === 0) {
+        dom.elements.push({
+          id: "late-line",
+          visible: true,
+          attributes: signifier("cart-line", {
+            merchandiseId: "variant-1",
+            quantity: 1,
+            pending: false,
+          }),
+        });
+      }
+    };
+
+    const line = await settle(
+      requireSignifier(
+        asPage(dom),
+        "cart-line",
+        { merchandiseId: "variant-1" },
+        { timeout: 15_000 },
+      ),
+      15_000,
+    );
+
+    expect(idsOf(line)).toEqual(["late-line"]);
+  });
+
+  it("bounds a missing cart line lookup by the supplied budget and reports that budget", async () => {
+    const dom = createDom();
+    const startedAt = Date.now();
+    let failedAt: number | undefined;
+    const lookup = requireSignifier(
+      asPage(dom),
+      "cart-line",
+      { merchandiseId: "variant-1" },
+      { timeout: 15_000 },
+    ).catch((error: unknown) => {
+      failedAt = Date.now();
+      throw error;
+    });
+    const error = await contractErrorFrom(lookup, 15_000);
+
+    expect(failedAt).toBeDefined();
+    expect(Number(failedAt) - startedAt).toBeLessThanOrEqual(15_000);
+    expect(error.message).toContain("15000ms");
+    expect(error.signifier).toMatchObject({ name: "cart-line", problem: "missing" });
+    expect(error.message).toContain("lineProps(line)");
+    expect(error.message).toContain("getCartLineAttributes(line, cartState)");
   });
 
   it("searches only inside a locator scope and reports the page route", async () => {
