@@ -15,14 +15,34 @@ describe("Customer Account API gql", () => {
     );
   });
 
-  it("exposes declared variable names", () => {
+  it.each([
+    ["$language: LanguageCode", ["language"]],
+    ["$language: LanguageCode!", ["language"]],
+    ["$language: LanguageCode = EN", ["language"]],
+    ["$language: String", []],
+    ["$language: [LanguageCode!]", []],
+    ["$language: CountryCode", []],
+    ["$locale: LanguageCode", []],
+  ])(
+    "records i18n variables declared with their Customer Account type (%s)",
+    (declaration, expected) => {
+      const query = gql(`query CurrentCustomer(${declaration}) { customer { firstName } }`);
+
+      expect(isCustomerAccountDocument(query)).toBe(true);
+      if (!isCustomerAccountDocument(query)) throw new Error("Expected Customer Account document");
+      expect([...query.i18nVariableNames]).toEqual(expected);
+    },
+  );
+
+  it("reads i18n variables from the operation, not from appended fragments", () => {
+    const fragment = gql(`fragment CustomerName on Customer { firstName }`);
     const query = gql(
-      `query CurrentCustomer($language: LanguageCode) @inContext(language: $language) { customer { firstName } }`,
+      `query CurrentCustomer($language: LanguageCode) @inContext(language: $language) { customer { ...CustomerName } }`,
+      [fragment],
     );
 
-    expect(isCustomerAccountDocument(query)).toBe(true);
     if (!isCustomerAccountDocument(query)) throw new Error("Expected Customer Account document");
-    expect([...query.variableNames]).toEqual(["language"]);
+    expect([...query.i18nVariableNames]).toEqual(["language"]);
   });
 
   it("rejects values not created by CAAPI.gql()", () => {
