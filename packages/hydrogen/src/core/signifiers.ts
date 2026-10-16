@@ -5,6 +5,8 @@ const SIGNIFIER_NAMESPACE = "data-shopify";
 // The canonical schema. The sample values only give each state field its widened type.
 const SIGNIFIER_SCHEMA = {
   "product-add-to-cart": { variantId: "", available: false },
+  "product-option-value": { optionName: "", optionValue: "", selected: false },
+  "product-quantity": {},
 };
 
 type SignifierValue = string | number | boolean;
@@ -43,7 +45,7 @@ function toAttributeEntries(
   state: Partial<Record<string, SignifierValue>>,
 ): Array<[string, string]> {
   const entries: Array<[string, string]> = [[SIGNIFIER_ATTRIBUTE, testId]];
-  for (const key of keysOf(SIGNIFIER_SCHEMA[testId])) {
+  for (const key of Object.keys(SIGNIFIER_SCHEMA[testId])) {
     const value = state[key];
     if (value === undefined) continue;
     const suffix = key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);

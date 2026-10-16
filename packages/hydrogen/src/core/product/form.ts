@@ -1,5 +1,6 @@
 import { signifier, type SignifierAttributes } from "../signifiers";
-import type { ProductVariantInput } from "./state";
+import { selectedOptionsToMap } from "./options";
+import type { ProductVariantInput, SelectedOption, VariantOptionValueState } from "./state";
 
 /**
  * Props for the hidden input that tells the cart which variant to add.
@@ -18,7 +19,7 @@ export interface ProductMerchandiseIdProps {
  *
  * @publicDocs
  */
-export interface ProductQuantityProps {
+export interface ProductQuantityProps extends SignifierAttributes<"product-quantity"> {
   /** Field name that the cart reads as the quantity to add. */
   name: "quantity";
   /** Quantity to add. Defaults to `1`. */
@@ -30,7 +31,7 @@ export interface ProductQuantityProps {
  *
  * @publicDocs
  */
-export interface ProductQuantityDefaultProps {
+export interface ProductQuantityDefaultProps extends SignifierAttributes<"product-quantity"> {
   /** Field name that the cart reads as the quantity to add. */
   name: "quantity";
   /** Starting quantity for the input. */
@@ -42,7 +43,7 @@ export interface ProductQuantityDefaultProps {
  *
  * @publicDocs
  */
-export interface ProductOptionValueProps {
+export interface ProductOptionValueProps extends SignifierAttributes<"product-option-value"> {
   /** Option name, such as "Color". */
   name: string;
   /** Option value that the control selects, such as "Red". */
@@ -114,19 +115,39 @@ export type ProductFormRegister = {
 };
 
 /**
+ * Returns only the signifier attributes for an option value, including server-rendered and combined-listing links.
+ * Keep the link URL, selection handlers, and native or ARIA state on the control.
+ *
+ * @publicDocs
+ */
+export function getProductOptionValueAttributes(
+  optionName: string,
+  value: Pick<VariantOptionValueState, "name" | "selected">,
+): SignifierAttributes<"product-option-value"> {
+  return signifier("product-option-value", {
+    optionName,
+    optionValue: value.name,
+    selected: value.selected,
+  });
+}
+
+/**
  * Creates the register function that returns props for each product form field.
  *
  * The merchandise ID field submits the variant that you pass at creation. Create a new register function each time the product form state changes. The product form hooks create a new register function for you.
  *
  * @param selectedVariant The variant that the merchandise ID field submits, or `null` when the selection doesn't resolve to a variant.
  * @param selectOption The function that option value fields call with the option name and value.
+ * @param selectedOptions The current selection, including unresolved selections. Defaults to the selected variant's options, or an empty selection. Core callers must pass this argument to mark unresolved selections correctly.
  * @returns A register function for the merchandise ID, quantity, option value, attribute, and add-to-cart fields.
  * @publicDocs
  */
 export function createProductFormRegister(
   selectedVariant: ProductVariantInput | null,
   selectOption: (name: string, value: string) => void,
+  selectedOptions: SelectedOption[] = selectedVariant?.selectedOptions ?? [],
 ): ProductFormRegister {
+  const selection = selectedOptionsToMap(selectedOptions);
   return ((field: string, opts?: Record<string, unknown>) => {
     if (field === "merchandiseId") {
       return { name: "merchandiseId", value: selectedVariant?.id ?? "" };
@@ -134,17 +155,34 @@ export function createProductFormRegister(
 
     if (field === "quantity") {
       if (typeof opts?.defaultValue === "number") {
-        return { name: "quantity" as const, defaultValue: String(opts.defaultValue) };
+        return {
+          name: "quantity" as const,
+          defaultValue: String(opts.defaultValue),
+          ...signifier("product-quantity", {}),
+        };
       }
       const value = typeof opts?.value === "number" ? opts.value : 1;
-      return { name: "quantity" as const, value: String(value) };
+      return {
+        name: "quantity" as const,
+        value: String(value),
+        ...signifier("product-quantity", {}),
+      };
     }
 
     if (field === "optionValue") {
       const optionName = String(opts?.optionName ?? "");
       const value = String(opts?.value ?? "");
       const handleSelect = () => selectOption(optionName, value);
-      return { name: optionName, value, onChange: handleSelect, onClick: handleSelect };
+      return {
+        name: optionName,
+        value,
+        onChange: handleSelect,
+        onClick: handleSelect,
+        ...getProductOptionValueAttributes(optionName, {
+          name: value,
+          selected: selection[optionName] === value,
+        }),
+      };
     }
 
     if (field === "attributeValue") {

@@ -150,7 +150,7 @@ export function useProductForm<TProduct extends ProductInput>(
 
   // oxlint-disable-next-line react-hooks/exhaustive-deps -- state is the full reactive snapshot; selectOption is stable
   const register = useMemo(
-    () => createProductFormRegister(state.selectedVariant, selectOption),
+    () => createProductFormRegister(state.selectedVariant, selectOption, state.selectedOptions),
     [state, selectOption],
   );
 
