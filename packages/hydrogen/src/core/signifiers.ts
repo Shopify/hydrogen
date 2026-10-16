@@ -4,7 +4,7 @@ const SIGNIFIER_NAMESPACE = "data-shopify";
 
 // The canonical schema. The sample values only give each state field its widened type.
 const SIGNIFIER_SCHEMA = {
-  "product-add-to-cart": { variantId: "", available: false },
+  "product-add-to-cart": { variantId: "", availableForSale: false },
 };
 
 type SignifierValue = string | number | boolean;

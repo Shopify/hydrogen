@@ -95,7 +95,7 @@ function idsOf(locator: Locator): string[] {
 
 function addToCart(
   id: string,
-  options: { readonly visible: boolean; readonly available?: boolean },
+  options: { readonly visible: boolean; readonly availableForSale?: boolean },
 ): FakeElement {
   return {
     id,
@@ -103,7 +103,7 @@ function addToCart(
     attributes: {
       "data-shopify-testid": "product-add-to-cart",
       "data-shopify-variant-id": `gid://shopify/ProductVariant/${id}`,
-      "data-shopify-available": String(options.available ?? true),
+      "data-shopify-available-for-sale": String(options.availableForSale ?? true),
     },
   };
 }
@@ -142,9 +142,11 @@ describe("locateSignifier", () => {
   it("builds the locator only from signifierSelector", () => {
     const dom = createDom();
 
-    locateSignifier(asPage(dom), "product-add-to-cart", { available: true });
+    locateSignifier(asPage(dom), "product-add-to-cart", { availableForSale: true });
 
-    expect(dom.selectors).toEqual([signifierSelector("product-add-to-cart", { available: true })]);
+    expect(dom.selectors).toEqual([
+      signifierSelector("product-add-to-cart", { availableForSale: true }),
+    ]);
   });
 });
 
@@ -171,12 +173,12 @@ describe("requireSignifier", () => {
 
   it("narrows matches by state before it checks for ambiguity", async () => {
     const dom = createDom([
-      addToCart("sold-out", { visible: true, available: false }),
-      addToCart("in-stock", { visible: true, available: true }),
+      addToCart("sold-out", { visible: true, availableForSale: false }),
+      addToCart("in-stock", { visible: true, availableForSale: true }),
     ]);
 
     const locator = await settle(
-      requireSignifier(asPage(dom), "product-add-to-cart", { available: true }),
+      requireSignifier(asPage(dom), "product-add-to-cart", { availableForSale: true }),
     );
 
     expect(idsOf(locator)).toEqual(["in-stock"]);
@@ -211,22 +213,22 @@ describe("requireSignifier", () => {
     expect(idsOf(locator)).toEqual(["inside"]);
 
     const error = await contractErrorFrom(
-      requireSignifier(scope, "product-add-to-cart", { available: false }),
+      requireSignifier(scope, "product-add-to-cart", { availableForSale: false }),
     );
     expect(error.routePath).toBe("/products/shirt?Size=M");
   });
 
   it("reports a missing signifier with both fix paths", async () => {
-    const dom = createDom([addToCart("sold-out", { visible: true, available: false })]);
+    const dom = createDom([addToCart("sold-out", { visible: true, availableForSale: false })]);
 
     const error = await contractErrorFrom(
-      requireSignifier(asPage(dom), "product-add-to-cart", { available: true }),
+      requireSignifier(asPage(dom), "product-add-to-cart", { availableForSale: true }),
     );
 
     expect(error.signifier).toMatchObject({
       name: "product-add-to-cart",
       problem: "missing",
-      state: { available: true },
+      state: { availableForSale: true },
       attachedCount: 0,
       visibleCount: 0,
     });
@@ -235,7 +237,9 @@ describe("requireSignifier", () => {
     expect(error.message).toContain("Missing storefront e2e signifier: product-add-to-cart");
     expect(error.message).toContain("/products/shirt?Size=M");
     expect(error.message).toContain("register('addToCart', {})");
-    expect(error.message).toContain("signifier('product-add-to-cart', { variantId, available })");
+    expect(error.message).toContain(
+      "signifier('product-add-to-cart', { variantId, availableForSale })",
+    );
     expect(error.message).toContain(`${CONTRACT_DOC_PATH}#product-add-to-cart`);
   });
 

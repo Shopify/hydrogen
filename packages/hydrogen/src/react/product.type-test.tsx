@@ -87,7 +87,7 @@ describe("react product form types", () => {
       expectTypeOf(addToCart.type).toEqualTypeOf<"submit">();
       expectTypeOf(addToCart["data-shopify-testid"]).toEqualTypeOf<"product-add-to-cart">();
       expectTypeOf(addToCart["data-shopify-variant-id"]).toEqualTypeOf<string>();
-      expectTypeOf(addToCart["data-shopify-available"]).toEqualTypeOf<string>();
+      expectTypeOf(addToCart["data-shopify-available-for-sale"]).toEqualTypeOf<string>();
       expectTypeOf<ProductAddToCartProps>().toExtend<SignifierAttributes<"product-add-to-cart">>();
 
       // @ts-expect-error product register only accepts product-relevant fields

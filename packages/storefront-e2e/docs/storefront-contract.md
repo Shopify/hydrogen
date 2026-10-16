@@ -76,7 +76,7 @@ Accessible labels are preferred. Broad data-testid attributes should only be use
 
 ## Signifiers
 
-Some controls use a standard signifier: a `data-shopify-testid` attribute with the signifier name, plus `data-shopify-variant-id` and `data-shopify-available` state attributes. Signifiers are present in production too. Use `signifier()` or a Hydrogen form binding to write them. Do not write them by hand. See [ADR 0001](adr/0001-standard-signifiers.md) for the design.
+Some controls use a standard signifier: a `data-shopify-testid` attribute with the signifier name, plus `data-shopify-variant-id` and `data-shopify-available-for-sale` state attributes. Signifiers are present in production too. Use `signifier()` or a Hydrogen form binding to write them. Do not write them by hand. See [ADR 0001](adr/0001-standard-signifiers.md) for the design.
 
 The suite finds a signifier like this:
 
@@ -90,15 +90,15 @@ The minimum Hydrogen version with signifiers is not released yet.
 
 The add-to-cart submit control on product detail pages.
 
-State: `variantId` (string) and `available` (boolean). Both are required. When no variant is selected, the state is `variantId: ''` and `available: false` (boolean). The DOM then has `data-shopify-variant-id=""` and `data-shopify-available="false"` (string).
+State: `variantId` (string) and `availableForSale` (boolean). Both are required. When no variant is selected, the state is `variantId: ''` and `availableForSale: false` (boolean). The DOM then has `data-shopify-variant-id=""` and `data-shopify-available-for-sale="false"` (string).
 
 Fix a missing or ambiguous signifier:
 
 - With Hydrogen form bindings: spread `register('addToCart', {})` on the control. It adds live attributes.
-- Without bindings: spread `signifier('product-add-to-cart', { variantId, available })` from `@shopify/hydrogen` on the control.
+- Without bindings: spread `signifier('product-add-to-cart', { variantId, availableForSale })` from `@shopify/hydrogen` on the control.
 - If a wrapper component renders the control, make sure it forwards props to the rendered element.
 - Keep only one visible add-to-cart control per product page.
-- If a query finds no matching signifier, check that existing attributes match its state filters, such as `available: true`.
+- If a query finds no matching signifier, check that existing attributes match its state filters, such as `availableForSale: true`.
 
 ## Checkout Handoff
 

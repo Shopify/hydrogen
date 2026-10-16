@@ -163,7 +163,7 @@ export function createProductFormRegister(
         type: "submit",
         ...signifier("product-add-to-cart", {
           variantId: selectedVariant?.id ?? "",
-          available: selectedVariant?.availableForSale ?? false,
+          availableForSale: selectedVariant?.availableForSale ?? false,
         }),
       } satisfies ProductAddToCartProps;
     }

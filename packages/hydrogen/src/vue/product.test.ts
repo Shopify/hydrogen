@@ -466,7 +466,7 @@ describe("useProductForm", () => {
           type: "submit",
           "data-shopify-testid": "product-add-to-cart",
           "data-shopify-variant-id": "v-red",
-          "data-shopify-available": "true",
+          "data-shopify-available-for-sale": "true",
         });
       });
 
@@ -482,7 +482,7 @@ describe("useProductForm", () => {
         });
         const wrapper = mount(CartProvider, { slots: { default: () => h(Consumer) } });
         const button = wrapper.find(
-          signifierSelector("product-add-to-cart", { variantId: "v-red", available: true }),
+          signifierSelector("product-add-to-cart", { variantId: "v-red", availableForSale: true }),
         );
         expect(button.exists()).toBe(true);
 
@@ -490,11 +490,14 @@ describe("useProductForm", () => {
         await nextTick();
 
         expect(button.attributes("data-shopify-variant-id")).toBe("v-green");
-        expect(button.attributes("data-shopify-available")).toBe("false");
+        expect(button.attributes("data-shopify-available-for-sale")).toBe("false");
         expect(
           wrapper
             .find(
-              signifierSelector("product-add-to-cart", { variantId: "v-green", available: false }),
+              signifierSelector("product-add-to-cart", {
+                variantId: "v-green",
+                availableForSale: false,
+              }),
             )
             .exists(),
         ).toBe(true);
