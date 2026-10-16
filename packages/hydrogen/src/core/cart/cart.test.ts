@@ -5382,29 +5382,57 @@ describe("multi-line update and remove events", () => {
     expect(getCartLines(store.getState().data).find((l) => l.id === "line-b")?.quantity).toBe(1);
   });
 
-  it("keeps the lines and revalidates when the response returns canonical line IDs", async () => {
+  describe("when the response returns canonical line IDs", () => {
     const canonical = [
       { id: "line-a?cart=123", quantity: 4 },
       { id: "line-b?cart=123", quantity: 4 },
       { id: "line-c?cart=123", quantity: 1 },
     ];
-    const refresh = createDeferred();
-    mockGetCart.mockReturnValue(refresh.promise);
-    const update = mockUpdateCart({
-      lines: [
-        { id: "line-a", quantity: 4 },
-        { id: "line-b", quantity: 4 },
-      ],
+    const requested = [
+      { id: "line-a", quantity: 4 },
+      { id: "line-b", quantity: 4 },
+      { id: "line-c", quantity: 1 },
+    ];
+    const updateBoth = async () => {
+      const update = mockUpdateCart({
+        lines: [
+          { id: "line-a", quantity: 4 },
+          { id: "line-b", quantity: 4 },
+        ],
+      });
+      resolveUpdate(0, serverCart(9, canonical));
+      await update;
+      await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+    };
+    const expectRequestedCart = () => {
+      expect(lines()).toEqual(requested);
+      expect(store.getState().data.totalQuantity).toBe(9);
+      expect(store.getState().data.cost.totalAmount.amount).toBe("90");
+      expect(store.getState().pending.lines.size).toBe(0);
+    };
+
+    it("keeps the requested quantities while the refresh is pending, then adopts the refresh", async () => {
+      const refresh = createDeferred();
+      mockGetCart.mockReturnValue(refresh.promise);
+
+      await updateBoth();
+      expectRequestedCart();
+      expect(store.getState().revalidating).toBe(true);
+
+      refresh.resolve(serverCart(9, canonical));
+      await vi.waitFor(() => expect(lines()).toEqual(canonical));
+      expect(store.getState().revalidating).toBeFalsy();
     });
 
-    resolveUpdate(0, serverCart(9, canonical));
-    await update;
-    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
-    expect(lines().map(({ id }) => id)).toEqual(["line-a", "line-b", "line-c"]);
-    expect(store.getState().revalidating).toBe(true);
+    it("keeps the successful update when the refresh fails", async () => {
+      mockGetCart.mockRejectedValue(new Error("Refresh failed"));
 
-    refresh.resolve(serverCart(9, canonical));
-    await vi.waitFor(() => expect(lines()).toEqual(canonical));
+      await updateBoth();
+      await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+
+      expectRequestedCart();
+      expect(store.getState().errors.network).toHaveLength(1);
+    });
   });
 
   describe("when a newer change supersedes one line", () => {
@@ -5688,6 +5716,33 @@ describe("changes during the first cart load", () => {
         expect(store.getState().loading).toBe(false);
       },
     );
+
+    it("stops waiting for a change that never settles once the Standard Actions timeout passes", async () => {
+      const firstLoad = await connectWithPendingLoad();
+      mockGetCart.mockResolvedValue({ cart: loadedCart() });
+      vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+
+      try {
+        const mutation = codeAdd();
+        mutation.catch(() => {});
+        store.destroy();
+        store.connect();
+        firstLoad.resolve({ cart: loadedCart() });
+        await nextTick();
+        await nextTick();
+        expect(mockGetCart).toHaveBeenCalledTimes(1);
+        expect(store.getState().revalidating).toBe(true);
+
+        await vi.advanceTimersByTimeAsync(STANDARD_ACTION_TIMEOUT_IN_MS);
+      } finally {
+        vi.useRealTimers();
+      }
+
+      await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+      expect(mockGetCart).toHaveBeenCalledTimes(2);
+      expect(sortedLineIds()).toEqual(["line-existing"]);
+      expect(store.getState().loading).toBe(false);
+    });
 
     it("recovers the cart when the store reconnects while the replacement refresh is pending", async () => {
       const firstLoad = await connectWithPendingLoad();
