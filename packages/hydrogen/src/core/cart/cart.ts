@@ -1212,7 +1212,9 @@ function projectLineQuantity(state: CartState, payload: ChangeLineQuantityPayloa
 }
 
 // A response can return a line under another ID (Standard Actions may add a `?cart=` suffix), so a
-// missing line only means removal for a removal. Otherwise keep it and revalidate.
+// missing line only means removal for a removal. Otherwise keep the line at its requested quantity,
+// which the server accepted, and revalidate to pick up its new ID. The response's totals already
+// include the new quantity, so keeping the old one would disagree with them.
 function settleLineQuantity(
   state: CartState,
   serverLines: CartLine[],
@@ -1223,7 +1225,7 @@ function settleLineQuantity(
   const matching = serverLines.find((line) => line.id === payload.lineId);
   if (!matching && payload.quantity > 0) {
     requestRevalidation();
-    return state;
+    return projectLineQuantity(state, payload);
   }
   const lines = matching
     ? previous.map((line) => (line.id === payload.lineId ? mergeServerLine(line, matching) : line))
@@ -1332,18 +1334,7 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
     payload: {} as ChangeLineQuantityPayload,
     transport: (payload, signal, updateCart) =>
       updateCart({ lines: [{ id: payload.lineId, quantity: payload.quantity }] }, { signal }),
-    projectPayload: (state, payload) => {
-      const previous = getLines(state.data);
-      const existing = previous.find((line) => line.id === payload.lineId);
-      if (!existing) return state;
-      const lines =
-        payload.quantity === 0
-          ? previous.filter((line) => line.id !== payload.lineId)
-          : previous.map((line) =>
-              line.id === payload.lineId ? { ...line, quantity: payload.quantity } : line,
-            );
-      return { ...state, data: reconcileCartLines(state.data, lines) };
-    },
+    projectPayload: (state, payload) => projectLineQuantity(state, payload),
     projectPromise: (state, result, payload, addError, options) => {
       if (hasProjectedErrors(result)) {
         addError((current, timestampMs) =>
@@ -1843,10 +1834,18 @@ function observeMutationTransport(
 ): void {
   if (store.activeMutationTransports.has(promise)) return;
   store.activeMutationTransports.add(promise);
+  let released = false;
+  // Teardown keeps observing requests the store doesn't own, so revalidation waits for them after a
+  // reconnect. A request that never settles would block it forever, so stop waiting once it has
+  // outlived the timeout the store gives its own requests.
   const releaseTransport = () => {
+    if (released) return;
+    released = true;
+    clearTimeout(timeout);
     store.activeMutationTransports.delete(promise);
     revalidateCartWhenIdle(store);
   };
+  const timeout = setTimeout(releaseTransport, STANDARD_ACTION_TIMEOUT_IN_MS);
   promise.then(releaseTransport, releaseTransport);
 }
 
