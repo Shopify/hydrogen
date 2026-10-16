@@ -72,7 +72,7 @@ export const handleShopifyRoutes: HydrogenRouteHandler = (options) => {
  */
 export type HandleShopifyRoutesForDocs =
   /**
-   * @param options - The request, its context and session, the Storefront API client, your route templates, and your handler groups.
+   * @param options - The request, its context, the Storefront API client, your route templates, your handler groups, and the session manager when a registered handler needs one.
    * @returns A promise for the matched route's response, or `null` when no route matches.
    */
   (options: HydrogenRoutesOptions) => null | Promise<Response>;
