@@ -247,7 +247,7 @@ const { data } = await client.graphql(PRODUCTS, {
 });
 ```
 
-For those declarations the request context wins: the variables type rejects `country` and `language`, and the client overwrites any value passed anyway. To query another market, create the client with a request context for that `i18n`.
+For those declarations the request context wins: the client overwrites any value you pass. The variables type leaves out `country` and `language`, but it only reports an error for them when the query has other variables too. If they're the only variables, the type is `{}` and a passed `country` still compiles. To query another market, create the client with a request context for that `i18n`.
 
 A same-named variable of any other type stays yours and keeps its nullability, for example `$country: String!` as a metafield key, `$country: [CountryCode!]!`, or `$language: ProductSortKeys`. Only the first operation's declarations count.
 
