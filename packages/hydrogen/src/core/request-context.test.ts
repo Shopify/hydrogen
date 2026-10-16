@@ -644,3 +644,109 @@ describe("createShopifyRequestContext", () => {
     expect(headers.getSetCookie()).toEqual(["session=1; Path=/; Secure"]);
   });
 });
+
+describe("UCP discovery link header", () => {
+  const UCP_PROFILE_LINK = '</.well-known/ucp>; rel="ucp"';
+
+  function applyResponseHeaders(request: StorefrontRequest, responseHeaders: HeadersInit = {}) {
+    const headers = new Headers(responseHeaders);
+    createTestRequestContext(request).applyResponseHeaders(headers);
+    return headers;
+  }
+
+  it("links responses to the UCP profile without a version", () => {
+    const headers = applyResponseHeaders(
+      new Request("https://shop.example.com/products/hat", { headers: { accept: "*/*" } }),
+      { "content-type": "text/html; charset=utf-8" },
+    );
+
+    expect(headers.get("link")).toBe(UCP_PROFILE_LINK);
+  });
+
+  it.each([
+    ["a JSON route requested with Accept: text/html", "GET", "text/html", "application/json"],
+    ["a JSON response", "GET", "application/json", "application/json"],
+    ["a HEAD request", "HEAD", "*/*", "text/html"],
+    ["a POST request", "POST", "*/*", "application/json"],
+    ["a response with no content type yet", "GET", "*/*", undefined],
+  ])("links %s", (_, method, accept, contentType) => {
+    const headers = applyResponseHeaders(
+      new Request("https://shop.example.com/page", { method, headers: { accept } }),
+      contentType ? { "content-type": contentType } : {},
+    );
+
+    expect(headers.get("link")).toBe(UCP_PROFILE_LINK);
+  });
+
+  it("appends to an existing Link header", () => {
+    const preload = "</fonts/brand.woff2>; rel=preload; as=font; crossorigin";
+    const headers = applyResponseHeaders(new Request("https://shop.example.com"), {
+      link: preload,
+    });
+
+    expect(headers.get("link")).toBe(`${preload}, ${UCP_PROFILE_LINK}`);
+  });
+
+  it.each([
+    '</.well-known/ucp>; rel="ucp"; version="2026-01-11"',
+    "</.well-known/ucp>; REL=UCP",
+    '</fonts/brand.woff2>; rel=preload, <https://profiles.example.com/ucp>; rel="ucp"',
+  ])("keeps an existing UCP link: %s", (existing) => {
+    const headers = applyResponseHeaders(new Request("https://shop.example.com"), {
+      link: existing,
+    });
+
+    expect(headers.get("link")).toBe(existing);
+  });
+
+  it("adds the link once when response headers are applied repeatedly", () => {
+    const context = createTestRequestContext(new Request("https://shop.example.com"));
+    const headers = new Headers();
+
+    context.applyResponseHeaders(headers);
+    context.applyResponseHeaders(headers);
+
+    expect(headers.get("link")).toBe(UCP_PROFILE_LINK);
+  });
+
+  it("does not treat a different relation containing ucp as a UCP link", () => {
+    const existing = '</ucp-docs>; rel="ucp-docs"';
+    const headers = applyResponseHeaders(new Request("https://shop.example.com"), {
+      link: existing,
+    });
+
+    expect(headers.get("link")).toBe(`${existing}, ${UCP_PROFILE_LINK}`);
+  });
+
+  it.each(["https://myshopify.dev", "https://01abc-hydrogen.o2.myshopify.dev/products/hat"])(
+    "does not link responses served from Oxygen deployment host %s",
+    (url) => {
+      const headers = applyResponseHeaders(new Request(url), { "content-type": "text/html" });
+
+      expect(headers.has("link")).toBe(false);
+    },
+  );
+
+  it("does not link responses on an Oxygen deployment host from the forwarded storefront URL", () => {
+    const headers = applyResponseHeaders({
+      headers: new Headers({ "x-storefront-url": "https://preview.myshopify.dev/" }),
+    });
+
+    expect(headers.has("link")).toBe(false);
+  });
+
+  it.each(["https://myshopify.dev.example.com", "https://notmyshopify.dev"])(
+    "links responses served from %s",
+    (url) => {
+      const headers = applyResponseHeaders(new Request(url));
+
+      expect(headers.get("link")).toBe(UCP_PROFILE_LINK);
+    },
+  );
+
+  it("links responses when the storefront URL is unknown", () => {
+    const headers = applyResponseHeaders({ headers: new Headers() });
+
+    expect(headers.get("link")).toBe(UCP_PROFILE_LINK);
+  });
+});
