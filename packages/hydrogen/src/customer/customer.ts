@@ -652,7 +652,11 @@ export function createCustomerAccountClient({
         idToken: id_token,
       });
 
-      return redirect(redirectPath || defaultRedirectPath);
+      // Checked again here because the saved value can predate the
+      // normalization in `login()`.
+      return redirect(
+        getSameOriginPath(redirectPath, httpsOrigin) || defaultRedirectPath,
+      );
     },
     setBuyer,
     getBuyer,
