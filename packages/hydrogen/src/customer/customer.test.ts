@@ -1216,6 +1216,31 @@ describe('customer', () => {
           ).toBe('/account');
         });
       });
+
+      it('Saves the default path and warns for a return_to without a leading slash', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(
+            `https://localhost/account/login?${new URLSearchParams({
+              return_to: 'account/orders',
+            })}`,
+          ),
+          waitUntil: vi.fn(),
+        });
+
+        await customer.login();
+
+        expect(session.set).toHaveBeenCalledWith(
+          CUSTOMER_ACCOUNT_SESSION_KEY,
+          expect.objectContaining({redirectPath: '/account'}),
+        );
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('account/orders'),
+        );
+      });
     });
   });
 
