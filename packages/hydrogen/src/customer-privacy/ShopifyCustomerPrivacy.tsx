@@ -6,6 +6,7 @@ import {
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {useRevalidator} from 'react-router';
 import {loadScript} from '@shopify/hydrogen-react/load-script';
+import {warnOnce} from '../utils/warning';
 
 export type ConsentStatus = boolean | undefined;
 
@@ -230,22 +231,32 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     // Both CDN bundles read this configuration while evaluating their modules.
     // Install it before loading either script, preserving any existing API,
     // consent, tokens, or unrelated Shopify configuration.
-    const shopify = (window.Shopify ??= {});
-    const privacy = (shopify.customerPrivacy ??= {});
-    privacy.config = {
-      ...privacy.config,
-      isHeadless: true,
-      asyncConsent: true,
-      asyncVisitorState: true,
-      consentDomain: config.checkoutRootDomain,
-      storefrontAccessToken: config.storefrontAccessToken,
-      debug: {
-        ...privacy.config?.debug,
-        hydrogen: HYDROGEN_DEBUG_METADATA,
-      },
-    };
-    if (config.country) shopify.country = config.country;
-    if (config.locale) shopify.locale = config.locale.toLowerCase();
+    try {
+      const shopify = (window.Shopify ??= {});
+      const privacy = (shopify.customerPrivacy ??= {});
+      privacy.config = {
+        ...privacy.config,
+        isHeadless: true,
+        asyncConsent: true,
+        asyncVisitorState: true,
+        consentDomain: config.checkoutRootDomain,
+        storefrontAccessToken: config.storefrontAccessToken,
+        debug: {
+          ...privacy.config?.debug,
+          hydrogen: HYDROGEN_DEBUG_METADATA,
+        },
+      };
+      if (config.country) shopify.country = config.country;
+      if (config.locale) shopify.locale = config.locale.toLowerCase();
+    } catch {
+      // A browser extension or another script can lock `window.Shopify`
+      // (#3575). Without this configuration the CDN bundles cannot run in
+      // headless mode, so skip loading them rather than crash the page.
+      warnOnce(
+        '[h2:warn:useCustomerPrivacy] Could not configure `window.Shopify.customerPrivacy`, likely because a browser extension or another script locked `window.Shopify`. The Customer Privacy API will not load.',
+      );
+      return;
+    }
 
     const updateTrackingValues = () => {
       const latest = getTrackingValues();
