@@ -1,22 +1,26 @@
-export function getRedirectUrl(requestUrl?: string): string | undefined {
+/**
+ * Returns the `return_to` or `redirect` search param of `requestUrl`, normalized
+ * by `getSameOriginPath`. `origin` defaults to the origin of `requestUrl`.
+ */
+export function getRedirectUrl(
+  requestUrl?: string,
+  origin?: string,
+): string | undefined {
   if (!requestUrl) return;
 
-  const {pathname, search} = new URL(requestUrl);
-  const redirectFrom = pathname + search;
-
-  const searchParams = new URLSearchParams(search);
+  const url = new URL(requestUrl);
   const redirectTo =
-    searchParams.get('return_to') || searchParams.get('redirect');
+    url.searchParams.get('return_to') || url.searchParams.get('redirect');
+  if (!redirectTo) return;
 
-  if (redirectTo) {
-    if (isLocalPath(requestUrl, redirectTo)) {
-      return redirectTo;
-    } else {
-      console.warn(
-        `Cross-domain redirects are not supported. Tried to redirect from ${redirectFrom} to ${redirectTo}`,
-      );
-    }
+  const redirectPath = getSameOriginPath(redirectTo, origin ?? url.origin);
+  if (!redirectPath) {
+    console.warn(
+      `Cross-domain redirects are not supported. Tried to redirect from ${url.pathname}${url.search} to ${redirectTo}`,
+    );
   }
+
+  return redirectPath;
 }
 
 /**
