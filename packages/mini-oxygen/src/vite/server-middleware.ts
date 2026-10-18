@@ -121,7 +121,7 @@ export function startMiniOxygenRuntime({
           ...env,
           __VITE_RUNTIME_EXECUTE_URL: workerEntryFile,
           __VITE_WARMUP_PATHNAME: WARMUP_PATHNAME,
-        } satisfies OnlyBindings<ViteEnv>,
+        } satisfies Omit<OnlyBindings<ViteEnv>, '__VITE_RUNNER_OBJECT'>,
         unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
         wrappedBindings: {__VITE_SETUP_ENV: 'setup-environment'},
         ...(compatibilityDate && {compatibilityDate}),

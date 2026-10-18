@@ -9,6 +9,7 @@ import {
   type SharedOptions,
   type CORE_PLUGIN,
   type MiniflareOptions as OutputMiniflareOptions,
+  type WorkerOptions,
 } from 'miniflare';
 import {createInspectorConnector} from './inspector.js';
 import {
@@ -64,7 +65,10 @@ type AssetOptions =
 type InputMiniflareOptions = Omit<SharedOptions, 'cf'> & {
   // Miniflare supports other type of options for D1, DO, KV, etc.
   // This is the only shape we support in MiniOxygen:
-  workers: Array<typeof CORE_PLUGIN.options._output & {name: string}>;
+  workers: Array<
+    typeof CORE_PLUGIN.options._output &
+      Pick<WorkerOptions, 'durableObjects'> & {name: string}
+  >;
 };
 
 type ReloadableOptions = Pick<MiniOxygenOptions, 'workers'>;

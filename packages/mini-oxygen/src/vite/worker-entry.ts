@@ -14,16 +14,13 @@ import {
   type ModuleRunnerContext,
 } from 'vite/module-runner';
 import type {HotPayload} from 'vite';
-import type {Response} from 'miniflare';
 import {withRequestHook} from '../worker/handler.js';
 
 export interface ViteEnv {
   __VITE_INVOKE_MODULE: {fetch: typeof fetch};
-  __VITE_RUNNER_OBJECT__: {
-    get(id: string): {
-      importModule(moduleId: string, callbackId: number): Promise<void>;
-      executeCallback(callbackId: number): Promise<void>;
-    };
+  __VITE_RUNNER_OBJECT: {
+    idFromName(name: string): unknown;
+    get(id: unknown): {fetch(request: Request): Promise<globalThis.Response>};
   };
   __VITE_RUNTIME_EXECUTE_URL: string;
   __VITE_WARMUP_PATHNAME: string;
@@ -127,13 +124,14 @@ function fetchEntryModule(env: ViteEnv) {
 
 async function importFromRunnerObject(env: ViteEnv, moduleId: string) {
   const callbackId = nextCallbackId++;
-  await env.__VITE_RUNNER_OBJECT__
-    .get('singleton')
-    .importModule(moduleId, callbackId);
 
-  const result = callbackResults.get(callbackId);
-  callbackResults.delete(callbackId);
-  return result;
+  try {
+    await callRunnerObject(env, 'importModule', [moduleId, callbackId]);
+
+    return callbackResults.get(callbackId);
+  } finally {
+    callbackResults.delete(callbackId);
+  }
 }
 
 async function runInRunnerObject(
@@ -144,14 +142,37 @@ async function runInRunnerObject(
   pendingCallbacks.set(callbackId, callback);
 
   try {
-    await env.__VITE_RUNNER_OBJECT__
-      .get('singleton')
-      .executeCallback(callbackId);
+    await callRunnerObject(env, 'executeCallback', [callbackId]);
 
     return callbackResults.get(callbackId);
   } finally {
     pendingCallbacks.delete(callbackId);
     callbackResults.delete(callbackId);
+  }
+}
+
+async function callRunnerObject(
+  env: ViteEnv,
+  method: 'importModule' | 'executeCallback',
+  args: unknown[],
+) {
+  const id = env.__VITE_RUNNER_OBJECT.idFromName('singleton');
+  const response = await env.__VITE_RUNNER_OBJECT.get(id).fetch(
+    new Request(`http://mini-oxygen/${method}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(args),
+    }),
+  );
+
+  if (!response.ok) {
+    const error = (await response.json()) as {
+      message: string;
+      stack?: string;
+    };
+    const wrappedError = new Error(error.message);
+    if (error.stack) wrappedError.stack = error.stack;
+    throw wrappedError;
   }
 }
 
@@ -162,9 +183,36 @@ async function runInRunnerObject(
  */
 export class ViteModuleRunnerObject {
   constructor(
-    _state: DurableObjectState,
+    _state: unknown,
     private env: ViteEnv,
   ) {}
+
+  async fetch(request: Request) {
+    const {pathname} = new URL(request.url);
+    const args = (await request.json()) as unknown[];
+
+    try {
+      if (pathname === '/importModule') {
+        await this.importModule(args[0] as string, args[1] as number);
+      } else if (pathname === '/executeCallback') {
+        await this.executeCallback(args[0] as number);
+      } else {
+        return new globalThis.Response('Not found', {status: 404});
+      }
+
+      return new globalThis.Response(null);
+    } catch (error) {
+      const wrappedError =
+        error instanceof Error ? error : new Error(String(error));
+      return new globalThis.Response(
+        JSON.stringify({
+          message: wrappedError.message,
+          stack: wrappedError.stack,
+        }),
+        {status: 500, headers: {'Content-Type': 'application/json'}},
+      );
+    }
+  }
 
   async importModule(moduleId: string, callbackId: number) {
     if (!runtime) {
