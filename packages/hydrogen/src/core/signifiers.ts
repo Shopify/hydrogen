@@ -82,6 +82,7 @@ function escapeCssString(value: string): string {
 
 /**
  * Returns a CSS selector for the named signifier. Each given state field narrows the match.
+ * Omit a field to match any value. An explicitly undefined schema field throws a TypeError.
  *
  * @publicDocs
  */
@@ -89,6 +90,11 @@ export function signifierSelector<TestId extends SignifierTestId>(
   testId: TestId,
   state: Partial<SignifierStates[TestId]> = {},
 ): string {
+  for (const key of keysOf(SIGNIFIER_SCHEMA[testId])) {
+    if (key in state && state[key] === undefined) {
+      throw new TypeError(`Signifier "${testId}" field "${key}" is undefined.`);
+    }
+  }
   return toAttributeEntries(testId, state)
     .map(([attribute, value]) => `[${attribute}="${escapeCssString(value)}"]`)
     .join("");

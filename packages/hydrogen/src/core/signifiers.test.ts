@@ -69,10 +69,36 @@ describe("signifiers", () => {
       '[data-shopify-testid="product-add-to-cart"][data-shopify-available-for-sale="false"]',
     );
     expect(
+      signifierSelector("product-add-to-cart", { variantId: "", availableForSale: false }),
+    ).toBe(
+      '[data-shopify-testid="product-add-to-cart"][data-shopify-variant-id=""][data-shopify-available-for-sale="false"]',
+    );
+    expect(
       signifierSelector("product-add-to-cart", { variantId: "v-1", availableForSale: true }),
     ).toBe(
       '[data-shopify-testid="product-add-to-cart"][data-shopify-variant-id="v-1"][data-shopify-available-for-sale="true"]',
     );
+  });
+
+  it.each([
+    ["variantId", { variantId: undefined }],
+    ["availableForSale", { availableForSale: undefined }],
+  ] as const)("rejects explicitly undefined selector field %s", (field, state) => {
+    expect(() => signifierSelector("product-add-to-cart", state)).toThrow(
+      new TypeError(`Signifier "product-add-to-cart" field "${field}" is undefined.`),
+    );
+  });
+
+  it("omits undefined string signifier state fields at runtime", () => {
+    const state = { variantId: undefined, availableForSale: false } as unknown as {
+      variantId: string;
+      availableForSale: boolean;
+    };
+
+    expect(signifier("product-add-to-cart", state)).toEqual({
+      "data-shopify-testid": "product-add-to-cart",
+      "data-shopify-available-for-sale": "false",
+    });
   });
 
   it("escapes quotes, backslashes, newlines, and control characters in selector values", () => {
