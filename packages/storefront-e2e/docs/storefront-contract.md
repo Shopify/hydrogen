@@ -78,11 +78,14 @@ Accessible labels are preferred. Broad data-testid attributes should only be use
 
 Some controls use a standard signifier: a `data-shopify-testid` attribute with the signifier name, plus `data-shopify-variant-id` and `data-shopify-available-for-sale` state attributes. Signifiers are present in production too. Use `signifier()` or a Hydrogen form binding to write them. Do not write them by hand. See [ADR 0001](adr/0001-standard-signifiers.md) for the design.
 
-The suite finds a signifier like this:
+The suite finds a signifier action target like this:
 
-- One visible match among several attached matches wins.
-- If no match is visible, exactly one attached match wins. A visually hidden control is usable.
-- More than one visible match, or more than one hidden match with no visible match, fails as ambiguous.
+- A match has the requested signifier and the state that the test supplies.
+- The first visible match in DOM order is the target. More than one visible match is allowed, for example a main and a sticky button. The suite acts on the target only. It does not test each copy.
+- If no match is visible, the suite waits for the normal timeout. It does not select a hidden match solely because it is attached. At the timeout, the check fails as missing when no match is attached, or as not visible when matches are attached but none is visible. The error reports the attached and visible counts.
+- Playwright actionability checks still apply. The suite does not force the action or retry a failed action on another match.
+
+Presence and removal checks use all attached matches. If a control appears only after a step, such as opening a drawer, the test does that step first. Visibility uses Playwright's definition, so a clipped visually hidden control can count as visible. An action on a hidden native control needs a separate, defined strategy.
 
 The minimum Hydrogen version with signifiers is not released yet.
 
@@ -92,12 +95,12 @@ The add-to-cart submit control on product detail pages.
 
 State: `variantId` (string) and `availableForSale` (boolean). Both are required. When no variant is selected, the state is `variantId: ''` and `availableForSale: false` (boolean). The DOM then has `data-shopify-variant-id=""` and `data-shopify-available-for-sale="false"` (string).
 
-Fix a missing or ambiguous signifier:
+Fix a missing or not-visible signifier:
 
 - With Hydrogen form bindings: spread `register('addToCart', {})` on the control. It adds live attributes.
 - Without bindings: spread `signifier('product-add-to-cart', { variantId, availableForSale })` from `@shopify/hydrogen` on the control.
 - If a wrapper component renders the control, make sure it forwards props to the rendered element.
-- Keep only one visible add-to-cart control per product page.
+- If the error says matches are attached but not visible, make sure a matching control is visible on the product page.
 - If a query finds no matching signifier, check that existing attributes match its state filters, such as `availableForSale: true`.
 
 ## Checkout Handoff

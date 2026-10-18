@@ -3,7 +3,7 @@ name: hydrogen-signifiers
 description: >
   Guide for standard signifiers in Hydrogen storefronts. Use when adding,
   checking, or debugging `data-shopify-testid` attributes on storefront controls, or when
-  a storefront E2E check reports a missing or ambiguous signifier.
+  a storefront E2E check reports a missing or not-visible signifier.
 ---
 
 # Standard Signifiers
@@ -37,7 +37,8 @@ Labels, roles, and link paths change when copy or markup changes. Signifiers giv
 - Use `signifierSelector(testId, partialState)` to find elements. Do not build selectors by hand.
 - Give all required state fields. TypeScript tells you which fields are required.
 - If a wrapper component renders the control, make sure the wrapper forwards props to the rendered element. A wrapper can drop props, and then the signifier is missing.
-- Put one signifier on one element. In the scope that a test searches, do not render two visible elements that match the state the test supplies. Hidden copies are allowed. For example, two visible buttons with different variant IDs both match `{ availableForSale: true }` when both variants are available for sale.
+- Put one signifier on one element. More than one visible element can match the state that a test supplies, for example a main and a sticky add-to-cart button. The test acts on the first visible match in DOM order. It does not test each copy, so make sure each copy works.
+- A test acts only on a visible match. It does not use a hidden copy. If the control appears only after a step, such as opening a drawer, the test must do that step first.
 
 ## Entries
 
@@ -86,4 +87,5 @@ Use `''` for `variantId` and `false` for `availableForSale` when no variant is s
 ## Troubleshooting
 
 - **Missing signifier**: Make sure the control uses `register('addToCart', {})` or `signifier('product-add-to-cart', ...)`. Then make sure each wrapper component forwards props to the rendered element. A wrapper can drop props. The attributes can exist but not match the requested state, for example `availableForSale: false` when the test asks for `availableForSale: true`, so check the selected variant state, not only the markup.
-- **Ambiguous signifier**: In the searched scope, more than one visible element matches the signifier and the supplied state. Or no element is visible and more than one hidden element matches. One visible match plus hidden copies is not ambiguous. Elements with different state can all match a partial state. Keep one visible matching control in the scope, or remove the extra copy.
+- **Signifier not visible**: One or more elements match the signifier and the supplied state, but none is visible before the timeout. The error reports the attached and visible counts. Make sure a matching control is visible on the page. If the control is inside a closed drawer or a collapsed section, open it first. A hidden native control needs a separate test strategy.
+- **Wrong control used**: When more than one visible element matches, the test acts on the first one in DOM order. Elements with different state can all match a partial state. Narrow the search scope or supply the relevant state fields to target the intended control.

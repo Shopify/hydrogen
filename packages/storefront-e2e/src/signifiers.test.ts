@@ -1,10 +1,9 @@
-import type { Locator, Page } from "@playwright/test";
+import { errors, type Locator, type Page } from "@playwright/test";
 import { signifierSelector } from "@shopify/hydrogen";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { CONTRACT_DOC_PATH, StorefrontContractError } from "./contract";
 import { locateSignifier, requireSignifier } from "./signifiers";
-import { EXPECT_TIMEOUT_MS } from "./timeouts";
 
 type FakeElement = {
   readonly id: string;
@@ -18,6 +17,8 @@ type FakeDom = {
   url: string;
   readonly selectors: string[];
   onCount?: () => void;
+  // Replaces the default waitFor stub. The native waiter belongs to Playwright.
+  waitFor?: () => Promise<void>;
 };
 
 // Supports only the attribute selectors that signifierSelector() returns.
@@ -50,6 +51,16 @@ class FakeLocator {
   filter(options: { readonly visible?: boolean }): FakeLocator {
     if (options.visible !== true) throw new Error("Fake locator supports only visible: true");
     return new FakeLocator(this.dom, () => this.resolve().filter((element) => element.visible));
+  }
+
+  first(): FakeLocator {
+    return new FakeLocator(this.dom, () => this.resolve().slice(0, 1));
+  }
+
+  // Default stub: resolves when the locator matches now, else fails like a Playwright timeout.
+  async waitFor(): Promise<void> {
+    if (this.dom.waitFor !== undefined) return this.dom.waitFor();
+    if (this.resolve().length === 0) throw new errors.TimeoutError("locator.waitFor: Timeout");
   }
 
   async count(): Promise<number> {
@@ -108,19 +119,8 @@ function addToCart(
   };
 }
 
-async function settle<T>(promise: Promise<T>): Promise<T> {
-  const settled = promise.then(
-    (value) => ({ value }),
-    (error: unknown) => ({ error }),
-  );
-  await vi.advanceTimersByTimeAsync(EXPECT_TIMEOUT_MS + 1_000);
-  const result = await settled;
-  if ("error" in result) throw result.error;
-  return result.value;
-}
-
 async function contractErrorFrom(promise: Promise<unknown>): Promise<StorefrontContractError> {
-  const error = await settle(promise).then(
+  const error = await promise.then(
     () => undefined,
     (reason: unknown) => reason,
   );
@@ -129,14 +129,6 @@ async function contractErrorFrom(promise: Promise<unknown>): Promise<StorefrontC
   }
   return error;
 }
-
-beforeEach(() => {
-  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date", "performance"] });
-});
-
-afterEach(() => {
-  vi.useRealTimers();
-});
 
 describe("locateSignifier", () => {
   it("builds the locator only from signifierSelector", () => {
@@ -148,53 +140,56 @@ describe("locateSignifier", () => {
       signifierSelector("product-add-to-cart", { availableForSale: true }),
     ]);
   });
+
+  it("returns every attached match, also hidden ones, so absence checks see them", () => {
+    const dom = createDom([
+      addToCart("hidden", { visible: false }),
+      addToCart("shown", { visible: true }),
+      addToCart("sold-out", { visible: true, availableForSale: false }),
+    ]);
+
+    const locator = locateSignifier(asPage(dom), "product-add-to-cart", { availableForSale: true });
+
+    expect(idsOf(locator)).toEqual(["hidden", "shown"]);
+  });
 });
 
 describe("requireSignifier", () => {
-  it("returns the only attached element when it is visually hidden", async () => {
-    const dom = createDom([addToCart("1", { visible: false })]);
+  it("returns the first visible element when more than one is visible", async () => {
+    const dom = createDom([
+      addToCart("hidden", { visible: false }),
+      addToCart("shown-a", { visible: true }),
+      addToCart("shown-b", { visible: true }),
+    ]);
 
-    const locator = await settle(requireSignifier(asPage(dom), "product-add-to-cart"));
+    const locator = await requireSignifier(asPage(dom), "product-add-to-cart");
 
-    expect(idsOf(locator)).toEqual(["1"]);
+    expect(idsOf(locator)).toEqual(["shown-a"]);
   });
 
-  it("returns the unique visible element among hidden copies", async () => {
+  it("returns the visible element among hidden copies", async () => {
     const dom = createDom([
       addToCart("hidden-a", { visible: false }),
       addToCart("shown", { visible: true }),
       addToCart("hidden-b", { visible: false }),
     ]);
 
-    const locator = await settle(requireSignifier(asPage(dom), "product-add-to-cart"));
+    const locator = await requireSignifier(asPage(dom), "product-add-to-cart");
 
     expect(idsOf(locator)).toEqual(["shown"]);
   });
 
-  it("narrows matches by state before it checks for ambiguity", async () => {
+  it("narrows matches by state before it picks the first visible element", async () => {
     const dom = createDom([
       addToCart("sold-out", { visible: true, availableForSale: false }),
       addToCart("in-stock", { visible: true, availableForSale: true }),
     ]);
 
-    const locator = await settle(
-      requireSignifier(asPage(dom), "product-add-to-cart", { availableForSale: true }),
-    );
+    const locator = await requireSignifier(asPage(dom), "product-add-to-cart", {
+      availableForSale: true,
+    });
 
     expect(idsOf(locator)).toEqual(["in-stock"]);
-  });
-
-  it("waits for an element that is attached late", async () => {
-    const dom = createDom();
-    let countCalls = 0;
-    dom.onCount = () => {
-      countCalls += 1;
-      if (countCalls === 5) dom.elements.push(addToCart("late", { visible: true }));
-    };
-
-    const locator = await settle(requireSignifier(asPage(dom), "product-add-to-cart"));
-
-    expect(idsOf(locator)).toEqual(["late"]);
   });
 
   it("searches only inside a locator scope and reports the page route", async () => {
@@ -209,7 +204,7 @@ describe("requireSignifier", () => {
     ]);
     const scope = new FakePage(dom).locator('[role="dialog"]') as unknown as Locator;
 
-    const locator = await settle(requireSignifier(scope, "product-add-to-cart"));
+    const locator = await requireSignifier(scope, "product-add-to-cart");
     expect(idsOf(locator)).toEqual(["inside"]);
 
     const error = await contractErrorFrom(
@@ -232,6 +227,7 @@ describe("requireSignifier", () => {
       attachedCount: 0,
       visibleCount: 0,
     });
+    expect(error.cause).toBeInstanceOf(errors.TimeoutError);
     expect(error.routePath).toBe("/products/shirt?Size=M");
     expect(error.docsAnchor).toBe("#product-add-to-cart");
     expect(error.message).toContain("Missing storefront e2e signifier: product-add-to-cart");
@@ -245,40 +241,52 @@ describe("requireSignifier", () => {
 
   it.each([
     {
-      name: "more than one visible element",
-      elements: [
-        addToCart("a", { visible: true }),
-        addToCart("b", { visible: true }),
-        addToCart("c", { visible: false }),
-      ],
-      attachedCount: 3,
-      visibleCount: 2,
+      name: "one hidden element",
+      elements: [addToCart("a", { visible: false })],
+      attachedCount: 1,
     },
     {
       name: "more than one hidden element",
       elements: [addToCart("a", { visible: false }), addToCart("b", { visible: false })],
       attachedCount: 2,
-      visibleCount: 0,
     },
-  ])("reports $name as ambiguous", async ({ elements, attachedCount, visibleCount }) => {
-    const dom = createDom(elements);
+  ])(
+    "reports $name as not visible when the wait times out",
+    async ({ elements, attachedCount }) => {
+      const dom = createDom(elements);
+      const timeout = new errors.TimeoutError("locator.waitFor: Timeout");
+      dom.waitFor = () => Promise.reject(timeout);
 
-    const error = await contractErrorFrom(requireSignifier(asPage(dom), "product-add-to-cart"));
+      const error = await contractErrorFrom(requireSignifier(asPage(dom), "product-add-to-cart"));
 
-    expect(error.signifier).toMatchObject({ problem: "ambiguous", attachedCount, visibleCount });
-    expect(error.message).toContain("Ambiguous storefront e2e signifier: product-add-to-cart");
-    expect(error.message).toContain(`Found: ${attachedCount} attached, ${visibleCount} visible`);
+      expect(error.cause).toBe(timeout);
+      expect(error.signifier).toMatchObject({
+        problem: "not-visible",
+        attachedCount,
+        visibleCount: 0,
+      });
+      expect(error.message).toContain("Storefront e2e signifier not visible: product-add-to-cart");
+      expect(error.message).toContain(`Found: ${attachedCount} attached, 0 visible`);
+      expect(error.message).toContain("Open the UI that contains it");
+      expect(error.message).not.toMatch(/more than one|only one/i);
+    },
+  );
+
+  it("rethrows a browser failure from the wait without a contract error", async () => {
+    const dom = createDom();
+    const failure = new Error("Target page, context or browser has been closed");
+    dom.waitFor = () => Promise.reject(failure);
+
+    await expect(requireSignifier(asPage(dom), "product-add-to-cart")).rejects.toBe(failure);
   });
 
-  it("rethrows an unrelated count failure without a contract error", async () => {
+  it("rethrows a count failure after a timeout without a contract error", async () => {
     const dom = createDom();
     const failure = new Error("Target page, context or browser has been closed");
     dom.onCount = () => {
       throw failure;
     };
 
-    await expect(settle(requireSignifier(asPage(dom), "product-add-to-cart"))).rejects.toBe(
-      failure,
-    );
+    await expect(requireSignifier(asPage(dom), "product-add-to-cart")).rejects.toBe(failure);
   });
 });

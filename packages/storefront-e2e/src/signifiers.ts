@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import { errors, type Locator, type Page } from "@playwright/test";
 import { signifierSelector, type SignifierStates } from "@shopify/hydrogen";
 
 import { createContractError, type SignifierProblem, type SignifierTestId } from "./contract";
@@ -12,11 +12,9 @@ type MatchCounts = {
   readonly visible: number;
 };
 
-type MatchResolution = "visible" | "attached" | SignifierProblem;
-
 /**
- * Returns a locator for every element with the signifier inside `scope`.
- * State fields narrow the match. The selector comes only from Hydrogen.
+ * Returns a locator for every attached element with the signifier inside `scope`,
+ * visible or not. State fields narrow the match. The selector comes only from Hydrogen.
  */
 export function locateSignifier<TestId extends SignifierTestId>(
   scope: SignifierScope,
@@ -27,12 +25,12 @@ export function locateSignifier<TestId extends SignifierTestId>(
 }
 
 /**
- * Waits for exactly one usable element with the signifier.
+ * Waits for a visible element with the signifier and returns a live locator for the
+ * first visible match in DOM order. Playwright actions do their usual checks.
  *
- * - One visible element wins, also when hidden copies are attached.
- * - With no visible element, exactly one attached element wins.
- * - More than one visible element, or more than one hidden element, is ambiguous.
- * - No attached element is missing.
+ * - One or more visible elements: returns the first visible element.
+ * - No visible element at the timeout and no attached element: fails as missing.
+ * - No visible element at the timeout but attached elements: fails as not visible.
  */
 export async function requireSignifier<TestId extends SignifierTestId>(
   scope: SignifierScope,
@@ -41,49 +39,17 @@ export async function requireSignifier<TestId extends SignifierTestId>(
 ): Promise<Locator> {
   const all = locateSignifier(scope, testId, state);
   const visible = all.filter({ visible: true });
-  let counts: MatchCounts = { attached: 0, visible: 0 };
-  let countFailure: { readonly error: unknown } | undefined;
+  const target = visible.first();
 
   try {
-    await expect
-      .poll(
-        async () => {
-          try {
-            counts = { attached: await all.count(), visible: await visible.count() };
-          } catch (error) {
-            countFailure = { error };
-            return "count-failed";
-          }
-          return isResolved(resolveMatch(counts)) ? "resolved" : "pending";
-        },
-        {
-          message: `Waiting for one resolvable "${testId}" signifier.`,
-          timeout: EXPECT_TIMEOUT_MS,
-        },
-      )
-      .not.toBe("pending");
-  } catch (pollError) {
-    throw signifierError(scope, testId, state, counts, { cause: pollError });
+    await target.waitFor({ state: "visible", timeout: EXPECT_TIMEOUT_MS });
+  } catch (waitError) {
+    if (!(waitError instanceof errors.TimeoutError)) throw waitError;
+    const counts: MatchCounts = { attached: await all.count(), visible: await visible.count() };
+    throw signifierError(scope, testId, state, counts, { cause: waitError });
   }
 
-  if (countFailure !== undefined) throw countFailure.error;
-
-  const resolution = resolveMatch(counts);
-  if (resolution === "visible") return visible;
-  if (resolution === "attached") return all;
-  throw signifierError(scope, testId, state, counts);
-}
-
-function resolveMatch(counts: MatchCounts): MatchResolution {
-  if (counts.visible === 1) return "visible";
-  if (counts.visible > 1) return "ambiguous";
-  if (counts.attached === 1) return "attached";
-  if (counts.attached > 1) return "ambiguous";
-  return "missing";
-}
-
-function isResolved(resolution: MatchResolution): boolean {
-  return resolution === "visible" || resolution === "attached";
+  return target;
 }
 
 function signifierError(
@@ -94,21 +60,17 @@ function signifierError(
   options?: ErrorOptions,
 ): Error {
   const remediation = SIGNIFIER_REMEDIATION[testId];
-  const resolution = resolveMatch(counts);
-  const problem: SignifierProblem = resolution === "ambiguous" ? "ambiguous" : "missing";
+  const problem: SignifierProblem = counts.attached === 0 ? "missing" : "not-visible";
 
   return createContractError(
     {
       capability: remediation.capability,
       routePath: routePathOf(scope),
-      expectation:
-        problem === "missing"
-          ? `An element with the "${testId}" signifier is attached within ${EXPECT_TIMEOUT_MS}ms.`
-          : `Exactly one visible element, or exactly one attached element when none is visible, has the "${testId}" signifier.`,
+      expectation: `At least one visible element with the "${testId}" signifier appears within ${EXPECT_TIMEOUT_MS}ms.`,
       likelyFix:
         problem === "missing"
           ? "Add the signifier to the control with a Hydrogen form binding or signifier()."
-          : "Keep only one visible control with this signifier on the page.",
+          : "Make the control with this signifier visible before the test uses it. Open the UI that contains it, or put the signifier on the control that is visible.",
       docsAnchor: remediation.docsAnchor,
       signifier: {
         name: testId,

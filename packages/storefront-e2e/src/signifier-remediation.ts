@@ -27,7 +27,7 @@ export const SIGNIFIER_REMEDIATION = {
     minimumHydrogenVersion: "unreleased",
     commonCauses: [
       "A wrapper component renders the control but does not forward props to the rendered element.",
-      "More than one visible add-to-cart control is rendered on the product page.",
+      "The matching control is hidden, or its containing drawer or panel is closed.",
       "The signifier attributes exist but do not match the requested state, for example data-shopify-available-for-sale is false when the query asks for true, or the variant ID is stale.",
     ],
     docsAnchor: "#product-add-to-cart",

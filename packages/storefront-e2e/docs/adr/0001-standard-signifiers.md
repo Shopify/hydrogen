@@ -95,14 +95,14 @@ A storefront that does not use the Hydrogen form bindings spreads the helper on 
 ### Runner
 
 - The runner module `src/signifiers.ts` in this package exports the `locateSignifier` and `requireSignifier` helpers. These helpers build all signifier locators through `signifierSelector`. They do not build selectors by hand.
-- Match rules use attached elements:
-  - If one element among several matches is visible, that element wins.
-  - If no element is visible and exactly one is attached, that element wins. A visually hidden (`sr-only`) control is usable.
-  - If more than one element is visible, or no element is visible and more than one is attached, the runner reports a structured ambiguity error.
-- Missing and ambiguity errors name the signifier and the route. They give the binding fix and the non-binding fix. They also name a possible cause: a wrapper component that does not forward props to the rendered element.
+- Match rules:
+  - The first visible match in DOM order wins.
+  - If no match is visible, wait until timeout. Report missing if no matches are attached, or not-visible otherwise.
+- `locateSignifier` returns all attached matches for presence and removal assertions.
+- Missing and not-visible errors name the signifier and the route. They give the binding fix and the non-binding fix. They also name a possible cause: a wrapper component that does not forward props to the rendered element.
 - Errors link to [the contract entry](../storefront-contract.md#product-add-to-cart).
 
-Visibility uses Playwright's definition. A clipped, one-pixel `sr-only` element can count as visible. A single such element resolves; it does not get an exemption from the ambiguity rule.
+Visibility uses Playwright's definition. A clipped, one-pixel `sr-only` element can count as visible.
 
 ### Minimum Hydrogen version
 

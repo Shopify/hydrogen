@@ -18,7 +18,7 @@ export type ContractCapability = (typeof CONTRACT_CAPABILITIES)[number];
 
 export type SignifierTestId = keyof SignifierStates;
 
-export type SignifierProblem = "missing" | "ambiguous";
+export type SignifierProblem = "missing" | "not-visible";
 
 export type ContractSignifierDetails = {
   readonly name: SignifierTestId;
@@ -82,9 +82,12 @@ function formatContractError(input: ContractErrorInput): string {
     ].join("\n");
   }
 
-  const problemLabel = signifier.problem === "missing" ? "Missing" : "Ambiguous";
+  const headline =
+    signifier.problem === "missing"
+      ? `Missing storefront e2e signifier: ${signifier.name}`
+      : `Storefront e2e signifier not visible: ${signifier.name}`;
   return [
-    `${problemLabel} storefront e2e signifier: ${signifier.name}`,
+    headline,
     `Capability: ${input.capability}`,
     `Route/page: ${input.routePath}`,
     `Signifier: ${signifier.name} ${JSON.stringify(signifier.state)}`,
