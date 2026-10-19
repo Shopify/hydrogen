@@ -5605,7 +5605,8 @@ describe("multi-line update and remove events", () => {
         outcome: "succeeds" | "fails",
         refreshed: Array<{ id: string; quantity: number }>,
       ) => {
-        if (outcome === "succeeds") refresh.resolve(serverCart(9, refreshed));
+        const total = refreshed.reduce((sum, line) => sum + line.quantity, 0);
+        if (outcome === "succeeds") refresh.resolve(serverCart(total, refreshed));
         else refresh.reject(new Error("Refresh failed"));
         await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
       };
@@ -5644,6 +5645,8 @@ describe("multi-line update and remove events", () => {
           await settleRefresh(refresh, outcome, refreshed);
           if (outcome === "succeeds") {
             expect(lines()).toEqual(refreshed);
+            expect(store.getState().data.totalQuantity).toBe(9);
+            expect(store.getState().data.cost.totalAmount.amount).toBe("90");
             expect(lineCost(renamed("line-a"))).toBe("50");
             expect(store.getState().errors.network).toHaveLength(0);
           } else {
@@ -5699,6 +5702,8 @@ describe("multi-line update and remove events", () => {
           await settleRefresh(refresh, outcome, refreshed);
           if (outcome === "succeeds") {
             expect(lines()).toEqual(refreshed);
+            expect(store.getState().data.totalQuantity).toBe(11);
+            expect(store.getState().data.cost.totalAmount.amount).toBe("110");
           } else {
             expect(lines()).toEqual(settledLines);
           }
