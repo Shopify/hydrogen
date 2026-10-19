@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - 2026-04
+  merge_group:
+    branches:
+      - 2026-04
 
 jobs:
   check-node-version:
