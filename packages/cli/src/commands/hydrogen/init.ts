@@ -1,3 +1,10 @@
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {
+  commandEventOutputMode,
+  runWithCommandEventsForCommand,
+} from '@shopify/cli-kit/node/command-events';
+import {withJsonConsole} from '../../lib/json-output.js';
+import {initJsonOutputSchema} from '../../lib/onboarding/types.js';
 import Command from '../../lib/hydrogen-command.js';
 import {Flags} from '@oclif/core';
 import {AbortError} from '@shopify/cli-kit/node/error';
@@ -19,9 +26,14 @@ import {LANGUAGES} from '../../lib/onboarding/common.js';
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
 export default class Init extends Command {
+  static get jsonOutputSchema(): typeof initJsonOutputSchema {
+    return initJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown = 'Creates a new Hydrogen storefront.';
-  static description = 'Creates a new Hydrogen storefront.';
+  static description = this.descriptionForHelp();
   static flags = {
+    ...jsonFlag,
     ...commonFlags.force,
     path: Flags.string({
       description: 'The path to the directory of the new Hydrogen storefront.',
@@ -71,6 +83,15 @@ export default class Init extends Command {
 }
 
 export async function runInit(
+  options?: InitOptions & {markets?: InitOptions['i18n']},
+) {
+  const execute = () => withJsonConsole(() => executeInit(options));
+  return commandEventOutputMode()
+    ? execute()
+    : runWithCommandEventsForCommand(process.argv.slice(2), execute);
+}
+
+async function executeInit(
   {
     markets,
     ...options

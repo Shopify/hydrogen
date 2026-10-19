@@ -1,3 +1,9 @@
+import {writeJsonResult} from '../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {
+  listJsonOutputSchema,
+  toListResult,
+} from '../../lib/storefronts/types.js';
 import Command from '../../lib/hydrogen-command.js';
 import {pluralize} from '@shopify/cli-kit/common/string';
 import colors from '@shopify/cli-kit/node/colors';
@@ -19,19 +25,23 @@ import {login} from '../../lib/auth.js';
 import {getCliCommand} from '../../lib/shell.js';
 
 export default class List extends Command {
+  static get jsonOutputSchema(): typeof listJsonOutputSchema {
+    return listJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown =
     'Lists all remote Hydrogen storefronts available to link to your local development environment.';
 
-  static description =
-    'Returns a list of Hydrogen storefronts available on a given shop.';
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(List);
-    await runList(flags);
+    await runList(flags, flags.json);
   }
 }
 
@@ -39,18 +49,32 @@ interface Flags {
   path?: string;
 }
 
-export async function runList({path: root = process.cwd()}: Flags) {
+export async function listStorefronts({path: root = process.cwd()}: Flags) {
   const {session} = await login(root);
 
   const storefronts = await getStorefrontsWithDeployment(session);
 
+  return {shop: session.storeFqdn, storefronts};
+}
+
+export async function runList(options: Flags, json?: boolean) {
+  const result = await listStorefronts(options);
+  if (!writeJsonResult(listJsonOutputSchema, toListResult(result), json))
+    await renderStorefronts(result, options.path);
+  return result;
+}
+
+async function renderStorefronts(
+  {shop, storefronts}: {shop: string; storefronts: HydrogenStorefront[]},
+  root?: string,
+) {
   if (storefronts.length > 0) {
     outputNewline();
 
     outputInfo(
       pluralizedStorefronts({
         storefronts,
-        shop: session.storeFqdn,
+        shop,
       }).toString(),
     );
 
@@ -84,10 +108,10 @@ export async function runList({path: root = process.cwd()}: Flags) {
       headline: 'Hydrogen storefronts',
       body: 'There are no Hydrogen storefronts on your Shop.',
       nextSteps: [
-        `Ensure you are logged in to the correct shop (currently: ${session.storeFqdn})`,
+        `Ensure you are logged in to the correct shop (currently: ${shop})`,
         `Create a new Hydrogen storefront: Run \`${await getCliCommand(
           root,
-        )} link\` or visit ${newHydrogenStorefrontUrl(session)}`,
+        )} link\` or visit ${newHydrogenStorefrontUrl({storeFqdn: shop})}`,
       ],
     });
   }
