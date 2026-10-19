@@ -9,7 +9,7 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
-import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
+import {isTTY, renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 
 import {type AdminSession, login} from '../../../lib/auth.js';
 import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environments.js';
@@ -17,7 +17,6 @@ import {getStorefrontEnvVariables} from '../../../lib/graphql/admin/pull-variabl
 import {dummyListEnvironments} from '../../../lib/graphql/admin/test-helper.js';
 
 import {runEnvPull} from './pull.js';
-import {renderMissingStorefront} from '../../../lib/render-errors.js';
 import {verifyLinkedStorefront} from '../../../lib/verify-linked-storefront.js';
 
 vi.mock('@shopify/cli-kit/node/ui', async () => {
@@ -26,12 +25,12 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
   >('@shopify/cli-kit/node/ui');
   return {
     ...original,
+    isTTY: vi.fn(),
     renderConfirmationPrompt: vi.fn(),
   };
 });
 vi.mock('../link.js');
 vi.mock('../../../lib/auth.js');
-vi.mock('../../../lib/render-errors.js');
 vi.mock('../../../lib/graphql/admin/list-environments.js');
 vi.mock('../../../lib/verify-linked-storefront.js');
 vi.mock('../../../lib/graphql/admin/pull-variables.js');
@@ -55,6 +54,7 @@ describe('pullVariables', () => {
   };
 
   beforeEach(async () => {
+    vi.mocked(isTTY).mockReturnValue(true);
     vi.mocked(login).mockResolvedValue({
       session: ADMIN_SESSION,
       config: SHOPIFY_CONFIG,
@@ -241,11 +241,11 @@ describe('pullVariables', () => {
       vi.mocked(getStorefrontEnvVariables).mockResolvedValue(null);
     });
 
-    it('renders missing storefronts message and ends', async () => {
+    it('fails when the linked storefront no longer exists', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        await runEnvPull({path: tmpDir, envFile});
-
-        expect(renderMissingStorefront).toHaveBeenCalledOnce();
+        await expect(runEnvPull({path: tmpDir, envFile})).rejects.toThrow(
+          'Couldn’t find Hydrogen storefront.',
+        );
       });
     });
   });
@@ -313,7 +313,6 @@ describe('pullVariables', () => {
       BACKSLASH: 'a\\b',
       DOUBLE_QUOTES: 'value"with"quotes',
       SINGLE_QUOTE: "it's",
-      SINGLE_QUOTE_AND_DOLLAR: "it's $5",
       HASH: 'a#b',
       SPACES: '  padded value  ',
       TAB: 'a\tb',
@@ -324,6 +323,11 @@ describe('pullVariables', () => {
       MULTILINE_KEY:
         '-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA04up8hoqzS1...\n-----END RSA PRIVATE KEY-----',
       TABS_AND_RETURNS: 'line1\tcolumn2\rreturn\nline2',
+      MULTILINE_QUOTES_AND_HASH:
+        'snapshot test # "quoted" $literal\\path\nsecond line',
+      LEADING_NEWLINE: '\nline "x"',
+      LEADING_BLANK_LINES: '\n\nline "x"',
+      LEADING_WHITESPACE: ' \t\nline "x"',
     };
 
     beforeEach(() => {
@@ -340,6 +344,30 @@ describe('pullVariables', () => {
 
         const {variables} = await readAndParseDotEnv(filePath);
         expect(variables).toEqual(ROUND_TRIP_VALUES);
+      });
+    });
+
+    it.each([
+      'private-value \' " ` #\r',
+      "it's $5",
+      'it\'s "quoted" # literal',
+      "it's a literal \\n, not a newline",
+      'touch pwned; echo "\'"',
+      "it's $(touch pwned)",
+      "it's `touch pwned`",
+    ])('rejects unsafe or unsupported quoting (%#)', async (value) => {
+      mockVariables({KEY: value});
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, envFile);
+        await writeFile(filePath, 'LOCAL_ONLY=keep-me');
+        await expect(runEnvPull({path: tmpDir, envFile})).rejects.toThrow(
+          'Environment variable KEY cannot be represented safely in dotenv format without changing its value.',
+        );
+        expect(await readFile(filePath)).toBe('LOCAL_ONLY=keep-me');
+        if (process.platform !== 'win32') {
+          execFileSync('sh', ['-c', `set -a; . ./${envFile}`], {cwd: tmpDir});
+          expect(await fileExists(joinPath(tmpDir, 'pwned'))).toBe(false);
+        }
       });
     });
 
@@ -432,6 +460,12 @@ describe('pullVariables', () => {
             'DOLLAR="stale"',
             'LOCAL_MULTILINE="first',
             'second"',
+            "LOCAL_LEADING_NEWLINE='",
+            'local "value"',
+            "'",
+            "LEADING_NEWLINE='",
+            'stale "value"',
+            "'",
           ].join('\n'),
         );
 
@@ -455,6 +489,7 @@ describe('pullVariables', () => {
           ...ROUND_TRIP_VALUES,
           LOCAL_ONLY: 'keep-me',
           LOCAL_MULTILINE: 'first\nsecond',
+          LOCAL_LEADING_NEWLINE: '\nlocal "value"\n',
         });
       });
     });

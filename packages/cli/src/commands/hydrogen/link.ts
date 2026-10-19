@@ -1,5 +1,12 @@
+import {toStoreDomain} from '../../lib/json-contract.js';
+import {writeJsonResult} from '../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {
+  linkJsonOutputSchema,
+  toStorefront,
+} from '../../lib/storefronts/types.js';
 import {Flags} from '@oclif/core';
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../lib/hydrogen-command.js';
 import {basename} from '@shopify/cli-kit/node/path';
 
 import {
@@ -7,7 +14,6 @@ import {
   renderSuccess,
   renderTasks,
   renderTextPrompt,
-  renderWarning,
 } from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 
@@ -28,16 +34,20 @@ import {
 } from '../../lib/onboarding/common.js';
 
 export default class Link extends Command {
+  static get jsonOutputSchema(): typeof linkJsonOutputSchema {
+    return linkJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown = `Links your local development environment to a remote Hydrogen storefront. You can link an unlimited number of development environments to a single Hydrogen storefront.
 
   Linking to a Hydrogen storefront enables you to run [dev](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-dev) and automatically inject your linked Hydrogen storefront's environment variables directly into the server runtime.
 
   After you run the \`link\` command, you can access the [env list](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-list), [env pull](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-pull), and [unlink](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-unlink) commands.`;
 
-  static description =
-    "Link a local project to one of your shop's Hydrogen storefronts.";
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.force,
     ...commonFlags.path,
     ...commonFlags.shop,
@@ -60,7 +70,7 @@ export default class Link extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Link);
-    await runLink(flagsToCamelObject(flags));
+    await runLink(flagsToCamelObject(flags), flags.json);
   }
 }
 
@@ -73,14 +83,17 @@ export interface LinkStorefrontArguments {
   name?: string;
 }
 
-export async function runLink({
-  createStorefront: flagCreateStorefront,
-  force,
-  path: root = process.cwd(),
-  shop,
-  storefront: flagStorefront,
-  name,
-}: LinkStorefrontArguments) {
+export async function runLink(
+  {
+    createStorefront: flagCreateStorefront,
+    force,
+    path: root = process.cwd(),
+    shop,
+    storefront: flagStorefront,
+    name,
+  }: LinkStorefrontArguments,
+  json?: boolean,
+) {
   const [{session, config}, cliCommand] = await Promise.all([
     login(root, shop),
     getCliCommand(),
@@ -94,7 +107,14 @@ export async function runLink({
     cliCommand,
   });
 
-  if (!linkedStore) return;
+  const result = {
+    status: linkedStore ? ('success' as const) : ('cancelled' as const),
+    changed: Boolean(linkedStore),
+    storeDomain: toStoreDomain(session.storeFqdn),
+    storefront: linkedStore ? toStorefront(linkedStore) : null,
+  };
+  if (writeJsonResult(linkJsonOutputSchema, result, json) || !linkedStore)
+    return result;
 
   renderSuccess({
     body: [{userInput: linkedStore.title}, 'is now linked'],
@@ -106,6 +126,7 @@ export async function runLink({
       ],
     ],
   });
+  return result;
 }
 
 export async function linkStorefront(
@@ -163,21 +184,10 @@ export async function linkStorefront(
     );
 
     if (!selectedStorefront) {
-      renderWarning({
-        headline: `Couldn't find ${flagStorefront}`,
-        body: [
-          "There's no storefront matching",
-          {userInput: flagStorefront},
-          'on your',
-          {userInput: config.shop},
-          'shop. To see all available Hydrogen storefronts, run',
-          {
-            command: `${cliCommand} list`,
-          },
-        ],
-      });
-
-      return;
+      throw new AbortError(
+        `Couldn't find ${flagStorefront}`,
+        `No storefront with that name exists on ${config.shop}. Run ${cliCommand} list to see available storefronts.`,
+      );
     }
   } else if (flagCreateStorefront || storefrontName) {
     selectedStorefront = await createNewStorefront(
@@ -240,11 +250,7 @@ async function createNewStorefront(
     {
       title: 'Creating API tokens',
       task: async () => {
-        try {
-          await waitForJob(session, jobId!);
-        } catch (_err) {
-          storefront = undefined;
-        }
+        await waitForJob(session, jobId!);
       },
       skip: () => !jobId,
     },
@@ -252,7 +258,7 @@ async function createNewStorefront(
 
   if (!storefront) {
     throw new AbortError(
-      'Unknown error ocurred. Please try again or contact support if the error persists.',
+      'Unknown error occurred. Please try again or contact support if the error persists.',
     );
   }
 

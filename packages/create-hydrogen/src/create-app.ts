@@ -3,6 +3,7 @@
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {runInit} from '@shopify/cli-hydrogen/commands/hydrogen/init';
+import {errorHandler} from '@shopify/cli-kit/node/error-handler';
 
 let isReactError = false;
 const reactErrorRE = /(useState|Invalid hook call)/gims;
@@ -37,4 +38,7 @@ process.on('beforeExit', () => {
   }
 });
 
-runInit();
+runInit().catch(async (error) => {
+  await errorHandler(error);
+  process.exitCode = 1;
+});

@@ -54,7 +54,7 @@ function hasBypassLabel(prNumber) {
 
 // Get open release PR
 function getOpenReleasePR() {
-  const result = gh('pr', 'list', '--state', 'open', '--head', 'changeset-release/main', 
+  const result = gh('pr', 'list', '--state', 'open', '--head', 'changeset-release/2026-04', 
                     '--json', 'number,title,body', '--limit', '1');
   if (!result) return null;
   const prs = JSON.parse(result);

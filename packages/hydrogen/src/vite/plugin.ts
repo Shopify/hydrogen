@@ -4,6 +4,7 @@ import {
   setupHydrogenMiddleware,
   type HydrogenMiddlewareOptions,
 } from './hydrogen-middleware.js';
+import {createDevToolingGuard} from './dev-tooling-guard.js';
 import type {HydrogenPluginOptions} from './types.js';
 import {type RequestEventPayload, emitRequestEvent} from './request-events.js';
 
@@ -194,6 +195,8 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
       configureServer: {
         order: 'pre',
         handler: (viteDevServer) => {
+          viteDevServer.middlewares.use(createDevToolingGuard());
+
           return () => {
             setupHydrogenMiddleware(
               viteDevServer,

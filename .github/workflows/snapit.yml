@@ -1,3 +1,9 @@
+# `/snapit` on a PR publishes snapshot versions of its packages to npm.
+#
+# npm rejects Trusted Publishing (OIDC) for issue_comment-triggered runs, so
+# this workflow only checks the request and dispatches release.yml on the PR
+# branch, which builds and publishes the snapshot and comments on the PR.
+# It never checks out or runs PR code.
 name: Snapit
 
 on:
@@ -11,37 +17,91 @@ jobs:
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/snapit' }}
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
-      id-token: write
+      actions: write # dispatch release.yml
+      contents: read # read release.yml on the PR branch
+      pull-requests: write # react to and reply on the PR
     steps:
-      # This action can be executed by users with write permission to this repo
-      - name: Checkout current branch
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+      - name: Dispatch the snapshot release
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          run_install: false
+          script: |
+            const {owner, repo} = context.repo;
+            const {comment, issue} = context.payload;
+            const updateBranch =
+              "This branch's `release.yml` can't publish snapshots yet. Update the branch with `main`, then comment `/snapit` again.";
 
-      - name: Setup Node.js
-        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
-        with:
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
-          node-version: 24
+            const refuse = async (message) => {
+              await github.rest.issues.createComment({owner, repo, issue_number: issue.number, body: message});
+              core.setFailed(message);
+            };
+            const react = (content) =>
+              github.rest.reactions.createForIssueComment({owner, repo, comment_id: comment.id, content});
 
-      - name: Force snapshot changeset
-        run: |
-          printf -- "---\n'@shopify/hydrogen': patch\n'@shopify/cli-hydrogen': patch\n'@shopify/create-hydrogen': patch\n---\n\nForce snapshot build.\n" > .changeset/force-snapshot-build.md
+            await react('eyes');
 
-      - name: Create snapshot version
-        uses: Shopify/snapit@0c0d2dd62c9b0c94b7d03e1f54e72f18548e7752 # pin to a specific commit
-        with:
-          github_comment_included_packages: '@shopify/hydrogen,@shopify/cli-hydrogen,@shopify/hydrogen-codegen,@shopify/mini-oxygen'
-          custom_message_suffix: "\n> Create a new project with all the released packages running `pnpm create @shopify/hydrogen@<snapshot_version>`\n>To try a new CLI plugin version, add `@shopify/cli-hydrogen` as a dependency to your project using the snapshot version."
-          build_script: 'pnpm run build'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
+            // Fail closed: any error or anything below write access is refused.
+            let permission;
+            try {
+              ({data: {permission}} = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner,
+                repo,
+                username: comment.user.login,
+              }));
+            } catch (error) {
+              return refuse(`Could not check your permissions, so no snapshot was started (${error.message}).`);
+            }
+            if (!['admin', 'write'].includes(permission)) {
+              return refuse('Only users with write permission to the repository can run `/snapit`.');
+            }
+
+            let pr;
+            try {
+              ({data: pr} = await github.rest.pulls.get({owner, repo, pull_number: issue.number}));
+            } catch (error) {
+              return refuse(`Could not load this pull request, so no snapshot was started (${error.message}).`);
+            }
+            if (pr.state !== 'open') {
+              return refuse('`/snapit` only runs on open pull requests.');
+            }
+            // Also stops a fork's branch name resolving to a same-named branch here.
+            if (pr.head.repo?.full_name !== `${owner}/${repo}`) {
+              return refuse('`/snapit` is not supported on pull requests from forks.');
+            }
+
+            // Dispatch runs the branch's own release.yml. Older branches (and the
+            // preview line, whose release.yml has an unrelated workflow_dispatch)
+            // don't have the snapshot jobs, so don't dispatch those.
+            let workflow = '';
+            try {
+              const {data} = await github.rest.repos.getContent({
+                owner,
+                repo,
+                path: '.github/workflows/release.yml',
+                ref: pr.head.sha,
+              });
+              workflow = Buffer.from(data.content, 'base64').toString('utf8');
+            } catch (error) {
+              core.info(`Could not read release.yml at ${pr.head.sha}: ${error.message}`);
+            }
+            if (!/^  snapshot-publish:/m.test(workflow)) {
+              return refuse(updateBranch);
+            }
+
+            try {
+              await github.rest.actions.createWorkflowDispatch({
+                owner,
+                repo,
+                workflow_id: 'release.yml',
+                ref: `refs/heads/${pr.head.ref}`,
+                inputs: {expected_sha: pr.head.sha, requested_by: comment.user.login},
+              });
+            } catch (error) {
+              return refuse(
+                error.status === 422
+                  ? updateBranch
+                  : `Could not start the snapshot release (${error.message}).`,
+              );
+            }
+
+            await react('rocket');
+            core.info(`Dispatched release.yml on ${pr.head.ref} at ${pr.head.sha}`);

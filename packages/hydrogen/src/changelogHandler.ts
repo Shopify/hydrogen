@@ -1,5 +1,5 @@
 const DEFAULT_GITHUB_CHANGELOG_URL =
-  'https://raw.githubusercontent.com/Shopify/hydrogen/main/docs/changelog.json';
+  'https://raw.githubusercontent.com/Shopify/hydrogen/2026-04/docs/changelog.json';
 
 /**
  * A custom Remix loader handler that fetches the changelog.json from GitHub.

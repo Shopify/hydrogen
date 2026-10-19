@@ -1,4 +1,7 @@
-import Command from '@shopify/cli-kit/node/base-command';
+import {writeJsonResult} from '../../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {generateRoutesJsonOutputSchema} from '../../../lib/setups/routes/types.js';
+import Command from '../../../lib/hydrogen-command.js';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
@@ -7,7 +10,7 @@ import {Flags, Args} from '@oclif/core';
 
 // Fix for a TypeScript bug:
 // https://github.com/microsoft/TypeScript/issues/42873
-import type {} from '@oclif/core/lib/interfaces/parser.js';
+import type {} from '@oclif/core/interfaces';
 import {
   ALL_ROUTE_CHOICES,
   generateRoutes,
@@ -15,9 +18,14 @@ import {
 import {isV1RouteConventionInstalled} from '../../../lib/remix-version-interop.js';
 
 export default class GenerateRoute extends Command {
+  static get jsonOutputSchema(): typeof generateRoutesJsonOutputSchema {
+    return generateRoutesJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown = `Generates a set of default routes from the starter template.`;
-  static description = 'Generates a standard Shopify route.';
+  static description = this.descriptionForHelp();
   static flags = {
+    ...jsonFlag,
     adapter: Flags.string({
       description:
         'React Router adapter used in the route. The default is `react-router`.',
@@ -56,28 +64,58 @@ export default class GenerateRoute extends Command {
 
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
-    await runGenerate({
-      ...flags,
-      directory,
-      routeName,
-      localePrefix: flags['locale-param'],
-    });
+    await runGenerate(
+      {
+        ...flags,
+        directory,
+        routeName,
+        localePrefix: flags['locale-param'],
+      },
+      flags.json,
+    );
   }
 }
 
-export async function runGenerate(options: {
-  routeName: string;
-  directory: string;
-  adapter?: string;
-  typescript?: boolean;
-  force?: boolean;
-  localePrefix?: string;
-}) {
-  const {routes} = await generateRoutes({
+export async function runGenerate(
+  options: {
+    routeName: string;
+    directory: string;
+    adapter?: string;
+    typescript?: boolean;
+    force?: boolean;
+    localePrefix?: string;
+  },
+  json?: boolean,
+) {
+  const {routes, routeGroups, isTypescript} = await generateRoutes({
     ...options,
     v1RouteConvention: isV1RouteConventionInstalled(),
   });
 
+  const changed = routes.some(({operation}) => operation !== 'skipped');
+  const result = {
+    status:
+      !changed && routes.length ? ('skipped' as const) : ('success' as const),
+    changed,
+    routes: routes.map(
+      ({sourceRoute, destinationRoute, operation, skipReason}) => ({
+        sourceRoute,
+        destinationRoute,
+        operation,
+        ...(skipReason ? {skipReason} : {}),
+      }),
+    ),
+    routeGroups,
+    isTypescript,
+  };
+  if (!writeJsonResult(generateRoutesJsonOutputSchema, result, json))
+    renderGeneratedRoutes(result);
+  return result;
+}
+
+export function renderGeneratedRoutes({
+  routes,
+}: import('../../../lib/setups/routes/types.js').GenerateRoutesResult) {
   const padEnd =
     3 +
     routes.reduce(
