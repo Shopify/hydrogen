@@ -978,7 +978,9 @@ describe('customer', () => {
           warnSpy.mockRestore();
         });
       });
+    });
 
+    describe('login redirectPath', () => {
       it('Saved redirectPath to session by default if `return_to` param was found', async () => {
         const redirectPath = '/account/orders';
         const request = new Request(
