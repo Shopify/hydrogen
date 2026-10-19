@@ -2,7 +2,7 @@
  * Returns the `return_to` or `redirect` search param of `requestUrl`, normalized
  * by `getSameOriginPath`. `origin` defaults to the origin of `requestUrl`.
  */
-export function getRedirectUrl(
+export function getRedirectPathFromSearchParams(
   requestUrl?: string,
   origin?: string,
 ): string | undefined {
