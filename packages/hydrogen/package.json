@@ -108,6 +108,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vue/test-utils": "^2.4.0",
+    "fast-check": "4.10.2",
     "graphql": "^16.13.2",
     "happy-dom": "^20.9.0",
     "magic-string": "^0.30.21",
