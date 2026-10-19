@@ -1,13 +1,5 @@
 # Agent Guidelines
 
-## Repo Branch Map
-
-`main` is the new version of Hydrogen (framework-agnostic); classic Hydrogen (React Router 7
-only) lives on the `2026-04` back-fix branch. Never write "Hydrogen 3" or "Hydrogen 2" in public
-artifacts — externally they are "the new version of Hydrogen" and "classic Hydrogen". The old
-`preview` branch is dead. When picking a base branch, rebasing, or porting changes between new
-vs classic Hydrogen, read `skills/hydrogen-branches/SKILL.md` first.
-
 ## Repo Skills
 
 Skills live in the top-level `skills/` directory — repo-development guidance for agents working
