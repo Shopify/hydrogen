@@ -26,6 +26,8 @@ export function resolveStorefrontConfig(env: RuntimeEnv): ResolvedStorefrontConf
     };
   }
 
+  // The private token, Customer Account, and Shopify script identity all belong to the shared store.
+  // Ignore non-mock domain overrides so the Storefront client can't move to another store alone.
   return {
     mode: "private",
     storeDomain: storefrontConfig.storeDomain,
