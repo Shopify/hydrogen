@@ -9,14 +9,14 @@ export function getRedirectUrl(
   if (!requestUrl) return;
 
   const url = new URL(requestUrl);
-  const redirectTo =
-    url.searchParams.get('return_to') || url.searchParams.get('redirect');
+  const param = url.searchParams.get('return_to') ? 'return_to' : 'redirect';
+  const redirectTo = url.searchParams.get(param);
   if (!redirectTo) return;
 
   const redirectPath = getSameOriginPath(redirectTo, origin ?? url.origin);
   if (!redirectPath) {
     console.warn(
-      `Cross-domain redirects are not supported. Tried to redirect from ${url.pathname}${url.search} to ${redirectTo}`,
+      `Ignoring ${param} because it isn't a same-origin path. Tried to redirect from ${url.pathname}${url.search} to ${redirectTo}`,
     );
   }
 
