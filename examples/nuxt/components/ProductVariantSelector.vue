@@ -106,6 +106,7 @@ function searchParamsToQuery(params: URLSearchParams) {
             :to="variantRoute(value.selectedOptions, value.handle)"
             replace
             :aria-label="isColor(option.name) ? value.name : undefined"
+            data-testid="product-sibling-option"
             :class="
               isColor(option.name)
                 ? 'block h-7 w-7 rounded-full'
@@ -126,6 +127,7 @@ function searchParamsToQuery(params: URLSearchParams) {
               :href="href"
               :aria-current="value.selected ? 'true' : undefined"
               :aria-label="isColor(option.name) ? value.name : undefined"
+              data-testid="product-variant-option"
               class="inline-flex items-center justify-center"
               :class="
                 isColor(option.name)
@@ -158,6 +160,7 @@ function searchParamsToQuery(params: URLSearchParams) {
               })
             "
             :aria-label="isColor(option.name) ? value.name : undefined"
+            data-testid="product-variant-option"
             :class="
               isColor(option.name)
                 ? value.selected

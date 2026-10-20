@@ -4,6 +4,7 @@ import { createContractError, type ContractCapability } from "./contract";
 
 // Product test IDs from docs/storefront-contract.md#product-test-ids.
 export const PRODUCT_TITLE_TEST_ID = "product-title";
+export const PRODUCT_VARIANT_OPTION_TEST_ID = "product-variant-option";
 export const PRODUCT_ADD_TO_CART_TEST_ID = "product-add-to-cart";
 
 type SingleProductTarget = {

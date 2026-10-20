@@ -168,6 +168,7 @@ function ProductPage({ product }: { product: ProductData }) {
                             };
                           }}
                           data-available={value.available ? "true" : "false"}
+                          data-testid="product-sibling-option"
                           className="option-pill no-underline"
                         >
                           {value.name}
@@ -197,6 +198,7 @@ function ProductPage({ product }: { product: ProductData }) {
                           }
                           aria-current={value.selected ? "true" : undefined}
                           data-available={value.available ? "true" : "false"}
+                          data-testid="product-variant-option"
                           className="option-pill no-underline"
                           onNavigate={(event) => {
                             register("optionValue", {
@@ -220,6 +222,7 @@ function ProductPage({ product }: { product: ProductData }) {
                           type="button"
                           aria-pressed={value.selected}
                           disabled
+                          data-testid="product-variant-option"
                           className="option-pill"
                         >
                           {value.name}

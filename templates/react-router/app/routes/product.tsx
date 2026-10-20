@@ -439,7 +439,6 @@ function VariantOptions({ product }: { product: ProductData }) {
       {options.map((option) => {
         const selectedValue = option.values.find((value) => value.selected)?.name;
         const renderSwatches = hasSwatchData(product, option.name);
-        const isColorOption = option.name.toLowerCase().includes("color");
 
         return (
           <fieldset key={option.name} className="space-y-2">
@@ -462,7 +461,6 @@ function VariantOptions({ product }: { product: ProductData }) {
                   baseParams,
                 );
                 const soldOut = !variantOption.available;
-                const testId = isColorOption ? "color-swatch" : undefined;
                 const swatch = renderSwatches ? swatches.get(`${option.name}:${valueName}`) : null;
                 const swatchStyle = swatch?.imageUrl
                   ? { backgroundImage: `url("${swatch.imageUrl}")` }
@@ -511,7 +509,7 @@ function VariantOptions({ product }: { product: ProductData }) {
                       className={className}
                       aria-label={renderSwatches ? valueName : undefined}
                       aria-pressed={variantOption.selected}
-                      data-testid={testId}
+                      data-testid="product-variant-option"
                     >
                       {content}
                     </button>
@@ -531,7 +529,9 @@ function VariantOptions({ product }: { product: ProductData }) {
                     className={className}
                     aria-label={renderSwatches ? valueName : undefined}
                     aria-current={variantOption.selected ? "true" : undefined}
-                    data-testid={testId}
+                    data-testid={
+                      isCrossProduct ? "product-sibling-option" : "product-variant-option"
+                    }
                     onClick={
                       isCrossProduct
                         ? undefined

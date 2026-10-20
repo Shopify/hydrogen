@@ -24,6 +24,10 @@ Use this skill when you prepare a custom storefront, in any framework, so that t
 | Test ID | Put it on |
 | --- | --- |
 | `product-title` | The existing product title heading |
+| `product-variant-option` | Each option value link or button that selects another variant of this product, including a disabled value for a combination that does not exist |
+| `product-sibling-option` | Each option value link that navigates to another product |
+
+The relationship decides the ID, not availability: `product-variant-option` selects another variant of the same product, and `product-sibling-option` navigates to another product. The suite supports variant option links and buttons only, not radio inputs or selects. It skips current values and values with the native `disabled` attribute or `aria-disabled="true"`, such as a combination that does not exist. Sold out does not change the ID: a sold-out value of this product is still a `product-variant-option`. Keep your existing availability behavior. A link can use any URL shape: the suite follows its real `href`, then checks the selected state (`aria-current="true"` on the link, or `aria-pressed="true"` on a button), a direct load of that URL, and that unrelated query params stay. The no-JavaScript check needs links. `STOREFRONT_SKIP_NO_JS_VARIANTS=true` skips only that check. The current variant journey ignores `product-sibling-option`, so it does not test navigation to another product. See Variant Options in the contract.
 
 ## How to adopt
 
@@ -53,6 +57,12 @@ The suite starts with `getByTestId`, then narrows to visible elements:
 ```ts
 const title = page.getByTestId('product-title').filter({visible: true}).first();
 await expect(title).toContainText('Classic Tee');
+
+const medium = page
+  .getByTestId('product-variant-option')
+  .filter({visible: true, hasText: 'Medium'})
+  .first();
+await medium.click();
 ```
 
 These are locator examples, not a complete buyer journey. Assert the real result, such as the URL or the selected option.
