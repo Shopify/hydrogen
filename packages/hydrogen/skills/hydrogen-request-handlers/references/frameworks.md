@@ -3,7 +3,7 @@
 ## Contents
 
 - Single-Hook Shape
-- React Router 7
+- React Router
 - SolidStart
 - Unknown Framework Decision Tree
 - Gotchas
@@ -81,7 +81,7 @@ export async function handleRequest(request: Request, next: () => Promise<Respon
 }
 ```
 
-## React Router 7
+## React Router
 
 React Router framework mode needs:
 
