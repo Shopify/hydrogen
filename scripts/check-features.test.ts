@@ -9,11 +9,19 @@ import {
   parseRegistry,
   type Feature,
   type Mutant,
-  type ProofResult,
+  type Proof,
+  type TestOutcome,
   type Workspace,
 } from "./check-features.ts";
 
 const URL_TEST = "src/core/collection/__tests__/url.property.test.ts";
+const ROUND_TRIP =
+  "parseCollectionParams(serializeCollectionParams(p)) equals p up to filter order";
+const OWNER = "@Shopify/developer-platforms";
+
+function proof(overrides: Partial<Proof> = {}): Proof {
+  return { file: URL_TEST, tests: [ROUND_TRIP], ...overrides };
+}
 
 function feature(overrides: Partial<Feature> = {}): Feature {
   return {
@@ -23,11 +31,15 @@ function feature(overrides: Partial<Feature> = {}): Feature {
     owner: "hydrogen",
     entry_points: ["src/core/collection/url.ts"],
     depends_on: [],
-    verified_by: [URL_TEST],
+    verified_by: [proof()],
     falsified_by: [],
     e2e_groups: ["collection-filter"],
     known_gaps: [
-      { gap: "category is serialize-only", accepted: "category never comes from the URL" },
+      {
+        gap: "category is serialize-only",
+        accepted: "category never comes from the URL",
+        accepted_by: OWNER,
+      },
     ],
     ...overrides,
   };
@@ -39,6 +51,7 @@ function workspace(overrides: Partial<Workspace> = {}): Workspace {
     fileExists: (path) => files.has(path),
     e2eGroupExists: (name) => name === "collection-filter",
     propertyTests: [URL_TEST],
+    codeOwners: new Set([OWNER]),
     ...overrides,
   };
 }
@@ -58,6 +71,11 @@ test("listed paths must exist", () => {
     workspace(),
   );
   assert.match(errors.join("\n"), /gone\.ts does not exist/);
+
+  const gapFile = "src/core/collection/__tests__/gaps.test.ts";
+  const gap = { gap: "x", issue: "#1", shown_by: proof({ file: gapFile }) };
+  const gapErrors = checkFeatures([feature({ known_gaps: [gap] })], workspace());
+  assert.match(gapErrors.join("\n"), /gaps\.test\.ts does not exist/);
 });
 
 test("e2e groups must exist under storefront-e2e/specs", () => {
@@ -92,6 +110,18 @@ test("ids are unique and dotted lowercase", () => {
   assert.match(shouty.join("\n"), /id must look like area\.feature-name/);
 });
 
+test("an accepted gap must be accepted by a code owner", () => {
+  const stranger = {
+    gap: "x",
+    accepted: "fine",
+    accepted_by: "@nobody",
+  };
+  const errors = checkFeatures([feature({ known_gaps: [stranger] })], workspace());
+  assert.deepEqual(errors, [
+    'collection.url-params: gap "x" is accepted by @nobody, who is not in .github/CODEOWNERS',
+  ]);
+});
+
 test("parseRegistry requires a decision on every known gap", () => {
   const base = { ...feature(), known_gaps: undefined };
   const undecided = parseRegistry([
@@ -104,6 +134,14 @@ test("parseRegistry requires a decision on every known gap", () => {
   ]);
   assert.match(both.errors.join("\n"), /needs exactly one of accepted .* or issue/);
 
+  const unowned = parseRegistry([{ ...base, known_gaps: [{ gap: "x", accepted: "fine" }] }]);
+  assert.match(unowned.errors.join("\n"), /accepted needs accepted_by, a @handle/);
+
+  const badHandle = parseRegistry([
+    { ...base, known_gaps: [{ gap: "x", accepted: "fine", accepted_by: "me" }] },
+  ]);
+  assert.match(badHandle.errors.join("\n"), /accepted needs accepted_by, a @handle/);
+
   const badIssue = parseRegistry([{ ...base, known_gaps: [{ gap: "x", issue: "later" }] }]);
   assert.match(badIssue.errors.join("\n"), /issue must be a URL or #number/);
 
@@ -111,7 +149,37 @@ test("parseRegistry requires a decision on every known gap", () => {
     { ...base, known_gaps: [{ gap: "x", issue: "https://github.com/Shopify/hydrogen/issues/1" }] },
   ]);
   assert.deepEqual(decided.errors, []);
-  assert.equal(decided.features[0]?.known_gaps.length, 1);
+  assert.deepEqual(decided.features[0]?.known_gaps, [
+    { gap: "x", issue: "https://github.com/Shopify/hydrogen/issues/1" },
+  ]);
+});
+
+test("parseRegistry reads a gap's shown_by like a proof", () => {
+  const base = { ...feature(), known_gaps: undefined };
+  const shown = parseRegistry([
+    {
+      ...base,
+      known_gaps: [{ gap: "x", issue: "#1", shown_by: { file: URL_TEST, tests: ["x holds"] } }],
+    },
+  ]);
+  assert.deepEqual(shown.errors, []);
+  assert.deepEqual(shown.features[0]?.known_gaps, [
+    { gap: "x", issue: "#1", shown_by: { file: URL_TEST, tests: ["x holds"] } },
+  ]);
+
+  const untested = parseRegistry([
+    { ...base, known_gaps: [{ gap: "x", issue: "#1", shown_by: { file: URL_TEST, tests: [] } }] },
+  ]);
+  assert.match(untested.errors.join("\n"), /shown_by: tests must list at least one/);
+});
+
+test("parseRegistry requires verified_by to name tests in a file", () => {
+  const base = feature();
+  const bare = parseRegistry([{ ...base, verified_by: [URL_TEST] }]);
+  assert.match(bare.errors.join("\n"), /verified_by\[0\]: must be a mapping of file and tests/);
+
+  const empty = parseRegistry([{ ...base, verified_by: [{ file: URL_TEST, tests: [] }] }]);
+  assert.match(empty.errors.join("\n"), /tests must list at least one it title or describe path/);
 });
 
 test("parseRegistry keeps every path inside packages/hydrogen", () => {
@@ -129,11 +197,10 @@ test("parseRegistry keeps every path inside packages/hydrogen", () => {
     "features[0] (collection.url-params): entry_points src//url.ts must be a relative path inside packages/hydrogen",
   ]);
 
-  const proofEscaped = parseRegistry([{ ...base, verified_by: ["src/../../x.test.ts"] }]);
-  assert.match(
-    proofEscaped.errors.join("\n"),
-    /verified_by src\/\.\.\/\.\.\/x\.test\.ts must be a relative path/,
-  );
+  const proofEscaped = parseRegistry([
+    { ...base, verified_by: [{ file: "src/../../x.test.ts", tests: ["x"] }] },
+  ]);
+  assert.match(proofEscaped.errors.join("\n"), /verified_by\[0\]: file must be a relative path/);
 
   const mutantEscaped = parseRegistry([
     { ...base, falsified_by: [{ ...mutant, file: "../../package.json" }] },
@@ -145,32 +212,103 @@ test("parseRegistry reports shape problems with the feature id", () => {
   const { errors } = parseRegistry([{ ...feature(), status: "done", verified_by: "one-string" }]);
   assert.deepEqual(errors, [
     "features[0] (collection.url-params): status must be one of planned, experimental, shipped, deprecated",
-    "features[0] (collection.url-params): verified_by must be a list of strings",
+    "features[0] (collection.url-params): verified_by must be a list",
   ]);
 });
 
-function proof(overrides: Partial<ProofResult> = {}): ProofResult {
-  return { passed: 5, failed: 0, skipped: 0, ...overrides };
+function outcome(overrides: Partial<TestOutcome> = {}): TestOutcome {
+  const title = overrides.title ?? ROUND_TRIP;
+  return {
+    title,
+    fullName: `collection URL round-trip properties ${title}`,
+    status: "passed",
+    ...overrides,
+  };
 }
 
 test("passing proofs produce no errors", () => {
-  const proofs = new Map<string, ProofResult>([[URL_TEST, proof()]]);
-  assert.deepEqual(checkProofs([feature()], proofs), []);
+  const report = new Map([[URL_TEST, [outcome()]]]);
+  assert.deepEqual(checkProofs([feature()], report), []);
 });
 
 test("a proof vitest did not collect is reported", () => {
-  const errors = checkProofs([feature()], new Map<string, ProofResult>());
+  const errors = checkProofs([feature()], new Map());
   assert.match(errors.join("\n"), /was not collected by vitest/);
 });
 
+test("a proof must name a test that exists in the file", () => {
+  const report = new Map([[URL_TEST, [outcome({ title: "something else" })]]]);
+  const errors = checkProofs([feature()], report);
+  assert.deepEqual(errors, [
+    `collection.url-params: ${URL_TEST} has no test named "${ROUND_TRIP}"`,
+  ]);
+});
+
 test("a proof with failing tests is reported", () => {
-  const proofs = new Map<string, ProofResult>([[URL_TEST, proof({ failed: 2 })]]);
-  assert.match(checkProofs([feature()], proofs).join("\n"), /has 2 failing test\(s\)/);
+  const report = new Map([
+    [URL_TEST, [outcome({ status: "failed" }), outcome({ status: "failed" })]],
+  ]);
+  const errors = checkProofs([feature()], report);
+  assert.match(errors.join("\n"), /has 2 failing test\(s\)/);
 });
 
 test("a proof with no passing tests is reported", () => {
-  const proofs = new Map<string, ProofResult>([[URL_TEST, proof({ passed: 0, skipped: 3 })]]);
-  assert.match(checkProofs([feature()], proofs).join("\n"), /has no passing tests/);
+  const report = new Map([[URL_TEST, [outcome({ status: "skipped" })]]]);
+  const errors = checkProofs([feature()], report);
+  assert.match(errors.join("\n"), /has no passing tests/);
+});
+
+test("a green test elsewhere in the file does not stand in for the named one", () => {
+  const report = new Map([
+    [URL_TEST, [outcome({ status: "failed" }), outcome({ title: "other" })]],
+  ]);
+  const errors = checkProofs([feature()], report);
+  assert.match(errors.join("\n"), /"parseCollectionParams\(.*" in .* has 1 failing test/);
+});
+
+test("a describe path names every test under it", () => {
+  const anchor = proof({
+    file: "src/core/collection/__tests__/url.test.ts",
+    tests: ["parseCollectionParams"],
+  });
+  const report = new Map([
+    [
+      anchor.file,
+      [
+        {
+          title: "parses tag filter",
+          fullName: "parseCollectionParams filters parses tag filter",
+          status: "passed",
+        },
+        {
+          title: "parses price-ascending",
+          fullName: "parseCollectionParams sort key parses price-ascending",
+          status: "failed",
+        },
+        { title: "x", fullName: "parseCollectionParamsExtra x", status: "failed" },
+      ],
+    ],
+  ]);
+  const errors = checkProofs([feature({ verified_by: [anchor] })], report);
+  assert.deepEqual(errors, [
+    `collection.url-params: "parseCollectionParams" in ${anchor.file} has 1 failing test(s)`,
+  ]);
+});
+
+test("a gap's shown_by test must still pass", () => {
+  const gapTitle = "a category filter does not round-trip";
+  const gap = {
+    gap: "category is serialize-only",
+    issue: "#1",
+    shown_by: proof({ tests: [gapTitle] }),
+  };
+  const open = new Map([[URL_TEST, [outcome(), outcome({ title: gapTitle })]]]);
+  assert.deepEqual(checkProofs([feature({ known_gaps: [gap] })], open), []);
+
+  const closed = new Map([[URL_TEST, [outcome(), outcome({ title: gapTitle, status: "failed" })]]]);
+  assert.deepEqual(checkProofs([feature({ known_gaps: [gap] })], closed), [
+    `collection.url-params: gap "category is serialize-only": "${gapTitle}" in ${URL_TEST} has 1 failing test(s)`,
+  ]);
 });
 
 const mutant: Mutant = {
@@ -212,21 +350,34 @@ test("applyMutant replaces a fragment that occurs exactly once", () => {
   assert.equal(applyMutant(source + source, mutant), undefined);
 });
 
-test("judgeMutant kills on any failing proof, survives on all green, and reports a broken run", () => {
-  const second = "src/core/collection/__tests__/sort.property.test.ts";
-  const both = [URL_TEST, second];
-  const green = new Map<string, ProofResult>([
-    [URL_TEST, proof()],
-    [second, proof()],
+test("judgeMutant kills on a failing named test, survives on all green, and reports a broken run", () => {
+  const second = proof({
+    file: "src/core/collection/__tests__/sort.property.test.ts",
+    tests: ["sort holds"],
+  });
+  const both = [proof(), second];
+  const green = new Map([
+    [URL_TEST, [outcome()]],
+    [second.file, [outcome({ title: "sort holds" })]],
   ]);
   assert.equal(judgeMutant(green, both), "survived");
 
-  const oneRed = new Map(green).set(second, proof({ failed: 1 }));
+  const oneRed = new Map(green).set(second.file, [
+    outcome({ title: "sort holds", status: "failed" }),
+  ]);
   assert.equal(judgeMutant(oneRed, both), "killed");
 
-  const notCollected = new Map<string, ProofResult>([[URL_TEST, proof({ failed: 1 })]]);
-  assert.deepEqual(judgeMutant(notCollected, both), { broke: second });
+  const unnamedRed = new Map(green).set(URL_TEST, [
+    outcome(),
+    outcome({ title: "other", status: "failed" }),
+  ]);
+  assert.equal(judgeMutant(unnamedRed, both), "survived");
 
-  const noTests = new Map(green).set(second, proof({ passed: 0 }));
-  assert.deepEqual(judgeMutant(noTests, both), { broke: second });
+  const notCollected = new Map([[URL_TEST, [outcome({ status: "failed" })]]]);
+  assert.deepEqual(judgeMutant(notCollected, both), { broke: `"sort holds" in ${second.file}` });
+
+  const noTests = new Map(green).set(second.file, [
+    outcome({ title: "sort holds", status: "skipped" }),
+  ]);
+  assert.deepEqual(judgeMutant(noTests, both), { broke: `"sort holds" in ${second.file}` });
 });

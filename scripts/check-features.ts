@@ -23,8 +23,15 @@ type Status = (typeof STATUSES)[number];
 
 const ID_PATTERN = /^[a-z0-9]+(\.[a-z0-9-]+)+$/;
 const ISSUE_PATTERN = /^(https?:\/\/\S+|#\d+)$/;
+const HANDLE_PATTERN = /^@[\w-]+(\/[\w-]+)?$/;
 
-export type KnownGap = { gap: string; accepted: string } | { gap: string; issue: string };
+/** A test file relative to packages/hydrogen and the `it` titles or `describe` paths in it. */
+export type Proof = { file: string; tests: string[] };
+
+export type KnownGap = { gap: string; shown_by?: Proof } & (
+  | { accepted: string; accepted_by: string }
+  | { issue: string }
+);
 
 /** A one-line change to an entry point that should make a proof fail. */
 export type Mutant = { mutant: string; file: string; find: string; replace: string };
@@ -36,21 +43,26 @@ export type Feature = {
   owner: string;
   entry_points: string[];
   depends_on: string[];
-  verified_by: string[];
+  verified_by: Proof[];
   falsified_by: Mutant[];
   e2e_groups: string[];
   known_gaps: KnownGap[];
 };
 
-export type ProofResult = { passed: number; failed: number; skipped: number };
+export type TestOutcome = { title: string; fullName: string; status: string };
+
+/** Maps a hydrogen-relative test file to the tests vitest ran in it. */
+export type ProofReport = ReadonlyMap<string, TestOutcome[]>;
 
 export type Workspace = {
-  /** Paths in `entry_points` and `verified_by` are relative to packages/hydrogen. */
+  /** Paths in the registry are relative to packages/hydrogen. */
   fileExists: (hydrogenRelativePath: string) => boolean;
   /** Names in `e2e_groups` are directories under packages/storefront-e2e/specs. */
   e2eGroupExists: (name: string) => boolean;
   /** Every `*.property.test.ts` under packages/hydrogen/src, relative to packages/hydrogen. */
   propertyTests: string[];
+  /** Every @handle in .github/CODEOWNERS. */
+  codeOwners: ReadonlySet<string>;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -65,6 +77,10 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim() !== "";
 }
 
+function isHandle(value: unknown): value is string {
+  return typeof value === "string" && HANDLE_PATTERN.test(value);
+}
+
 /** A path that stays inside packages/hydrogen and cannot be read as a flag. */
 function isPackagePath(value: unknown): value is string {
   return (
@@ -76,20 +92,45 @@ function isPackagePath(value: unknown): value is string {
 
 const PATH_RULE = "must be a relative path inside packages/hydrogen";
 
+function parseProof(raw: unknown, label: string, errors: string[]): Proof | undefined {
+  if (!isRecord(raw)) {
+    errors.push(`${label}: must be a mapping of file and tests`);
+    return undefined;
+  }
+  const { file, tests } = raw;
+  if (!isPackagePath(file)) {
+    errors.push(`${label}: file ${PATH_RULE}`);
+    return undefined;
+  }
+  if (!isStringList(tests) || tests.length === 0 || !tests.every(isNonEmptyString)) {
+    errors.push(`${label}: tests must list at least one it title or describe path`);
+    return undefined;
+  }
+  return { file, tests };
+}
+
 function parseKnownGap(rawGap: unknown, gapLabel: string, errors: string[]): KnownGap | undefined {
   if (!isRecord(rawGap)) {
     errors.push(`${gapLabel}: must be a mapping`);
     return undefined;
   }
-  const { gap, accepted, issue } = rawGap;
+  const { gap, accepted, accepted_by, issue, shown_by } = rawGap;
   if (!isNonEmptyString(gap)) {
     errors.push(`${gapLabel}: gap must be a non-empty string`);
     return undefined;
   }
-  if (isNonEmptyString(accepted) && issue === undefined) return { gap, accepted };
+  const shownBy =
+    shown_by === undefined ? undefined : parseProof(shown_by, `${gapLabel}.shown_by`, errors);
+  if (isNonEmptyString(accepted) && issue === undefined) {
+    if (!isHandle(accepted_by)) {
+      errors.push(`${gapLabel}: accepted needs accepted_by, a @handle from .github/CODEOWNERS`);
+      return undefined;
+    }
+    return { gap, accepted, accepted_by, ...(shownBy && { shown_by: shownBy }) };
+  }
   if (isNonEmptyString(issue) && accepted === undefined) {
     if (!ISSUE_PATTERN.test(issue)) errors.push(`${gapLabel}: issue must be a URL or #number`);
-    return { gap, issue };
+    return { gap, issue, ...(shownBy && { shown_by: shownBy }) };
   }
   errors.push(
     `${gapLabel}: needs exactly one of accepted (why this is fine) or issue (where the fix is tracked)`,
@@ -168,13 +209,10 @@ function parseFeature(entry: unknown, index: number, errors: string[]): Feature 
     }
     return value;
   };
-  const paths = (key: string): string[] => {
-    const value = list(key);
-    for (const path of value) {
-      if (!isPackagePath(path)) errors.push(`${label}: ${key} ${path} ${PATH_RULE}`);
-    }
-    return value;
-  };
+  const entry_points = list("entry_points");
+  for (const path of entry_points) {
+    if (!isPackagePath(path)) errors.push(`${label}: entry_points ${path} ${PATH_RULE}`);
+  }
 
   const statusText = text("status");
   const status = STATUSES.find((candidate) => candidate === statusText);
@@ -182,6 +220,7 @@ function parseFeature(entry: unknown, index: number, errors: string[]): Feature 
     errors.push(`${label}: status must be one of ${STATUSES.join(", ")}`);
   }
 
+  const verified_by = parseEntries(entry, "verified_by", label, errors, parseProof);
   const known_gaps = parseEntries(entry, "known_gaps", label, errors, parseKnownGap);
   const falsified_by = parseEntries(entry, "falsified_by", label, errors, parseMutant, {
     optional: true,
@@ -191,9 +230,9 @@ function parseFeature(entry: unknown, index: number, errors: string[]): Feature 
     id: text("id"),
     promise: text("promise"),
     owner: text("owner"),
-    entry_points: paths("entry_points"),
+    entry_points,
     depends_on: list("depends_on"),
-    verified_by: paths("verified_by"),
+    verified_by,
     falsified_by,
     e2e_groups: list("e2e_groups"),
     known_gaps,
@@ -214,11 +253,22 @@ export function parseRegistry(raw: unknown): { features: Feature[]; errors: stri
   return { features, errors };
 }
 
+function gapProofs(feature: Feature): { label: string; proof: Proof }[] {
+  return feature.known_gaps.flatMap((gap) =>
+    gap.shown_by ? [{ label: `${feature.id}: gap "${gap.gap}"`, proof: gap.shown_by }] : [],
+  );
+}
+
 function checkFeature(feature: Feature, workspace: Workspace): string[] {
   const errors: string[] = [];
   if (!ID_PATTERN.test(feature.id))
     errors.push(`${feature.id}: id must look like area.feature-name`);
-  for (const path of [...feature.entry_points, ...feature.verified_by]) {
+  const files = [
+    ...feature.entry_points,
+    ...feature.verified_by.map((proof) => proof.file),
+    ...gapProofs(feature).map(({ proof }) => proof.file),
+  ];
+  for (const path of files) {
     if (!workspace.fileExists(path))
       errors.push(`${feature.id}: packages/hydrogen/${path} does not exist`);
   }
@@ -238,6 +288,17 @@ function checkFeature(feature: Feature, workspace: Workspace): string[] {
     }
   }
   return errors;
+}
+
+/** An `accepted` binds to a reviewer GitHub will require, so the agent cannot close a gap alone. */
+function acceptedByStrangers(feature: Feature, workspace: Workspace): string[] {
+  return feature.known_gaps.flatMap((gap) =>
+    "accepted_by" in gap && !workspace.codeOwners.has(gap.accepted_by)
+      ? [
+          `${feature.id}: gap "${gap.gap}" is accepted by ${gap.accepted_by}, who is not in .github/CODEOWNERS`,
+        ]
+      : [],
+  );
 }
 
 function duplicateIds(features: Feature[]): string[] {
@@ -289,7 +350,9 @@ function checkDependencies(features: Feature[]): string[] {
 }
 
 function unclaimedPropertyTests(features: Feature[], workspace: Workspace): string[] {
-  const claimed = new Set(features.flatMap((feature) => feature.verified_by));
+  const claimed = new Set(
+    features.flatMap((feature) => feature.verified_by.map((proof) => proof.file)),
+  );
   return workspace.propertyTests
     .filter((test) => !claimed.has(test))
     .map((test) => `${test}: property test is not claimed by any feature's verified_by`);
@@ -299,48 +362,51 @@ export function checkFeatures(features: Feature[], workspace: Workspace): string
   return [
     ...duplicateIds(features),
     ...features.flatMap((feature) => checkFeature(feature, workspace)),
+    ...features.flatMap((feature) => acceptedByStrangers(feature, workspace)),
     ...checkDependencies(features),
     ...unclaimedPropertyTests(features, workspace),
   ];
 }
 
-export function checkProofs(
-  features: Feature[],
-  proofs: ReadonlyMap<string, ProofResult>,
-): string[] {
+/** A registry test name is an `it` title or the space-joined path of a `describe`. */
+function matchesTest(outcome: TestOutcome, name: string): boolean {
+  return outcome.title === name || `${outcome.fullName} `.startsWith(`${name} `);
+}
+
+function outcomesFor(report: ProofReport, proof: Proof, name: string): TestOutcome[] {
+  return (report.get(proof.file) ?? []).filter((outcome) => matchesTest(outcome, name));
+}
+
+function checkProof(label: string, proof: Proof, report: ProofReport): string[] {
+  if (!report.has(proof.file)) return [`${label}: ${proof.file} was not collected by vitest`];
   const errors: string[] = [];
-  for (const feature of features) {
-    for (const path of feature.verified_by) {
-      const result = proofs.get(path);
-      if (result === undefined) {
-        errors.push(`${feature.id}: ${path} was not collected by vitest`);
-      } else if (result.failed > 0) {
-        errors.push(`${feature.id}: ${path} has ${result.failed} failing test(s)`);
-      } else if (result.passed === 0) {
-        errors.push(`${feature.id}: ${path} has no passing tests`);
-      }
+  for (const name of proof.tests) {
+    const outcomes = outcomesFor(report, proof, name);
+    const failed = outcomes.filter((outcome) => outcome.status === "failed").length;
+    if (outcomes.length === 0) {
+      errors.push(`${label}: ${proof.file} has no test named "${name}"`);
+    } else if (failed > 0) {
+      errors.push(`${label}: "${name}" in ${proof.file} has ${failed} failing test(s)`);
+    } else if (!outcomes.some((outcome) => outcome.status === "passed")) {
+      errors.push(`${label}: "${name}" in ${proof.file} has no passing tests`);
     }
   }
   return errors;
 }
 
-function countAssertions(assertions: { status: string }[]): ProofResult {
-  let passed = 0;
-  let failed = 0;
-  let skipped = 0;
-  for (const assertion of assertions) {
-    if (assertion.status === "passed") passed++;
-    else if (assertion.status === "failed") failed++;
-    else skipped++;
-  }
-  return { passed, failed, skipped };
+/** Every proof must pass. Every gap test must pass too: it shows the gap is still there. */
+export function checkProofs(features: Feature[], report: ProofReport): string[] {
+  return features.flatMap((feature) => [
+    ...feature.verified_by.flatMap((proof) => checkProof(feature.id, proof, report)),
+    ...gapProofs(feature).flatMap(({ label, proof }) => checkProof(label, proof, report)),
+  ]);
 }
 
 export function runProofs(
   hydrogenDir: string,
-  paths: string[],
+  files: string[],
   options: { quiet?: boolean; root?: string } = {},
-): ReadonlyMap<string, ProofResult> | string {
+): ProofReport | string {
   const root = options.root ?? hydrogenDir;
   const tmp = mkdtempSync(join(tmpdir(), "check-features-"));
   const reportPath = join(tmp, "report.json");
@@ -353,7 +419,7 @@ export function runProofs(
         "run",
         "--root",
         root,
-        ...paths,
+        ...files,
         "--reporter=default",
         "--reporter=json",
         `--outputFile=${reportPath}`,
@@ -366,12 +432,14 @@ export function runProofs(
     if (vitest.error) return `could not run vitest: ${vitest.error.message}`;
     if (!existsSync(reportPath)) return "vitest did not produce a JSON report";
     const report: {
-      testResults: { name: string; assertionResults: { status: string }[] }[];
+      testResults: { name: string; assertionResults: TestOutcome[] }[];
     } = JSON.parse(readFileSync(reportPath, "utf8"));
-    const map = new Map<string, ProofResult>();
+    const map = new Map<string, TestOutcome[]>();
     for (const suite of report.testResults) {
-      const rel = relative(root, suite.name);
-      map.set(rel, countAssertions(suite.assertionResults));
+      map.set(
+        relative(root, suite.name),
+        suite.assertionResults.map(({ title, fullName, status }) => ({ title, fullName, status })),
+      );
     }
     return map;
   } finally {
@@ -389,21 +457,22 @@ export function applyMutant(source: string, mutant: Mutant): string | undefined 
 export type MutantVerdict = "killed" | "survived" | { broke: string };
 
 /**
- * A mutant is killed when some proof fails. A proof that vitest could not
- * collect or that ran zero tests under the mutant did not fail, it broke,
- * which usually means the mutant is not valid code.
+ * A mutant is killed when some named proof test fails. A test vitest could
+ * not collect or did not run under the mutant did not fail, it broke, which
+ * usually means the mutant is not valid code.
  */
-export function judgeMutant(
-  proofs: ReadonlyMap<string, ProofResult>,
-  verifiedBy: string[],
-): MutantVerdict {
-  for (const path of verifiedBy) {
-    const result = proofs.get(path);
-    if (result === undefined || (result.passed === 0 && result.failed === 0)) {
-      return { broke: path };
+export function judgeMutant(report: ProofReport, verifiedBy: Proof[]): MutantVerdict {
+  let killed = false;
+  for (const proof of verifiedBy) {
+    for (const name of proof.tests) {
+      const outcomes = outcomesFor(report, proof, name);
+      if (!outcomes.some((outcome) => outcome.status === "passed" || outcome.status === "failed")) {
+        return { broke: `"${name}" in ${proof.file}` };
+      }
+      if (outcomes.some((outcome) => outcome.status === "failed")) killed = true;
     }
   }
-  return verifiedBy.some((path) => (proofs.get(path)?.failed ?? 0) > 0) ? "killed" : "survived";
+  return killed ? "killed" : "survived";
 }
 
 /** Mutants are written to `copy`, a copy of packages/hydrogen, never to the real tree. */
@@ -414,6 +483,7 @@ export function runFalsification(
 ): { errors: string[]; killed: string[] } {
   const errors: string[] = [];
   const killed: string[] = [];
+  const files = [...new Set(feature.verified_by.map((proof) => proof.file))];
   for (const mutant of feature.falsified_by) {
     const label = `${feature.id}: mutant "${mutant.mutant}"`;
     const original = readFileSync(join(hydrogenDir, mutant.file), "utf8");
@@ -423,9 +493,9 @@ export function runFalsification(
       continue;
     }
     writeFileSync(join(copy, mutant.file), mutated);
-    const proofs = runProofs(hydrogenDir, feature.verified_by, { quiet: true, root: copy });
+    const report = runProofs(hydrogenDir, files, { quiet: true, root: copy });
     writeFileSync(join(copy, mutant.file), original);
-    const verdict = typeof proofs === "string" ? proofs : judgeMutant(proofs, feature.verified_by);
+    const verdict = typeof report === "string" ? report : judgeMutant(report, feature.verified_by);
     if (verdict === "killed") killed.push(label);
     else if (verdict === "survived") errors.push(`${label} survived every proof`);
     else if (typeof verdict === "string") errors.push(`${label}: ${verdict}`);
@@ -441,10 +511,15 @@ export function loadWorkspace(repoRoot: string): Workspace {
     .filter((path) => path.endsWith(".property.test.ts"))
     .map((path) => join("src", path))
     .toSorted();
+  const codeOwners = readFileSync(join(repoRoot, ".github/CODEOWNERS"), "utf8")
+    .split("\n")
+    .filter((line) => !line.startsWith("#"))
+    .flatMap((line) => line.split(/\s+/).filter((word) => word.startsWith("@")));
   return {
     fileExists: (path) => existsSync(join(hydrogenDir, path)),
     e2eGroupExists: (name) => existsSync(join(specsDir, name)),
     propertyTests,
+    codeOwners: new Set(codeOwners),
   };
 }
 
@@ -461,11 +536,16 @@ export function run(
   if (errors.length > 0 || !(options.proofs || options.falsify)) return { errors, killed: [] };
 
   const hydrogenDir = join(repoRoot, "packages/hydrogen");
-  const proofPaths = [...new Set(parsed.features.flatMap((feature) => feature.verified_by))];
-  if (proofPaths.length > 0) {
-    const result = runProofs(hydrogenDir, proofPaths);
-    if (typeof result === "string") return { errors: [result], killed: [] };
-    errors.push(...checkProofs(parsed.features, result));
+  const files = new Set(
+    parsed.features.flatMap((feature) => [
+      ...feature.verified_by.map((proof) => proof.file),
+      ...gapProofs(feature).map(({ proof }) => proof.file),
+    ]),
+  );
+  if (files.size > 0) {
+    const report = runProofs(hydrogenDir, [...files]);
+    if (typeof report === "string") return { errors: [report], killed: [] };
+    errors.push(...checkProofs(parsed.features, report));
   }
   // Mutants only mean something against a registry whose proofs are green.
   if (errors.length > 0 || !options.falsify) return { errors, killed: [] };
