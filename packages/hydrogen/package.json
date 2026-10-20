@@ -96,7 +96,9 @@
   },
   "dependencies": {
     "cross-spawn": "7.0.6",
-    "gql.tada": "1.9.2"
+    "gql.tada": "1.9.2",
+    "graphql": "^16.13.2",
+    "oxc-parser": "0.135.0"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^7.0.0",
@@ -108,10 +110,8 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vue/test-utils": "^2.4.0",
-    "graphql": "^16.13.2",
     "happy-dom": "^20.9.0",
     "magic-string": "^0.30.21",
-    "oxc-parser": "0.135.0",
     "oxc-walker": "^1.0.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",

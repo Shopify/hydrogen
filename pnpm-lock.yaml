@@ -320,6 +320,12 @@ importers:
       gql.tada:
         specifier: 1.9.2
         version: 1.9.2(graphql@16.13.2)(typescript@5.9.3)
+      graphql:
+        specifier: ^16.13.2
+        version: 16.13.2
+      oxc-parser:
+        specifier: 0.135.0
+        version: 0.135.0
       vue:
         specifier: ^3.5.0
         version: 3.5.33(typescript@5.9.3)
@@ -351,18 +357,12 @@ importers:
       '@vue/test-utils':
         specifier: ^2.4.0
         version: 2.4.10(@vue/compiler-dom@3.5.33)(@vue/server-renderer@3.5.33(vue@3.5.33(typescript@5.9.3)))(vue@3.5.33(typescript@5.9.3))
-      graphql:
-        specifier: ^16.13.2
-        version: 16.13.2
       happy-dom:
         specifier: ^20.9.0
         version: 20.9.0
       magic-string:
         specifier: ^0.30.21
         version: 0.30.21
-      oxc-parser:
-        specifier: 0.135.0
-        version: 0.135.0
       oxc-walker:
         specifier: ^1.0.0
         version: 1.0.0(oxc-parser@0.135.0)(rolldown@1.0.0-rc.17)

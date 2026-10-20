@@ -68,6 +68,16 @@ Run the package script before finishing any setup that added or changed Storefro
 
 For stricter CI, append `--fail-on-warn` to the package script so warning-level findings fail the build too.
 
+## Write Checkable Documents
+
+`hydrogen gql check` reads source files directly instead of running TypeScript, so it only sees documents it can read statically:
+
+- Import `gql` directly from `@shopify/hydrogen` or `@shopify/hydrogen/customer-account`. A local module that re-exports `gql` hides its calls from the check.
+- Write the query as a string literal without `${}` expressions.
+- Pass fragments as an array literal of `gql()` documents declared with module-level `const`. Fragments can be imported from other project files through relative or `tsconfig.json` `paths` imports.
+
+The check warns about documents it can't read, so `--fail-on-warn` catches them.
+
 ## What It Catches
 
 - Fields that do not exist on the selected type.
