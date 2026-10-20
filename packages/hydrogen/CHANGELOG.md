@@ -1,5 +1,18 @@
 # @shopify/hydrogen
 
+## 2026.4.8
+
+### Patch Changes
+
+- When the login request has no `return_to` or `redirect` search param, `customerAccount.login()` now saves the post-sign-in redirect as a normalized path on your storefront's origin, falling back to `defaultRedirectPath` otherwise. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- The `hydrogen dev` developer tooling routes (GraphiQL, the Subrequest Profiler, and the endpoints behind them) now respond only to requests from the machine running the dev server. Requests from other devices, for example when running with `--host`, receive a 404. Storefront routes are unaffected. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Fix a race condition in `loadScript` where the browser could begin fetching a script before integrity or other security attributes were applied. Attributes are now set before the element is inserted into the DOM. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Updated dependencies [[`e4622144c83e9d9838b5c9336a4d9a021bbe0727`](https://github.com/Shopify/hydrogen/commit/e4622144c83e9d9838b5c9336a4d9a021bbe0727)]:
+  - @shopify/hydrogen-react@2026.4.5
+
 ## 2026.4.7
 
 ### Patch Changes
