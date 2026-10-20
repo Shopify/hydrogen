@@ -291,7 +291,9 @@ jobs:
         uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1.7.0
         with:
           version: pnpm run version
-          publish: pnpm run changeset -- publish --tag ${{ github.ref_name }}
+          # No `--` before `publish`: unlike npm, pnpm passes it through to the
+          # script, and changeset rejects it as an extra argument
+          publish: pnpm changeset publish --tag ${{ github.ref_name }}
           commit: '[ci] back-fix release ${{ github.ref_name }}'
           title: '[ci] back-fix release ${{ github.ref_name }}'
         env:
