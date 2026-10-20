@@ -38,8 +38,11 @@ The relationship decides the ID, not availability: `product-variant-option` sele
 | `cart-drawer` | The cart drawer element |
 | `cart-trigger` | The control that opens the cart drawer. Not a plain link to `/cart` |
 | `cart-line` | The element that holds one cart line: its title, variant text, quantity, and controls |
+| `cart-line-quantity` | The quantity input of a cart line |
+| `cart-line-increase` | The increase quantity control of a cart line |
+| `cart-line-decrease` | The decrease quantity control of a cart line |
 
-After Add to cart, the drawer must open by itself. The suite uses `cart-trigger` only to open a closed drawer in one test. It finds a line inside the visible cart page or the open drawer, never across both.
+After Add to cart, the drawer must open by itself. The suite uses `cart-trigger` only to open a closed drawer in one test. It finds a line inside the visible cart page or the open drawer, never across both, then the controls inside that line. It reads the quantity from the native input value.
 
 ## How to adopt
 
@@ -85,6 +88,9 @@ const line = page
   .getByTestId('cart-line')
   .filter({visible: true, hasText: 'Classic Tee'})
   .first();
+const quantity = line.getByTestId('cart-line-quantity').filter({visible: true}).first();
+await line.getByTestId('cart-line-increase').filter({visible: true}).first().click();
+await expect(quantity).toHaveValue('2');
 ```
 
 These are locator examples, not a complete cart journey. Wait for settlement between cart changes and assert the real result.

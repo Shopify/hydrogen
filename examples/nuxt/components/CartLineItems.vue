@@ -138,6 +138,7 @@ function errorIdForLine(lineId: string) {
               type="submit"
               :aria-label="`Decrease quantity for ${line.merchandise?.product.title ?? 'cart item'}`"
               v-bind="register('decrease')"
+              data-testid="cart-line-decrease"
               class="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-sm hover:border-black"
             >
               -
@@ -147,6 +148,7 @@ function errorIdForLine(lineId: string) {
               type="text"
               inputmode="numeric"
               v-bind="register('quantity', { value: line.quantity })"
+              data-testid="cart-line-quantity"
               :aria-label="`Quantity for ${line.merchandise?.product.title ?? 'cart item'}`"
               :aria-invalid="
                 Boolean(
@@ -161,6 +163,7 @@ function errorIdForLine(lineId: string) {
               type="submit"
               :aria-label="`Increase quantity for ${line.merchandise?.product.title ?? 'cart item'}`"
               v-bind="register('increase')"
+              data-testid="cart-line-increase"
               class="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-sm hover:border-black"
             >
               +

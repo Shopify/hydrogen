@@ -5,8 +5,6 @@ import { test, type CartTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
 const REMOVE_CONTROL_NAME = /remove/i;
-const INCREASE_CONTROL_NAME = /increase|^\+$/i;
-const DECREASE_CONTROL_NAME = /decrease|^[-−]$/i;
 const CART_ENDPOINT_PATTERN = "**/api/cart";
 const CART_TOTALS_UPDATING_TEXT = "Updating cart totals";
 const CART_TOTALS_UPDATED_TEXT = "Cart totals updated";
@@ -72,7 +70,7 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
     await addToCart.click();
     const line = await openCartOverlayFor(page, product.productTitle);
     await expect(line).toBeVisible({ timeout: CART_SETTLE_TIMEOUT_MS });
-    const quantityInput = await quantityInputFor(line, product.path);
+    const quantityInput = quantityInputFor(line);
     await expect
       .poll(() => numericInputValue(quantityInput), {
         message: `Expected cart line quantity to optimistically increase from ${product.maxQuantity} to ${product.maxQuantity + 1}.`,
@@ -133,6 +131,21 @@ test.describe("cart locator helpers", () => {
 
     await expect(await openCartOverlayFor(page, "Shirt")).toBeVisible();
     expect(await wasTriggerClicked(page)).toBe(true);
+  });
+
+  test("changes quantity with the controls of the chosen line only", async ({ page }) => {
+    // The other line comes first, so a page-level match would change its quantity.
+    await page.setContent(`<div data-testid="cart-page"><ul>
+      ${quantityLineHtml("Hat", 5)}
+      ${quantityLineHtml("Shirt", 1)}
+    </ul></div>`);
+    const line = cartLineFor(page, "Shirt");
+
+    await stepCartLineQuantity(line, "increase");
+    await expect(quantityInputFor(line)).toHaveValue("2");
+    await stepCartLineQuantity(line, "decrease");
+    await expect(quantityInputFor(line)).toHaveValue("1");
+    await expect(quantityInputFor(cartLineFor(page, "Hat"))).toHaveValue("5");
   });
 });
 
@@ -203,7 +216,7 @@ async function setCartLineQuantity(
   quantity: number,
 ): Promise<void> {
   const line = await expectCartLine(page, expectation);
-  const quantityInput = await quantityInputFor(line, expectation.cartPath);
+  const quantityInput = quantityInputFor(line);
   const requestGate = createRequestGate();
   await page.route(CART_ENDPOINT_PATTERN, async (route) => {
     await requestGate.wait;
@@ -240,40 +253,29 @@ async function expectCartLine(page: Page, expectation: CartExpectation): Promise
 
 async function increaseCartLineQuantity(page: Page, expectation: CartExpectation): Promise<void> {
   const line = await expectCartLine(page, expectation);
-  const quantityInput = await quantityInputFor(line, expectation.cartPath);
-  const initialQuantity = await numericInputValue(quantityInput);
-  const increase = await lineButton(
-    line,
-    INCREASE_CONTROL_NAME,
-    "increase quantity",
-    expectation.cartPath,
-  );
-
-  await increase.click();
-  await expect
-    .poll(() => numericInputValue(quantityInput), {
-      message: `Expected cart line quantity to increase from ${initialQuantity} to ${initialQuantity + 1}.`,
-    })
-    .toBe(initialQuantity + 1);
+  await stepCartLineQuantity(line, "increase");
 }
 
 async function decreaseCartLineQuantity(page: Page, expectation: CartExpectation): Promise<void> {
   const line = await expectCartLine(page, expectation);
-  const quantityInput = await quantityInputFor(line, expectation.cartPath);
-  const initialQuantity = await numericInputValue(quantityInput);
-  const decrease = await lineButton(
-    line,
-    DECREASE_CONTROL_NAME,
-    "decrease quantity",
-    expectation.cartPath,
-  );
+  await stepCartLineQuantity(line, "decrease");
+}
 
-  await decrease.click();
-  await expect
-    .poll(() => numericInputValue(quantityInput), {
-      message: `Expected cart line quantity to decrease from ${initialQuantity} to ${initialQuantity - 1} after quantity increase succeeded.`,
-    })
-    .toBe(initialQuantity - 1);
+/** Clicks the line's increase or decrease control and waits for the native input value. */
+async function stepCartLineQuantity(
+  line: Locator,
+  control: "increase" | "decrease",
+): Promise<void> {
+  const quantityInput = quantityInputFor(line);
+  const initialQuantity = await numericInputValue(quantityInput);
+  const expectedQuantity = control === "increase" ? initialQuantity + 1 : initialQuantity - 1;
+  const message =
+    control === "increase"
+      ? `Expected cart line quantity to increase from ${initialQuantity} to ${expectedQuantity}.`
+      : `Expected cart line quantity to decrease from ${initialQuantity} to ${expectedQuantity} after quantity increase succeeded.`;
+
+  await lineControl(line, `cart-line-${control}`).click();
+  await expect.poll(() => numericInputValue(quantityInput), { message }).toBe(expectedQuantity);
 }
 
 async function removeCartLine(page: Page, expectation: CartExpectation): Promise<void> {
@@ -339,20 +341,12 @@ async function expectCartTotalsStatus(
   }
 }
 
-async function quantityInputFor(line: Locator, cartPath: string): Promise<Locator> {
-  const textbox = line.getByRole("textbox").first();
-  if (await textbox.isVisible().catch(() => false)) return textbox;
+function quantityInputFor(line: Locator): Locator {
+  return lineControl(line, "cart-line-quantity");
+}
 
-  const spinbutton = line.getByRole("spinbutton").first();
-  if (await spinbutton.isVisible().catch(() => false)) return spinbutton;
-
-  throw createContractError({
-    capability: "cart-line",
-    routePath: cartPath,
-    expectation: "Cart line item exposes a visible quantity input.",
-    likelyFix: "Label the cart line quantity control and keep it inside the line item.",
-    docsAnchor: "#cart-line-items",
-  });
+function lineControl(line: Locator, testId: string): Locator {
+  return line.getByTestId(testId).filter({ visible: true }).first();
 }
 
 async function numericInputValue(input: Locator): Promise<number> {
@@ -386,6 +380,21 @@ async function lineButton(
 /** A cart line for helper fixtures. */
 function cartLineHtml(text: string): string {
   return `<li data-testid="cart-line">${text}</li>`;
+}
+
+/** A helper fixture line with working quantity controls. */
+function quantityLineHtml(title: string, quantity: number): string {
+  return `<li data-testid="cart-line">
+    <span>${title}</span>
+    <input type="number" data-testid="cart-line-quantity" aria-label="Menge" value="${quantity}">
+    <button type="button" data-testid="cart-line-increase" aria-label="Mehr" onclick="${quantityStepScript(1)}">↑</button>
+    <button type="button" data-testid="cart-line-decrease" aria-label="Weniger" onclick="${quantityStepScript(-1)}">↓</button>
+  </li>`;
+}
+
+/** Inline click handler that changes the line's quantity input by `delta`. */
+function quantityStepScript(delta: number): string {
+  return `const input = this.closest('[data-testid=cart-line]').querySelector('[data-testid=cart-line-quantity]'); input.value = String(Number(input.value) + ${delta});`;
 }
 
 async function wasTriggerClicked(page: Page): Promise<boolean> {
