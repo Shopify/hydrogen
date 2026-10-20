@@ -28,6 +28,7 @@ The suite finds the elements in this table with `data-testid` attributes and Pla
 | Test ID | Put it on |
 | --- | --- |
 | `product-title` | The product title heading |
+| `product-variant-option` | Each option value link or button that selects another variant of the same product, including sold-out values and disabled values for combinations that do not exist |
 
 IDs can repeat, for example a main and a sticky add to cart. The suite narrows each ID to visible elements, and to the expected text or accessible name when it needs a specific one. The storefront can have other test IDs for its own tests. The suite does not read them.
 
@@ -53,16 +54,18 @@ The suite discovers a live product title, searches for it, and verifies that pro
 
 ## Variant Options
 
-At least one probed product must expose a selectable variant control.
+At least one probed product must expose a selectable variant control. The suite looks for unselected `product-variant-option` links first, then `product-variant-option` buttons (see Test IDs).
 
 Supported controls:
 
-- Same-product links whose href is a product URL with selected option query params. The selected link has `aria-current="true"`.
+- Links to another variant of the same product. Any URL format works: the suite follows the link's real `href`. The selected link has `aria-current="true"`.
 - Buttons with `aria-pressed`. The selected button has `aria-pressed="true"`. Buttons work only with JavaScript; the no-JavaScript check needs links.
+
+The suite skips current values and disabled values (the native `disabled` attribute, or `aria-disabled="true"` on a link).
 
 With JavaScript, selecting a value must put the selection in the URL (for a link, the link's href) and mark the value as selected. Loading that URL directly must render the product title and show the same value as selected. Selection must keep unrelated non-option query params (the suite uses `storefront_e2e_ref=variant-check`).
 
-Without JavaScript, the product title must render, and at least one probed product must expose a same-product variant link for an unselected value. A native click on that link must load its href, keep unrelated query params, and the server-rendered page must mark that value as selected.
+Without JavaScript, the product title must render, and at least one probed product must expose an unselected `product-variant-option` link. A native click on that link must load its href, keep unrelated query params, and the server-rendered page must mark that value as selected.
 
 Selected values should also be visibly indicated (styling or text). The suite does not check this. It also does not check that hydration is complete before it clicks, how many navigations or document loads a selection makes, or the visible appearance, price, or merchandise of the selected variant.
 

@@ -24,6 +24,9 @@ Use this skill when you prepare a custom storefront, in any framework, so that t
 | Test ID | Put it on |
 | --- | --- |
 | `product-title` | The product title heading |
+| `product-variant-option` | Each option value link or button that selects another variant of the same product, including sold-out values and disabled values for combinations that do not exist |
+
+`product-variant-option` marks option values that select another variant of the same product, including sold-out values and disabled values for combinations that do not exist. The suite tries unselected links first, then buttons, and skips current and disabled values. It follows a link's real `href`, so any URL format works. The no-JavaScript check needs links; `STOREFRONT_SKIP_NO_JS_VARIANTS=true` skips only that check.
 
 ## How to adopt
 
