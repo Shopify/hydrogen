@@ -101,9 +101,11 @@ async function startCheckoutFromPopulatedCart(
 
 async function expectCartLine(page: Page, expectation: CartExpectation): Promise<Locator> {
   const line = page
-    .getByRole("main")
-    .getByRole("listitem")
-    .filter({ hasText: expectation.productTitle })
+    .getByTestId("cart-page")
+    .filter({ visible: true })
+    .first()
+    .getByTestId("cart-line")
+    .filter({ hasText: expectation.productTitle, visible: true })
     .first();
   await expect(line).toBeVisible({ timeout: CART_SETTLE_TIMEOUT_MS });
 
@@ -115,7 +117,13 @@ async function expectCartLine(page: Page, expectation: CartExpectation): Promise
 }
 
 function cartOverlayLineFor(page: Page, productTitle: string): Locator {
-  return page.getByRole("dialog").getByRole("listitem").filter({ hasText: productTitle }).first();
+  return page
+    .getByTestId("cart-drawer")
+    .filter({ visible: true })
+    .first()
+    .getByTestId("cart-line")
+    .filter({ hasText: productTitle, visible: true })
+    .first();
 }
 
 function shouldAssertVariant(variantLabel: string): boolean {

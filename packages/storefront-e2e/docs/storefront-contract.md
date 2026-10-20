@@ -98,7 +98,7 @@ Cart UI that has no ID in Test IDs is found by role, label, and text.
 
 The checkout test verifies only the storefront-owned side of the checkout handoff.
 
-It verifies the added product and variant in the storefront cart, clicks the visible checkout link, and waits for a checkout URL. It does not depend on the external checkout document loading, enter customer data, payment data, or perform any irreversible checkout step.
+It verifies the added product and variant in the storefront cart, clicks the visible checkout link, and waits for a checkout URL. It finds the added line with `cart-drawer`, `cart-page`, and `cart-line`. It does not depend on the external checkout document loading, enter customer data, payment data, or perform any irreversible checkout step.
 
 If the storefront does not start checkout navigation, the test fails as a contract issue. External checkout availability is outside this suite's boundary.
 
