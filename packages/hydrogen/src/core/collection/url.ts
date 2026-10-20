@@ -322,7 +322,13 @@ function parseCollectionSortKey(
   return rawSortBy ? STANDARD_EVENTS_COLLECTION_SORT_KEY[rawSortBy] : undefined;
 }
 
+const CANONICAL_DECIMAL = /^-?\d+(\.\d+)?$/;
+
 function parseLocalizedNumber(value: string): number {
+  // Canonical decimals come from String(n) in the serializer and from
+  // <input type="number">, so they must survive regardless of shop locale.
+  if (CANONICAL_DECIMAL.test(value)) return Number(value);
+
   try {
     const locale = typeof window !== "undefined" ? window.Shopify?.locale : undefined;
     const parts = new Intl.NumberFormat(locale ?? "en").formatToParts(1234.5);
