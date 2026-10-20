@@ -10,7 +10,7 @@ description: >
 
 ### The Golden Rules
 
-1. **Use role-based locators** - Never CSS classes unless absolutely necessary
+1. **Use role-based locators** - Never CSS classes unless absolutely necessary. Exception: the portable storefront suite uses its documented test IDs (see [Portable Storefront Test IDs](#portable-storefront-test-ids))
 2. **Assert absence broadly, presence specifically** - Wide net for "not there", scoped for "is there"
 3. **Never use timeouts or networkidle** - Wait for visible effects only
 4. **Improve accessibility while testing** - Tests drive better markup
@@ -23,7 +23,7 @@ description: >
 ❌ `page.waitForLoadState('networkidle')` - Unreliable
 ❌ `page.waitForResponse(...)` - Implementation detail
 ❌ `page.locator('.css-class')` - Fragile selectors
-❌ Adding test IDs when accessibility markup would work
+❌ Adding test IDs when accessibility markup would work (except the documented portable storefront test IDs)
 ❌ Hardcoding dynamic store data names (e.g., collection titles from `sortKey: UPDATED_AT` queries)
 
 ### Dynamic Store Data
@@ -133,6 +133,12 @@ Always choose selectors based on **DOM elements and semantic structure**, NOT CS
 
 Test IDs are acceptable when they disambiguate duplicated UI that is already semantically valid, such as cart page versus cart drawer rendering at the same time. Do not add test IDs to avoid fixing missing accessible names.
 
+### Portable Storefront Test IDs
+
+The portable storefront suite in `packages/storefront-e2e` runs against storefronts that it does not own, so it finds these elements with `getByTestId`: `product-title`. These IDs can repeat, so narrow each one to the visible element, and to the expected text when you need a specific one.
+
+This exception covers only these IDs in the portable suite. All other locators stay role-first. The source of truth is `packages/storefront-e2e/docs/storefront-contract.md`. See also `skills/hydrogen-storefront-testing/SKILL.md`.
+
 ### Accessibility Improvements During Test Writing
 
 **Writing tests should drive better markup.** When you can't write a good locator, that's often a signal of missing accessibility features.
@@ -175,7 +181,7 @@ getCartTotals() {
 - Adding `aria-label` purely for test purposes when it provides no user benefit
 - Over-labeling elements that are already accessible
 - Adding explicit ARIA roles that duplicate native semantics (e.g., `role="list"` on `<ul>`, `role="button"` on `<button>`)
-- Using `data-testid` when role-based selectors would work with proper markup
+- Using `data-testid` when role-based selectors would work with proper markup (except the documented portable storefront test IDs)
 
 ### Presence vs Absence Assertions
 

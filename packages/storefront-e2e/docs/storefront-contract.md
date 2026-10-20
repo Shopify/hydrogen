@@ -21,6 +21,16 @@ Default route expectations:
 
 Required groups fail on route HTTP failures; optional groups skip.
 
+## Test IDs
+
+The suite finds the elements in this table with `data-testid` attributes and Playwright `getByTestId`. Put each ID on the existing element that has this meaning; its markup, styles, behavior, and accessibility stay as they are. The sections below describe what each test checks.
+
+| Test ID | Put it on |
+| --- | --- |
+| `product-title` | The product title heading |
+
+IDs can repeat, for example a main and a sticky add to cart. The suite narrows each ID to visible elements, and to the expected text or accessible name when it needs a specific one. The storefront can have other test IDs for its own tests. The suite does not read them.
+
 ## Product Results
 
 Collection and search pages must expose product cards as accessible links to product detail pages.
@@ -50,9 +60,9 @@ Supported controls:
 - Same-product links whose href is a product URL with selected option query params. The selected link has `aria-current="true"`.
 - Buttons with `aria-pressed`. The selected button has `aria-pressed="true"`. Buttons work only with JavaScript; the no-JavaScript check needs links.
 
-With JavaScript, selecting a value must put the selection in the URL (for a link, the link's href) and mark the value as selected. Loading that URL directly must render the product heading and show the same value as selected. Selection must keep unrelated non-option query params (the suite uses `storefront_e2e_ref=variant-check`).
+With JavaScript, selecting a value must put the selection in the URL (for a link, the link's href) and mark the value as selected. Loading that URL directly must render the product title and show the same value as selected. Selection must keep unrelated non-option query params (the suite uses `storefront_e2e_ref=variant-check`).
 
-Without JavaScript, the product heading must render, and at least one probed product must expose a same-product variant link for an unselected value. A native click on that link must load its href, keep unrelated query params, and the server-rendered page must mark that value as selected.
+Without JavaScript, the product title must render, and at least one probed product must expose a same-product variant link for an unselected value. A native click on that link must load its href, keep unrelated query params, and the server-rendered page must mark that value as selected.
 
 Selected values should also be visibly indicated (styling or text). The suite does not check this. It also does not check that hydration is complete before it clicks, how many navigations or document loads a selection makes, or the visible appearance, price, or merchandise of the selected variant.
 
@@ -78,7 +88,7 @@ Each line must expose:
 
 Cart totals must expose a `role="status"` region that says `Updating cart totals` while cart totals are stale, then `Cart totals updated` after mutation settlement. Do not announce `Cart totals updated` on initial idle render before a mutation cycle. The region may be visually hidden if it remains available to assistive technology.
 
-Accessible labels are preferred. Broad data-testid attributes should only be used when a semantic role or label cannot express the user-facing concept.
+Cart UI that has no ID in Test IDs is found by role, label, and text.
 
 ## Checkout Handoff
 
@@ -110,4 +120,4 @@ Operational expectations:
 
 When the storefront contract changes, update the relevant spec matcher, shared helper, and this document together.
 
-Generated examples should migrate toward explicit storefront-owned signifiers for product results, variant options, cart lines, and checkout summaries. Until then, the suite assumes label strings and semantic roles.
+The suite reads test IDs only from Test IDs. It finds all other UI by semantic roles and label strings.

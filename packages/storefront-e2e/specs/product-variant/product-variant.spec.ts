@@ -34,7 +34,10 @@ test("product variant URL loads selected variant", async ({ data, page }) => {
   await page.goto(selectedVariant.variantUrl);
 
   await expect(
-    page.getByRole("heading", { level: 1, name: selectedVariant.productTitle }),
+    page
+      .getByTestId("product-title")
+      .filter({ hasText: selectedVariant.productTitle, visible: true })
+      .first(),
   ).toBeVisible();
   expectQuerySentinel(page.url());
   await expectSelectedControl(page, selectedVariant);
@@ -55,7 +58,12 @@ test.describe("without JavaScript", () => {
 
     await expect(page).toHaveURL(variant.targetUrl);
     expectQuerySentinel(page.url());
-    await expect(page.getByRole("heading", { level: 1, name: variant.productTitle })).toBeVisible();
+    await expect(
+      page
+        .getByTestId("product-title")
+        .filter({ hasText: variant.productTitle, visible: true })
+        .first(),
+    ).toBeVisible();
     await expectCurrentVariantLinks(page, variant.linkName, variant.targetUrl);
   });
 });
@@ -126,7 +134,9 @@ async function findServerVariantLink(
     const path = productPathWithSentinel(paths, product);
     checkedPaths.push(path);
     await page.goto(path);
-    await expect(page.getByRole("heading", { level: 1, name: product.title })).toBeVisible();
+    await expect(
+      page.getByTestId("product-title").filter({ hasText: product.title, visible: true }).first(),
+    ).toBeVisible();
 
     const link = await findVariantLink(page, product.optionNames);
     if (link === null) continue;
@@ -166,7 +176,9 @@ async function selectVariantForProduct(
   paths: Paths,
 ): Promise<SelectedVariant | null> {
   await page.goto(productPathWithSentinel(paths, product));
-  await expect(page.getByRole("heading", { level: 1, name: product.title })).toBeVisible();
+  await expect(
+    page.getByTestId("product-title").filter({ hasText: product.title, visible: true }).first(),
+  ).toBeVisible();
 
   const control = await findVariantControl(page, product.optionNames);
   if (control === null) return null;

@@ -1,0 +1,56 @@
+---
+name: hydrogen-storefront-testing
+description: >
+  Guide for agents preparing a custom storefront to run the portable
+  storefront-e2e suite. Explains the supported test IDs, where to add them to
+  existing storefront UI, and how the tests use them.
+---
+
+# Storefront Test IDs
+
+Use this skill when you prepare a custom storefront, in any framework, so that the portable storefront-e2e suite in this repository can test it. The canonical reference is `packages/storefront-e2e/docs/storefront-contract.md`. It also lists the routes, live store data, and other conditions that each test group needs. If this skill and the contract differ, the contract is correct.
+
+## How the test IDs work
+
+- A test ID is a locator. It goes on an element that the storefront already renders, and that element keeps its HTML, styles, interactions, and accessibility.
+- IDs can repeat, for example a main and a sticky add to cart, or a desktop and a mobile copy. The suite narrows each ID to visible elements and uses the first match, or the first match with the expected text.
+- An ID finds an element. Each test then checks a buyer journey that the contract describes, such as variant selection, cart changes, filtering, search, and checkout handoff.
+- The suite finds UI without an ID in this skill by role, label, and text, as the contract describes.
+
+## Test IDs
+
+### Product page
+
+| Test ID | Put it on |
+| --- | --- |
+| `product-title` | The product title heading |
+
+## How to adopt
+
+1. Find the existing elements in the tables above in your storefront.
+2. Add the `data-testid` attributes to those elements.
+3. Make sure the buyer journeys work in the running storefront, because the suite checks them.
+4. Start your storefront. The suite tests a storefront that is already running.
+5. From a checkout of the Hydrogen repository, run the suite against it:
+
+   ```sh
+   STOREFRONT_BASE_URL=https://your-storefront.example pnpm test:e2e:storefront
+   ```
+
+   The suite lives in this repository. It is not a package that you install in your storefront.
+6. For failures and skips, read the contract and `packages/storefront-e2e/README.md`. Some test groups need specific routes or store data.
+
+## Example
+
+Add the attribute to the existing element:
+
+```html
+<h1 class="title" data-testid="product-title">Classic Tee</h1>
+```
+
+The suite starts with `getByTestId`, then narrows to visible elements:
+
+```ts
+const title = page.getByTestId('product-title').filter({visible: true}).first();
+await expect(title).toContainText('Classic Tee');
+```

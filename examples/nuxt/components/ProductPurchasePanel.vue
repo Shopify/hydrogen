@@ -9,7 +9,7 @@ const form = useProductForm();
 
 <template>
   <aside class="md:sticky md:top-8 md:self-start">
-    <h1 class="text-4xl font-black tracking-tight">
+    <h1 class="text-4xl font-black tracking-tight" data-testid="product-title">
       {{ product.title }}
     </h1>
     <p class="mt-3 text-lg font-semibold">
