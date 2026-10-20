@@ -406,6 +406,11 @@
     opacity: 0;
     pointer-events: none;
   }
+  /* A selected swatch is the product color under a dark scrim, not the brand
+     fill, so its check stays white instead of following brand contrast. */
+  .filter-swatch .filter-check-icon {
+    color: var(--color-on-fill);
+  }
   .filter-checkbox[aria-checked="true"] .filter-check-icon,
   .filter-checkbox[aria-pressed="true"] .filter-check-icon,
   .filter-checkbox.is-selected .filter-check-icon,
