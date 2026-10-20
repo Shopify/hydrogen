@@ -29,6 +29,7 @@ The suite finds the elements in this table with `data-testid` attributes and Pla
 | --- | --- |
 | `product-title` | The product title heading |
 | `product-variant-option` | Each option value link or button that selects another variant of the same product, including sold-out values and disabled values for combinations that do not exist |
+| `product-add-to-cart` | The add to cart button |
 
 IDs can repeat, for example a main and a sticky add to cart. The suite narrows each ID to visible elements, and to the expected text or accessible name when it needs a specific one. The storefront can have other test IDs for its own tests. The suite does not read them.
 
@@ -74,6 +75,8 @@ Set STOREFRONT_SKIP_NO_JS_VARIANTS=true to skip the no-JavaScript check for a st
 ## Cart Line Items
 
 Cart lines must be visible list items containing the product title.
+
+The cart and checkout tests click the first visible `product-add-to-cart` (see Test IDs).
 
 After Add to cart, the suite must be able to inspect the added line in a cart drawer dialog before navigating to the cart page. Either open the drawer immediately with the optimistic line, or expose a visible page-level button or link whose accessible name begins with Cart, Open cart, or View cart so the suite can open the drawer while the update is pending.
 

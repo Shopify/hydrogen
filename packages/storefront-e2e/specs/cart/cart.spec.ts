@@ -4,7 +4,6 @@ import { createContractError } from "../../src/contract";
 import { test, type CartTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
-const ADD_TO_CART_NAME = /add to cart/i;
 const CART_CONTROL_NAME = /^(?:open |view )?cart\b/i;
 const REMOVE_CONTROL_NAME = /remove/i;
 const INCREASE_CONTROL_NAME = /increase|^\+$/i;
@@ -68,7 +67,7 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
     await route.continue();
   });
 
-  const addToCart = page.getByRole("button", { name: ADD_TO_CART_NAME }).first();
+  const addToCart = page.getByTestId("product-add-to-cart").filter({ visible: true }).first();
 
   try {
     await addToCart.click();
@@ -135,7 +134,7 @@ async function tryAddProductToCart(
     productTitle: product.productTitle,
     variantLabel: product.variantLabel,
   };
-  const addToCart = page.getByRole("button", { name: ADD_TO_CART_NAME }).first();
+  const addToCart = page.getByTestId("product-add-to-cart").filter({ visible: true }).first();
   const isCartVisible = await addToCart
     .waitFor({ state: "visible", timeout: CART_SETTLE_TIMEOUT_MS })
     .then(() => true)
