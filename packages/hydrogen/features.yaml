@@ -7,8 +7,8 @@
   promise: >
     Collection filter and sort state that the Liquid-compatible URL scheme can
     express survives a trip through the URL. parseCollectionParams(serializeCollectionParams(p))
-    equals p, and parseSortByValue(getSortByValue(k, r)) returns k for every Storefront
-    API sort key, keeping r only for directional keys. State the scheme cannot express
+    equals p up to filter order, and parseSortByValue(getSortByValue(k, r)) returns k for every
+    Storefront API sort key, keeping r only for directional keys. State the scheme cannot express
     is listed under known_gaps.
   status: shipped
   owner: hydrogen
@@ -71,7 +71,7 @@
       accepted: >
         The Liquid URL scheme has a single price facet and the collection UI exposes one range.
         Revisit if normalizeFilters grows a price rule or a UI makes two ranges reachable.
-    - gap: A metafield namespace containing a dot, a taxonomy key without a dot, an empty metafield key, or an empty option name serialize to params the parser drops.
+    - gap: A metafield namespace containing a dot parses back split at its first dot. A taxonomy key without a dot, an empty metafield key, or an empty option name serialize to params the parser drops.
       accepted: >
         Shopify metafield namespaces allow letters, digits, underscore and hyphen, and keys are
         required. Taxonomy keys are always namespace.key. Variant option names are required. None

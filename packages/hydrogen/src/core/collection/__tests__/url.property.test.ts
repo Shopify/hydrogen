@@ -1,5 +1,5 @@
 import * as fc from "fast-check";
-import { describe, it, expect, expectTypeOf } from "vitest";
+import { describe, it, expect, expectTypeOf, vi } from "vitest";
 
 import type { ProductFilter } from "../../../../vendor/standard-events";
 import type { ProductCollectionSortKeys } from "../../../graphql/generated/storefront-api-types";
@@ -20,11 +20,8 @@ const delimiterHeavyChar = fc.oneof(
 const filterString = fc.string({ unit: delimiterHeavyChar, maxLength: 20 });
 const nonEmptyFilterString = fc.string({ unit: delimiterHeavyChar, minLength: 1, maxLength: 20 });
 
-// Namespaces are parsed with `[^.]+` and encodeURIComponent leaves dots alone,
-// so a dotted namespace cannot round-trip. Shopify namespaces never contain dots.
+// Each exclusion below is a known gap in features.yaml, shown by a test at the bottom of this file.
 const dotFreeNamespace = nonEmptyFilterString.filter((s) => !s.includes("."));
-
-// String(-0) is "0", so negative zero cannot round-trip. No price is negative zero.
 const price = fc.double({ noNaN: true }).map((n) => (n === 0 ? 0 : n));
 
 const LIQUID_SORT_KEYS = [
@@ -82,13 +79,11 @@ const variantMetafieldFilter = fc
     ([namespace, key, value]): ProductFilter => ({ variantMetafield: { namespace, key, value } }),
   );
 
-const taxonomyMetafieldFilter = fc
-  .tuple(dotFreeNamespace, nonEmptyFilterString, nonEmptyFilterString)
-  .map(
-    ([ns, subkey, value]): ProductFilter => ({
-      taxonomyMetafield: { key: `${ns}.${subkey}`, value },
-    }),
-  );
+const taxonomyMetafieldFilter = fc.tuple(dotFreeNamespace, nonEmptyFilterString, filterString).map(
+  ([ns, subkey, value]): ProductFilter => ({
+    taxonomyMetafield: { key: `${ns}.${subkey}`, value },
+  }),
+);
 
 const repeatableFilter = fc.oneof(
   tagFilter,
@@ -129,11 +124,20 @@ const collectionParams = fc
 
 // The parser emits filters in a fixed kind order, so filter order is not part of the promise.
 function canonicalOrder(filters: ProductFilter[]): ProductFilter[] {
-  return filters.toSorted((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+  return filters.toSorted((a, b) => {
+    const [left, right] = [JSON.stringify(a), JSON.stringify(b)];
+    return left < right ? -1 : left > right ? 1 : 0;
+  });
+}
+
+function roundTrip(filters: ProductFilter[]): ProductFilter[] {
+  return parseCollectionParams(
+    serializeCollectionParams({ filters, sortKey: undefined, reverse: false }),
+  ).filters;
 }
 
 describe("collection URL round-trip properties", () => {
-  it("parseCollectionParams(serializeCollectionParams(p)) equals p", () => {
+  it("parseCollectionParams(serializeCollectionParams(p)) equals p up to filter order", () => {
     fc.assert(
       fc.property(collectionParams, (p) => {
         const result = parseCollectionParams(serializeCollectionParams(p));
@@ -158,6 +162,66 @@ describe("collection URL round-trip properties", () => {
           reverse: EXPECTED_DIRECTIONAL_SORT_KEYS.has(sortKey) && reverse,
         });
       }
+    }
+  });
+});
+
+// Each test asserts a gap under known_gaps in features.yaml is still there. Closing a gap
+// fails its test, so the registry entry has to change in the same diff as the code.
+describe("collection URL known gaps", () => {
+  it("a category filter does not round-trip", () => {
+    expect(roundTrip([{ category: { id: "gid://shopify/TaxonomyCategory/aa-1" } }])).toEqual([]);
+  });
+
+  it("two availability filters round-trip to none", () => {
+    expect(roundTrip([{ available: true }, { available: false }])).toEqual([]);
+  });
+
+  it("only the first of two price filters round-trips", () => {
+    expect(roundTrip([{ price: { min: 1, max: 2 } }, { price: { min: 3, max: 4 } }])).toEqual([
+      { price: { min: 1, max: 2 } },
+    ]);
+  });
+
+  it("a dotted metafield namespace parses back split at its first dot", () => {
+    expect(roundTrip([{ productMetafield: { namespace: "a.b", key: "k", value: "v" } }])).toEqual([
+      { productMetafield: { namespace: "a", key: "b.k", value: "v" } },
+    ]);
+  });
+
+  it("a dotless taxonomy key, an empty metafield key, and an empty option name are dropped", () => {
+    expect(
+      roundTrip([
+        { taxonomyMetafield: { key: "nodot", value: "v" } },
+        { productMetafield: { namespace: "ns", key: "", value: "v" } },
+        { variantOption: { name: "", value: "v" } },
+      ]),
+    ).toEqual([]);
+  });
+
+  it("ID, RELEVANCE, and COLLECTION_DEFAULT do not round-trip through parseCollectionParams", () => {
+    for (const sortKey of ["ID", "RELEVANCE", "COLLECTION_DEFAULT"] as const) {
+      const params = serializeCollectionParams({ filters: [], sortKey, reverse: false });
+      expect(parseCollectionParams(params).sortKey).toBe(undefined);
+    }
+  });
+
+  it("a price bound of -0 round-trips as 0", () => {
+    const [filter] = roundTrip([{ price: { min: -0 } }]);
+    expect(Object.is(filter?.price?.min, 0)).toBe(true);
+  });
+
+  it("a storefront locale that groups with a dot misreads a serialized price", () => {
+    vi.stubGlobal("window", { Shopify: { locale: "de" } });
+    try {
+      const params = serializeCollectionParams({
+        filters: [{ price: { min: 12.5 } }],
+        sortKey: undefined,
+        reverse: false,
+      });
+      expect(parseCollectionParams(params).filters).toEqual([{ price: { min: 125 } }]);
+    } finally {
+      vi.unstubAllGlobals();
     }
   });
 });
