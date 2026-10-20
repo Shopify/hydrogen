@@ -30,6 +30,7 @@
         - serializeCollectionParams
         - getSortByValue
         - parseSortByValue
+        - price bounds under window.Shopify.locale
   falsified_by:
     - mutant: the price minimum is written to the lte param
       file: src/core/collection/url.ts
@@ -122,8 +123,3 @@
         tests: [a price bound of -0 round-trips as 0]
       accepted: String(-0) is "0". No price is negative zero.
       accepted_by: "@andguy95"
-    - gap: serializeCollectionParams writes prices with a dot decimal, but parseLocalizedNumber reads them with window.Shopify.locale, so a storefront whose locale groups digits with a dot (de) reads 12.5 as 125. The proofs run in node, where locale is pinned to en.
-      shown_by:
-        file: src/core/collection/__tests__/url.property.test.ts
-        tests: [a storefront locale that groups with a dot misreads a serialized price]
-      issue: https://github.com/Shopify/hydrogen/issues/new?title=parseLocalizedNumber+misreads+prices+serializeCollectionParams+wrote+on+dot-grouping+locales
