@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 
+import { expectProductTitle } from "../../src/product-targets";
 import { expect, test, type ProductVariantProduct, type ProductVariantTestData } from "./config";
 
 const MAX_VARIANT_CONTROL_PROBES = 30;
@@ -33,9 +34,7 @@ test("product variant URL loads selected variant", async ({ data, page }) => {
 
   await page.goto(selectedVariant.variantUrl);
 
-  await expect(
-    page.getByRole("heading", { level: 1, name: selectedVariant.productTitle }),
-  ).toBeVisible();
+  await expectProductTitle(page, selectedVariant.productTitle, selectedVariant.variantUrl);
   expectQuerySentinel(page.url());
   await expectSelectedControl(page, selectedVariant);
 });
@@ -55,7 +54,7 @@ test.describe("without JavaScript", () => {
 
     await expect(page).toHaveURL(variant.targetUrl);
     expectQuerySentinel(page.url());
-    await expect(page.getByRole("heading", { level: 1, name: variant.productTitle })).toBeVisible();
+    await expectProductTitle(page, variant.productTitle, variant.targetUrl);
     await expectCurrentVariantLinks(page, variant.linkName, variant.targetUrl);
   });
 });
@@ -126,7 +125,7 @@ async function findServerVariantLink(
     const path = productPathWithSentinel(paths, product);
     checkedPaths.push(path);
     await page.goto(path);
-    await expect(page.getByRole("heading", { level: 1, name: product.title })).toBeVisible();
+    await expectProductTitle(page, product.title, path);
 
     const link = await findVariantLink(page, product.optionNames);
     if (link === null) continue;
@@ -165,8 +164,9 @@ async function selectVariantForProduct(
   product: ProductVariantProduct,
   paths: Paths,
 ): Promise<SelectedVariant | null> {
-  await page.goto(productPathWithSentinel(paths, product));
-  await expect(page.getByRole("heading", { level: 1, name: product.title })).toBeVisible();
+  const path = productPathWithSentinel(paths, product);
+  await page.goto(path);
+  await expectProductTitle(page, product.title, path);
 
   const control = await findVariantControl(page, product.optionNames);
   if (control === null) return null;

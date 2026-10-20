@@ -21,11 +21,30 @@ Default route expectations:
 
 Required groups fail on route HTTP failures; optional groups skip.
 
+## Product Test IDs
+
+The suite finds the product detail title with a standard `data-testid` attribute and Playwright `getByTestId`:
+
+| Test ID | Put it on | Count on the product page | Evidence the suite reads |
+| --- | --- | --- | --- |
+| `product-title` | The product heading, a native `<h1>` | Exactly one | A visible level-one heading exposed to assistive technology, whose text contains the product title (case does not matter) |
+
+Exactly one means the whole page. If recommendations, a sticky bar, or a quick-add form render another product title, do not give it the same test ID. A missing or duplicate `product-title` fails the test with a contract error.
+
+Rules:
+
+- Put the ID on the element a buyer reads. Do not put it on a container.
+- A test ID only identifies a kind of element. Do not add new test-only attributes for the suite. Existing app attributes, such as `data-*` used for styling, can stay.
+- Test IDs do not replace accessibility. The title stays the page heading, and its text is the product title.
+- The test ID does not add a server-rendering or hydration requirement. It goes on the same element the page already renders. Where the page supports server rendering, the ID is on the server-rendered element.
+
+Scope: the product and product variant groups use this ID to find the product title. The suite still finds all other UI by role, label, and text, as the sections below describe. This includes product results, collection filters, search, variant options, the add to cart button, cart lines, cart controls, the cart totals status, and the checkout link. The storefront can have other test IDs for its own tests. The suite does not read them.
+
 ## Product Results
 
 Collection and search pages must expose product cards as accessible links to product detail pages.
 
-Current first-pass discovery assumes standard label strings and link paths. A future contract should add explicit storefront-owned signifiers so the suite can distinguish product results from unrelated product links without relying on labels alone.
+Discovery uses link roles, label strings, and link paths.
 
 ## Collection Filters
 
@@ -43,16 +62,16 @@ The suite discovers a live product title, searches for it, and verifies that pro
 
 ## Variant Options
 
-At least one probed product must expose a selectable variant control.
+At least one probed product must expose a selectable variant control. The product heading has `data-testid="product-title"` (see Product Test IDs).
 
 Supported controls:
 
 - Same-product links whose href is a product URL with selected option query params. The selected link has `aria-current="true"`.
 - Buttons with `aria-pressed`. The selected button has `aria-pressed="true"`. Buttons work only with JavaScript; the no-JavaScript check needs links.
 
-With JavaScript, selecting a value must put the selection in the URL (for a link, the link's href) and mark the value as selected. Loading that URL directly must render the product heading and show the same value as selected. Selection must keep unrelated non-option query params (the suite uses `storefront_e2e_ref=variant-check`).
+With JavaScript, selecting a value must put the selection in the URL (for a link, the link's href) and mark the value as selected. Loading that URL directly must render the product title and show the same value as selected. Selection must keep unrelated non-option query params (the suite uses `storefront_e2e_ref=variant-check`).
 
-Without JavaScript, the product heading must render, and at least one probed product must expose a same-product variant link for an unselected value. A native click on that link must load its href, keep unrelated query params, and the server-rendered page must mark that value as selected.
+Without JavaScript, the product title must render, and at least one probed product must expose a same-product variant link for an unselected value. A native click on that link must load its href, keep unrelated query params, and the server-rendered page must mark that value as selected.
 
 Selected values should also be visibly indicated (styling or text). The suite does not check this. It also does not check that hydration is complete before it clicks, how many navigations or document loads a selection makes, or the visible appearance, price, or merchandise of the selected variant.
 
@@ -106,4 +125,4 @@ Operational expectations:
 
 When the storefront contract changes, update the relevant spec matcher, shared helper, and this document together.
 
-Generated examples should migrate toward explicit storefront-owned signifiers for product results, variant options, cart lines, and checkout summaries. Until then, the suite assumes label strings and semantic roles.
+The suite reads a test ID only for the product title. It finds all other UI by semantic roles and label strings, including the English cart totals status text. Before the suite reads a new test ID, add it to this document.
