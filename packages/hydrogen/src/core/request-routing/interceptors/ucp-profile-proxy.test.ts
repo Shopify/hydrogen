@@ -13,7 +13,7 @@ const UCP_CACHE_CONTROL =
 function handleUcpProfileProxy(request: Request, storeUrl = STORE_URL) {
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n: { defaultLocale: { country: "US", language: "EN" } },
   });
 
   return handleUcpProfileProxyImpl(new URL(request.url), {
@@ -27,7 +27,8 @@ function handleUcpProfileProxy(request: Request, storeUrl = STORE_URL) {
     },
     storefrontClient: {
       type: "private",
-      i18n: { country: "US", language: "EN", pathPrefix: "" },
+      i18n: { defaultLocale: { country: "US", language: "EN" } },
+      locale: { country: "US", language: "EN", pathPrefix: "" },
       storeUrl,
       apiUrl: `${storeUrl}/api/2026-04/graphql.json`,
       requestContext,

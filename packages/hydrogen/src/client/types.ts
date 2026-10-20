@@ -19,8 +19,6 @@ import type {
 } from "../graphql/type-resolver";
 import type { I18N_VARIABLE_TYPES } from "./i18n-variables";
 
-export type { I18nConfig } from "../core/request-context";
-
 /** A document that the client's GraphQL method accepts, from `gql` or from `gql`.tada. */
 type DocLike = TadaDocumentNode<any, any> | AnyStorefrontQueryString;
 /** The typed document that Hydrogen infers from a plain query string. */
@@ -298,8 +296,10 @@ export type StorefrontClient<
 > = {
   /** The client type that you passed to `createStorefrontClient`. */
   type: Type;
-  /** The country and language that the client sends for `$country` and `$language` variables. */
+  /** The storefront's i18n definition from the request context. */
   i18n: RequestContext["i18n"];
+  /** The locale resolved for this request. The client sends its country and language for `$country` and `$language` variables. */
+  locale: RequestContext["locale"];
   /**
    * Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a
    * plain query string. When the operation declares `$country: CountryCode` or

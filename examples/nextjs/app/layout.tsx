@@ -6,8 +6,9 @@ import { Suspense } from "react";
 
 import { ShopifyScriptsWithNavigation } from "@/components/ShopifyScriptsWithNavigation";
 import { getAnalyticsShop } from "@/lib/analytics-shop";
-import { defaultI18n, shop } from "@/lib/config";
+import { shop } from "@/lib/config";
 import { content } from "@/lib/content";
+import { defaultI18n } from "@/lib/i18n";
 import { SITE_ORIGIN } from "@/lib/site";
 
 import { AppShell } from "./app-shell";
