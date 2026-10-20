@@ -913,4 +913,12 @@ describe("price bounds under window.Shopify.locale", () => {
 
     expect(collectionParamsMatchState(serializeCollectionParams(state), state)).toBe(true);
   });
+
+  it("parses a locale-formatted comma decimal under de", () => {
+    vi.stubGlobal("window", { Shopify: { locale: "de" } });
+
+    const result = parseCollectionParams(params("filter.v.price.gte=12,50"));
+
+    expect(result.filters).toEqual([{ price: { min: 12.5 } }]);
+  });
 });
