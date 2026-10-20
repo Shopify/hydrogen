@@ -7,6 +7,7 @@ import {
   checkProofs,
   judgeMutant,
   parseRegistry,
+  registryOwners,
   type Feature,
   type Mutant,
   type Proof,
@@ -17,7 +18,7 @@ import {
 const URL_TEST = "src/core/collection/__tests__/url.property.test.ts";
 const ROUND_TRIP =
   "parseCollectionParams(serializeCollectionParams(p)) equals p up to filter order";
-const OWNER = "@Shopify/developer-platforms";
+const OWNER = "@andguy95";
 
 function proof(overrides: Partial<Proof> = {}): Proof {
   return { file: URL_TEST, tests: [ROUND_TRIP], ...overrides };
@@ -51,7 +52,7 @@ function workspace(overrides: Partial<Workspace> = {}): Workspace {
     fileExists: (path) => files.has(path),
     e2eGroupExists: (name) => name === "collection-filter",
     propertyTests: [URL_TEST],
-    codeOwners: new Set([OWNER]),
+    registryOwners: new Set([OWNER]),
     ...overrides,
   };
 }
@@ -110,16 +111,24 @@ test("ids are unique and dotted lowercase", () => {
   assert.match(shouty.join("\n"), /id must look like area\.feature-name/);
 });
 
-test("an accepted gap must be accepted by a code owner", () => {
-  const stranger = {
-    gap: "x",
-    accepted: "fine",
-    accepted_by: "@nobody",
-  };
+test("an accepted gap must be accepted by a person on the registry's CODEOWNERS line", () => {
+  const stranger = { gap: "x", accepted: "fine", accepted_by: "@nobody" };
   const errors = checkFeatures([feature({ known_gaps: [stranger] })], workspace());
   assert.deepEqual(errors, [
-    'collection.url-params: gap "x" is accepted by @nobody, who is not in .github/CODEOWNERS',
+    'collection.url-params: gap "x" is accepted by @nobody, who is not an owner of /packages/hydrogen/features.yaml in .github/CODEOWNERS',
   ]);
+});
+
+test("registryOwners reads people, not teams, from the features.yaml line only", () => {
+  const owners = registryOwners(
+    [
+      "* @Shopify/developer-platforms @fallback",
+      "# /packages/hydrogen/features.yaml @commented-out",
+      "/packages/hydrogen/features.yaml @Shopify/developer-platforms @andguy95 @other # note",
+    ].join("\n"),
+  );
+  assert.deepEqual([...owners], ["@andguy95", "@other"]);
+  assert.deepEqual([...registryOwners("")], []);
 });
 
 test("parseRegistry requires a decision on every known gap", () => {
@@ -135,12 +144,17 @@ test("parseRegistry requires a decision on every known gap", () => {
   assert.match(both.errors.join("\n"), /needs exactly one of accepted .* or issue/);
 
   const unowned = parseRegistry([{ ...base, known_gaps: [{ gap: "x", accepted: "fine" }] }]);
-  assert.match(unowned.errors.join("\n"), /accepted needs accepted_by, a @handle/);
+  assert.match(unowned.errors.join("\n"), /accepted needs accepted_by, the @handle of the person/);
 
-  const badHandle = parseRegistry([
-    { ...base, known_gaps: [{ gap: "x", accepted: "fine", accepted_by: "me" }] },
-  ]);
-  assert.match(badHandle.errors.join("\n"), /accepted needs accepted_by, a @handle/);
+  for (const accepted_by of ["me", "@Shopify/developer-platforms"]) {
+    const badHandle = parseRegistry([
+      { ...base, known_gaps: [{ gap: "x", accepted: "fine", accepted_by }] },
+    ]);
+    assert.match(
+      badHandle.errors.join("\n"),
+      /accepted needs accepted_by, the @handle of the person/,
+    );
+  }
 
   const badIssue = parseRegistry([{ ...base, known_gaps: [{ gap: "x", issue: "later" }] }]);
   assert.match(badIssue.errors.join("\n"), /issue must be a URL or #number/);
