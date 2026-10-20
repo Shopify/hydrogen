@@ -6,7 +6,6 @@ import { test, type CartTestProduct } from "./config";
 const CART_SETTLE_TIMEOUT_MS = 15_000;
 // Any non-empty accessible name, so other and localized labels pass but an unlabeled icon button fails.
 const ADD_TO_CART_CONTROL_NAME = /\S/;
-const CART_CONTROL_NAME = /^(?:open |view )?cart\b/i;
 const REMOVE_CONTROL_NAME = /remove/i;
 const INCREASE_CONTROL_NAME = /increase|^\+$/i;
 const DECREASE_CONTROL_NAME = /decrease|^[-−]$/i;
@@ -258,18 +257,20 @@ async function removeCartLine(page: Page, expectation: CartExpectation): Promise
 }
 
 function cartOverlayLineFor(page: Page, productTitle: string): Locator {
-  return page.getByRole("dialog").getByRole("listitem").filter({ hasText: productTitle }).first();
+  return page
+    .getByTestId("cart-drawer")
+    .filter({ visible: true })
+    .first()
+    .getByRole("listitem")
+    .filter({ hasText: productTitle })
+    .first();
 }
 
 async function openCartOverlayFor(page: Page, productTitle: string): Promise<Locator> {
   const line = cartOverlayLineFor(page, productTitle);
   if (await line.isVisible().catch(() => false)) return line;
 
-  await page
-    .getByRole("button", { name: CART_CONTROL_NAME })
-    .or(page.getByRole("link", { name: CART_CONTROL_NAME }))
-    .first()
-    .click();
+  await page.getByTestId("cart-trigger").filter({ visible: true }).first().click();
   return line;
 }
 
@@ -295,7 +296,13 @@ async function expectCartTotalsStatus(
 }
 
 function cartLineFor(page: Page, productTitle: string): Locator {
-  return page.getByRole("main").getByRole("listitem").filter({ hasText: productTitle }).first();
+  return page
+    .getByTestId("cart-page")
+    .filter({ visible: true })
+    .first()
+    .getByRole("listitem")
+    .filter({ hasText: productTitle })
+    .first();
 }
 
 async function quantityInputFor(line: Locator, cartPath: string): Promise<Locator> {

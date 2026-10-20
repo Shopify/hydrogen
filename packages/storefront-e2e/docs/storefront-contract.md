@@ -29,6 +29,9 @@ The suite finds the elements in this table with `data-testid` attributes and Pla
 | --- | --- |
 | `product-variant-option` | Each option value link or button that selects another variant of the same product, including sold-out values and disabled values for combinations that do not exist |
 | `product-add-to-cart` | The add to cart button. It must have the button role, such as a native `<button>`, and a non-empty accessible name. The label can be any text; an icon-only button needs `aria-label` or visually hidden text |
+| `cart-page` | The element that holds the cart page content |
+| `cart-drawer` | The cart drawer |
+| `cart-trigger` | The control that opens the cart drawer |
 
 IDs can repeat, for example a main and a sticky add to cart. The suite narrows each ID to visible elements, and to the expected text or accessible name when it needs a specific one. The storefront can have other test IDs for its own tests. The suite does not read them.
 
@@ -77,11 +80,11 @@ Set STOREFRONT_SKIP_NO_JS_VARIANTS=true to skip the no-JavaScript check for a st
 
 ## Cart Line Items
 
-Cart lines must be visible list items containing the product title.
+Cart lines must be visible list items containing the product title. The suite finds them inside the visible `cart-page` on the cart page and inside the visible `cart-drawer` in the drawer.
 
 The cart and checkout tests click the first visible `product-add-to-cart` button (see Test IDs).
 
-After Add to cart, the suite must be able to inspect the added line in a cart drawer dialog before navigating to the cart page. Either open the drawer immediately with the optimistic line, or expose a visible page-level button or link whose accessible name begins with Cart, Open cart, or View cart so the suite can open the drawer while the update is pending.
+After Add to cart, the suite must be able to inspect the added line in the visible `cart-drawer` before navigating to the cart page. Either open the drawer immediately with the optimistic line, or expose a visible `cart-trigger` control so the suite can open the drawer while the update is pending.
 
 Render the cart on the server. If the cart loads in the browser, an Add to cart that starts before the load finishes builds on an empty cart, and the stock-limit rollback test fails.
 

@@ -135,7 +135,7 @@ Test IDs are acceptable when they disambiguate duplicated UI that is already sem
 
 ### Portable Storefront Test IDs
 
-The portable storefront suite in `packages/storefront-e2e` runs against storefronts that it does not own, so it finds these elements with `getByTestId`: `product-variant-option` and `product-add-to-cart`. These IDs can repeat, so narrow each one to the visible element, and to the expected text when you need a specific one.
+The portable storefront suite in `packages/storefront-e2e` runs against storefronts that it does not own, so it finds these elements with `getByTestId`: `product-variant-option`, `product-add-to-cart`, `cart-page`, `cart-drawer`, and `cart-trigger`. These IDs can repeat, so narrow each one to the visible element, and to the expected text when you need a specific one.
 
 This exception covers only these IDs in the portable suite. All other locators stay role-first. The source of truth is `packages/storefront-e2e/docs/storefront-contract.md`. See also `skills/hydrogen-storefront-testing/SKILL.md`.
 
