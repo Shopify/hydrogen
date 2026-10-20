@@ -23,7 +23,9 @@ type Status = (typeof STATUSES)[number];
 
 const ID_PATTERN = /^[a-z0-9]+(\.[a-z0-9-]+)+$/;
 const ISSUE_PATTERN = /^(https?:\/\/\S+|#\d+)$/;
-const HANDLE_PATTERN = /^@[\w-]+(\/[\w-]+)?$/;
+/** One person's GitHub handle. A team handle would let anyone on it, or an agent, claim a gap. */
+const HANDLE_PATTERN = /^@[\w-]+$/;
+const REGISTRY_PATH = "packages/hydrogen/features.yaml";
 
 /** A test file relative to packages/hydrogen and the `it` titles or `describe` paths in it. */
 export type Proof = { file: string; tests: string[] };
@@ -61,8 +63,8 @@ export type Workspace = {
   e2eGroupExists: (name: string) => boolean;
   /** Every `*.property.test.ts` under packages/hydrogen/src, relative to packages/hydrogen. */
   propertyTests: string[];
-  /** Every @handle in .github/CODEOWNERS. */
-  codeOwners: ReadonlySet<string>;
+  /** People named on the .github/CODEOWNERS line for features.yaml. */
+  registryOwners: ReadonlySet<string>;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -123,7 +125,7 @@ function parseKnownGap(rawGap: unknown, gapLabel: string, errors: string[]): Kno
     shown_by === undefined ? undefined : parseProof(shown_by, `${gapLabel}.shown_by`, errors);
   if (isNonEmptyString(accepted) && issue === undefined) {
     if (!isHandle(accepted_by)) {
-      errors.push(`${gapLabel}: accepted needs accepted_by, a @handle from .github/CODEOWNERS`);
+      errors.push(`${gapLabel}: accepted needs accepted_by, the @handle of the person who decided`);
       return undefined;
     }
     return { gap, accepted, accepted_by, ...(shownBy && { shown_by: shownBy }) };
@@ -290,12 +292,12 @@ function checkFeature(feature: Feature, workspace: Workspace): string[] {
   return errors;
 }
 
-/** An `accepted` binds to a reviewer GitHub will require, so the agent cannot close a gap alone. */
+/** An `accepted` names a person GitHub asks to review this file, so the agent cannot close a gap alone. */
 function acceptedByStrangers(feature: Feature, workspace: Workspace): string[] {
   return feature.known_gaps.flatMap((gap) =>
-    "accepted_by" in gap && !workspace.codeOwners.has(gap.accepted_by)
+    "accepted_by" in gap && !workspace.registryOwners.has(gap.accepted_by)
       ? [
-          `${feature.id}: gap "${gap.gap}" is accepted by ${gap.accepted_by}, who is not in .github/CODEOWNERS`,
+          `${feature.id}: gap "${gap.gap}" is accepted by ${gap.accepted_by}, who is not an owner of /${REGISTRY_PATH} in .github/CODEOWNERS`,
         ]
       : [],
   );
@@ -511,23 +513,33 @@ export function loadWorkspace(repoRoot: string): Workspace {
     .filter((path) => path.endsWith(".property.test.ts"))
     .map((path) => join("src", path))
     .toSorted();
-  const codeOwners = readFileSync(join(repoRoot, ".github/CODEOWNERS"), "utf8")
-    .split("\n")
-    .filter((line) => !line.startsWith("#"))
-    .flatMap((line) => line.split(/\s+/).filter((word) => word.startsWith("@")));
+  const codeownersPath = join(repoRoot, ".github/CODEOWNERS");
   return {
     fileExists: (path) => existsSync(join(hydrogenDir, path)),
     e2eGroupExists: (name) => existsSync(join(specsDir, name)),
     propertyTests,
-    codeOwners: new Set(codeOwners),
+    registryOwners: registryOwners(
+      existsSync(codeownersPath) ? readFileSync(codeownersPath, "utf8") : "",
+    ),
   };
+}
+
+/** The people on the CODEOWNERS line for features.yaml itself. Teams and the `*` fallback do not count. */
+export function registryOwners(codeowners: string): ReadonlySet<string> {
+  return new Set(
+    codeowners.split("\n").flatMap((line) => {
+      const [pattern, ...owners] = line.replace(/#.*/, "").trim().split(/\s+/);
+      if (pattern !== `/${REGISTRY_PATH}`) return [];
+      return owners.filter((owner) => HANDLE_PATTERN.test(owner));
+    }),
+  );
 }
 
 export function run(
   repoRoot: string,
   options: { proofs?: boolean; falsify?: boolean } = {},
 ): { errors: string[]; killed: string[] } {
-  const registryPath = join(repoRoot, "packages/hydrogen/features.yaml");
+  const registryPath = join(repoRoot, REGISTRY_PATH);
   const parsed = parseRegistry(parse(readFileSync(registryPath, "utf8")));
   if (parsed.errors.length > 0) return { errors: parsed.errors, killed: [] };
 

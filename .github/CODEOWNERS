@@ -1,1 +1,5 @@
 * @Shopify/developer-platforms
+
+# An accepted gap in the feature registry names one of the people on this line in
+# accepted_by. scripts/check-features.ts rejects teams and anyone else.
+/packages/hydrogen/features.yaml @Shopify/developer-platforms @andguy95
