@@ -12,7 +12,7 @@ import {
   symlinkSync,
   writeFileSync,
 } from "node:fs";
-import { tmpdir } from "node:os";
+import { constants, tmpdir } from "node:os";
 import { basename, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -404,13 +404,41 @@ export function checkProofs(features: Feature[], report: ProofReport): string[] 
   ]);
 }
 
+const tempDirs = new Set<string>();
+
+/** Removed in `finally` on the normal path, and by `exitOnSignal` when vitest is interrupted. */
+function makeTempDir(prefix: string): string {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), prefix)));
+  tempDirs.add(dir);
+  return dir;
+}
+
+function removeTempDir(dir: string): void {
+  rmSync(dir, { recursive: true, force: true });
+  tempDirs.delete(dir);
+}
+
+/**
+ * Exits with the shell's code for a signal after removing live temp dirs.
+ *
+ * Ctrl-C reaches vitest and this process together. spawnSync blocks the event
+ * loop, so the parent's handler cannot run between mutants; instead runProofs
+ * sees that vitest died from the signal and exits here. The handler on the
+ * parent exists so Node does not die inside spawnSync with the copy still on
+ * disk. A signal sent to the parent alone is not seen until the run ends.
+ */
+function exitOnSignal(signal: NodeJS.Signals): never {
+  for (const dir of tempDirs) rmSync(dir, { recursive: true, force: true });
+  process.exit(128 + constants.signals[signal]);
+}
+
 export function runProofs(
   hydrogenDir: string,
   files: string[],
   options: { quiet?: boolean; root?: string } = {},
 ): ProofReport | string {
   const root = options.root ?? hydrogenDir;
-  const tmp = mkdtempSync(join(tmpdir(), "check-features-"));
+  const tmp = makeTempDir("check-features-");
   const reportPath = join(tmp, "report.json");
   try {
     const vitest = spawnSync(
@@ -431,6 +459,7 @@ export function runProofs(
         stdio: options.quiet ? "pipe" : "inherit",
       },
     );
+    if (vitest.signal) exitOnSignal(vitest.signal);
     if (vitest.error) return `could not run vitest: ${vitest.error.message}`;
     if (!existsSync(reportPath)) return "vitest did not produce a JSON report";
     const report: {
@@ -445,7 +474,7 @@ export function runProofs(
     }
     return map;
   } finally {
-    rmSync(tmp, { recursive: true, force: true });
+    removeTempDir(tmp);
   }
 }
 
@@ -563,7 +592,7 @@ export function run(
   if (errors.length > 0 || !options.falsify) return { errors, killed: [] };
 
   // Mutants run in a copy of the package so a crash, a signal, or a watcher never sees them.
-  const copy = realpathSync(mkdtempSync(join(tmpdir(), "check-features-mutants-")));
+  const copy = makeTempDir("check-features-mutants-");
   const killed: string[] = [];
   try {
     cpSync(hydrogenDir, copy, {
@@ -577,7 +606,7 @@ export function run(
       killed.push(...outcome.killed);
     }
   } finally {
-    rmSync(copy, { recursive: true, force: true });
+    removeTempDir(copy);
   }
   return { errors, killed };
 }
@@ -585,6 +614,7 @@ export function run(
 const isMain =
   process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
+  for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, exitOnSignal);
   const proofs = process.argv.includes("--proofs");
   const falsify = process.argv.includes("--falsify");
   const { errors, killed } = run(resolve(fileURLToPath(import.meta.url), "../.."), {
