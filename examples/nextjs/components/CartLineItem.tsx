@@ -125,6 +125,7 @@ export function CartLineItem({
           type="submit"
           {...register("remove")}
           onClick={onRemoveIntent}
+          data-testid="cart-line-remove"
           className="button-icon self-start rounded"
           aria-label={`Remove: ${productTitle}`}
         >

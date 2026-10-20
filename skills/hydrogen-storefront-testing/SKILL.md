@@ -41,6 +41,7 @@ The relationship decides the ID, not availability: `product-variant-option` sele
 | `cart-line-quantity` | The quantity input of a cart line |
 | `cart-line-increase` | The increase quantity control of a cart line |
 | `cart-line-decrease` | The decrease quantity control of a cart line |
+| `cart-line-remove` | The remove control of a cart line |
 
 After Add to cart, the drawer must open by itself. The suite uses `cart-trigger` only to open a closed drawer in one test. It finds a line inside the visible cart page or the open drawer, never across both, then the controls inside that line. It reads the quantity from the native input value.
 

@@ -51,6 +51,7 @@ The cart group finds these cart elements with `data-testid` attributes. The loca
 | `cart-line-quantity` | The quantity input of a cart line |
 | `cart-line-increase` | The increase quantity control of a cart line |
 | `cart-line-decrease` | The decrease quantity control of a cart line |
+| `cart-line-remove` | The remove control of a cart line |
 
 The suite finds a line by `cart-line` and its product title inside the visible cart page or the open cart drawer, never across both. It finds the quantity input and the line controls inside the chosen line, and reads the quantity from the native input value. Keep `cart-trigger` off links that only go to `/cart`.
 
@@ -103,10 +104,9 @@ After ordinary Add to cart, the drawer must open by itself and show the added li
 Each line must expose:
 
 - Variant text when the product has a non-default variant
-- A quantity input, an increase control, and a decrease control (see Cart Test IDs)
-- A visible remove control named Remove
+- A quantity input, an increase control, a decrease control, and a remove control (see Cart Test IDs)
 
-The suite reads the quantity from the native input value.
+The suite reads the quantity from the native input value. After remove, it waits for the line to go away.
 
 Cart totals must expose a `role="status"` region that says `Updating cart totals` while cart totals are stale, then `Cart totals updated` after mutation settlement. Do not announce `Cart totals updated` on initial idle render before a mutation cycle. The region may be visually hidden if it remains available to assistive technology.
 

@@ -4,7 +4,6 @@ import { createContractError } from "../../src/contract";
 import { test, type CartTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
-const REMOVE_CONTROL_NAME = /remove/i;
 const CART_ENDPOINT_PATTERN = "**/api/cart";
 const CART_TOTALS_UPDATING_TEXT = "Updating cart totals";
 const CART_TOTALS_UPDATED_TEXT = "Cart totals updated";
@@ -147,6 +146,20 @@ test.describe("cart locator helpers", () => {
     await expect(quantityInputFor(line)).toHaveValue("1");
     await expect(quantityInputFor(cartLineFor(page, "Hat"))).toHaveValue("5");
   });
+
+  test("removes only the chosen line", async ({ page }) => {
+    // The other page line and the drawer line have remove controls too.
+    await page.setContent(`
+      <div data-testid="cart-page"><ul>${removableLineHtml("Hat")}${removableLineHtml("Shirt")}</ul></div>
+      <dialog open data-testid="cart-drawer"><ul>${removableLineHtml("Shirt")}</ul></dialog>`);
+
+    await removeLine(cartLineFor(page, "Shirt"));
+
+    const pageLines = page.getByTestId("cart-page").getByTestId("cart-line");
+    await expect(pageLines).toHaveCount(1);
+    await expect(pageLines).toContainText("Hat");
+    await expect(page.getByTestId("cart-drawer").getByTestId("cart-line")).toContainText("Shirt");
+  });
 });
 
 function createRequestGate(): { wait: Promise<void>; release: () => void } {
@@ -280,14 +293,12 @@ async function stepCartLineQuantity(
 
 async function removeCartLine(page: Page, expectation: CartExpectation): Promise<void> {
   const line = await expectCartLine(page, expectation);
-  const remove = await lineButton(
-    line,
-    REMOVE_CONTROL_NAME,
-    "remove line item",
-    expectation.cartPath,
-  );
+  await removeLine(line);
+}
 
-  await remove.click();
+/** Clicks the line's remove control and waits for the line to go away. */
+async function removeLine(line: Locator): Promise<void> {
+  await lineControl(line, "cart-line-remove").click();
   await expect(line).not.toBeVisible({ timeout: CART_SETTLE_TIMEOUT_MS });
 }
 
@@ -359,24 +370,6 @@ function shouldAssertVariant(variantLabel: string): boolean {
   return variantLabel !== "" && variantLabel.toLowerCase() !== "default title";
 }
 
-async function lineButton(
-  line: Locator,
-  name: RegExp,
-  purpose: string,
-  cartPath: string,
-): Promise<Locator> {
-  const button = line.getByRole("button", { name }).first();
-  if (await button.isVisible().catch(() => false)) return button;
-
-  throw createContractError({
-    capability: "cart-line",
-    routePath: cartPath,
-    expectation: "Cart line item exposes a visible button for " + purpose + ".",
-    likelyFix: "Add accessible names to cart line quantity and remove controls.",
-    docsAnchor: "#cart-line-items",
-  });
-}
-
 /** A cart line for helper fixtures. */
 function cartLineHtml(text: string): string {
   return `<li data-testid="cart-line">${text}</li>`;
@@ -395,6 +388,11 @@ function quantityLineHtml(title: string, quantity: number): string {
 /** Inline click handler that changes the line's quantity input by `delta`. */
 function quantityStepScript(delta: number): string {
   return `const input = this.closest('[data-testid=cart-line]').querySelector('[data-testid=cart-line-quantity]'); input.value = String(Number(input.value) + ${delta});`;
+}
+
+/** A helper fixture line with a working remove control. */
+function removableLineHtml(title: string): string {
+  return `<li data-testid="cart-line">${title} <button type="button" data-testid="cart-line-remove" aria-label="Entfernen" onclick="this.closest('[data-testid=cart-line]').remove()">×</button></li>`;
 }
 
 async function wasTriggerClicked(page: Page): Promise<boolean> {

@@ -135,7 +135,7 @@ Test IDs are acceptable when they disambiguate duplicated UI that is already sem
 
 ### Portable Storefront Test IDs
 
-The portable storefront suite in `packages/storefront-e2e` runs against storefronts that it does not own. It defines four product test IDs: `product-title`, `product-variant-option`, `product-sibling-option`, and `product-add-to-cart`. It reads all of them with `getByTestId` except `product-sibling-option`, which identifies cross-product values and is excluded from the variant journey. It also finds cart elements: `cart-page`, `cart-drawer`, `cart-trigger`, `cart-line`, `cart-line-quantity`, `cart-line-increase`, and `cart-line-decrease`. These IDs can repeat (for example, main and sticky add to cart). Narrow to the visible, relevant element, and choose one when the journey needs one.
+The portable storefront suite in `packages/storefront-e2e` runs against storefronts that it does not own. It defines four product test IDs: `product-title`, `product-variant-option`, `product-sibling-option`, and `product-add-to-cart`. It reads all of them with `getByTestId` except `product-sibling-option`, which identifies cross-product values and is excluded from the variant journey. It also finds cart elements: `cart-page`, `cart-drawer`, `cart-trigger`, `cart-line`, `cart-line-quantity`, `cart-line-increase`, `cart-line-decrease`, and `cart-line-remove`. These IDs can repeat (for example, main and sticky add to cart). Narrow to the visible, relevant element, and choose one when the journey needs one.
 
 This exception covers only these IDs in the portable suite. All other locators stay role-first. The source of truth is `packages/storefront-e2e/docs/storefront-contract.md`. See also `skills/hydrogen-storefront-testing/SKILL.md`.
 
