@@ -47,8 +47,9 @@ The cart group finds these cart elements with `data-testid` attributes. The loca
 | `cart-page` | The cart page content |
 | `cart-drawer` | The cart drawer |
 | `cart-trigger` | The control that opens the cart drawer |
+| `cart-line` | A cart line |
 
-The suite finds lines inside the visible cart page or the open cart drawer, never across both. Keep `cart-trigger` off links that only go to `/cart`.
+The suite finds a line by `cart-line` and its product title inside the visible cart page or the open cart drawer, never across both. Keep `cart-trigger` off links that only go to `/cart`.
 
 ## Product Results
 
@@ -90,7 +91,7 @@ Set STOREFRONT_SKIP_NO_JS_VARIANTS=true to skip the no-JavaScript check for a st
 
 ## Cart Line Items
 
-Cart lines must be visible list items containing the product title. The suite finds them inside the cart page or the cart drawer (see Cart Test IDs).
+Each cart line contains the product title. The suite finds lines with `cart-line` inside the cart page or the cart drawer (see Cart Test IDs).
 
 The cart and checkout groups find the add to cart control with `product-add-to-cart` (see Product Test IDs). It must be enabled for the discovered variant.
 

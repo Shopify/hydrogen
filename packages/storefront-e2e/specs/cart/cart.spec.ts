@@ -303,7 +303,7 @@ function lineIn(view: Locator, productTitle: string): Locator {
   return view
     .filter({ visible: true })
     .first()
-    .getByRole("listitem")
+    .getByTestId("cart-line")
     .filter({ hasText: productTitle, visible: true })
     .first();
 }
@@ -385,7 +385,7 @@ async function lineButton(
 
 /** A cart line for helper fixtures. */
 function cartLineHtml(text: string): string {
-  return `<li>${text}</li>`;
+  return `<li data-testid="cart-line">${text}</li>`;
 }
 
 async function wasTriggerClicked(page: Page): Promise<boolean> {

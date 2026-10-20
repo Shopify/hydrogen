@@ -85,7 +85,7 @@ function errorIdForLine(lineId: string) {
   </div>
 
   <ul v-else ref="cartLinesRegion" class="mt-8 divide-y divide-black/10">
-    <li v-for="line in lines" :key="line.id" class="py-6">
+    <li v-for="line in lines" :key="line.id" class="py-6" data-testid="cart-line">
       <form
         v-bind="formProps()"
         :aria-describedby="

@@ -45,6 +45,7 @@ export function CartLineItem({
   return (
     <div
       className="grid grid-cols-[var(--spacing-cart-line-thumbnail-width)_1fr_auto] items-stretch gap-3 py-4"
+      data-testid="cart-line"
       {...(isPending ? { "aria-busy": "true" } : {})}
     >
       <div className="bg-surface-secondary h-full w-full overflow-hidden">

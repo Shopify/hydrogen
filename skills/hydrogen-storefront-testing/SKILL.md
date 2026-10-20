@@ -37,6 +37,7 @@ The relationship decides the ID, not availability: `product-variant-option` sele
 | `cart-page` | The element that holds the cart page content |
 | `cart-drawer` | The cart drawer element |
 | `cart-trigger` | The control that opens the cart drawer. Not a plain link to `/cart` |
+| `cart-line` | The element that holds one cart line: its title, variant text, quantity, and controls |
 
 After Add to cart, the drawer must open by itself. The suite uses `cart-trigger` only to open a closed drawer in one test. It finds a line inside the visible cart page or the open drawer, never across both.
 
@@ -76,6 +77,14 @@ const medium = page
 await medium.click();
 
 await page.getByTestId('product-add-to-cart').filter({visible: true}).first().click();
+
+const line = page
+  .getByTestId('cart-page')
+  .filter({visible: true})
+  .first()
+  .getByTestId('cart-line')
+  .filter({visible: true, hasText: 'Classic Tee'})
+  .first();
 ```
 
 These are locator examples, not a complete cart journey. Wait for settlement between cart changes and assert the real result.
