@@ -187,7 +187,7 @@ function CartStatus({
   const message = useCartStatusMessage(isPending, networkErrors.length > 0);
   return (
     <>
-      <span role="status" className="sr-only">
+      <span role="status" className="sr-only" data-testid="cart-status">
         {message}
       </span>
       {networkErrors.length > 0 ? (
