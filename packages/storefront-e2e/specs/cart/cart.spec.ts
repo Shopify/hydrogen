@@ -7,8 +7,6 @@ const CART_SETTLE_TIMEOUT_MS = 15_000;
 // Any non-empty accessible name, so other and localized labels pass but an unlabeled icon button fails.
 const ADD_TO_CART_CONTROL_NAME = /\S/;
 const REMOVE_CONTROL_NAME = /remove/i;
-const INCREASE_CONTROL_NAME = /increase|^\+$/i;
-const DECREASE_CONTROL_NAME = /decrease|^[-−]$/i;
 const CART_ENDPOINT_PATTERN = "**/api/cart";
 const CART_TOTALS_UPDATING_TEXT = "Updating cart totals";
 const CART_TOTALS_UPDATED_TEXT = "Cart totals updated";
@@ -210,8 +208,7 @@ async function increaseCartLineQuantity(page: Page, expectation: CartExpectation
   const quantityInput = await quantityInputFor(line, expectation.cartPath);
   const initialQuantity = await numericInputValue(quantityInput);
   const increase = await lineButton(
-    line,
-    INCREASE_CONTROL_NAME,
+    line.getByTestId("cart-line-increase"),
     "increase quantity",
     expectation.cartPath,
   );
@@ -229,8 +226,7 @@ async function decreaseCartLineQuantity(page: Page, expectation: CartExpectation
   const quantityInput = await quantityInputFor(line, expectation.cartPath);
   const initialQuantity = await numericInputValue(quantityInput);
   const decrease = await lineButton(
-    line,
-    DECREASE_CONTROL_NAME,
+    line.getByTestId("cart-line-decrease"),
     "decrease quantity",
     expectation.cartPath,
   );
@@ -246,8 +242,7 @@ async function decreaseCartLineQuantity(page: Page, expectation: CartExpectation
 async function removeCartLine(page: Page, expectation: CartExpectation): Promise<void> {
   const line = await expectCartLine(page, expectation);
   const remove = await lineButton(
-    line,
-    REMOVE_CONTROL_NAME,
+    line.getByRole("button", { name: REMOVE_CONTROL_NAME }),
     "remove line item",
     expectation.cartPath,
   );
@@ -306,17 +301,15 @@ function cartLineFor(page: Page, productTitle: string): Locator {
 }
 
 async function quantityInputFor(line: Locator, cartPath: string): Promise<Locator> {
-  const textbox = line.getByRole("textbox").first();
-  if (await textbox.isVisible().catch(() => false)) return textbox;
-
-  const spinbutton = line.getByRole("spinbutton").first();
-  if (await spinbutton.isVisible().catch(() => false)) return spinbutton;
+  const input = line.getByTestId("cart-line-quantity").filter({ visible: true }).first();
+  if (await input.isVisible().catch(() => false)) return input;
 
   throw createContractError({
     capability: "cart-line",
     routePath: cartPath,
     expectation: "Cart line item exposes a visible quantity input.",
-    likelyFix: "Label the cart line quantity control and keep it inside the line item.",
+    likelyFix:
+      'Put data-testid="cart-line-quantity" on the quantity input and keep it inside the line item.',
     docsAnchor: "#cart-line-items",
   });
 }
@@ -332,19 +325,18 @@ function shouldAssertVariant(variantLabel: string): boolean {
 }
 
 async function lineButton(
-  line: Locator,
-  name: RegExp,
+  candidates: Locator,
   purpose: string,
   cartPath: string,
 ): Promise<Locator> {
-  const button = line.getByRole("button", { name }).first();
+  const button = candidates.filter({ visible: true }).first();
   if (await button.isVisible().catch(() => false)) return button;
 
   throw createContractError({
     capability: "cart-line",
     routePath: cartPath,
     expectation: "Cart line item exposes a visible button for " + purpose + ".",
-    likelyFix: "Add accessible names to cart line quantity and remove controls.",
+    likelyFix: "Keep the cart line quantity and remove controls visible inside the line item.",
     docsAnchor: "#cart-line-items",
   });
 }

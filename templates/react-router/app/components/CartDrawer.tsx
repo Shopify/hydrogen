@@ -163,6 +163,7 @@ export function CartLineItem({
             <button
               type="submit"
               {...register("decrease")}
+              data-testid="cart-line-decrease"
               className="text-on-surface-secondary hover:text-on-surface inline-flex size-11 items-center justify-center disabled:cursor-not-allowed disabled:opacity-50 motion-safe:transition-[color,transform] motion-safe:active:scale-[0.90]"
               aria-label={`Decrease quantity for ${product?.title ?? merchandise?.title ?? "item"}`}
             >
@@ -170,6 +171,7 @@ export function CartLineItem({
             </button>
             <input
               {...register("quantity", { value: line.quantity, interactive: true })}
+              data-testid="cart-line-quantity"
               className={`number-reset text-on-surface h-11 w-12 rounded-none border-0 bg-transparent p-0 text-center text-sm ${pending ? "opacity-50" : ""}`}
               aria-label="Quantity"
               aria-describedby={lineError?.userErrors.length ? errorId : undefined}
@@ -178,6 +180,7 @@ export function CartLineItem({
             <button
               type="submit"
               {...register("increase")}
+              data-testid="cart-line-increase"
               className="text-on-surface-secondary hover:text-on-surface inline-flex size-11 items-center justify-center disabled:cursor-not-allowed disabled:opacity-50 motion-safe:transition-[color,transform] motion-safe:active:scale-[0.90]"
               aria-label={`Increase quantity for ${product?.title ?? merchandise?.title ?? "item"}`}
             >
