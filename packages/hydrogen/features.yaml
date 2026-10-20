@@ -17,6 +17,47 @@
   depends_on: []
   verified_by:
     - src/core/collection/__tests__/url.property.test.ts
+  falsified_by:
+    - mutant: the price minimum is written to the lte param
+      file: src/core/collection/url.ts
+      find: 'key: "filter.v.price.gte", value: String(filter.price.min)'
+      replace: 'key: "filter.v.price.lte", value: String(filter.price.min)'
+    - mutant: out-of-stock availability is read as in stock
+      file: src/core/collection/url.ts
+      find: 'availability.includes("0")'
+      replace: 'availability.includes("1")'
+    - mutant: descending sort_by values parse as ascending
+      file: src/core/collection/url.ts
+      find: "rawSortBy?.endsWith(SORT_BY_DESCENDING_SUFFIX) ?? false"
+      replace: "rawSortBy?.endsWith(SORT_BY_ASCENDING_SUFFIX) ?? false"
+    - mutant: created-descending maps to the PRICE sort key
+      file: src/core/collection/url.ts
+      find: '"created-descending": "CREATED",'
+      replace: '"created-descending": "PRICE",'
+    - mutant: filter key parts are not percent-decoded
+      file: src/core/collection/url.ts
+      find: 'return decodeURIComponent(value.replace(/\+/g, " "));'
+      replace: "return value;"
+    - mutant: a product metafield namespace may swallow dots
+      file: src/core/collection/url.ts
+      find: '/^filter\.p\.m\.([^.]+)\.(.+)$/'
+      replace: '/^filter\.p\.m\.(.+)\.(.+)$/'
+    - mutant: the manual sort key is never written to the URL
+      file: src/core/collection/url.ts
+      find: "if (state.sortKey) {"
+      replace: 'if (state.sortKey && state.sortKey !== "MANUAL") {'
+    - mutant: ascending and descending suffixes are swapped when writing sort_by
+      file: src/core/collection/url.ts
+      find: "return reverse ? `${base}-descending` : `${base}-ascending`;"
+      replace: "return reverse ? `${base}-ascending` : `${base}-descending`;"
+    - mutant: tags are read from the wrong param
+      file: src/core/collection/url.ts
+      find: 'searchParams.getAll("filter.p.tag")'
+      replace: 'searchParams.getAll("filter.p.tags")'
+    - mutant: the ID sort key loses its direction suffix
+      file: src/core/collection/url.ts
+      find: 'sortKey === "CREATED" || sortKey === "ID"'
+      replace: 'sortKey === "CREATED"'
   e2e_groups:
     - collection-filter
   known_gaps:
@@ -30,7 +71,14 @@
       accepted: >
         The Liquid URL scheme has a single price facet and the collection UI exposes one range.
         Revisit if normalizeFilters grows a price rule or a UI makes two ranges reachable.
-    - gap: A metafield namespace containing a dot, a taxonomy key without a dot, or an empty option name serialize to params the parser drops.
+    - gap: A metafield namespace containing a dot, a taxonomy key without a dot, an empty metafield key, or an empty option name serialize to params the parser drops.
       accepted: >
-        Shopify metafield namespaces allow letters, digits, underscore and hyphen. Taxonomy keys
-        are always namespace.key. Variant option names are required. None can occur in Storefront API data.
+        Shopify metafield namespaces allow letters, digits, underscore and hyphen, and keys are
+        required. Taxonomy keys are always namespace.key. Variant option names are required. None
+        can occur in Storefront API data.
+    - gap: A sortKey of ID, RELEVANCE, or COLLECTION_DEFAULT serializes to a sort_by value that parseCollectionParams does not read, so it parses back as undefined.
+      accepted: >
+        Liquid's sort_by has no id, relevance, or collection-default value. The url.ts doc comment
+        says parseCollectionParams reads only the Standard Events values. parseSortByValue reads all eight.
+    - gap: A price bound of -0 serializes as "0" and parses back as 0.
+      accepted: String(-0) is "0". No price is negative zero.

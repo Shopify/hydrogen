@@ -2,9 +2,12 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  applyMutant,
   checkFeatures,
+  judgeMutant,
   parseRegistry,
   type Feature,
+  type Mutant,
   type ProofResult,
   type Workspace,
 } from "./check-features.ts";
@@ -20,6 +23,7 @@ function feature(overrides: Partial<Feature> = {}): Feature {
     entry_points: ["src/core/collection/url.ts"],
     depends_on: [],
     verified_by: [URL_TEST],
+    falsified_by: [],
     e2e_groups: ["collection-filter"],
     known_gaps: [
       { gap: "category is serialize-only", accepted: "category never comes from the URL" },
@@ -143,4 +147,62 @@ test("a proof with no passing tests is reported", () => {
   const proofs = new Map<string, ProofResult>([[URL_TEST, proof({ passed: 0, skipped: 3 })]]);
   const errors = checkFeatures([feature()], workspace({ proofs }));
   assert.match(errors.join("\n"), /has no passing tests/);
+});
+
+const mutant: Mutant = {
+  mutant: "tags are read from the wrong param",
+  file: "src/core/collection/url.ts",
+  find: 'getAll("filter.p.tag")',
+  replace: 'getAll("filter.p.tags")',
+};
+
+test("a mutant must target an entry point", () => {
+  const stray = { ...mutant, file: "src/core/collection/state.ts" };
+  const errors = checkFeatures([feature({ falsified_by: [stray] })], workspace());
+  assert.deepEqual(errors, [
+    'collection.url-params: mutant "tags are read from the wrong param" targets src/core/collection/state.ts, which is not an entry point',
+  ]);
+});
+
+test("parseRegistry requires a complete mutant and rejects a no-op one", () => {
+  const base = feature();
+  const incomplete = parseRegistry([{ ...base, falsified_by: [{ mutant: "x", find: "a" }] }]);
+  assert.match(incomplete.errors.join("\n"), /needs mutant, file, find, and replace strings/);
+
+  const noop = parseRegistry([{ ...base, falsified_by: [{ ...mutant, replace: mutant.find }] }]);
+  assert.match(noop.errors.join("\n"), /find and replace are identical/);
+
+  const absent = parseRegistry([{ ...base, falsified_by: undefined }]);
+  assert.deepEqual(absent.errors, []);
+  assert.deepEqual(absent.features[0]?.falsified_by, []);
+});
+
+test("applyMutant replaces a fragment that occurs exactly once", () => {
+  const source =
+    'const tags = params.getAll("filter.p.tag");\nconst vendors = params.getAll("filter.p.vendor");\n';
+  assert.equal(
+    applyMutant(source, mutant),
+    'const tags = params.getAll("filter.p.tags");\nconst vendors = params.getAll("filter.p.vendor");\n',
+  );
+  assert.equal(applyMutant("nothing here", mutant), undefined);
+  assert.equal(applyMutant(source + source, mutant), undefined);
+});
+
+test("judgeMutant kills on any failing proof, survives on all green, and reports a broken run", () => {
+  const second = "src/core/collection/__tests__/sort.property.test.ts";
+  const both = [URL_TEST, second];
+  const green = new Map<string, ProofResult>([
+    [URL_TEST, proof()],
+    [second, proof()],
+  ]);
+  assert.equal(judgeMutant(green, both), "survived");
+
+  const oneRed = new Map(green).set(second, proof({ failed: 1 }));
+  assert.equal(judgeMutant(oneRed, both), "killed");
+
+  const notCollected = new Map<string, ProofResult>([[URL_TEST, proof({ failed: 1 })]]);
+  assert.deepEqual(judgeMutant(notCollected, both), { broke: second });
+
+  const noTests = new Map(green).set(second, proof({ passed: 0 }));
+  assert.deepEqual(judgeMutant(noTests, both), { broke: second });
 });

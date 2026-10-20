@@ -5,7 +5,6 @@ import type { ProductFilter } from "../../../../vendor/standard-events";
 import type { ProductCollectionSortKeys } from "../../../graphql/generated/storefront-api-types";
 import {
   type CollectionParams,
-  filterEquals,
   getSortByValue,
   isDirectionalSortKey,
   parseCollectionParams,
@@ -13,44 +12,22 @@ import {
   serializeCollectionParams,
 } from "../url";
 
-const URL_CHARS = [
-  ..."abcdefghijklmnopqrstuvwxyz0123456789",
-  "&",
-  "=",
-  ".",
-  "+",
-  "%",
-  "/",
-  " ",
-  "ñ",
-  "ü",
-  "漢",
-  "€",
-];
-
-const filterString = fc.string({ unit: fc.constantFrom(...URL_CHARS), maxLength: 20 });
-const nonEmptyFilterString = fc.string({
-  unit: fc.constantFrom(...URL_CHARS),
-  minLength: 1,
-  maxLength: 20,
-});
+// A wide alphabet dilutes the delimiters the parser splits on, so draw them half the time.
+const delimiterHeavyChar = fc.oneof(
+  fc.constantFrom(".", "&", "=", "+", "%", "/", " "),
+  fc.string({ unit: "grapheme", minLength: 1, maxLength: 1 }),
+);
+const filterString = fc.string({ unit: delimiterHeavyChar, maxLength: 20 });
+const nonEmptyFilterString = fc.string({ unit: delimiterHeavyChar, minLength: 1, maxLength: 20 });
 
 // Namespaces are parsed with `[^.]+` and encodeURIComponent leaves dots alone,
 // so a dotted namespace cannot round-trip. Shopify namespaces never contain dots.
-const namespaceString = fc.string({
-  unit: fc.constantFrom(...URL_CHARS.filter((c) => c !== ".")),
-  minLength: 1,
-  maxLength: 15,
-});
+const dotFreeNamespace = nonEmptyFilterString.filter((s) => !s.includes("."));
 
-// Integer cents over 100 keeps String(n) free of exponent notation and float
-// noise, so parseLocalizedNumber reads the value back exactly.
-const price = fc.integer({ min: 0, max: 99_999_999 }).map((n) => n / 100);
+// String(-0) is "0", so negative zero cannot round-trip. No price is negative zero.
+const price = fc.double({ noNaN: true }).map((n) => (n === 0 ? 0 : n));
 
-// parseCollectionSortKey recognizes only the Standard Events sort values.
-// ID, RELEVANCE, and COLLECTION_DEFAULT round-trip through parseSortByValue
-// alone, which the second test covers.
-const ROUND_TRIP_SORT_KEYS = [
+const LIQUID_SORT_KEYS = [
   "BEST_SELLING",
   "CREATED",
   "MANUAL",
@@ -69,6 +46,13 @@ const ALL_SORT_KEYS = [
   "TITLE",
 ] as const satisfies readonly ProductCollectionSortKeys[];
 
+const EXPECTED_DIRECTIONAL_SORT_KEYS = new Set<ProductCollectionSortKeys>([
+  "CREATED",
+  "ID",
+  "PRICE",
+  "TITLE",
+]);
+
 const tagFilter = filterString.map((tag): ProductFilter => ({ tag }));
 const productTypeFilter = filterString.map((productType): ProductFilter => ({ productType }));
 const productVendorFilter = filterString.map((productVendor): ProductFilter => ({ productVendor }));
@@ -82,36 +66,30 @@ const priceFilter = fc
   .filter((p) => p.min !== undefined || p.max !== undefined)
   .map((p): ProductFilter => ({ price: p }));
 
-// An empty option name serializes to the bare key `filter.v.option.`, which
-// the parser does not read.
 const variantOptionFilter = fc
   .tuple(nonEmptyFilterString, filterString)
   .map(([name, value]): ProductFilter => ({ variantOption: { name, value } }));
 
 const productMetafieldFilter = fc
-  .tuple(namespaceString, nonEmptyFilterString, filterString)
+  .tuple(dotFreeNamespace, nonEmptyFilterString, filterString)
   .map(
     ([namespace, key, value]): ProductFilter => ({ productMetafield: { namespace, key, value } }),
   );
 
 const variantMetafieldFilter = fc
-  .tuple(namespaceString, nonEmptyFilterString, filterString)
+  .tuple(dotFreeNamespace, nonEmptyFilterString, filterString)
   .map(
     ([namespace, key, value]): ProductFilter => ({ variantMetafield: { namespace, key, value } }),
   );
 
-// serializeFilter splits the taxonomy key on its first dot and the parser reads
-// it back as `[^.]+` `.` `.+`, so both halves must be non-empty and the first dot-free.
 const taxonomyMetafieldFilter = fc
-  .tuple(namespaceString, nonEmptyFilterString, nonEmptyFilterString)
+  .tuple(dotFreeNamespace, nonEmptyFilterString, nonEmptyFilterString)
   .map(
     ([ns, subkey, value]): ProductFilter => ({
       taxonomyMetafield: { key: `${ns}.${subkey}`, value },
     }),
   );
 
-// No category filter. serializeCollectionParams emits filter.p.category, which
-// parseCollectionParams does not read.
 const repeatableFilter = fc.oneof(
   tagFilter,
   productTypeFilter,
@@ -122,8 +100,6 @@ const repeatableFilter = fc.oneof(
   taxonomyMetafieldFilter,
 );
 
-// At most one availability filter, because both directions at once parse to none.
-// At most one price filter, because the parser reads gte/lte with get, not getAll.
 const filterList = fc
   .tuple(
     fc.option(availableFilter, { nil: undefined }),
@@ -136,32 +112,24 @@ const filterList = fc
     ...rest,
   ]);
 
-// reverse is only meaningful for directional sort keys; the store normalizes it
-// to false otherwise, so the generator does the same.
 const collectionParams = fc
   .tuple(
     filterList,
-    fc.option(fc.constantFrom(...ROUND_TRIP_SORT_KEYS), { nil: undefined }),
+    fc.option(fc.constantFrom(...LIQUID_SORT_KEYS), { nil: undefined }),
     fc.boolean(),
   )
   .map(
     ([filters, sortKey, reverse]): CollectionParams => ({
       filters,
       sortKey,
-      reverse: sortKey !== undefined && isDirectionalSortKey(sortKey) ? reverse : false,
+      reverse:
+        sortKey !== undefined && EXPECTED_DIRECTIONAL_SORT_KEYS.has(sortKey) ? reverse : false,
     }),
   );
 
-// The parser emits filters in a fixed kind order, so order is not part of the promise.
-function filtersMatchAsMultiset(a: ProductFilter[], b: ProductFilter[]): boolean {
-  if (a.length !== b.length) return false;
-  const remaining = [...b];
-  for (const filter of a) {
-    const idx = remaining.findIndex((candidate) => filterEquals(filter, candidate));
-    if (idx === -1) return false;
-    remaining.splice(idx, 1);
-  }
-  return true;
+// The parser emits filters in a fixed kind order, so filter order is not part of the promise.
+function canonicalOrder(filters: ProductFilter[]): ProductFilter[] {
+  return filters.toSorted((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
 }
 
 describe("collection URL round-trip properties", () => {
@@ -171,22 +139,23 @@ describe("collection URL round-trip properties", () => {
         const result = parseCollectionParams(serializeCollectionParams(p));
         expect(result.sortKey).toBe(p.sortKey);
         expect(result.reverse).toBe(p.reverse);
-        expect(filtersMatchAsMultiset(result.filters, p.filters)).toBe(true);
+        expect(canonicalOrder(result.filters)).toEqual(canonicalOrder(p.filters));
       }),
       { numRuns: 500 },
     );
   });
 
-  it("parseSortByValue(getSortByValue(k, r)) returns k, keeping r only for directional keys", () => {
+  it("parseSortByValue(getSortByValue(k, r)) returns k, keeping r only for the four directional keys", () => {
     expectTypeOf<
       Exclude<ProductCollectionSortKeys, (typeof ALL_SORT_KEYS)[number]>
     >().toEqualTypeOf<never>();
 
     for (const sortKey of ALL_SORT_KEYS) {
+      expect(isDirectionalSortKey(sortKey)).toBe(EXPECTED_DIRECTIONAL_SORT_KEYS.has(sortKey));
       for (const reverse of [false, true]) {
         expect(parseSortByValue(getSortByValue(sortKey, reverse))).toEqual({
           sortKey,
-          reverse: isDirectionalSortKey(sortKey) && reverse,
+          reverse: EXPECTED_DIRECTIONAL_SORT_KEYS.has(sortKey) && reverse,
         });
       }
     }

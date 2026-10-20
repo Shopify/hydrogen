@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,6 +16,9 @@ const ISSUE_PATTERN = /^(https?:\/\/\S+|#\d+)$/;
 
 export type KnownGap = { gap: string; accepted: string } | { gap: string; issue: string };
 
+/** A one-line change to an entry point that should make a proof fail. */
+export type Mutant = { mutant: string; file: string; find: string; replace: string };
+
 export type Feature = {
   id: string;
   promise: string;
@@ -24,6 +27,7 @@ export type Feature = {
   entry_points: string[];
   depends_on: string[];
   verified_by: string[];
+  falsified_by: Mutant[];
   e2e_groups: string[];
   known_gaps: KnownGap[];
 };
@@ -74,6 +78,48 @@ function parseKnownGap(rawGap: unknown, gapLabel: string, errors: string[]): Kno
   return undefined;
 }
 
+function parseMutant(raw: unknown, label: string, errors: string[]): Mutant | undefined {
+  if (!isRecord(raw)) {
+    errors.push(`${label}: must be a mapping`);
+    return undefined;
+  }
+  const { mutant, file, find, replace } = raw;
+  if (
+    !isNonEmptyString(mutant) ||
+    !isNonEmptyString(file) ||
+    !isNonEmptyString(find) ||
+    typeof replace !== "string"
+  ) {
+    errors.push(`${label}: needs mutant, file, find, and replace strings`);
+    return undefined;
+  }
+  if (find === replace) {
+    errors.push(`${label}: find and replace are identical`);
+    return undefined;
+  }
+  return { mutant, file, find, replace };
+}
+
+function parseEntries<T>(
+  entry: Record<string, unknown>,
+  key: string,
+  label: string,
+  errors: string[],
+  parseEntry: (raw: unknown, entryLabel: string, errors: string[]) => T | undefined,
+  options: { optional?: boolean } = {},
+): T[] {
+  const raw = entry[key];
+  if (raw === undefined && options.optional) return [];
+  if (!Array.isArray(raw)) {
+    errors.push(`${label}: ${key} must be a list`);
+    return [];
+  }
+  return raw.flatMap((item: unknown, itemIndex) => {
+    const parsed = parseEntry(item, `${label}.${key}[${itemIndex}]`, errors);
+    return parsed ? [parsed] : [];
+  });
+}
+
 function parseFeature(entry: unknown, index: number, errors: string[]): Feature | undefined {
   if (!isRecord(entry)) {
     errors.push(`features[${index}]: must be a mapping`);
@@ -106,13 +152,9 @@ function parseFeature(entry: unknown, index: number, errors: string[]): Feature 
     errors.push(`${label}: status must be one of ${STATUSES.join(", ")}`);
   }
 
-  const rawGaps: unknown[] | undefined = Array.isArray(entry.known_gaps)
-    ? entry.known_gaps
-    : undefined;
-  if (rawGaps === undefined) errors.push(`${label}: known_gaps must be a list`);
-  const known_gaps = (rawGaps ?? []).flatMap((rawGap, gapIndex) => {
-    const gap = parseKnownGap(rawGap, `${label}.known_gaps[${gapIndex}]`, errors);
-    return gap ? [gap] : [];
+  const known_gaps = parseEntries(entry, "known_gaps", label, errors, parseKnownGap);
+  const falsified_by = parseEntries(entry, "falsified_by", label, errors, parseMutant, {
+    optional: true,
   });
 
   const feature = {
@@ -122,6 +164,7 @@ function parseFeature(entry: unknown, index: number, errors: string[]): Feature 
     entry_points: list("entry_points"),
     depends_on: list("depends_on"),
     verified_by: list("verified_by"),
+    falsified_by,
     e2e_groups: list("e2e_groups"),
     known_gaps,
   };
@@ -166,6 +209,11 @@ function checkFeature(feature: Feature, workspace: Workspace): string[] {
   }
   if (feature.status === "shipped" && feature.verified_by.length === 0) {
     errors.push(`${feature.id}: shipped features need at least one verified_by test`);
+  }
+  for (const { mutant, file } of feature.falsified_by) {
+    if (!feature.entry_points.includes(file)) {
+      errors.push(`${feature.id}: mutant "${mutant}" targets ${file}, which is not an entry point`);
+    }
   }
   for (const group of feature.e2e_groups) {
     if (!workspace.e2eGroupExists(group)) {
@@ -259,6 +307,7 @@ function countAssertions(assertions: { status: string }[]): ProofResult {
 export function runProofs(
   hydrogenDir: string,
   paths: string[],
+  options: { quiet?: boolean } = {},
 ): ReadonlyMap<string, ProofResult> | string {
   const tmp = mkdtempSync(join(tmpdir(), "check-features-"));
   const reportPath = join(tmp, "report.json");
@@ -276,7 +325,7 @@ export function runProofs(
       ],
       {
         cwd: hydrogenDir,
-        stdio: "inherit",
+        stdio: options.quiet ? "pipe" : "inherit",
       },
     );
     if (vitest.error) return `could not run vitest: ${vitest.error.message}`;
@@ -295,6 +344,64 @@ export function runProofs(
   }
 }
 
+/** Returns the mutated source, or undefined unless `find` occurs exactly once. */
+export function applyMutant(source: string, mutant: Mutant): string | undefined {
+  const first = source.indexOf(mutant.find);
+  if (first === -1 || source.indexOf(mutant.find, first + 1) !== -1) return undefined;
+  return source.slice(0, first) + mutant.replace + source.slice(first + mutant.find.length);
+}
+
+export type MutantVerdict = "killed" | "survived" | { broke: string };
+
+/**
+ * A mutant is killed when some proof fails. A proof that vitest could not
+ * collect or that ran zero tests under the mutant did not fail, it broke,
+ * which usually means the mutant is not valid code.
+ */
+export function judgeMutant(
+  proofs: ReadonlyMap<string, ProofResult>,
+  verifiedBy: string[],
+): MutantVerdict {
+  for (const path of verifiedBy) {
+    const result = proofs.get(path);
+    if (result === undefined || (result.passed === 0 && result.failed === 0)) {
+      return { broke: path };
+    }
+  }
+  return verifiedBy.some((path) => (proofs.get(path)?.failed ?? 0) > 0) ? "killed" : "survived";
+}
+
+export function runFalsification(
+  hydrogenDir: string,
+  feature: Feature,
+): { errors: string[]; killed: string[] } {
+  const errors: string[] = [];
+  const killed: string[] = [];
+  for (const mutant of feature.falsified_by) {
+    const label = `${feature.id}: mutant "${mutant.mutant}"`;
+    const path = join(hydrogenDir, mutant.file);
+    const original = readFileSync(path, "utf8");
+    const mutated = applyMutant(original, mutant);
+    if (mutated === undefined) {
+      errors.push(`${label} find text does not occur exactly once in ${mutant.file}`);
+      continue;
+    }
+    writeFileSync(path, mutated);
+    let verdict: MutantVerdict | string;
+    try {
+      const proofs = runProofs(hydrogenDir, feature.verified_by, { quiet: true });
+      verdict = typeof proofs === "string" ? proofs : judgeMutant(proofs, feature.verified_by);
+    } finally {
+      writeFileSync(path, original);
+    }
+    if (verdict === "killed") killed.push(label);
+    else if (verdict === "survived") errors.push(`${label} survived every proof`);
+    else if (typeof verdict === "string") errors.push(`${label}: ${verdict}`);
+    else errors.push(`${label} broke ${verdict.broke} instead of failing it; is it valid code?`);
+  }
+  return { errors, killed };
+}
+
 export function loadWorkspace(repoRoot: string): Workspace {
   const hydrogenDir = join(repoRoot, "packages/hydrogen");
   const specsDir = join(repoRoot, "packages/storefront-e2e/specs");
@@ -309,26 +416,45 @@ export function loadWorkspace(repoRoot: string): Workspace {
   };
 }
 
-export function run(repoRoot: string, options: { proofs?: boolean } = {}): string[] {
+export function run(
+  repoRoot: string,
+  options: { proofs?: boolean; falsify?: boolean } = {},
+): { errors: string[]; killed: string[] } {
   const registryPath = join(repoRoot, "packages/hydrogen/features.yaml");
   const parsed = parseRegistry(parse(readFileSync(registryPath, "utf8")));
-  if (parsed.errors.length > 0) return parsed.errors;
+  if (parsed.errors.length > 0) return { errors: parsed.errors, killed: [] };
 
+  const hydrogenDir = join(repoRoot, "packages/hydrogen");
   const workspace = loadWorkspace(repoRoot);
   const proofPaths = [...new Set(parsed.features.flatMap((feature) => feature.verified_by))];
-  if (options.proofs && proofPaths.length > 0) {
-    const result = runProofs(join(repoRoot, "packages/hydrogen"), proofPaths);
-    if (typeof result === "string") return [result];
+  if ((options.proofs || options.falsify) && proofPaths.length > 0) {
+    const result = runProofs(hydrogenDir, proofPaths);
+    if (typeof result === "string") return { errors: [result], killed: [] };
     workspace.proofs = result;
   }
-  return checkFeatures(parsed.features, workspace);
+  const errors = checkFeatures(parsed.features, workspace);
+  // Mutants only mean something against a registry whose proofs are green.
+  if (errors.length > 0 || !options.falsify) return { errors, killed: [] };
+
+  const killed: string[] = [];
+  for (const feature of parsed.features) {
+    const outcome = runFalsification(hydrogenDir, feature);
+    errors.push(...outcome.errors);
+    killed.push(...outcome.killed);
+  }
+  return { errors, killed };
 }
 
 const isMain =
   process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   const proofs = process.argv.includes("--proofs");
-  const errors = run(resolve(fileURLToPath(import.meta.url), "../.."), { proofs });
+  const falsify = process.argv.includes("--falsify");
+  const { errors, killed } = run(resolve(fileURLToPath(import.meta.url), "../.."), {
+    proofs,
+    falsify,
+  });
+  for (const label of killed) console.log(`  killed ${label}`);
   if (errors.length > 0) {
     console.error(`features.yaml: ${errors.length} problem${errors.length === 1 ? "" : "s"}`);
     for (const error of errors) console.error(`  ${error}`);
