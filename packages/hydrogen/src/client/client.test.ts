@@ -679,7 +679,36 @@ describe("createStorefrontClient", () => {
       expect((error as StorefrontApiError).status).toBe(307);
       expect((error as StorefrontApiError).requestId).toBe("req-3xx");
       expect((error as StorefrontApiError).message).toMatch(/redirect/);
+      expect((error as StorefrontApiError).message).toContain("https://attacker.example");
+      expect((error as StorefrontApiError).message).not.toContain("/collect");
       expect(capture).not.toHaveBeenCalled();
+    });
+
+    it("names a relative redirect's resolved origin", async () => {
+      mockFetch.mockResolvedValueOnce(
+        new Response(null, { status: 301, headers: { location: "/api/graphql.json" } }),
+      );
+
+      const error = await createPublicClient({ fetch: mockFetch })
+        .graphql(SHOP_QUERY)
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(StorefrontApiError);
+      expect((error as StorefrontApiError).message).toBe(
+        "SFAPI responded with a redirect (301 to https://test.myshopify.com); redirects are not followed",
+      );
+    });
+
+    it("treats 304 Not Modified as a non-OK response, not a redirect", async () => {
+      mockFetch.mockResolvedValueOnce(new Response(null, { status: 304 }));
+
+      const error = await createPublicClient({ fetch: mockFetch })
+        .graphql(SHOP_QUERY)
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(StorefrontApiError);
+      expect((error as StorefrontApiError).status).toBe(304);
+      expect((error as StorefrontApiError).message).not.toMatch(/redirect/);
     });
 
     // Node and workerd return a real 3xx for `redirect: "manual"`, which the cache wrapper reserializes.

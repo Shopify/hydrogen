@@ -62,6 +62,8 @@ const REQUEST_IDENTITY_HEADERS = new Set([
   SHOPIFY_STOREFRONT_Y_HEADER.toLowerCase(),
   SHOPIFY_STOREFRONT_S_HEADER.toLowerCase(),
 ]);
+// 304 Not Modified is a 3xx but not a redirect, so it falls through to the non-OK handling.
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const CACHE_ENABLED_GRAPHQL_CLIENTS = new WeakSet<StorefrontClient["graphql"]>();
 const SHOULD_CACHE_RESULT = Symbol();
 
@@ -283,13 +285,16 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       // Reject redirects before capturing headers so a rejected response can't set cookies.
       // Browsers hide a manual redirect's status behind an opaque response, so leave it out.
       const isOpaqueRedirect = response.type === "opaqueredirect";
-      if (isOpaqueRedirect || (status >= 300 && status < 400)) {
+      if (isOpaqueRedirect || REDIRECT_STATUSES.has(status)) {
         // Don't await: a cancel waits on any unread clone (tee) a custom fetch kept.
         void response.body?.cancel().catch(() => {});
+        // Name only the target origin, which diagnoses a misconfigured `storeDomain` (e.g. an
+        // `http://` domain redirected to https) without logging the target's path or query.
+        const locationOrigin = getLocationOrigin(responseHeaders.get("location"), apiUrl);
         throw new StorefrontApiError(
           isOpaqueRedirect
             ? "SFAPI responded with a redirect; redirects are not followed"
-            : `SFAPI responded with a redirect (${status}); redirects are not followed`,
+            : `SFAPI responded with a redirect (${status}${locationOrigin ? ` to ${locationOrigin}` : ""}); redirects are not followed`,
           { status: isOpaqueRedirect ? undefined : status, requestId, queryText, variables },
         );
       }
@@ -372,6 +377,15 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
   if (config.cache) CACHE_ENABLED_GRAPHQL_CLIENTS.add(client.graphql);
 
   return client;
+}
+
+function getLocationOrigin(location: string | null, baseUrl: string): string | undefined {
+  if (!location) return undefined;
+  try {
+    return new URL(location, baseUrl).origin;
+  } catch {
+    return undefined;
+  }
 }
 
 function buildVariables(
