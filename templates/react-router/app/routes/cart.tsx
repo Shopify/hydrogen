@@ -27,6 +27,7 @@ export default function CartRoute() {
       id="main-content"
       tabIndex={-1}
       className="max-w-page px-margin mx-auto w-full flex-1 py-12"
+      data-testid="cart-page"
     >
       <h1 id="cart-page-title" tabIndex={-1} className="type-display text-on-surface mb-8">
         Cart

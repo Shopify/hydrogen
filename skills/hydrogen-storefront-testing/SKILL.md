@@ -30,6 +30,16 @@ Use this skill when you prepare a custom storefront, in any framework, so that t
 
 The relationship decides the ID, not availability: `product-variant-option` selects another variant of the same product, and `product-sibling-option` navigates to another product. The suite supports variant option links and buttons only, not radio inputs or selects. It skips current values and values with the native `disabled` attribute or `aria-disabled="true"`, such as a combination that does not exist. Sold out does not change the ID: a sold-out value of this product is still a `product-variant-option`. Keep your existing availability behavior. A link can use any URL shape: the suite follows its real `href`, then checks the selected state (`aria-current="true"` on the link, or `aria-pressed="true"` on a button), a direct load of that URL, and that unrelated query params stay. The no-JavaScript check needs links. `STOREFRONT_SKIP_NO_JS_VARIANTS=true` skips only that check. The current variant journey ignores `product-sibling-option`, so it does not test navigation to another product. See Variant Options in the contract.
 
+### Cart
+
+| Test ID | Put it on |
+| --- | --- |
+| `cart-page` | The element that holds the cart page content |
+| `cart-drawer` | The cart drawer element |
+| `cart-trigger` | The control that opens the cart drawer. Not a plain link to `/cart` |
+
+After Add to cart, the drawer must open by itself. The suite uses `cart-trigger` only to open a closed drawer in one test. It finds a line inside the visible cart page or the open drawer, never across both.
+
 ## How to adopt
 
 1. Find the existing elements in the tables above in your storefront.
@@ -68,4 +78,4 @@ await medium.click();
 await page.getByTestId('product-add-to-cart').filter({visible: true}).first().click();
 ```
 
-These are locator examples, not a complete buyer journey. Assert the real result, such as the URL or the selected option.
+These are locator examples, not a complete cart journey. Wait for settlement between cart changes and assert the real result.

@@ -36,7 +36,19 @@ This is a locator change only. Add each ID to the existing element that has this
 
 IDs can repeat. For example, a main and a sticky add to cart, a desktop and a mobile title, or one ID on each option value. The suite starts with `getByTestId`, then narrows to the visible, relevant element or value. When the journey needs one element, the suite chooses one. The suite proves buyer outcomes (URL, selected state, cart lines), not only the presence of an ID.
 
-The suite finds all other UI by role, label, and text, as the sections below describe. The storefront can have other test IDs for its own tests. The suite does not read them.
+The suite finds other UI by role, label, and text, unless a section below lists a test ID for it. The storefront can have other test IDs for its own tests. The suite does not read them.
+
+## Cart Test IDs
+
+The cart group finds these cart elements with `data-testid` attributes. The locator policy in Product Test IDs applies: add each ID to the existing element with this meaning, IDs can repeat, and the suite narrows to the visible, relevant element.
+
+| Test ID | Meaning |
+| --- | --- |
+| `cart-page` | The cart page content |
+| `cart-drawer` | The cart drawer |
+| `cart-trigger` | The control that opens the cart drawer |
+
+The suite finds lines inside the visible cart page or the open cart drawer, never across both. Keep `cart-trigger` off links that only go to `/cart`.
 
 ## Product Results
 
@@ -78,11 +90,11 @@ Set STOREFRONT_SKIP_NO_JS_VARIANTS=true to skip the no-JavaScript check for a st
 
 ## Cart Line Items
 
-Cart lines must be visible list items containing the product title.
+Cart lines must be visible list items containing the product title. The suite finds them inside the cart page or the cart drawer (see Cart Test IDs).
 
 The cart and checkout groups find the add to cart control with `product-add-to-cart` (see Product Test IDs). It must be enabled for the discovered variant.
 
-After Add to cart, the suite must be able to inspect the added line in a cart drawer dialog before navigating to the cart page. Either open the drawer immediately with the optimistic line, or expose a visible page-level button whose accessible name begins with Cart, Open cart, or View cart so the suite can open the drawer while the update is pending.
+After ordinary Add to cart, the drawer must open by itself and show the added line before the suite navigates to the cart page. Only the stock-limit rollback test clicks `cart-trigger` when the drawer is closed while its cart request is held. Keep the closed drawer rendered before that click; its lines can render after it opens.
 
 Each line must expose:
 
@@ -94,7 +106,7 @@ Each line must expose:
 
 Cart totals must expose a `role="status"` region that says `Updating cart totals` while cart totals are stale, then `Cart totals updated` after mutation settlement. Do not announce `Cart totals updated` on initial idle render before a mutation cycle. The region may be visually hidden if it remains available to assistive technology.
 
-Accessible labels are preferred. Broad data-testid attributes should only be used when a semantic role or label cannot express the user-facing concept.
+Cart UI without a test ID in Cart Test IDs is found by role, label, and text.
 
 ## Checkout Handoff
 
@@ -126,4 +138,4 @@ Operational expectations:
 
 When test locators change, update the affected specs and this document together.
 
-The suite reads test IDs only for the product title, same-product option values (`product-variant-option`), and add to cart control (see Product Test IDs; `product-sibling-option` is defined but not read). It finds all other UI by semantic roles and label strings, including the English cart totals status text.
+The suite reads test IDs for the product title, same-product option values (`product-variant-option`), and add to cart control (see Product Test IDs; `product-sibling-option` is defined but not read), and for the cart elements in Cart Test IDs. It finds all other UI by semantic roles and label strings, including the English cart totals status text.

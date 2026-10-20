@@ -4,7 +4,6 @@ import { createContractError } from "../../src/contract";
 import { test, type CartTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
-const CART_CONTROL_NAME = /^(?:open |view )?cart\b/i;
 const REMOVE_CONTROL_NAME = /remove/i;
 const INCREASE_CONTROL_NAME = /increase|^\+$/i;
 const DECREASE_CONTROL_NAME = /decrease|^[-−]$/i;
@@ -94,6 +93,49 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
   }
 });
 
+test.describe("cart locator helpers", () => {
+  const triggerHtml = `<button type="button" data-testid="cart-trigger" onclick="window.triggerClicked = true; document.getElementById('drawer').showModal()">Cart</button>`;
+
+  test("reads cart page lines and drawer lines from their own view", async ({ page }) => {
+    // A line outside both views comes first, so an unscoped match would find it.
+    await page.setContent(`
+      <main><ul>${cartLineHtml("Shirt outside")}</ul></main>
+      <dialog open data-testid="cart-drawer"><ul>${cartLineHtml("Shirt drawer line")}</ul></dialog>
+      <div data-testid="cart-page"><ul>${cartLineHtml("Shirt page line")}</ul></div>`);
+
+    await expect(cartLineFor(page, "Shirt")).toHaveText("Shirt page line");
+    await expect(cartOverlayLineFor(page, "Shirt")).toHaveText("Shirt drawer line");
+  });
+
+  test("uses a drawer that opened by itself without clicking the cart trigger", async ({
+    page,
+  }) => {
+    await page.setContent(`
+      ${triggerHtml}
+      <dialog open id="drawer" data-testid="cart-drawer"><ul>${cartLineHtml("Shirt")}</ul></dialog>`);
+
+    await expect(await openCartOverlayFor(page, "Shirt")).toBeVisible();
+    expect(await wasTriggerClicked(page)).toBe(false);
+  });
+
+  test("opens a closed drawer with the cart trigger, also when its lines render later", async ({
+    page,
+  }) => {
+    // The drawer is empty until the trigger opens it, then adds the line later.
+    await page.setContent(`
+      <button type="button" data-testid="cart-trigger" onclick="
+        window.triggerClicked = true;
+        const drawer = document.getElementById('drawer');
+        drawer.showModal();
+        setTimeout(() => { drawer.innerHTML = '<ul>${cartLineHtml("Shirt").replaceAll('"', "&quot;")}</ul>'; }, 50);
+      ">Cart</button>
+      <dialog id="drawer" data-testid="cart-drawer"></dialog>`);
+
+    await expect(await openCartOverlayFor(page, "Shirt")).toBeVisible();
+    expect(await wasTriggerClicked(page)).toBe(true);
+  });
+});
+
 function createRequestGate(): { wait: Promise<void>; release: () => void } {
   let release: (() => void) | undefined;
   const wait = new Promise<void>((resolve) => {
@@ -143,6 +185,7 @@ async function tryAddProductToCart(
   if (!isCartEnabled) return null;
 
   await addToCart.click();
+  // Ordinary Add to cart needs the drawer to open by itself.
   const line = cartOverlayLineFor(page, expectation.productTitle);
   await expect(line).toBeVisible({
     timeout: CART_SETTLE_TIMEOUT_MS,
@@ -246,16 +289,33 @@ async function removeCartLine(page: Page, expectation: CartExpectation): Promise
   await expect(line).not.toBeVisible({ timeout: CART_SETTLE_TIMEOUT_MS });
 }
 
-function cartOverlayLineFor(page: Page, productTitle: string): Locator {
-  return page.getByRole("dialog").getByRole("listitem").filter({ hasText: productTitle }).first();
+/** The visible line with the product title inside the visible cart page. */
+function cartLineFor(page: Page, productTitle: string): Locator {
+  return lineIn(page.getByTestId("cart-page"), productTitle);
 }
 
-async function openCartOverlayFor(page: Page, productTitle: string): Promise<Locator> {
-  const line = cartOverlayLineFor(page, productTitle);
-  if (await line.isVisible().catch(() => false)) return line;
+/** The visible line with the product title inside the open cart drawer. */
+function cartOverlayLineFor(page: Page, productTitle: string): Locator {
+  return lineIn(page.getByTestId("cart-drawer"), productTitle);
+}
 
-  await page.getByRole("button", { name: CART_CONTROL_NAME }).first().click();
-  return line;
+function lineIn(view: Locator, productTitle: string): Locator {
+  return view
+    .filter({ visible: true })
+    .first()
+    .getByRole("listitem")
+    .filter({ hasText: productTitle, visible: true })
+    .first();
+}
+
+/**
+ * Returns the drawer line. Clicks the cart trigger only when no cart drawer is
+ * open, so a drawer that opened by itself after Add to cart is not toggled.
+ */
+async function openCartOverlayFor(page: Page, productTitle: string): Promise<Locator> {
+  const isOpen = (await page.getByTestId("cart-drawer").filter({ visible: true }).count()) > 0;
+  if (!isOpen) await page.getByTestId("cart-trigger").filter({ visible: true }).first().click();
+  return cartOverlayLineFor(page, productTitle);
 }
 
 async function expectCartTotalsStatus(
@@ -277,10 +337,6 @@ async function expectCartTotalsStatus(
       docsAnchor: "#cart-line-items",
     });
   }
-}
-
-function cartLineFor(page: Page, productTitle: string): Locator {
-  return page.getByRole("main").getByRole("listitem").filter({ hasText: productTitle }).first();
 }
 
 async function quantityInputFor(line: Locator, cartPath: string): Promise<Locator> {
@@ -325,4 +381,13 @@ async function lineButton(
     likelyFix: "Add accessible names to cart line quantity and remove controls.",
     docsAnchor: "#cart-line-items",
   });
+}
+
+/** A cart line for helper fixtures. */
+function cartLineHtml(text: string): string {
+  return `<li>${text}</li>`;
+}
+
+async function wasTriggerClicked(page: Page): Promise<boolean> {
+  return page.evaluate(() => "triggerClicked" in window);
 }

@@ -15,6 +15,7 @@ export function CartDrawer() {
       id={CART_DRAWER_ID}
       className="drawer-right bg-surface text-on-surface"
       aria-labelledby="cart-drawer-title"
+      data-testid="cart-drawer"
       closedby="any"
     >
       <Suspense fallback={<div role="status">Loading cart...</div>}>

@@ -10,7 +10,7 @@ description: >
 
 ### The Golden Rules
 
-1. **Use role-based locators** - Never CSS classes unless absolutely necessary. Exception: the portable storefront suite uses its four documented product test IDs (see [Portable Storefront Test IDs](#portable-storefront-test-ids))
+1. **Use role-based locators** - Never CSS classes unless absolutely necessary. Exception: the portable storefront suite uses its documented test IDs (see [Portable Storefront Test IDs](#portable-storefront-test-ids))
 2. **Assert absence broadly, presence specifically** - Wide net for "not there", scoped for "is there"
 3. **Never use timeouts or networkidle** - Wait for visible effects only
 4. **Improve accessibility while testing** - Tests drive better markup
@@ -135,9 +135,9 @@ Test IDs are acceptable when they disambiguate duplicated UI that is already sem
 
 ### Portable Storefront Test IDs
 
-The portable storefront suite in `packages/storefront-e2e` runs against storefronts that it does not own. It defines four product test IDs: `product-title`, `product-variant-option`, `product-sibling-option`, and `product-add-to-cart`. It reads all of them with `getByTestId` except `product-sibling-option`, which identifies cross-product values and is excluded from the variant journey. These IDs can repeat (for example, main and sticky add to cart). Narrow to the visible, relevant element, and choose one when the journey needs one.
+The portable storefront suite in `packages/storefront-e2e` runs against storefronts that it does not own. It defines four product test IDs: `product-title`, `product-variant-option`, `product-sibling-option`, and `product-add-to-cart`. It reads all of them with `getByTestId` except `product-sibling-option`, which identifies cross-product values and is excluded from the variant journey. It also finds cart elements: `cart-page`, `cart-drawer`, and `cart-trigger`. These IDs can repeat (for example, main and sticky add to cart). Narrow to the visible, relevant element, and choose one when the journey needs one.
 
-This exception covers only these four IDs in the portable suite. All other locators stay role-first. The source of truth is `packages/storefront-e2e/docs/storefront-contract.md`. See also `skills/hydrogen-storefront-testing/SKILL.md`.
+This exception covers only these IDs in the portable suite. All other locators stay role-first. The source of truth is `packages/storefront-e2e/docs/storefront-contract.md`. See also `skills/hydrogen-storefront-testing/SKILL.md`.
 
 ### Accessibility Improvements During Test Writing
 
