@@ -1,0 +1,14 @@
+packages:
+  - packages/*
+  - examples/*
+  - templates/*
+allowBuilds:
+  "@parcel/watcher": false
+  esbuild: false
+  lefthook: true
+  msw: false
+  sharp: false
+  unrs-resolver: false
+  workerd: false
+catalog:
+  typescript: ^5.9.3

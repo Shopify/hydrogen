@@ -1,0 +1,64 @@
+# Don't change the line below!
+#! oxygen_storefront_id: 1000014875
+
+# Pushes to main deploy to the storefront's Production environment. Pull requests deploy with
+# `--preview`, so they stay in its Preview environment.
+#
+# Keep this file at .github/workflows/deploy.yml. The Shopify GitHub App only comments preview
+# links for runs of workflow files that exist on the default branch, so renaming it silently
+# stops those comments on pull requests.
+name: React Router deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  # One deploy per ref at a time, so Production never ends up on an older push that
+  # finished last. A newer commit replaces a pull request's in-progress deploy
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  deploy:
+    name: Deploy to Oxygen
+    # Pull requests from forks can't read the deployment token
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      npm_config_registry: https://registry.npmjs.org/
+      TURBO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          # Pull requests deploy their head commit rather than GitHub's merge commit, so each
+          # deployment matches the pushed code. Empty on push, which checks out the branch.
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm run build:pkgs
+
+      - name: Build and deploy to Oxygen
+        working-directory: templates/react-router
+        run: pnpm run deploy ${{ github.event_name == 'pull_request' && '--preview' || '' }}
+        env:
+          SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014875 }}
