@@ -2,4 +2,4 @@
 "@shopify/hydrogen": patch
 ---
 
-The `hydrogen-setup` account-page step now points at the `hydrogen-local-https` skill when account routes fail with "Customer Account OAuth origin must use HTTPS", instead of telling agents to skip signed-in checks without naming the fix.
+The `hydrogen-setup` account-page step and the `hydrogen-smoke-test` account checks now point at the `hydrogen-local-https` skill when a real login needs a registered HTTPS origin. Because agent shells usually run with `CI` set and no TTY, they tell agents to ask the user to run `npx hydrogen certs install` (or `dev:https`) in a real terminal, and otherwise fall back to the signed-out checks and say so.
