@@ -1,10 +1,9 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
-import { createContractError } from "../../src/contract";
+import { createContractError, StorefrontContractError } from "../../src/contract";
 import { test, type CheckoutTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
-const CHECKOUT_CONTROL_NAME = /check\s*out|checkout|continue to checkout/i;
 
 type CartExpectation = {
   readonly cartPath: string;
@@ -44,6 +43,69 @@ test.describe("checkout cart setup helpers", () => {
     const error = await rejection(expectCartLine(page, expectation, 200));
 
     expect(String(error)).toContain("Small");
+  });
+});
+
+test.describe("checkout link helpers", () => {
+  const expectation: CartExpectation = {
+    cartPath: "/cart",
+    productTitle: "Shirt",
+    variantLabel: "Small",
+  };
+  const cartLine = `<ul><li data-testid="cart-line">Shirt Small</li></ul>`;
+  const checkoutHref = "https://shop.example/checkouts/cn/abc";
+
+  test("clicks the cart page checkout link, not the closed drawer's link", async ({ page }) => {
+    // The closed drawer and its checkout link come first. The real link has a localized name.
+    await openCartFixture(
+      page,
+      `<dialog data-testid="cart-drawer">
+        ${cartLine}
+        <a data-testid="cart-checkout" href="https://decoy.example/checkouts/drawer">Checkout</a>
+      </dialog>
+      <main data-testid="cart-page">
+        ${cartLine}
+        <a data-testid="cart-checkout" href="${checkoutHref}">Zur Kasse</a>
+      </main>`,
+    );
+
+    await startCheckoutFromPopulatedCart(page, expectation);
+
+    await expect(page).toHaveURL(checkoutHref);
+  });
+
+  test("hands off to a relative checkout URL on the storefront", async ({ page }) => {
+    await openCartFixture(
+      page,
+      `<main data-testid="cart-page">
+        ${cartLine}
+        <a data-testid="cart-checkout" href="/cart/c/abc?key=1">Checkout</a>
+      </main>`,
+    );
+
+    await startCheckoutFromPopulatedCart(page, expectation);
+
+    await expect(page).toHaveURL(`${STOREFRONT_ORIGIN}/cart/c/abc?key=1`);
+  });
+
+  test("does not navigate for a missing, empty, or non-checkout href", async ({ page }) => {
+    const links = [
+      `<a data-testid="cart-checkout">Checkout</a>`,
+      `<a data-testid="cart-checkout" href="">Checkout</a>`,
+      `<a data-testid="cart-checkout" href="http://[">Checkout</a>`,
+      `<a data-testid="cart-checkout" href="/collections/all">Checkout</a>`,
+    ];
+
+    for (const link of links) {
+      await test.step(link, async () => {
+        await openCartFixture(page, `<main data-testid="cart-page">${cartLine}${link}</main>`);
+        await expectContractError(
+          startCheckoutFromPopulatedCart(page, expectation),
+          /The visible checkout link targets a checkout URL\./,
+        );
+        await expect(page).toHaveURL(`${STOREFRONT_ORIGIN}/cart`);
+      });
+    }
   });
 });
 
@@ -101,7 +163,7 @@ async function startCheckoutFromPopulatedCart(
 ): Promise<void> {
   await expectCartLine(page, expectation);
 
-  const checkout = page.getByRole("link", { name: CHECKOUT_CONTROL_NAME }).first();
+  const checkout = cartPage(page).getByTestId("cart-checkout").filter({ visible: true }).first();
   await expect(checkout).toBeVisible();
   const checkoutUrl = await requireCheckoutUrl(page, checkout, expectation.cartPath);
   const isCheckoutNavigation = (url: URL) => url.href === checkoutUrl.href;
@@ -201,4 +263,26 @@ async function rejection(promise: Promise<unknown>): Promise<unknown> {
   } catch (error) {
     return error;
   }
+}
+
+async function expectContractError(promise: Promise<unknown>, message: RegExp): Promise<void> {
+  const error = await rejection(promise);
+  expect(error).toBeInstanceOf(StorefrontContractError);
+  expect(String(error)).toMatch(message);
+}
+
+/** Fake storefront origin for checkout link fixtures. No request leaves the browser. */
+const STOREFRONT_ORIGIN = "https://storefront.test";
+
+/**
+ * Serves `body` as the storefront cart page, so relative checkout links have an
+ * HTTP base. Every other request is aborted, except routes the test adds later.
+ */
+async function openCartFixture(page: Page, body: string): Promise<void> {
+  await page.unrouteAll({ behavior: "ignoreErrors" });
+  await page.route("**/*", (route) => route.abort());
+  await page.route(`${STOREFRONT_ORIGIN}/cart`, (route) =>
+    route.fulfill({ body: `<!doctype html>${body}`, contentType: "text/html", status: 200 }),
+  );
+  await page.goto(`${STOREFRONT_ORIGIN}/cart`);
 }

@@ -53,8 +53,9 @@ The cart group finds these cart elements with `data-testid` attributes. The loca
 | `cart-line-decrease` | The decrease quantity control of a cart line |
 | `cart-line-remove` | The remove control of a cart line |
 | `cart-status` | The cart totals status region |
+| `cart-checkout` | The checkout link of a cart view |
 
-The suite finds a line by `cart-line` and its product title inside the visible cart page or the open cart drawer, never across both. It finds the quantity input and the line controls inside the chosen line, and reads the quantity from the native input value. It waits for the cart totals message in a `cart-status` region that also has `role="status"` (see Cart Line Items). Keep `cart-trigger` off links that only go to `/cart`. The checkout group reuses `cart-drawer`, `cart-page`, and `cart-line` to find the added line.
+The suite finds a line by `cart-line` and its product title inside the visible cart page or the open cart drawer, never across both. It finds the quantity input and the line controls inside the chosen line, and reads the quantity from the native input value. It waits for the cart totals message in a `cart-status` region that also has `role="status"` (see Cart Line Items). Keep `cart-trigger` off links that only go to `/cart`. The checkout group reuses `cart-drawer`, `cart-page`, and `cart-line` to find the added line. It clicks the first visible `cart-checkout` inside the cart page.
 
 ## Product Results
 
@@ -119,7 +120,7 @@ Cart UI without a test ID in Cart Test IDs is found by role, label, and text.
 
 The checkout test verifies only the storefront-owned side of the checkout handoff.
 
-It verifies the added product and variant in the storefront cart, clicks the visible checkout link, and waits for a checkout URL. It finds the added line in the drawer and on the cart page with `cart-drawer`, `cart-page`, and `cart-line` (see Cart Test IDs). It does not depend on the external checkout document loading, enter customer data, payment data, or perform any irreversible checkout step.
+It verifies the added product and variant in the storefront cart, clicks the visible checkout link, and waits for a checkout URL. It finds the added line in the drawer and on the cart page with `cart-drawer`, `cart-page`, and `cart-line` (see Cart Test IDs). It finds the checkout link with `cart-checkout` inside the cart page, and checks that its `href` is a checkout URL before it clicks. It does not depend on the external checkout document loading, enter customer data, payment data, or perform any irreversible checkout step.
 
 If the storefront does not start checkout navigation, the test fails as a contract issue. External checkout availability is outside this suite's boundary.
 
