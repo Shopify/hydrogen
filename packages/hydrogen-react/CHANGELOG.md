@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2026.4.5
+
+### Patch Changes
+
+- Fix a race condition in `loadScript` where the browser could begin fetching a script before integrity or other security attributes were applied. Attributes are now set before the element is inserted into the DOM. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
 ## 2026.4.4
 
 ### Patch Changes

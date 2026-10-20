@@ -1,5 +1,29 @@
 # @shopify/create-hydrogen
 
+## 5.1.0
+
+### Minor Changes
+
+- Add typed JSON project and account results with explicit initialization outcomes. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  Partial setup failures now exit with code 1 in both `shopify hydrogen init` and `npm create @shopify/hydrogen`, including text mode. Linking with an unknown `--storefront` name also exits with an error.
+
+- Add --no-input to disable prompts and browser authentication independently of JSON output. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+### Patch Changes
+
+- Report Hydrogen project and disabled-command failures through the standard CLI error handler. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Add `--json` output to `shopify hydrogen shortcut` and `shopify hydrogen upgrade`. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  `shopify hydrogen shortcut` now exits with code 1 when it cannot configure any supported shell, in both text and JSON modes.
+
+- Add typed JSON setup results with absolute file paths and explicit no-op outcomes. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Emit structured progress when scaffolding with `create-hydrogen --json`. Preserve storefront provisioning errors and propagate failed job requests. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  Finish copying remote templates before dependency setup writes project files, preventing intermittent initialization failures.
+
 ## 5.0.40
 
 ### Patch Changes
