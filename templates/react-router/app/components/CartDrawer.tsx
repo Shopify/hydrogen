@@ -190,6 +190,7 @@ export function CartLineItem({
           <button
             type="submit"
             {...register("remove")}
+            data-testid="cart-line-remove"
             className="text-on-surface-secondary hover:text-on-surface inline-flex size-11 items-center justify-center rounded motion-safe:transition-[color,transform] motion-safe:active:scale-[0.90]"
             aria-label={`Remove ${product?.title ?? merchandise?.title ?? "item"}`}
           >

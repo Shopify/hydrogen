@@ -187,6 +187,7 @@ function errorIdForLine(lineId: string) {
             type="submit"
             :aria-label="`Remove ${line.merchandise?.product.title ?? 'cart item'} from cart`"
             v-bind="register('remove')"
+            data-testid="cart-line-remove"
             class="min-h-6 py-1 text-sm text-red-600 underline hover:text-red-800"
           >
             Remove
