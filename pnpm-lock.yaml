@@ -44,6 +44,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      yaml:
+        specifier: 2.9.0
+        version: 2.9.0
 
   examples/astro:
     dependencies:

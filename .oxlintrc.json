@@ -23,6 +23,7 @@
     "patches/**",
     "scripts/**",
     "!scripts/calver*.ts",
+    "!scripts/check-features*.ts",
     "!scripts/copy-hydrogen-to-preview*.ts",
     "!scripts/preview-template-dist*.ts",
     "!scripts/test-local-https.ts",

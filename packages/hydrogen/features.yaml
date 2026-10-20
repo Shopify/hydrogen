@@ -1,0 +1,36 @@
+# Paths in entry_points and verified_by are relative to this directory.
+# e2e_groups name directories under packages/storefront-e2e/specs.
+# Every known gap carries a decision. `accepted` says why it is fine as-is.
+# `issue` links to where the fix is tracked.
+
+- id: collection.url-params
+  promise: >
+    Collection filter and sort state that the Liquid-compatible URL scheme can
+    express survives a trip through the URL. parseCollectionParams(serializeCollectionParams(p))
+    equals p, and parseSortByValue(getSortByValue(k, r)) returns k for every Storefront
+    API sort key, keeping r only for directional keys. State the scheme cannot express
+    is listed under known_gaps.
+  status: shipped
+  owner: hydrogen
+  entry_points:
+    - src/core/collection/url.ts
+  depends_on: []
+  verified_by:
+    - src/core/collection/__tests__/url.property.test.ts
+  e2e_groups:
+    - collection-filter
+  known_gaps:
+    - gap: A category filter serializes to filter.p.category, which parseCollectionParams never reads.
+      accepted: >
+        Documented in url.ts. The Liquid URL scheme has no category parameter. The serializer
+        emits one so filter checkboxes can be built from a filter value's input string.
+    - gap: Two availability filters serialize to two params that parse back to no availability filter.
+      accepted: Matches normalizeFilters in collection.ts, which drops both when a second one is added.
+    - gap: The store can hold two price filters, but the parser reads gte and lte with get, so only the first range survives the URL.
+      accepted: >
+        The Liquid URL scheme has a single price facet and the collection UI exposes one range.
+        Revisit if normalizeFilters grows a price rule or a UI makes two ranges reachable.
+    - gap: A metafield namespace containing a dot, a taxonomy key without a dot, or an empty option name serialize to params the parser drops.
+      accepted: >
+        Shopify metafield namespaces allow letters, digits, underscore and hyphen. Taxonomy keys
+        are always namespace.key. Variant option names are required. None can occur in Storefront API data.

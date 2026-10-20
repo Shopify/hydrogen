@@ -25,13 +25,13 @@
     "benchmark:harness": "node scripts/storefront-benchmark-harness/run-opencode-docker.ts",
     "typecheck": "turbo run typecheck",
     "libcheck": "turbo run libcheck --filter='./packages/*'",
-    "lint": "oxlint --max-warnings=0 packages/ examples/ templates/ scripts/calver*.ts scripts/preview-template-dist*.ts scripts/test-local-https.ts scripts/workspace-vite.test.ts",
-    "lint:ci": "oxlint --format github --max-warnings=0 packages/ examples/ templates/ scripts/calver*.ts scripts/preview-template-dist*.ts scripts/test-local-https.ts scripts/workspace-vite.test.ts",
+    "lint": "oxlint --max-warnings=0 packages/ examples/ templates/ scripts/calver*.ts scripts/check-features*.ts scripts/preview-template-dist*.ts scripts/test-local-https.ts scripts/workspace-vite.test.ts && node scripts/check-features.ts",
+    "lint:ci": "oxlint --format github --max-warnings=0 packages/ examples/ templates/ scripts/calver*.ts scripts/check-features*.ts scripts/preview-template-dist*.ts scripts/test-local-https.ts scripts/workspace-vite.test.ts && node scripts/check-features.ts",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "changeset": "changeset",
     "version-packages": "node scripts/calver.ts version",
-    "test": "pnpm run test:scripts && turbo run test",
+    "test": "pnpm run test:scripts && turbo run test && node scripts/check-features.ts --proofs",
     "test:scripts": "node --test scripts/*.test.ts templates/*/__test__/*.test.ts",
     "test:local-https": "node --use-system-ca scripts/test-local-https.ts",
     "test:benchmark-harness": "tsc -p scripts/storefront-benchmark-harness/tsconfig.json && node --test scripts/storefront-benchmark-harness/*.test.ts",
@@ -47,7 +47,8 @@
     "oxfmt": "^0.47.0",
     "oxlint": "^1.62.0",
     "turbo": "^2.9.14",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "yaml": "2.9.0"
   },
   "engines": {
     "node": ">=24"
