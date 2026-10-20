@@ -6,11 +6,11 @@ import type { LanguageCode as CustomerAccountLanguageCode } from "@shopify/hydro
 
 type CustomerAccountClientLanguageCode = Parameters<
   typeof CAAPI.createCustomerAccountClient
->[0]["requestContext"]["i18n"]["language"];
+>[0]["requestContext"]["locale"]["language"];
 
 const requestContext = createShopifyRequestContext({
   request: new Request("https://example.com/account"),
-  i18n: { country: "US", language: "EN" },
+  i18n: { defaultLocale: { country: "US", language: "EN" } },
 });
 
 describe("Customer Account public entrypoints", () => {

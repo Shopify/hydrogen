@@ -2,10 +2,11 @@ import {
   type CacheInstance,
   createShopifyRequestContext,
   createStorefrontClient,
-  type I18nConfig,
   type PrivateNoBuyerContextStorefrontClient,
   type PublicStorefrontClient,
   type RequestScopedPrivateStorefrontClient,
+  type ShopifyI18n,
+  type ShopifyLocale,
 } from "@shopify/hydrogen";
 
 import { getBuyerIp } from "./buyer-ip";
@@ -29,7 +30,9 @@ type StorefrontRequest = Pick<Request, "headers"> &
 type ClientInput = {
   config: ResolvedStorefrontConfig;
   request: StorefrontRequest;
-  i18n: I18nConfig;
+  i18n: ShopifyI18n;
+  /** Pins the locale when there is no request URL to match against, such as static rendering. */
+  locale?: ShopifyLocale;
 };
 
 export type StaticStorefrontClient = PublicStorefrontClient | PrivateNoBuyerContextStorefrontClient;
@@ -39,8 +42,9 @@ export function createStaticStorefrontClient({
   config,
   request,
   i18n,
+  locale,
 }: ClientInput): StaticStorefrontClient {
-  const requestContext = createShopifyRequestContext({ request, i18n });
+  const requestContext = createShopifyRequestContext({ request, i18n, locale });
 
   if (config.mode === "mock") {
     return createStorefrontClient({
@@ -77,13 +81,14 @@ export function createRequestStorefrontClient({
   config,
   request,
   i18n,
+  locale,
   cache,
   waitUntil,
 }: RequestClientInput): RequestStorefrontClient {
   if (config.mode === "mock") {
     return createStorefrontClient({
       type: "public",
-      requestContext: createShopifyRequestContext({ request, i18n }),
+      requestContext: createShopifyRequestContext({ request, i18n, locale }),
       config: { storeDomain: config.storeDomain, cache, waitUntil },
     });
   }
@@ -93,6 +98,7 @@ export function createRequestStorefrontClient({
     requestContext: createShopifyRequestContext({
       request,
       i18n,
+      locale,
       buyerIp: getBuyerIp(request.headers),
     }),
     config: {

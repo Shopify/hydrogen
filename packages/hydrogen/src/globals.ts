@@ -1,6 +1,6 @@
 import type { ShopifyStandardActions } from "../vendor/standard-actions";
 import type { StorefrontAnalytics } from "./core/analytics/types";
-import type { I18nConfig } from "./core/request-context";
+import type { ShopifyCountryCode, ShopifyLanguageCode } from "./core/i18n/types";
 import type { ShopifyStandardRouteMatch } from "./core/standard-routes/index";
 
 /**
@@ -22,7 +22,7 @@ export type ShopifyGlobal = {
     };
   };
   /** The customer's country code. Defaults to `US`. */
-  country: I18nConfig["country"] | string;
+  country: ShopifyCountryCode | string;
   /** The active currency code, in uppercase. */
   currency?: {
     active: string;
@@ -47,7 +47,7 @@ export type ShopifyGlobal = {
     shouldShowGDPRBanner: () => boolean;
   };
   /** The customer's language code, in lowercase. Defaults to `en`. */
-  locale: Lowercase<I18nConfig["language"]> | string;
+  locale: Lowercase<ShopifyLanguageCode> | string;
   /**
    * Navigates to a storefront URL.
    * @deprecated Use `Shopify.routes.navigate` instead.

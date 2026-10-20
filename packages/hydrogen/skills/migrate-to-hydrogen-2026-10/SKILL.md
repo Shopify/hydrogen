@@ -144,6 +144,7 @@ import {
   type CachingStrategy,
   createShopifyRequestContext,
   createStorefrontClient,
+  defineShopifyI18n,
   type PublicStorefrontClient,
   type RequestScopedPrivateStorefrontClient,
   type ShopifyRequestContext,
@@ -173,14 +174,15 @@ function getBuyerIp(headers: Headers) {
   throw new Error('No buyer IP header on the request');
 }
 
+// Module scope. Add `routing` to serve more locales by path prefix or hostname; the request context matches the locale from the URL.
+const i18n = defineShopifyI18n({defaultLocale: {country: 'US', language: 'EN'}});
+
 export function createRequestStorefrontClient(
   request: Request,
   env: Env,
   cache: CacheInstance,
   waitUntil: ExecutionContext['waitUntil'],
 ): RequestStorefrontClient {
-  const i18n = {country: 'US', language: 'EN'} as const;             // or derive from the URL/domain
-
   // mock.shop is auth-free and 401s any token header, so it always gets the tokenless public client.
   if (env.MOCK_SHOP === '1' || !env.PUBLIC_STORE_DOMAIN) {
     return createStorefrontClient({
@@ -223,13 +225,13 @@ export function createRequestStorefrontClient(
 `app/lib/route-templates.ts` — maps Shopify entities to your route shapes. Pass it to `handleShopifyRoutes` (optional in the type, but handler-owned URLs come out wrong without it), to `handleShopifyRedirects` (**required** there), and to the `routes` prop of `ShopifyScripts`:
 
 ```ts
-import {createShopifyRouteTemplates} from '@shopify/hydrogen';
-export const routeTemplates = createShopifyRouteTemplates({
+import {defineShopifyRouteTemplates} from '@shopify/hydrogen';
+export const routeTemplates = defineShopifyRouteTemplates({
   productInCollection: '/products/:productHandle',
 });
 ```
 
-**Classic data-layer call-sites map mechanically:** `storefront.query()` → `client.graphql(QUERY, {variables, cache})`, which returns `{data, errors, headers}` instead of merging errors into the result — check `errors` before reading `data`; `$country`/`$language` are auto-injected, so drop them from `variables`; `storefront.CacheLong()` → the per-call `Cache.long()` (classic's implicit default caching is **gone**, so give every query that relied on it an explicit `cache`, `Cache.short()` or `Cache.long()`, or it hits the API on every request); `storefront.i18n` → `client.i18n`.
+**Classic data-layer call-sites map mechanically:** `storefront.query()` → `client.graphql(QUERY, {variables, cache})`, which returns `{data, errors, headers}` instead of merging errors into the result — check `errors` before reading `data`; `$country`/`$language` are auto-injected, so drop them from `variables`; `storefront.CacheLong()` → the per-call `Cache.long()` (classic's implicit default caching is **gone**, so give every query that relied on it an explicit `cache`, `Cache.short()` or `Cache.long()`, or it hits the API on every request); `storefront.i18n` → `client.locale` (the resolved `{language, country, pathPrefix}`; `client.i18n` is the `defineShopifyI18n` definition).
 
 Root **middleware** in `app/root.tsx` (needs `future.v8_middleware`) — the request lifecycle from mental-model step 1:
 

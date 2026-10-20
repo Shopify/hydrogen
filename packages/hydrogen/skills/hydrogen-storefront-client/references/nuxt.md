@@ -9,7 +9,9 @@ Use the `hydrogen-request-handlers` skill when wiring middleware, response-heade
 
 ## Server Client
 
-Create the client in server middleware where Nuxt exposes the incoming request. `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` per the `hydrogen-storefront-client` buyer-IP guidance:
+Create the client in server middleware where Nuxt exposes the incoming request. `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` per the `hydrogen-storefront-client` buyer-IP guidance.
+
+`i18n` is the module-scope `defineShopifyI18n` definition (see `SKILL.md`). Keep it in a module both server and client code can import, since the client plugin below needs it too.
 
 ```ts
 import {
@@ -17,12 +19,13 @@ import {
   createShopifyRequestContext,
   type ShopifyRequestContext,
 } from "@shopify/hydrogen";
+import { i18n } from "~/lib/i18n";
 
 export default defineEventHandler((event) => {
   const request = toWebRequest(event);
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n,
   });
 
   event.context.storefrontClient = createPublicStorefrontClient(requestContext);
@@ -67,16 +70,17 @@ Augment `#app`, `h3`, and `vue` types so `$storefrontClient` is available in pag
 
 ## Client Plugin
 
-Browser-side Storefront API calls should go through the same-origin SFAPI proxy installed by `handleShopifyRoutes`. Do not call the remote store domain directly from the browser.
+Browser-side Storefront API calls should go through the same-origin SFAPI proxy installed by `handleShopifyRoutes`. Do not call the remote store domain directly from the browser. Pass the page URL as `request.url` so the browser client resolves the same locale as the server did:
 
 ```ts
 import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
+import { i18n } from "~/lib/i18n";
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig().public;
   const requestContext = createShopifyRequestContext({
-    request: { headers: new Headers() },
-    i18n: { country: "US", language: "EN" },
+    request: { headers: new Headers(), url: window.location.href },
+    i18n,
   });
   const storefrontClient = createStorefrontClient({
     type: "public",

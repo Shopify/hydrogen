@@ -50,7 +50,7 @@ const shopifyRoute = handleShopifyRoutes({
 });
 ```
 
-Pass `routeTemplates` to `handleShopifyRoutes` so product `?variant=` links can be recognized before framework routing. `pathPrefix` is inferred from `requestContext.i18n.pathPrefix`, so localized product URLs stay in the localized tree.
+Pass `routeTemplates` to `handleShopifyRoutes` so product `?variant=` links can be recognized before framework routing. `pathPrefix` is inferred from `requestContext.locale.pathPrefix`, so localized product URLs stay in the localized tree. Registered handler groups are matched with that prefix stripped, so `/fr-ca/api/cart` reaches the `/api/cart` handler without per-locale registration.
 
 `handleShopifyRedirects` is a post-routing 404 check for `/admin`, configured standard route redirects, Storefront URL redirects, and same-origin `return_to`/`redirect` query params. Do not run it on every request.
 
@@ -71,7 +71,7 @@ const redirect = await handleShopifyRedirects({
 - Default to one request-scoped public Storefront client per request; `publicStorefrontToken` may be undefined for tokenless access (all mock.shop supports). Recommend a token-backed client once the app targets a real store, and upgrade to a private client when a private token and trusted buyer context exist.
 - Route handlers, cart server handlers, and `handleShopifyRedirects` accept any provided Storefront client.
 - When creating a private client, resolve trusted `buyerIp` first and pass it to `createShopifyRequestContext`. Use the `hydrogen-storefront-client` buyer-IP guidance for the app's deployment.
-- Create `requestContext` with `createShopifyRequestContext({ request, i18n, buyerIp })` where buyer context exists and the framework exposes a real `Request`; use `request: { headers }` only when no `Request` exists.
+- Create `requestContext` with `createShopifyRequestContext({ request, i18n, buyerIp })` where buyer context exists and the framework exposes a real `Request`; use `request: { headers }` only when no `Request` exists. `i18n` is the module-scope `defineShopifyI18n` definition; the locale is matched from `request.url` (or the forwarded `x-storefront-url` header with headers-only requests). Pass `locale` only for contexts with no meaningful URL.
 - Pass the same request-scoped `requestContext` and `storefrontClient` into `handleShopifyRoutes` and registered handler groups, plus the same request-scoped `sessionManager` when a handler needs one.
 - `handleShopifyRoutes` requires `sessionManager` only when a registered handler reads the session: Customer Account handlers, cart handlers created with `customerSession`, or custom handlers whose context includes it. Apps whose handlers never read the session, such as cart and predictive search only, can omit it. The requirement comes from the handler types, so a handler list that conditionally includes Customer Account handlers still needs a session manager on every request; when the account handlers are not registered, an in-memory session manager is enough, as in the starter templates. Annotate custom `createShopifyRouteHandler` contexts as `Omit<ShopifyRouteHandlerContext, "sessionManager">` when they do not use the session; a context that declares `sessionManager`, even as optional, requires one.
 - Call `handleShopifyRoutes` without awaiting it immediately. It returns `null` synchronously when no route matches; only return or await the promise after checking that it is truthy.
@@ -95,10 +95,23 @@ import {
   createPredictiveSearchServerHandlers,
   createShopifyRequestContext,
   createStorefrontClient,
+  defineShopifyI18n,
   handleShopifyRedirects,
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
 import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-account";
+```
+
+`define*` exports (`defineShopifyI18n`, `defineShopifyRouteTemplates`) return module-scope, serializable configuration. `create*` exports return stateful objects or handler groups; the request-scoped ones (`createShopifyRequestContext`, `createStorefrontClient`) belong inside the request lifecycle.
+
+The examples in `references/` assume an app-owned `lib/i18n.ts`:
+
+```ts
+import { defineShopifyI18n } from "@shopify/hydrogen";
+
+export const i18n = defineShopifyI18n({
+  defaultLocale: { language: "EN", country: "US" },
+});
 ```
 
 ## Verify
@@ -113,5 +126,6 @@ Run the app in dev and production modes, then check:
 6. `GET /admin` returns a redirect to the shop admin URL.
 7. An unknown path returns the framework 404 when no Shopify redirect exists.
 8. `GET /products/{handle}?variant={numeric id}` returns a 302 to the option-params URL when `routeTemplates` is passed to `handleShopifyRoutes`; `?variant=garbage` falls through to the product page.
-9. Cart, Customer Account, and consent responses preserve eligible `Set-Cookie` headers. Consent responses remain private and non-cacheable even when personal state is returned only in the body.
-10. Authenticated Customer Account responses do not preserve public or CDN cache-control headers.
+9. With pathname routing in `defineShopifyI18n`, `GET /{prefix}/api/cart` returns the same cart handler JSON as `GET /api/cart`.
+10. Cart, Customer Account, and consent responses preserve eligible `Set-Cookie` headers. Consent responses remain private and non-cacheable even when personal state is returned only in the body.
+11. Authenticated Customer Account responses do not preserve public or CDN cache-control headers.

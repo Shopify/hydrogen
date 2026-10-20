@@ -1,11 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { STOREFRONT_URL_HEADER } from "../core/headers";
-import {
-  createShopifyRequestContext,
-  type I18nConfig,
-  type ShopifyRequestContext,
-} from "../core/request-context";
+import type { ShopifyLocale } from "../core/i18n/types";
+import { createShopifyRequestContext } from "../core/request-context";
 import {
   createCustomerAccountClient,
   CustomerAccountApiError,
@@ -18,7 +15,8 @@ import {
 const SHOP_ID = "123456789";
 const CUSTOMER_ACCOUNT_TOKEN = "customer-token";
 const LANGUAGE_CODE = "FR";
-const DEFAULT_I18N = { country: "US", language: "EN" } satisfies I18nConfig;
+const DEFAULT_LOCALE = { country: "US", language: "EN" } as const satisfies ShopifyLocale;
+const DEFAULT_I18N = { defaultLocale: DEFAULT_LOCALE } as const;
 const LONG_TIMEOUT_IN_MS = 60_000;
 const TOO_LONG_TIMEOUT_IN_MS = 2_147_483_648;
 const CUSTOMER_QUERY = gql(`query CustomerName { customer { firstName } }`);
@@ -44,16 +42,14 @@ function createRequest(url = "https://example.com/account") {
   return new Request(url);
 }
 
-function createRequestContext(url?: string): ShopifyRequestContext<typeof DEFAULT_I18N>;
-function createRequestContext<const I18n extends I18nConfig>(
-  url: string,
-  i18n: I18n,
-): ShopifyRequestContext<I18n>;
-function createRequestContext(url = "https://example.com/account", i18n = DEFAULT_I18N) {
-  return createShopifyRequestContext({ request: createRequest(url), i18n });
+function createRequestContext(
+  url = "https://example.com/account",
+  defaultLocale: ShopifyLocale = DEFAULT_LOCALE,
+) {
+  return createShopifyRequestContext({ request: createRequest(url), i18n: { defaultLocale } });
 }
 
-function createHeaderRequestContext(url: string): ShopifyRequestContext<typeof DEFAULT_I18N> {
+function createHeaderRequestContext(url: string) {
   return createShopifyRequestContext({
     request: { headers: new Headers({ [STOREFRONT_URL_HEADER]: url }) },
     i18n: DEFAULT_I18N,

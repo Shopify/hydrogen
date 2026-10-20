@@ -8,7 +8,7 @@ describe("safeApplyResponseHeaders", () => {
     const response = Response.redirect("https://example.com/redirect", 302);
     const requestContext = createShopifyRequestContext({
       request: new Request("https://example.com"),
-      i18n: { country: "US", language: "EN" },
+      i18n: { defaultLocale: { country: "US", language: "EN" } },
     });
 
     const result = safeApplyResponseHeaders(response, requestContext);

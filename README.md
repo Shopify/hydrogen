@@ -104,8 +104,11 @@ Create a Storefront API client for each request, in server code. `getBuyerIp()` 
 import {
   createShopifyRequestContext,
   createStorefrontClient,
+  defineShopifyI18n,
   gql,
 } from "@shopify/hydrogen";
+
+const i18n = defineShopifyI18n({ defaultLocale: { country: "US", language: "EN" } });
 
 const storeDomain = process.env.PUBLIC_STORE_DOMAIN;
 const privateStorefrontToken = process.env.PRIVATE_STOREFRONT_API_TOKEN;
@@ -117,7 +120,7 @@ const storefront = createStorefrontClient({
   type: "private",
   requestContext: createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n,
     buyerIp: getBuyerIp(request.headers),
   }),
   config: { storeDomain, privateStorefrontToken },

@@ -288,7 +288,7 @@ export {};
 
 Add typed React Router contexts for Worker values the app needs, such as `env`, `cache`, and `waitUntil`. Use `createContext<T>()`/`RouterContextProvider` consistently so middleware and loaders do not reach for globals or `process.env`.
 
-Do not replace `tsconfig.json` wholesale. Keep `types` set to `["@shopify/oxygen-workers-types", "react-router", "vite/client"]` without `node`. Under `verbatimModuleSyntax`, any binding used only in a type position must use `import type`. Example: `defaultI18n` in `app/lib/storefront.ts` is used only as `typeof defaultI18n`, so it must be `import type {defaultI18n}`.
+Do not replace `tsconfig.json` wholesale. Keep `types` set to `["@shopify/oxygen-workers-types", "react-router", "vite/client"]` without `node`. Under `verbatimModuleSyntax`, any binding used only in a type position must use `import type`. Example: a module that only references `typeof i18n` (the `defineShopifyI18n` definition exported from the public config module) must use `import type { i18n }`.
 
 Keep `@types/node` in `devDependencies` (build tooling needs it at runtime); it is just not in the app `types` array.
 
@@ -318,8 +318,9 @@ the client. Split it:
   `Layout` reads `shopIdentity` with `useRouteLoaderData("root")` and passes it to `ShopifyScripts`.
 - Mock shops, or no storefront ID -> keep analytics local (`headless` channel) and set `shopifyAnalytics: false` with an
   empty `storefrontId`, so the Shopify analytics SDK and PerfKit do not load. Do not invent demo shop or storefront IDs.
-- Static non-secret defaults -> keep `storefrontConfig.i18n` and `analyticsConsent` in `app/lib/shop.ts`. These can
-  stay in the client bundle.
+- Static non-secret defaults -> keep the `defineShopifyI18n` definition `i18n` and `analyticsConsent` in
+  `app/lib/shop.ts`. These can stay in the client bundle; `createShopifyRequestContext` resolves
+  `requestContext.locale` from `i18n` on the server.
 - Secrets -> Worker `env`, read on the server only: `PRIVATE_STOREFRONT_API_TOKEN` and `SESSION_SECRET`. Read them in
   root middleware or loaders, not at module scope. Never return `env` or private tokens from a loader.
 

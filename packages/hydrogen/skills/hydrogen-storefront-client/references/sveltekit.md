@@ -13,6 +13,8 @@ SvelteKit's `handle` hook in `hooks.server.ts` runs on every server request and 
 
 The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports) — read it through `$env/dynamic/public`, since `$env/static/public` fails the build for unset vars. Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` (e.g. from `event.getClientAddress()`) per the `hydrogen-storefront-client` buyer-IP guidance.
 
+`i18n` is the module-scope `defineShopifyI18n` definition (see `SKILL.md`); the request context matches the locale from `event.request.url`.
+
 ```ts
 // src/hooks.server.ts
 import type { Handle } from "@sveltejs/kit";
@@ -22,11 +24,12 @@ import {
 } from "@shopify/hydrogen";
 import { env } from "$env/dynamic/public";
 import { PUBLIC_STORE_DOMAIN } from "$env/static/public";
+import { i18n } from "$lib/i18n";
 
 export const handle: Handle = async ({ event, resolve }) => {
   const requestContext = createShopifyRequestContext({
     request: event.request,
-    i18n: { country: "US", language: "EN" },
+    i18n,
   });
   const client = createStorefrontClient({
     type: "public",
@@ -89,11 +92,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 // src/hooks.server.ts — response header propagation
 import { env } from "$env/dynamic/public";
 import { PUBLIC_STORE_DOMAIN } from "$env/static/public";
+import { i18n } from "$lib/i18n";
 
 export const handle: Handle = async ({ event, resolve }) => {
   const requestContext = createShopifyRequestContext({
     request: event.request,
-    i18n: { country: "US", language: "EN" },
+    i18n,
   });
 
   const client = createStorefrontClient({
@@ -115,17 +119,19 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 ## Static pages (no buyer IP)
 
-For prerendered pages, use a module-scoped `private_no_buyer_context` client and export `prerender = true`.
+For prerendered pages, use a module-scoped `private_no_buyer_context` client and export `prerender = true`. There is no request URL to match a locale from, so pin `locale` explicitly.
 
 ```ts
 // src/lib/storefront-static.ts
 import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
 import { PRIVATE_STOREFRONT_API_TOKEN } from "$env/static/private";
 import { PUBLIC_STORE_DOMAIN } from "$env/static/public";
+import { i18n } from "$lib/i18n";
 
 const requestContext = createShopifyRequestContext({
   request: { headers: new Headers() },
-  i18n: { country: "US", language: "EN" },
+  i18n,
+  locale: i18n.defaultLocale,
 });
 
 export const staticStorefrontClient = createStorefrontClient({

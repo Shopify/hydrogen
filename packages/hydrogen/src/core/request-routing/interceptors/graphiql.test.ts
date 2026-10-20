@@ -6,12 +6,14 @@ import { assert } from "../../test-utils";
 import type { GraphiQLOptions } from "../../types";
 import { handleGraphiql as handleGraphiqlImpl } from "./graphiql";
 
-const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
+const DEFAULT_LOCALE = { country: "US", language: "EN" } as const;
+const DEFAULT_I18N = { defaultLocale: DEFAULT_LOCALE } as const;
 const DEFAULT_BUYER_IP = "127.0.0.1";
 
 const storefrontClient = {
   type: "private",
   i18n: DEFAULT_I18N,
+  locale: { ...DEFAULT_LOCALE, pathPrefix: "" },
   storeUrl: "https://test-store.myshopify.com",
   apiUrl: "https://test-store.myshopify.com/api/2026-04/graphql.json",
   graphql: vi.fn(),
