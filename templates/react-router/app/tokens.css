@@ -74,8 +74,11 @@
   --color-button-primary-disabled-text: var(--color-interactive-disabled-text);
   --color-button-secondary: var(--color-surface-secondary);
   --color-button-secondary-text: var(--color-on-surface);
-  --color-button-outline-border: var(--color-interactive);
-  --color-button-outline-text: var(--color-interactive);
+  /* Outline buttons draw the brand as text on the surface, so cap its
+     lightness: a light brand (e.g. yellow) darkens to a readable shade of the
+     same hue, while dark brands pass through unchanged. */
+  --color-button-outline-border: oklch(from var(--color-primary) min(l, 0.45) c h);
+  --color-button-outline-text: oklch(from var(--color-primary) min(l, 0.45) c h);
   /* Shop Pay brand button — mirrors the fixed branding of Hydrogen's
      ShopPayButton rendered in the live app, so the reference shows the
      same purple accelerated-checkout action. */
