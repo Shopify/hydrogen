@@ -1,9 +1,19 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join, relative, resolve } from "node:path";
+import { basename, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { parse } from "yaml";
@@ -41,8 +51,6 @@ export type Workspace = {
   e2eGroupExists: (name: string) => boolean;
   /** Every `*.property.test.ts` under packages/hydrogen/src, relative to packages/hydrogen. */
   propertyTests: string[];
-  /** Present only when --proofs was passed. Maps hydrogen-relative path to its test outcome. */
-  proofs?: ReadonlyMap<string, ProofResult>;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -56,6 +64,17 @@ function isStringList(value: unknown): value is string[] {
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim() !== "";
 }
+
+/** A path that stays inside packages/hydrogen and cannot be read as a flag. */
+function isPackagePath(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^[A-Za-z0-9_]/.test(value) &&
+    !value.split("/").some((segment) => segment === "" || segment === "..")
+  );
+}
+
+const PATH_RULE = "must be a relative path inside packages/hydrogen";
 
 function parseKnownGap(rawGap: unknown, gapLabel: string, errors: string[]): KnownGap | undefined {
   if (!isRecord(rawGap)) {
@@ -91,6 +110,10 @@ function parseMutant(raw: unknown, label: string, errors: string[]): Mutant | un
     typeof replace !== "string"
   ) {
     errors.push(`${label}: needs mutant, file, find, and replace strings`);
+    return undefined;
+  }
+  if (!isPackagePath(file)) {
+    errors.push(`${label}: file ${PATH_RULE}`);
     return undefined;
   }
   if (find === replace) {
@@ -145,6 +168,13 @@ function parseFeature(entry: unknown, index: number, errors: string[]): Feature 
     }
     return value;
   };
+  const paths = (key: string): string[] => {
+    const value = list(key);
+    for (const path of value) {
+      if (!isPackagePath(path)) errors.push(`${label}: ${key} ${path} ${PATH_RULE}`);
+    }
+    return value;
+  };
 
   const statusText = text("status");
   const status = STATUSES.find((candidate) => candidate === statusText);
@@ -161,9 +191,9 @@ function parseFeature(entry: unknown, index: number, errors: string[]): Feature 
     id: text("id"),
     promise: text("promise"),
     owner: text("owner"),
-    entry_points: list("entry_points"),
+    entry_points: paths("entry_points"),
     depends_on: list("depends_on"),
-    verified_by: list("verified_by"),
+    verified_by: paths("verified_by"),
     falsified_by,
     e2e_groups: list("e2e_groups"),
     known_gaps,
@@ -182,21 +212,6 @@ export function parseRegistry(raw: unknown): { features: Feature[]; errors: stri
     return feature ? [feature] : [];
   });
   return { features, errors };
-}
-
-function checkProofs(feature: Feature, proofs: ReadonlyMap<string, ProofResult>): string[] {
-  const errors: string[] = [];
-  for (const path of feature.verified_by) {
-    const result = proofs.get(path);
-    if (result === undefined) {
-      errors.push(`${feature.id}: ${path} was not collected by vitest`);
-    } else if (result.failed > 0) {
-      errors.push(`${feature.id}: ${path} has ${result.failed} failing test(s)`);
-    } else if (result.passed === 0) {
-      errors.push(`${feature.id}: ${path} has no passing tests`);
-    }
-  }
-  return errors;
 }
 
 function checkFeature(feature: Feature, workspace: Workspace): string[] {
@@ -221,9 +236,6 @@ function checkFeature(feature: Feature, workspace: Workspace): string[] {
         `${feature.id}: no packages/storefront-e2e/specs/${group} for e2e group ${group}`,
       );
     }
-  }
-  if (workspace.proofs !== undefined) {
-    errors.push(...checkProofs(feature, workspace.proofs));
   }
   return errors;
 }
@@ -292,6 +304,26 @@ export function checkFeatures(features: Feature[], workspace: Workspace): string
   ];
 }
 
+export function checkProofs(
+  features: Feature[],
+  proofs: ReadonlyMap<string, ProofResult>,
+): string[] {
+  const errors: string[] = [];
+  for (const feature of features) {
+    for (const path of feature.verified_by) {
+      const result = proofs.get(path);
+      if (result === undefined) {
+        errors.push(`${feature.id}: ${path} was not collected by vitest`);
+      } else if (result.failed > 0) {
+        errors.push(`${feature.id}: ${path} has ${result.failed} failing test(s)`);
+      } else if (result.passed === 0) {
+        errors.push(`${feature.id}: ${path} has no passing tests`);
+      }
+    }
+  }
+  return errors;
+}
+
 function countAssertions(assertions: { status: string }[]): ProofResult {
   let passed = 0;
   let failed = 0;
@@ -307,8 +339,9 @@ function countAssertions(assertions: { status: string }[]): ProofResult {
 export function runProofs(
   hydrogenDir: string,
   paths: string[],
-  options: { quiet?: boolean } = {},
+  options: { quiet?: boolean; root?: string } = {},
 ): ReadonlyMap<string, ProofResult> | string {
+  const root = options.root ?? hydrogenDir;
   const tmp = mkdtempSync(join(tmpdir(), "check-features-"));
   const reportPath = join(tmp, "report.json");
   try {
@@ -318,6 +351,8 @@ export function runProofs(
         "exec",
         "vitest",
         "run",
+        "--root",
+        root,
         ...paths,
         "--reporter=default",
         "--reporter=json",
@@ -335,7 +370,7 @@ export function runProofs(
     } = JSON.parse(readFileSync(reportPath, "utf8"));
     const map = new Map<string, ProofResult>();
     for (const suite of report.testResults) {
-      const rel = relative(hydrogenDir, suite.name);
+      const rel = relative(root, suite.name);
       map.set(rel, countAssertions(suite.assertionResults));
     }
     return map;
@@ -371,29 +406,26 @@ export function judgeMutant(
   return verifiedBy.some((path) => (proofs.get(path)?.failed ?? 0) > 0) ? "killed" : "survived";
 }
 
+/** Mutants are written to `copy`, a copy of packages/hydrogen, never to the real tree. */
 export function runFalsification(
   hydrogenDir: string,
+  copy: string,
   feature: Feature,
 ): { errors: string[]; killed: string[] } {
   const errors: string[] = [];
   const killed: string[] = [];
   for (const mutant of feature.falsified_by) {
     const label = `${feature.id}: mutant "${mutant.mutant}"`;
-    const path = join(hydrogenDir, mutant.file);
-    const original = readFileSync(path, "utf8");
+    const original = readFileSync(join(hydrogenDir, mutant.file), "utf8");
     const mutated = applyMutant(original, mutant);
     if (mutated === undefined) {
       errors.push(`${label} find text does not occur exactly once in ${mutant.file}`);
       continue;
     }
-    writeFileSync(path, mutated);
-    let verdict: MutantVerdict | string;
-    try {
-      const proofs = runProofs(hydrogenDir, feature.verified_by, { quiet: true });
-      verdict = typeof proofs === "string" ? proofs : judgeMutant(proofs, feature.verified_by);
-    } finally {
-      writeFileSync(path, original);
-    }
+    writeFileSync(join(copy, mutant.file), mutated);
+    const proofs = runProofs(hydrogenDir, feature.verified_by, { quiet: true, root: copy });
+    writeFileSync(join(copy, mutant.file), original);
+    const verdict = typeof proofs === "string" ? proofs : judgeMutant(proofs, feature.verified_by);
     if (verdict === "killed") killed.push(label);
     else if (verdict === "survived") errors.push(`${label} survived every proof`);
     else if (typeof verdict === "string") errors.push(`${label}: ${verdict}`);
@@ -424,23 +456,36 @@ export function run(
   const parsed = parseRegistry(parse(readFileSync(registryPath, "utf8")));
   if (parsed.errors.length > 0) return { errors: parsed.errors, killed: [] };
 
+  // Nothing is spawned until the registry's shape and paths have passed.
+  const errors = checkFeatures(parsed.features, loadWorkspace(repoRoot));
+  if (errors.length > 0 || !(options.proofs || options.falsify)) return { errors, killed: [] };
+
   const hydrogenDir = join(repoRoot, "packages/hydrogen");
-  const workspace = loadWorkspace(repoRoot);
   const proofPaths = [...new Set(parsed.features.flatMap((feature) => feature.verified_by))];
-  if ((options.proofs || options.falsify) && proofPaths.length > 0) {
+  if (proofPaths.length > 0) {
     const result = runProofs(hydrogenDir, proofPaths);
     if (typeof result === "string") return { errors: [result], killed: [] };
-    workspace.proofs = result;
+    errors.push(...checkProofs(parsed.features, result));
   }
-  const errors = checkFeatures(parsed.features, workspace);
   // Mutants only mean something against a registry whose proofs are green.
   if (errors.length > 0 || !options.falsify) return { errors, killed: [] };
 
+  // Mutants run in a copy of the package so a crash, a signal, or a watcher never sees them.
+  const copy = realpathSync(mkdtempSync(join(tmpdir(), "check-features-mutants-")));
   const killed: string[] = [];
-  for (const feature of parsed.features) {
-    const outcome = runFalsification(hydrogenDir, feature);
-    errors.push(...outcome.errors);
-    killed.push(...outcome.killed);
+  try {
+    cpSync(hydrogenDir, copy, {
+      recursive: true,
+      filter: (source) => basename(source) !== "node_modules",
+    });
+    symlinkSync(join(hydrogenDir, "node_modules"), join(copy, "node_modules"));
+    for (const feature of parsed.features) {
+      const outcome = runFalsification(hydrogenDir, copy, feature);
+      errors.push(...outcome.errors);
+      killed.push(...outcome.killed);
+    }
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
   }
   return { errors, killed };
 }
