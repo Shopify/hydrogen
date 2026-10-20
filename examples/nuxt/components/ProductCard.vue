@@ -14,7 +14,7 @@ defineProps<{ product: ProductCardData }>();
 </script>
 
 <template>
-  <NuxtLink :to="`/products/${product.handle}`" class="group block">
+  <NuxtLink :to="`/products/${product.handle}`" class="group block" data-testid="product-card">
     <div class="aspect-square overflow-hidden bg-neutral-100">
       <img
         v-if="product.featuredImage"

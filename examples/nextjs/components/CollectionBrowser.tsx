@@ -213,6 +213,7 @@ function CollectionPage(props: CollectionPageProps) {
             <ul
               role="list"
               className="grid grid-cols-2 gap-x-1 gap-y-10 contain-paint lg:grid-cols-3"
+              data-testid="product-results"
             >
               {products.map((product, index) => (
                 <li key={product.id} className={isLoading ? "opacity-60" : ""}>
@@ -352,6 +353,7 @@ function SearchPage(props: SearchPageProps) {
             <ul
               role="list"
               className="grid grid-cols-2 gap-x-1 gap-y-10 contain-paint lg:grid-cols-3"
+              data-testid="product-results"
             >
               {products.map((product, index) => (
                 <li key={product.id} className={isLoading ? "opacity-60" : ""}>

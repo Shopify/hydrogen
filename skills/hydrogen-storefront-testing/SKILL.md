@@ -47,6 +47,15 @@ The relationship decides the ID, not availability: `product-variant-option` sele
 
 After Add to cart, the drawer must open by itself. The suite uses `cart-trigger` only to open a closed drawer in one test. It finds a line inside the visible cart page or the open drawer, never across both, then the controls inside that line. It reads the quantity from the native input value. It waits for the English messages `Updating cart totals` and `Cart totals updated` in the `cart-status` region. Checkout tests reuse `cart-drawer`, `cart-page`, and `cart-line` to find the added line, then click the first visible `cart-checkout` inside the cart page and expect a checkout URL.
 
+### Collection and search results
+
+| Test ID | Put it on |
+| --- | --- |
+| `product-results` | The element that holds the main results of a collection or search page. Not recommendations or featured products |
+| `product-card` | The product link of each result |
+
+The suite reads only visible cards inside the first visible `product-results`, matches a product by the handle in the card link and the title in its name, and counts results by unique product URL.
+
 ## How to adopt
 
 1. Find the existing elements in the tables above in your storefront.

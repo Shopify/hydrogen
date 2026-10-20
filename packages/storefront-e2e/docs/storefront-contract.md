@@ -59,15 +59,22 @@ The suite finds a line by `cart-line` and its product title inside the visible c
 
 ## Product Results
 
-Collection and search pages must expose product cards as accessible links to product detail pages.
+Collection and search pages must expose product cards as links to product detail pages. The suite finds them with `data-testid` attributes (see the locator policy in Product Test IDs):
 
-Discovery uses link roles, label strings, and link paths.
+| Test ID | Meaning |
+| --- | --- |
+| `product-results` | The product results of a collection or search page |
+| `product-card` | The product link of a result |
+
+The suite uses the first visible `product-results` element and reads only the visible `product-card` links inside it. Recommendations outside the results and hidden responsive copies do not count. The collection group looks for the card whose `href` path ends with `/products/:handle` for a product from the Storefront API (a path prefix, such as a locale, is allowed) and whose accessible name contains the product title. A card for another product does not match, even when its title contains the requested title. The collection filter group counts the unique product URL paths of these cards.
 
 ## Collection Filters
 
-At least one probed collection must expose a visible, enabled checkbox filter that changes the URL, returns products, and reduces the visible product-link count when selected. Filters may auto-submit or use a visible Apply filters/Show results button.
+At least one probed collection must expose a visible, enabled checkbox filter that changes the URL, returns products, and reduces the product card count when selected. Filters may auto-submit or use a visible Apply filters/Show results button.
 
-Filter labels must include a count like Color Red (4). The suite uses that count to choose a filter that narrows the visible product links, then asserts the filtered result count does not exceed the label count. Browser Back after a filter selection must restore the previous URL and show the same filter unchecked. Missing Storefront API filter data skips the collection filter group.
+The suite counts results as the unique product URL paths of the visible `product-card` links inside `product-results` (see Product Results).
+
+Filter labels must include a count like Color Red (4). The suite uses that count to choose a filter that narrows the product card count, then asserts the filtered result count does not exceed the label count. Browser Back after a filter selection must restore the previous URL and show the same filter unchecked. Missing Storefront API filter data skips the collection filter group.
 
 When a probed collection exposes a Storefront API PRICE_RANGE filter, the page must render the price bounds as spinbuttons whose accessible names start with Minimum price and Maximum price. Typing a decimal bound such as 12.5 must put that exact value in the filter.v.price.gte or filter.v.price.lte URL param and keep it in the input. A storefront with no price range filter skips this check.
 
@@ -146,4 +153,4 @@ Operational expectations:
 
 When test locators change, update the affected specs and this document together.
 
-The suite reads test IDs for the product title, same-product option values (`product-variant-option`), and add to cart control (see Product Test IDs; `product-sibling-option` is defined but not read), and for the cart elements in Cart Test IDs. It finds all other UI by semantic roles and label strings, including the English cart totals status text inside `cart-status`.
+The suite reads test IDs for the product title, same-product option values (`product-variant-option`), and add to cart control (see Product Test IDs; `product-sibling-option` is defined but not read), for the cart elements in Cart Test IDs, and for product results (see Product Results). It finds all other UI by semantic roles and label strings, including the English cart totals status text inside `cart-status`.

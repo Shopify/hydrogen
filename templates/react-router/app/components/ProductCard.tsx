@@ -59,11 +59,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   const badgeClass = !product.availableForSale ? "badge-soldout" : "badge-sale";
 
   return (
-    <article
-      className="group card flex flex-col gap-2"
-      aria-label={product.title}
-      data-testid="product-card"
-    >
+    <article className="group card flex flex-col gap-2" aria-label={product.title}>
       <div className="rounded-card bg-surface-secondary relative block aspect-square overflow-hidden">
         {primaryImage ? (
           <div className="h-full w-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.04]">
@@ -96,7 +92,11 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       </div>
       <div className="flex flex-col gap-0.5 text-left">
         <h3 className="type-body-sm text-on-surface line-clamp-2 font-medium">
-          <Link to={`/products/${product.handle}`} className="card-link text-on-surface">
+          <Link
+            to={`/products/${product.handle}`}
+            className="card-link text-on-surface"
+            data-testid="product-card"
+          >
             {product.title}
           </Link>
         </h3>
