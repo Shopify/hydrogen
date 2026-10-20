@@ -13,7 +13,7 @@ export const handleCheckoutRedirect: HydrogenRouteInterceptor = (
   { request, storefrontClient },
 ) => {
   // Match only checkout and cart permalinks. Customer account handoff paths belong to the app
-  // router or registered customer account handlers, which run before or after this interceptor.
+  // router or registered customer account handlers, which run earlier in the interceptor list.
   const isCheckout = CHECKOUT_RE.test(url.pathname);
   if (!isCheckout && !CART_PERMALINK_RE.test(url.pathname)) {
     return null;
@@ -43,10 +43,10 @@ export const handleCheckoutRedirect: HydrogenRouteInterceptor = (
       log.error("checkout redirect request failed", { error });
       const message = error instanceof Error ? error.message : "Internal redirect error";
 
-      return new Response(JSON.stringify({ error: message }), {
-        status: 502,
-        headers: { "content-type": "application/json" },
-      });
+      // The error message can name cart IDs or SFAPI details, so keep it out of shared caches too.
+      const headers = new Headers({ "content-type": "application/json" });
+      applyPrivateResponseCacheHeaders(headers);
+      return new Response(JSON.stringify({ error: message }), { status: 502, headers });
     });
 };
 

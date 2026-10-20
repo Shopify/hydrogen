@@ -192,6 +192,7 @@ describe("handleCheckoutRedirect", () => {
     );
 
     expect(result?.status).toBe(502);
+    expect(result?.headers.get("cache-control")).toBe(PRIVATE_CACHE_CONTROL);
     expect(await result?.json()).toEqual({ error: "SFAPI request failed" });
     expect(logger.error).toHaveBeenCalledWith("checkout redirect request failed", {
       scope: "checkout",
