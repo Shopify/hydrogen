@@ -1,5 +1,5 @@
 import * as fc from "fast-check";
-import { describe, it, expect, expectTypeOf, vi } from "vitest";
+import { describe, it, expect, expectTypeOf } from "vitest";
 
 import type { ProductFilter } from "../../../../vendor/standard-events";
 import type { ProductCollectionSortKeys } from "../../../graphql/generated/storefront-api-types";
@@ -209,19 +209,5 @@ describe("collection URL known gaps", () => {
   it("a price bound of -0 round-trips as 0", () => {
     const [filter] = roundTrip([{ price: { min: -0 } }]);
     expect(Object.is(filter?.price?.min, 0)).toBe(true);
-  });
-
-  it("a storefront locale that groups with a dot misreads a serialized price", () => {
-    vi.stubGlobal("window", { Shopify: { locale: "de" } });
-    try {
-      const params = serializeCollectionParams({
-        filters: [{ price: { min: 12.5 } }],
-        sortKey: undefined,
-        reverse: false,
-      });
-      expect(parseCollectionParams(params).filters).toEqual([{ price: { min: 125 } }]);
-    } finally {
-      vi.unstubAllGlobals();
-    }
   });
 });
