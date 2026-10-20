@@ -2,7 +2,6 @@ import type { Locator, Page } from "@playwright/test";
 
 import { expect, test } from "./config";
 
-const MAX_ANCHOR_INSPECTION_PROBES = 200;
 const MAX_FILTER_CONTROL_PROBES = 20;
 const MAX_LINK_DISCOVERY_PROBES = 40;
 
@@ -78,35 +77,31 @@ async function selectFilter(filter: FilterCandidate): Promise<void> {
 }
 
 async function visibleLinksWithPath(page: Page, pathSegment: string): Promise<ProductCandidate[]> {
-  return page.evaluate(
-    ({ currentUrl, maxAnchorInspectionProbes, maxLinkDiscoveryProbes, targetPathSegment }) => {
-      const links = [...document.querySelectorAll<HTMLAnchorElement>("a[href]")].slice(
-        0,
-        maxAnchorInspectionProbes,
-      );
-      const candidates: ProductCandidate[] = [];
-
-      for (const link of links) {
-        if (candidates.length >= maxLinkDiscoveryProbes) break;
-
-        const url = new URL(link.href, currentUrl);
-        const rect = link.getBoundingClientRect();
-        const isVisible = rect.width > 0 && rect.height > 0;
-        if (!isVisible || !url.pathname.includes(targetPathSegment)) continue;
-
-        const title = link.textContent?.replace(/\s+/g, " ").trim() ?? "";
-        candidates.push({ href: url.toString(), title });
-      }
-
-      return candidates;
-    },
-    {
-      currentUrl: page.url(),
-      maxAnchorInspectionProbes: MAX_ANCHOR_INSPECTION_PROBES,
-      maxLinkDiscoveryProbes: MAX_LINK_DISCOVERY_PROBES,
-      targetPathSegment: pathSegment,
-    },
+  const cards = page
+    .getByTestId("product-results")
+    .filter({ visible: true })
+    .first()
+    .getByTestId("product-card")
+    .filter({ visible: true });
+  const links = await cards.evaluateAll((elements) =>
+    elements.map((element) => ({
+      href: element.getAttribute("href"),
+      title: element.textContent?.replace(/\s+/g, " ").trim() ?? "",
+    })),
   );
+  const candidates: ProductCandidate[] = [];
+
+  for (const { href, title } of links) {
+    if (candidates.length >= MAX_LINK_DISCOVERY_PROBES) break;
+    if (href === null) continue;
+
+    const url = new URL(href, page.url());
+    if (!url.pathname.includes(pathSegment)) continue;
+
+    candidates.push({ href: url.toString(), title });
+  }
+
+  return candidates;
 }
 
 async function findUsableFilter(
