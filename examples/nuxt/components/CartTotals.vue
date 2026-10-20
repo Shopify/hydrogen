@@ -37,6 +37,7 @@ const isTotalsPending = useCart((s) => s.pending.cost === true || s.revalidating
       <ShopPayButton width="100%" border-radius="4px" />
       <a
         :href="checkoutUrl"
+        data-testid="cart-checkout"
         class="block rounded bg-black px-6 py-3 text-center text-sm font-medium text-white hover:bg-neutral-800"
       >
         Check out

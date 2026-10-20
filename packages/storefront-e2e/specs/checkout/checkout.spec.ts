@@ -6,7 +6,6 @@ import { test, type CheckoutTestProduct } from "./config";
 const CART_SETTLE_TIMEOUT_MS = 15_000;
 // Any non-empty accessible name, so other and localized labels pass but an unlabeled icon button fails.
 const ADD_TO_CART_CONTROL_NAME = /\S/;
-const CHECKOUT_CONTROL_NAME = /check\s*out|checkout|continue to checkout/i;
 
 type CartExpectation = {
   readonly cartPath: string;
@@ -78,7 +77,13 @@ async function startCheckoutFromPopulatedCart(
 ): Promise<void> {
   await expectCartLine(page, expectation);
 
-  const checkout = page.getByRole("link", { name: CHECKOUT_CONTROL_NAME }).first();
+  const checkout = page
+    .getByTestId("cart-page")
+    .filter({ visible: true })
+    .first()
+    .getByTestId("cart-checkout")
+    .filter({ visible: true })
+    .first();
   await expect(checkout).toBeVisible();
   const checkoutUrl = await requireCheckoutUrl(page, checkout, expectation.cartPath);
   const isCheckoutNavigation = (url: URL) => url.href === checkoutUrl.href;
