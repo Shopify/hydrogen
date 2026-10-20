@@ -38,12 +38,10 @@ type AccountPageProps = {
  * `/account` — core Customer Accounts surface (name + email only).
  *
  * No `export const dynamic` / `export const fetchCache`: under
- * `cacheComponents: true`, `force-dynamic` is not allowed. The page relies on
- * the `AppShell` dynamic context (`await connection()` in the root layout's
- * shell), which opts the whole subtree into dynamic rendering — any
- * `headers()`/`cookies()` read inside (e.g. `getCustomerAccessToken()` →
- * `createCurrentRequest()` → `headers()`) is then automatically dynamic, the
- * same convention `cart/page.tsx` follows.
+ * `cacheComponents: true`, `force-dynamic` is not allowed. The page reads
+ * request data (`searchParams`, and `headers()`/`cookies()` through
+ * `getCustomerAccessToken()` → `createCurrentRequest()`), so it renders per
+ * request and streams behind the `app/account/loading.tsx` boundary.
  *
  * Token refresh is delegated to the `/account/refresh` handler (intercepted in
  * `proxy.ts`): the page only **reads** the token via `getAccessToken`

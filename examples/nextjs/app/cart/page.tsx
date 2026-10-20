@@ -25,8 +25,9 @@ export const metadata: Metadata = {
  * `CartProvider` would create a divergent inner store vs the root-rendered
  * `CartDrawer` — mutations would not reflect across them.
  *
- * `force-dynamic` is not allowed with `cacheComponents: true`; the per-request
- * `AppShell` calls `connection()` and reads `headers()` for the cart seed.
+ * `force-dynamic` is not allowed with `cacheComponents: true`. The per-buyer
+ * cart seed is an un-awaited promise from `AppShell`; `CartContent` reads it
+ * inside the local `<Suspense>` boundary below.
  * Reachable via the footer `/cart` link when the drawer is unavailable.
  */
 export default function CartPage() {

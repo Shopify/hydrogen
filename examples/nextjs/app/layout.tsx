@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 
-import { Suspense } from "react";
-
 import { ShopifyScriptsWithNavigation } from "@/components/ShopifyScriptsWithNavigation";
 import { getAnalyticsShop } from "@/lib/analytics-shop";
 import { defaultI18n, shop } from "@/lib/config";
@@ -13,12 +11,11 @@ import { SITE_ORIGIN } from "@/lib/site";
 import { AppShell } from "./app-shell";
 
 /**
- * Root layout. With `cacheComponents: true`,
- * the layout is a **static shell** — it prerenders the `<html>`/`<body>` +
- * announcement bar, then wraps the per-request (dynamic) `AppShell` (cart seed
- * + analytics shop + chrome) in `<Suspense>` so the dynamic parts stream while
- * the static shell serves immediately. `AppShell` calls `connection()` to opt
- * the subtree into dynamic rendering.
+ * Root layout. With `cacheComponents: true`, it renders the `<html>`/`<body>`,
+ * the announcement bar, and `AppShell` (chrome, cached shop identity, and the
+ * un-awaited cart seed). `AppShell` is not wrapped in `<Suspense>`, so a page
+ * that opts out of instant validation (the product page) can render its content
+ * in the initial HTML. Pages that read request data keep their own boundaries.
  *
  * `metadataBase` is set here for canonical/OG URL resolution (F10). The `<title>`
  * template uses the live `shop.name` (via `getAnalyticsShop`, which is cached
@@ -65,13 +62,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <p className="type-body-sm text-surface">{content.announcement.text}</p>
         </div>
 
-        <Suspense
-          fallback={
-            <div className="bg-surface text-on-surface-secondary flex-1" aria-busy="true" />
-          }
-        >
-          <AppShell>{children}</AppShell>
-        </Suspense>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

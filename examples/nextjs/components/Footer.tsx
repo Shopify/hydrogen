@@ -1,3 +1,4 @@
+import { cacheLife } from "next/cache";
 import Link from "next/link";
 
 import { content } from "@/lib/content";
@@ -6,17 +7,29 @@ const footerLinkClass =
   "min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors";
 
 /**
+ * Copyright year. Reading the clock while prerendering fails under Cache
+ * Components, so only the year is cached. No buyer data goes into this cache.
+ */
+async function getCopyrightYear(): Promise<number> {
+  "use cache";
+  cacheLife("hours");
+  return new Date().getFullYear();
+}
+
+/**
  * Site footer — shared chrome, server-rendered. Includes the `/cart` link that
  * keeps the cart route reachable when the drawer is unavailable.
  */
-export function Footer({ shopName = "CORE" }: { shopName?: string }) {
+export async function Footer({ shopName = "CORE" }: { shopName?: string }) {
+  const year = await getCopyrightYear();
+
   return (
     <footer className="max-w-page px-margin mx-auto w-full">
       <div className="border-border grid grid-cols-1 gap-8 border-t py-12 text-sm md:grid-cols-2 lg:grid-cols-4">
         <div>
           <h2 className="type-body-sm text-on-surface mb-4 font-medium">{shopName}</h2>
           <p className="text-on-surface-secondary">
-            &copy; {new Date().getFullYear()} {shopName}
+            &copy; {year} {shopName}
           </p>
         </div>
         <nav aria-labelledby="footer-quick-links-heading">

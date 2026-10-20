@@ -1,5 +1,4 @@
 import "server-only";
-import { connection } from "next/server";
 import { Suspense } from "react";
 
 import { CartDrawer } from "@/components/CartDrawer";
@@ -13,20 +12,14 @@ import { getStorefrontClient } from "@/lib/storefront";
 import { Providers } from "./providers";
 
 /**
- * Async server shell that owns the per-request (dynamic) read: the cart seed.
- * It also reads the cached shop identity for the header and footer. With
- * `cacheComponents: true`, uncached/dynamic data accessed in a Server Component
- * must sit inside a `<Suspense>` boundary so the static HTML shell prerenders
- * and the per-buyer parts stream (`next/server` `connection()` +
- * `headers()`/`cookies()` are per-request).
+ * Async server shell for the header, footer, cart drawer, and cart provider.
+ * It awaits only the cached shop identity. The per-buyer cart seed stays an
+ * un-awaited promise, so the shell does not block on it. Consumers that need
+ * the full cart suspend locally. Do not put this private seed in `use cache`.
  *
- * Rendered inside `<Suspense>` from the root layout. `await connection()`
- * opts the subtree into dynamic rendering (resolves immediately on a real
- * request, never during prerender).
+ * Rendered directly from the root layout, without a `<Suspense>` boundary.
  */
 export async function AppShell({ children }: { children: React.ReactNode }) {
-  await connection();
-
   // Cart seed: per-buyer and non-blocking so the shell can stream.
   const cartData = getStorefrontClient().then((storefrontClient) =>
     cartHandlers.get({ storefrontClient }).then((r) => r.data),

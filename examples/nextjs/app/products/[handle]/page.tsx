@@ -14,6 +14,13 @@ import { canonicalUrl, jsonLdScript } from "@/lib/site";
 import { staticStorefrontClient } from "@/lib/storefront-static";
 import { toURLSearchParams } from "@/lib/url-params";
 
+// The product page must render its content in the initial HTML, so the
+// no-JavaScript variant links and the product heading work before hydration.
+// `false` opts this route out of instant validation, which lets it block on
+// its data instead of streaming behind an empty static shell. Unstable Next.js
+// API: see `route-segment-config/instant.md` in the installed docs.
+export const unstable_instant = false;
+
 type Props = {
   params: Promise<{ handle: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;

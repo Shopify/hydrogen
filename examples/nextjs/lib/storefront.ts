@@ -13,7 +13,7 @@ import { resolveStorefrontConfig } from "./storefront-config";
  * `headers()` → dynamic render + market, plus the per-buyer buyer IP against a
  * real store (tokenless public on mock.shop, where no buyer IP is needed).
  *
- * **Used only for the cart seed in the per-request AppShell** because the cart
+ * **Used only for the per-request cart seed started by AppShell** because the cart
  * is personalized. Catalog reads go through `staticStorefrontClient`
  * (`storefront-static.ts`) so they share a throttle bucket and never carry a
  * buyer IP (F2).

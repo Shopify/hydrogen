@@ -18,9 +18,9 @@ import type { cartHandlers } from "@/lib/cart-handlers";
  * Passing the promise keeps the shell non-blocking; cart content that needs the
  * full cart uses `useSuspenseCart()` inside a local Suspense boundary.
  *
- * `AnalyticsTracker` reads `usePathname` + `useSearchParams`; it stays inside
- * the `<Suspense>` boundary the layout wraps around `Providers` so the
- * `useSearchParams()` CSR bailout is scoped to the tracker, not the layout.
+ * `AnalyticsTracker` reads `usePathname` + `useSearchParams`; it has its own
+ * local `<Suspense>` boundary below, so the `useSearchParams()` CSR bailout is
+ * scoped to the tracker, not the layout.
  */
 export type CartData = Awaited<ReturnType<typeof cartHandlers.get>>["data"];
 
