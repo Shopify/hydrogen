@@ -42,8 +42,9 @@ The relationship decides the ID, not availability: `product-variant-option` sele
 | `cart-line-increase` | The increase quantity control of a cart line |
 | `cart-line-decrease` | The decrease quantity control of a cart line |
 | `cart-line-remove` | The remove control of a cart line |
+| `cart-status` | The existing cart totals status region, the element with `role="status"` |
 
-After Add to cart, the drawer must open by itself. The suite uses `cart-trigger` only to open a closed drawer in one test. It finds a line inside the visible cart page or the open drawer, never across both, then the controls inside that line. It reads the quantity from the native input value.
+After Add to cart, the drawer must open by itself. The suite uses `cart-trigger` only to open a closed drawer in one test. It finds a line inside the visible cart page or the open drawer, never across both, then the controls inside that line. It reads the quantity from the native input value. It waits for the English messages `Updating cart totals` and `Cart totals updated` in the `cart-status` region.
 
 ## How to adopt
 

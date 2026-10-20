@@ -52,8 +52,9 @@ The cart group finds these cart elements with `data-testid` attributes. The loca
 | `cart-line-increase` | The increase quantity control of a cart line |
 | `cart-line-decrease` | The decrease quantity control of a cart line |
 | `cart-line-remove` | The remove control of a cart line |
+| `cart-status` | The cart totals status region |
 
-The suite finds a line by `cart-line` and its product title inside the visible cart page or the open cart drawer, never across both. It finds the quantity input and the line controls inside the chosen line, and reads the quantity from the native input value. Keep `cart-trigger` off links that only go to `/cart`.
+The suite finds a line by `cart-line` and its product title inside the visible cart page or the open cart drawer, never across both. It finds the quantity input and the line controls inside the chosen line, and reads the quantity from the native input value. It waits for the cart totals message in a `cart-status` region that also has `role="status"` (see Cart Line Items). Keep `cart-trigger` off links that only go to `/cart`.
 
 ## Product Results
 
@@ -110,6 +111,8 @@ The suite reads the quantity from the native input value. After remove, it waits
 
 Cart totals must expose a `role="status"` region that says `Updating cart totals` while cart totals are stale, then `Cart totals updated` after mutation settlement. Do not announce `Cart totals updated` on initial idle render before a mutation cycle. The region may be visually hidden if it remains available to assistive technology.
 
+The suite finds this region with `cart-status` and `role="status"`, then matches the English text. The English text is a known dependency.
+
 Cart UI without a test ID in Cart Test IDs is found by role, label, and text.
 
 ## Checkout Handoff
@@ -142,4 +145,4 @@ Operational expectations:
 
 When test locators change, update the affected specs and this document together.
 
-The suite reads test IDs for the product title, same-product option values (`product-variant-option`), and add to cart control (see Product Test IDs; `product-sibling-option` is defined but not read), and for the cart elements in Cart Test IDs. It finds all other UI by semantic roles and label strings, including the English cart totals status text.
+The suite reads test IDs for the product title, same-product option values (`product-variant-option`), and add to cart control (see Product Test IDs; `product-sibling-option` is defined but not read), and for the cart elements in Cart Test IDs. It finds all other UI by semantic roles and label strings, including the English cart totals status text inside `cart-status`.

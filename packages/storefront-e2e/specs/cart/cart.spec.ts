@@ -75,7 +75,7 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
         message: `Expected cart line quantity to optimistically increase from ${product.maxQuantity} to ${product.maxQuantity + 1}.`,
       })
       .toBe(product.maxQuantity + 1);
-    await expectCartTotalsStatus(page, CART_TOTALS_UPDATING_TEXT, data.paths.cart);
+    await expectCartTotalsStatus(page, CART_TOTALS_UPDATING_TEXT);
 
     requestGate.release();
     await expect
@@ -83,7 +83,7 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
         message: `Expected cart line quantity to roll back to the stock limit of ${product.maxQuantity}.`,
       })
       .toBe(product.maxQuantity);
-    await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT, data.paths.cart);
+    await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT);
   } finally {
     requestGate.release();
     await page.unroute(CART_ENDPOINT_PATTERN);
@@ -160,6 +160,19 @@ test.describe("cart locator helpers", () => {
     await expect(pageLines).toContainText("Hat");
     await expect(page.getByTestId("cart-drawer").getByTestId("cart-line")).toContainText("Shirt");
   });
+
+  test("waits for the cart totals status message to change", async ({ page }) => {
+    await page.setContent(
+      `<span role="status" data-testid="cart-status">${CART_TOTALS_UPDATING_TEXT}</span>`,
+    );
+
+    const updated = expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT);
+    await expect(page.getByTestId("cart-status")).toHaveText(CART_TOTALS_UPDATING_TEXT);
+    await page.getByTestId("cart-status").evaluate((status, message) => {
+      status.textContent = message;
+    }, CART_TOTALS_UPDATED_TEXT);
+    await updated;
+  });
 });
 
 function createRequestGate(): { wait: Promise<void>; release: () => void } {
@@ -216,7 +229,7 @@ async function tryAddProductToCart(
   await expect(line).toBeVisible({
     timeout: CART_SETTLE_TIMEOUT_MS,
   });
-  await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT, cartPath);
+  await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT);
   await page.goto(cartPath);
   await expectCartLine(page, expectation);
 
@@ -239,14 +252,14 @@ async function setCartLineQuantity(
   try {
     await quantityInput.fill(String(quantity));
     await quantityInput.press("Tab");
-    await expectCartTotalsStatus(page, CART_TOTALS_UPDATING_TEXT, expectation.cartPath);
+    await expectCartTotalsStatus(page, CART_TOTALS_UPDATING_TEXT);
     requestGate.release();
     await expect
       .poll(() => numericInputValue(quantityInput), {
         message: `Expected cart line quantity to settle at the discovered stock limit of ${quantity}.`,
       })
       .toBe(quantity);
-    await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT, expectation.cartPath);
+    await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT);
   } finally {
     requestGate.release();
     await page.unroute(CART_ENDPOINT_PATTERN);
@@ -331,25 +344,19 @@ async function openCartOverlayFor(page: Page, productTitle: string): Promise<Loc
   return cartOverlayLineFor(page, productTitle);
 }
 
-async function expectCartTotalsStatus(
-  page: Page,
-  message: string,
-  cartPath: string,
-): Promise<void> {
-  try {
-    await expect(page.getByRole("status").filter({ hasText: message }).first()).toBeAttached({
-      timeout: CART_SETTLE_TIMEOUT_MS,
-    });
-  } catch {
-    throw createContractError({
-      capability: "cart-status",
-      routePath: cartPath,
-      expectation: `Cart exposes a status region containing "${message}" while totals settle.`,
-      likelyFix:
-        'Render a role="status" region that changes from updating to updated around cart mutations.',
-      docsAnchor: "#cart-line-items",
-    });
-  }
+/** Waits for an accessible cart-status region that says `message`. */
+async function expectCartTotalsStatus(page: Page, message: string): Promise<void> {
+  const status = page
+    .getByTestId("cart-status")
+    .and(page.getByRole("status"))
+    .filter({ hasText: message })
+    .first();
+  await expect(
+    status,
+    `Expected a cart-status region with role="status" that says "${message}".`,
+  ).toBeAttached({
+    timeout: CART_SETTLE_TIMEOUT_MS,
+  });
 }
 
 function quantityInputFor(line: Locator): Locator {
