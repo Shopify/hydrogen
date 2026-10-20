@@ -23,7 +23,7 @@ const storefrontClient = createStorefrontClient({
   type: "public",
   requestContext: createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n: { defaultLocale: { country: "US", language: "EN" } },
   }),
   config: { storeDomain: "test-store.myshopify.com", publicStorefrontToken: "test-token" },
 });

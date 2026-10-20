@@ -13,12 +13,12 @@ Server root/layout resolves safe `shop` and `i18n` data and passes it to Shopify
     storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0",
     myshopifyDomain: env.PUBLIC_STORE_DOMAIN,
   }}
-  i18n={{ country: market.country, language: market.language, currency: market.currencyCode }}
+  i18n={{ ...storefrontClient.locale, currency: currencyCode }}
   consent={{ mode: "default-banner" }}
 />
 ```
 
-Do not query `localization.language` just to echo the language already passed to `@inContext`. If the app only knows country/language and does not have a market currency code, add `currencyCode` to the app's market config or query `localization { country { currency { isoCode } } }` as a fallback.
+`storefrontClient.locale` (also `requestContext.locale`) is the `{ language, country, pathPrefix }` resolved for the request from the `defineShopifyI18n` definition. Do not query `localization.language` just to echo the language already passed to `@inContext`. If the app does not have a currency code for the locale, add `currency` to the locale entries in `defineShopifyI18n` (extra fields survive on `requestContext.locale`) or query `localization { country { currency { isoCode } } }` as a fallback.
 
 ```tsx
 import { useEffect } from "react";

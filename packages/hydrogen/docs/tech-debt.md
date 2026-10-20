@@ -4,6 +4,24 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 
 ---
 
+## `defineShopifyI18n` cannot detect `pathSegment` colliding with app routes
+
+**Status:** Open
+**Added:** 2026-09-09
+
+**What:** Under `routing.type: "pathname"`, a locale's URL segment (derived `fr-ca` or an explicit `pathSegment`) is matched against the first path segment of every request before framework routing runs. `defineShopifyI18n` validates segments against each other (uniqueness, no slashes) but has no knowledge of the app's routes or route templates, so `pathSegment: "cart"` or `"products"` passes validation and silently shadows `/cart` and `/products/*`: those requests resolve to that locale with the segment stripped, and the app renders the locale root instead of the page.
+
+**Why it matters:** The failure is quiet. Nothing throws, and a whole route tree disappears behind a locale prefix. The `pathSegment` override is the realistic trigger (`"br"` today, `"shop"` tomorrow), and the collision only shows up when someone visits the shadowed route.
+
+**Possible approaches:**
+1. Accept `routeTemplates` (from `defineShopifyRouteTemplates`) as an optional second argument to `defineShopifyI18n`, or add a `validateShopifyI18n(i18n, routeTemplates)` helper, and throw when a locale segment equals the first segment of any default or custom standard route (`cart`, `products`, `collections`, `search`, `policies`, `pages`, `blogs`, `account`, `api`, `__shopify`).
+2. Maintain a reserved-segment list inside the package covering Hydrogen-owned paths (`api`, `account`, `__shopify`, `cart`, Ajax API paths) and reject those unconditionally; app-defined routes remain the app's responsibility and are documented as such.
+3. Document only: JSDoc on `pathSegment` and the routing skill state that segments must not collide with top-level app routes.
+
+**Done when:** Either Hydrogen-owned path collisions are rejected at define time (approach 1 or 2), or the constraint is documented on `ShopifyPathnameLocale.pathSegment` and in `hydrogen-routing/SKILL.md` (approach 3) and the decision is recorded here.
+
+---
+
 ## Local Shop Pay button does not emit shop-js impression analytics
 
 **Status:** Open

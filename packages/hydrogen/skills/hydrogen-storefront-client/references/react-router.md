@@ -12,12 +12,15 @@ export const storefrontContext = createContext<StorefrontClient>();
 
 This `createContext` is React Router's request context for passing values from middleware to loaders; it is not React's component `createContext`.
 
+`i18n` is the module-scope `defineShopifyI18n` definition (see `SKILL.md`); the request context matches the locale from `request.url`.
+
 ```ts
 // app/storefront.middleware.ts
 import {
   createStorefrontClient,
   createShopifyRequestContext,
 } from "@shopify/hydrogen";
+import { i18n } from "~/lib/i18n";
 import { storefrontContext } from "./storefront.context";
 import type { Route } from "./+types/root";
 
@@ -27,7 +30,7 @@ export const storefrontMiddleware: Route.MiddlewareFunction = async (
 ) => {
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n,
   });
 
   const client = createStorefrontClient({

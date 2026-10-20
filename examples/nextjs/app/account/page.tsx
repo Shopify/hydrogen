@@ -42,7 +42,7 @@ type AccountPageProps = {
  * the `AppShell` dynamic context (`await connection()` in the root layout's
  * shell), which opts the whole subtree into dynamic rendering — any
  * `headers()`/`cookies()` read inside (e.g. `getCustomerAccessToken()` →
- * `createCurrentRequest()` → `headers()`) is then automatically dynamic, the
+ * `headers()`) is then automatically dynamic, the
  * same convention `cart/page.tsx` follows.
  *
  * Token refresh is delegated to the `/account/refresh` handler (intercepted in

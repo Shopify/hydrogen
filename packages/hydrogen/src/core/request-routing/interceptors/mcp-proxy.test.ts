@@ -22,7 +22,7 @@ function createRequest(
 function handleMcpProxy(request: Request, storeUrl = defaultStoreUrl) {
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n: { defaultLocale: { country: "US", language: "EN" } },
   });
   return handleMcpProxyImpl(new URL(request.url), {
     request,
@@ -30,7 +30,8 @@ function handleMcpProxy(request: Request, storeUrl = defaultStoreUrl) {
     sessionManager: createTestSessionManager(request),
     storefrontClient: {
       type: "private",
-      i18n: { country: "US", language: "EN", pathPrefix: "" },
+      i18n: { defaultLocale: { country: "US", language: "EN" } },
+      locale: { country: "US", language: "EN", pathPrefix: "" },
       storeUrl,
       apiUrl: `${storeUrl}/api/2026-04/graphql.json`,
       requestContext,

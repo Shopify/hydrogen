@@ -26,7 +26,7 @@ import { predictiveSearchHandlers } from "~/lib/predictive-search-handlers";
 import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
-import { analyticsConsent, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
+import { analyticsConsent, i18n, resolveShopIdentity } from "~/lib/shop";
 import {
   createRequestStorefrontClient,
   storefrontClientContext,
@@ -119,7 +119,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {rootData ? (
           <ShopifyScripts
-            i18n={{ ...storefrontConfig.i18n, currency: rootData.currency }}
+            i18n={{ ...i18n.defaultLocale, currency: rootData.currency }}
             shop={rootData.shopIdentity.scriptShop}
             analytics={{ channel: rootData.shopIdentity.analyticsShop.channel }}
             shopifyAnalytics={rootData.shopIdentity.shopifyAnalytics}

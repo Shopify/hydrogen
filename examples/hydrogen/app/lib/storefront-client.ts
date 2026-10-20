@@ -5,10 +5,9 @@ import {
   type GraphQLFormattedError,
   type RequestScopedPrivateStorefrontClient,
   type CachingStrategy,
+  type ShopifyMatchedLocale,
   type ShopifyRequestContextWithBuyerIp,
 } from "@shopify/hydrogen";
-
-import type { I18nLocale } from "~/lib/i18n";
 
 type CreateStorefrontClientOptions = {
   env: Env;
@@ -45,7 +44,7 @@ type StorefrontDocumentGraphql = <Doc extends StorefrontDocument>(
 }>;
 
 export type StorefrontClient = RequestScopedPrivateStorefrontClient & {
-  i18n: I18nLocale;
+  locale: ShopifyMatchedLocale;
   mutate: <Doc extends StorefrontDocument>(
     query: Doc,
     options?: Omit<StorefrontQueryOptions, "cache">,
@@ -112,6 +111,7 @@ export function createStorefrontClientForRequest({
     storeUrl: client.storeUrl,
     apiUrl: client.apiUrl,
     i18n: shopifyRequestContext.i18n,
+    locale: shopifyRequestContext.locale,
     requestContext: shopifyRequestContext,
     graphql: client.graphql,
     mutate,

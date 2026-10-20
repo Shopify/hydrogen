@@ -7,7 +7,7 @@ import { assert } from "../test-utils";
 import { DEFAULT_PREDICTIVE_SEARCH_LIMIT, getEmptyPredictiveSearchResult } from "./search";
 import { createPredictiveSearchServerHandlers } from "./server-handlers";
 
-const DEFAULT_I18N = { country: "US", language: "EN" } as const;
+const DEFAULT_I18N = { defaultLocale: { country: "US", language: "EN" } } as const;
 
 const MOCK_ITEMS = {
   products: [
