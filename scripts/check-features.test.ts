@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   applyMutant,
   checkFeatures,
+  checkProofs,
   judgeMutant,
   parseRegistry,
   type Feature,
@@ -113,6 +114,33 @@ test("parseRegistry requires a decision on every known gap", () => {
   assert.equal(decided.features[0]?.known_gaps.length, 1);
 });
 
+test("parseRegistry keeps every path inside packages/hydrogen", () => {
+  const base = feature();
+  const escaped = parseRegistry([
+    {
+      ...base,
+      entry_points: ["../../package.json", "/etc/passwd", "--reporter=html", "src//url.ts"],
+    },
+  ]);
+  assert.deepEqual(escaped.errors, [
+    "features[0] (collection.url-params): entry_points ../../package.json must be a relative path inside packages/hydrogen",
+    "features[0] (collection.url-params): entry_points /etc/passwd must be a relative path inside packages/hydrogen",
+    "features[0] (collection.url-params): entry_points --reporter=html must be a relative path inside packages/hydrogen",
+    "features[0] (collection.url-params): entry_points src//url.ts must be a relative path inside packages/hydrogen",
+  ]);
+
+  const proofEscaped = parseRegistry([{ ...base, verified_by: ["src/../../x.test.ts"] }]);
+  assert.match(
+    proofEscaped.errors.join("\n"),
+    /verified_by src\/\.\.\/\.\.\/x\.test\.ts must be a relative path/,
+  );
+
+  const mutantEscaped = parseRegistry([
+    { ...base, falsified_by: [{ ...mutant, file: "../../package.json" }] },
+  ]);
+  assert.match(mutantEscaped.errors.join("\n"), /falsified_by\[0\]: file must be a relative path/);
+});
+
 test("parseRegistry reports shape problems with the feature id", () => {
   const { errors } = parseRegistry([{ ...feature(), status: "done", verified_by: "one-string" }]);
   assert.deepEqual(errors, [
@@ -127,26 +155,22 @@ function proof(overrides: Partial<ProofResult> = {}): ProofResult {
 
 test("passing proofs produce no errors", () => {
   const proofs = new Map<string, ProofResult>([[URL_TEST, proof()]]);
-  const errors = checkFeatures([feature()], workspace({ proofs }));
-  assert.deepEqual(errors, []);
+  assert.deepEqual(checkProofs([feature()], proofs), []);
 });
 
 test("a proof vitest did not collect is reported", () => {
-  const proofs = new Map<string, ProofResult>();
-  const errors = checkFeatures([feature()], workspace({ proofs }));
+  const errors = checkProofs([feature()], new Map<string, ProofResult>());
   assert.match(errors.join("\n"), /was not collected by vitest/);
 });
 
 test("a proof with failing tests is reported", () => {
   const proofs = new Map<string, ProofResult>([[URL_TEST, proof({ failed: 2 })]]);
-  const errors = checkFeatures([feature()], workspace({ proofs }));
-  assert.match(errors.join("\n"), /has 2 failing test\(s\)/);
+  assert.match(checkProofs([feature()], proofs).join("\n"), /has 2 failing test\(s\)/);
 });
 
 test("a proof with no passing tests is reported", () => {
   const proofs = new Map<string, ProofResult>([[URL_TEST, proof({ passed: 0, skipped: 3 })]]);
-  const errors = checkFeatures([feature()], workspace({ proofs }));
-  assert.match(errors.join("\n"), /has no passing tests/);
+  assert.match(checkProofs([feature()], proofs).join("\n"), /has no passing tests/);
 });
 
 const mutant: Mutant = {
