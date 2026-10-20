@@ -261,8 +261,8 @@ function cartOverlayLineFor(page: Page, productTitle: string): Locator {
     .getByTestId("cart-drawer")
     .filter({ visible: true })
     .first()
-    .getByRole("listitem")
-    .filter({ hasText: productTitle })
+    .getByTestId("cart-line")
+    .filter({ hasText: productTitle, visible: true })
     .first();
 }
 
@@ -300,8 +300,8 @@ function cartLineFor(page: Page, productTitle: string): Locator {
     .getByTestId("cart-page")
     .filter({ visible: true })
     .first()
-    .getByRole("listitem")
-    .filter({ hasText: productTitle })
+    .getByTestId("cart-line")
+    .filter({ hasText: productTitle, visible: true })
     .first();
 }
 

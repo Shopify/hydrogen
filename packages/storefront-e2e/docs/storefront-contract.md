@@ -32,6 +32,7 @@ The suite finds the elements in this table with `data-testid` attributes and Pla
 | `cart-page` | The element that holds the cart page content |
 | `cart-drawer` | The cart drawer |
 | `cart-trigger` | The control that opens the cart drawer |
+| `cart-line` | The element that holds one cart line |
 
 IDs can repeat, for example a main and a sticky add to cart. The suite narrows each ID to visible elements, and to the expected text or accessible name when it needs a specific one. The storefront can have other test IDs for its own tests. The suite does not read them.
 
@@ -80,7 +81,7 @@ Set STOREFRONT_SKIP_NO_JS_VARIANTS=true to skip the no-JavaScript check for a st
 
 ## Cart Line Items
 
-Cart lines must be visible list items containing the product title. The suite finds them inside the visible `cart-page` on the cart page and inside the visible `cart-drawer` in the drawer.
+Cart lines must be visible `cart-line` elements containing the product title. The suite finds them inside the visible `cart-page` on the cart page and inside the visible `cart-drawer` in the drawer.
 
 The cart and checkout tests click the first visible `product-add-to-cart` button (see Test IDs).
 

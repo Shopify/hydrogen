@@ -39,6 +39,7 @@ The product title needs no test ID. The suite requires it to be the page's `<h1>
 | `cart-page` | The element that holds the cart page content |
 | `cart-drawer` | The cart drawer |
 | `cart-trigger` | The control that opens the cart drawer |
+| `cart-line` | The element that holds one cart line |
 
 The suite finds a cart line by its product title inside the visible `cart-page` or the visible `cart-drawer`. After Add to cart, it clicks `cart-trigger` only when it needs the drawer and the added line is not visible.
 
