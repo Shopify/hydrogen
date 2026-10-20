@@ -252,6 +252,7 @@ function ProductPage({ product }: { product: ProductData }) {
             <button
               {...addToCartProps}
               aria-disabled={!addable}
+              data-testid="product-add-to-cart"
               onClick={(event) => {
                 if (!addable) {
                   event.preventDefault();

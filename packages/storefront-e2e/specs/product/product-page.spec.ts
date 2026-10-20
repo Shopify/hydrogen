@@ -1,5 +1,5 @@
 import { StorefrontContractError } from "../../src/contract";
-import { expectProductTitle } from "../../src/product-targets";
+import { expectProductTitle, requireProductAddToCart } from "../../src/product-targets";
 import { expect, test } from "./config";
 
 test("product page loads", async ({ data, page }) => {
@@ -81,6 +81,60 @@ test.describe("product target helpers", () => {
     await expectContractError(
       expectProductTitle(page, "Shirt", routePath, { timeout }),
       /exactly one element with data-testid="product-title".*Found 2\./,
+    );
+  });
+
+  test("returns the single add to cart button and ignores decoy buttons", async ({ page }) => {
+    await page.setContent(`
+      <button>Add to cart</button>
+      <button data-testid="product-add-to-cart" disabled>Sold out</button>`);
+
+    const addToCart = await requireProductAddToCart(page, routePath, { timeout });
+
+    await expect(addToCart).toHaveText("Sold out");
+    await expect(addToCart).toBeDisabled();
+  });
+
+  test("accepts a native button with any name and aria-disabled", async ({ page }) => {
+    await page.setContent(
+      `<button data-testid="product-add-to-cart" aria-disabled="true">In den Warenkorb</button>`,
+    );
+
+    const addToCart = await requireProductAddToCart(page, routePath, { timeout });
+
+    await expect(addToCart).toHaveAccessibleName("In den Warenkorb");
+    expect(await addToCart.isEnabled()).toBe(false);
+  });
+
+  test("fails clearly for a missing, duplicate, or non-button add to cart", async ({ page }) => {
+    await page.setContent(`<button>Add to cart</button>`);
+    await expectContractError(
+      requireProductAddToCart(page, routePath, { timeout }),
+      /data-testid="product-add-to-cart".*Found 0\./,
+    );
+
+    await page.setContent(`
+      <button data-testid="product-add-to-cart">Add to cart</button>
+      <button data-testid="product-add-to-cart">Add to cart</button>`);
+    await expectContractError(
+      requireProductAddToCart(page, routePath, { timeout }),
+      /data-testid="product-add-to-cart".*Found 2\./,
+    );
+
+    await page.setContent(
+      `<div data-testid="product-add-to-cart"><button>Add to cart</button></div>`,
+    );
+    await expectContractError(
+      requireProductAddToCart(page, routePath, { timeout }),
+      /native <button> add to cart button\. Found <div>\./,
+    );
+
+    await page.setContent(
+      `<div data-testid="product-add-to-cart" role="button" tabindex="0">Add to cart</div>`,
+    );
+    await expectContractError(
+      requireProductAddToCart(page, routePath, { timeout }),
+      /native <button> add to cart button\. Found <div>\./,
     );
   });
 });

@@ -1,10 +1,10 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { createContractError } from "../../src/contract";
+import { requireProductAddToCart } from "../../src/product-targets";
 import { test, type CheckoutTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
-const ADD_TO_CART_NAME = /add to cart/i;
 const CHECKOUT_CONTROL_NAME = /check\s*out|checkout|continue to checkout/i;
 
 type CartExpectation = {
@@ -51,7 +51,9 @@ async function tryAddProductToCart(
     productTitle: product.productTitle,
     variantLabel: product.variantLabel,
   };
-  const addToCart = page.getByRole("button", { name: ADD_TO_CART_NAME }).first();
+  const addToCart = await requireProductAddToCart(page, product.path, {
+    timeout: CART_SETTLE_TIMEOUT_MS,
+  });
   const isCartEnabled =
     (await addToCart.isVisible().catch(() => false)) &&
     (await addToCart.isEnabled().catch(() => false));
