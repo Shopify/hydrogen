@@ -141,8 +141,9 @@ function spawnRunCommand(command: string, args: string[], options: { cwd: string
   });
 }
 
-const TEMPLATE_TARBALL_URL = "https://codeload.github.com/Shopify/hydrogen/tar.gz/dist";
-const TEMPLATE_TARBALL_PREFIX = "hydrogen-dist/templates/react-router/";
+// TODO: Update branch from "dist-preview" to "dist" before GA launch
+const TEMPLATE_TARBALL_URL = "https://codeload.github.com/Shopify/hydrogen/tar.gz/dist-preview";
+const TEMPLATE_TARBALL_PREFIX = "hydrogen-dist-preview/templates/react-router/";
 const TEMPLATE_TARBALL_STRIP_COMPONENTS = TEMPLATE_TARBALL_PREFIX.split("/").filter(Boolean).length;
 
 type SetupChoice = "scaffold" | "skills";

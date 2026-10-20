@@ -41,8 +41,8 @@ function createRunCommandSpy(): RunCommand & { calls: Array<[string, string[], {
 
 function createFixtureTarball(): Buffer {
   const fixtureDir = mkdtempSync(join(tmpdir(), "hydrogen-fixture-"));
-  const templateDir = join(fixtureDir, "hydrogen-dist/templates/react-router");
-  const siblingDir = join(fixtureDir, "hydrogen-dist/templates/other-template");
+  const templateDir = join(fixtureDir, "hydrogen-dist-preview/templates/react-router");
+  const siblingDir = join(fixtureDir, "hydrogen-dist-preview/templates/other-template");
   mkdirSync(templateDir, { recursive: true });
   mkdirSync(join(templateDir, "app"), { recursive: true });
   mkdirSync(siblingDir, { recursive: true });
@@ -58,7 +58,7 @@ function createFixtureTarball(): Buffer {
   writeJson(join(siblingDir, "package.json"), { name: "other-template" });
 
   const tarballPath = join(fixtureDir, "fixture.tar.gz");
-  execFileSync("tar", ["czf", tarballPath, "-C", fixtureDir, "hydrogen-dist"]);
+  execFileSync("tar", ["czf", tarballPath, "-C", fixtureDir, "hydrogen-dist-preview"]);
   return readFileSync(tarballPath);
 }
 
