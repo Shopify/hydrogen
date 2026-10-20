@@ -337,7 +337,13 @@ function parseLocalizedNumber(value: string): number {
 }
 
 function decodeFilterKeyPart(value: string): string {
-  return decodeURIComponent(value.replace(/\+/g, " "));
+  const spaced = value.replace(/\+/g, " ");
+  try {
+    return decodeURIComponent(spaced);
+  } catch {
+    // Keep a malformed percent sequence as literal text instead of failing the request.
+    return spaced;
+  }
 }
 
 function getFilterParamEntries(filter: ProductFilter): Array<{ key: string; value: string }> {
