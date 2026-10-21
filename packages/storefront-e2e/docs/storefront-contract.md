@@ -43,7 +43,7 @@ When a probed collection exposes a Storefront API PRICE_RANGE filter, the page m
 
 ## Search
 
-The search page must expose a searchbox. A visible button with an accessible name containing Search is supported; otherwise the suite submits the searchbox with Enter.
+The search page must expose a search input with `search-input`. If the page has a visible `search-submit` control, the suite clicks it; otherwise it submits the input with Enter.
 
 The suite discovers a live product title, searches for it, and verifies that product appears in visible results. It looks for a visible `product-card` link whose accessible name contains the title inside `product-results` (see Product Results).
 
