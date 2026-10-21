@@ -13,6 +13,7 @@ import {
   createShopifyRouteHandler,
   handleShopifyRoutes,
   type CartServerHandlers,
+  type ShopifyRouteHandler,
   type ShopifyRouteHandlerContext,
   type ShopifyRouteHandlerGroup,
 } from "../index";
@@ -108,6 +109,35 @@ describe("handleShopifyRoutes sessionManager requirement", () => {
       ...options,
       sessionManager,
       handlers: [createCartServerHandlers(), cartHandlersWithSession, accountHandlers],
+    });
+  });
+
+  it("follows the context type argument of ShopifyRouteHandler", () => {
+    const sessionFreeHandler = createShopifyRouteHandler(
+      "/api/hello",
+      "GET",
+      async ({ storefrontClient: _client }: Omit<ShopifyRouteHandlerContext, "sessionManager">) => ({
+        type: "json" as const,
+        data: {},
+      }),
+    );
+    const explicitSessionFree: ShopifyRouteHandler<
+      "/api/hello",
+      "GET",
+      Omit<ShopifyRouteHandlerContext, "sessionManager">
+    > = sessionFreeHandler;
+    const pathnameOnly: ShopifyRouteHandler<"/api/hello"> = sessionFreeHandler;
+    const pathnameAndMethod: ShopifyRouteHandler<"/api/hello", "GET"> = sessionFreeHandler;
+
+    handleShopifyRoutes({ ...options, handlers: [{ get: explicitSessionFree }] });
+    // @ts-expect-error one type argument keeps the full context
+    handleShopifyRoutes({ ...options, handlers: [{ get: pathnameOnly }] });
+    // @ts-expect-error two type arguments keep the full context
+    handleShopifyRoutes({ ...options, handlers: [{ get: pathnameAndMethod }] });
+    handleShopifyRoutes({
+      ...options,
+      sessionManager,
+      handlers: [{ get: pathnameOnly, post: pathnameAndMethod }],
     });
   });
 });

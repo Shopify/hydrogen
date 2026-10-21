@@ -3945,7 +3945,7 @@
       "name": "HydrogenRoutesOptions",
       "value": "HydrogenRoutesOptions",
       "members": [],
-      "override": "The options for handleShopifyRoutes: the `request`, the `requestContext`, the `storefrontClient` created with that request context, optional `routeTemplates`, and optional `handlers`, an array of handler groups. Pass `sessionManager` when a registered handler's context includes it, such as Customer Account handlers or cart handlers created with `customerSession`. Otherwise `sessionManager` is optional."
+      "override": "The options for handleShopifyRoutes: the `request`, the `requestContext`, the `storefrontClient` created with that request context, optional `routeTemplates`, and optional `handlers`, an array of handler groups. Pass `sessionManager` when a registered handler's context includes it, such as Customer Account handlers or cart handlers created with `customerSession`. Otherwise `sessionManager` is optional when the handler types are inferred from `handlers`."
     }
   },
   "ShopifyScriptsOptions": {
