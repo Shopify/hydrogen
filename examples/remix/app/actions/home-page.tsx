@@ -103,7 +103,7 @@ export function HomePage(
             <h2 id="recommended-products">Recommended Products</h2>
             <Frame
               src={localizePath(routes.recommendedProducts.href(), pathPrefix)}
-              fallback={<div>Loading...</div>}
+              fallback={<RecommendedProductsFallback />}
             />
             <br />
           </section>
@@ -111,6 +111,38 @@ export function HomePage(
       </Document>
     );
   };
+}
+
+/** Matches `first: 4` in `RECOMMENDED_PRODUCTS_QUERY`. */
+const RECOMMENDED_PRODUCTS_COUNT = 4;
+
+const placeholderImageStyle = css({
+  aspectRatio: "1 / 1",
+  background: "#f2f2f2",
+  borderRadius: "4px",
+  // Inline-block sits on the text baseline like the cards' inline `<img>`, so the gap below
+  // it matches too.
+  display: "inline-block",
+  width: "100%",
+});
+
+/**
+ * Card-shaped placeholders that take the same space as the product cards, so the page
+ * doesn't shift when the recommendations stream in.
+ */
+function RecommendedProductsFallback() {
+  return () => (
+    <div mix={recommendedGridStyle} aria-busy="true">
+      <span class="sr-only">Loading...</span>
+      {Array.from({ length: RECOMMENDED_PRODUCTS_COUNT }, (_, index) => (
+        <div key={index} aria-hidden="true">
+          <span mix={placeholderImageStyle} />
+          <h4>&nbsp;</h4>
+          <small>&nbsp;</small>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 /** The `recommendedProducts` route's fragment, streamed into the home page. */
