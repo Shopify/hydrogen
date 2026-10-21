@@ -1,9 +1,9 @@
 import { createController } from "remix/router";
 
+import { ONE_DAY } from "../../lib/cache-control.ts";
 import { createSitemapIndexResponse, createSitemapResponse } from "../../lib/sitemap.ts";
 import { routes } from "../../routes.ts";
 
-const ONE_DAY_IN_SECONDS = 60 * 60 * 24;
 const SITEMAP_LOCALES = ["EN-US", "EN-CA", "FR-CA"];
 
 export default createController(routes.seo, {
@@ -12,7 +12,7 @@ export default createController(routes.seo, {
       return new Response(robotsTxt(new URL(request.url).origin), {
         headers: {
           "Content-Type": "text/plain",
-          "Cache-Control": `max-age=${ONE_DAY_IN_SECONDS}`,
+          "Cache-Control": ONE_DAY,
         },
       });
     },
@@ -22,7 +22,7 @@ export default createController(routes.seo, {
         request,
         storefront: shopify.storefront,
       });
-      response.headers.set("Cache-Control", `max-age=${ONE_DAY_IN_SECONDS}`);
+      response.headers.set("Cache-Control", ONE_DAY);
       return response;
     },
 
@@ -37,7 +37,7 @@ export default createController(routes.seo, {
             ? `${baseUrl}/${locale.toLowerCase()}/${type}/${handle}`
             : `${baseUrl}/${type}/${handle}`,
       });
-      response.headers.set("Cache-Control", `max-age=${ONE_DAY_IN_SECONDS}`);
+      response.headers.set("Cache-Control", ONE_DAY);
       return response;
     },
   },

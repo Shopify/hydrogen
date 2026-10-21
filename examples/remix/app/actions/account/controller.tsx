@@ -5,6 +5,7 @@ import { formData } from "remix/middleware/form-data";
 import { redirect } from "remix/response/redirect";
 import { createController } from "remix/router";
 
+import { NO_STORE } from "../../lib/cache-control.ts";
 import {
   CREATE_ADDRESS_MUTATION,
   CUSTOMER_DETAILS_QUERY,
@@ -25,7 +26,7 @@ import { NotFoundPage } from "../../ui/error-pages.tsx";
 import { AddressActionForm, AddressForm, firstIssue, ProfileForm } from "./forms.ts";
 import { AddressesPage, NEW_ADDRESS_ID, OrderPage, OrdersPage, ProfilePage } from "./pages.tsx";
 
-const NO_STORE = { "Cache-Control": "no-cache, no-store, must-revalidate" };
+const NO_STORE_HEADERS = { "Cache-Control": NO_STORE };
 
 /**
  * Customer Account pages. `customerAuth()` resolves the customer from Hydrogen's session,
@@ -74,7 +75,7 @@ export default createController(routes.account, {
           pathPrefix={locale.pathPrefix}
           url={new URL(request.url)}
         />,
-        { headers: NO_STORE },
+        { headers: NO_STORE_HEADERS },
       );
     },
 
@@ -102,14 +103,14 @@ export default createController(routes.account, {
       if (!order || !("id" in order)) {
         return render(<NotFoundPage pathname={new URL(request.url).pathname} />, {
           status: 404,
-          headers: NO_STORE,
+          headers: NO_STORE_HEADERS,
         });
       }
 
       return render(
         <OrderPage customer={customer} order={order} pathPrefix={locale.pathPrefix} />,
         {
-          headers: NO_STORE,
+          headers: NO_STORE_HEADERS,
         },
       );
     },
@@ -119,7 +120,7 @@ export default createController(routes.account, {
       const { accessToken } = auth.identity;
       const customer = await getCustomer(customerAccount, accessToken);
       return render(<ProfilePage customer={customer} pathPrefix={locale.pathPrefix} />, {
-        headers: NO_STORE,
+        headers: NO_STORE_HEADERS,
       });
     },
 
@@ -144,7 +145,7 @@ export default createController(routes.account, {
             error={error}
             pathPrefix={locale.pathPrefix}
           />,
-          { status: 400, headers: NO_STORE },
+          { status: 400, headers: NO_STORE_HEADERS },
         );
       }
       // Post/Redirect/Get, so a refresh doesn't resubmit the form.
@@ -156,7 +157,7 @@ export default createController(routes.account, {
       const { accessToken } = auth.identity;
       const customer = await getCustomer(customerAccount, accessToken);
       return render(<AddressesPage customer={customer} pathPrefix={locale.pathPrefix} />, {
-        headers: NO_STORE,
+        headers: NO_STORE_HEADERS,
       });
     },
 
@@ -209,7 +210,7 @@ export default createController(routes.account, {
             errors={{ [addressId || NEW_ADDRESS_ID]: error }}
             pathPrefix={locale.pathPrefix}
           />,
-          { status: 400, headers: NO_STORE },
+          { status: 400, headers: NO_STORE_HEADERS },
         );
       }
       return redirect(localizePath(routes.account.addresses.href(), locale.pathPrefix), 303);

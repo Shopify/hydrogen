@@ -1,5 +1,6 @@
 import { gql, type StorefrontApi } from "@shopify/hydrogen";
 import type { SitemapType } from "@shopify/hydrogen/storefront-api-types";
+import { html, type SafeHtml } from "remix/html-template";
 
 import {
   contentCache,
@@ -8,6 +9,11 @@ import {
 } from "./storefront.ts";
 
 const CHANGE_FREQUENCY = "weekly";
+/**
+ * Remix's `html` template escapes interpolated values, which XML needs too. Named `xml`
+ * so formatters don't reformat the markup as HTML.
+ */
+const xml = html;
 const FIRST_SITEMAP_PAGE = 1;
 const XML_CONTENT_TYPE = "application/xml";
 
@@ -56,12 +62,9 @@ export async function createSitemapIndexResponse({
 }) {
   const baseUrl = getBaseUrl(request);
   const sitemapLocations = await getSitemapLocations({ baseUrl, storefront });
-  const body = `<?xml version="1.0" encoding="UTF-8"?>
+  return xmlResponse(xml`<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${sitemapLocations.map((location) => `  <sitemap><loc>${escapeXml(location)}</loc></sitemap>`).join("\n")}
-</sitemapindex>`;
-
-  return xmlResponse(body);
+${sitemapLocations.map((location) => xml`  <sitemap><loc>${location}</loc></sitemap>\n`)}</sitemapindex>`);
 }
 
 export async function createSitemapResponse({
@@ -84,12 +87,9 @@ export async function createSitemapResponse({
   const page = parseSitemapPage(params.page);
   const entries = await querySitemapEntries({ page, storefront, type: params.type });
   const baseUrl = getBaseUrl(request);
-  const body = `<?xml version="1.0" encoding="UTF-8"?>
+  return xmlResponse(xml`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${entries.map((entry) => sitemapUrlXml({ baseUrl, entry, getLink, locales })).join("\n")}
-</urlset>`;
-
-  return xmlResponse(body);
+${entries.map((entry) => sitemapUrlXml({ baseUrl, entry, getLink, locales }))}</urlset>`);
 }
 
 function isSitemapRouteType(value: string | undefined): value is SitemapRouteType {
@@ -193,36 +193,24 @@ function sitemapUrlXml({
   }));
   const defaultLink = getLink({ ...entry, baseUrl });
 
-  return [
-    "  <url>",
-    `    <loc>${escapeXml(defaultLink)}</loc>`,
-    `    <lastmod>${escapeXml(entry.updatedAt)}</lastmod>`,
-    `    <changefreq>${CHANGE_FREQUENCY}</changefreq>`,
-    ...localizedLinks.map(
-      ({ href, locale }) =>
-        `    <xhtml:link rel="alternate" hreflang="${escapeXml(locale)}" href="${escapeXml(href)}" />`,
-    ),
-    "  </url>",
-  ].join("\n");
+  return xml`  <url>
+    <loc>${defaultLink}</loc>
+    <lastmod>${entry.updatedAt}</lastmod>
+    <changefreq>${CHANGE_FREQUENCY}</changefreq>
+${localizedLinks.map(
+  ({ href, locale }) =>
+    xml`    <xhtml:link rel="alternate" hreflang="${locale}" href="${href}" />\n`,
+)}  </url>\n`;
 }
 
 function getBaseUrl(request: Request) {
   return new URL(request.url).origin;
 }
 
-function xmlResponse(body: string) {
-  return new Response(body, {
+function xmlResponse(body: SafeHtml) {
+  return new Response(String(body), {
     headers: { "Content-Type": XML_CONTENT_TYPE },
   });
-}
-
-function escapeXml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
 }
 
 const SITEMAP_INDEX_QUERY = gql(`

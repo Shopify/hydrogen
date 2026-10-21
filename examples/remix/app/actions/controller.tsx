@@ -2,6 +2,7 @@ import { cartQueries, createCartCookie, getCartId } from "@shopify/hydrogen";
 import { redirect } from "remix/response/redirect";
 import { createController } from "remix/router";
 
+import { PRIVATE_NO_STORE } from "../lib/cache-control.ts";
 import { getPaginationVariables } from "../lib/pagination.ts";
 import { localizePath } from "../lib/public/i18n.ts";
 import { catalogCache, requireData } from "../lib/storefront.ts";
@@ -106,7 +107,7 @@ export default createController(routes, {
             })
           ).data?.cartCreate?.cart;
 
-      const headers = new Headers({ "Cache-Control": "private, no-store" });
+      const headers = new Headers({ "Cache-Control": PRIVATE_NO_STORE });
       if (cart) headers.set("Set-Cookie", createCartCookie(cart.id));
       return redirect(location, { status: 303, headers });
     },

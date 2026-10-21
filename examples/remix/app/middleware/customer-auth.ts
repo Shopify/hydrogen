@@ -5,6 +5,7 @@ import { Renderer } from "remix/middleware/render";
 import { redirect } from "remix/response/redirect";
 
 import { LoginFailedPage } from "../actions/account/pages.tsx";
+import { NO_STORE } from "../lib/cache-control.ts";
 import { localizePath } from "../lib/public/i18n.ts";
 import { requireContext } from "./context.ts";
 import { LocaleContext } from "./locale.ts";
@@ -57,7 +58,7 @@ export function requireCustomer() {
         ) => Promise<Response>;
         return renderPage(createElement(LoginFailedPage, { pathPrefix }), {
           status: 401,
-          headers: { "Cache-Control": "no-cache, no-store, must-revalidate" },
+          headers: { "Cache-Control": NO_STORE },
         });
       }
 
