@@ -31,6 +31,7 @@ const UCP_PROFILE_LINK = '</.well-known/ucp>; rel="ucp"';
 const UCP_LINK_REL_PATTERN = /;\s*rel="?ucp"?\s*(?:[;,]|$)/i;
 // Oxygen deployment hostnames route `/.well-known/ucp` to the Online Store, which cannot resolve
 // the shop from them, so a link there would advertise a profile that does not exist.
+// Deliberately unlike the HTML `<link rel="ucp">` tag, which renders here without request context.
 const OXYGEN_DEPLOYMENT_HOST_SUFFIX = ".myshopify.dev";
 
 /** The incoming request's headers, plus its method, abort signal, and URL when the framework provides them. */
