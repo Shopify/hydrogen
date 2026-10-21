@@ -39,6 +39,7 @@ Hydrogen migration:
 - [ ] CSP/nonce: classic's utilities are gone — port CSP/nonce as app code, then check the browser console for CSP violations
 - [ ] 7. Connect a store — env vars in .env (private token, or public token), or MOCK_SHOP=1 for the tokenless mock.shop demo
 - [ ] Optional subsystems: detect each → migrate or skip, and report every skip
+- [ ] Root middleware runs: GET /api/cart returns 200 JSON from the cart handler; a 404 or the app's 404 page means middleware isn't enabled for your React Router version (step 4)
 - [ ] 8. Verify (build/typecheck gate, hydrogen-smoke-test, browser console on the home page), then hand off to the user
 ```
 
@@ -321,7 +322,7 @@ Each file is a short list of the specific "it renders but is wrong" traps for th
 
 ## Verification
 
-Don't trust "it renders." Gate on the build first: `react-router build` and `react-router typegen && tsc && hydrogen gql check --fail-on-warn` must both exit 0 (most import/return-helper and gql traps surface here — fix the root cause, don't suppress it; a red build makes everything downstream meaningless). Then run the local `hydrogen-smoke-test` skill for functional/runtime verification — request handlers, product, cart, collection/search, analytics, money, and the production pass. That skill owns "does the storefront work"; don't restate its checks here.
+Don't trust "it renders." Gate on the build first: `react-router build` and `react-router typegen && tsc && hydrogen gql check --fail-on-warn` must both exit 0 (most import/return-helper and gql traps surface here — fix the root cause, don't suppress it; a red build makes everything downstream meaningless). Next, prove the root middleware actually runs: with the dev server up, `GET /api/cart` must return 200 JSON from the Hydrogen cart handler. A 404, or the app's own 404 page, means middleware isn't enabled for your React Router version (step 4), so cart routes, redirects, the storefront context and response headers are all silently skipped. Then run the local `hydrogen-smoke-test` skill for functional/runtime verification — request handlers, product, cart, collection/search, analytics, money, and the production pass. That skill owns "does the storefront work"; don't restate its checks here.
 
 After the build gate and smoke test pass, **keep the dev server running and load the home page in a browser.** Fix every console error and warning before handing off. If you have no browser tool, say so in the handoff and ask the user to check the console themselves. Then hand off to the user. Tell them to test the migrated code with `npm run dev` (or `npm run dev:https` when they need customer login locally), and to pay special attention to the areas a migration most often gets subtly wrong while still compiling:
 
