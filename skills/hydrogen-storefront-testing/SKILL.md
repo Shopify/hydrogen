@@ -56,6 +56,15 @@ After Add to cart, the drawer must open by itself. The suite uses `cart-trigger`
 
 The suite reads only visible cards inside the first visible `product-results`, matches a product by the handle in the card link and the title in its name, and counts results by unique product URL.
 
+### Collection filters
+
+| Test ID | Put it on |
+| --- | --- |
+| `collection-filter-label` | The visible label of a filter value |
+| `collection-filter-value` | The checkbox inside that label |
+
+Keep the checkbox inside its marked label. The suite clicks the label, expects the checkbox to be checked, and reads the count from the label text, such as `Red (4)`.
+
 ## How to adopt
 
 1. Find the existing elements in the tables above in your storefront.

@@ -282,11 +282,12 @@ function ListFacet({
     return (
       <li key={value.id}>
         <label
-          data-testid="facet-option"
+          data-testid="collection-filter-label"
           className="min-h-touch-target text-on-surface flex cursor-pointer items-center gap-2 py-1 text-sm motion-safe:transition-transform motion-safe:active:scale-[0.97]"
         >
           <input
             type="checkbox"
+            data-testid="collection-filter-value"
             name={name}
             value={paramValue}
             checked={isActive}
@@ -465,12 +466,13 @@ function ColorSwatchFacet({
     return (
       <li key={value.id}>
         <label
-          data-testid="facet-option"
+          data-testid="collection-filter-label"
           className="min-h-touch-target min-w-touch-target relative inline-flex cursor-pointer items-center justify-center motion-safe:transition-transform motion-safe:active:scale-[0.93]"
           title={`${value.label} (${value.count})`}
         >
           <input
             type="checkbox"
+            data-testid="collection-filter-value"
             name={name}
             value={paramValue}
             checked={isFilterInputActive(state.filters, value.input)}

@@ -259,9 +259,11 @@ function visibleFilters(filters: AvailableFilter[]) {
                 v-for="value in visibleValues(filter)"
                 :key="value.id"
                 class="flex cursor-pointer items-center gap-2 text-sm"
+                data-testid="collection-filter-label"
               >
                 <input
                   type="checkbox"
+                  data-testid="collection-filter-value"
                   :name="filterInputToParamEntries(value.input)[0]?.name"
                   :value="filterInputToParamEntries(value.input)[0]?.value"
                   :checked="isFilterInputActive(state.filters, value.input)"

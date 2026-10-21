@@ -74,7 +74,16 @@ At least one probed collection must expose a visible, enabled checkbox filter th
 
 The suite counts results as the unique product URL paths of the visible `product-card` links inside `product-results` (see Product Results).
 
-Filter labels must include a count like Color Red (4). The suite uses that count to choose a filter that narrows the product card count, then asserts the filtered result count does not exceed the label count. Browser Back after a filter selection must restore the previous URL and show the same filter unchecked. Missing Storefront API filter data skips the collection filter group.
+The suite finds filter values with `data-testid` attributes:
+
+| Test ID | Meaning |
+| --- | --- |
+| `collection-filter-value` | A filter value checkbox |
+| `collection-filter-label` | The label of a filter value checkbox |
+
+The suite reads up to 20 visible `collection-filter-label` elements in page order and finds the `collection-filter-value` inside each one. It skips disabled checkboxes. It clicks the label of the first usable filter and expects the native checkbox to be checked. If the page has no visible filter label, the test fails; it does not skip.
+
+Filter labels must include a count like Red (4). The suite reads the label text, removes a trailing " - Sold out", and uses the first whole number in parentheses as the count. It does not read counts from `title`, `aria-label`, or text such as `4 products`, so such labels are not chosen; for example, the React Router template color swatches. A value name with a number in parentheses, such as `Pack (2)`, can give the wrong count. The suite uses the count to choose a filter that narrows the product card count, then asserts the filtered result count does not exceed the label count. Browser Back after a filter selection must restore the previous URL and show the same filter, found by the same label text, unchecked. If visible filter labels exist but none has a count that narrows the results, the test skips. Missing Storefront API filter data skips the collection filter group.
 
 When a probed collection exposes a Storefront API PRICE_RANGE filter, the page must render the price bounds as spinbuttons whose accessible names start with Minimum price and Maximum price. Typing a decimal bound such as 12.5 must put that exact value in the filter.v.price.gte or filter.v.price.lte URL param and keep it in the input. A storefront with no price range filter skips this check.
 
@@ -153,4 +162,4 @@ Operational expectations:
 
 When test locators change, update the affected specs and this document together.
 
-The suite reads test IDs for the product title, same-product option values (`product-variant-option`), and add to cart control (see Product Test IDs; `product-sibling-option` is defined but not read), for the cart elements in Cart Test IDs, and for product results (see Product Results). It finds all other UI by semantic roles and label strings, including the English cart totals status text inside `cart-status`.
+The suite reads test IDs for the product title, same-product option values (`product-variant-option`), and add to cart control (see Product Test IDs; `product-sibling-option` is defined but not read), for the cart elements in Cart Test IDs, for product results (see Product Results), and for collection filter values (see Collection Filters). It finds all other UI by semantic roles and label strings, including the English cart totals status text inside `cart-status`.
