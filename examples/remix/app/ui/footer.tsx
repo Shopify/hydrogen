@@ -1,7 +1,19 @@
-import type { Handle } from "remix/component";
+import { css, type Handle } from "remix/component";
 
 import type { Layout } from "../lib/layout.ts";
 import { toMenuLinks } from "../lib/public/menu.ts";
+
+const footerStyle = css({ background: "var(--color-dark)", marginTop: "auto" });
+
+const footerMenuStyle = css({
+  display: "flex",
+  flexWrap: "wrap",
+  gridGap: "1rem",
+  justifyContent: "center",
+  padding: "1rem",
+  "& a": { color: "var(--color-light)", minWidth: "fit-content" },
+  '& a[aria-current="page"]': { fontWeight: "bold" },
+});
 
 export function Footer(handle: Handle<{ layout: Layout }>) {
   return () => {
@@ -12,8 +24,8 @@ export function Footer(handle: Handle<{ layout: Layout }>) {
     });
 
     return (
-      <footer class="footer">
-        <nav class="footer-menu" role="navigation">
+      <footer mix={footerStyle}>
+        <nav mix={footerMenuStyle} role="navigation">
           {links.map((link) =>
             link.external ? (
               <a key={link.id} href={link.url} rel="noopener noreferrer" target="_blank">

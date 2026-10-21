@@ -1,237 +1,164 @@
-/* Reset */
-body {
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    "Open Sans",
-    "Helvetica Neue",
-    sans-serif;
-  margin: 0;
-  padding: 0;
-}
+/*
+ * Global styles: element defaults, design tokens, and a few document-level rules.
+ * Component styles live next to their components as `css()` mixins, which Remix emits in
+ * the `rmx` cascade layer. `base` comes first, so component styles override these defaults.
+ */
+@layer base, rmx;
 
-h1,
-h2,
-p {
-  margin: 0;
-  padding: 0;
-}
+@layer base {
+  :root {
+    --aside-width: 400px;
+    --cart-aside-summary-height-with-discount: 450px;
+    --cart-aside-summary-height: 400px;
+    --grid-item-width: 355px;
+    --header-height: 64px;
+    --color-dark: #000;
+    --color-light: #fff;
+  }
 
-h1 {
-  font-size: 1.6rem;
-  font-weight: 700;
-  line-height: 1.4;
-  margin-bottom: 2rem;
-  margin-top: 2rem;
-}
+  body {
+    display: flex;
+    flex-direction: column;
+    font-family:
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      Oxygen,
+      Ubuntu,
+      Cantarell,
+      "Open Sans",
+      "Helvetica Neue",
+      sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    padding: 0;
+  }
 
-h2 {
-  font-size: 1.2rem;
-  font-weight: 700;
-  line-height: 1.4;
-  margin-bottom: 1rem;
-}
+  body > main {
+    margin: 0 1rem 1rem 1rem;
+  }
 
-h4 {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-}
+  h1,
+  h2,
+  p {
+    margin: 0;
+    padding: 0;
+  }
 
-h5 {
-  margin-bottom: 1rem;
-  margin-top: 0.5rem;
-}
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 2rem;
+    margin-top: 2rem;
+  }
 
-p {
-  font-size: 1rem;
-  line-height: 1.4;
-}
+  h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+  }
 
-a {
-  color: #000;
-  text-decoration: none;
-}
+  h4 {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
 
-a:hover {
-  text-decoration: underline;
-  cursor: pointer;
-}
+  h5 {
+    margin-bottom: 1rem;
+    margin-top: 0.5rem;
+  }
 
-hr {
-  border-bottom: none;
-  border-top: 1px solid #000;
-  margin: 0;
-}
+  p {
+    font-size: 1rem;
+    line-height: 1.4;
+  }
 
-pre {
-  white-space: pre-wrap;
-}
+  a {
+    color: #000;
+    text-decoration: none;
+  }
 
-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
+  a:hover {
+    text-decoration: underline;
+    cursor: pointer;
+  }
 
-body > main {
-  margin: 0 1rem 1rem 1rem;
-}
+  hr {
+    border-bottom: none;
+    border-top: 1px solid #000;
+    margin: 0;
+  }
 
-section {
-  padding: 1rem 0;
-  @media (min-width: 768px) {
-    padding: 2rem 0;
+  pre {
+    white-space: pre-wrap;
+  }
+
+  section {
+    padding: 1rem 0;
+    @media (min-width: 768px) {
+      padding: 2rem 0;
+    }
+  }
+
+  fieldset {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5rem;
+    padding: 1rem;
+  }
+
+  form {
+    max-width: 100%;
+    @media (min-width: 768px) {
+      max-width: 400px;
+    }
+  }
+
+  input {
+    border-radius: 4px;
+    border: 1px solid #000;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    margin-top: 0.25rem;
+    padding: 0.5rem;
+  }
+
+  legend {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+  }
+
+  dl {
+    margin: 0.5rem 0;
+  }
+
+  code {
+    background: #ddd;
+    border-radius: 4px;
+    font-family: monospace;
+    padding: 0.25rem;
+  }
+
+  img {
+    border-radius: 4px;
   }
 }
 
-fieldset {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 0.5rem;
-  padding: 1rem;
-}
-
-form {
-  max-width: 100%;
-  @media (min-width: 768px) {
-    max-width: 400px;
-  }
-}
-
-input {
-  border-radius: 4px;
-  border: 1px solid #000;
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
-  margin-top: 0.25rem;
-  padding: 0.5rem;
-}
-
-legend {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-li {
-  margin-bottom: 0.5rem;
-}
-
-dl {
-  margin: 0.5rem 0;
-}
-
-code {
-  background: #ddd;
-  border-radius: 4px;
-  font-family: monospace;
-  padding: 0.25rem;
-}
-
-/* Skeleton styles */
-:root {
-  --aside-width: 400px;
-  --cart-aside-summary-height-with-discount: 450px;
-  --cart-aside-summary-height: 400px;
-  --grid-item-width: 355px;
-  --header-height: 64px;
-  --color-dark: #000;
-  --color-light: #fff;
-}
-
-img {
-  border-radius: 4px;
-}
-
-/*
-* --------------------------------------------------
-* Non anchor links
-* --------------------------------------------------
-*/
-.link:hover {
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-/*
-* --------------------------------------------------
-* ui/public/aside.tsx: native <dialog> side drawers
-* --------------------------------------------------
-*/
-dialog.aside {
-  background: var(--color-light);
-  border: 0;
-  box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
-  height: 100vh;
-  inset: 0 0 0 auto;
-  margin: 0;
-  max-height: none;
-  max-width: none;
-  padding: 0;
-  position: fixed;
-  width: min(var(--aside-width), 100vw);
-}
-
-dialog.aside::backdrop {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-dialog.aside header {
-  align-items: center;
-  border-bottom: 1px solid var(--color-dark);
-  display: flex;
-  height: var(--header-height);
-  justify-content: space-between;
-  padding: 0 20px;
-}
-
-dialog.aside header h3 {
-  margin: 0;
-}
-
-dialog.aside header .close {
-  font-weight: bold;
-  opacity: 0.8;
-  text-decoration: none;
-  transition: all 200ms;
-  width: 20px;
-}
-
-dialog.aside header .close:hover {
-  opacity: 1;
-}
-
-dialog.aside .aside-body {
-  margin: 1rem;
-}
-
-dialog.aside p {
-  margin: 0 0 0.25rem;
-}
-
-dialog.aside p:last-child {
-  margin: 0;
-}
-
-dialog.aside li {
-  margin-bottom: 0.125rem;
-}
-
-html:has(dialog.aside[open]) {
-  overflow: hidden;
-}
-
+/* Unlayered, so these win over component styles. */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -244,485 +171,7 @@ html:has(dialog.aside[open]) {
   border-width: 0;
 }
 
-/* Values the cart store hasn't confirmed yet. */
-.pending {
-  opacity: 0.5;
-}
-
-button.reset {
-  border: 0;
-  background: inherit;
-  font-size: inherit;
-}
-
-button.reset > * {
-  margin: 0;
-}
-
-button.reset:not(:has(> *)) {
-  height: 1.5rem;
-  line-height: 1.5rem;
-}
-
-button.reset:hover:not(:has(> *)) {
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-/*
-* --------------------------------------------------
-* components/Header
-* --------------------------------------------------
-*/
-.header {
-  align-items: center;
-  background: #fff;
-  display: flex;
-  height: var(--header-height);
-  padding: 0 1rem;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-.header-menu-mobile-toggle {
-  @media (min-width: 48em) {
-    display: none;
-  }
-}
-
-.header-menu-mobile {
-  display: flex;
-  flex-direction: column;
-  grid-gap: 1rem;
-}
-
-.header-menu-desktop {
-  display: none;
-  grid-gap: 1rem;
-  @media (min-width: 45em) {
-    display: flex;
-    grid-gap: 1rem;
-    margin-left: 3rem;
-  }
-}
-
-.header-menu-item {
-  cursor: pointer;
-}
-
-.header-ctas {
-  align-items: center;
-  display: flex;
-  grid-gap: 1rem;
-  margin-left: auto;
-}
-
-.header-ctas > * {
-  min-width: fit-content;
-}
-
-/*
-* --------------------------------------------------
-* components/Footer
-* --------------------------------------------------
-*/
-.footer {
-  background: var(--color-dark);
-  margin-top: auto;
-}
-
-.footer-menu {
-  justify-content: center;
-  display: flex;
-  flex-wrap: wrap;
-  grid-gap: 1rem;
-  padding: 1rem;
-}
-
-.footer-menu a {
-  color: var(--color-light);
-  min-width: fit-content;
-}
-
-/*
-* --------------------------------------------------
-* components/Cart
-* --------------------------------------------------
-*/
-.cart-main {
-  height: 100%;
-  max-height: calc(100vh - var(--cart-aside-summary-height));
-  overflow-y: auto;
-  width: auto;
-}
-
-.cart-main.with-discount {
-  max-height: calc(100vh - var(--cart-aside-summary-height-with-discount));
-}
-
-.cart-line {
-  padding: 0.75rem 0;
-}
-
-.cart-line-inner {
-  display: flex;
-}
-
-.cart-line img {
-  height: 100%;
-  display: block;
-  margin-right: 0.75rem;
-}
-
-.cart-summary-page {
-  position: relative;
-}
-
-.cart-summary-aside {
-  background: white;
-  border-top: 1px solid var(--color-dark);
-  bottom: 0;
-  padding-top: 0.75rem;
-  position: absolute;
-  width: calc(var(--aside-width) - 40px);
-}
-
-.cart-line-quantity {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-}
-
-/* The hidden "set" button stays the form's first submitter. */
-.cart-line-quantity [hidden] {
-  display: none;
-}
-
-.cart-line-quantity input[name="quantity"] {
-  width: 3rem;
-}
-
-.cart-errors {
-  border: 1px solid #a40000;
-  margin: 0.5rem 0;
-  padding: 0.5rem;
-}
-
-/* Child line components (warranties, gift wrapping, etc.) */
-.cart-line-children {
-  padding-left: 2rem;
-}
-
-.cart-discount {
-  align-items: center;
-  display: flex;
-  margin-top: 0.25rem;
-}
-
-.cart-attribute {
-  display: grid;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.cart-attribute textarea {
-  resize: vertical;
-}
-
-.cart-subtotal {
-  align-items: center;
-  display: flex;
-}
-/*
-* --------------------------------------------------
-* components/Search
-* --------------------------------------------------
-*/
-.predictive-search {
-  height: calc(100vh - var(--header-height) - 40px);
-  overflow-y: auto;
-}
-
-.predictive-search-form {
-  background: var(--color-light);
-  position: sticky;
-  top: 0;
-}
-
-.predictive-search-result {
-  margin-bottom: 2rem;
-}
-
-.predictive-search-result h5 {
-  text-transform: uppercase;
-}
-
-.predictive-search-result-item {
-  margin-bottom: 0.5rem;
-}
-
-.predictive-search-result-item a {
-  align-items: center;
-  display: flex;
-}
-
-.predictive-search-result-item a img {
-  margin-right: 0.75rem;
-  height: 100%;
-}
-
-.search-result {
-  margin-bottom: 1.5rem;
-}
-
-.search-results-item {
-  margin-bottom: 0.5rem;
-}
-
-.search-results-item a {
-  display: flex;
-  flex: row;
-  align-items: center;
-  gap: 1rem;
-}
-
-/*
-* --------------------------------------------------
-* routes/__index
-* --------------------------------------------------
-*/
-.featured-collection {
-  display: block;
-  margin-bottom: 2rem;
-  position: relative;
-}
-
-.featured-collection-image {
-  aspect-ratio: 1 / 1;
-  @media (min-width: 45em) {
-    aspect-ratio: 16 / 9;
-  }
-}
-
-.featured-collection img {
-  height: auto;
-  max-height: 100%;
-  object-fit: cover;
-}
-
-.recommended-products-grid {
-  display: grid;
-  grid-gap: 1.5rem;
-  grid-template-columns: repeat(2, 1fr);
-  @media (min-width: 45em) {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-/*
-* --------------------------------------------------
-* routes/collections._index.tsx
-* --------------------------------------------------
-*/
-.collections-grid {
-  display: grid;
-  grid-gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
-  margin-bottom: 2rem;
-}
-
-.collection-item img {
-  height: auto;
-}
-
-/*
-* --------------------------------------------------
-* routes/collections.$handle.tsx
-* --------------------------------------------------
-*/
-.collection-description {
-  margin-bottom: 1rem;
-  max-width: 95%;
-  @media (min-width: 45em) {
-    max-width: 600px;
-  }
-}
-
-.products-grid {
-  display: grid;
-  grid-gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
-  margin-bottom: 2rem;
-}
-
-.product-item img {
-  height: auto;
-  width: 100%;
-}
-
-/*
-* --------------------------------------------------
-* routes/products.$handle.tsx
-* --------------------------------------------------
-*/
-.product {
-  display: grid;
-  @media (min-width: 45em) {
-    grid-template-columns: 1fr 1fr;
-    grid-gap: 4rem;
-  }
-}
-
-.product h1 {
-  margin-top: 0;
-}
-
-.product-image img {
-  height: auto;
-  width: 100%;
-}
-
-.product-main {
-  align-self: start;
-  position: sticky;
-  top: 6rem;
-}
-
-.product-price-on-sale {
-  display: flex;
-  grid-gap: 0.5rem;
-}
-
-.product-price-on-sale s {
-  opacity: 0.5;
-}
-
-.product-options-grid {
-  display: flex;
-  flex-wrap: wrap;
-  grid-gap: 0.75rem;
-}
-
-.product-options-item,
-.product-options-item:disabled {
-  padding: 0.25rem 0.5rem;
-  background-color: transparent;
-  font-size: 1rem;
-  font-family: inherit;
-}
-
-.product-option-label-swatch {
-  width: 1.25rem;
-  height: 1.25rem;
-  margin: 0.25rem 0;
-}
-
-.product-option-label-swatch img {
-  width: 100%;
-}
-
-/*
-* --------------------------------------------------
-* routes/blog._index.tsx
-* --------------------------------------------------
-*/
-.blog-grid {
-  display: grid;
-  grid-gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
-  margin-bottom: 2rem;
-}
-
-.blog-article-image {
-  aspect-ratio: 3/2;
-  display: block;
-}
-
-.blog-article-image img {
-  height: 100%;
-}
-
-/*
-* --------------------------------------------------
-* routes/blog.$articlehandle.tsx
-* --------------------------------------------------
-*/
-.article img {
-  height: auto;
-  width: 100%;
-}
-
-/*
-* --------------------------------------------------
-* routes/account
-* --------------------------------------------------
-*/
-
-.account-logout {
-  display: inline-block;
-}
-
-/*
-* --------------------------------------------------
-* Order Search Form - Minimal & Responsive
-* --------------------------------------------------
-*/
-.order-search-form {
-  margin-bottom: 1.5rem;
-}
-
-.order-search-fieldset {
-  border: 1px solid #e5e5e5;
-  border-radius: 4px;
-  padding: 1rem;
-}
-
-.order-search-legend {
-  font-weight: 600;
-  padding: 0 0.5rem;
-}
-
-.order-search-inputs {
-  display: grid;
-  gap: 1rem;
-  margin: 0.25rem 0 1rem;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 640px) {
-  .order-search-inputs {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.order-search-input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 1rem;
-}
-
-.order-search-buttons {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-/*
-* --------------------------------------------------
-* Active links (React Router's NavLink styling in the skeleton)
-* --------------------------------------------------
-*/
-.header a {
-  color: var(--color-dark);
-}
-
-.header a[aria-current="page"] {
-  font-weight: bold;
-}
-
-.footer a[aria-current="page"] {
-  font-weight: bold;
+/* An open drawer locks the page behind it. */
+html:has(dialog.aside[open]) {
+  overflow: hidden;
 }

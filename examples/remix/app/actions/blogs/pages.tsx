@@ -1,11 +1,20 @@
 import { gql, type StorefrontApi } from "@shopify/hydrogen";
-import { unsafeHTML, type Handle } from "remix/component";
+import { css, unsafeHTML, type Handle } from "remix/component";
 
 import { localizePath } from "../../lib/public/i18n.ts";
 import { routes } from "../../routes.ts";
 import { Document } from "../../ui/document.tsx";
-import { PaginatedResourceSection } from "../../ui/pagination.tsx";
+import { PaginatedResourceSection, resourceGridStyle } from "../../ui/pagination.tsx";
 import { Image } from "../../ui/public/image.tsx";
+
+const articleImageStyle = css({
+  aspectRatio: "3 / 2",
+  display: "block",
+  "& img": { height: "100%" },
+});
+
+/** Also styles images in the merchant's article HTML. */
+const articleStyle = css({ "& img": { height: "auto", width: "100%" } });
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/objects/blog
 export const BLOGS_QUERY = gql(`
@@ -139,11 +148,7 @@ export function BlogsPage(handle: Handle<{ blogs: Blogs; pathPrefix: string; url
       <Document title="Hydrogen | Blogs">
         <div class="blogs">
           <h1>Blogs</h1>
-          <PaginatedResourceSection
-            pageInfo={blogs.pageInfo}
-            url={url}
-            resourcesClassName="blogs-grid"
-          >
+          <PaginatedResourceSection pageInfo={blogs.pageInfo} url={url}>
             {blogs.nodes.map((blog) => (
               <a
                 key={blog.handle}
@@ -173,7 +178,7 @@ export function BlogPage(handle: Handle<{ blog: Blog; pathPrefix: string; url: U
           <PaginatedResourceSection
             pageInfo={blog.articles.pageInfo}
             url={url}
-            resourcesClassName="blog-grid"
+            resourcesMix={resourceGridStyle}
           >
             {blog.articles.nodes.map((article, index) => (
               <div class="blog-article" key={article.id}>
@@ -187,7 +192,7 @@ export function BlogPage(handle: Handle<{ blog: Blog; pathPrefix: string; url: U
                   )}
                 >
                   {article.image ? (
-                    <div class="blog-article-image">
+                    <div mix={articleImageStyle}>
                       <Image
                         data={article.image}
                         alt={article.image.altText || article.title}
@@ -217,7 +222,7 @@ export function ArticlePage(handle: Handle<{ article: Article }>) {
         title={`Hydrogen | ${article.seo?.title ?? article.title} article`}
         description={article.seo?.description}
       >
-        <div class="article">
+        <div mix={articleStyle}>
           <h1>
             {article.title}
             <div>
@@ -229,7 +234,7 @@ export function ArticlePage(handle: Handle<{ article: Article }>) {
           </h1>
           {article.image ? <Image data={article.image} sizes="90vw" loading="eager" /> : null}
           {/* Merchant-authored HTML from the Storefront API. */}
-          <div class="article" innerHTML={unsafeHTML(article.contentHtml)} />
+          <div innerHTML={unsafeHTML(article.contentHtml)} />
         </div>
       </Document>
     );

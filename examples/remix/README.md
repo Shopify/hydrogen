@@ -66,6 +66,7 @@ Every route also matches under a locale prefix (`/en-ca`, `/fr-ca`), like the Sk
 | `app/middleware/render.tsx` | Wraps Remix's streaming renderer so every page renders inside the app shell. `context.renderFragment()` renders frame content without it |
 | `app/actions/**` | Controllers and their pages |
 | `app/assets/public/**` | `clientEntry()` islands: cart, product form, header, predictive search, analytics |
+| `app/assets/public/app.css` | Global styles only: element defaults and design tokens in `@layer base`, plus `.sr-only`. Component styles are `css()` mixins next to their components, which Remix emits in the `rmx` cascade layer after `base`. Shared ones live in `app/ui/public/styles.ts` |
 | `app/lib/storefront.ts` | The Storefront client and a process-local LRU cache for Storefront API responses |
 
 Hydrogen primitives in use:
@@ -92,6 +93,7 @@ The collection filter group skips, because the Skeleton's collection page has no
 
 - **Pagination** uses previous and next page links instead of the Skeleton's client-side "load more" list.
 - **Asides** are native `<dialog>` elements instead of a React context.
+- **Styles** are split: the Skeleton's `app.css` keeps only global rules, and component rules are `css()` mixins next to their components. The rendered styles match the Skeleton's stylesheet.
 - **Runs on Node, not Oxygen.** The Skeleton deploys to Oxygen. This example uses Remix's own Node server, so it has no Worker build and no `shopify hydrogen deploy` script.
 - **Carts aren't connected to the signed-in customer.** Cart handlers are created without `customerSession`, like the other examples, so checkout isn't pre-authenticated and login doesn't attach the cart.
 - **Cart delivery instructions** (the Skeleton's cart metafield route) aren't ported. The gift message cart attribute is.

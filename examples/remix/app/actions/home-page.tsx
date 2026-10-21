@@ -1,11 +1,30 @@
 import { gql, type StorefrontApi } from "@shopify/hydrogen";
-import { Frame, type Handle } from "remix/component";
+import { css, Frame, type Handle } from "remix/component";
 
 import { localizePath } from "../lib/public/i18n.ts";
 import { routes } from "../routes.ts";
 import { Document } from "../ui/document.tsx";
 import { PRODUCT_ITEM_FRAGMENT, ProductItem } from "../ui/product-item.tsx";
 import { Image } from "../ui/public/image.tsx";
+
+const featuredCollectionStyle = css({
+  display: "block",
+  marginBottom: "2rem",
+  position: "relative",
+  "& img": { height: "auto", maxHeight: "100%", objectFit: "cover" },
+});
+
+const featuredImageStyle = css({
+  aspectRatio: "1 / 1",
+  "@media (min-width: 45em)": { aspectRatio: "16 / 9" },
+});
+
+const recommendedGridStyle = css({
+  display: "grid",
+  gridGap: "1.5rem",
+  gridTemplateColumns: "repeat(2, 1fr)",
+  "@media (min-width: 45em)": { gridTemplateColumns: "repeat(4, 1fr)" },
+});
 
 export const FEATURED_COLLECTION_QUERY = gql(`
   fragment FeaturedCollection on Collection {
@@ -62,14 +81,14 @@ export function HomePage(
       <Document title="Hydrogen | Home">
         <div class="home">
           <a
-            class="featured-collection"
+            mix={featuredCollectionStyle}
             href={localizePath(
               routes.collections.show.href({ handle: featuredCollection.handle }),
               pathPrefix,
             )}
           >
             {image ? (
-              <div class="featured-collection-image">
+              <div mix={featuredImageStyle}>
                 <Image
                   data={image}
                   sizes="100vw"
@@ -101,7 +120,7 @@ export function RecommendedProducts(
   return () => {
     const { pathPrefix, products } = handle.props;
     return (
-      <div class="recommended-products-grid">
+      <div mix={recommendedGridStyle}>
         {products.map((product) => (
           <ProductItem key={product.id} product={product} pathPrefix={pathPrefix} />
         ))}

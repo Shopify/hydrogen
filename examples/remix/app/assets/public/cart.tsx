@@ -7,7 +7,7 @@ import {
   type CartLine,
   type CartState,
 } from "@shopify/hydrogen";
-import { clientEntry, on, ref, type Handle } from "remix/component";
+import { css, clientEntry, on, ref, type Handle } from "remix/component";
 
 import type { CartInitialData } from "../../lib/cart.ts";
 import { cartApiPath } from "../../lib/public/cart-routes.ts";
@@ -16,8 +16,66 @@ import { formatMoney } from "../../lib/public/money.ts";
 import { routes } from "../../routes.ts";
 import { AsideDialog, closeAsides } from "../../ui/public/aside.tsx";
 import { Image } from "../../ui/public/image.tsx";
+import { resetButton } from "../../ui/public/styles.ts";
 import { publishCartViewed } from "./analytics.ts";
 import { getCartStore } from "./cart-store.ts";
+
+const cartMainStyle = css({
+  height: "100%",
+  maxHeight: "calc(100vh - var(--cart-aside-summary-height))",
+  overflowY: "auto",
+  width: "auto",
+});
+
+const withDiscountStyle = css({
+  maxHeight: "calc(100vh - var(--cart-aside-summary-height-with-discount))",
+});
+
+const errorsStyle = css({ border: "1px solid #a40000", margin: "0.5rem 0", padding: "0.5rem" });
+
+const lineStyle = css({
+  padding: "0.75rem 0",
+  "& img": { display: "block", height: "100%", marginRight: "0.75rem" },
+});
+
+const lineInnerStyle = css({ display: "flex" });
+
+/** Child lines, such as warranties and gift wrapping. */
+const lineChildrenStyle = css({ paddingLeft: "2rem" });
+
+const lineQuantityStyle = css({
+  alignItems: "center",
+  display: "flex",
+  flexWrap: "wrap",
+  // The hidden "set" button stays the form's first submitter.
+  "& [hidden]": { display: "none" },
+  '& input[name="quantity"]': { width: "3rem" },
+});
+
+/** Values the cart store hasn't confirmed yet. */
+const pendingStyle = css({ opacity: "0.5" });
+
+const summaryPageStyle = css({ position: "relative" });
+
+const summaryAsideStyle = css({
+  background: "white",
+  borderTop: "1px solid var(--color-dark)",
+  bottom: "0",
+  paddingTop: "0.75rem",
+  position: "absolute",
+  width: "calc(var(--aside-width) - 40px)",
+});
+
+const subtotalStyle = css({ alignItems: "center", display: "flex" });
+
+const discountStyle = css({ alignItems: "center", display: "flex", marginTop: "0.25rem" });
+
+const attributeStyle = css({
+  display: "grid",
+  gap: "0.5rem",
+  marginTop: "1rem",
+  "& textarea": { resize: "vertical" },
+});
 
 const register = createCartFormRegister();
 const GIFT_MESSAGE_ATTRIBUTE = "gift-message";
@@ -108,36 +166,41 @@ function CartMain(
 
     return (
       <section
-        class={`cart-main ${cart?.discountCodes.some((code) => code.applicable) ? "with-discount" : ""}`}
         aria-label={layout === "page" ? "Cart page" : "Cart drawer"}
-        mix={on("submit", (event) => {
-          if (!store) return;
-          // With the store connected, cart forms run through Hydrogen's optimistic
-          // store. Without JavaScript, or before the store connects, the same forms post
-          // to the cart endpoint. `data-rmx-document` keeps that post a full-document
-          // navigation, so the endpoint's redirect returns to this page.
-          event.preventDefault();
-          store.handleFormSubmit(event).catch((error: unknown) => {
-            if (error instanceof Error && error.name === "AbortError") return;
-            console.error("[hydrogen] Cart update failed", error);
-          });
-        })}
+        mix={[
+          cartMainStyle,
+          cart?.discountCodes.some((code) => code.applicable) && withDiscountStyle,
+          on("submit", (event) => {
+            if (!store) return;
+            // With the store connected, cart forms run through Hydrogen's optimistic
+            // store. Without JavaScript, or before the store connects, the same forms post
+            // to the cart endpoint. `data-rmx-document` keeps that post a full-document
+            // navigation, so the endpoint's redirect returns to this page.
+            event.preventDefault();
+            store.handleFormSubmit(event).catch((error: unknown) => {
+              if (error instanceof Error && error.name === "AbortError") return;
+              console.error("Cart update failed", error);
+            });
+          }),
+        ]}
       >
         <span role="status" class="sr-only">
           {statusMessage}
         </span>
         {showBanner ? (
-          <div role="alert" class="cart-errors">
+          <div role="alert" mix={errorsStyle}>
             {bannerMessages.map((message, index) => (
               <p key={`${message}-${index}`}>{message}</p>
             ))}
             <button
               type="button"
-              class="reset"
-              mix={on("click", () => {
-                dismissedErrorsAt = state?.errors.lastUpdatedAt ?? Date.now();
-                handle.update();
-              })}
+              mix={[
+                resetButton,
+                on("click", () => {
+                  dismissedErrorsAt = state?.errors.lastUpdatedAt ?? Date.now();
+                  handle.update();
+                }),
+              ]}
             >
               Dismiss
             </button>
@@ -219,8 +282,8 @@ function CartLineItem(
     );
 
     return (
-      <li class="cart-line" aria-busy={pending || undefined}>
-        <div class="cart-line-inner">
+      <li mix={lineStyle} aria-busy={pending || undefined}>
+        <div mix={lineInnerStyle}>
           {merchandise.image ? (
             <Image
               data={merchandise.image}
@@ -236,7 +299,7 @@ function CartLineItem(
                 <strong>{merchandise.product.title}</strong>
               </p>
             </a>
-            <p class={pending ? "pending" : undefined}>{formatMoney(line.cost.totalAmount)}</p>
+            <p mix={pending && pendingStyle}>{formatMoney(line.cost.totalAmount)}</p>
             {merchandise.title && merchandise.title !== "Default Title" ? (
               <p>
                 <small>{merchandise.title}</small>
@@ -253,7 +316,7 @@ function CartLineItem(
               ))}
             {childLines.length ? (
               <ul
-                class="cart-line-children"
+                mix={lineChildrenStyle}
                 aria-label={`Line items with ${merchandise.product.title}`}
               >
                 {childLines.map((child) => (
@@ -323,7 +386,7 @@ function CartLineQuantity(
       <form
         action={cartApiPath(pathPrefix)}
         method="post"
-        class="cart-line-quantity"
+        mix={lineQuantityStyle}
         data-rmx-document
       >
         <button {...register("set")}>Update quantity</button>
@@ -334,10 +397,10 @@ function CartLineQuantity(
             {...register("quantity", { value: draft ?? line.quantity, interactive: true })}
             size={3}
             readOnly={isOptimistic}
-            class={pending ? "pending" : undefined}
             aria-invalid={hasErrors || undefined}
             aria-describedby={hasErrors ? errorId : undefined}
             mix={[
+              pending && pendingStyle,
               ref((input, signal) => {
                 if (!input.form) return;
                 // Submits the hidden `set` button when the quantity changes.
@@ -395,13 +458,13 @@ function CartSummary(
     return (
       <div
         aria-labelledby={summaryId}
-        class={layout === "page" ? "cart-summary-page" : "cart-summary-aside"}
+        mix={layout === "page" ? summaryPageStyle : summaryAsideStyle}
       >
         <h4 id={summaryId}>Totals {totalsPending ? <span>(updating)</span> : null}</h4>
         <div aria-label="Subtotal" aria-busy={totalsPending} role="group">
-          <dl class="cart-subtotal">
+          <dl mix={subtotalStyle}>
             <dt>Subtotal</dt>
-            <dd class={totalsPending ? "pending" : undefined}>
+            <dd mix={totalsPending && pendingStyle}>
               {cart.cost.subtotalAmount.amount ? formatMoney(cart.cost.subtotalAmount) : "-"}
             </dd>
           </dl>
@@ -447,8 +510,8 @@ function CartDiscounts(
                 return (
                   <form key={code} action={action} method="post" data-rmx-document>
                     <input type="hidden" {...register("discountCode", { value: code })} />
-                    <div class="cart-discount" role="group" aria-labelledby={headingId}>
-                      <code class={pending ? "pending" : undefined}>{code}</code>
+                    <div mix={discountStyle} role="group" aria-labelledby={headingId}>
+                      <code mix={pending && pendingStyle}>{code}</code>
                       {applicable ? null : <small>&nbsp;(not applicable)</small>}
                       &nbsp;
                       <button
@@ -526,7 +589,7 @@ function CartGiftMessage(
       cart.attributes.find(({ key }) => key === GIFT_MESSAGE_ATTRIBUTE)?.value ?? "";
 
     return (
-      <form action={cartApiPath(pathPrefix)} method="post" class="cart-attribute" data-rmx-document>
+      <form action={cartApiPath(pathPrefix)} method="post" mix={attributeStyle} data-rmx-document>
         {cart.attributes
           .filter(({ key }) => key !== GIFT_MESSAGE_ATTRIBUTE)
           .map(({ key, value }) => (

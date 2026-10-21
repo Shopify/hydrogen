@@ -1,4 +1,4 @@
-import type { Handle, RemixNode } from "remix/component";
+import { css, type Handle, type RemixNode } from "remix/component";
 
 import type {
   Customer,
@@ -13,6 +13,36 @@ import { routes } from "../../routes.ts";
 import { Document } from "../../ui/document.tsx";
 import { PaginatedResourceSection } from "../../ui/pagination.tsx";
 import { Image } from "../../ui/public/image.tsx";
+
+const logoutStyle = css({ display: "inline-block" });
+
+const orderSearchStyle = css({ marginBottom: "1.5rem" });
+
+const orderSearchFieldsetStyle = css({
+  border: "1px solid #e5e5e5",
+  borderRadius: "4px",
+  padding: "1rem",
+});
+
+const orderSearchLegendStyle = css({ fontWeight: "600", padding: "0 0.5rem" });
+
+const orderSearchInputsStyle = css({
+  display: "grid",
+  gap: "1rem",
+  gridTemplateColumns: "1fr",
+  margin: "0.25rem 0 1rem",
+  "@media (min-width: 640px)": { gridTemplateColumns: "1fr 1fr" },
+});
+
+const orderSearchInputStyle = css({
+  border: "1px solid #d1d5db",
+  borderRadius: "4px",
+  fontSize: "1rem",
+  padding: "0.5rem",
+  width: "100%",
+});
+
+const orderSearchButtonsStyle = css({ display: "flex", flexWrap: "wrap", gap: "0.75rem" });
 
 type AccountSection = "orders" | "profile" | "addresses";
 
@@ -54,7 +84,7 @@ export function AccountLayout(
             &nbsp;|&nbsp;
             {/* Logout redirects to Shopify, so it's a native form, not an enhanced one. */}
             <form
-              class="account-logout"
+              mix={logoutStyle}
               method="post"
               action={`/account/logout?return_to=${encodeURIComponent(localizePath(routes.home.href(), pathPrefix))}`}
               data-rmx-document
@@ -88,22 +118,17 @@ export function OrdersPage(
     return (
       <AccountLayout customer={customer} pathPrefix={pathPrefix} section="orders" title="Orders">
         <div class="orders">
-          <form
-            method="get"
-            action={ordersPath}
-            class="order-search-form"
-            aria-label="Search orders"
-          >
-            <fieldset class="order-search-fieldset">
-              <legend class="order-search-legend">Filter Orders</legend>
-              <div class="order-search-inputs">
+          <form method="get" action={ordersPath} mix={orderSearchStyle} aria-label="Search orders">
+            <fieldset mix={orderSearchFieldsetStyle}>
+              <legend mix={orderSearchLegendStyle}>Filter Orders</legend>
+              <div mix={orderSearchInputsStyle}>
                 <input
                   type="search"
                   name="name"
                   placeholder="Order #"
                   aria-label="Order number"
                   defaultValue={filters.name ?? ""}
-                  class="order-search-input"
+                  mix={orderSearchInputStyle}
                 />
                 <input
                   type="search"
@@ -111,10 +136,10 @@ export function OrdersPage(
                   placeholder="Confirmation #"
                   aria-label="Confirmation number"
                   defaultValue={filters.confirmationNumber ?? ""}
-                  class="order-search-input"
+                  mix={orderSearchInputStyle}
                 />
               </div>
-              <div class="order-search-buttons">
+              <div mix={orderSearchButtonsStyle}>
                 <button type="submit">Search</button>
                 {hasFilters ? <a href={ordersPath}>Clear</a> : null}
               </div>

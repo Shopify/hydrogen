@@ -1,5 +1,5 @@
 import { getSearchResultUrl, gql, type StorefrontApi } from "@shopify/hydrogen";
-import type { Handle } from "remix/component";
+import { css, type Handle } from "remix/component";
 
 import { SearchView } from "../assets/public/analytics-events.tsx";
 import { localizePath } from "../lib/public/i18n.ts";
@@ -8,6 +8,13 @@ import { routes } from "../routes.ts";
 import { Document } from "../ui/document.tsx";
 import { PaginatedResourceSection } from "../ui/pagination.tsx";
 import { Image } from "../ui/public/image.tsx";
+
+const resultStyle = css({ marginBottom: "1.5rem" });
+
+const resultItemStyle = css({
+  marginBottom: "0.5rem",
+  "& a": { alignItems: "center", display: "flex", gap: "1rem" },
+});
 
 const SEARCH_PRODUCT_FRAGMENT = gql(`
   fragment SearchProduct on Product {
@@ -196,7 +203,7 @@ export function SearchPage(
           ) : (
             <div>
               {items.products.length ? (
-                <div class="search-result">
+                <div mix={resultStyle}>
                   <h2>Products</h2>
                   <PaginatedResourceSection pageInfo={items.pageInfo} url={url}>
                     {items.products.map((product) => {
@@ -210,7 +217,7 @@ export function SearchPage(
                         trackingParameters: product.trackingParameters,
                       });
                       return (
-                        <div class="search-results-item" key={product.id}>
+                        <div mix={resultItemStyle} key={product.id}>
                           <a href={href}>
                             {variant?.image ? (
                               <Image
@@ -233,11 +240,11 @@ export function SearchPage(
                 </div>
               ) : null}
               {items.pages.length ? (
-                <div class="search-result">
+                <div mix={resultStyle}>
                   <h2>Pages</h2>
                   <div>
                     {items.pages.map((page) => (
-                      <div class="search-results-item" key={page.id}>
+                      <div mix={resultItemStyle} key={page.id}>
                         <a
                           href={getSearchResultUrl({
                             baseUrl: localizePath(
@@ -257,11 +264,11 @@ export function SearchPage(
                 </div>
               ) : null}
               {items.articles.length ? (
-                <div class="search-result">
+                <div mix={resultStyle}>
                   <h2>Articles</h2>
                   <div>
                     {items.articles.map((article) => (
-                      <div class="search-results-item" key={article.id}>
+                      <div mix={resultItemStyle} key={article.id}>
                         <a
                           href={getSearchResultUrl({
                             baseUrl: localizePath(

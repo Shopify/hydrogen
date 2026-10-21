@@ -7,7 +7,7 @@ import {
   type ProductFormStore,
   type SelectedOption,
 } from "@shopify/hydrogen";
-import { clientEntry, navigate, on, unsafeHTML, type Handle } from "remix/component";
+import { css, clientEntry, navigate, on, unsafeHTML, type Handle } from "remix/component";
 
 import type { ProductData } from "../../actions/products/page.tsx";
 import { cartApiPath } from "../../lib/public/cart-routes.ts";
@@ -17,6 +17,38 @@ import { routes } from "../../routes.ts";
 import { openAside } from "../../ui/public/aside.tsx";
 import { Image } from "../../ui/public/image.tsx";
 import { getCartStore } from "./cart-store.ts";
+
+const productStyle = css({
+  display: "grid",
+  "@media (min-width: 45em)": { gridGap: "4rem", gridTemplateColumns: "1fr 1fr" },
+  "& h1": { marginTop: "0" },
+});
+
+const imageStyle = css({ "& img": { height: "auto", width: "100%" } });
+
+const mainStyle = css({ alignSelf: "start", position: "sticky", top: "6rem" });
+
+const priceOnSaleStyle = css({ display: "flex", gridGap: "0.5rem", "& s": { opacity: "0.5" } });
+
+const optionsGridStyle = css({ display: "flex", flexWrap: "wrap", gridGap: "0.75rem" });
+
+const optionItemStyle = css({
+  backgroundColor: "transparent",
+  fontFamily: "inherit",
+  fontSize: "1rem",
+  padding: "0.25rem 0.5rem",
+});
+
+const unselectedOptionStyle = css({
+  "&:hover": { cursor: "pointer", textDecoration: "underline" },
+});
+
+const swatchStyle = css({
+  height: "1.25rem",
+  margin: "0.25rem 0",
+  width: "1.25rem",
+  "& img": { width: "100%" },
+});
 
 type ProductStore = ProductFormStore<ProductData>;
 type ProductState = ReturnType<ProductStore["getState"]>;
@@ -118,8 +150,8 @@ export const ProductDetails = clientEntry(
       const image = selectedVariant?.image;
 
       return (
-        <div class="product">
-          <div class="product-image">
+        <div mix={productStyle}>
+          <div mix={imageStyle}>
             {image ? (
               <Image
                 key={image.id ?? image.url}
@@ -131,11 +163,11 @@ export const ProductDetails = clientEntry(
               />
             ) : null}
           </div>
-          <div class="product-main">
+          <div mix={mainStyle}>
             <h1>{product.title}</h1>
             <div aria-label="Price" class="product-price" role="group">
               {compareAtPrice && price ? (
-                <div class="product-price-on-sale">
+                <div mix={priceOnSaleStyle}>
                   {formatMoney(price)}
                   <s>{formatMoney(compareAtPrice)}</s>
                 </div>
@@ -151,7 +183,7 @@ export const ProductDetails = clientEntry(
                 option.values.length <= 1 ? null : (
                   <div class="product-options" key={option.name}>
                     <h5>{option.name}</h5>
-                    <div class="product-options-grid">
+                    <div mix={optionsGridStyle}>
                       {option.values.map((value) => (
                         <OptionValueControl
                           key={option.name + value.name}
@@ -224,13 +256,7 @@ function OptionValueControl(
 
     if (!value.exists) {
       return (
-        <button
-          type="button"
-          class="product-options-item"
-          style={style}
-          disabled
-          aria-pressed={false}
-        >
+        <button type="button" mix={optionItemStyle} style={style} disabled aria-pressed={false}>
           <OptionSwatch value={value} />
         </button>
       );
@@ -239,29 +265,29 @@ function OptionValueControl(
     return (
       <a
         href={href}
-        class={`product-options-item${value.selected ? "" : " link"}`}
         style={style}
         aria-current={value.selected ? "true" : undefined}
         data-rmx-reset-scroll="false"
         data-rmx-history="replace"
-        mix={
-          onSelect
-            ? on("click", (event) => {
-                const target = event.currentTarget.target;
-                const plainClick =
-                  !event.defaultPrevented &&
-                  event.button === 0 &&
-                  !event.metaKey &&
-                  !event.ctrlKey &&
-                  !event.shiftKey &&
-                  !event.altKey &&
-                  (!target || target === "_self");
-                if (!plainClick) return;
-                event.preventDefault();
-                onSelect();
-              })
-            : undefined
-        }
+        mix={[
+          optionItemStyle,
+          !value.selected && unselectedOptionStyle,
+          onSelect &&
+            on("click", (event) => {
+              const target = event.currentTarget.target;
+              const plainClick =
+                !event.defaultPrevented &&
+                event.button === 0 &&
+                !event.metaKey &&
+                !event.ctrlKey &&
+                !event.shiftKey &&
+                !event.altKey &&
+                (!target || target === "_self");
+              if (!plainClick) return;
+              event.preventDefault();
+              onSelect();
+            }),
+        ]}
       >
         <OptionSwatch value={value} />
         {value.available ? null : <span class="sr-only"> (sold out)</span>}
@@ -280,7 +306,7 @@ function OptionSwatch(handle: Handle<{ value: OptionValue }>) {
     return (
       <div
         aria-label={value.name}
-        class="product-option-label-swatch"
+        mix={swatchStyle}
         style={{ backgroundColor: color || "transparent" }}
       >
         {image ? <img src={image} alt={value.name} /> : null}

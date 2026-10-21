@@ -1,10 +1,12 @@
 import { gql, type MoneyV2 } from "@shopify/hydrogen";
-import type { Handle } from "remix/component";
+import { css, type Handle } from "remix/component";
 
 import { localizePath } from "../lib/public/i18n.ts";
 import { formatMoney } from "../lib/public/money.ts";
 import { routes } from "../routes.ts";
 import { Image, type ImageData } from "./public/image.tsx";
+
+const productItemStyle = css({ "& img": { height: "auto", width: "100%" } });
 
 export const PRODUCT_ITEM_FRAGMENT = gql(`
   fragment MoneyProductItem on MoneyV2 {
@@ -50,7 +52,7 @@ export function ProductItem(
 
     return (
       <a
-        class="product-item"
+        mix={productItemStyle}
         href={localizePath(routes.products.show.href({ handle: product.handle }), pathPrefix)}
       >
         {image ? (

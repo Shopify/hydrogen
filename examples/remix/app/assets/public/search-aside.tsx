@@ -7,7 +7,7 @@ import {
   type PredictiveSearchState,
   type PredictiveSearchStore,
 } from "@shopify/hydrogen";
-import { clientEntry, on, ref, type Handle } from "remix/component";
+import { css, clientEntry, on, ref, type Handle } from "remix/component";
 
 import { localizePath } from "../../lib/public/i18n.ts";
 import { formatMoney } from "../../lib/public/money.ts";
@@ -15,6 +15,21 @@ import { routeTemplates } from "../../lib/public/route-templates.ts";
 import { routes } from "../../routes.ts";
 import { AsideDialog, asideId, closeAsides } from "../../ui/public/aside.tsx";
 import { Image } from "../../ui/public/image.tsx";
+
+const predictiveSearchStyle = css({
+  height: "calc(100vh - var(--header-height) - 40px)",
+  overflowY: "auto",
+});
+
+const formStyle = css({ background: "var(--color-light)", position: "sticky", top: "0" });
+
+const resultStyle = css({ marginBottom: "2rem", "& h5": { textTransform: "uppercase" } });
+
+const resultItemStyle = css({
+  marginBottom: "0.5rem",
+  "& a": { alignItems: "center", display: "flex" },
+  "& a img": { height: "100%", marginRight: "0.75rem" },
+});
 
 const PREDICTIVE_SEARCH_LIMIT = 5;
 const register = createPredictiveSearchFormRegister();
@@ -74,9 +89,9 @@ export const SearchAside = clientEntry(
 
       return (
         <AsideDialog type="search" heading="SEARCH">
-          <div class="predictive-search">
+          <div mix={predictiveSearchStyle}>
             <br />
-            <form {...getPredictiveSearchFormAttributes(searchPath)} class="predictive-search-form">
+            <form {...getPredictiveSearchFormAttributes(searchPath)} mix={formStyle}>
               <input
                 {...register("query")}
                 placeholder="Search"
@@ -111,11 +126,11 @@ export const SearchAside = clientEntry(
             {items && state?.result.total ? (
               <>
                 {items.queries.length ? (
-                  <div class="predictive-search-result">
+                  <div mix={resultStyle}>
                     <h5>Suggestions</h5>
                     <ul>
                       {items.queries.map((query) => (
-                        <li class="predictive-search-result-item" key={query.text}>
+                        <li mix={resultItemStyle} key={query.text}>
                           <a
                             href={localize(
                               getPredictiveSearchItemUrl(query, { routes: routeTemplates }),
@@ -130,13 +145,13 @@ export const SearchAside = clientEntry(
                   </div>
                 ) : null}
                 {items.products.length ? (
-                  <div class="predictive-search-result">
+                  <div mix={resultStyle}>
                     <h5>Products</h5>
                     <ul>
                       {items.products.map((product) => {
                         const variant = product.selectedOrFirstAvailableVariant;
                         return (
-                          <li class="predictive-search-result-item" key={product.id}>
+                          <li mix={resultItemStyle} key={product.id}>
                             <a
                               href={localize(
                                 getPredictiveSearchItemUrl(product, {
@@ -168,11 +183,11 @@ export const SearchAside = clientEntry(
                   </div>
                 ) : null}
                 {items.collections.length ? (
-                  <div class="predictive-search-result">
+                  <div mix={resultStyle}>
                     <h5>Collections</h5>
                     <ul>
                       {items.collections.map((collection) => (
-                        <li class="predictive-search-result-item" key={collection.id}>
+                        <li mix={resultItemStyle} key={collection.id}>
                           <a
                             href={localize(
                               getPredictiveSearchItemUrl(collection, {
@@ -198,11 +213,11 @@ export const SearchAside = clientEntry(
                   </div>
                 ) : null}
                 {items.pages.length ? (
-                  <div class="predictive-search-result">
+                  <div mix={resultStyle}>
                     <h5>Pages</h5>
                     <ul>
                       {items.pages.map((page) => (
-                        <li class="predictive-search-result-item" key={page.id}>
+                        <li mix={resultItemStyle} key={page.id}>
                           <a
                             href={localize(
                               getPredictiveSearchItemUrl(page, { routes: routeTemplates, term }),
@@ -217,11 +232,11 @@ export const SearchAside = clientEntry(
                   </div>
                 ) : null}
                 {items.articles.length ? (
-                  <div class="predictive-search-result">
+                  <div mix={resultStyle}>
                     <h5>Articles</h5>
                     <ul>
                       {items.articles.map((article) => (
-                        <li class="predictive-search-result-item" key={article.id}>
+                        <li mix={resultItemStyle} key={article.id}>
                           <a
                             href={localize(
                               getPredictiveSearchItemUrl(article, { routes: routeTemplates, term }),

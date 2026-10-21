@@ -1,13 +1,21 @@
 import { gql, type StorefrontApi } from "@shopify/hydrogen";
-import type { Handle } from "remix/component";
+import { css, type Handle } from "remix/component";
 
 import { CollectionView } from "../../assets/public/analytics-events.tsx";
 import { localizePath } from "../../lib/public/i18n.ts";
 import { routes } from "../../routes.ts";
 import { Document } from "../../ui/document.tsx";
-import { PaginatedResourceSection } from "../../ui/pagination.tsx";
+import { PaginatedResourceSection, resourceGridStyle } from "../../ui/pagination.tsx";
 import { PRODUCT_ITEM_FRAGMENT, ProductItem } from "../../ui/product-item.tsx";
 import { Image } from "../../ui/public/image.tsx";
+
+const collectionItemStyle = css({ "& img": { height: "auto" } });
+
+const descriptionStyle = css({
+  marginBottom: "1rem",
+  maxWidth: "95%",
+  "@media (min-width: 45em)": { maxWidth: "600px" },
+});
 
 export const COLLECTIONS_QUERY = gql(`
   fragment Collection on Collection {
@@ -125,12 +133,12 @@ export function CollectionsPage(
           <PaginatedResourceSection
             pageInfo={collections.pageInfo}
             url={url}
-            resourcesClassName="collections-grid"
+            resourcesMix={resourceGridStyle}
           >
             {collections.nodes.map((collection, index) => (
               <a
                 key={collection.id}
-                class="collection-item"
+                mix={collectionItemStyle}
                 href={localizePath(
                   routes.collections.show.href({ handle: collection.handle }),
                   pathPrefix,
@@ -167,11 +175,11 @@ export function CollectionPage(
       >
         <div class="collection">
           <h1>{collection.title}</h1>
-          <p class="collection-description">{collection.description}</p>
+          <p mix={descriptionStyle}>{collection.description}</p>
           <PaginatedResourceSection
             pageInfo={collection.products.pageInfo}
             url={url}
-            resourcesClassName="products-grid"
+            resourcesMix={resourceGridStyle}
           >
             {collection.products.nodes.map((product, index) => (
               <ProductItem
@@ -201,7 +209,7 @@ export function AllProductsPage(
           <PaginatedResourceSection
             pageInfo={products.pageInfo}
             url={url}
-            resourcesClassName="products-grid"
+            resourcesMix={resourceGridStyle}
           >
             {products.nodes.map((product, index) => (
               <ProductItem

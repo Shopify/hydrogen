@@ -1,6 +1,14 @@
-import type { Handle, RemixNode } from "remix/component";
+import { css, type CSSMixinDescriptor, type Handle, type RemixNode } from "remix/component";
 
 import type { PageInfo } from "../lib/pagination.ts";
+
+/** A responsive grid of product, collection, or article cards. */
+export const resourceGridStyle = css({
+  display: "grid",
+  gridGap: "1.5rem",
+  gridTemplateColumns: "repeat(auto-fit, minmax(var(--grid-item-width), 1fr))",
+  marginBottom: "2rem",
+});
 
 /**
  * Cursor pagination as plain links. They work without JavaScript; with it, the Remix
@@ -10,13 +18,13 @@ export function PaginatedResourceSection(
   handle: Handle<{
     pageInfo: PageInfo;
     url: URL;
-    resourcesClassName?: string;
+    resourcesMix?: CSSMixinDescriptor;
     ariaLabel?: string;
     children?: RemixNode;
   }>,
 ) {
   return () => {
-    const { ariaLabel, children, pageInfo, resourcesClassName, url } = handle.props;
+    const { ariaLabel, children, pageInfo, resourcesMix, url } = handle.props;
 
     return (
       <div>
@@ -25,11 +33,7 @@ export function PaginatedResourceSection(
             <span aria-hidden="true">←</span> Previous page
           </a>
         ) : null}
-        <div
-          class={resourcesClassName}
-          aria-label={ariaLabel}
-          role={ariaLabel ? "region" : undefined}
-        >
+        <div mix={resourcesMix} aria-label={ariaLabel} role={ariaLabel ? "region" : undefined}>
           {children}
         </div>
         {pageInfo.hasNextPage && pageInfo.endCursor ? (

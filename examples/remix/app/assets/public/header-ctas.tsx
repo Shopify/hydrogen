@@ -1,5 +1,5 @@
 import type { CartState } from "@shopify/hydrogen";
-import { clientEntry, on, type Handle } from "remix/component";
+import { css, clientEntry, on, type Handle } from "remix/component";
 
 import type { CartInitialData } from "../../lib/cart.ts";
 import { localizePath } from "../../lib/public/i18n.ts";
@@ -7,6 +7,16 @@ import { routes } from "../../routes.ts";
 import { openAside } from "../../ui/public/aside.tsx";
 import { publishCartViewed } from "./analytics.ts";
 import { getCartStore } from "./cart-store.ts";
+
+const ctasStyle = css({
+  alignItems: "center",
+  display: "flex",
+  gridGap: "1rem",
+  marginLeft: "auto",
+  "& > *": { minWidth: "fit-content" },
+});
+
+const mobileToggleStyle = css({ "@media (min-width: 48em)": { display: "none" } });
 
 /**
  * Header actions. Every control is a real link first (`/account`, `/search`, `/cart`), so
@@ -40,15 +50,17 @@ export const HeaderCtas = clientEntry(
         state && !state.loading ? state.data.totalQuantity : (initialCart.cart?.totalQuantity ?? 0);
 
       return (
-        <nav class="header-ctas" role="navigation">
+        <nav mix={ctasStyle} role="navigation">
           <a
             href={localizePath(routes.home.href(), pathPrefix)}
-            class="header-menu-mobile-toggle reset"
             aria-label="Open menu"
-            mix={on("click", (event) => {
-              event.preventDefault();
-              openAside("mobile");
-            })}
+            mix={[
+              mobileToggleStyle,
+              on("click", (event) => {
+                event.preventDefault();
+                openAside("mobile");
+              }),
+            ]}
           >
             <h3>☰</h3>
           </a>
