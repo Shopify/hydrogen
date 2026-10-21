@@ -60,7 +60,7 @@ type AnyPredictiveSearchItemUrlOptions =
   | PredictiveSearchQueryItemUrlOptions;
 
 /** Options for a search result URL. */
-type SearchResultUrlOptions = {
+export type SearchResultUrlOptions = {
   /** Search page path or absolute URL. */
   baseUrl: string;
   /** Search term to add to the URL. */
