@@ -847,6 +847,79 @@ describe("createProductFormStore", () => {
       expect(result.status).toBe("invalid");
     });
 
+    it("returns invalid for a multi-option value whose variants are absent from encodedVariantExistence", () => {
+      const product: ProductInput = {
+        ...TWO_OPTION_PRODUCT,
+        encodedVariantExistence: "v1_0:0-1,1:0-1,",
+        encodedVariantAvailability: "v1_0:0-1,1:0-1,",
+        options: [
+          {
+            name: "Size",
+            optionValues: [
+              { name: "Small", firstSelectableVariant: SMALL_RED },
+              { name: "Large", firstSelectableVariant: LARGE_RED },
+              { name: "XL", firstSelectableVariant: null },
+            ],
+          },
+          {
+            name: "Color",
+            optionValues: [
+              { name: "Red", firstSelectableVariant: SMALL_RED },
+              { name: "Blue", firstSelectableVariant: SMALL_BLUE },
+              { name: "Green", firstSelectableVariant: null },
+            ],
+          },
+        ],
+        adjacentVariants: [LARGE_RED, SMALL_BLUE],
+      };
+      const store = createStore(product);
+
+      expect(store.getState().options).toMatchObject([
+        {
+          name: "Size",
+          values: [
+            { name: "Small", exists: true },
+            { name: "Large", exists: true },
+            { name: "XL", exists: false, available: false },
+          ],
+        },
+        {
+          name: "Color",
+          values: [
+            { name: "Red", exists: true },
+            { name: "Blue", exists: true },
+            { name: "Green", exists: false, available: false },
+          ],
+        },
+      ]);
+      expect(store.selectOption("Color", "Green").status).toBe("invalid");
+      expect(store.selectOption("Size", "XL").status).toBe("invalid");
+    });
+
+    it("reads existence from encodedVariantExistence when the query loads no variant for a value", () => {
+      const product: ProductInput = {
+        ...TWO_OPTION_PRODUCT,
+        encodedVariantExistence: "v1_0:0-1,1:0,",
+        encodedVariantAvailability: "v1_0:0-1,1:0,",
+        options: [
+          { name: "Size", optionValues: [{ name: "Small" }, { name: "Large" }] },
+          { name: "Color", optionValues: [{ name: "Red" }, { name: "Blue" }] },
+        ],
+        selectedOrFirstAvailableVariant: LARGE_RED,
+        adjacentVariants: [],
+      };
+      const store = createStore(product);
+
+      expect(store.getState().options[1]).toMatchObject({
+        name: "Color",
+        values: [
+          { name: "Red", exists: true, available: true },
+          { name: "Blue", exists: false, available: false },
+        ],
+      });
+      expect(store.selectOption("Color", "Blue").status).toBe("invalid");
+    });
+
     it("does not mutate state on invalid selection", () => {
       const store = createStore(makeSingleOptionProduct(RED));
       const before = store.getState();
