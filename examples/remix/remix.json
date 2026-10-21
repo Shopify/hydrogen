@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/remix/schema/remix.json",
+  "assets": {
+    "basePath": "/assets",
+    "mounts": {
+      "app": "app",
+      "npm": "node_modules",
+      "hydrogen": "../../packages/hydrogen"
+    },
+    "allowFiles": ["app/routes.ts", "app/**/public/**"],
+    "allowPackages": ["remix", "@shopify/hydrogen"],
+    "denyFiles": ["app/**/*.test.*"]
+  }
+}

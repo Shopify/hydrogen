@@ -1,27 +1,25 @@
 import { createAssetServer } from "remix/assets";
+import { loadConfig } from "remix/cli";
 import { componentHmr } from "remix/component-hmr/assets";
 
 const isDevelopment = (process.env.NODE_ENV ?? "development") === "development";
 const isHmr = Boolean(isDevelopment && process.env.REMIX_NODE_HMR);
 
+// `remix.json` holds the JSON-compatible settings, so the Remix CLI (`remix assets`)
+// sees the same mounts and browser boundary as the server.
+const config = await loadConfig(process.cwd());
+if (!config.assets) throw new Error("remix.json is missing its assets configuration.");
+
 /**
- * Compiles and serves browser source on demand. `allowFiles` and `allowPackages` are the
- * browser boundary: a browser module can't import anything outside them, so server-only
- * code (private tokens, GraphQL documents, session handling) can't leak into the client.
+ * Compiles and serves browser source on demand. `allowFiles` and `allowPackages` in
+ * `remix.json` are the browser boundary: a browser module can't import anything outside
+ * them, so server-only code (private tokens, GraphQL documents, session handling) can't
+ * leak into the client. `app/routes.ts` is allowed for type-safe hrefs; it only imports
+ * `remix/routes`. The `hydrogen` mount serves `@shopify/hydrogen`, which the monorepo
+ * workspace links from outside `node_modules`.
  */
 export const assets = createAssetServer({
-  basePath: "/assets",
-  rootDir: process.cwd(),
-  mounts: {
-    app: "app",
-    npm: "node_modules",
-    // `@shopify/hydrogen` is linked from the monorepo workspace, outside `node_modules`.
-    hydrogen: "../../packages/hydrogen",
-  },
-  // `app/routes.ts` gives browser code type-safe hrefs. It only imports `remix/routes`.
-  allowFiles: ["app/routes.ts", "app/**/public/**"],
-  allowPackages: ["remix", "@shopify/hydrogen"],
-  denyFiles: ["app/**/*.test.*"],
+  ...config.assets,
   sourceMaps: isDevelopment ? "external" : undefined,
   minify: !isDevelopment,
   watch: isDevelopment,

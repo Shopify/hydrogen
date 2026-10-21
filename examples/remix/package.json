@@ -9,7 +9,7 @@
     "dev:https": "NODE_ENV=development node --env-file-if-exists=.env --watch --import remix/node-tsx server.ts",
     "hmr": "NODE_ENV=development node --env-file-if-exists=.env hmr.ts",
     "start": "NODE_ENV=production node --env-file-if-exists=.env --import remix/node-tsx server.ts",
-    "typecheck": "tsc --noEmit && hydrogen gql check --fail-on-warn"
+    "typecheck": "tsc --noEmit && hydrogen gql check --fail-on-warn && remix doctor --strict"
   },
   "dependencies": {
     "@shopify/hydrogen": "workspace:*",
