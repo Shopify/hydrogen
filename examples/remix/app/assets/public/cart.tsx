@@ -206,11 +206,9 @@ function CartMain(
             </button>
           </div>
         ) : null}
-        {state?.loading && !cart ? (
-          <p aria-busy="true">Loading cart…</p>
-        ) : lines.length === 0 ? (
-          <CartEmpty layout={layout} pathPrefix={pathPrefix} />
-        ) : null}
+        {/* While the store loads, the server cart above is the answer, so an empty one
+            renders as empty, matching the server HTML, rather than as loading. */}
+        {lines.length === 0 ? <CartEmpty layout={layout} pathPrefix={pathPrefix} /> : null}
         {cart && lines.length > 0 ? (
           <div class="cart-details">
             <p id={`cart-lines-${layout}`} class="sr-only">
