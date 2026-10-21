@@ -10,5 +10,8 @@
     "allowFiles": ["app/routes.ts", "app/**/public/**"],
     "allowPackages": ["remix", "@shopify/hydrogen"],
     "denyFiles": ["app/**/*.test.*"]
+  },
+  "test": {
+    "exclude": ["node_modules/**"]
   }
 }

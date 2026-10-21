@@ -1,5 +1,5 @@
 {
-  "include": ["app/**/*.ts", "app/**/*.tsx", "__test__/**/*.ts", "*.ts"],
+  "include": ["app/**/*.ts", "app/**/*.tsx", "*.ts"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     "strict": true,

@@ -52,7 +52,8 @@ function createAppRouter(runtimeValue: Runtime, documentAssets: DocumentAssets) 
 
   return createRouter({
     middleware: [
-      logger(),
+      // Quiet under `remix test`, where request lines would interleave with test output.
+      logger(process.env.NODE_ENV === "test" ? { log() {} } : {}),
       // Streams HTML with a flush after each chunk, so streaming still reaches the browser early.
       compression(),
       staticFiles("./public", { index: false }),
