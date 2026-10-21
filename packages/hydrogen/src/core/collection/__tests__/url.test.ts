@@ -921,4 +921,12 @@ describe("price bounds under window.Shopify.locale", () => {
 
     expect(result.filters).toEqual([{ price: { min: 12.5 } }]);
   });
+
+  it("treats a dot-only numeric string as a canonical decimal under de, not a grouped thousand", () => {
+    vi.stubGlobal("window", { Shopify: { locale: "de" } });
+
+    const result = parseCollectionParams(params("filter.v.price.gte=1.000"));
+
+    expect(result.filters).toEqual([{ price: { min: 1 } }]);
+  });
 });
