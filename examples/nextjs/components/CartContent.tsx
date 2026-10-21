@@ -18,7 +18,13 @@ export function CartContent() {
   const cart = useSuspenseCart((state) => state.data);
   const pending = useCart((state) => state.pending);
   const networkErrors = useCart((state) => state.errors.network);
-  const isPending = pending.lines.size > 0 || pending.note || pending.discountCodes.size > 0;
+  const revalidating = useCart((state) => state.revalidating === true);
+  const isPending =
+    pending.lines.size > 0 ||
+    pending.note ||
+    pending.discountCodes.size > 0 ||
+    pending.cost === true ||
+    revalidating;
   const lines = cart.lines.nodes;
   const totalQuantity = cart.totalQuantity;
   const subtotal = cart.cost.subtotalAmount;
@@ -184,11 +190,11 @@ function CartStatus({
   isPending: boolean;
   networkErrors: readonly { message: string }[];
 }) {
-  const message = useCartStatusMessage(isPending, networkErrors.length > 0);
+  const state = useCartStatusState(isPending, networkErrors.length > 0);
   return (
     <>
-      <span role="status" className="sr-only" data-testid="cart-status">
-        {message}
+      <span role="status" className="sr-only" data-cart-state={state} data-testid="cart-status">
+        {CART_STATUS_MESSAGES[state]}
       </span>
       {networkErrors.length > 0 ? (
         <div role="alert" aria-atomic="true" className="mb-3 text-sm">
@@ -201,7 +207,18 @@ function CartStatus({
   );
 }
 
-function useCartStatusMessage(isPending: boolean, hasNetworkErrors: boolean): string {
+type CartStatusState = "idle" | "updating" | "updated" | "error";
+
+// `updated` means the last cycle finished without a network failure. Line or
+// discount user errors and warnings can still be present.
+const CART_STATUS_MESSAGES: Record<CartStatusState, string> = {
+  idle: "",
+  updating: "Updating cart totals",
+  updated: "Cart totals updated",
+  error: "",
+};
+
+function useCartStatusState(isPending: boolean, hasNetworkErrors: boolean): CartStatusState {
   const [previousPending, setPreviousPending] = useState(isPending);
   const [sawPending, setSawPending] = useState(isPending);
 
@@ -210,7 +227,8 @@ function useCartStatusMessage(isPending: boolean, hasNetworkErrors: boolean): st
     if (isPending) setSawPending(true);
   }
 
-  if (isPending) return "Updating cart totals";
-  if (sawPending && !hasNetworkErrors) return "Cart totals updated";
-  return "";
+  if (isPending) return "updating";
+  if (hasNetworkErrors) return "error";
+  if (sawPending) return "updated";
+  return "idle";
 }

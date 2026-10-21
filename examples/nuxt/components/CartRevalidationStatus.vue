@@ -11,13 +11,28 @@ watchEffect(() => {
   if (isPending.value) sawPending.value = true;
 });
 
-const message = computed(() => {
-  if (isPending.value) return "Updating cart totals";
-  if (sawPending.value && !hasNetworkErrors.value) return "Cart totals updated";
-  return "";
+type CartStatusState = "idle" | "updating" | "updated" | "error";
+
+// `updated` means the last cycle finished without a network failure. Line or
+// discount user errors and warnings can still be present.
+const CART_STATUS_MESSAGES: Record<CartStatusState, string> = {
+  idle: "",
+  updating: "Updating cart totals",
+  updated: "Cart totals updated",
+  error: "",
+};
+
+const state = computed<CartStatusState>(() => {
+  if (isPending.value) return "updating";
+  if (hasNetworkErrors.value) return "error";
+  if (sawPending.value) return "updated";
+  return "idle";
 });
+const message = computed(() => CART_STATUS_MESSAGES[state.value]);
 </script>
 
 <template>
-  <span role="status" class="sr-only" data-testid="cart-status">{{ message }}</span>
+  <span role="status" class="sr-only" :data-cart-state="state" data-testid="cart-status">{{
+    message
+  }}</span>
 </template>

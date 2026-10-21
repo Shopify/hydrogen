@@ -55,7 +55,7 @@ The cart group finds these cart elements with `data-testid` attributes. The loca
 | `cart-status` | The cart totals status region |
 | `cart-checkout` | The checkout link of a cart view |
 
-The suite finds a line by `cart-line` and its product title inside the visible cart page or the open cart drawer, never across both. It finds the quantity input and the line controls inside the chosen line, and reads the quantity from the native input value. It waits for the cart totals message in a `cart-status` region that also has `role="status"` (see Cart Line Items). Keep `cart-trigger` off links that only go to `/cart`. The checkout group reuses `cart-drawer`, `cart-page`, and `cart-line` to find the added line. It clicks the first visible `cart-checkout` inside the cart page.
+The suite finds a line by `cart-line` and its product title inside the visible cart page or the open cart drawer, never across both. It finds the quantity input and the line controls inside the chosen line, and reads the quantity from the native input value. It waits for the `data-cart-state` of the `cart-status` regions that also have `role="status"` (see Cart Line Items). Keep `cart-trigger` off links that only go to `/cart`. The checkout group reuses `cart-drawer`, `cart-page`, and `cart-line` to find the added line. It clicks the first visible `cart-checkout` inside the cart page.
 
 ## Product Results
 
@@ -133,9 +133,16 @@ Each line must expose:
 
 The suite reads the quantity from the native input value. After remove, it waits for the line to go away.
 
-Cart totals must expose a `role="status"` region that says `Updating cart totals` while cart totals are stale, then `Cart totals updated` after mutation settlement. Do not announce `Cart totals updated` on initial idle render before a mutation cycle. The region may be visually hidden if it remains available to assistive technology.
+Cart totals must expose a `role="status"` region with `cart-status` that announces, in any language, when cart totals are stale and when they are updated. Do not announce an update on the first render before a cart change. The region may be visually hidden if it stays available to assistive technology.
 
-The suite finds this region with `cart-status` and `role="status"`, then matches the English text. The English text is a known dependency.
+Each `cart-status` region has a `data-cart-state` attribute, derived from the same cart state as its message. This is the one state attribute in this contract:
+
+- `updating` while a change that can affect totals, or an authoritative cart reload, is pending. Count `pending.cost` and cart revalidation as pending, not only line, note, or discount changes.
+- `error` when the last cycle ended with a network failure that is still unresolved.
+- `updated` after a pending cycle finished without a network failure. Line or discount user errors and warnings can still show.
+- `idle` before the first pending cycle. Do not start in `updated`.
+
+The state is a readiness wait only. The suite reads the states of the accessible `cart-status` regions with `role="status"`. A wait for `updated` needs one updated region and no region that is updating or has an error, so an old `updated` region does not end the wait while another view is updating. `idle`, `error`, and a missing or unknown state never complete a wait for `updated`. After the wait, the suite still checks the real outcome, such as the native quantity value or the line.
 
 Cart UI without a test ID in Cart Test IDs is found by role, label, and text.
 
@@ -169,4 +176,4 @@ Operational expectations:
 
 When test locators change, update the affected specs and this document together.
 
-The suite reads test IDs for the product title, same-product option values (`product-variant-option`), and add to cart control (see Product Test IDs; `product-sibling-option` is defined but not read), for the cart elements in Cart Test IDs, for product results (see Product Results), for collection filter values (see Collection Filters), and for the search controls (see Search). It finds all other UI by semantic roles and label strings, including the English cart totals status text inside `cart-status`.
+The suite reads test IDs for the product title, same-product option values (`product-variant-option`), and add to cart control (see Product Test IDs; `product-sibling-option` is defined but not read), for the cart elements in Cart Test IDs, for product results (see Product Results), for collection filter values (see Collection Filters), and for the search controls (see Search). It finds all other UI by semantic roles and label strings. It reads `data-cart-state` on `cart-status`, the one state attribute in this contract, and does not read the status text.

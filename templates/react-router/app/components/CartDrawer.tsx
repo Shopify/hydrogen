@@ -48,7 +48,18 @@ function hasPendingCost(pending: {
   return pending.cost ?? (pending.lines.size > 0 || pending.discountCodes.size > 0);
 }
 
-function useCartStatusMessage(): string {
+type CartStatusState = "idle" | "updating" | "updated" | "error";
+
+// `updated` means the last cycle finished without a network failure. Line or
+// discount user errors and warnings can still be present.
+const CART_STATUS_MESSAGES: Record<CartStatusState, string> = {
+  idle: "",
+  updating: "Updating cart totals",
+  updated: "Cart totals updated",
+  error: "",
+};
+
+function useCartStatusState(): CartStatusState {
   const pending = useCart((state) => state.pending);
   const revalidating = useCart((state) => "revalidating" in state && state.revalidating === true);
   const networkErrors = useCart((state) => state.errors.network);
@@ -59,9 +70,10 @@ function useCartStatusMessage(): string {
     if (isPending) setSawPending(true);
   }, [isPending]);
 
-  if (isPending) return "Updating cart totals";
-  if (sawPending && networkErrors.length === 0) return "Cart totals updated";
-  return "";
+  if (isPending) return "updating";
+  if (networkErrors.length > 0) return "error";
+  if (sawPending) return "updated";
+  return "idle";
 }
 
 type CartLineView = {
@@ -281,7 +293,7 @@ function CartFooter() {
 export function CartDrawer() {
   const totalQuantity = useCart((state) => state.data.totalQuantity);
   const cart = useCart((state) => state.data);
-  const statusMessage = useCartStatusMessage();
+  const statusState = useCartStatusState();
 
   useEffect(() => {
     configureOpenCartAction();
@@ -302,9 +314,10 @@ export function CartDrawer() {
         aria-live="polite"
         aria-atomic="true"
         data-cart-status
+        data-cart-state={statusState}
         data-testid="cart-status"
       >
-        {statusMessage}
+        {CART_STATUS_MESSAGES[statusState]}
       </span>
       <dialog
         id={CART_DRAWER_ID}

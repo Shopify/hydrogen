@@ -5,8 +5,6 @@ import { test, type CartTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
 const CART_ENDPOINT_PATTERN = "**/api/cart";
-const CART_TOTALS_UPDATING_TEXT = "Updating cart totals";
-const CART_TOTALS_UPDATED_TEXT = "Cart totals updated";
 
 type CartExpectation = {
   readonly cartPath: string;
@@ -75,7 +73,7 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
         message: `Expected cart line quantity to optimistically increase from ${product.maxQuantity} to ${product.maxQuantity + 1}.`,
       })
       .toBe(product.maxQuantity + 1);
-    await expectCartTotalsStatus(page, CART_TOTALS_UPDATING_TEXT);
+    await waitForCartState(page, "updating");
 
     requestGate.release();
     await expect
@@ -83,7 +81,7 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
         message: `Expected cart line quantity to roll back to the stock limit of ${product.maxQuantity}.`,
       })
       .toBe(product.maxQuantity);
-    await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT);
+    await waitForCartState(page, "updated");
   } finally {
     requestGate.release();
     await page.unroute(CART_ENDPOINT_PATTERN);
@@ -161,17 +159,84 @@ test.describe("cart locator helpers", () => {
     await expect(page.getByTestId("cart-drawer").getByTestId("cart-line")).toContainText("Shirt");
   });
 
-  test("waits for the cart totals status message to change", async ({ page }) => {
-    await page.setContent(
-      `<span role="status" data-testid="cart-status">${CART_TOTALS_UPDATING_TEXT}</span>`,
-    );
+  test("waits for the cart state to change, with any message text", async ({ page }) => {
+    await page.setContent(cartStatusHtml("updating", "Wird aktualisiert"));
+    await waitForCartState(page, "updating");
 
-    const updated = expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT);
-    await expect(page.getByTestId("cart-status")).toHaveText(CART_TOTALS_UPDATING_TEXT);
-    await page.getByTestId("cart-status").evaluate((status, message) => {
-      status.textContent = message;
-    }, CART_TOTALS_UPDATED_TEXT);
+    const updated = waitForCartState(page, "updated", { timeout: 2_000 });
+    await expect(page.getByTestId("cart-status")).toHaveAttribute("data-cart-state", "updating");
+    await page.getByTestId("cart-status").evaluate((status) => {
+      status.setAttribute("data-cart-state", "updated");
+    });
     await updated;
+  });
+
+  test("an idle region in another view does not block updated", async ({ page }) => {
+    await page.setContent(`
+      <div data-testid="cart-page">${cartStatusHtml("updated", "")}</div>
+      <dialog open data-testid="cart-drawer">${cartStatusHtml("idle", "")}</dialog>`);
+
+    await waitForCartState(page, "updated");
+  });
+
+  test("does not settle on updated while another region is updating or has an error", async ({
+    page,
+  }) => {
+    for (const other of ["updating", "error"]) {
+      await test.step(other, async () => {
+        await page.setContent(`${cartStatusHtml("updated", "Done")}${cartStatusHtml(other, "")}`);
+        await expect(waitForCartState(page, "updated", { timeout: 200 })).rejects.toThrow(
+          /data-cart-state="updated"/,
+        );
+      });
+    }
+  });
+
+  test("does not settle on updated for an idle, error, missing, or unknown state", async ({
+    page,
+  }) => {
+    const cases = [
+      cartStatusHtml("idle", "Cart totals updated"),
+      cartStatusHtml("error", "Cart totals updated"),
+      `<span role="status" data-testid="cart-status">Cart totals updated</span>`,
+      cartStatusHtml("done", "Cart totals updated"),
+      `${cartStatusHtml("updated", "")}${cartStatusHtml("done", "")}`,
+    ];
+
+    for (const html of cases) {
+      await test.step(html, async () => {
+        await page.setContent(html);
+        await expect(waitForCartState(page, "updated", { timeout: 200 })).rejects.toThrow(
+          /data-cart-state="updated"/,
+        );
+      });
+    }
+  });
+
+  test("ignores hidden cart-status regions", async ({ page }) => {
+    // A hidden region that says updated must not end the wait while the visible one is idle.
+    for (const hidden of ['aria-hidden="true"', "hidden"]) {
+      await test.step(hidden, async () => {
+        await page.setContent(
+          `${cartStatusHtml("idle", "")}${cartStatusHtml("updated", "", hidden)}`,
+        );
+        await expect(waitForCartState(page, "updated", { timeout: 200 })).rejects.toThrow(
+          /data-cart-state="updated"/,
+        );
+      });
+    }
+  });
+
+  test("waits for an error state when asked, but not while a region is updating", async ({
+    page,
+  }) => {
+    await page.setContent(`${cartStatusHtml("error", "")}${cartStatusHtml("idle", "")}`);
+    await waitForCartState(page, "error");
+
+    await page.setContent(`${cartStatusHtml("error", "")}${cartStatusHtml("updating", "")}`);
+    await expect(waitForCartState(page, "error", { timeout: 200 })).rejects.toThrow(
+      /data-cart-state="error"/,
+    );
   });
 });
 
@@ -229,7 +294,7 @@ async function tryAddProductToCart(
   await expect(line).toBeVisible({
     timeout: CART_SETTLE_TIMEOUT_MS,
   });
-  await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT);
+  await waitForCartState(page, "updated");
   await page.goto(cartPath);
   await expectCartLine(page, expectation);
 
@@ -252,14 +317,14 @@ async function setCartLineQuantity(
   try {
     await quantityInput.fill(String(quantity));
     await quantityInput.press("Tab");
-    await expectCartTotalsStatus(page, CART_TOTALS_UPDATING_TEXT);
+    await waitForCartState(page, "updating");
     requestGate.release();
     await expect
       .poll(() => numericInputValue(quantityInput), {
         message: `Expected cart line quantity to settle at the discovered stock limit of ${quantity}.`,
       })
       .toBe(quantity);
-    await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT);
+    await waitForCartState(page, "updated");
   } finally {
     requestGate.release();
     await page.unroute(CART_ENDPOINT_PATTERN);
@@ -344,19 +409,46 @@ async function openCartOverlayFor(page: Page, productTitle: string): Promise<Loc
   return cartOverlayLineFor(page, productTitle);
 }
 
-/** Waits for an accessible cart-status region that says `message`. */
-async function expectCartTotalsStatus(page: Page, message: string): Promise<void> {
-  const status = page
-    .getByTestId("cart-status")
-    .and(page.getByRole("status"))
-    .filter({ hasText: message })
-    .first();
-  await expect(
-    status,
-    `Expected a cart-status region with role="status" that says "${message}".`,
-  ).toBeAttached({
-    timeout: CART_SETTLE_TIMEOUT_MS,
-  });
+const CART_STATES = ["idle", "updating", "updated", "error"];
+
+type CartWaitOptions = {
+  /** How long to wait. Defaults to the cart settle timeout. */
+  readonly timeout?: number;
+};
+
+/**
+ * Waits until the accessible cart-status regions reach `state`. This is a
+ * readiness wait, not a verdict: callers still assert the real result.
+ * `updating` needs one updating region. `updated` needs one updated region and
+ * no region that is updating or has an error. `error` needs one region with an
+ * error and no updating region. A missing or unknown state never completes
+ * `updated` or `error`.
+ */
+async function waitForCartState(
+  page: Page,
+  state: "updating" | "updated" | "error",
+  { timeout = CART_SETTLE_TIMEOUT_MS }: CartWaitOptions = {},
+): Promise<void> {
+  const statuses = page.getByTestId("cart-status").and(page.getByRole("status"));
+  await expect
+    .poll(
+      async () => {
+        const states = await statuses.evaluateAll((elements) =>
+          elements.map((element) => element.getAttribute("data-cart-state")),
+        );
+        return isCartStateReached(states, state);
+      },
+      { message: `Expected the cart-status regions to reach data-cart-state="${state}".`, timeout },
+    )
+    .toBe(true);
+}
+
+function isCartStateReached(states: readonly (string | null)[], target: string): boolean {
+  if (!states.includes(target)) return false;
+  if (target === "updating") return true;
+  if (states.includes("updating")) return false;
+  if (target === "updated" && states.includes("error")) return false;
+  return states.every((value) => value !== null && CART_STATES.includes(value));
 }
 
 function quantityInputFor(line: Locator): Locator {
@@ -400,6 +492,11 @@ function quantityStepScript(delta: number): string {
 /** A helper fixture line with a working remove control. */
 function removableLineHtml(title: string): string {
   return `<li data-testid="cart-line">${title} <button type="button" data-testid="cart-line-remove" aria-label="Entfernen" onclick="this.closest('[data-testid=cart-line]').remove()">×</button></li>`;
+}
+
+/** A cart status region for helper fixtures. The text is arbitrary on purpose. */
+function cartStatusHtml(state: string, text: string, attributes = ""): string {
+  return `<span role="status" data-testid="cart-status" data-cart-state="${state}" ${attributes}>${text}</span>`;
 }
 
 async function wasTriggerClicked(page: Page): Promise<boolean> {

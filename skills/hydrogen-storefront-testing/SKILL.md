@@ -45,7 +45,9 @@ The relationship decides the ID, not availability: `product-variant-option` sele
 | `cart-status` | The existing cart totals status region, the element with `role="status"` |
 | `cart-checkout` | The checkout link of a cart view |
 
-After Add to cart, the drawer must open by itself. The suite uses `cart-trigger` only to open a closed drawer in one test. It finds a line inside the visible cart page or the open drawer, never across both, then the controls inside that line. It reads the quantity from the native input value. It waits for the English messages `Updating cart totals` and `Cart totals updated` in the `cart-status` region. Checkout tests reuse `cart-drawer`, `cart-page`, and `cart-line` to find the added line, then click the first visible `cart-checkout` inside the cart page and expect a checkout URL.
+After Add to cart, the drawer must open by itself. The suite uses `cart-trigger` only to open a closed drawer in one test. It finds a line inside the visible cart page or the open drawer, never across both, then the controls inside that line. It reads the quantity from the native input value. Checkout tests reuse `cart-drawer`, `cart-page`, and `cart-line` to find the added line, then click the first visible `cart-checkout` inside the cart page and expect a checkout URL.
+
+Give each `cart-status` region a `data-cart-state` attribute, derived from the same cart state as its message: `updating` while a change or a cart reload is pending, `error` after an unresolved network failure, `updated` after a pending cycle finished without a network failure, and `idle` before the first cycle. It is the one state attribute in the contract. The suite only waits for it: `updated` needs one updated region and none updating or failed. Then it checks the real result.
 
 ### Collection and search results
 
