@@ -46,7 +46,7 @@ jobs:
       id-token: write # enable generation of an ID token for publishing
     outputs:
       published: ${{ steps.changesets.outputs.published }}
-      publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
+      publishedPackages: ${{ steps.changesets.outputs.published-packages }}
       latest: ${{ env.latest }}
       latestBranch: ${{ env.latestBranch }}
       latestVersion: ${{ env.latestVersion }}
@@ -142,16 +142,21 @@ jobs:
       - name: Create Release Pull Request or Publish (for latest release)
         if: env.latest == 'true'
         id: changesets
-        uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1.7.0
+        # v2 is required by Changesets v3, which no longer prints the "New tag:"
+        # lines v1 parsed to work out what was published. v3 reports published
+        # packages through the CHANGESETS_OUTPUT file instead, and v1 cannot read
+        # it, so `published` would stay "false" after a successful publish.
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
-          version: pnpm run version
-          publish: pnpm run changeset publish
+          version-script: pnpm run version
+          publish-script: pnpm run changeset publish
           # we use the commit message in next release workflow file. This avoid a next release when an actual release is happening
-          commit: '[ci] release ${{ env.latestVersion }}'
-          title: '[ci] release ${{ env.latestVersion }}'
-        env:
-          GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
-          NPM_TOKEN: '' # Empty string forces OIDC authentication
+          commit-message: '[ci] release ${{ env.latestVersion }}'
+          pr-title: '[ci] release ${{ env.latestVersion }}'
+          # v2 pushes release commits and tags through the GitHub API by default.
+          # Keep the Git CLI so this upgrade does not also change how commits land.
+          push-with-git-cli: true
+          github-token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
 
   # ============================================
   # NEXT/SNAPSHOT RELEASE (push to main, skips [ci] release commits)
@@ -288,17 +293,21 @@ jobs:
 
       - name: Create Back-fix Release Pull Request or Publish (for back-fix release)
         id: changesets
-        uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1.7.0
+        # Same action version as the production release job: v2 is required by
+        # Changesets v3, which reports published packages through the
+        # CHANGESETS_OUTPUT file instead of the "New tag:" stdout lines v1 read.
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
-          version: pnpm run version
+          version-script: pnpm run version
           # No `--` before `publish`: unlike npm, pnpm passes it through to the
           # script, and changeset rejects it as an extra argument
-          publish: pnpm changeset publish --tag ${{ github.ref_name }}
-          commit: '[ci] back-fix release ${{ github.ref_name }}'
-          title: '[ci] back-fix release ${{ github.ref_name }}'
-        env:
-          GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
-          NPM_TOKEN: '' # Empty string forces OIDC authentication
+          publish-script: pnpm changeset publish --tag ${{ github.ref_name }}
+          commit-message: '[ci] back-fix release ${{ github.ref_name }}'
+          pr-title: '[ci] back-fix release ${{ github.ref_name }}'
+          # v2 pushes release commits and tags through the GitHub API by default.
+          # Keep the Git CLI so this upgrade does not also change how commits land.
+          push-with-git-cli: true
+          github-token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
 
   # ============================================
   # COMPILE TEMPLATES (after production release publishes)
