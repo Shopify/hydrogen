@@ -1,0 +1,25 @@
+export interface Input<T extends string | number | null = string | null> {
+  key: string;
+  value: T;
+  parse: (value: string) => T;
+}
+
+<let/internalValue=(
+  (() => {
+    const searchValue = $global.url.searchParams.get(input.key);
+    return searchValue === null ? input.value : input.parse(searchValue);
+  })()
+)>
+
+<return=internalValue
+  valueChange(newValue: T) {
+    const newUrl = new URL(location.href);
+    if (newValue == null) {
+      newUrl.searchParams.delete(input.key);
+    } else {
+      newUrl.searchParams.set(input.key, String(newValue));
+    }
+    history.replaceState(null, "", newUrl.toString());
+    internalValue = newValue;
+  }
+>
