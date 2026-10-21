@@ -1372,6 +1372,7 @@
         }
       },
       "hasDynamicHelp": false,
+      "hidden": true,
       "hiddenAliases": [],
       "id": "hydrogen:generate:route",
       "pluginAlias": "@shopify/cli-hydrogen",
@@ -1474,6 +1475,7 @@
         }
       },
       "hasDynamicHelp": false,
+      "hidden": true,
       "hiddenAliases": [],
       "id": "hydrogen:generate:routes",
       "pluginAlias": "@shopify/cli-hydrogen",

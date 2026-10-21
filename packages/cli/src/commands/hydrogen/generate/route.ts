@@ -44,7 +44,7 @@ export default class GenerateRoute extends Command {
     ...commonFlags.path,
   };
 
-  static hidden: true;
+  static hidden = true;
 
   static args = {
     routeName: Args.string({
