@@ -139,7 +139,11 @@ export type ShopifyStandardRouteMatch<
   route: TRoute;
   /** The page template name for the matched route, such as `product` or `list-collections`. */
   pageTemplateName: ShopifyPageTemplateName<TRoute>;
-  /** Shopify's default template for the matched route and your app's custom template, which falls back to the default. */
+  /**
+   * Shopify's default template for the matched resource and your app's custom template, which
+   * falls back to the default. A collection-scoped product match without a collection handle uses
+   * the product template as its standard template.
+   */
   templates: {
     standard: string;
     custom: string;
