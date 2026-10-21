@@ -5,7 +5,6 @@ import {
   type CustomerAccountClient,
   type WritableCustomerSessionManager,
 } from "@shopify/hydrogen/customer-account";
-import { redirect } from "remix/response/redirect";
 import type { Session } from "remix/session";
 
 import type { Env } from "../env.ts";
@@ -53,25 +52,4 @@ export function createCustomerAccount({
     session: createCustomerSession({ shopId, customerAccountApiClientId }),
     sessionManager,
   };
-}
-
-/**
- * Returns a usable Customer Account access token, refreshing it when needed. Without
- * one, throws a redirect to the login handler so account routes stay unreachable.
- */
-export async function requireCustomerAccessToken(
-  customerAccount: CustomerAccount,
-  request: Request,
-  pathPrefix: string,
-): Promise<string> {
-  const accessToken = await customerAccount.session.getOrRefreshAccessToken(
-    customerAccount.sessionManager,
-    customerAccount.requestContext,
-  );
-  if (accessToken) return accessToken;
-
-  const url = new URL(request.url);
-  const loginUrl = new URL("/account/login", url.origin);
-  loginUrl.searchParams.set("return_to", `${url.pathname}${url.search}`);
-  throw redirect(`${pathPrefix}${loginUrl.pathname}${loginUrl.search}`);
 }

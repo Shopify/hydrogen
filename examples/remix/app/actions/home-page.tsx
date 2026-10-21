@@ -1,7 +1,8 @@
 import { gql, type StorefrontApi } from "@shopify/hydrogen";
-import type { Handle } from "remix/component";
+import { Frame, type Handle } from "remix/component";
 
 import { localizePath } from "../lib/public/i18n.ts";
+import { routes } from "../routes.ts";
 import { Document } from "../ui/document.tsx";
 import { PRODUCT_ITEM_FRAGMENT, ProductItem } from "../ui/product-item.tsx";
 import { Image } from "../ui/public/image.tsx";
@@ -46,19 +47,15 @@ export const RECOMMENDED_PRODUCTS_QUERY = gql(
 type FeaturedCollection = StorefrontApi.ResultOf<
   typeof FEATURED_COLLECTION_QUERY
 >["collections"]["nodes"][number];
-type RecommendedProducts = StorefrontApi.ResultOf<
+type RecommendedProductsData = StorefrontApi.ResultOf<
   typeof RECOMMENDED_PRODUCTS_QUERY
 >["products"]["nodes"];
 
 export function HomePage(
-  handle: Handle<{
-    featuredCollection: FeaturedCollection;
-    recommendedProducts: RecommendedProducts | null;
-    pathPrefix: string;
-  }>,
+  handle: Handle<{ featuredCollection: FeaturedCollection; pathPrefix: string }>,
 ) {
   return () => {
-    const { featuredCollection, pathPrefix, recommendedProducts } = handle.props;
+    const { featuredCollection, pathPrefix } = handle.props;
     const image = featuredCollection.image;
 
     return (
@@ -66,7 +63,10 @@ export function HomePage(
         <div class="home">
           <a
             class="featured-collection"
-            href={localizePath(`/collections/${featuredCollection.handle}`, pathPrefix)}
+            href={localizePath(
+              routes.collections.show.href({ handle: featuredCollection.handle }),
+              pathPrefix,
+            )}
           >
             {image ? (
               <div class="featured-collection-image">
@@ -82,15 +82,30 @@ export function HomePage(
           </a>
           <section class="recommended-products" aria-labelledby="recommended-products">
             <h2 id="recommended-products">Recommended Products</h2>
-            <div class="recommended-products-grid">
-              {recommendedProducts?.map((product) => (
-                <ProductItem key={product.id} product={product} pathPrefix={pathPrefix} />
-              ))}
-            </div>
+            <Frame
+              src={localizePath(routes.recommendedProducts.href(), pathPrefix)}
+              fallback={<div>Loading...</div>}
+            />
             <br />
           </section>
         </div>
       </Document>
+    );
+  };
+}
+
+/** The `recommendedProducts` route's fragment, streamed into the home page. */
+export function RecommendedProducts(
+  handle: Handle<{ products: RecommendedProductsData; pathPrefix: string }>,
+) {
+  return () => {
+    const { pathPrefix, products } = handle.props;
+    return (
+      <div class="recommended-products-grid">
+        {products.map((product) => (
+          <ProductItem key={product.id} product={product} pathPrefix={pathPrefix} />
+        ))}
+      </div>
     );
   };
 }

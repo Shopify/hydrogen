@@ -2,6 +2,7 @@ import { gql, type StorefrontApi } from "@shopify/hydrogen";
 import { unsafeHTML, type Handle } from "remix/component";
 
 import { localizePath } from "../../lib/public/i18n.ts";
+import { routes } from "../../routes.ts";
 import { Document } from "../../ui/document.tsx";
 import { PaginatedResourceSection } from "../../ui/pagination.tsx";
 import { Image } from "../../ui/public/image.tsx";
@@ -147,7 +148,7 @@ export function BlogsPage(handle: Handle<{ blogs: Blogs; pathPrefix: string; url
               <a
                 key={blog.handle}
                 class="blog"
-                href={localizePath(`/blogs/${blog.handle}`, pathPrefix)}
+                href={localizePath(routes.blogs.show.href({ blogHandle: blog.handle }), pathPrefix)}
               >
                 <h2>{blog.title}</h2>
               </a>
@@ -177,7 +178,13 @@ export function BlogPage(handle: Handle<{ blog: Blog; pathPrefix: string; url: U
             {blog.articles.nodes.map((article, index) => (
               <div class="blog-article" key={article.id}>
                 <a
-                  href={localizePath(`/blogs/${article.blog.handle}/${article.handle}`, pathPrefix)}
+                  href={localizePath(
+                    routes.blogs.article.href({
+                      blogHandle: article.blog.handle,
+                      articleHandle: article.handle,
+                    }),
+                    pathPrefix,
+                  )}
                 >
                   {article.image ? (
                     <div class="blog-article-image">

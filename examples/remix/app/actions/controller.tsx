@@ -8,34 +8,45 @@ import { catalogCache, requireData } from "../lib/storefront.ts";
 import { LayoutContext } from "../middleware/layout.ts";
 import { routes } from "../routes.ts";
 import { CartPage } from "./cart-page.tsx";
-import { FEATURED_COLLECTION_QUERY, HomePage, RECOMMENDED_PRODUCTS_QUERY } from "./home-page.tsx";
+import {
+  FEATURED_COLLECTION_QUERY,
+  HomePage,
+  RECOMMENDED_PRODUCTS_QUERY,
+  RecommendedProducts,
+} from "./home-page.tsx";
 import { SEARCH_QUERY, SearchPage, toSearchItems } from "./search-page.tsx";
 
 export default createController(routes, {
   actions: {
     async home({ locale, render, shopify }) {
-      const { storefront } = shopify;
-      const [featured, recommended] = await Promise.all([
-        storefront.graphql(FEATURED_COLLECTION_QUERY, { cache: catalogCache() }),
-        // Below the fold: a failure renders the page without recommendations.
-        storefront
-          .graphql(RECOMMENDED_PRODUCTS_QUERY, { cache: catalogCache() })
-          .catch((error: unknown) => {
-            console.error(error);
-            return null;
-          }),
-      ]);
+      const featured = await shopify.storefront.graphql(FEATURED_COLLECTION_QUERY, {
+        cache: catalogCache(),
+      });
       const featuredCollection = requireData(featured).collections.nodes[0];
       if (!featuredCollection) {
         return new Response("Featured collection not found", { status: 404 });
       }
 
       return render(
-        <HomePage
-          featuredCollection={featuredCollection}
-          recommendedProducts={recommended?.data?.products.nodes ?? null}
-          pathPrefix={locale.pathPrefix}
-        />,
+        <HomePage featuredCollection={featuredCollection} pathPrefix={locale.pathPrefix} />,
+      );
+    },
+
+    /**
+     * Below the fold, so it streams in after the rest of the home page. A failure renders
+     * no products instead of failing the page.
+     */
+    async recommendedProducts({ locale, renderFragment, shopify }) {
+      const products = await shopify.storefront
+        .graphql(RECOMMENDED_PRODUCTS_QUERY, { cache: catalogCache() })
+        .then((result) => result.data?.products.nodes ?? [])
+        .catch((error: unknown) => {
+          console.error(error);
+          return [];
+        });
+
+      return renderFragment(
+        <RecommendedProducts products={products} pathPrefix={locale.pathPrefix} />,
       );
     },
 

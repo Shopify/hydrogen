@@ -3,6 +3,7 @@ import type { Handle } from "remix/component";
 
 import { localizePath } from "../lib/public/i18n.ts";
 import { formatMoney } from "../lib/public/money.ts";
+import { routes } from "../routes.ts";
 import { Image, type ImageData } from "./public/image.tsx";
 
 export const PRODUCT_ITEM_FRAGMENT = gql(`
@@ -50,7 +51,7 @@ export function ProductItem(
     return (
       <a
         class="product-item"
-        href={localizePath(`/products/${encodeURIComponent(product.handle)}`, pathPrefix)}
+        href={localizePath(routes.products.show.href({ handle: product.handle }), pathPrefix)}
       >
         {image ? (
           <Image

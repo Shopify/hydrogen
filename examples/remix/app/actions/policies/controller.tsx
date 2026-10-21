@@ -110,7 +110,12 @@ export default createController(routes.policies, {
             <div>
               {policies.map((policy) => (
                 <fieldset key={policy.id}>
-                  <a href={localizePath(`/policies/${policy.handle}`, locale.pathPrefix)}>
+                  <a
+                    href={localizePath(
+                      routes.policies.show.href({ handle: policy.handle }),
+                      locale.pathPrefix,
+                    )}
+                  >
                     {policy.title}
                   </a>
                 </fieldset>
@@ -149,7 +154,9 @@ export default createController(routes.policies, {
             <br />
             <br />
             <div>
-              <a href={localizePath("/policies", locale.pathPrefix)}>← Back to Policies</a>
+              <a href={localizePath(routes.policies.index.href(), locale.pathPrefix)}>
+                ← Back to Policies
+              </a>
             </div>
             <br />
             <h1>{policy.title}</h1>

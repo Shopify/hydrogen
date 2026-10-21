@@ -4,6 +4,7 @@ import type { Handle } from "remix/component";
 import { SearchView } from "../assets/public/analytics-events.tsx";
 import { localizePath } from "../lib/public/i18n.ts";
 import { formatMoney } from "../lib/public/money.ts";
+import { routes } from "../routes.ts";
 import { Document } from "../ui/document.tsx";
 import { PaginatedResourceSection } from "../ui/pagination.tsx";
 import { Image } from "../ui/public/image.tsx";
@@ -172,7 +173,7 @@ export function SearchPage(
   return () => {
     const { error, items, pathPrefix, term, url } = handle.props;
     const total = items ? items.articles.length + items.pages.length + items.products.length : 0;
-    const searchPath = localizePath("/search", pathPrefix);
+    const searchPath = localizePath(routes.search.href(), pathPrefix);
 
     return (
       <Document title="Hydrogen | Search">
@@ -201,7 +202,10 @@ export function SearchPage(
                     {items.products.map((product) => {
                       const variant = product.selectedOrFirstAvailableVariant;
                       const href = getSearchResultUrl({
-                        baseUrl: localizePath(`/products/${product.handle}`, pathPrefix),
+                        baseUrl: localizePath(
+                          routes.products.show.href({ handle: product.handle }),
+                          pathPrefix,
+                        ),
                         term,
                         trackingParameters: product.trackingParameters,
                       });
@@ -236,7 +240,10 @@ export function SearchPage(
                       <div class="search-results-item" key={page.id}>
                         <a
                           href={getSearchResultUrl({
-                            baseUrl: localizePath(`/pages/${page.handle}`, pathPrefix),
+                            baseUrl: localizePath(
+                              routes.pages.show.href({ handle: page.handle }),
+                              pathPrefix,
+                            ),
                             term,
                             trackingParameters: page.trackingParameters,
                           })}
@@ -258,7 +265,10 @@ export function SearchPage(
                         <a
                           href={getSearchResultUrl({
                             baseUrl: localizePath(
-                              `/blogs/${article.blog.handle}/${article.handle}`,
+                              routes.blogs.article.href({
+                                blogHandle: article.blog.handle,
+                                articleHandle: article.handle,
+                              }),
                               pathPrefix,
                             ),
                             term,

@@ -13,6 +13,7 @@ import type { ProductData } from "../../actions/products/page.tsx";
 import { cartApiPath } from "../../lib/public/cart-routes.ts";
 import { localizePath } from "../../lib/public/i18n.ts";
 import { formatMoney } from "../../lib/public/money.ts";
+import { routes } from "../../routes.ts";
 import { openAside } from "../../ui/public/aside.tsx";
 import { Image } from "../../ui/public/image.tsx";
 import { getCartStore } from "./cart-store.ts";
@@ -27,8 +28,8 @@ type OptionValue = ProductState["options"][number]["values"][number];
  * the price and image immediately; the URL then follows with one in-place navigation.
  *
  * On the server the store runs against an empty cart, so the first HTML already shows
- * the selected variant and works without JavaScript: option values are links and the
- * add-to-cart form posts to Hydrogen's cart endpoint.
+ * the selected variant. Option values are links, so variant selection works without
+ * JavaScript; Add to cart needs the hydrated island, as in the Skeleton.
  */
 export const ProductDetails = clientEntry(
   import.meta.url,
@@ -43,6 +44,13 @@ export const ProductDetails = clientEntry(
     let storeIdentity = productIdentity(handle.props.product);
     let adding = false;
     let submitError = "";
+    // Like the Skeleton, Add to cart stays disabled until this island hydrates, so a
+    // click always goes through the cart store and opens the cart drawer.
+    let isHydrated = false;
+    handle.queueTask(() => {
+      isHydrated = true;
+      handle.update();
+    });
 
     const unsubscribe = store.subscribe((next) => {
       state = next;
@@ -177,7 +185,7 @@ export const ProductDetails = clientEntry(
               >
                 <input type="hidden" {...register("merchandiseId", {})} />
                 <input type="hidden" {...register("quantity", { value: 1 })} />
-                <button {...register("addToCart", {})} disabled={!addable || adding}>
+                <button {...register("addToCart", {})} disabled={!isHydrated || !addable || adding}>
                   {addToCartLabel(adding, addable, selectedVariant)}
                 </button>
               </form>
@@ -304,7 +312,7 @@ function variantHref(
     base: new URLSearchParams(search),
   });
   const query = params.size ? `?${params}` : "";
-  return localizePath(`/products/${encodeURIComponent(handle)}${query}`, pathPrefix);
+  return localizePath(`${routes.products.show.href({ handle })}${query}`, pathPrefix);
 }
 
 function productIdentity(product: ProductData): string {

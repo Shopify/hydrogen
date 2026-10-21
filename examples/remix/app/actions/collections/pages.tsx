@@ -3,6 +3,7 @@ import type { Handle } from "remix/component";
 
 import { CollectionView } from "../../assets/public/analytics-events.tsx";
 import { localizePath } from "../../lib/public/i18n.ts";
+import { routes } from "../../routes.ts";
 import { Document } from "../../ui/document.tsx";
 import { PaginatedResourceSection } from "../../ui/pagination.tsx";
 import { PRODUCT_ITEM_FRAGMENT, ProductItem } from "../../ui/product-item.tsx";
@@ -130,7 +131,10 @@ export function CollectionsPage(
               <a
                 key={collection.id}
                 class="collection-item"
-                href={localizePath(`/collections/${collection.handle}`, pathPrefix)}
+                href={localizePath(
+                  routes.collections.show.href({ handle: collection.handle }),
+                  pathPrefix,
+                )}
               >
                 {collection.image ? (
                   <Image

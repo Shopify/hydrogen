@@ -1,5 +1,7 @@
 import { createElement } from "remix/component";
 import { createCookie } from "remix/cookie";
+import { compression } from "remix/middleware/compression";
+import { logger } from "remix/middleware/logger";
 import { session } from "remix/middleware/session";
 import { staticFiles } from "remix/middleware/static";
 import { createRouter, type RouterContext } from "remix/router";
@@ -30,6 +32,7 @@ import { NotFoundPage } from "./ui/error-pages.tsx";
  * runtime values enter through middleware instead of module state.
  *
  * Middleware order matters:
+ * - Request logging and response compression wrap everything.
  * - Static files and compiled browser assets are served first, without sessions or
  *   Hydrogen's personalized-response headers.
  * - The renderer and the outer error boundary wrap everything else.
@@ -49,6 +52,9 @@ function createAppRouter(runtimeValue: Runtime, documentAssets: DocumentAssets) 
 
   return createRouter({
     middleware: [
+      logger(),
+      // Streams HTML with a flush after each chunk, so streaming still reaches the browser early.
+      compression(),
       staticFiles("./public", { index: false }),
       browserAssets(),
       runtime(runtimeValue),

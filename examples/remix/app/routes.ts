@@ -10,6 +10,8 @@ import { get, post, route } from "remix/routes";
  */
 export const routes = route({
   home: get("/"),
+  /** A fragment the home page streams in with `<Frame>`, after the rest of the page. */
+  recommendedProducts: get("/recommended-products"),
   cart: get("/cart"),
   search: get("/search"),
   discount: get("/discount/:code"),

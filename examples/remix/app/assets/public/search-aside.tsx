@@ -12,6 +12,7 @@ import { clientEntry, on, ref, type Handle } from "remix/component";
 import { localizePath } from "../../lib/public/i18n.ts";
 import { formatMoney } from "../../lib/public/money.ts";
 import { routeTemplates } from "../../lib/public/route-templates.ts";
+import { routes } from "../../routes.ts";
 import { AsideDialog, asideId, closeAsides } from "../../ui/public/aside.tsx";
 import { Image } from "../../ui/public/image.tsx";
 
@@ -66,7 +67,7 @@ export const SearchAside = clientEntry(
 
     return () => {
       const { pathPrefix } = handle.props;
-      const searchPath = localizePath("/search", pathPrefix);
+      const searchPath = localizePath(routes.search.href(), pathPrefix);
       const term = state?.term ?? "";
       const items = state?.result.items;
       const localize = (url: string) => localizePath(url, pathPrefix);

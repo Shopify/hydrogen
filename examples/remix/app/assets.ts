@@ -18,7 +18,8 @@ export const assets = createAssetServer({
     // `@shopify/hydrogen` is linked from the monorepo workspace, outside `node_modules`.
     hydrogen: "../../packages/hydrogen",
   },
-  allowFiles: ["app/**/public/**"],
+  // `app/routes.ts` gives browser code type-safe hrefs. It only imports `remix/routes`.
+  allowFiles: ["app/routes.ts", "app/**/public/**"],
   allowPackages: ["remix", "@shopify/hydrogen"],
   denyFiles: ["app/**/*.test.*"],
   sourceMaps: isDevelopment ? "external" : undefined,

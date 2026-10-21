@@ -14,7 +14,7 @@ export const LayoutContext = createContextKey<LoadLayout>();
 /**
  * Starts loading the shell (menus, cart, login state) as soon as an HTML request
  * reaches the router, so it runs in parallel with the route's own queries. The
- * renderer awaits it; non-HTML routes such as `robots.txt` never start it.
+ * renderer awaits it; non-HTML routes such as `robots.txt` and fragments never start it.
  */
 export function layout(): Middleware<{ key: typeof LayoutContext; value: LoadLayout }> {
   return (context, next) => {
@@ -29,8 +29,13 @@ export function layout(): Middleware<{ key: typeof LayoutContext; value: LoadLay
       return promise;
     };
 
+    // Remix's renderer marks the subrequests it makes to resolve a page's `<Frame>`s.
+    // Those render fragments without the shell, so they don't start loading it.
+    const isFrameSubrequest = context.headers.has("X-Remix-Top-Frame-Src");
     const isPageRequest =
-      context.method === "GET" && context.headers.get("Accept")?.includes("text/html");
+      context.method === "GET" &&
+      context.headers.get("Accept")?.includes("text/html") &&
+      !isFrameSubrequest;
     if (isPageRequest) {
       // Errors surface when the renderer awaits the promise.
       load().catch(() => {});

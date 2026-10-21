@@ -5,21 +5,28 @@ import {
   Renderer,
   type RenderFunction,
 } from "remix/middleware/render";
-import { createMiddleware } from "remix/router";
+import { createContextKey, createMiddleware, type Middleware } from "remix/router";
 
 import { assets, type DocumentAssets } from "../assets.ts";
 import { AppShell } from "../ui/app-shell.tsx";
 import { LayoutContext, type LoadLayout } from "./layout.ts";
 import { LocaleContext } from "./locale.ts";
 
+export const FragmentRendererContext = createContextKey<RenderFunction>();
+const fragmentRendererProperty = { property: "renderFragment" } as const;
+
 /**
  * Remix's streaming renderer, wrapped so every `context.render(page)` call renders inside
  * the app shell: document assets, the active locale, and the layout data the page's
  * `<Document>` reads for its header, footer, cart, and analytics.
+ *
+ * `context.renderFragment(node)` renders without the shell or its layout data, for
+ * routes that a `<Frame>` streams into a page.
  */
 export function render(documentAssets: DocumentAssets) {
   return createMiddleware(
     remixRender({ assets }),
+    fragmentRenderer(),
     renderWith((context) => {
       // Capture Remix's renderer before `renderWith` installs this wrapper.
       const renderNode = context.get(Renderer) as RenderFunction;
@@ -49,4 +56,19 @@ export function render(documentAssets: DocumentAssets) {
       };
     }),
   );
+}
+
+function fragmentRenderer(): Middleware<{
+  key: typeof FragmentRendererContext;
+  value: RenderFunction;
+  property: "renderFragment";
+}> {
+  return (context, next) => {
+    context.set(
+      FragmentRendererContext,
+      context.get(Renderer) as RenderFunction,
+      fragmentRendererProperty,
+    );
+    return next();
+  };
 }

@@ -9,6 +9,7 @@ import type {
 import type { OrderFilterParams } from "../../lib/order-filters.ts";
 import { localizePath } from "../../lib/public/i18n.ts";
 import { formatMoney } from "../../lib/public/money.ts";
+import { routes } from "../../routes.ts";
 import { Document } from "../../ui/document.tsx";
 import { PaginatedResourceSection } from "../../ui/pagination.tsx";
 import { Image } from "../../ui/public/image.tsx";
@@ -31,7 +32,7 @@ export function AccountLayout(
       : "Welcome to your account.";
     const link = (target: AccountSection, label: string) => (
       <a
-        href={localizePath(`/account/${target}`, pathPrefix)}
+        href={localizePath(routes.account[target].href(), pathPrefix)}
         aria-current={section === target ? "page" : undefined}
         style={{ fontWeight: section === target ? "bold" : undefined }}
       >
@@ -55,7 +56,7 @@ export function AccountLayout(
             <form
               class="account-logout"
               method="post"
-              action={`/account/logout?return_to=${encodeURIComponent(localizePath("/", pathPrefix))}`}
+              action={`/account/logout?return_to=${encodeURIComponent(localizePath(routes.home.href(), pathPrefix))}`}
               data-rmx-document
             >
               &nbsp;<button type="submit">Sign out</button>
@@ -81,7 +82,7 @@ export function OrdersPage(
 ) {
   return () => {
     const { customer, filters, orders, pathPrefix, url } = handle.props;
-    const ordersPath = localizePath("/account/orders", pathPrefix);
+    const ordersPath = localizePath(routes.account.orders.href(), pathPrefix);
     const hasFilters = Boolean(filters.name || filters.confirmationNumber);
 
     return (
@@ -123,7 +124,10 @@ export function OrdersPage(
             {orders.nodes.length ? (
               <PaginatedResourceSection pageInfo={orders.pageInfo} url={url}>
                 {orders.nodes.map((order) => {
-                  const orderHref = localizePath(`/account/orders/${btoa(order.id)}`, pathPrefix);
+                  const orderHref = localizePath(
+                    routes.account.order.href({ id: btoa(order.id) }),
+                    pathPrefix,
+                  );
                   const fulfillmentStatus = order.fulfillments.nodes[0]?.status;
                   return (
                     <div key={order.id}>
@@ -158,7 +162,9 @@ export function OrdersPage(
                 <p>You haven&apos;t placed any orders yet.</p>
                 <br />
                 <p>
-                  <a href={localizePath("/collections", pathPrefix)}>Start Shopping →</a>
+                  <a href={localizePath(routes.collections.index.href(), pathPrefix)}>
+                    Start Shopping →
+                  </a>
                 </p>
               </div>
             )}
@@ -298,7 +304,7 @@ export function ProfilePage(
         <div class="account-profile">
           <h2>My profile</h2>
           <br />
-          <form method="post" action={localizePath("/account/profile", pathPrefix)}>
+          <form method="post" action={localizePath(routes.account.profile.href(), pathPrefix)}>
             <legend>Personal information</legend>
             <fieldset>
               <label htmlFor="firstName">First name</label>
@@ -469,7 +475,11 @@ function AddressForm(
     );
 
     return (
-      <form id={addressId} method="post" action={localizePath("/account/addresses", pathPrefix)}>
+      <form
+        id={addressId}
+        method="post"
+        action={localizePath(routes.account.addresses.href(), pathPrefix)}
+      >
         <fieldset>
           <input type="hidden" name="addressId" value={addressId} />
           {field("firstName", "First name", { autoComplete: "given-name", required: true })}
@@ -528,7 +538,7 @@ export function LoginFailedPage(handle: Handle<{ pathPrefix: string }>) {
         <p>We couldn&apos;t sign you in. Please try again.</p>
         <br />
         <a
-          href={`${localizePath("/account/login", handle.props.pathPrefix)}?return_to=${encodeURIComponent(localizePath("/account", handle.props.pathPrefix))}`}
+          href={`${localizePath("/account/login", handle.props.pathPrefix)}?return_to=${encodeURIComponent(localizePath(routes.account.index.href(), handle.props.pathPrefix))}`}
           data-rmx-document
         >
           Sign in →

@@ -2,6 +2,7 @@ import { clientEntry, on, type Handle } from "remix/component";
 
 import { localizePath } from "../../lib/public/i18n.ts";
 import type { MenuLink } from "../../lib/public/menu.ts";
+import { routes } from "../../routes.ts";
 import { AsideDialog, closeAsides } from "../../ui/public/aside.tsx";
 
 export const MobileMenuAside = clientEntry(
@@ -10,7 +11,10 @@ export const MobileMenuAside = clientEntry(
     return () => (
       <AsideDialog type="mobile" heading="MENU">
         <nav class="header-menu-mobile" role="navigation">
-          <a href={localizePath("/", handle.props.pathPrefix)} mix={on("click", closeAsides)}>
+          <a
+            href={localizePath(routes.home.href(), handle.props.pathPrefix)}
+            mix={on("click", closeAsides)}
+          >
             Home
           </a>
           {handle.props.links.map((link) => (

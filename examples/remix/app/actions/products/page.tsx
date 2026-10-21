@@ -4,6 +4,7 @@ import type { Handle } from "remix/component";
 import { ProductView } from "../../assets/public/analytics-events.tsx";
 import { ProductDetails } from "../../assets/public/product-details.tsx";
 import { localizePath } from "../../lib/public/i18n.ts";
+import { routes } from "../../routes.ts";
 import { Document } from "../../ui/document.tsx";
 
 const PRODUCT_VARIANT_FRAGMENT = gql(`
@@ -120,7 +121,10 @@ export function ProductPage(
       <Document
         title={`Hydrogen | ${product.seo.title ?? product.title}`}
         description={product.seo.description ?? product.description}
-        canonicalPath={localizePath(`/products/${product.handle}`, pathPrefix)}
+        canonicalPath={localizePath(
+          routes.products.show.href({ handle: product.handle }),
+          pathPrefix,
+        )}
       >
         <ProductDetails product={product} pathPrefix={pathPrefix} search={search} />
         {variant ? (

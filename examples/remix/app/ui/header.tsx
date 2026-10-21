@@ -4,17 +4,18 @@ import { HeaderCtas } from "../assets/public/header-ctas.tsx";
 import type { Layout } from "../lib/layout.ts";
 import { localizePath } from "../lib/public/i18n.ts";
 import { toMenuLinks, type MenuLink } from "../lib/public/menu.ts";
+import { routes } from "../routes.ts";
 
 export function Header(handle: Handle<{ layout: Layout; pathname: string }>) {
   return () => {
     const { layout, pathname } = handle.props;
     const { pathPrefix } = layout.locale;
-    const accountPath = localizePath("/account", pathPrefix);
+    const accountPath = localizePath(routes.account.index.href(), pathPrefix);
 
     return (
       <header class="header">
         <a
-          href={localizePath("/", pathPrefix)}
+          href={localizePath(routes.home.href(), pathPrefix)}
           aria-current={pathname === "/" ? "page" : undefined}
         >
           <strong>{layout.header.shop.name}</strong>

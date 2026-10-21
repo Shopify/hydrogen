@@ -13,6 +13,7 @@ import type { CartInitialData } from "../../lib/cart.ts";
 import { cartApiPath } from "../../lib/public/cart-routes.ts";
 import { localizePath } from "../../lib/public/i18n.ts";
 import { formatMoney } from "../../lib/public/money.ts";
+import { routes } from "../../routes.ts";
 import { AsideDialog, closeAsides } from "../../ui/public/aside.tsx";
 import { Image } from "../../ui/public/image.tsx";
 import { publishCartViewed } from "./analytics.ts";
@@ -112,7 +113,9 @@ function CartMain(
         mix={on("submit", (event) => {
           if (!store) return;
           // With the store connected, cart forms run through Hydrogen's optimistic
-          // store. Without JavaScript, the same forms post to the cart endpoint.
+          // store. Without JavaScript, or before the store connects, the same forms post
+          // to the cart endpoint. `data-rmx-document` keeps that post a full-document
+          // navigation, so the endpoint's redirect returns to this page.
           event.preventDefault();
           store.handleFormSubmit(event).catch((error: unknown) => {
             if (error instanceof Error && error.name === "AbortError") return;
@@ -183,7 +186,7 @@ function CartEmpty(handle: Handle<{ layout: CartLayout; pathPrefix: string }>) {
       <p>Looks like you haven&rsquo;t added anything yet, let&rsquo;s get you started!</p>
       <br />
       <a
-        href={localizePath("/collections", handle.props.pathPrefix)}
+        href={localizePath(routes.collections.index.href(), handle.props.pathPrefix)}
         mix={handle.props.layout === "aside" ? on("click", closeAsides) : undefined}
       >
         Continue shopping →
@@ -317,7 +320,12 @@ function CartLineQuantity(
     const isOptimistic = line.id.startsWith(OPTIMISTIC_LINE_ID_PREFIX);
 
     return (
-      <form action={cartApiPath(pathPrefix)} method="post" class="cart-line-quantity">
+      <form
+        action={cartApiPath(pathPrefix)}
+        method="post"
+        class="cart-line-quantity"
+        data-rmx-document
+      >
         <button {...register("set")}>Update quantity</button>
         <input type="hidden" {...register("lineId", { value: line.id })} />
         <label>
@@ -437,7 +445,7 @@ function CartDiscounts(
                 const pending = state?.pending.discountCodes.has(code) ?? false;
                 const errors = errorMessages(state?.errors.discountCodes.get(code));
                 return (
-                  <form key={code} action={action} method="post">
+                  <form key={code} action={action} method="post" data-rmx-document>
                     <input type="hidden" {...register("discountCode", { value: code })} />
                     <div class="cart-discount" role="group" aria-labelledby={headingId}>
                       <code class={pending ? "pending" : undefined}>{code}</code>
@@ -467,6 +475,7 @@ function CartDiscounts(
         <form
           action={action}
           method="post"
+          data-rmx-document
           mix={on("submit", (event) => {
             // Skip empty and duplicate codes before they reach the cart store.
             const code = String(new FormData(event.currentTarget).get("discountCode") ?? "").trim();
@@ -517,7 +526,7 @@ function CartGiftMessage(
       cart.attributes.find(({ key }) => key === GIFT_MESSAGE_ATTRIBUTE)?.value ?? "";
 
     return (
-      <form action={cartApiPath(pathPrefix)} method="post" class="cart-attribute">
+      <form action={cartApiPath(pathPrefix)} method="post" class="cart-attribute" data-rmx-document>
         {cart.attributes
           .filter(({ key }) => key !== GIFT_MESSAGE_ATTRIBUTE)
           .map(({ key, value }) => (
@@ -566,7 +575,7 @@ function productPath(
 ) {
   const params = new URLSearchParams(selectedOptions.map(({ name, value }) => [name, value]));
   const query = params.size ? `?${params}` : "";
-  return localizePath(`/products/${encodeURIComponent(handle)}${query}`, pathPrefix);
+  return localizePath(`${routes.products.show.href({ handle })}${query}`, pathPrefix);
 }
 
 function getParentLineId(line: CartLine): string | undefined {

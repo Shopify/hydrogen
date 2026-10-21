@@ -3,6 +3,7 @@ import { clientEntry, on, type Handle } from "remix/component";
 
 import type { CartInitialData } from "../../lib/cart.ts";
 import { localizePath } from "../../lib/public/i18n.ts";
+import { routes } from "../../routes.ts";
 import { openAside } from "../../ui/public/aside.tsx";
 import { publishCartViewed } from "./analytics.ts";
 import { getCartStore } from "./cart-store.ts";
@@ -41,7 +42,7 @@ export const HeaderCtas = clientEntry(
       return (
         <nav class="header-ctas" role="navigation">
           <a
-            href={localizePath("/", pathPrefix)}
+            href={localizePath(routes.home.href(), pathPrefix)}
             class="header-menu-mobile-toggle reset"
             aria-label="Open menu"
             mix={on("click", (event) => {
@@ -60,7 +61,7 @@ export const HeaderCtas = clientEntry(
             </a>
           )}
           <a
-            href={localizePath("/search", pathPrefix)}
+            href={localizePath(routes.search.href(), pathPrefix)}
             mix={on("click", (event) => {
               event.preventDefault();
               openAside("search");
@@ -69,7 +70,7 @@ export const HeaderCtas = clientEntry(
             Search
           </a>
           <a
-            href={localizePath("/cart", pathPrefix)}
+            href={localizePath(routes.cart.href(), pathPrefix)}
             mix={on("click", (event) => {
               event.preventDefault();
               openAside("cart");

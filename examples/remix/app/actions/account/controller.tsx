@@ -1,5 +1,5 @@
 import type { GraphQLFormattedError } from "@shopify/hydrogen";
-import type { CustomerAddressInput } from "@shopify/hydrogen/customer-account-api-types";
+import * as s from "remix/data-schema";
 import { cop } from "remix/middleware/cop";
 import { formData } from "remix/middleware/form-data";
 import { redirect } from "remix/response/redirect";
@@ -15,69 +15,42 @@ import {
   UPDATE_ADDRESS_MUTATION,
   type Customer,
 } from "../../lib/customer-account-queries.ts";
-import { requireCustomerAccessToken, type CustomerAccount } from "../../lib/customer-account.ts";
+import type { CustomerAccount } from "../../lib/customer-account.ts";
 import { buildOrderSearchQuery, parseOrderFilters } from "../../lib/order-filters.ts";
 import { getPaginationVariables } from "../../lib/pagination.ts";
 import { localizePath } from "../../lib/public/i18n.ts";
+import { customerAuth, requireCustomer } from "../../middleware/customer-auth.ts";
 import { routes } from "../../routes.ts";
 import { NotFoundPage } from "../../ui/error-pages.tsx";
-import {
-  AddressesPage,
-  LoginFailedPage,
-  NEW_ADDRESS_ID,
-  OrderPage,
-  OrdersPage,
-  ProfilePage,
-} from "./pages.tsx";
+import { AddressActionForm, AddressForm, firstIssue, ProfileForm } from "./forms.ts";
+import { AddressesPage, NEW_ADDRESS_ID, OrderPage, OrdersPage, ProfilePage } from "./pages.tsx";
 
 const NO_STORE = { "Cache-Control": "no-cache, no-store, must-revalidate" };
-const ADDRESS_INPUT_KEYS = [
-  "address1",
-  "address2",
-  "city",
-  "company",
-  "firstName",
-  "lastName",
-  "phoneNumber",
-  "zip",
-  "zoneCode",
-] as const;
 
 /**
- * Customer Account pages. Every action requires a usable access token; without one it
- * redirects to Hydrogen's `/account/login` handler, which starts Shopify's OAuth flow.
+ * Customer Account pages. `customerAuth()` resolves the customer from Hydrogen's session,
+ * and `requireCustomer()` sends anonymous requests to Hydrogen's `/account/login` handler,
+ * which starts Shopify's OAuth flow. Actions read the access token from `context.auth`.
  *
  * `cop()` rejects cross-origin form posts, and `formData()` parses the profile and
- * address forms. Both run only for this controller: the cart endpoint must read its own
+ * address forms. They run only for this controller: the cart endpoint must read its own
  * request body.
  */
 export default createController(routes.account, {
-  middleware: [cop(), formData()],
+  middleware: [cop(), formData(), customerAuth(), requireCustomer()],
   actions: {
-    async index({ locale, render, request, shopify, url }) {
-      if (url.searchParams.get("login") === "failed") {
-        return render(<LoginFailedPage pathPrefix={locale.pathPrefix} />, {
-          status: 401,
-          headers: NO_STORE,
-        });
-      }
-      await requireCustomerAccessToken(shopify.customerAccount, request, locale.pathPrefix);
-      return redirect(localizePath("/account/orders", locale.pathPrefix));
+    index({ locale }) {
+      return redirect(localizePath(routes.account.orders.href(), locale.pathPrefix));
     },
 
     /** Unknown account paths require login, like the rest of the section, then go to `/account`. */
-    async fallback({ locale, request, shopify }) {
-      await requireCustomerAccessToken(shopify.customerAccount, request, locale.pathPrefix);
-      return redirect(localizePath("/account", locale.pathPrefix));
+    fallback({ locale }) {
+      return redirect(localizePath(routes.account.index.href(), locale.pathPrefix));
     },
 
-    async orders({ locale, render, request, shopify, url }) {
+    async orders({ auth, locale, render, request, shopify, url }) {
       const { customerAccount } = shopify;
-      const accessToken = await requireCustomerAccessToken(
-        customerAccount,
-        request,
-        locale.pathPrefix,
-      );
+      const { accessToken } = auth.identity;
       const filters = parseOrderFilters(url.searchParams);
       const [customer, orders] = await Promise.all([
         getCustomer(customerAccount, accessToken),
@@ -105,18 +78,14 @@ export default createController(routes.account, {
       );
     },
 
-    async order({ locale, params, render, request, shopify }) {
+    async order({ auth, locale, params, render, request, shopify }) {
       const { customerAccount } = shopify;
-      const accessToken = await requireCustomerAccessToken(
-        customerAccount,
-        request,
-        locale.pathPrefix,
-      );
+      const { accessToken } = auth.identity;
       let orderId: string;
       try {
         orderId = atob(params.id);
       } catch {
-        return redirect(localizePath("/account/orders", locale.pathPrefix));
+        return redirect(localizePath(routes.account.orders.href(), locale.pathPrefix));
       }
 
       const [customer, result] = await Promise.all([
@@ -145,31 +114,19 @@ export default createController(routes.account, {
       );
     },
 
-    async profile({ locale, render, request, shopify }) {
+    async profile({ auth, locale, render, shopify }) {
       const { customerAccount } = shopify;
-      const accessToken = await requireCustomerAccessToken(
-        customerAccount,
-        request,
-        locale.pathPrefix,
-      );
+      const { accessToken } = auth.identity;
       const customer = await getCustomer(customerAccount, accessToken);
       return render(<ProfilePage customer={customer} pathPrefix={locale.pathPrefix} />, {
         headers: NO_STORE,
       });
     },
 
-    async updateProfile({ formData, locale, render, request, shopify }) {
+    async updateProfile({ auth, formData, locale, render, shopify }) {
       const { customerAccount } = shopify;
-      const accessToken = await requireCustomerAccessToken(
-        customerAccount,
-        request,
-        locale.pathPrefix,
-      );
-      const customer: { firstName?: string; lastName?: string } = {};
-      for (const key of ["firstName", "lastName"] as const) {
-        const value = formData.get(key);
-        if (typeof value === "string" && value) customer[key] = value;
-      }
+      const { accessToken } = auth.identity;
+      const customer = s.parse(ProfileForm, formData);
 
       const result = await customerAccount.client.graphql(CUSTOMER_UPDATE_MUTATION, {
         accessToken,
@@ -191,58 +148,58 @@ export default createController(routes.account, {
         );
       }
       // Post/Redirect/Get, so a refresh doesn't resubmit the form.
-      return redirect(localizePath("/account/profile", locale.pathPrefix), 303);
+      return redirect(localizePath(routes.account.profile.href(), locale.pathPrefix), 303);
     },
 
-    async addresses({ locale, render, request, shopify }) {
+    async addresses({ auth, locale, render, shopify }) {
       const { customerAccount } = shopify;
-      const accessToken = await requireCustomerAccessToken(
-        customerAccount,
-        request,
-        locale.pathPrefix,
-      );
+      const { accessToken } = auth.identity;
       const customer = await getCustomer(customerAccount, accessToken);
       return render(<AddressesPage customer={customer} pathPrefix={locale.pathPrefix} />, {
         headers: NO_STORE,
       });
     },
 
-    async updateAddresses({ formData, locale, render, request, shopify }) {
+    async updateAddresses({ auth, formData, locale, render, shopify }) {
       const { customerAccount } = shopify;
-      const accessToken = await requireCustomerAccessToken(
-        customerAccount,
-        request,
-        locale.pathPrefix,
-      );
-      const addressId = String(formData.get("addressId") ?? "");
-      const intent = String(formData.get("intent") ?? "");
-      const defaultAddress = formData.get("defaultAddress") === "on";
+      const { accessToken } = auth.identity;
+      const { addressId, defaultAddress, intent } = s.parse(AddressActionForm, formData);
 
       let error: string | undefined;
       try {
-        if (intent === "create") {
-          const result = await customerAccount.client.graphql(CREATE_ADDRESS_MUTATION, {
-            accessToken,
-            variables: { address: parseAddress(formData), defaultAddress },
-          });
-          error = mutationError(result, result.data?.customerAddressCreate, "customerAddress");
-        } else if (intent === "update" && addressId) {
-          const result = await customerAccount.client.graphql(UPDATE_ADDRESS_MUTATION, {
-            accessToken,
-            variables: { address: parseAddress(formData), addressId, defaultAddress },
-          });
-          error = mutationError(result, result.data?.customerAddressUpdate, "customerAddress");
-        } else if (intent === "delete" && addressId) {
+        error = await runAddressAction();
+      } catch (caught) {
+        console.error(caught);
+        error = "Address action failed.";
+      }
+
+      async function runAddressAction(): Promise<string | undefined> {
+        if (intent === "delete" && addressId) {
           const result = await customerAccount.client.graphql(DELETE_ADDRESS_MUTATION, {
             accessToken,
             variables: { addressId },
           });
-          error = mutationError(result, result.data?.customerAddressDelete, "deletedAddressId");
-        } else {
-          error = "Unknown address action.";
+          return mutationError(result, result.data?.customerAddressDelete, "deletedAddressId");
         }
-      } catch (caught) {
-        error = caught instanceof Error ? caught.message : "Address action failed.";
+        if (intent !== "create" && !(intent === "update" && addressId)) {
+          return "Unknown address action.";
+        }
+
+        const address = s.parseSafe(AddressForm, formData);
+        if (!address.success) return firstIssue(address);
+
+        if (intent === "create") {
+          const result = await customerAccount.client.graphql(CREATE_ADDRESS_MUTATION, {
+            accessToken,
+            variables: { address: address.value, defaultAddress },
+          });
+          return mutationError(result, result.data?.customerAddressCreate, "customerAddress");
+        }
+        const result = await customerAccount.client.graphql(UPDATE_ADDRESS_MUTATION, {
+          accessToken,
+          variables: { address: address.value, addressId, defaultAddress },
+        });
+        return mutationError(result, result.data?.customerAddressUpdate, "customerAddress");
       }
 
       if (error) {
@@ -255,7 +212,7 @@ export default createController(routes.account, {
           { status: 400, headers: NO_STORE },
         );
       }
-      return redirect(localizePath("/account/addresses", locale.pathPrefix), 303);
+      return redirect(localizePath(routes.account.addresses.href(), locale.pathPrefix), 303);
     },
   },
 });
@@ -271,21 +228,6 @@ async function getCustomer(
     throw new Error("Customer not found", { cause: errors });
   }
   return data.customer;
-}
-
-function parseAddress(formData: FormData): CustomerAddressInput {
-  const address: CustomerAddressInput = {};
-  for (const key of ADDRESS_INPUT_KEYS) {
-    const value = formData.get(key);
-    if (typeof value === "string") address[key] = value;
-  }
-  const countryCode = String(formData.get("countryCode") ?? "").trim();
-  // CountryCode is an enum the API matches case-sensitively.
-  if (!/^[a-z]{2}$/i.test(countryCode)) {
-    throw new Error("Enter a valid two-letter country code, such as US or GB.");
-  }
-  address.countryCode = countryCode.toUpperCase() as CustomerAddressInput["countryCode"];
-  return address;
 }
 
 function mutationError<Key extends string>(

@@ -18,6 +18,7 @@ import {
 import { localizePath } from "../lib/public/i18n.ts";
 import { routeTemplates } from "../lib/public/route-templates.ts";
 import { createAppStorefrontClient, type AppStorefrontClient } from "../lib/storefront.ts";
+import { routes } from "../routes.ts";
 import { requireContext } from "./context.ts";
 import { LocaleContext } from "./locale.ts";
 import { RuntimeContext } from "./runtime.ts";
@@ -67,9 +68,15 @@ export function shopify(): Middleware<{
     });
     const customerAccountHandlers = createCustomerAccountServerHandlers({
       customerSession: customerAccount.session,
-      defaultPostLoginRedirectPathname: localizePath("/account", locale.pathPrefix),
-      loginFailedRedirectPath: localizePath("/account?login=failed", locale.pathPrefix),
-      postLogoutRedirectUri: localizePath("/", locale.pathPrefix),
+      defaultPostLoginRedirectPathname: localizePath(
+        routes.account.index.href(),
+        locale.pathPrefix,
+      ),
+      loginFailedRedirectPath: localizePath(
+        `${routes.account.index.href()}?login=failed`,
+        locale.pathPrefix,
+      ),
+      postLogoutRedirectUri: localizePath(routes.home.href(), locale.pathPrefix),
     });
 
     const shopifyRoute = handleShopifyRoutes({
