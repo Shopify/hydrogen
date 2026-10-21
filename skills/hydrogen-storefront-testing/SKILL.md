@@ -58,6 +58,17 @@ The suite finds a cart line by its product title inside the visible `cart-page` 
 
 The suite reads only visible `product-card` links inside the first visible `product-results`. The collection test matches a product by the card's accessible name, and the collection filter test counts results by unique product URL path.
 
+### Collection filters
+
+| Test ID | Put it on |
+| --- | --- |
+| `collection-filter-value` | Each filter value checkbox |
+| `collection-filter-label` | The label that wraps a filter value checkbox |
+| `collection-filter-min-price` | The minimum price input of a price range filter |
+| `collection-filter-apply` | The control that applies the filters, if the page has one (optional) |
+
+Keep the checkbox inside its marked label. The suite clicks the label, expects the checkbox to be checked, and reads the count from the label text, such as `Red (4)`. `collection-filter-apply` is optional: it goes on the control that applies the filters, if the page has one, and the suite clicks it when it is visible. The price range test types into the visible `collection-filter-min-price`.
+
 ## How to adopt
 
 1. Find the existing elements in the tables above in your storefront.

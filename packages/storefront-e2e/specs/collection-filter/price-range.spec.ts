@@ -10,7 +10,7 @@ test("a decimal price bound keeps its value through the URL", async ({ data, pag
   await page.goto(data.paths.collection(collection.handle));
 
   const minimumPrice = page
-    .getByRole("spinbutton", { name: /minimum price/i })
+    .getByTestId("collection-filter-min-price")
     .filter({ visible: true })
     .first();
   expect(new URL(page.url()).searchParams.has("filter.v.price.gte")).toBe(false);

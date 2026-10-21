@@ -231,7 +231,11 @@ function CollectionPage(props: CollectionPageProps) {
 
           {/* No-JS submit so the GET filter/sort form is submittable without JS (F4). */}
           <noscript>
-            <button type="submit" className="rounded-button button-primary h-11 px-4">
+            <button
+              type="submit"
+              className="rounded-button button-primary h-11 px-4"
+              data-testid="collection-filter-apply"
+            >
               {content.collection.showResults}
             </button>
           </noscript>
@@ -379,7 +383,11 @@ function SearchPage(props: SearchPageProps) {
             ) : null}
 
             <noscript>
-              <button type="submit" className="rounded-button button-primary h-11 px-4">
+              <button
+                type="submit"
+                className="rounded-button button-primary h-11 px-4"
+                data-testid="collection-filter-apply"
+              >
                 {content.collection.showResults}
               </button>
             </noscript>

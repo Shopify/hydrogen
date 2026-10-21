@@ -282,11 +282,12 @@ function ListFacet({
     return (
       <li key={value.id}>
         <label
-          data-testid="facet-option"
+          data-testid="collection-filter-label"
           className="min-h-touch-target text-on-surface flex cursor-pointer items-center gap-2 py-1 text-sm motion-safe:transition-transform motion-safe:active:scale-[0.97]"
         >
           <input
             type="checkbox"
+            data-testid="collection-filter-value"
             name={name}
             value={paramValue}
             checked={isActive}
@@ -402,6 +403,7 @@ function PriceRangeFacet({
             ref={minInput}
             id={minId}
             aria-label={`Minimum price in ${currencyCode}`}
+            data-testid="collection-filter-min-price"
             name={PRICE_MIN_PARAM}
             min="0"
             step="any"
@@ -465,12 +467,13 @@ function ColorSwatchFacet({
     return (
       <li key={value.id}>
         <label
-          data-testid="facet-option"
+          data-testid="collection-filter-label"
           className="min-h-touch-target min-w-touch-target relative inline-flex cursor-pointer items-center justify-center motion-safe:transition-transform motion-safe:active:scale-[0.93]"
           title={`${value.label} (${value.count})`}
         >
           <input
             type="checkbox"
+            data-testid="collection-filter-value"
             name={name}
             value={paramValue}
             checked={isFilterInputActive(state.filters, value.input)}
@@ -619,6 +622,7 @@ export function FacetForm({
       <noscript>
         <button
           type="submit"
+          data-testid="collection-filter-apply"
           className="rounded-button button-primary focus-visible:outline-accent mt-4 inline-flex h-11 items-center justify-center px-4 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           Apply filters

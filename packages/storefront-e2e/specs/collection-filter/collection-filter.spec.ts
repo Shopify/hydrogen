@@ -14,6 +14,7 @@ type FilterCandidate = {
   readonly control: Locator;
   readonly expectedResultCount: number | null;
   readonly label: string;
+  readonly labelElement: Locator;
 };
 
 test("collection filter narrows products", async ({ data, page }) => {
@@ -62,14 +63,16 @@ async function uniqueProductLinkCount(page: Page, productPathSegment: string): P
 }
 
 async function applyFiltersIfNeeded(page: Page): Promise<void> {
-  const applyFilters = page.getByRole("button", { name: /apply filters|show results/i }).first();
+  const applyFilters = page
+    .getByTestId("collection-filter-apply")
+    .filter({ visible: true })
+    .first();
   if (await applyFilters.isVisible().catch(() => false)) await applyFilters.click();
 }
 
 async function selectFilter(filter: FilterCandidate): Promise<void> {
-  const wrappingLabel = filter.control.locator("xpath=ancestor::label[1]");
-  if (await wrappingLabel.isVisible().catch(() => false)) {
-    await wrappingLabel.click();
+  if (await filter.labelElement.isVisible().catch(() => false)) {
+    await filter.labelElement.click();
     return;
   }
 
@@ -108,16 +111,22 @@ async function findUsableFilter(
   page: Page,
   initialResultCount: number,
 ): Promise<FilterCandidate | null> {
-  const controls = page.getByRole("checkbox");
-  const count = Math.min(await controls.count(), MAX_FILTER_CONTROL_PROBES);
+  const labels = page.getByTestId("collection-filter-label").filter({ visible: true });
+  const count = Math.min(await labels.count(), MAX_FILTER_CONTROL_PROBES);
 
   for (let index = 0; index < count; index += 1) {
-    const control = controls.nth(index);
+    const labelElement = labels.nth(index);
+    const control = labelElement.getByTestId("collection-filter-value").first();
     const usable = (await control.isVisible()) && (await control.isEnabled());
     if (!usable) continue;
 
     const label = normalizeLabel(await controlText(control));
-    const candidate = { control, expectedResultCount: parseFilterCount(label), label };
+    const candidate = {
+      control,
+      expectedResultCount: parseFilterCount(label),
+      label,
+      labelElement,
+    };
 
     if (candidate.expectedResultCount === null) continue;
     if (candidate.expectedResultCount > 0 && candidate.expectedResultCount < initialResultCount) {
