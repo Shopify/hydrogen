@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { analyticsConsent, defaultI18n, shop } from "@shared/config";
+import { defaultI18n } from "@shared/config";
 import { getShopifyScriptTags, initializeShopifyScripts } from "@shopify/hydrogen";
 
 import { CartProvider } from "~/storefront/cart";
+import { resolveShopIdentity } from "~/storefront/shop-identity";
+import type { StorefrontModeConfig } from "~/storefront/storefront-config";
 import { routeTemplates } from "~/utils/route-templates";
 
 const route = useRoute();
 const router = useRouter();
+const storefrontConfig = useState<StorefrontModeConfig>("storefront-config");
+const shopIdentity = resolveShopIdentity(storefrontConfig.value);
 const shopifyScriptTags = getShopifyScriptTags({
-  consent: analyticsConsent,
+  ...shopIdentity,
   i18n: defaultI18n,
-  shop,
 });
 
 const navigate = async (url: string) => {
