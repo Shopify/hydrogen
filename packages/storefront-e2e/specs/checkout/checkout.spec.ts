@@ -1,7 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { createContractError } from "../../src/contract";
-import { requireProductAddToCart } from "../../src/product-targets";
 import { test, type CheckoutTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
@@ -51,9 +50,7 @@ async function tryAddProductToCart(
     productTitle: product.productTitle,
     variantLabel: product.variantLabel,
   };
-  const addToCart = await requireProductAddToCart(page, product.path, {
-    timeout: CART_SETTLE_TIMEOUT_MS,
-  });
+  const addToCart = page.getByTestId("product-add-to-cart").filter({ visible: true }).first();
   const isCartEnabled =
     (await addToCart.isVisible().catch(() => false)) &&
     (await addToCart.isEnabled().catch(() => false));

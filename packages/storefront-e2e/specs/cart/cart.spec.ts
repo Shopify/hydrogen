@@ -1,7 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { createContractError } from "../../src/contract";
-import { requireProductAddToCart } from "../../src/product-targets";
 import { test, type CartTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
@@ -61,15 +60,14 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
   }
   await setCartLineQuantity(page, expectation, product.maxQuantity);
   await page.goto(product.path);
-  const addToCart = await requireProductAddToCart(page, product.path, {
-    timeout: CART_SETTLE_TIMEOUT_MS,
-  });
 
   const requestGate = createRequestGate();
   await page.route(CART_ENDPOINT_PATTERN, async (route) => {
     await requestGate.wait;
     await route.continue();
   });
+
+  const addToCart = page.getByTestId("product-add-to-cart").filter({ visible: true }).first();
 
   try {
     await addToCart.click();
@@ -136,9 +134,7 @@ async function tryAddProductToCart(
     productTitle: product.productTitle,
     variantLabel: product.variantLabel,
   };
-  const addToCart = await requireProductAddToCart(page, product.path, {
-    timeout: CART_SETTLE_TIMEOUT_MS,
-  });
+  const addToCart = page.getByTestId("product-add-to-cart").filter({ visible: true }).first();
   const isCartVisible = await addToCart
     .waitFor({ state: "visible", timeout: CART_SETTLE_TIMEOUT_MS })
     .then(() => true)

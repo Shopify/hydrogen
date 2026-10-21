@@ -135,16 +135,9 @@ Test IDs are acceptable when they disambiguate duplicated UI that is already sem
 
 ### Portable Storefront Test IDs
 
-The portable storefront suite in `packages/storefront-e2e` runs against storefronts it does not own, so it defines four product test IDs. It reads `product-title`, `product-variant-option`, and `product-add-to-cart` with `getByTestId` first; `product-sibling-option` is defined but not read:
+The portable storefront suite in `packages/storefront-e2e` runs against storefronts that it does not own. It defines four product test IDs: `product-title`, `product-variant-option`, `product-sibling-option`, and `product-add-to-cart`. It reads all of them with `getByTestId` except `product-sibling-option`, which identifies cross-product values and is excluded from the variant journey. These IDs can repeat (for example, main and sticky add to cart). Narrow to the visible, relevant element, and choose one when the journey needs one.
 
-- `product-title` on the product detail `<h1>` (exactly one on the page)
-- `product-variant-option` on each option value `<a>` or `<button>` that selects another variant of the same product, including a disabled value for a combination that does not exist (the ID repeats; narrow it by accessible name or `href`)
-- `product-sibling-option` on each option value link that navigates to another product (the variant journey ignores it)
-- `product-add-to-cart` on the add to cart `<button>` (exactly one on the page)
-
-Read state from native attributes, ARIA, and content: `href`, `aria-current`, `aria-pressed`, native `disabled` or `aria-disabled`, and the title text. Do not add new test-only attributes for state or identity. The target markup must stay accessible.
-
-This exception covers only these four IDs in the portable suite. All other portable-suite locators, and all other suites, stay role-first. `packages/storefront-e2e/docs/storefront-contract.md` is the source of truth. Add a new portable test ID only together with that document. Other test IDs in the target app are allowed, but the portable suite does not read them.
+This exception covers only these four IDs in the portable suite. All other locators stay role-first. The source of truth is `packages/storefront-e2e/docs/storefront-contract.md`. See also `skills/hydrogen-storefront-testing/SKILL.md`.
 
 ### Accessibility Improvements During Test Writing
 

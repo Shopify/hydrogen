@@ -23,30 +23,20 @@ Required groups fail on route HTTP failures; optional groups skip.
 
 ## Product Test IDs
 
-The contract defines four product detail IDs with standard `data-testid` attributes. The suite reads `product-title`, `product-variant-option`, and `product-add-to-cart` with Playwright `getByTestId`. `product-sibling-option` identifies cross-product values and is excluded from the variant journey:
+The contract defines four product IDs. The suite reads `product-title`, `product-variant-option`, and `product-add-to-cart` with Playwright `getByTestId`. `product-sibling-option` identifies cross-product values and is excluded from the variant journey:
 
-| Test ID | Put it on | Count on the product page | Evidence the suite reads |
-| --- | --- | --- | --- |
-| `product-title` | The product heading, a native `<h1>` | Exactly one | A visible level-one heading exposed to assistive technology, whose text contains the product title (case does not matter) |
-| `product-variant-option` | Each option value control that selects another variant of this product: the native `<a>` or `<button>` itself, not a wrapper. This includes a disabled value for a combination that does not exist | One per rendered value, so the ID repeats | Accessible name, `href`, `aria-current`, `aria-pressed`, and disabled state |
-| `product-sibling-option` | Each option value link that navigates to another product | One per rendered value, so the ID repeats | Not read yet. The variant journey ignores it |
-| `product-add-to-cart` | The add to cart control, a native `<button>` | Exactly one on the whole page | Enabled or disabled state, and the click |
+| Test ID | Meaning |
+| --- | --- |
+| `product-title` | The product title |
+| `product-variant-option` | An option value that selects another variant of this product, including a disabled value for a combination that does not exist |
+| `product-sibling-option` | An option value that navigates to another product |
+| `product-add-to-cart` | The add to cart control |
 
-Exactly one means the whole page. If recommendations, a sticky bar, or a quick-add form render another title or add to cart button, do not give it the same test ID. A missing or duplicate `product-title` or `product-add-to-cart` fails the test with a contract error.
+This is a locator change only. Add each ID to the existing element that has this meaning. Keep its markup, styles, interactions, and accessibility. The IDs do not add new behavior requirements. The other sections of this document still apply.
 
-Rules:
+IDs can repeat. For example, a main and a sticky add to cart, a desktop and a mobile title, or one ID on each option value. The suite starts with `getByTestId`, then narrows to the visible, relevant element or value. When the journey needs one element, the suite chooses one. The suite proves buyer outcomes (URL, selected state, cart lines), not only the presence of an ID.
 
-- Put each ID on the element a buyer reads or activates. Do not put it on a container.
-- A test ID only identifies a kind of element. Do not add new test-only attributes for the suite, such as option names, values, variant IDs, or selected state. Existing app attributes, such as `data-*` used for styling, can stay.
-- State comes from native attributes and ARIA:
-  - Option links: `aria-current="true"` on the selected link.
-  - Option buttons: `aria-pressed`, with `aria-pressed="true"` on the selected button.
-  - Option values for combinations that do not exist: buttons with the native `disabled` attribute.
-  - Add to cart: native `disabled` or `aria-disabled="true"` when the selection cannot be added. Keep the storefront's existing interaction behavior. For example, a button with `aria-disabled="true"` can still move focus to the first option on click.
-- Test IDs do not replace accessibility. The title stays the page heading, each control keeps an accessible name, and state stays in the attributes above.
-- The test IDs do not add a server-rendering or hydration requirement. They go on the same elements the page already renders. Where the page supports server rendering and no-JavaScript selection, the IDs are on the server-rendered elements.
-
-Scope: the product, product variant, cart, and checkout groups use these IDs to find the product title, same-product option values, and add to cart button. The suite still finds all other UI by role, label, and text, as the sections below describe. This includes product results, collection filters, search, cart lines, cart controls, the cart totals status, and the checkout link. The storefront can have other test IDs for its own tests. The suite does not read them.
+The suite finds all other UI by role, label, and text, as the sections below describe. The storefront can have other test IDs for its own tests. The suite does not read them.
 
 ## Product Results
 
@@ -70,13 +60,13 @@ The suite discovers a live product title, searches for it, and verifies that pro
 
 ## Variant Options
 
-At least one probed product must expose a selectable variant control. Each control that selects another variant of the same product has `data-testid="product-variant-option"`. An option value that navigates to another product has `data-testid="product-sibling-option"`; the variant journey ignores it. The product heading has `data-testid="product-title"` (see Product Test IDs).
+At least one probed product must expose a selectable variant control. The suite finds same-product option values with `product-variant-option` and the title with `product-title` (see Product Test IDs). It ignores `product-sibling-option`, so this journey does not cover navigation to another product.
 
 Supported controls:
 
 - Links to another variant of the same product. The URL shape is free: a selected-options query, a path such as `/products/shirt/medium`, or another format. The suite follows the link's real `href`. The selected link has `aria-current="true"`.
 - Buttons with `aria-pressed`. The selected button has `aria-pressed="true"`. Buttons work only with JavaScript; the no-JavaScript check needs links.
-- If the page renders option combinations that do not exist, render them as buttons with the native `disabled` attribute. They keep `product-variant-option`. The suite does not select disabled controls. Sold out does not change the ID: a sold-out value of this product is still a `product-variant-option`. Keep existing availability behavior.
+- Values for combinations that do not exist can have the native `disabled` attribute, or `aria-disabled="true"` on a link. The suite skips disabled values. Sold out does not change the ID: a sold-out value of this product is still a `product-variant-option`. Keep existing availability behavior.
 
 With JavaScript, selecting a value must put the selection in the URL (for a link, the link's href) and mark the value as selected. Loading that URL directly must render the product title and show the same value as selected. Selection must keep unrelated non-option query params (the suite uses `storefront_e2e_ref=variant-check`).
 
@@ -90,7 +80,7 @@ Set STOREFRONT_SKIP_NO_JS_VARIANTS=true to skip the no-JavaScript check for a st
 
 Cart lines must be visible list items containing the product title.
 
-The cart and checkout groups add a product with the single button that has `data-testid="product-add-to-cart"` (see Product Test IDs). The button must be enabled for the discovered variant. It keeps an accessible name, such as Add to cart.
+The cart and checkout groups find the add to cart control with `product-add-to-cart` (see Product Test IDs). It must be enabled for the discovered variant.
 
 After Add to cart, the suite must be able to inspect the added line in a cart drawer dialog before navigating to the cart page. Either open the drawer immediately with the optimistic line, or expose a visible page-level button whose accessible name begins with Cart, Open cart, or View cart so the suite can open the drawer while the update is pending.
 
@@ -104,7 +94,7 @@ Each line must expose:
 
 Cart totals must expose a `role="status"` region that says `Updating cart totals` while cart totals are stale, then `Cart totals updated` after mutation settlement. Do not announce `Cart totals updated` on initial idle render before a mutation cycle. The region may be visually hidden if it remains available to assistive technology.
 
-The suite finds cart lines, line controls, and the totals status by role, label, and text.
+Accessible labels are preferred. Broad data-testid attributes should only be used when a semantic role or label cannot express the user-facing concept.
 
 ## Checkout Handoff
 
@@ -134,6 +124,6 @@ Operational expectations:
 
 ## Contract Migration
 
-When the storefront contract changes, update the relevant spec matcher, shared helper, and this document together.
+When test locators change, update the affected specs and this document together.
 
-The suite reads test IDs only for the product title, same-product option values (`product-variant-option`), and add to cart button. It does not read `product-sibling-option`. It finds all other UI by semantic roles and label strings, including the English cart totals status text. Before the suite reads a new test ID, add it to this document.
+The suite reads test IDs only for the product title, same-product option values (`product-variant-option`), and add to cart control (see Product Test IDs; `product-sibling-option` is defined but not read). It finds all other UI by semantic roles and label strings, including the English cart totals status text.
