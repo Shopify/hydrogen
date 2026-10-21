@@ -26,6 +26,7 @@ export type ShopifyGlobalConfig = {
       };
     };
   };
+  hydrogen: ShopifyGlobal["hydrogen"];
   routes: {
     root: string;
     apiProxyPrefix: string;
@@ -145,6 +146,7 @@ export function getShopifyGlobalBootstrapScript({
     locale: (i18n?.language ?? DEFAULT_LOCALE).toLowerCase() as Lowercase<
       ShopifyGlobalConfig["locale"]
     >,
+    hydrogen: { version: __HYDROGEN_VERSION__ },
     routes: {
       root: getShopifyRoutesRoot(i18n?.pathPrefix),
       apiProxyPrefix: SHOPIFY_API_PROXY_PREFIX,

@@ -46,6 +46,11 @@ export type ShopifyGlobal = {
     shouldShowBanner: () => boolean;
     shouldShowGDPRBanner: () => boolean;
   };
+  /** Metadata about the Hydrogen runtime that rendered the page. */
+  hydrogen: {
+    /** The `@shopify/hydrogen` release in use. */
+    version: string;
+  };
   /** The customer's language code, in lowercase. Defaults to `en`. */
   locale: Lowercase<I18nConfig["language"]> | string;
   /**
