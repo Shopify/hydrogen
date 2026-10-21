@@ -13,6 +13,9 @@ test("a decimal price bound keeps its value through the URL", async ({ data, pag
     .getByRole("spinbutton", { name: /minimum price/i })
     .filter({ visible: true })
     .first();
+  expect(new URL(page.url()).searchParams.has("filter.v.price.gte")).toBe(false);
+  await expect(minimumPrice).toHaveValue("");
+
   await minimumPrice.fill("12.5");
 
   await expect(page).toHaveURL(/[?&]filter\.v\.price\.gte=/);
