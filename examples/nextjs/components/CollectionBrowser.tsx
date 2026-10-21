@@ -290,7 +290,7 @@ function SearchPage(props: SearchPageProps) {
       </form>
 
       {!term ? null : products.length === 0 ? (
-        <div className="py-12 text-center">
+        <div className="py-12 text-center" data-testid="product-results">
           <p className="type-body text-on-surface">
             {content.search.noResults.replace("{{ terms }}", `\u201c${term}\u201d`)}
           </p>

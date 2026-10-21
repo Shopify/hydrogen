@@ -1,39 +1,69 @@
 import type { Locator, Page } from "@playwright/test";
 
-import { EXPECT_TIMEOUT_MS } from "../../src/timeouts";
+import {
+  findProductCardLink,
+  productResults,
+  type ExpectedProduct,
+} from "../../src/product-results";
 import { expect, test } from "./config";
 
-const MAX_LINK_DISCOVERY_PROBES = 40;
 const MAX_SEARCH_PRODUCT_PROBES = 8;
+/** Fake storefront origin for helper fixtures. No request leaves the browser. */
+const STOREFRONT_ORIGIN = "https://storefront.test";
+
+type SearchPaths = {
+  readonly product: string;
+  readonly search: string;
+};
+
+type SearchOptions = {
+  /** How long to wait for the URL change and the product card. */
+  readonly timeout?: number;
+};
 
 test("search returns matching products", async ({ data, page }) => {
-  const products = data.products.slice(0, MAX_SEARCH_PRODUCT_PROBES);
+  const match = await findSearchMatch(page, data.paths, data.products);
+  if (match === null) {
+    throw new Error("No discovered product title returned matching search results");
+  }
+});
 
-  for (const product of products) {
-    const result = await searchForMatchingProduct(
-      page,
-      data.paths.search,
-      data.paths.product,
-      product.title,
-    );
-    if (result) return;
+/**
+ * Searches for up to eight discovered products by title, and returns the first
+ * one whose own product card shows in the results. A search with no or other
+ * results tries the next product.
+ */
+async function findSearchMatch(
+  page: Page,
+  paths: SearchPaths,
+  products: readonly ExpectedProduct[],
+  options: SearchOptions = {},
+): Promise<ExpectedProduct | null> {
+  for (const product of products.slice(0, MAX_SEARCH_PRODUCT_PROBES)) {
+    if (await searchForMatchingProduct(page, paths, product, options)) return product;
   }
 
-  throw new Error("No discovered product title returned matching search results");
-});
+  return null;
+}
 
 async function searchForMatchingProduct(
   page: Page,
-  searchPath: string,
-  productPathSegment: string,
-  productTitle: string,
+  paths: SearchPaths,
+  product: ExpectedProduct,
+  options: SearchOptions,
 ): Promise<boolean> {
-  await page.goto(searchPath);
-  const searchbox = page.getByRole("searchbox").first();
-  await searchbox.fill(productTitle);
-  await submitSearch(searchbox);
+  await page.goto(paths.search);
+  const beforeUrl = page.url();
+  const searchInput = page.getByRole("searchbox").first();
+  await searchInput.fill(product.title);
+  await submitSearch(searchInput);
 
-  return hasMatchingProductResult(page, productPathSegment, productTitle);
+  // A search that does not navigate cannot prove that the query rendered the results.
+  await expect(page, "Expected the search submit to change the URL.").not.toHaveURL(beforeUrl, {
+    timeout: options.timeout,
+  });
+  const card = await findProductCardLink(productResults(page), paths.product, product, options);
+  return card !== null;
 }
 
 async function submitSearch(searchbox: Locator): Promise<void> {
@@ -47,51 +77,147 @@ async function submitSearch(searchbox: Locator): Promise<void> {
   await searchbox.press("Enter");
 }
 
-async function matchingProductLinkCount(
-  page: Page,
-  productPathSegment: string,
-  productTitle: string,
-): Promise<number> {
-  const productTitleMatcher = new RegExp(escapeRegExp(productTitle), "i");
-  const productLinks = page.getByRole("link", { name: productTitleMatcher });
-  const count = Math.min(await productLinks.count(), MAX_LINK_DISCOVERY_PROBES);
-  let matchingLinkCount = 0;
+test.describe("search result helpers", () => {
+  const paths: SearchPaths = { product: "/products/", search: `${STOREFRONT_ORIGIN}/search` };
+  const options: SearchOptions = { timeout: 200 };
+  const shirt: ExpectedProduct = { handle: "shirt", title: "Shirt" };
 
-  for (let index = 0; index < count; index += 1) {
-    const link = productLinks.nth(index);
-    if (!(await link.isVisible())) continue;
-
-    const href = await link.getAttribute("href");
-    if (!isProductHref(href, page.url(), productPathSegment)) continue;
-
-    matchingLinkCount += 1;
-  }
-
-  return matchingLinkCount;
-}
-
-async function hasMatchingProductResult(
-  page: Page,
-  productPathSegment: string,
-  productTitle: string,
-): Promise<boolean> {
-  return expect
-    .poll(() => matchingProductLinkCount(page, productPathSegment, productTitle), {
-      timeout: EXPECT_TIMEOUT_MS,
-    })
-    .toBeGreaterThan(0)
-    .then(
-      () => true,
-      () => false,
+  test("matches the product handle inside the results, not a similar title or a recommendation", async ({
+    page,
+  }) => {
+    const { queries } = await openSearchFixture(page, (query) =>
+      query === "Shirt"
+        ? `<aside><h2>Recommended</h2>${productCardHtml("/products/shirt", "Shirt")}</aside>
+          <div data-testid="product-results">
+            <a href="/products/shirt">Shirt</a>
+            ${productCardHtml("/products/t-shirt", "T-Shirt")}
+            ${productCardHtml("/products/shirt-2", "Shirt")}
+          </div>`
+        : `<div data-testid="product-results">${productCardHtml("/products/shirt", "Shirt")}</div>`,
     );
+
+    await expect(findSearchMatch(page, paths, [shirt], options)).resolves.toBeNull();
+    expect(queries).toEqual(["Shirt"]);
+
+    // The real card matches by handle, and its name contains the title in any case.
+    const upperCaseShirt: ExpectedProduct = { handle: "shirt", title: "SHIRT" };
+    await expect(findSearchMatch(page, paths, [upperCaseShirt], options)).resolves.toBe(
+      upperCaseShirt,
+    );
+  });
+
+  test("tries the next product after empty or other results, up to eight products", async ({
+    page,
+  }) => {
+    const products = Array.from({ length: 9 }, (_, index) => ({
+      handle: `product-${index}`,
+      title: `Product ${index}`,
+    }));
+    const hits = new Set(["Product 2"]);
+    const { queries } = await openSearchFixture(page, (query) =>
+      hits.has(query)
+        ? `<div data-testid="product-results">${productCardHtml(`/products/product-2`, "Product 2")}</div>`
+        : query === "Product 0"
+          ? `<div data-testid="product-results"><p>No results</p></div>`
+          : `<div data-testid="product-results">${productCardHtml("/products/other", "Other")}</div>`,
+    );
+
+    await expect(findSearchMatch(page, paths, products, options)).resolves.toBe(products[2]);
+    expect(queries).toEqual(["Product 0", "Product 1", "Product 2"]);
+
+    // Only the ninth product matches, so the bounded search finds nothing.
+    hits.clear();
+    hits.add("Product 8");
+    queries.length = 0;
+    await expect(findSearchMatch(page, paths, products, options)).resolves.toBeNull();
+    expect(queries).toHaveLength(8);
+  });
+
+  test("fails instead of trying the next product when the matched card lacks the title", async ({
+    page,
+  }) => {
+    const { queries } = await openSearchFixture(
+      page,
+      () =>
+        `<div data-testid="product-results"><a data-testid="product-card" href="/products/shirt" aria-label="View">Shirt</a></div>`,
+    );
+
+    await expect(findSearchMatch(page, paths, [shirt, shirt], options)).rejects.toThrow();
+    expect(queries).toHaveLength(1);
+  });
+
+  test("fails when the submit does not change the URL, even with the card on the page", async ({
+    page,
+  }) => {
+    // The page already shows the expected card, and the submit does nothing.
+    const shirtResults = `<div data-testid="product-results">${productCardHtml("/products/shirt", "Shirt")}</div>`;
+    const { queries } = await openSearchFixture(
+      page,
+      () => shirtResults,
+      NO_OP_SEARCH_FORM,
+      shirtResults,
+    );
+
+    await expect(findSearchMatch(page, paths, [shirt], options)).rejects.toThrow(
+      /Expected the search submit to change the URL/,
+    );
+    expect(queries).toEqual([]);
+  });
+});
+
+/** The search page form: a searchbox and a Search button. */
+const SEARCH_FORM = `<form action="/search" method="get" role="search">
+  <input type="search" name="q" aria-label="Search">
+  <button type="submit">Search</button>
+</form>`;
+
+/** A search form whose submit does nothing. */
+const NO_OP_SEARCH_FORM = `<form action="/search" method="get" role="search" onsubmit="event.preventDefault()">
+  <input type="search" name="q" aria-label="Search">
+</form>`;
+
+/** No header decoy: the role-based searchbox lookup takes the first searchbox. */
+const HEADER_SEARCH_DECOY = "";
+
+type SearchFixture = {
+  /** The `q` value of each search request, in order. */
+  readonly queries: string[];
+  /** The `via` value of each search request: the name of the submitter, if any. */
+  readonly submitters: (string | null)[];
+};
+
+/**
+ * Serves a search page with `searchForm`. Before a query, the page renders
+ * `beforeQuery`. After a query, `results` renders the results for it.
+ */
+async function openSearchFixture(
+  page: Page,
+  results: (query: string) => string,
+  searchForm = SEARCH_FORM,
+  beforeQuery = "",
+): Promise<SearchFixture> {
+  const fixture: SearchFixture = { queries: [], submitters: [] };
+  await page.unrouteAll({ behavior: "ignoreErrors" });
+  await page.route("**/*", (route) => route.abort());
+  await page.route(
+    (url) => url.origin === STOREFRONT_ORIGIN && url.pathname === "/search",
+    (route) => {
+      const params = new URL(route.request().url()).searchParams;
+      const query = params.get("q");
+      if (query !== null) {
+        fixture.queries.push(query);
+        fixture.submitters.push(params.get("via"));
+      }
+      const body = `<!doctype html>${HEADER_SEARCH_DECOY}${searchForm}
+        ${query === null ? beforeQuery : results(query)}`;
+      return route.fulfill({ body, contentType: "text/html", status: 200 });
+    },
+  );
+  await page.goto(`${STOREFRONT_ORIGIN}/search`);
+  return fixture;
 }
 
-function isProductHref(href: string | null, currentUrl: string, pathSegment: string): boolean {
-  if (href === null) return false;
-
-  return new URL(href, currentUrl).pathname.includes(pathSegment);
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** A product card link for helper fixtures. Decoy links have no test ID. */
+function productCardHtml(href: string, name: string): string {
+  return `<a data-testid="product-card" href="${href}">${name}</a>`;
 }

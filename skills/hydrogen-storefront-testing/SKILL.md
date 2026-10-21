@@ -65,6 +65,10 @@ The suite reads only visible cards inside the first visible `product-results`, m
 
 Keep the checkbox inside its marked label. The suite clicks the label, expects the checkbox to be checked, and reads the count from the label text, such as `Red (4)`.
 
+### Search
+
+After a query, the suite looks for the searched product's card in `product-results`. It finds the search input and the submit button by role and name, and expects the URL to change.
+
 ## How to adopt
 
 1. Find the existing elements in the tables above in your storefront.

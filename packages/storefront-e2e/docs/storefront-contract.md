@@ -66,7 +66,7 @@ Collection and search pages must expose product cards as links to product detail
 | `product-results` | The product results of a collection or search page |
 | `product-card` | The product link of a result |
 
-The suite uses the first visible `product-results` element and reads only the visible `product-card` links inside it. Recommendations outside the results and hidden responsive copies do not count. The collection group looks for the card whose `href` path ends with `/products/:handle` for a product from the Storefront API (a path prefix, such as a locale, is allowed) and whose accessible name contains the product title. A card for another product does not match, even when its title contains the requested title. The collection filter group counts the unique product URL paths of these cards.
+The suite uses the first visible `product-results` element and reads only the visible `product-card` links inside it. Recommendations outside the results and hidden responsive copies do not count. The collection group looks for the card whose `href` path ends with `/products/:handle` for a product from the Storefront API (a path prefix, such as a locale, is allowed) and whose accessible name contains the product title. A card for another product does not match, even when its title contains the requested title. The collection filter group counts the unique product URL paths of these cards. The search group finds the searched product's card the same way after each query (see Search).
 
 ## Collection Filters
 
@@ -89,9 +89,9 @@ When a probed collection exposes a Storefront API PRICE_RANGE filter, the page m
 
 ## Search
 
-The search page must expose a searchbox. A visible button with an accessible name containing Search is supported; otherwise the suite submits the searchbox with Enter.
+The search page must expose a searchbox. A visible button with an accessible name containing Search is supported; otherwise the suite submits the searchbox with Enter. A submit that leaves the URL unchanged fails. The suite does not require a specific query parameter.
 
-The suite discovers a live product title, searches for it, and verifies that product appears in visible results.
+The suite discovers live products with their handle and title from the Storefront API. For up to eight products, it searches for the title and looks for that product's card in `product-results` (see Product Results). If the results are empty or show only other products, it tries the next product. A card that links to the product but does not have the product title in its accessible name fails the test. If none of the eight products shows in its own results, the test fails. The reference storefronts also put `product-results` on the existing empty-results element after a query.
 
 ## Variant Options
 
