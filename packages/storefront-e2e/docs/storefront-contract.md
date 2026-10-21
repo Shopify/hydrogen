@@ -133,6 +133,8 @@ Each line must expose:
 
 The suite reads the quantity from the native input value. After remove, it waits for the line to go away.
 
+After each quantity change, the suite waits for `updated`, reads the native quantity again, reloads the cart page, and expects the same line, variant text, and quantity. After it removes the only line, it waits for `updated` and checks again that the line is gone. A two-line test adds a second product, whose title the line lookup can tell apart from the first, as a witness. After the removal and a reload, the witness line with quantity 1 must show before the suite checks that the removed line is gone, so an empty or loading cart page cannot pass. The test skips when no such second product exists. The stock rollback test reads the native quantity again after `updated`. A reload checks what the storefront renders for its stored cart. It is a UI check, not proof of the data that Shopify stores.
+
 Cart totals must expose a `role="status"` region with `cart-status` that announces, in any language, when cart totals are stale and when they are updated. Do not announce an update on the first render before a cart change. The region may be visually hidden if it stays available to assistive technology.
 
 Each `cart-status` region has a `data-cart-state` attribute, derived from the same cart state as its message. This is the one state attribute in this contract:

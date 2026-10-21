@@ -5,6 +5,8 @@ import { test, type CartTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
 const CART_ENDPOINT_PATTERN = "**/api/cart";
+/** Fake storefront origin for cart outcome fixtures. No request leaves the browser. */
+const STOREFRONT_ORIGIN = "https://storefront.test";
 
 type CartExpectation = {
   readonly cartPath: string;
@@ -33,6 +35,26 @@ test("cart removes product", async ({ data, page }) => {
   const expectation = await addProductToCart(page, data.products, data.paths.cart);
 
   await removeCartLine(page, expectation);
+});
+
+test("cart removal persists after reload while another line stays", async ({ data, page }) => {
+  const removed = await addProductToCart(page, data.products, data.paths.cart);
+  const secondProducts = data.products.filter((product) =>
+    hasDistinctCartLineTitle(product.productTitle, removed.productTitle),
+  );
+  if (secondProducts.length === 0) {
+    test.skip(
+      true,
+      "No second cart enabled product has a title that is distinct from the first one, so the cart lines cannot be told apart",
+    );
+    return;
+  }
+
+  const witness = await addProductToCart(page, secondProducts, data.paths.cart);
+  await expectCartLineQuantity(page, removed, 1);
+  await expectCartLineQuantity(page, witness, 1);
+
+  await removeCartLineAndExpectPersisted(page, removed, witness);
 });
 
 test("cart rolls back an optimistic add beyond available stock", async ({ data, page }) => {
@@ -82,6 +104,11 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
       })
       .toBe(product.maxQuantity);
     await waitForCartState(page, "updated");
+    // The state is only a wait. The native quantity is the result.
+    expect(
+      await numericInputValue(quantityInput),
+      `Expected cart line quantity to stay at the stock limit of ${product.maxQuantity} after the cart settled.`,
+    ).toBe(product.maxQuantity);
   } finally {
     requestGate.release();
     await page.unroute(CART_ENDPOINT_PATTERN);
@@ -331,32 +358,117 @@ async function setCartLineQuantity(
   }
 }
 
-async function expectCartLine(page: Page, expectation: CartExpectation): Promise<Locator> {
+async function expectCartLine(
+  page: Page,
+  expectation: CartExpectation,
+  { timeout }: CartWaitOptions = {},
+): Promise<Locator> {
   const line = cartLineFor(page, expectation.productTitle);
-  await expect(line).toBeVisible({ timeout: CART_SETTLE_TIMEOUT_MS });
+  await expect(line).toBeVisible({ timeout: timeout ?? CART_SETTLE_TIMEOUT_MS });
 
   if (shouldAssertVariant(expectation.variantLabel)) {
-    await expect(line.getByText(expectation.variantLabel, { exact: false })).toBeVisible();
+    await expect(line.getByText(expectation.variantLabel, { exact: false })).toBeVisible({
+      timeout,
+    });
   }
 
   return line;
 }
 
+/** Expects the cart page line, with its variant, to show `expected` as its native quantity. */
+async function expectCartLineQuantity(
+  page: Page,
+  expectation: CartExpectation,
+  expected: number,
+  options: CartWaitOptions = {},
+): Promise<void> {
+  const quantityInput = quantityInputFor(await expectCartLine(page, expectation, options));
+  await expect
+    .poll(() => numericInputValue(quantityInput), {
+      message: `Expected the ${expectation.productTitle} cart line quantity to be ${expected}.`,
+      timeout: options.timeout,
+    })
+    .toBe(expected);
+}
+
+/**
+ * Waits for the cart change to settle, then reads the native quantity once.
+ * The state is only a wait: a settled cart with another quantity fails.
+ */
+async function expectSettledCartLineQuantity(
+  page: Page,
+  expectation: CartExpectation,
+  expected: number,
+  options: CartWaitOptions = {},
+): Promise<void> {
+  await waitForCartState(page, "updated", options);
+  const quantityInput = quantityInputFor(await expectCartLine(page, expectation, options));
+  expect(
+    await numericInputValue(quantityInput),
+    `Expected the ${expectation.productTitle} cart line quantity to be ${expected} after the cart settled.`,
+  ).toBe(expected);
+}
+
+/**
+ * Reloads the cart page, then expects the same line and variant with the
+ * native quantity. This checks what the storefront shows after a reload, not
+ * the stored cart itself.
+ */
+async function expectPersistedCartLineQuantity(
+  page: Page,
+  expectation: CartExpectation,
+  expected: number,
+  options: CartWaitOptions = {},
+): Promise<void> {
+  await page.reload();
+  await expectCartLineQuantity(page, expectation, expected, options);
+}
+
+/** Expects no visible cart page line for the product. Read once, after the caller proved the page loaded. */
+async function expectNoCartLine(page: Page, expectation: CartExpectation): Promise<void> {
+  const lines = page
+    .getByTestId("cart-page")
+    .filter({ visible: true })
+    .first()
+    .getByTestId("cart-line")
+    .filter({ hasText: expectation.productTitle, visible: true });
+  expect(
+    await lines.count(),
+    `Expected no ${expectation.productTitle} cart line on the cart page.`,
+  ).toBe(0);
+}
+
 async function increaseCartLineQuantity(page: Page, expectation: CartExpectation): Promise<void> {
-  const line = await expectCartLine(page, expectation);
-  await stepCartLineQuantity(line, "increase");
+  await changeCartLineQuantityAndExpectPersisted(page, expectation, "increase");
 }
 
 async function decreaseCartLineQuantity(page: Page, expectation: CartExpectation): Promise<void> {
-  const line = await expectCartLine(page, expectation);
-  await stepCartLineQuantity(line, "decrease");
+  await changeCartLineQuantityAndExpectPersisted(page, expectation, "decrease");
 }
 
-/** Clicks the line's increase or decrease control and waits for the native input value. */
+/**
+ * Steps the quantity, waits for the cart to settle after the optimistic change
+ * shows, reads the native quantity again, then reloads and reads it a third time.
+ */
+async function changeCartLineQuantityAndExpectPersisted(
+  page: Page,
+  expectation: CartExpectation,
+  control: "increase" | "decrease",
+): Promise<void> {
+  const line = await expectCartLine(page, expectation);
+  const expected = await stepCartLineQuantity(line, control);
+  await expectSettledCartLineQuantity(page, expectation, expected);
+  await expectPersistedCartLineQuantity(page, expectation, expected);
+}
+
+/**
+ * Clicks the line's increase or decrease control and waits for the optimistic
+ * native input value. Returns that value.
+ */
 async function stepCartLineQuantity(
   line: Locator,
   control: "increase" | "decrease",
-): Promise<void> {
+): Promise<number> {
   const quantityInput = quantityInputFor(line);
   const initialQuantity = await numericInputValue(quantityInput);
   const expectedQuantity = control === "increase" ? initialQuantity + 1 : initialQuantity - 1;
@@ -367,11 +479,45 @@ async function stepCartLineQuantity(
 
   await lineControl(line, `cart-line-${control}`).click();
   await expect.poll(() => numericInputValue(quantityInput), { message }).toBe(expectedQuantity);
+  return expectedQuantity;
 }
 
 async function removeCartLine(page: Page, expectation: CartExpectation): Promise<void> {
   const line = await expectCartLine(page, expectation);
   await removeLine(line);
+  await waitForCartState(page, "updated");
+  await expectNoCartLine(page, expectation);
+}
+
+/**
+ * Removes one line, then checks after the cart settles and after a reload that
+ * the line is gone. The witness line must show first after the reload, with
+ * its variant and quantity, so an empty or loading cart page cannot pass.
+ */
+async function removeCartLineAndExpectPersisted(
+  page: Page,
+  removed: CartExpectation,
+  witness: CartExpectation,
+  options: CartWaitOptions = {},
+): Promise<void> {
+  await removeLine(await expectCartLine(page, removed, options));
+  await waitForCartState(page, "updated", options);
+  await expectNoCartLine(page, removed);
+  await expectCartLineQuantity(page, witness, 1, options);
+
+  await page.reload();
+  await expectCartLineQuantity(page, witness, 1, options);
+  await expectNoCartLine(page, removed);
+}
+
+/**
+ * Cart lines are found by title text, which matches substrings without case.
+ * A second product is usable only when neither title contains the other.
+ */
+function hasDistinctCartLineTitle(title: string, otherTitle: string): boolean {
+  const normalized = title.toLowerCase();
+  const otherNormalized = otherTitle.toLowerCase();
+  return !normalized.includes(otherNormalized) && !otherNormalized.includes(normalized);
 }
 
 /** Clicks the line's remove control and waits for the line to go away. */
@@ -492,6 +638,156 @@ function quantityStepScript(delta: number): string {
 /** A helper fixture line with a working remove control. */
 function removableLineHtml(title: string): string {
   return `<li data-testid="cart-line">${title} <button type="button" data-testid="cart-line-remove" aria-label="Entfernen" onclick="this.closest('[data-testid=cart-line]').remove()">×</button></li>`;
+}
+
+test.describe("cart outcome helpers", () => {
+  const options: CartWaitOptions = { timeout: 500 };
+  const shirt: CartExpectation = {
+    cartPath: `${STOREFRONT_ORIGIN}/cart`,
+    productTitle: "Shirt",
+    variantLabel: "Small",
+  };
+  const hat: CartExpectation = { ...shirt, productTitle: "Hat", variantLabel: "Blue" };
+
+  test("fails the settled quantity check when the cart settles with another quantity", async ({
+    page,
+  }) => {
+    for (const [finalQuantity, passes] of [
+      [2, true],
+      [1, false],
+    ] as const) {
+      await test.step(`settles at ${finalQuantity}`, async () => {
+        // The increase shows 2 at once, then the cart settles at finalQuantity.
+        await openCartFixture(page, [
+          `${cartStatusHtml("idle", "", 'id="status"')}
+          <div data-testid="cart-page"><ul>
+            ${outcomeLineHtml("Shirt", "Small", 1, settlingIncreaseScript(finalQuantity))}
+          </ul></div>`,
+        ]);
+        const optimistic = await stepCartLineQuantity(cartLineFor(page, "Shirt"), "increase");
+        expect(optimistic).toBe(2);
+
+        const settledCheck = expectSettledCartLineQuantity(page, shirt, optimistic, options);
+        if (passes) {
+          await settledCheck;
+        } else {
+          await expect(settledCheck).rejects.toThrow(
+            "Expected the Shirt cart line quantity to be 2 after the cart settled.",
+          );
+        }
+      });
+    }
+  });
+
+  test("fails the reload check for another quantity, another variant, or a missing line", async ({
+    page,
+  }) => {
+    const cases: [string, string | null][] = [
+      [outcomeLineHtml("Shirt", "Small", 2), null],
+      [outcomeLineHtml("Shirt", "Small", 1), "Expected the Shirt cart line quantity to be 2."],
+      [outcomeLineHtml("Shirt", "Large", 2), "Small"],
+      [outcomeLineHtml("Hat", "Blue", 2), "Shirt"],
+    ];
+
+    for (const [reloaded, message] of cases) {
+      await test.step(reloaded, async () => {
+        await openCartFixture(page, [
+          `<div data-testid="cart-page"><ul>${outcomeLineHtml("Shirt", "Small", 2)}</ul></div>`,
+          `<div data-testid="cart-page"><ul>${reloaded}</ul></div>`,
+        ]);
+        const check = expectPersistedCartLineQuantity(page, shirt, 2, options);
+        if (message === null) {
+          await check;
+        } else {
+          await expect(check).rejects.toThrow(message);
+        }
+      });
+    }
+  });
+
+  test("fails the removal reload check unless the witness line shows and the removed line does not", async ({
+    page,
+  }) => {
+    const before = `<div data-testid="cart-page"><ul>
+      ${outcomeLineHtml("Shirt", "Small", 1, "", "this.closest('[data-testid=cart-line]').remove()")}
+      ${outcomeLineHtml("Hat", "Blue", 1)}
+    </ul></div>`;
+    const cases: [string, string | null][] = [
+      [`<div data-testid="cart-page"><ul>${outcomeLineHtml("Hat", "Blue", 1)}</ul></div>`, null],
+      // An empty or still loading cart page has no Shirt line either. It must not pass.
+      [`<div data-testid="cart-page"><ul></ul></div>`, "Hat"],
+      [
+        `<div data-testid="cart-page"><ul>${outcomeLineHtml("Hat", "Blue", 2)}</ul></div>`,
+        "Expected the Hat cart line quantity to be 1.",
+      ],
+      [
+        `<div data-testid="cart-page"><ul>${outcomeLineHtml("Shirt", "Small", 1)}${outcomeLineHtml("Hat", "Blue", 1)}</ul></div>`,
+        "Expected no Shirt cart line on the cart page.",
+      ],
+    ];
+
+    for (const [reloaded, message] of cases) {
+      await test.step(reloaded, async () => {
+        await openCartFixture(page, [
+          `${cartStatusHtml("updated", "")}${before}`,
+          `${cartStatusHtml("idle", "")}${reloaded}`,
+        ]);
+        const check = removeCartLineAndExpectPersisted(page, shirt, hat, options);
+        if (message === null) {
+          await check;
+        } else {
+          await expect(check).rejects.toThrow(message);
+        }
+      });
+    }
+  });
+});
+
+/**
+ * Serves `bodies` as the cart page, one per request in order, so a reload can
+ * show another cart. The last body repeats. Every other request is aborted.
+ */
+async function openCartFixture(page: Page, bodies: readonly string[]): Promise<void> {
+  let requestCount = 0;
+  await page.unrouteAll({ behavior: "ignoreErrors" });
+  await page.route("**/*", (route) => route.abort());
+  await page.route(`${STOREFRONT_ORIGIN}/cart`, (route) => {
+    const body = bodies[Math.min(requestCount, bodies.length - 1)];
+    requestCount += 1;
+    return route.fulfill({ body: `<!doctype html>${body}`, contentType: "text/html", status: 200 });
+  });
+  await page.goto(`${STOREFRONT_ORIGIN}/cart`);
+}
+
+/** A helper fixture line with a variant, a quantity input, and optional controls. */
+function outcomeLineHtml(
+  title: string,
+  variant: string,
+  quantity: number,
+  increaseScript = "",
+  removeScript = "",
+): string {
+  const increase =
+    increaseScript === ""
+      ? ""
+      : `<button type="button" data-testid="cart-line-increase" aria-label="Mehr" onclick="${increaseScript}">+</button>`;
+  const remove =
+    removeScript === ""
+      ? ""
+      : `<button type="button" data-testid="cart-line-remove" aria-label="Entfernen" onclick="${removeScript}">×</button>`;
+  return `<li data-testid="cart-line">
+    <span>${title}</span> <span>${variant}</span>
+    <input type="number" data-testid="cart-line-quantity" aria-label="Menge" value="${quantity}">
+    ${increase}${remove}
+  </li>`;
+}
+
+/**
+ * Inline click handler that shows quantity 2 at once while the status is
+ * updating, then settles the status as updated with `finalQuantity`.
+ */
+function settlingIncreaseScript(finalQuantity: number): string {
+  return `const input = this.closest('[data-testid=cart-line]').querySelector('[data-testid=cart-line-quantity]'); const status = document.getElementById('status'); input.value = '2'; status.dataset.cartState = 'updating'; setTimeout(() => { input.value = '${finalQuantity}'; status.dataset.cartState = 'updated'; }, 100);`;
 }
 
 /** A cart status region for helper fixtures. The text is arbitrary on purpose. */

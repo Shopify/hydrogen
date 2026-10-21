@@ -49,6 +49,8 @@ After Add to cart, the drawer must open by itself. The suite uses `cart-trigger`
 
 Give each `cart-status` region a `data-cart-state` attribute, derived from the same cart state as its message: `updating` while a change or a cart reload is pending, `error` after an unresolved network failure, `updated` after a pending cycle finished without a network failure, and `idle` before the first cycle. It is the one state attribute in the contract. The suite only waits for it: `updated` needs one updated region and none updating or failed. Then it checks the real result.
 
+After a cart change, the suite reads the native quantity again, reloads the cart page, and expects the same line and quantity. To check a removal after a reload, it keeps a second line in the cart as a witness.
+
 ### Collection and search results
 
 | Test ID | Put it on |
