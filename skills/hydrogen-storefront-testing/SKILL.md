@@ -56,7 +56,7 @@ The suite finds a cart line by its product title inside the visible `cart-page` 
 | `product-results` | The element that holds the product results of a collection or search page |
 | `product-card` | The product link of each result |
 
-The suite reads only visible `product-card` links inside `product-results`. The collection test matches a product by the card's accessible name, and the collection filter test counts results by unique product URL path.
+The suite reads only visible `product-card` links inside `product-results`. The collection and search tests match a product by the card's accessible name, and the collection filter test counts results by unique product URL path.
 
 ### Collection filters
 

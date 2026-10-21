@@ -29,7 +29,7 @@ The suite finds some elements with `data-testid` attributes and Playwright `getB
 
 Collection and search pages must expose product cards as accessible links to product detail pages.
 
-The suite reads only the visible `product-card` links inside `product-results`, so product links outside the results, such as recommendations, do not count. The collection test matches a card by its accessible name, and the collection filter test counts the unique product URL paths of the cards.
+The suite reads only the visible `product-card` links inside `product-results`, so product links outside the results, such as recommendations, do not count. The collection and search tests match a card by its accessible name, and the collection filter test counts the unique product URL paths of the cards.
 
 ## Collection Filters
 
@@ -45,7 +45,7 @@ When a probed collection exposes a Storefront API PRICE_RANGE filter, the page m
 
 The search page must expose a searchbox. A visible button with an accessible name containing Search is supported; otherwise the suite submits the searchbox with Enter.
 
-The suite discovers a live product title, searches for it, and verifies that product appears in visible results.
+The suite discovers a live product title, searches for it, and verifies that product appears in visible results. It looks for a visible `product-card` link whose accessible name contains the title inside `product-results` (see Product Results).
 
 ## Product Page
 
