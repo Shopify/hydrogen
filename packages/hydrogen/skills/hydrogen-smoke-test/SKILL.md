@@ -145,7 +145,7 @@ Expected: a redirect whose `location` header points at Shopify's hosted login, n
 
 - `/account` renders the signed-out panel when no session exists, without touching access tokens.
 - The logout control is a native `<form method="post" action="/account/logout">`; the handler enforces same-origin POST and returns a raw redirect only a native browser submit can follow.
-- Completing a real login requires a public HTTPS origin registered for the OAuth callback. To get one locally, follow the `hydrogen-local-https` skill; agent shells usually run with `CI` set and no TTY, so ask the user to run `npx hydrogen certs install` (or the `dev:https` script) in a real terminal. When the local origin is still not registered, verify the signed-out checks and say so instead of faking signed-in ones.
+- Completing a real login requires a public HTTPS origin registered for the OAuth callback. To get one locally, follow the `hydrogen-local-https` skill: the user runs the `dev:https` script in a real terminal outside CI, where the `localHttps` Vite plugin serves trusted HTTPS and registers the Customer Account URLs through Shopify CLI. Agent shells usually run with `CI` set and no TTY, which skips both. `npx hydrogen certs install` only provisions certificate files; it registers no URLs. If the user can't run `dev:https`, verify the signed-out checks and say so instead of faking signed-in ones.
 
 ## Product Page
 
