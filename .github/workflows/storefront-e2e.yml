@@ -98,6 +98,15 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+      - name: Upload Playwright JSON results
+        if: failure()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: storefront-e2e-results-${{ matrix.template.port }}
+          path: packages/storefront-e2e/playwright-results.json
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Upload template dev log
         if: failure()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0

@@ -27,8 +27,8 @@ later" and "Hydrogen 2026-04 and earlier"; public changelogs use neither phrase.
 | `2026-04` | Classic Hydrogen (2026.4.x), React Router 7 only | Classic back-fixes and back-fix releases |
 | `do-not-delete-h2-backup-use-2026-04-branch` | Frozen snapshot of pre-takeover `main` (classic Hydrogen) | Nothing — backup only, never target or delete it |
 | `preview` | Dead pre-release branch for the new version | Nothing — its final tree became `main` via #4162, which merged a rebuilt copy of preview's history (new SHAs), not preview itself |
-| `dist-preview` | Compiled templates for the new version | Nothing — generated; force-pushed by `main`'s Release workflow, downloaded by `hydrogen setup` |
-| `dist` | Classic-era compiled templates | Nothing — generated, frozen since 2026-02 |
+| `dist` | Compiled templates for the new version | Nothing — generated; force-pushed by `main`'s Release workflow |
+| `dist-preview` | Compiled templates downloaded by `hydrogen setup` | Nothing — no longer updated; keep it so `hydrogen setup` can still scaffold |
 
 `2026-04` and the backup branch are protected: deletions and force-pushes are blocked, and merges
 require an approving review. `.github/workflows/release.yml` on each branch is the source of truth
