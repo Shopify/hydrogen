@@ -136,6 +136,7 @@ function SearchHeader({ term }: { term: string }) {
             key={term}
             {...registerSearchForm("query")}
             id="search-q"
+            data-testid="search-input"
             defaultValue={term}
             placeholder="Search"
             className="peer h-11 w-full ps-10 pe-14"

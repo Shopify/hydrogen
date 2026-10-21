@@ -89,7 +89,14 @@ When a probed collection exposes a Storefront API PRICE_RANGE filter, the page m
 
 ## Search
 
-The search page must expose a searchbox. A visible button with an accessible name containing Search is supported; otherwise the suite submits the searchbox with Enter. A submit that leaves the URL unchanged fails. The suite does not require a specific query parameter.
+The search page form exposes its query input, and optionally its submit control, with `data-testid` attributes:
+
+| Test ID | Meaning |
+| --- | --- |
+| `search-input` | The search query input |
+| `search-submit` | The search submit control (optional) |
+
+The suite fills the first visible `search-input`. If the page has a visible `search-submit`, the suite clicks it; otherwise it presses Enter in the input. A storefront without a marked submit control is tested with Enter only. A submit that leaves the URL unchanged fails. The suite does not require a specific query parameter.
 
 The suite discovers live products with their handle and title from the Storefront API. For up to eight products, it searches for the title and looks for that product's card in `product-results` (see Product Results). If the results are empty or show only other products, it tries the next product. A card that links to the product but does not have the product title in its accessible name fails the test. If none of the eight products shows in its own results, the test fails. The reference storefronts also put `product-results` on the existing empty-results element after a query.
 
@@ -162,4 +169,4 @@ Operational expectations:
 
 When test locators change, update the affected specs and this document together.
 
-The suite reads test IDs for the product title, same-product option values (`product-variant-option`), and add to cart control (see Product Test IDs; `product-sibling-option` is defined but not read), for the cart elements in Cart Test IDs, for product results (see Product Results), and for collection filter values (see Collection Filters). It finds all other UI by semantic roles and label strings, including the English cart totals status text inside `cart-status`.
+The suite reads test IDs for the product title, same-product option values (`product-variant-option`), and add to cart control (see Product Test IDs; `product-sibling-option` is defined but not read), for the cart elements in Cart Test IDs, for product results (see Product Results), for collection filter values (see Collection Filters), and for the search controls (see Search). It finds all other UI by semantic roles and label strings, including the English cart totals status text inside `cart-status`.

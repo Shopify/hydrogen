@@ -212,6 +212,7 @@ function visibleFilters(filters: AvailableFilter[]) {
     <form method="get" action="/search" class="mt-8 flex max-w-xl gap-3">
       <input
         v-bind="registerSearchField('query')"
+        data-testid="search-input"
         :value="term"
         placeholder="Search products"
         class="min-w-0 flex-1 rounded border border-black/15 px-4 py-2 text-base"
@@ -219,6 +220,7 @@ function visibleFilters(filters: AvailableFilter[]) {
       <button
         type="submit"
         class="rounded bg-black px-5 py-2 text-sm font-semibold text-white hover:bg-black/80"
+        data-testid="search-submit"
       >
         Search
       </button>

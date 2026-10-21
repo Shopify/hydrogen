@@ -54,9 +54,9 @@ async function searchForMatchingProduct(
 ): Promise<boolean> {
   await page.goto(paths.search);
   const beforeUrl = page.url();
-  const searchInput = page.getByRole("searchbox").first();
+  const searchInput = page.getByTestId("search-input").filter({ visible: true }).first();
   await searchInput.fill(product.title);
-  await submitSearch(searchInput);
+  await submitSearch(page, searchInput);
 
   // A search that does not navigate cannot prove that the query rendered the results.
   await expect(page, "Expected the search submit to change the URL.").not.toHaveURL(beforeUrl, {
@@ -66,15 +66,15 @@ async function searchForMatchingProduct(
   return card !== null;
 }
 
-async function submitSearch(searchbox: Locator): Promise<void> {
-  const form = searchbox.locator("xpath=ancestor::form[1]");
-  const searchButton = form.getByRole("button", { name: /search/i }).first();
-  if (await searchButton.isVisible().catch(() => false)) {
-    await searchButton.click();
+/** Clicks the first visible search submit control, or presses Enter when there is none. */
+async function submitSearch(page: Page, searchInput: Locator): Promise<void> {
+  const submit = page.getByTestId("search-submit").filter({ visible: true }).first();
+  if ((await submit.count()) > 0) {
+    await submit.click();
     return;
   }
 
-  await searchbox.press("Enter");
+  await searchInput.press("Enter");
 }
 
 test.describe("search result helpers", () => {
@@ -165,19 +165,66 @@ test.describe("search result helpers", () => {
   });
 });
 
-/** The search page form: a searchbox and a Search button. */
+test.describe("search input and submit helpers", () => {
+  const paths: SearchPaths = { product: "/products/", search: `${STOREFRONT_ORIGIN}/search` };
+  const options: SearchOptions = { timeout: 200 };
+  const shirt: ExpectedProduct = { handle: "shirt", title: "Shirt" };
+  const shirtResults = () =>
+    `<div data-testid="product-results">${productCardHtml("/products/shirt", "Shirt")}</div>`;
+
+  test("clicks the marked localized submit control, not the default unmarked button", async ({
+    page,
+  }) => {
+    // Enter would use the first submit button, which sends via=enter.
+    const fixture = await openSearchFixture(
+      page,
+      shirtResults,
+      `<form action="/search" method="get">
+        <input data-testid="search-input" type="search" name="q" aria-label="Suche">
+        <button type="submit" name="via" value="enter">Search</button>
+        <button data-testid="search-submit" type="submit" name="via" value="button">Suchen</button>
+      </form>`,
+    );
+
+    await expect(findSearchMatch(page, paths, [shirt], options)).resolves.toBe(shirt);
+    expect(fixture.queries).toEqual(["Shirt"]);
+    expect(fixture.submitters).toEqual(["button"]);
+  });
+
+  test("presses Enter in the marked input when there is no marked submit control", async ({
+    page,
+  }) => {
+    // An unmarked English button outside the form would search for "decoy".
+    const fixture = await openSearchFixture(
+      page,
+      shirtResults,
+      `<button type="button" onclick="location.href = '/search?q=decoy'">Search</button>
+      <form action="/search" method="get">
+        <input data-testid="search-input" type="search" name="q" aria-label="Suche">
+      </form>`,
+    );
+
+    await expect(findSearchMatch(page, paths, [shirt], options)).resolves.toBe(shirt);
+    expect(fixture.queries).toEqual(["Shirt"]);
+    expect(fixture.submitters).toEqual([null]);
+  });
+});
+
+/** An unmarked header search form. Clicking or using it fails the fixture journey. */
+const HEADER_SEARCH_DECOY = `<header><form action="/decoy" method="get" role="search">
+  <input type="search" name="q" aria-label="Search"><button type="submit">Search</button>
+</form></header>`;
+
+/** The search page form: a marked query input and a marked localized submit control. */
 const SEARCH_FORM = `<form action="/search" method="get" role="search">
-  <input type="search" name="q" aria-label="Search">
-  <button type="submit">Search</button>
+  <input data-testid="search-input" type="search" name="q" aria-label="Suche">
+  <button data-testid="search-submit" type="submit" name="via" value="button">Suchen</button>
 </form>`;
 
 /** A search form whose submit does nothing. */
-const NO_OP_SEARCH_FORM = `<form action="/search" method="get" role="search" onsubmit="event.preventDefault()">
-  <input type="search" name="q" aria-label="Search">
+const NO_OP_SEARCH_FORM = `<form action="/search" method="get" onsubmit="event.preventDefault()">
+  <input data-testid="search-input" type="search" name="q" aria-label="Suche">
 </form>`;
-
-/** No header decoy: the role-based searchbox lookup takes the first searchbox. */
-const HEADER_SEARCH_DECOY = "";
 
 type SearchFixture = {
   /** The `q` value of each search request, in order. */

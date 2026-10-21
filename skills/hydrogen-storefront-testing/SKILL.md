@@ -67,7 +67,12 @@ Keep the checkbox inside its marked label. The suite clicks the label, expects t
 
 ### Search
 
-After a query, the suite looks for the searched product's card in `product-results`. It finds the search input and the submit button by role and name, and expects the URL to change.
+| Test ID | Put it on |
+| --- | --- |
+| `search-input` | The query input of the full search page. Not a header or predictive search input |
+| `search-submit` | Optional. The submit control of that search form |
+
+The suite fills `search-input`, clicks `search-submit` when it exists or presses Enter, and expects the URL to change. Then it looks for the searched product's card in `product-results`.
 
 ## How to adopt
 

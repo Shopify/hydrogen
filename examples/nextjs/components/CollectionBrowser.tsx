@@ -268,6 +268,7 @@ function SearchPage(props: SearchPageProps) {
         <input
           {...registerSearchField("query")}
           id="search-q"
+          data-testid="search-input"
           defaultValue={term}
           key={term}
           placeholder={content.search.placeholder}
@@ -276,6 +277,7 @@ function SearchPage(props: SearchPageProps) {
         <button
           type="submit"
           className="rounded-button button-primary inline-flex h-11 items-center justify-center px-4 text-sm font-medium"
+          data-testid="search-submit"
         >
           {content.search.submit}
         </button>
