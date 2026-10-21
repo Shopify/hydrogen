@@ -25,6 +25,7 @@ The server listens on `http://localhost:44100` (Remix's default). Set `PORT` or 
 | `dev:https` | `dev` on `https://local.tryhydrogen.dev:5173` for Customer Account OAuth. The first run creates and trusts a local certificate with mkcert, which can ask for your password |
 | `hmr` | `server.ts` behind Remix's hot module replacement proxy (`remix/node-hmr`) |
 | `start` | Production mode: minified, fingerprinted assets with immutable caching |
+| `test` | Unit tests with Node's test runner (`node --test`), like the Next.js example: discount redirects, locale resolution, environment validation, account form schemas, and the Storefront cache |
 | `typecheck` | `tsc`, `hydrogen gql check` for every `gql()` document, then `remix doctor --strict` for the project's Remix conventions |
 
 Unlike the Vite plugin the other examples use for `dev:https`, `server.ts` doesn't push the Customer Account API URLs with Shopify CLI. If the store doesn't already allow them, add the callback URL `https://local.tryhydrogen.dev:5173/account/authorize`, the JavaScript origin `https://local.tryhydrogen.dev:5173`, and the logout URL `https://local.tryhydrogen.dev:5173` in the store's Customer Account API settings.
@@ -84,6 +85,8 @@ STOREFRONT_BASE_URL=http://localhost:44100/ pnpm test:e2e:storefront
 ```
 
 The collection filter group skips, because the Skeleton's collection page has no filters.
+
+`pnpm test` runs the unit tests in `__test__/`.
 
 ## Differences from the Skeleton
 
