@@ -1,3 +1,4 @@
+import { revalidate } from "@pitlane/vite-plugin-remix/hmr";
 import { initializeShopifyScripts, trackCartAnalytics } from "@shopify/hydrogen";
 import { navigate, run } from "remix/component";
 import {
@@ -32,15 +33,8 @@ app.addEventListener("error", (event) => {
 });
 
 if (import.meta.hot) {
-  // Under `pnpm hmr`, editing a server module re-renders the current page in place.
-  import.meta.hot.on("server:update", async () => {
-    try {
-      await app.ready();
-      await app.frames.top.reload();
-    } catch (error) {
-      console.error("Error reloading top frame on server update", error);
-    }
-  });
+  // Editing a server module re-renders the current page in place.
+  import.meta.hot.on("server:update", () => revalidate(app));
 }
 
 const publishPageViewed = createPageViewPublisher();

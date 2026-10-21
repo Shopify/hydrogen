@@ -10,7 +10,9 @@ import type { AppStorefrontClient } from "./storefront.ts";
 
 /**
  * Cart server handlers. Like the other examples, they're created without
- * `customerSession`, so carts aren't connected to the signed-in customer.
+ * `customerSession`, so carts aren't connected to the signed-in customer. Connecting them
+ * safely also needs `cartServerHandlers` on the Customer Account handlers, so logout
+ * detaches the customer, and that fails under `vite dev` (see the README).
  */
 export const cartHandlers = createCartServerHandlers();
 

@@ -1,9 +1,6 @@
 import { createElement } from "remix/component";
 import { createCookie } from "remix/cookie";
-import { compression } from "remix/middleware/compression";
-import { logger } from "remix/middleware/logger";
 import { session } from "remix/middleware/session";
-import { staticFiles } from "remix/middleware/static";
 import { createRouter, type RouterContext } from "remix/router";
 import { createCookieSessionStorage } from "remix/session-storage/cookie";
 
@@ -16,8 +13,7 @@ import policiesController from "./actions/policies/controller.tsx";
 import productsController from "./actions/products/controller.tsx";
 import seoController from "./actions/seo/controller.ts";
 import type { DocumentAssets } from "./assets.ts";
-import type { Runtime } from "./env.ts";
-import { browserAssets } from "./middleware/browser-assets.ts";
+import { requireEnv, type Runtime } from "./env.ts";
 import { browsingCache } from "./middleware/browsing-cache.ts";
 import { errorPages } from "./middleware/error-pages.ts";
 import { layout } from "./middleware/layout.ts";
@@ -29,14 +25,14 @@ import { routes } from "./routes.ts";
 import { NotFoundPage } from "./ui/error-pages.tsx";
 
 /**
- * Builds the app for one request. The buyer IP comes from the request's connection, so the
- * runtime values enter through middleware instead of module state.
+ * Builds the app for one request. The Worker's `env`, cache, and `waitUntil` are
+ * request-scoped, so they enter through middleware instead of module state.
  *
  * Middleware order matters:
- * - Request logging and response compression wrap everything.
- * - Static files and compiled browser assets are served first, without sessions or
- *   Hydrogen's personalized-response headers.
- * - The renderer and the outer error boundary wrap everything else.
+ * - The renderer and the outer error boundary wrap everything. Oxygen compresses
+ *   responses and serves browser assets from its CDN, and MiniOxygen logs requests in
+ *   development, so the Node version's compression, logging, and asset middleware
+ *   aren't needed here.
  * - The browsing cache policy applies after Hydrogen's response headers and the session cookie.
  * - The locale prefix is resolved before routing.
  * - Hydrogen's response headers are applied outside the session, after its cookie is set.
@@ -49,17 +45,11 @@ function createAppRouter(runtimeValue: Runtime, documentAssets: DocumentAssets) 
     httpOnly: true,
     path: "/",
     sameSite: "lax",
-    secrets: [runtimeValue.env.SESSION_SECRET],
+    secrets: [requireEnv(runtimeValue.env, "SESSION_SECRET")],
   });
 
   return createRouter({
     middleware: [
-      // Quiet under `remix test`, where request lines would interleave with test output.
-      logger(process.env.NODE_ENV === "test" ? { log() {} } : {}),
-      // Streams HTML with a flush after each chunk, so streaming still reaches the browser early.
-      compression(),
-      staticFiles("./public", { index: false }),
-      browserAssets(),
       runtime(runtimeValue),
       ...render(documentAssets),
       browsingCache(),

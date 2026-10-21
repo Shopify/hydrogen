@@ -41,7 +41,7 @@ jobs:
             directory: examples/remix
             package: "@shopify/hydrogen-example-remix"
             port: 4203
-            devCommand: "PORT=4203 pnpm --filter @shopify/hydrogen-example-remix dev"
+            devCommand: "pnpm --filter @shopify/hydrogen-example-remix exec vite dev --port 4203"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -67,8 +67,7 @@ jobs:
         run: cp ${{ matrix.template.directory }}/.env.example ${{ matrix.template.directory }}/.env
 
       - name: Build ${{ matrix.template.name }}
-        # The Remix example runs from source and has no build step.
-        run: pnpm --filter ${{ matrix.template.package }} run --if-present build
+        run: pnpm --filter ${{ matrix.template.package }} build
 
       - name: Start ${{ matrix.template.name }} dev server
         run: |

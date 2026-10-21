@@ -6,28 +6,8 @@ import {
   type ShopifyRequestContextWithBuyerIp,
   type StorefrontClient,
 } from "@shopify/hydrogen";
-import { LRUCache } from "lru-cache";
 
-import type { Runtime, StorefrontCache } from "../env.ts";
-
-const STOREFRONT_CACHE_MAX_ENTRIES = 1000;
-
-/**
- * A process-local, size-bounded Storefront API cache, like the other Node examples use.
- * Each server process has its own; share a store such as Redis across replicas instead.
- */
-export function createStorefrontCache(): StorefrontCache {
-  const cache = new LRUCache<string, object>({ max: STOREFRONT_CACHE_MAX_ENTRIES });
-  return {
-    get: (key) => cache.get(key),
-    set(key, value, options) {
-      if (typeof value !== "object" || value === null) return;
-      // Hydrogen passes seconds; lru-cache expects milliseconds.
-      cache.set(key, value, { ttl: options?.ttl ? options.ttl * 1000 : undefined });
-    },
-    delete: (key) => void cache.delete(key),
-  };
-}
+import type { Runtime } from "../env.ts";
 
 /**
  * One Storefront client per request. With a private token, the client forwards the
@@ -38,7 +18,7 @@ export function createAppStorefrontClient(
   runtime: Runtime,
   requestContext: ShopifyRequestContextWithBuyerIp,
 ): AppStorefrontClient {
-  const { env, cache } = runtime;
+  const { env, cache, waitUntil } = runtime;
   const privateToken = env.PRIVATE_STOREFRONT_API_TOKEN;
 
   if (privateToken) {
@@ -50,6 +30,7 @@ export function createAppStorefrontClient(
         storefrontId: env.PUBLIC_STOREFRONT_ID,
         privateStorefrontToken: privateToken,
         cache,
+        waitUntil,
       },
     });
   }
@@ -62,6 +43,7 @@ export function createAppStorefrontClient(
       storefrontId: env.PUBLIC_STOREFRONT_ID,
       publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN || undefined,
       cache,
+      waitUntil,
     },
   });
 }

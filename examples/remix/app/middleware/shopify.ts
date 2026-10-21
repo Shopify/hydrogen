@@ -52,15 +52,17 @@ export function shopify(): Middleware<{
   property: "shopify";
 }> {
   return async (context, next) => {
-    const runtime = requireContext(context, RuntimeContext, "runtime");
-    const { buyerIp, env } = runtime;
+    const { env, ...runtime } = requireContext(context, RuntimeContext, "runtime");
     const locale = context.get(LocaleContext);
     const session = requireContext(context, Session, "session");
     // Hydrogen route handlers match the prefix-free path, like the app router does.
     const request = requestWithUrl(context.request, context.url);
 
+    const buyerIp = request.headers.get("oxygen-buyer-ip");
+    if (!buyerIp) throw new Error("The Oxygen runtime must provide the oxygen-buyer-ip header.");
+
     const requestContext = createShopifyRequestContext({ request, i18n: locale, buyerIp });
-    const storefront = createAppStorefrontClient(runtime, requestContext);
+    const storefront = createAppStorefrontClient({ env, ...runtime }, requestContext);
     const customerAccount = createCustomerAccount({
       env,
       requestContext,

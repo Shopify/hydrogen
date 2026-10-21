@@ -5,21 +5,27 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
-    "dev": "NODE_ENV=development node --env-file-if-exists=.env --watch --import remix/node-tsx server.ts",
-    "dev:https": "NODE_ENV=development node --env-file-if-exists=.env --watch --import remix/node-tsx server.ts",
-    "hmr": "NODE_ENV=development node --env-file-if-exists=.env hmr.ts",
-    "start": "NODE_ENV=production node --env-file-if-exists=.env --import remix/node-tsx server.ts",
+    "dev": "vite dev",
+    "dev:https": "vite dev",
+    "build": "vite build",
+    "preview": "vite build && vite preview",
+    "deploy": "shopify hydrogen deploy --build-command 'pnpm build'",
     "typecheck": "tsc --noEmit && hydrogen gql check --fail-on-warn && remix doctor --strict",
     "test": "NODE_ENV=test remix test"
   },
   "dependencies": {
+    "@pitlane/assets": "0.2.0",
     "@shopify/hydrogen": "workspace:*",
-    "lru-cache": "^11.3.6",
     "remix": "3.1.0"
   },
   "devDependencies": {
+    "@pitlane/vite-plugin-remix": "0.9.0",
+    "@shopify/cli": "4.8.1",
+    "@shopify/mini-oxygen": "workspace:*",
+    "@shopify/oxygen-workers-types": "^4.1.6",
     "@types/node": "^25.8.0",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vite": "^8.0.3"
   },
   "engines": {
     "node": ">=24.3.0"

@@ -1,11 +1,4 @@
-/** The key-value store shape Hydrogen's Storefront client accepts as `cache`; `ttl` is in seconds. */
-export interface StorefrontCache {
-  get(key: string): unknown;
-  set(key: string, value: unknown, options?: { ttl?: number }): void;
-  delete(key: string): void;
-}
-
-/** Environment variables. `node --env-file-if-exists=.env` loads them from `.env`. */
+/** Worker bindings. MiniOxygen loads them from `.env`; Oxygen injects them per deployment. */
 export interface Env {
   PUBLIC_STORE_DOMAIN: string;
   /** Enables buyer-aware server rendering. Without it, the public token is used. */
@@ -17,37 +10,16 @@ export interface Env {
   PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: string;
 }
 
-/** Values the app reads through router context: process-wide config plus the request's client. */
+/** Request-scoped Worker values that the app reads through router context. */
 export interface Runtime {
   env: Env;
-  cache: StorefrontCache;
-  /** The client address from the Node server, used as the buyer IP for private Storefront API requests. */
-  buyerIp: string;
+  cache: Cache;
+  waitUntil?: (promise: Promise<unknown>) => void;
 }
 
-const REQUIRED_KEYS = [
-  "PUBLIC_STORE_DOMAIN",
-  "SESSION_SECRET",
-  "SHOP_ID",
-  "PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID",
-] as const;
-
-/** Reads and validates the environment once, so the server fails before it starts listening. */
-export function readEnv(source: Record<string, string | undefined> = process.env): Env {
-  const missing = REQUIRED_KEYS.filter((key) => !source[key]);
-  if (missing.length) {
-    throw new Error(
-      `${missing.join(", ")} ${missing.length === 1 ? "is" : "are"} required. Copy .env.example to .env to run the example.`,
-    );
-  }
-
-  return {
-    PUBLIC_STORE_DOMAIN: source.PUBLIC_STORE_DOMAIN ?? "",
-    PRIVATE_STOREFRONT_API_TOKEN: source.PRIVATE_STOREFRONT_API_TOKEN || undefined,
-    PUBLIC_STOREFRONT_API_TOKEN: source.PUBLIC_STOREFRONT_API_TOKEN || undefined,
-    PUBLIC_STOREFRONT_ID: source.PUBLIC_STOREFRONT_ID || undefined,
-    SESSION_SECRET: source.SESSION_SECRET ?? "",
-    SHOP_ID: source.SHOP_ID ?? "",
-    PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: source.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID ?? "",
-  };
+/** Reads a required binding, failing with setup instructions when `.env` is missing it. */
+export function requireEnv<Key extends keyof Env>(env: Env, key: Key): NonNullable<Env[Key]> {
+  const value = env[key];
+  if (!value) throw new Error(`${key} is required. Copy .env.example to .env to run the example.`);
+  return value as NonNullable<Env[Key]>;
 }

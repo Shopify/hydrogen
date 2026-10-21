@@ -7,7 +7,7 @@ import {
 } from "@shopify/hydrogen/customer-account";
 import type { Session } from "remix/session";
 
-import type { Env } from "../env.ts";
+import { requireEnv, type Env } from "../env.ts";
 
 export type CustomerSessionManager = WritableCustomerSessionManager;
 
@@ -43,8 +43,8 @@ export function createCustomerAccount({
   requestContext: ShopifyRequestContext;
   sessionManager: CustomerSessionManager;
 }): CustomerAccount {
-  const shopId = env.SHOP_ID;
-  const customerAccountApiClientId = env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID;
+  const shopId = requireEnv(env, "SHOP_ID");
+  const customerAccountApiClientId = requireEnv(env, "PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID");
 
   return {
     client: createCustomerAccountClient({ shopId, requestContext }),

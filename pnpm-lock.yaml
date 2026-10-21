@@ -237,22 +237,37 @@ importers:
 
   examples/remix:
     dependencies:
+      '@pitlane/assets':
+        specifier: 0.2.0
+        version: 0.2.0(vite@8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))
       '@shopify/hydrogen':
         specifier: workspace:*
         version: link:../../packages/hydrogen
-      lru-cache:
-        specifier: ^11.3.6
-        version: 11.3.6
       remix:
         specifier: 3.1.0
         version: 3.1.0(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
     devDependencies:
+      '@pitlane/vite-plugin-remix':
+        specifier: 0.9.0
+        version: 0.9.0(remix@3.1.0(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2))(vite@8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))
+      '@shopify/cli':
+        specifier: 4.8.1
+        version: 4.8.1
+      '@shopify/mini-oxygen':
+        specifier: workspace:*
+        version: link:../../packages/mini-oxygen
+      '@shopify/oxygen-workers-types':
+        specifier: ^4.1.6
+        version: 4.2.0
       '@types/node':
         specifier: ^25.8.0
         version: 25.8.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      vite:
+        specifier: ^8.0.3
+        version: 8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0)
 
   examples/solid-start:
     dependencies:
@@ -4015,6 +4030,34 @@ packages:
   '@parcel/watcher@2.5.6':
     resolution: {integrity: sha512-tmmZ3lQxAe/k/+rNnXQRawJ4NjxO2hqiOLTHvWchtGZULp4RyFeh6aU4XdOYBFe2KE1oShQTv4AblOs2iOrNnQ==, tarball: https://registry.npmjs.org/@parcel/watcher/-/watcher-2.5.6.tgz}
     engines: {node: '>= 10.0.0'}
+
+  '@pitlane/assets@0.2.0':
+    resolution: {integrity: sha512-8b0xTApHaN4DI6yrdooIjfcafOkn2lKYDT4G/9B+UC+ItaUMZJs9DBdlS7+jdVSTlhb/EY1LRWvjOmatroGjmg==, tarball: https://registry.npmjs.org/@pitlane/assets/-/assets-0.2.0.tgz}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    peerDependencies:
+      vite: '>=8.1.0'
+    peerDependenciesMeta:
+      vite:
+        optional: true
+
+  '@pitlane/crawler@0.3.0':
+    resolution: {integrity: sha512-dDrNjGmbvEEXfdi9H0+Ki4SSpFEr5oG1/uUntoVUeiQXOO2ooNmzeFDQCi6uc/RHWvvCwjIJ96mMAaLHsoVZyQ==, tarball: https://registry.npmjs.org/@pitlane/crawler/-/crawler-0.3.0.tgz}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    peerDependencies:
+      remix: ^3.0.0
+
+  '@pitlane/vite-plugin-fetch-server@0.1.0':
+    resolution: {integrity: sha512-NckJEBc1ECO45ddDSJc12LIPsbuKd1629hA/x3egppG4rKiU7TdfDhnIWw2bDi+36DYMeo8UFGBBEe7THY6o6Q==, tarball: https://registry.npmjs.org/@pitlane/vite-plugin-fetch-server/-/vite-plugin-fetch-server-0.1.0.tgz}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    peerDependencies:
+      vite: '>=8.1.0'
+
+  '@pitlane/vite-plugin-remix@0.9.0':
+    resolution: {integrity: sha512-Nlo74ksLOX3g4CefsOWi+/Klu93uvqfYCYInmC0smGRb5YR3AhBvS+UvRnvbR09j5B67j3pefZFu71uB1CuZ6A==, tarball: https://registry.npmjs.org/@pitlane/vite-plugin-remix/-/vite-plugin-remix-0.9.0.tgz}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    peerDependencies:
+      remix: ^3.0.0
+      vite: '>=8.1.0'
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==, tarball: https://registry.npmjs.org/@pkgjs/parseargs/-/parseargs-0.11.0.tgz}
@@ -14118,6 +14161,30 @@ snapshots:
       '@parcel/watcher-win32-arm64': 2.5.6
       '@parcel/watcher-win32-ia32': 2.5.6
       '@parcel/watcher-win32-x64': 2.5.6
+
+  '@pitlane/assets@0.2.0(vite@8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))':
+    dependencies:
+      magic-string: 0.30.21
+    optionalDependencies:
+      vite: 8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0)
+
+  '@pitlane/crawler@0.3.0(remix@3.1.0(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2))':
+    dependencies:
+      remix: 3.1.0(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
+
+  '@pitlane/vite-plugin-fetch-server@0.1.0(vite@8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))':
+    dependencies:
+      '@remix-run/node-fetch-server': 1.0.0
+      vite: 8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0)
+
+  '@pitlane/vite-plugin-remix@0.9.0(remix@3.1.0(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2))(vite@8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))':
+    dependencies:
+      '@pitlane/assets': 0.2.0(vite@8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))
+      '@pitlane/crawler': 0.3.0(remix@3.1.0(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2))
+      '@pitlane/vite-plugin-fetch-server': 0.1.0(vite@8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))
+      magic-string: 0.30.21
+      remix: 3.1.0(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
+      vite: 8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0)
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
