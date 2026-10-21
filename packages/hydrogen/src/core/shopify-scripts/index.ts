@@ -107,6 +107,7 @@ export function getShopifyScriptTags({
     },
     // Rendered on every host, including Oxygen preview hosts where the profile 404s: descriptors are
     // often built without a request, and a missing profile only means agents find no UCP there.
+    // The `Link` response header deliberately skips preview hosts, since it has the request URL.
     {
       tagName: "link",
       attributes: {
