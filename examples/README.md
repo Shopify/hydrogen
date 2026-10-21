@@ -9,6 +9,7 @@ These projects are development examples for exercising Hydrogen across framework
 - `solid-start/` — SolidStart v1 with `query`, `createAsync`, and signal-driven product state.
 - `sveltekit/` — SvelteKit 2 and Svelte 5 with server `load`.
 - `hydrogen/` — mirror of the Hydrogen Skeleton template, kept for parity with Hydrogen classic and its E2E suite.
+- `remix/` — Remix 3 on Node, set up like a `remix new` project (`remix/node-fetch-server`, `remix/node-tsx`, `remix/assets`). A port of the `hydrogen/` Skeleton, so it answers whether Hydrogen's framework-neutral core is enough for a full storefront in a framework with no Hydrogen binding. Its README lists the differences from the Skeleton. Also used by the storefront E2E suite.
 - `nextjs/` — Next.js 16 App Router, also used by the storefront E2E suite.
 
 Shared infrastructure:
@@ -16,7 +17,7 @@ Shared infrastructure:
 - `core/` — frozen, framework-agnostic storefront design source with reference HTML and Tailwind tokens.
 - `shared/` — configuration and request helpers shared by the framework examples.
 
-The framework examples are built from the `core/` design source. They exist to answer practical questions:
+The framework examples are built from the `core/` design source, except `remix/`, which follows the `hydrogen/` Skeleton. They exist to answer practical questions:
 
 - Does this API feel good in a real storefront slice?
 - Where does a framework integration get awkward?

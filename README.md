@@ -148,6 +148,7 @@ Hydrogen works in any JavaScript framework that renders on the server. Framework
 | Astro | `@shopify/hydrogen` | [`examples/astro`](./examples/astro) |
 | SvelteKit | `@shopify/hydrogen` | [`examples/sveltekit`](./examples/sveltekit) |
 | SolidStart | `@shopify/hydrogen` | [`examples/solid-start`](./examples/solid-start) |
+| Remix 3 | `@shopify/hydrogen` | [`examples/remix`](./examples/remix) |
 
 The projects in [`examples/`](./examples) test Hydrogen across frameworks. They aren't starters and aren't versioned for reuse.
 

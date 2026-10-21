@@ -1,0 +1,26 @@
+{
+  "name": "@shopify/hydrogen-example-remix",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "dev": "NODE_ENV=development node --env-file-if-exists=.env --watch --import remix/node-tsx server.ts",
+    "dev:https": "NODE_ENV=development node --env-file-if-exists=.env --watch --import remix/node-tsx server.ts",
+    "hmr": "NODE_ENV=development node --env-file-if-exists=.env hmr.ts",
+    "start": "NODE_ENV=production node --env-file-if-exists=.env --import remix/node-tsx server.ts",
+    "typecheck": "tsc --noEmit && hydrogen gql check --fail-on-warn"
+  },
+  "dependencies": {
+    "@shopify/hydrogen": "workspace:*",
+    "lru-cache": "^11.3.6",
+    "remix": "3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": ">=24.3.0"
+  }
+}

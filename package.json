@@ -15,6 +15,7 @@
     "dev:solid": "turbo run dev --filter=@shopify/hydrogen-example-solid-start...",
     "dev:svelte": "turbo run dev --filter=@shopify/hydrogen-example-sveltekit...",
     "dev:hydrogen": "pnpm --dir examples/hydrogen dev",
+    "dev:remix": "turbo run dev --filter=@shopify/hydrogen-example-remix...",
     "dev:hub": "node scripts/examples-dev.ts",
     "download:standard-types": "node scripts/download-standard-types.ts",
     "prepare:preview-dist": "node scripts/preview-template-dist.ts prepare",

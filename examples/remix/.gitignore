@@ -1,0 +1,5 @@
+node_modules
+.env
+.shopify
+storefront-graphql-env.d.ts
+customer-account-graphql-env.d.ts

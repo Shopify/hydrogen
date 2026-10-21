@@ -19,6 +19,8 @@ export default defineConfig({
     "**/vendor/**",
     "**/generated/**",
     "**/public/*",
+    // The Remix example's browser source lives in `public/` folders.
+    "!examples/remix/app/**/public/*",
     "**/static/*",
     "**/playwright-report/**",
     "**/.react-router/**",

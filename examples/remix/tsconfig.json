@@ -1,0 +1,21 @@
+{
+  "include": ["app/**/*.ts", "app/**/*.tsx", "*.ts"],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "strict": true,
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "types": ["node", "remix/assets/types/hmr"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ESNext",
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "remix/component",
+    "plugins": [{ "name": "@shopify/hydrogen/ts-plugin" }],
+    "noEmit": true
+  }
+}
