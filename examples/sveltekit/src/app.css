@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-paper: #f4f4f2;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+}
+
+dialog#cart-drawer {
+  position: fixed;
+  inset-block: 0;
+  right: 0;
+  left: auto;
+  margin: 0;
+  width: 100%;
+  max-width: 36rem;
+  height: 100dvh;
+  max-height: none;
+  border: 0;
+  padding: 0;
+  background: white;
+  color: black;
+  transform: translateX(100%);
+  transition:
+    transform 250ms cubic-bezier(0.22, 1, 0.36, 1),
+    overlay 250ms allow-discrete,
+    display 250ms allow-discrete;
+}
+
+dialog#cart-drawer[open] {
+  transform: translateX(0);
+}
+
+@starting-style {
+  dialog#cart-drawer[open] {
+    transform: translateX(100%);
+  }
+}
+
+dialog#cart-drawer::backdrop {
+  background: rgb(0 0 0 / 0);
+  transition:
+    background-color 250ms ease-out,
+    overlay 250ms allow-discrete,
+    display 250ms allow-discrete;
+}
+
+dialog#cart-drawer[open]::backdrop {
+  background: rgb(0 0 0 / 0.3);
+}
+
+@starting-style {
+  dialog#cart-drawer[open]::backdrop {
+    background: rgb(0 0 0 / 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog#cart-drawer,
+  dialog#cart-drawer::backdrop {
+    transition: none;
+  }
+}
+
+body:has(dialog#cart-drawer[open]) {
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+}

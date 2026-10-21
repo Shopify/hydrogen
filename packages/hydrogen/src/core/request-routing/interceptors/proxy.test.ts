@@ -1,0 +1,356 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { configureLogging } from "../../logging";
+import { createShopifyRequestContext } from "../../request-context";
+import { assert, createTestLogger } from "../../test-utils";
+import type { HydrogenRouteInterceptor } from "../route-types";
+import { createProxyInterceptor } from "./proxy";
+
+const STORE_URL = "https://test-store.myshopify.com";
+
+function run(
+  interceptor: HydrogenRouteInterceptor,
+  request: Request,
+  { storeUrl = STORE_URL }: { storeUrl?: string } = {},
+) {
+  const requestContext = createShopifyRequestContext({
+    request,
+    i18n: { country: "US", language: "EN" },
+  });
+
+  return interceptor(new URL(request.url), {
+    request,
+    requestContext,
+    sessionManager: {
+      getSessionOrigin: () => new URL(request.url).origin,
+      getSessionItem: () => undefined,
+      setSessionItem: () => undefined,
+      removeSessionItem: () => undefined,
+    },
+    storefrontClient: {
+      type: "public",
+      i18n: { country: "US", language: "EN", pathPrefix: "" },
+      storeUrl,
+      apiUrl: `${storeUrl}/api/2026-04/graphql.json`,
+      requestContext,
+      graphql: vi.fn(),
+    },
+  });
+}
+
+async function getResponse(result: ReturnType<HydrogenRouteInterceptor>): Promise<Response> {
+  assert(result, "expected a proxy response");
+  return result;
+}
+
+describe("createProxyInterceptor", () => {
+  let mockFetch: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    mockFetch = vi.fn().mockResolvedValue(new Response("ok"));
+    vi.stubGlobal("fetch", mockFetch);
+  });
+
+  afterEach(() => {
+    configureLogging({});
+    vi.unstubAllGlobals();
+  });
+
+  it("returns a 500 error response instead of throwing when the upstream URL is invalid", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const interceptor = createProxyInterceptor({
+      match: /.*/,
+      scope: "test-proxy",
+      requestHeaders: { allow: [] },
+    });
+
+    let result: ReturnType<HydrogenRouteInterceptor> | undefined;
+    expect(() => {
+      result = run(interceptor, new Request("https://app.example/anything"), {
+        storeUrl: "::not-a-valid-url::",
+      });
+    }).not.toThrow();
+
+    assert(result, "expected the interceptor to return a result");
+    const response = await getResponse(result);
+    expect(response.status).toBe(500);
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledWith(
+      "request failed",
+      expect.objectContaining({ scope: "test-proxy" }),
+    );
+  });
+
+  it("forwards no request headers for an empty allowlist with storefront headers off", async () => {
+    const interceptor = createProxyInterceptor({
+      match: /.*/,
+      scope: "test-proxy",
+      requestHeaders: { allow: [], applyStorefrontHeaders: false },
+    });
+
+    await run(
+      interceptor,
+      new Request("https://app.example/x", {
+        headers: { authorization: "Bearer secret", cookie: "a=b" },
+      }),
+    );
+
+    const call = mockFetch.mock.calls[0];
+    assert(call, "expected fetch to be called");
+    expect([...new Headers(call[1].headers)]).toEqual([]);
+  });
+
+  it("rejects a response: drains the upstream body, returns the from-scratch error, and leaks no upstream headers", async () => {
+    const cancel = vi.fn();
+    const upstreamBody = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode("UPSTREAM-BYTES"));
+      },
+      cancel,
+    });
+    mockFetch.mockResolvedValueOnce(
+      new Response(upstreamBody, {
+        status: 302,
+        headers: {
+          location: "https://elsewhere.example/",
+          "set-cookie": "shopper=secret",
+          "content-type": "text/plain",
+        },
+      }),
+    );
+
+    const interceptor = createProxyInterceptor({
+      match: /.*/,
+      scope: "test-proxy",
+      requestHeaders: { allow: [] },
+      responseValidation: (upstream) =>
+        upstream.status >= 300 && upstream.status < 400
+          ? {
+              status: 502,
+              body: { error: "rejected" },
+            }
+          : null,
+    });
+
+    const response = await getResponse(run(interceptor, new Request("https://app.example/x")));
+
+    expect(response.status).toBe(502);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("set-cookie")).toBeNull();
+    await expect(response.json()).resolves.toEqual({ error: "rejected" });
+    expect(cancel).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the setup->500 / fetch->502 split when mapError is omitted", async () => {
+    const setupThrows = createProxyInterceptor({
+      match: /.*/,
+      scope: "test-proxy",
+      requestHeaders: { allow: [] },
+      rewritePathname: () => {
+        throw new Error("boom");
+      },
+    });
+    const setup = await getResponse(run(setupThrows, new Request("https://app.example/x")));
+    expect(setup.status).toBe(500);
+    expect(mockFetch).not.toHaveBeenCalled();
+
+    const fetchFails = createProxyInterceptor({
+      match: /.*/,
+      scope: "test-proxy",
+      requestHeaders: { allow: [] },
+    });
+    mockFetch.mockRejectedValueOnce(new Error("Connection refused"));
+    const fetched = await getResponse(run(fetchFails, new Request("https://app.example/x")));
+    expect(fetched.status).toBe(502);
+  });
+
+  it("preserves empty allowlisted headers and prepares headers using the upstream status", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response("profile", {
+        headers: { "x-empty": "", "x-internal": "private" },
+      }),
+    );
+    const interceptor = createProxyInterceptor({
+      match: /.*/,
+      scope: "test-proxy",
+      requestHeaders: { allow: [] },
+      responseHeaders: {
+        allow: ["x-empty"],
+        prepare: (headers, { response }) => {
+          headers.set("cache-control", response.ok ? "public, max-age=60" : "no-store");
+        },
+      },
+    });
+
+    const response = await getResponse(run(interceptor, new Request("https://app.example/x")));
+
+    expect(response.headers.get("x-empty")).toBe("");
+    expect(response.headers.get("x-internal")).toBeNull();
+    expect(response.headers.get("cache-control")).toBe("public, max-age=60");
+  });
+
+  it.each([
+    [undefined, { message: "Connection refused" }],
+    [{ error: "Upstream unavailable" }, { error: "Upstream unavailable" }],
+  ])(
+    "uses the mapped body when provided, otherwise preserves formatError (%j)",
+    async (body, expected) => {
+      mockFetch.mockRejectedValueOnce(new Error("Connection refused"));
+      const interceptor = createProxyInterceptor({
+        match: /.*/,
+        scope: "test-proxy",
+        requestHeaders: { allow: [] },
+        formatError: (message) => ({ message }),
+        mapError: () => ({ status: 503, body }),
+      });
+
+      const response = await getResponse(run(interceptor, new Request("https://app.example/x")));
+
+      expect(response.status).toBe(503);
+      expect(response.headers.get("content-type")).toBe("application/json");
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      await expect(response.json()).resolves.toEqual(expected);
+    },
+  );
+
+  it("applies context headers before deny and prepare", async () => {
+    const prepare = vi.fn((headers: Headers) => {
+      expect(headers.get("cookie")).toBeNull();
+      headers.set("x-prepared", "true");
+    });
+    const handleProxy = createProxyInterceptor({
+      match: /^\/proxy$/,
+      requestHeaders: { deny: ["cookie"], prepare },
+      scope: "test-proxy",
+    });
+    const request = new Request("https://my-app.com/proxy", {
+      headers: { cookie: "session=private" },
+    });
+
+    const response = await run(handleProxy, request);
+
+    assert(response, "expected a response");
+    const call = mockFetch.mock.calls[0];
+    assert(call, "expected fetch to be called");
+    const headers = new Headers(call[1].headers);
+    expect(headers.get("cookie")).toBeNull();
+    expect(headers.get("x-prepared")).toBe("true");
+    expect(prepare).toHaveBeenCalledOnce();
+  });
+
+  it("bounds upstream fetches with a 30 second timeout signal", async () => {
+    const timeoutSignal = new AbortController().signal;
+    const timeout = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutSignal);
+    const handleProxy = createProxyInterceptor({
+      match: /^\/proxy$/,
+      requestHeaders: { deny: [] },
+      scope: "test-proxy",
+    });
+    const request = new Request("https://my-app.com/proxy");
+
+    try {
+      await run(handleProxy, request);
+
+      expect(timeout).toHaveBeenCalledWith(30_000);
+      const call = mockFetch.mock.calls[0];
+      assert(call, "expected fetch to be called");
+      expect(call[1].signal).toBe(timeoutSignal);
+    } finally {
+      timeout.mockRestore();
+    }
+  });
+
+  it("returns the allowed methods when the request method is unsupported", async () => {
+    const handleProxy = createProxyInterceptor({
+      match: /^\/proxy$/,
+      methods: ["POST", "DELETE"],
+      requestHeaders: { deny: [] },
+      scope: "test-proxy",
+    });
+    const request = new Request("https://my-app.com/proxy", { method: "GET" });
+
+    const response = await run(handleProxy, request);
+
+    assert(response, "expected a response");
+    expect(response.status).toBe(405);
+    expect(response.headers.get("allow")).toBe("POST, DELETE");
+    expect(response.headers.get("content-type")).toBe("application/json");
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.json()).toEqual({ error: "Method Not Allowed" });
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it.each(["callback=readCart", "callback=", "%63allback=readCart", "callback=&callback=readCart"])(
+    "rejects JSONP before forwarding requests: %s",
+    async (query) => {
+      const handleProxy = createProxyInterceptor({
+        match: /^\/proxy$/,
+        requestHeaders: { deny: [] },
+        scope: "test-proxy",
+      });
+      const request = new Request(`https://my-app.com/proxy?${query}`);
+      const response = await run(handleProxy, request);
+      assert(response, "expected a JSONP rejection");
+      expect(response.status).toBe(400);
+      expect(response.headers.get("content-type")).toContain("application/json");
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      expect(await response.json()).toEqual({ error: "JSONP requests are not supported" });
+      expect(mockFetch).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["GET", "HEAD"])(
+    "preserves the descriptor's error format for %s JSONP rejections",
+    async (method) => {
+      const handleProxy = createProxyInterceptor({
+        match: /^\/proxy$/,
+        requestHeaders: { deny: [] },
+        formatError: (message) => ({ jsonrpc: "2.0", error: { message }, id: null }),
+        scope: "test-proxy",
+      });
+      const request = new Request("https://my-app.com/proxy?callback=readCart", { method });
+      const response = await run(handleProxy, request);
+      assert(response, "expected a JSONP rejection");
+      expect(response.status).toBe(400);
+      if (method === "HEAD") {
+        expect(response.body).toBeNull();
+      } else {
+        expect(await response.json()).toEqual({
+          jsonrpc: "2.0",
+          error: { message: "JSONP requests are not supported" },
+          id: null,
+        });
+      }
+      expect(mockFetch).not.toHaveBeenCalled();
+    },
+  );
+
+  it("does not intercept callback parameters outside the proxy's route", () => {
+    const handleProxy = createProxyInterceptor({
+      match: /^\/proxy$/,
+      requestHeaders: { deny: [] },
+      scope: "test-proxy",
+    });
+    const request = new Request("https://my-app.com/other?callback=readCart");
+    expect(run(handleProxy, request)).toBeNull();
+  });
+
+  it("allows similarly named parameters that do not enable JSONP", async () => {
+    const handleProxy = createProxyInterceptor({
+      match: /^\/proxy$/,
+      requestHeaders: { deny: [] },
+      scope: "test-proxy",
+    });
+    mockFetch.mockResolvedValueOnce(new Response("{}"));
+    const request = new Request("https://my-app.com/proxy?callbackUrl=/return");
+    const response = await run(handleProxy, request);
+    assert(response, "expected a successful proxy response");
+    expect(response.status).toBe(200);
+    expect(mockFetch).toHaveBeenCalledWith(
+      new URL(`${STORE_URL}/proxy?callbackUrl=/return`),
+      expect.anything(),
+    );
+  });
+});
