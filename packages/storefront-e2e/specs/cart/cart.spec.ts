@@ -274,7 +274,10 @@ async function expectCartTotalsStatus(
   cartPath: string,
 ): Promise<void> {
   try {
-    const status = page.getByTestId("cart-status").filter({ hasText: message }).first();
+    const status = page
+      .getByTestId("cart-status")
+      .filter({ visible: true, hasText: message })
+      .first();
     await expect(status).toBeAttached({
       timeout: CART_SETTLE_TIMEOUT_MS,
     });
