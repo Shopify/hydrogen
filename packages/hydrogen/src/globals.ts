@@ -11,6 +11,12 @@ import type { ShopifyStandardRouteMatch } from "./core/standard-routes/index";
 export type ShopifyGlobal = {
   actions: ShopifyStandardActions;
   analytics?: StorefrontAnalytics;
+  /** The application that rendered the page. */
+  application: {
+    name: "hydrogen";
+    /** The `@shopify/hydrogen` release in use. */
+    version: string;
+  };
   /** The store settings that Shopify's storefront web components read. */
   components: {
     config: {
@@ -45,11 +51,6 @@ export type ShopifyGlobal = {
     setTrackingConsent: (consent: Record<string, unknown>) => Promise<unknown>;
     shouldShowBanner: () => boolean;
     shouldShowGDPRBanner: () => boolean;
-  };
-  /** Metadata about the Hydrogen runtime that rendered the page. */
-  hydrogen: {
-    /** The `@shopify/hydrogen` release in use. */
-    version: string;
   };
   /** The customer's language code, in lowercase. Defaults to `en`. */
   locale: Lowercase<I18nConfig["language"]> | string;

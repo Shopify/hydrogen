@@ -12,6 +12,7 @@ import type { ShopifyScriptsShop } from "./types";
 import { asInlineScript } from "./utils/inline-script";
 
 export type ShopifyGlobalConfig = {
+  application: ShopifyGlobal["application"];
   country: I18nConfig["country"];
   currency?: NonNullable<ShopifyGlobal["currency"]>;
   locale: Lowercase<I18nConfig["language"]>;
@@ -26,7 +27,6 @@ export type ShopifyGlobalConfig = {
       };
     };
   };
-  hydrogen: ShopifyGlobal["hydrogen"];
   routes: {
     root: string;
     apiProxyPrefix: string;
@@ -140,13 +140,13 @@ export function getShopifyGlobalBootstrapScript({
   shop: ShopifyScriptsShop;
 }): string {
   const config: ShopifyGlobalConfig = {
+    application: { name: "hydrogen", version: __HYDROGEN_VERSION__ },
     country: i18n?.country ?? DEFAULT_COUNTRY,
     ...(i18n?.currency !== undefined ? { currency: { active: i18n.currency.toUpperCase() } } : {}),
     // oxlint-disable-next-line typescript/consistent-type-assertions
     locale: (i18n?.language ?? DEFAULT_LOCALE).toLowerCase() as Lowercase<
       ShopifyGlobalConfig["locale"]
     >,
-    hydrogen: { version: __HYDROGEN_VERSION__ },
     routes: {
       root: getShopifyRoutesRoot(i18n?.pathPrefix),
       apiProxyPrefix: SHOPIFY_API_PROXY_PREFIX,

@@ -2,4 +2,4 @@
 "@shopify/hydrogen": patch
 ---
 
-Add `window.Shopify.hydrogen`, a global with metadata about the Hydrogen runtime on the page. It starts with `version`, the `@shopify/hydrogen` release in use.
+Add `window.Shopify.application`, a global that identifies the application that rendered the page: `name` is `"hydrogen"` and `version` is the `@shopify/hydrogen` release in use.
