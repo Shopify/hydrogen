@@ -184,7 +184,12 @@ export function createMiniOxygenDevEnvironment(
       void warmup();
     },
     async close() {
-      await Promise.allSettled([originalClose(), miniOxygen?.dispose()]);
+      await Promise.allSettled([
+        originalClose(),
+        miniOxygen?.dispose(),
+        // A runtime can still be starting, e.g. from the warmup request.
+        pendingRuntime?.then((runtime) => runtime.dispose()),
+      ]);
     },
   });
 }

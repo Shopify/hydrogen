@@ -227,7 +227,7 @@ describe('MiniOxygen Worker Runtime', () => {
           );
           expect(warnings).toHaveLength(1);
           expect(warnings[0]?.[0]).toMatch(
-            /compatibility date 9999-12-31 isn't supported by the local Workers runtime yet\. Running locally with \d{4}-\d{2}-\d{2}; deployments still use 9999-12-31\./,
+            /compatibility date 9999-12-31 isn't supported by the local Workers runtime yet\. Running locally with \d{4}-\d{2}-\d{2} instead\./,
           );
         },
       );

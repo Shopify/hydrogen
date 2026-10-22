@@ -367,6 +367,42 @@ describe('createMiniOxygenDevEnvironment', () => {
     expect(new URL(warmupRequest.url).pathname).toBe('/__vite_warmup');
   });
 
+  it('disposes a runtime that is still starting when the environment closes', async () => {
+    const ready = createDeferred<void>();
+    const runtime = createMockRuntime('runtime-1', ready.promise);
+    const resolveRuntimeOptions = vi.fn(async (_, viteDevServer) => {
+      return {
+        entry: './server',
+        viteDevServer,
+      };
+    });
+
+    mocks.startMiniOxygenRuntime.mockReturnValue(runtime);
+
+    const environment = createMiniOxygenDevEnvironment(
+      'ssr',
+      {} as any,
+      {},
+      resolveRuntimeOptions,
+    );
+
+    await environment.listen(TEST_SERVER);
+
+    const pendingRequest = environment.dispatchFetch(
+      new Request('http://localhost/pending'),
+    );
+    await vi.waitFor(() =>
+      expect(mocks.startMiniOxygenRuntime).toHaveBeenCalledTimes(1),
+    );
+
+    const closing = environment.close();
+    ready.resolve();
+    await closing;
+
+    expect(runtime.dispose).toHaveBeenCalled();
+    await pendingRequest.catch(() => {});
+  });
+
   it('closes the Vite environment and disposes the active runtime', async () => {
     const runtime = createMockRuntime('runtime-1');
     const resolveRuntimeOptions = vi.fn(async (_, viteDevServer) => {

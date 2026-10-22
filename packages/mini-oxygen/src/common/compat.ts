@@ -56,6 +56,8 @@ const warnedCompatibilityDates = new Set<string>();
  */
 export function toRuntimeCompatibilityDate(requested: string) {
   const today = new Date().toISOString().slice(0, 10);
+  // If the runtime's date can't be read, only guard against future dates.
+  // workerd then explains any date it doesn't support when it fails to start.
   const runtimeDate = getRuntimeCompatibilityDate() ?? today;
   const capped = capCompatibilityDate(requested, runtimeDate, today);
 
@@ -63,7 +65,7 @@ export function toRuntimeCompatibilityDate(requested: string) {
     warnedCompatibilityDates.add(requested);
     console.warn(
       `MiniOxygen: compatibility date ${requested} isn't supported by the local Workers runtime yet. ` +
-        `Running locally with ${capped}; deployments still use ${requested}.` +
+        `Running locally with ${capped} instead.` +
         (capped === runtimeDate
           ? ' Update @shopify/mini-oxygen to get a newer runtime.'
           : ''),
