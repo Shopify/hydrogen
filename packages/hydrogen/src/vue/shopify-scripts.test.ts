@@ -20,6 +20,7 @@ import * as shopifyScriptsCore from "../core/shopify-scripts";
 import { defineShopifyRouteTemplates } from "../core/standard-routes/index";
 import {
   assert,
+  getRenderedAccountWidgetData,
   recordShopifyAccountConnections,
   TEST_ACCOUNT_WIDGET_CUSTOMER,
   TEST_ACCOUNT_WIDGET_DATA,
@@ -85,7 +86,7 @@ describe("ShopifyScripts", () => {
       `<script id="shopify-account" type="module" async crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_ACCOUNT_SCRIPT}"></script>`,
     );
     expect(html).toContain(
-      `<script id="shopify-customer-account-data" type="application/json">${JSON.stringify(TEST_ACCOUNT_WIDGET_DATA)}</script>`,
+      `<script id="shopify-customer-account-data" type="application/json">${JSON.stringify(getRenderedAccountWidgetData(TEST_ACCOUNT_WIDGET_DATA, TEST_SHOP_ID))}</script>`,
     );
     expect(html).not.toContain(`id="shopify-storefront-analytics"`);
     expect(html).not.toContain("<shopify-chat");
@@ -157,11 +158,11 @@ describe("ShopifyScripts", () => {
     await nextTick();
 
     expect(document.querySelector("shopify-account")).not.toBe(header);
-    expect(connectedData.map((data) => data?.customer?.id ?? null)).toEqual([
+    expect(connectedData.map((data) => data?.customer?.firstName ?? null)).toEqual([
       null,
       null,
-      TEST_ACCOUNT_WIDGET_CUSTOMER.id,
-      TEST_ACCOUNT_WIDGET_CUSTOMER.id,
+      TEST_ACCOUNT_WIDGET_CUSTOMER.firstName,
+      TEST_ACCOUNT_WIDGET_CUSTOMER.firstName,
     ]);
     wrapper.unmount();
   });

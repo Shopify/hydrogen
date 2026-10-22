@@ -53,8 +53,15 @@ export function accountWidgetTypes(widget: ShopifyAccountWidgetData) {
   void signedOut;
 
   // @ts-expect-error customer must be explicit; pass null for a signed-out visitor
-  const missingCustomer: ShopifyAccountWidgetData = { shop: widget.shop, visitor: widget.visitor };
+  const missingCustomer: ShopifyAccountWidgetData = { shop: widget.shop };
   void missingCustomer;
+
+  const withToken: ShopifyAccountWidgetData = {
+    ...widget,
+    // @ts-expect-error tokens aren't part of the widget data; it's rendered into the HTML
+    customerAccessToken: "shcat_secret",
+  };
+  void withToken;
 
   const { b2bEnabled: _b2bEnabled, ...shopWithoutB2b } = widget.shop;
   // @ts-expect-error every shop field is required because the widget skips its own fetch

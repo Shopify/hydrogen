@@ -43,7 +43,6 @@ export type {
   ShopifyAccountWidgetData,
   ShopifyAccountWidgetShop,
   ShopifyAccountWidgetSocialLoginProvider,
-  ShopifyAccountWidgetVisitor,
 } from "./account-widget";
 export { getShopifyGlobal } from "./global";
 export { getShopifyScriptHashes } from "./hashes";
@@ -161,7 +160,7 @@ export function getShopifyScriptTags({
   }
 
   if (accountWidget) {
-    scripts.push(getShopifyAccountWidgetDataScript(accountWidget));
+    scripts.push(getShopifyAccountWidgetDataScript(accountWidget, { shop, i18n }));
     scripts.push({
       tagName: "script",
       attributes: {
