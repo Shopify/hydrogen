@@ -1,5 +1,6 @@
 import type { DocumentDecoration, initGraphQLTada as InitGraphQLTada } from "gql.tada";
 
+import { appendFragments } from "./fragments";
 import type { introspection } from "./generated/graphql-env";
 import type { StorefrontScalars } from "./scalars";
 import type { InferResult, InferVariables } from "./type-resolver";
@@ -10,11 +11,16 @@ type StorefrontTadaGql = InitGraphQLTada<{
 }>;
 
 /** Type-only properties that mark a string as a `gql` document. */
-type StorefrontQueryMetadata<Source extends string = string> = {
+type StorefrontQueryMetadata<
+  Source extends string = string,
+  Parts extends readonly string[] = readonly string[],
+> = {
   /** Marks a string that `gql` returns. The property exists only in types. */
   readonly __hydrogenQueryBrand: true;
   /** The document's query text, which TypeScript reads to infer types. The property exists only in types. */
   readonly __hydrogenQuerySource?: Source;
+  /** The operation text followed by each distinct fragment text the document appends. The property exists only in types. */
+  readonly __hydrogenQueryParts?: Parts;
 };
 
 /**
@@ -27,11 +33,8 @@ export type StorefrontQueryString<
   Result = any,
   Variables = any,
   Source extends string = string,
-> = string &
-  DocumentDecoration<Result, Variables> & {
-    readonly __hydrogenQueryBrand: true;
-    readonly __hydrogenQuerySource?: Source;
-  };
+  Parts extends readonly string[] = readonly string[],
+> = string & DocumentDecoration<Result, Variables> & StorefrontQueryMetadata<Source, Parts>;
 
 /**
  * Any `gql` document, whatever its result and variables types. Use the type to accept any Storefront API document.
@@ -45,56 +48,101 @@ export type SourceOf<Doc> = Doc extends {
   ? Source
   : never;
 
-export type FragmentSources<Fragments extends readonly AnyStorefrontQueryString[]> =
-  Fragments extends readonly []
-    ? ""
-    : Fragments extends readonly [infer Only extends AnyStorefrontQueryString]
-      ? SourceOf<Only>
-      : Fragments extends readonly [
-            infer First extends AnyStorefrontQueryString,
-            ...infer Rest extends readonly AnyStorefrontQueryString[],
-          ]
-        ? `${SourceOf<First>}\n${FragmentSources<Rest>}`
-        : string;
+/** The operation text and distinct fragment texts of a `gql` document. A document without parts is one part: its source. */
+type PartsOf<Doc> = Doc extends {
+  readonly __hydrogenQueryParts?: infer Parts extends readonly string[];
+}
+  ? string[] extends Parts
+    ? readonly [SourceOf<Doc>]
+    : Parts
+  : readonly [SourceOf<Doc>];
+
+type Includes<Items extends readonly string[], Item extends string> = Items extends readonly [
+  infer First,
+  ...infer Rest extends readonly string[],
+]
+  ? [First] extends [Item]
+    ? [Item] extends [First]
+      ? true
+      : Includes<Rest, Item>
+    : Includes<Rest, Item>
+  : false;
+
+type Dedupe<
+  Items extends readonly string[],
+  Seen extends readonly string[] = readonly [],
+> = Items extends readonly [infer First extends string, ...infer Rest extends readonly string[]]
+  ? Includes<Seen, First> extends true
+    ? Dedupe<Rest, Seen>
+    : readonly [First, ...Dedupe<Rest, readonly [...Seen, First]>]
+  : readonly [];
+
+type FlattenParts<Fragments extends readonly AnyStorefrontQueryString[]> =
+  Fragments extends readonly [
+    infer First extends AnyStorefrontQueryString,
+    ...infer Rest extends readonly AnyStorefrontQueryString[],
+  ]
+    ? readonly [...PartsOf<First>, ...FlattenParts<Rest>]
+    : readonly [];
+
+type JoinParts<Parts extends readonly string[]> = Parts extends readonly [infer Only extends string]
+  ? Only
+  : Parts extends readonly [infer First extends string, ...infer Rest extends readonly string[]]
+    ? `${First}\n${JoinParts<Rest>}`
+    : "";
+
+/** The operation text of a document followed by every distinct fragment text from its fragments, nested fragments included. */
+type ComposedParts<
+  Source extends string,
+  Fragments extends readonly AnyStorefrontQueryString[],
+> = Dedupe<readonly [Source, ...FlattenParts<Fragments>]>;
+
+/** The query text of a document's fragments, each distinct fragment once, joined with newlines. An empty tuple produces `""`. */
+export type FragmentSources<Fragments extends readonly AnyStorefrontQueryString[]> = JoinParts<
+  Dedupe<FlattenParts<Fragments>>
+>;
 
 /** The combined query text of a document and its fragments, which keeps the inferred types of composed documents. */
 export type ComposedSource<
   Source extends string,
   Fragments extends readonly AnyStorefrontQueryString[],
-> = FragmentSources<Fragments> extends "" ? Source : `${Source}\n${FragmentSources<Fragments>}`;
+> = string[] extends Fragments ? string : JoinParts<ComposedParts<Source, Fragments>>;
+
+type QueryStringFromParts<
+  Parts extends readonly string[],
+  DocumentSource extends string = JoinParts<Parts>,
+> = StorefrontQueryString<
+  InferResult<DocumentSource>,
+  InferVariables<DocumentSource>,
+  DocumentSource,
+  Parts
+>;
+
+/** The document that `gql(document, fragments)` returns: the document's parts followed by each distinct fragment part. */
+export type ComposedDocument<
+  Document extends AnyStorefrontQueryString,
+  Fragments extends readonly AnyStorefrontQueryString[],
+> = QueryStringFromParts<Dedupe<readonly [...PartsOf<Document>, ...FlattenParts<Fragments>]>>;
 
 type StorefrontGql = {
   // Composes an already-declared document with additional fragments. Declared
-  // before the raw-source overloads so branded documents recover their literal
-  // source through SourceOf instead of binding Source to the branded type,
-  // which would degrade ComposedSource and kill inference.
+  // before the raw-source overloads so branded documents keep their parts
+  // instead of binding Source to the branded type, which would degrade
+  // ComposedSource and kill inference.
   <
     const Document extends AnyStorefrontQueryString,
     const Fragments extends readonly AnyStorefrontQueryString[],
-    const DocumentSource extends string = ComposedSource<SourceOf<Document>, Fragments>,
   >(
     document: Document,
     fragments: Fragments,
-  ): StorefrontQueryString<
-    InferResult<DocumentSource>,
-    InferVariables<DocumentSource>,
-    DocumentSource
-  >;
+  ): ComposedDocument<Document, Fragments>;
   <const Source extends string>(
     source: Source,
   ): StorefrontQueryString<InferResult<Source>, InferVariables<Source>, Source>;
-  <
-    const Source extends string,
-    const Fragments extends readonly AnyStorefrontQueryString[],
-    const DocumentSource extends string = ComposedSource<Source, Fragments>,
-  >(
+  <const Source extends string, const Fragments extends readonly AnyStorefrontQueryString[]>(
     source: Source,
     fragments: Fragments,
-  ): StorefrontQueryString<
-    InferResult<DocumentSource>,
-    InferVariables<DocumentSource>,
-    DocumentSource
-  >;
+  ): QueryStringFromParts<ComposedParts<Source, Fragments>>;
 } & StorefrontTadaGql;
 
 /**
@@ -127,21 +175,8 @@ type StorefrontGql = {
  * @publicDocs
  */
 // oxlint-disable-next-line typescript-eslint/consistent-type-assertions -- gql.tada adds phantom helper properties to the function type that are not used at runtime.
-export const gql = ((source: string, fragments?: Array<string>) => {
-  let query = source;
-
-  if (fragments) {
-    const seen = new Set<string>();
-    for (const fragment of fragments) {
-      if (!seen.has(fragment)) {
-        seen.add(fragment);
-        query += "\n" + fragment;
-      }
-    }
-  }
-
-  return query;
-}) as unknown as StorefrontGql;
+export const gql = ((source: string, fragments?: readonly string[]) =>
+  fragments ? appendFragments(source, fragments) : source) as unknown as StorefrontGql;
 
 /**
  * Writes a typed Storefront API query, mutation, or fragment. At runtime, the function returns the query text with each fragment appended once.
