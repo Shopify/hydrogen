@@ -19,7 +19,13 @@ import {
   SHOPIFY_STOREFRONT_WEBMCP_SCRIPT,
 } from "../core/shopify-scripts/index";
 import { createShopifyRouteTemplates } from "../core/standard-routes/index";
-import { assert } from "../core/test-utils";
+import {
+  assert,
+  recordShopifyAccountConnections,
+  TEST_ACCOUNT_WIDGET_CUSTOMER,
+  TEST_ACCOUNT_WIDGET_DATA,
+} from "../core/test-utils";
+import { ShopifyAccount } from "./shopify-account";
 import { ShopifyScripts } from "./shopify-scripts";
 
 afterEach(() => {
@@ -99,7 +105,7 @@ describe("ShopifyScripts", () => {
         routes: routeTemplates,
         shop: TEST_SHOP,
         inbox: true,
-        account: true,
+        accountWidget: TEST_ACCOUNT_WIDGET_DATA,
       }),
     );
 
@@ -126,6 +132,9 @@ describe("ShopifyScripts", () => {
     expect(html).toContain(
       `<script id="shopify-account" type="module" async="" crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_ACCOUNT_SCRIPT}"></script>`,
     );
+    expect(html).toContain(
+      `<script id="shopify-customer-account-data" type="application/json">${JSON.stringify(TEST_ACCOUNT_WIDGET_DATA)}</script>`,
+    );
     expect(html).not.toContain("<shopify-chat");
     expect(html).toContain(`id="shopify-perfkit"`);
     expect(html).toContain(`async=""`);
@@ -139,6 +148,40 @@ describe("ShopifyScripts", () => {
       `<link rel="prefetch" as="script" href="${SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT}" crossorigin="anonymous"/>`,
     );
     expect(html).not.toContain(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT);
+  });
+
+  it("remounts every ShopifyAccount after the account widget data changes", () => {
+    vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts").mockResolvedValue(undefined);
+    const connectedData = recordShopifyAccountConnections();
+    const page = (accountWidget: typeof TEST_ACCOUNT_WIDGET_DATA) => (
+      <>
+        <ShopifyScripts shop={TEST_SHOP} accountWidget={accountWidget} />
+        <ShopifyAccount menu="customer-account-main-menu" signInUrl="/account/login">
+          <span slot="signed-out-avatar">Sign in</span>
+        </ShopifyAccount>
+        <ShopifyAccount />
+      </>
+    );
+    const { container, rerender } = render(page(TEST_ACCOUNT_WIDGET_DATA));
+    const [header] = container.querySelectorAll("shopify-account");
+    assert(header, "Expected a shopify-account element");
+
+    expect(header.getAttribute("sign-in-url")).toBe("/account/login");
+    expect(header.querySelector('[slot="signed-out-avatar"]')?.textContent).toBe("Sign in");
+
+    rerender(page({ ...TEST_ACCOUNT_WIDGET_DATA }));
+    expect(container.querySelector("shopify-account")).toBe(header);
+
+    const signedIn = { ...TEST_ACCOUNT_WIDGET_DATA, customer: TEST_ACCOUNT_WIDGET_CUSTOMER };
+    rerender(page(signedIn));
+
+    expect(container.querySelector("shopify-account")).not.toBe(header);
+    expect(connectedData.map((data) => data?.customer?.id ?? null)).toEqual([
+      null,
+      null,
+      TEST_ACCOUNT_WIDGET_CUSTOMER.id,
+      TEST_ACCOUNT_WIDGET_CUSTOMER.id,
+    ]);
   });
 
   it("suppresses hydration warnings caused by concealed script nonces", async () => {

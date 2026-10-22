@@ -22,7 +22,7 @@ import {
 } from "./shopify-scripts/index";
 import { getPerfKitScript } from "./shopify-scripts/perfkit";
 import { createShopifyRouteTemplates } from "./standard-routes/index";
-import { assert } from "./test-utils";
+import { assert, TEST_ACCOUNT_WIDGET_CUSTOMER, TEST_ACCOUNT_WIDGET_DATA } from "./test-utils";
 import { loadScript } from "./utils/load-script";
 
 vi.mock("./utils/load-script", () => ({
@@ -662,14 +662,27 @@ describe("shopify scripts", () => {
     );
   });
 
-  it("includes the async account module when enabled", () => {
+  it("renders the account widget data before the account module for signed-out visitors", () => {
     const descriptors = getShopifyScriptTags({
       nonce: "test-nonce",
       shop: TEST_SHOP,
-      account: true,
+      accountWidget: TEST_ACCOUNT_WIDGET_DATA,
     });
+    const dataIndex = descriptors.scripts.findIndex(
+      ({ attributes }) => attributes?.id === "shopify-customer-account-data",
+    );
+    const moduleIndex = descriptors.scripts.findIndex(
+      ({ attributes }) => attributes?.src === SHOPIFY_ACCOUNT_SCRIPT,
+    );
+    const dataScript = descriptors.scripts[dataIndex];
+    assert(dataScript?.innerHTML, "Expected the account widget data script");
 
-    expect(descriptors.scripts).toContainEqual({
+    expect(dataScript.attributes).toEqual({
+      id: "shopify-customer-account-data",
+      type: "application/json",
+    });
+    expect(JSON.parse(dataScript.innerHTML)).toEqual(TEST_ACCOUNT_WIDGET_DATA);
+    expect(descriptors.scripts[moduleIndex]).toEqual({
       tagName: "script",
       attributes: {
         id: "shopify-account",
@@ -684,17 +697,42 @@ describe("shopify scripts", () => {
       descriptors.scripts.findIndex(
         ({ attributes }) => attributes?.src === SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
       ),
-    ).toBeLessThan(
-      descriptors.scripts.findIndex(({ attributes }) => attributes?.src === SHOPIFY_ACCOUNT_SCRIPT),
-    );
+    ).toBeLessThan(dataIndex);
+    expect(dataIndex).toBeLessThan(moduleIndex);
   });
 
-  it("omits the account module by default", () => {
+  it("keeps account widget data inside its script tag and drops unknown fields", () => {
+    const hostileName = "</script><script>alert(1)</script><!--\u2028\u2029";
+    const customer = {
+      ...TEST_ACCOUNT_WIDGET_CUSTOMER,
+      firstName: hostileName,
+      accessToken: "shcat_secret",
+    };
+    const [dataTag] = renderShopifyScriptTags({
+      shop: TEST_SHOP,
+      accountWidget: { ...TEST_ACCOUNT_WIDGET_DATA, customer },
+    }).filter((tag) => tag.includes('id="shopify-customer-account-data"'));
+    assert(dataTag, "Expected the account widget data tag");
+    const json = dataTag.slice(dataTag.indexOf(">") + 1, -"</script>".length);
+
+    expect(json).not.toMatch(/<|\u2028|\u2029/);
+    expect(JSON.parse(json)).toEqual({
+      ...TEST_ACCOUNT_WIDGET_DATA,
+      customer: { ...TEST_ACCOUNT_WIDGET_CUSTOMER, firstName: hostileName },
+    });
+  });
+
+  it("omits the account module and data by default", () => {
     const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
 
     expect(descriptors.scripts).not.toContainEqual(
       expect.objectContaining({
         attributes: expect.objectContaining({ src: SHOPIFY_ACCOUNT_SCRIPT }),
+      }),
+    );
+    expect(descriptors.scripts).not.toContainEqual(
+      expect.objectContaining({
+        attributes: expect.objectContaining({ id: "shopify-customer-account-data" }),
       }),
     );
   });

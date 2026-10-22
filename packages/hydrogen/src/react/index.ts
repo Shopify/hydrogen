@@ -46,5 +46,7 @@ export type {
 } from "../core/product";
 export { ShopPayButton } from "./shop-pay";
 export type { ShopPayButtonProps } from "./shop-pay";
+export { ShopifyAccount } from "./shopify-account";
+export type { ShopifyAccountProps } from "./shopify-account";
 export { ShopifyScripts } from "./shopify-scripts";
 export type { ShopifyScriptsProps } from "./shopify-scripts";
