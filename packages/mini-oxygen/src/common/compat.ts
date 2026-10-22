@@ -1,5 +1,7 @@
 import {createRequire} from 'node:module';
 
+const COMPATIBILITY_DATE_FORMAT = /^\d{4}-\d{2}-\d{2}$/;
+
 export const OXYGEN_COMPAT_PARAMS = {
   compatibilityFlags: [],
   compatibilityDate: '2025-04-01' as const,
@@ -37,7 +39,7 @@ function getRuntimeCompatibilityDate() {
 
       runtimeCompatibilityDate =
         typeof compatibilityDate === 'string' &&
-        /^\d{4}-\d{2}-\d{2}$/.test(compatibilityDate)
+        COMPATIBILITY_DATE_FORMAT.test(compatibilityDate)
           ? compatibilityDate
           : null;
     } catch {
@@ -55,6 +57,9 @@ const warnedCompatibilityDates = new Set<string>();
  * requested date has to be lowered, warns once per requested date.
  */
 export function toRuntimeCompatibilityDate(requested: string) {
+  // Leave malformed dates for Miniflare to reject.
+  if (!COMPATIBILITY_DATE_FORMAT.test(requested)) return requested;
+
   const today = new Date().toISOString().slice(0, 10);
   // If the runtime's date can't be read, only guard against future dates.
   // workerd then explains any date it doesn't support when it fails to start.

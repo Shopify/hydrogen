@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {capCompatibilityDate} from './compat.js';
+import {capCompatibilityDate, toRuntimeCompatibilityDate} from './compat.js';
 
 describe('capCompatibilityDate', () => {
   const runtimeDate = '2026-07-30';
@@ -24,5 +24,11 @@ describe('capCompatibilityDate', () => {
     expect(capCompatibilityDate('2027-01-01', '2026-12-15', today)).toBe(
       today,
     );
+  });
+});
+
+describe('toRuntimeCompatibilityDate', () => {
+  it('leaves malformed dates for Miniflare to reject', () => {
+    expect(toRuntimeCompatibilityDate('not-a-date')).toBe('not-a-date');
   });
 });
