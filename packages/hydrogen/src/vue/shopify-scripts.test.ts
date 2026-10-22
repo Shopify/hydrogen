@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
-import { h } from "vue";
+import { defineComponent, h, nextTick, shallowRef } from "vue";
 import { renderToString } from "vue/server-renderer";
 
 import { setupStorefrontAnalytics } from "../core/analytics/bus";
@@ -18,7 +18,14 @@ import {
 } from "../core/shopify-scripts";
 import * as shopifyScriptsCore from "../core/shopify-scripts";
 import { createShopifyRouteTemplates } from "../core/standard-routes/index";
+import {
+  assert,
+  recordShopifyAccountConnections,
+  TEST_ACCOUNT_WIDGET_CUSTOMER,
+  TEST_ACCOUNT_WIDGET_DATA,
+} from "../core/test-utils";
 import type { ShopifyGlobal } from "../globals";
+import { ShopifyAccount } from "./shopify-account";
 import { ShopifyScripts } from "./shopify-scripts";
 
 afterEach(() => {
@@ -52,7 +59,7 @@ describe("ShopifyScripts", () => {
         routes: routeTemplates,
         shop: TEST_SHOP,
         inbox: true,
-        account: true,
+        accountWidget: TEST_ACCOUNT_WIDGET_DATA,
         shopifyAnalytics: false,
       }),
     );
@@ -74,6 +81,9 @@ describe("ShopifyScripts", () => {
     );
     expect(html).toContain(
       `<script id="shopify-account" type="module" async crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_ACCOUNT_SCRIPT}"></script>`,
+    );
+    expect(html).toContain(
+      `<script id="shopify-customer-account-data" type="application/json">${JSON.stringify(TEST_ACCOUNT_WIDGET_DATA)}</script>`,
     );
     expect(html).not.toContain(`id="shopify-storefront-analytics"`);
     expect(html).not.toContain("<shopify-chat");
@@ -107,6 +117,47 @@ describe("ShopifyScripts", () => {
     expect(html).toContain('"locale":"en"');
     expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
     expect(html).not.toContain('"templates"');
+  });
+
+  it("remounts every ShopifyAccount after the account widget data changes", async () => {
+    vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts").mockResolvedValue(undefined);
+    // The widgets must be in the document to connect, which makes Happy DOM try to load the CDN scripts.
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const connectedData = recordShopifyAccountConnections();
+    const accountWidget = shallowRef(TEST_ACCOUNT_WIDGET_DATA);
+    const wrapper = mount(
+      // Widgets render before ShopifyScripts, so they must wait for the JSON script tag to update.
+      defineComponent(() => () => [
+        h(ShopifyAccount, { menu: "customer-account-main-menu", signInUrl: "/account/login" }, () =>
+          h("span", { slot: "signed-out-avatar" }, "Sign in"),
+        ),
+        h(ShopifyAccount),
+        h(ShopifyScripts, { shop: TEST_SHOP, accountWidget: accountWidget.value }),
+      ]),
+      { attachTo: document.body },
+    );
+    const header = wrapper.element.parentElement?.querySelector("shopify-account");
+    assert(header, "Expected a shopify-account element");
+
+    expect(header.getAttribute("sign-in-url")).toBe("/account/login");
+    expect(header.querySelector('[slot="signed-out-avatar"]')?.textContent).toBe("Sign in");
+
+    accountWidget.value = { ...TEST_ACCOUNT_WIDGET_DATA };
+    await nextTick();
+    expect(document.querySelector("shopify-account")).toBe(header);
+
+    accountWidget.value = { ...TEST_ACCOUNT_WIDGET_DATA, customer: TEST_ACCOUNT_WIDGET_CUSTOMER };
+    await nextTick();
+    await nextTick();
+
+    expect(document.querySelector("shopify-account")).not.toBe(header);
+    expect(connectedData.map((data) => data?.customer?.id ?? null)).toEqual([
+      null,
+      null,
+      TEST_ACCOUNT_WIDGET_CUSTOMER.id,
+      TEST_ACCOUNT_WIDGET_CUSTOMER.id,
+    ]);
+    wrapper.unmount();
   });
 
   it("initializes browser script behavior once with initial props", async () => {

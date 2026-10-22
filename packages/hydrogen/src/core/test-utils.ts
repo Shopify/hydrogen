@@ -1,6 +1,53 @@
 import { expect, vi } from "vitest";
 
 import type { LogSeverity } from "./logging";
+import type { ShopifyAccountWidgetData } from "./shopify-scripts/account-widget";
+
+export const TEST_ACCOUNT_WIDGET_DATA: ShopifyAccountWidgetData = {
+  customer: null,
+  shop: {
+    id: "gid://shopify/Shop/42",
+    legacyCustomerAccounts: false,
+    b2bEnabled: false,
+    marketingConsentSigninEnabled: true,
+    marketingConsentPreselected: false,
+    socialLoginProviders: [{ handle: "shop" }],
+    customerAccountTranslations: [],
+  },
+  visitor: { sessionId: "session-1", country: "US", language: "EN" },
+};
+
+export const TEST_ACCOUNT_WIDGET_CUSTOMER: NonNullable<ShopifyAccountWidgetData["customer"]> = {
+  id: "gid://shopify/Customer/7",
+  firstName: "Ada",
+  lastName: "Lovelace",
+  email: "ada@example.com",
+  displayName: "Ada Lovelace",
+  avatarUrl: null,
+  socialLoginProvider: null,
+};
+
+const shopifyAccountConnections: Array<ShopifyAccountWidgetData | null> = [];
+
+/**
+ * Defines a stand-in `shopify-account` element that, like account.js, reads the JSON script tag
+ * once when it connects. Returns the data each connection read, in order.
+ */
+export function recordShopifyAccountConnections() {
+  if (!customElements.get("shopify-account")) {
+    customElements.define(
+      "shopify-account",
+      class extends HTMLElement {
+        connectedCallback() {
+          const json = document.getElementById("shopify-customer-account-data")?.textContent;
+          shopifyAccountConnections.push(json ? JSON.parse(json) : null);
+        }
+      },
+    );
+  }
+  shopifyAccountConnections.length = 0;
+  return shopifyAccountConnections;
+}
 
 export function assert<T>(value: T | null | undefined, message: string): asserts value is T {
   expect(value != null, message).toBe(true);
