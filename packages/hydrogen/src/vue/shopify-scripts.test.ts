@@ -128,7 +128,7 @@ describe("ShopifyScripts", () => {
     const wrapper = mount(
       // Widgets render before ShopifyScripts, so they must wait for the JSON script tag to update.
       defineComponent(() => () => [
-        h(ShopifyAccount, { menu: "customer-account-main-menu", signInUrl: "/account/login" }, () =>
+        h(ShopifyAccount, { menu: "customer-account-main-menu", signInUrl: "/sign-in" }, () =>
           h("span", { slot: "signed-out-avatar" }, "Sign in"),
         ),
         h(ShopifyAccount),
@@ -136,10 +136,12 @@ describe("ShopifyScripts", () => {
       ]),
       { attachTo: document.body },
     );
-    const header = wrapper.element.parentElement?.querySelector("shopify-account");
+    const [header, menu] = document.querySelectorAll("shopify-account");
     assert(header, "Expected a shopify-account element");
+    assert(menu, "Expected a second shopify-account element");
 
-    expect(header.getAttribute("sign-in-url")).toBe("/account/login");
+    expect(header.getAttribute("sign-in-url")).toBe("/sign-in");
+    expect(menu.getAttribute("sign-in-url")).toBe("/account/login");
     expect(header.querySelector('[slot="signed-out-avatar"]')?.textContent).toBe("Sign in");
 
     accountWidget.value = { ...TEST_ACCOUNT_WIDGET_DATA };

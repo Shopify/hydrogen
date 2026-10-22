@@ -4,7 +4,6 @@ Pass the data to `ShopifyScripts` once, in the root layout. Render `ShopifyAccou
 
 ```vue
 <script setup lang="ts">
-import { CUSTOMER_ACCOUNT_LOGIN_PATH } from "@shopify/hydrogen/customer-account";
 import type { ShopifyAccountWidgetData, ShopifyScriptsShop } from "@shopify/hydrogen";
 import { ShopifyAccount, ShopifyScripts } from "@shopify/hydrogen/vue";
 
@@ -14,7 +13,7 @@ defineProps<{ accountWidget: ShopifyAccountWidgetData; shop: ShopifyScriptsShop 
 <template>
   <ShopifyScripts :shop="shop" :account-widget="accountWidget" />
   <header>
-    <ShopifyAccount :sign-in-url="CUSTOMER_ACCOUNT_LOGIN_PATH">
+    <ShopifyAccount>
       <img slot="signed-out-avatar" src="/icons/user.svg" alt="Sign in" />
     </ShopifyAccount>
   </header>
