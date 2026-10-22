@@ -1,5 +1,7 @@
 import { defineComponent, h, shallowRef } from "vue";
 
+import { CUSTOMER_ACCOUNT_PATHS } from "../core/url";
+
 /**
  * Props for the Vue `ShopifyAccount` component. Pass `ShopifyScripts` the `accountWidget` option
  * so the component has data to read.
@@ -9,7 +11,7 @@ import { defineComponent, h, shallowRef } from "vue";
 export type ShopifyAccountProps = {
   /** The handle of the menu to show in the account sheet, such as `customer-account-main-menu`. */
   menu?: string;
-  /** The path that starts a customer sign-in. Defaults to `/customer_authentication/login`. */
+  /** The path that starts a customer sign-in. Defaults to Hydrogen's `/account/login` route. */
   signInUrl?: string;
 };
 
@@ -34,7 +36,7 @@ export const ShopifyAccount = defineComponent({
   name: "ShopifyAccount",
   props: {
     menu: { type: String, default: undefined },
-    signInUrl: { type: String, default: undefined },
+    signInUrl: { type: String, default: CUSTOMER_ACCOUNT_PATHS.login },
   },
   setup(props, { slots }) {
     return () =>

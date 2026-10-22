@@ -19,13 +19,13 @@ This renders, in order, the JSON script tag and `account.js`:
 <script id="shopify-account" type="module" async crossorigin="anonymous" src="https://cdn.shopify.com/storefront/web-components/account.js"></script>
 ```
 
+Use `getShopifyScriptTags()` instead when the framework's head API takes tag objects. Both helpers escape the JSON and copy only the known fields; always render the tag through them.
+
 Render the element where the widget should appear:
 
 ```html
 <shopify-account sign-in-url="/account/login"></shopify-account>
 ```
-
-Use `getShopifyScriptTags()` instead when the framework's head API takes tag objects. Both helpers escape the JSON and copy only the known fields. If you write the tag by hand, keep the exact id, use `type="application/json"`, and escape `<` as `\u003c` so a value such as `</script>` can't end the tag.
 
 ## Browser: Remount on Change
 
@@ -45,6 +45,14 @@ function updateAccountWidget(serializedData: string) {
 }
 ```
 
-Get `serializedData` from the server: the inner text of the JSON tag in a fresh `renderShopifyScriptTags()` result. If the framework owns the DOM (for example a virtual DOM or keyed template), remount through the framework instead of `replaceWith`, such as by changing the element's key, so the framework's node references stay valid.
+Get `serializedData` on the server from the JSON descriptor's `innerHTML`, which is already escaped:
+
+```ts
+const serializedData = getShopifyScriptTags({ shop, accountWidget }).scripts.find(
+  ({ attributes }) => attributes?.id === "shopify-customer-account-data",
+)?.innerHTML;
+```
 
 Do the steps in that order. A widget that connects before the JSON updates reads the old data.
+
+`cloneNode(true)` keeps the element's attributes and slot children, including any attributes the component set on itself at runtime. If the framework owns the DOM (for example a virtual DOM or keyed template), remount through the framework instead, such as by changing the element's key, so the framework's node references stay valid.

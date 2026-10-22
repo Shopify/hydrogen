@@ -61,9 +61,10 @@ export function ShopifyScripts(options: ShopifyScriptsProps) {
     Fragment,
     null,
     getShopifyScriptTags({ ...scriptOptions, consent }).tags.map(
-      ({ tagName, attributes, innerHTML }, index) =>
+      ({ tagName, attributes, innerHTML }) =>
         createElement(tagName, {
-          key: index,
+          // Optional tags come and go, so index keys would make React reuse already-run scripts.
+          key: getTagKey(attributes),
           ...getReactAttributes(attributes),
           ...(innerHTML ? { dangerouslySetInnerHTML: { __html: innerHTML } } : {}),
         }),
@@ -83,6 +84,10 @@ function useRestartAccountWidgetsOnChange(
     previous.current = serialized;
     restartShopifyAccountWidgets();
   }, [serialized]);
+}
+
+function getTagKey(attributes: Record<string, string | boolean> = {}) {
+  return String(attributes.id ?? `${attributes.rel}:${attributes.href}`);
 }
 
 function getReactAttributes(attributes: Record<string, string | boolean> = {}) {
