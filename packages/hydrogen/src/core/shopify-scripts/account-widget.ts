@@ -61,30 +61,32 @@ type AccountWidgetContext = {
   i18n?: Pick<ShopifyScriptsI18n, "country" | "language">;
 };
 
-const CUSTOMER_KEYS = [
-  "firstName",
-  "lastName",
-  "email",
-  "avatarUrl",
-  "socialLoginProvider",
-] as const;
-const SHOP_KEYS = [
-  "legacyCustomerAccounts",
-  "b2bEnabled",
-  "marketingConsentSigninEnabled",
-  "marketingConsentPreselected",
-  "socialLoginProviders",
-  "customerAccountTranslations",
-] as const;
-
 /** Returns the JSON script tag that `<shopify-account>` reads its data from. */
 export function getShopifyAccountWidgetDataScript(
   data: ShopifyAccountWidgetData,
   { shop, i18n }: AccountWidgetContext,
 ): ShopifyScriptDescriptor {
-  pickKnown(data, ["customer", "shop"], "accountWidget");
-  const customer =
-    data.customer && pickKnown(data.customer, CUSTOMER_KEYS, "accountWidget.customer");
+  assertExactFields(data, ["customer", "shop"], "accountWidget");
+  const { customer, shop: settings } = data;
+  if (customer) {
+    assertExactFields(
+      customer,
+      ["firstName", "lastName", "email", "avatarUrl", "socialLoginProvider"],
+      "accountWidget.customer",
+    );
+  }
+  assertExactFields(
+    settings,
+    [
+      "legacyCustomerAccounts",
+      "b2bEnabled",
+      "marketingConsentSigninEnabled",
+      "marketingConsentPreselected",
+      "socialLoginProviders",
+      "customerAccountTranslations",
+    ],
+    "accountWidget.shop",
+  );
 
   return {
     tagName: "script",
@@ -92,28 +94,34 @@ export function getShopifyAccountWidgetDataScript(
     attributes: { id: SHOPIFY_ACCOUNT_WIDGET_DATA_ID, type: "application/json" },
     innerHTML: serializeJsonForHtml({
       customer: customer && {
-        ...customer,
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        email: customer.email,
+        avatarUrl: customer.avatarUrl,
         socialLoginProvider:
           customer.socialLoginProvider &&
-          pickKnown(
+          getSocialLoginProvider(
             customer.socialLoginProvider,
-            ["handle"],
             "accountWidget.customer.socialLoginProvider",
           ),
       },
       shop: {
         id: shop.shopId,
-        ...pickKnown(data.shop, SHOP_KEYS, "accountWidget.shop"),
-        socialLoginProviders: data.shop.socialLoginProviders.map((provider) =>
-          pickKnown(provider, ["handle"], "accountWidget.shop.socialLoginProviders[]"),
+        legacyCustomerAccounts: settings.legacyCustomerAccounts,
+        b2bEnabled: settings.b2bEnabled,
+        marketingConsentSigninEnabled: settings.marketingConsentSigninEnabled,
+        marketingConsentPreselected: settings.marketingConsentPreselected,
+        socialLoginProviders: settings.socialLoginProviders.map((provider) =>
+          getSocialLoginProvider(provider, "accountWidget.shop.socialLoginProviders[]"),
         ),
-        customerAccountTranslations: data.shop.customerAccountTranslations.map((translation) =>
-          pickKnown(
+        customerAccountTranslations: settings.customerAccountTranslations.map((translation) => {
+          assertExactFields(
             translation,
             ["key", "value"],
             "accountWidget.shop.customerAccountTranslations[]",
-          ),
-        ),
+          );
+          return { key: translation.key, value: translation.value };
+        }),
       },
       visitor: { country: i18n?.country ?? "US", language: i18n?.language ?? "EN" },
     }),
@@ -125,23 +133,34 @@ export function findShopifyAccountWidgetDataScript(scripts: readonly ShopifyScri
   return scripts.find(({ attributes }) => attributes?.id === SHOPIFY_ACCOUNT_WIDGET_DATA_ID);
 }
 
-// Copies the known keys and throws on any other key, so callers can't pass extra values, such
-// as access tokens, into the HTML by spreading an API response or session object.
-function pickKnown<T extends object, K extends keyof T>(
-  value: T,
-  keys: readonly K[],
+function getSocialLoginProvider(
+  provider: ShopifyAccountWidgetSocialLoginProvider,
   path: string,
-): Pick<T, K> {
-  const unknownKeys = Object.keys(value).filter(
-    (key) => !(keys as readonly string[]).includes(key),
-  );
-  if (unknownKeys.length > 0) {
+): ShopifyAccountWidgetSocialLoginProvider {
+  assertExactFields(provider, ["handle"], path);
+  return { handle: provider.handle };
+}
+
+// Unknown fields throw so extra values, such as access tokens, can't reach the HTML through a
+// spread API response. Missing fields throw because the widget skips its own requests when this
+// data is present, so a missing field would silently turn a feature off.
+function assertExactFields<T extends object>(
+  value: T,
+  fields: readonly (keyof T & string)[],
+  path: string,
+) {
+  const allowed: readonly string[] = fields;
+  const unknownFields = Object.keys(value).filter((field) => !allowed.includes(field));
+  if (unknownFields.length > 0) {
     throw new Error(
-      `${path} received unknown field(s): ${unknownKeys.join(", ")}. Pass only the fields the account widget reads, because this data is rendered into the page HTML.`,
+      `${path} received unknown field(s): ${unknownFields.join(", ")}. Pass only the fields the account widget reads, because this data is rendered into the page HTML.`,
     );
   }
 
-  return Object.fromEntries(keys.map((key) => [key, value[key]])) as Pick<T, K>;
+  const missingFields = fields.filter((field) => !(field in value));
+  if (missingFields.length > 0) {
+    throw new Error(`${path} is missing required field(s): ${missingFields.join(", ")}.`);
+  }
 }
 
 // Escaping `<` stops values such as `</script>` or `<!--` from ending the script tag early.

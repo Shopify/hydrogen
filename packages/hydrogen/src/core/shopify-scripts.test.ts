@@ -749,6 +749,15 @@ describe("shopify scripts", () => {
     );
   });
 
+  it("rejects missing fields instead of silently turning features off", () => {
+    const { b2bEnabled: _b2bEnabled, ...shop } = TEST_ACCOUNT_WIDGET_DATA.shop;
+    const accountWidget = { ...TEST_ACCOUNT_WIDGET_DATA, shop } as typeof TEST_ACCOUNT_WIDGET_DATA;
+
+    expect(() => getShopifyScriptTags({ shop: TEST_SHOP, accountWidget })).toThrow(
+      "accountWidget.shop is missing required field(s): b2bEnabled",
+    );
+  });
+
   it("omits the account module and data by default", () => {
     const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
 
