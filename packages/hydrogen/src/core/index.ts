@@ -171,6 +171,11 @@ export {
   getShopifyScriptHashes,
 } from "./shopify-scripts/index";
 export type {
+  ShopifyAccountWidgetCustomer,
+  ShopifyAccountWidgetData,
+  ShopifyAccountWidgetShop,
+  ShopifyAccountWidgetSocialLoginProvider,
+  ShopifyAccountWidgetVisitor,
   ShopifyRoutesOptions,
   ShopifyScriptsAnalyticsConfig,
   ShopifyScriptTagDescriptor,

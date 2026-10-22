@@ -1,7 +1,7 @@
 import { describe, expectTypeOf, it } from "vitest";
 
 import type { ConsentConfig, ConsentPreferences, ConsentSetup, ShopifyGlobal, StorefrontAnalyticsConfig } from "./index";
-import type { ShopifyScriptTagsOptions } from "./shopify-scripts";
+import type { ShopifyAccountWidgetData, ShopifyScriptTagsOptions } from "./shopify-scripts";
 
 describe("Shopify script option types", () => {
   it("requires complete shop identity", () => {});
@@ -46,6 +46,20 @@ export function shopifyScriptOptionTypes() {
     },
   };
   void missingShopId;
+}
+
+export function accountWidgetTypes(widget: ShopifyAccountWidgetData) {
+  const signedOut: ShopifyAccountWidgetData = { ...widget, customer: null };
+  void signedOut;
+
+  // @ts-expect-error customer must be explicit; pass null for a signed-out visitor
+  const missingCustomer: ShopifyAccountWidgetData = { shop: widget.shop, visitor: widget.visitor };
+  void missingCustomer;
+
+  const { b2bEnabled: _b2bEnabled, ...shopWithoutB2b } = widget.shop;
+  // @ts-expect-error every shop field is required because the widget skips its own fetch
+  const partialShop: ShopifyAccountWidgetData = { ...widget, shop: shopWithoutB2b };
+  void partialShop;
 }
 
 // @ts-expect-error setup must return a promise representing initial consent readiness
