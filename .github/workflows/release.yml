@@ -304,10 +304,25 @@ jobs:
           publish-script: pnpm changeset publish --tag ${{ github.ref_name }}
           commit-message: '[ci] back-fix release ${{ github.ref_name }}'
           pr-title: '[ci] back-fix release ${{ github.ref_name }}'
+          # Git tags are still pushed, because `push-git-tags` is a separate input
+          # that defaults to true. Releases are created by the next step instead:
+          # it is the only way to keep them off GitHub's "Latest" designation.
+          create-github-releases: false
           # v2 pushes release commits and tags through the GitHub API by default.
           # Keep the Git CLI so this upgrade does not also change how commits land.
           push-with-git-cli: true
           github-token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+
+      - name: Create GitHub releases without claiming "Latest"
+        # changesets/action offers no control over GitHub's `make_latest` field
+        # (changesets/action#340), so the releases it would have created are
+        # created here with `--latest=false`. A release from this branch ships an
+        # older line and must never take the designation away from the current
+        # one. This no-ops when nothing was published.
+        env:
+          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.published-packages }}
+          GH_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+        run: node scripts/create-backfix-github-releases.mjs
 
   # ============================================
   # COMPILE TEMPLATES (after production release publishes)
