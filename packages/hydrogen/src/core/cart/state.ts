@@ -1,4 +1,8 @@
-import type { CartErrorCode, CartWarningCode } from "../../graphql/generated/storefront-api-types";
+import type {
+  CartErrorCode,
+  CartWarningCode,
+  CountryCode,
+} from "../../graphql/generated/storefront-api-types";
 
 /** A monetary value from the Storefront API. */
 export interface Money {
@@ -137,6 +141,18 @@ export interface CartNetworkEntry {
   status?: number;
 }
 
+/** The buyer that the cart belongs to. The country sets the cart's pricing and currency. */
+export interface CartBuyerIdentity {
+  /** The country that prices the cart. Set from the request's country when the cart is created, and reset to the request's country when the two drift apart. */
+  countryCode?: CountryCode | null;
+  /** The buyer's email address. */
+  email?: string | null;
+  /** The buyer's phone number. */
+  phone?: string | null;
+  /** The customer that the cart is attached to, or `null` for a guest cart. */
+  customer?: { id: string } | null;
+}
+
 /** A key-value pair attached to the cart or to an individual cart line. */
 export interface Attribute {
   /** The attribute name. Look up the attribute's errors with this name. */
@@ -244,6 +260,8 @@ export interface CartData {
   lines: CartLineConnection;
   /** Discount codes applied to the cart, with their applicability. */
   discountCodes: DiscountCode[];
+  /** The buyer that the cart belongs to. Absent until the first server response. */
+  buyerIdentity?: CartBuyerIdentity | null;
   /** Extra cart fields from your custom cart fragment, unchanged. */
   [key: string]: unknown;
 }
