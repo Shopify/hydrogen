@@ -137,7 +137,18 @@ export function createMiniOxygenDevEnvironment(
       viteDevServer,
     );
 
-    return startMiniOxygenRuntime(options);
+    const runtime = startMiniOxygenRuntime(options);
+
+    try {
+      // Fail this request instead of keeping a runtime that never started,
+      // so the next request retries with a fresh one.
+      await runtime.ready;
+    } catch (error) {
+      await runtime.dispose().catch(() => {});
+      throw error;
+    }
+
+    return runtime;
   }
 
   async function warmup() {

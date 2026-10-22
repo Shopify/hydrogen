@@ -49,6 +49,7 @@ vi.mock('./utils.js', () => ({
 }));
 
 type MockRuntime = {
+  ready: Promise<unknown>;
   isDisposed: boolean;
   dispatchFetch: ReturnType<typeof vi.fn>;
   dispose: ReturnType<typeof vi.fn>;
@@ -56,8 +57,12 @@ type MockRuntime = {
 
 const TEST_SERVER = {} as any;
 
-function createMockRuntime(label: string): MockRuntime {
+function createMockRuntime(
+  label: string,
+  ready: Promise<unknown> = Promise.resolve(),
+): MockRuntime {
   const runtime = {
+    ready,
     isDisposed: false,
     dispatchFetch: vi.fn(async (request: Request) => {
       return new Response(`${label}:${new URL(request.url).pathname}`);
@@ -219,6 +224,50 @@ describe('createMiniOxygenDevEnvironment', () => {
     expect(mocks.startMiniOxygenRuntime).toHaveBeenCalledTimes(2);
     expect(firstRuntime.dispatchFetch).toHaveBeenCalledTimes(1);
     expect(secondRuntime.dispatchFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('fails the request and retries when the runtime fails to start', async () => {
+    const startupError = new Error('The Workers runtime failed to start.');
+    let failedRuntime: MockRuntime | undefined;
+    const workingRuntime = createMockRuntime('runtime-2');
+    const resolveRuntimeOptions = vi.fn(async (_, viteDevServer) => {
+      return {
+        entry: './server',
+        viteDevServer,
+      };
+    });
+
+    mocks.startMiniOxygenRuntime
+      .mockImplementationOnce(() => {
+        failedRuntime = createMockRuntime(
+          'runtime-1',
+          Promise.reject(startupError),
+        );
+        return failedRuntime;
+      })
+      .mockReturnValueOnce(workingRuntime);
+
+    const environment = createMiniOxygenDevEnvironment(
+      'ssr',
+      {} as any,
+      {},
+      resolveRuntimeOptions,
+    );
+
+    await environment.listen(TEST_SERVER);
+
+    await expect(
+      environment.dispatchFetch(new Request('http://localhost/first')),
+    ).rejects.toBe(startupError);
+    expect(failedRuntime?.dispose).toHaveBeenCalledTimes(1);
+    expect(failedRuntime?.dispatchFetch).not.toHaveBeenCalled();
+
+    const response = await environment.dispatchFetch(
+      new Request('http://localhost/second'),
+    );
+
+    expect(await response.text()).toBe('runtime-2:/second');
+    expect(mocks.startMiniOxygenRuntime).toHaveBeenCalledTimes(2);
   });
 
   it('rejects runtime reconfiguration after startup', async () => {
