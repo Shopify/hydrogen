@@ -417,7 +417,10 @@ function decodeAriaSnapshotRootName(rootLine: string): string | null {
 }
 
 async function findUnselectedVariantButton(page: Page): Promise<Locator | null> {
-  const buttons = page.getByTestId("product-variant-option").filter({ visible: true });
+  const buttons = page
+    .getByTestId("product-variant-option")
+    .and(page.getByRole("button"))
+    .filter({ visible: true });
   const count = Math.min(await buttons.count(), MAX_VARIANT_CONTROL_PROBES);
 
   for (let index = 0; index < count; index += 1) {
@@ -431,7 +434,10 @@ async function findUnselectedVariantButton(page: Page): Promise<Locator | null> 
 }
 
 async function findVariantLink(page: Page): Promise<Locator | null> {
-  const links = page.getByTestId("product-variant-option").filter({ visible: true });
+  const links = page
+    .getByTestId("product-variant-option")
+    .and(page.getByRole("link"))
+    .filter({ visible: true });
   const count = Math.min(await links.count(), MAX_VARIANT_CONTROL_PROBES);
 
   for (let index = 0; index < count; index += 1) {
