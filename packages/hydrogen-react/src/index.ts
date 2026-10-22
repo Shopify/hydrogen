@@ -52,6 +52,7 @@ export {
   mapSelectedProductOptionToObject,
 } from './getProductOptions.js';
 export {Image, IMAGE_FRAGMENT} from './Image.js';
+export {isSafeRichTextUrl} from './isSafeRichTextUrl.js';
 export {useLoadScript} from './load-script.js';
 export {MediaFile} from './MediaFile.js';
 export {ModelViewer} from './ModelViewer.js';

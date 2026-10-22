@@ -1,4 +1,5 @@
 import {createElement, type ReactNode} from 'react';
+import {isSafeRichTextUrl} from './isSafeRichTextUrl.js';
 
 export type CustomComponents = {
   /** The root node of the rich text. Defaults to `<div>` */
@@ -95,6 +96,8 @@ function RichTextLink({
     children?: ReactNode[];
   };
 }): ReactNode {
+  if (!isSafeRichTextUrl(node.url)) return node.children;
+
   return (
     <a href={node.url} title={node.title} target={node.target}>
       {node.children}
