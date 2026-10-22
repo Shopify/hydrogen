@@ -6,7 +6,6 @@ import type { ShopifyAccountWidgetData } from "./shopify-scripts/account-widget"
 export const TEST_ACCOUNT_WIDGET_DATA: ShopifyAccountWidgetData = {
   customer: null,
   shop: {
-    id: "gid://shopify/Shop/42",
     legacyCustomerAccounts: false,
     b2bEnabled: false,
     marketingConsentSigninEnabled: true,
@@ -14,20 +13,26 @@ export const TEST_ACCOUNT_WIDGET_DATA: ShopifyAccountWidgetData = {
     socialLoginProviders: [{ handle: "shop" }],
     customerAccountTranslations: [],
   },
-  visitor: { sessionId: "session-1", country: "US", language: "EN" },
 };
 
 export const TEST_ACCOUNT_WIDGET_CUSTOMER: NonNullable<ShopifyAccountWidgetData["customer"]> = {
-  id: "gid://shopify/Customer/7",
   firstName: "Ada",
   lastName: "Lovelace",
   email: "ada@example.com",
-  displayName: "Ada Lovelace",
   avatarUrl: null,
   socialLoginProvider: null,
 };
 
-const shopifyAccountConnections: Array<ShopifyAccountWidgetData | null> = [];
+/** The JSON that `<shopify-account>` reads for the given data, with the default US English locale. */
+export function getRenderedAccountWidgetData(data: ShopifyAccountWidgetData, shopId: string) {
+  return {
+    customer: data.customer,
+    shop: { id: shopId, ...data.shop },
+    visitor: { country: "US", language: "EN" },
+  };
+}
+
+const shopifyAccountConnections: Array<ReturnType<typeof getRenderedAccountWidgetData> | null> = [];
 
 /**
  * Defines a stand-in `shopify-account` element that, like account.js, reads the JSON script tag
