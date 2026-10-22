@@ -581,6 +581,21 @@ describe("toggleFilterInput", () => {
     expect(store.getState().filters).toEqual([]);
   });
 
+  it("serializes Storefront API taxonomy filter input", () => {
+    store = createTestStore();
+
+    store.toggleFilterInput(
+      JSON.stringify({
+        taxonomyMetafield: { namespace: "shopify", key: "material", value: "leather" },
+      }),
+    );
+
+    expect(store.serializeToParams().get("filter.v.t.shopify.material")).toBe("leather");
+    expect(store.getState().filters).toEqual([
+      { taxonomyMetafield: { namespace: "shopify", key: "material", value: "leather" } },
+    ]);
+  });
+
   it("is a no-op for invalid JSON", () => {
     store = createTestStore();
     const listener = vi.fn();

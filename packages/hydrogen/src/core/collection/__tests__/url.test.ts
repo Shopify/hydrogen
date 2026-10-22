@@ -1,6 +1,6 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
 
-import type { ProductFilter } from "../../../../vendor/standard-events";
+import type { ProductFilter } from "../state";
 import {
   parseCollectionParams,
   parseSortByValue,
@@ -123,10 +123,10 @@ describe("parseCollectionParams", () => {
       ]);
     });
 
-    it("parses taxonomy metafield filter", () => {
+    it("parses taxonomy metafield filter into the Storefront API shape", () => {
       const result = parseCollectionParams(params("filter.v.t.color.family=red"));
       expect(result.filters).toEqual([
-        { taxonomyMetafield: { key: "color.family", value: "red" } },
+        { taxonomyMetafield: { namespace: "color", key: "family", value: "red" } },
       ]);
     });
 
@@ -343,13 +343,27 @@ describe("serializeCollectionParams", () => {
     expect(result.get("filter.v.m.custom.weight")).toBe("100g");
   });
 
-  it("serializes taxonomy metafield filter", () => {
+  it("serializes Storefront API taxonomy metafield filters", () => {
     const result = serializeCollectionParams({
-      filters: [{ taxonomyMetafield: { key: "color.family", value: "red" } }],
+      filters: [{ taxonomyMetafield: { namespace: "color", key: "family", value: "red" } }],
       sortKey: undefined,
       reverse: false,
     });
     expect(result.get("filter.v.t.color.family")).toBe("red");
+  });
+
+  it("round-trips taxonomy namespaces and keys containing dots", () => {
+    const filter: ProductFilter = {
+      taxonomyMetafield: { namespace: "shopify", key: "color.pattern", value: "striped" },
+    };
+    const serialized = serializeCollectionParams({
+      filters: [filter],
+      sortKey: undefined,
+      reverse: false,
+    });
+
+    expect(serialized.get("filter.v.t.shopify.color.pattern")).toBe("striped");
+    expect(parseCollectionParams(serialized).filters).toEqual([filter]);
   });
 
   it("serializes product type filter", () => {
@@ -536,7 +550,7 @@ describe("getFilterRemovalUrl", () => {
   it("removes taxonomy metafield filter", () => {
     const current = params("filter.v.t.color.family=red&filter.p.tag=men");
     const url = getFilterRemovalUrl(current, {
-      taxonomyMetafield: { key: "color.family", value: "red" },
+      taxonomyMetafield: { namespace: "color", key: "family", value: "red" },
     });
     const result = new URLSearchParams(url.slice(1));
     expect(result.has("filter.v.t.color.family")).toBe(false);
@@ -785,6 +799,15 @@ describe("filterEquals", () => {
     expect(filterEquals(fromUrl, fromApi)).toBe(true);
   });
 
+  it("matches URL-parsed and API-shaped taxonomy filters", () => {
+    const fromUrl = parseCollectionParams(params("filter.v.t.shopify.material=leather")).filters[0];
+    const fromApi: ProductFilter = {
+      taxonomyMetafield: { namespace: "shopify", key: "material", value: "leather" },
+    };
+
+    expect(filterEquals(fromUrl, fromApi)).toBe(true);
+  });
+
   it("does not match different filter kinds", () => {
     expect(filterEquals({ tag: "men" }, { productVendor: "Nike" })).toBe(false);
   });
@@ -801,6 +824,21 @@ describe("isFilterInputActive", () => {
     expect(isFilterInputActive(activeFilters, tagInput)).toBe(true);
     expect(isFilterInputActive(activeFilters, colorInput)).toBe(true);
     expect(isFilterInputActive(activeFilters, JSON.stringify({ tag: "women" }))).toBe(false);
+  });
+
+  it("matches active taxonomy filters against Storefront API input strings", () => {
+    const activeFilters = parseCollectionParams(
+      params("filter.v.t.shopify.material=leather"),
+    ).filters;
+
+    expect(
+      isFilterInputActive(
+        activeFilters,
+        JSON.stringify({
+          taxonomyMetafield: { namespace: "shopify", key: "material", value: "leather" },
+        }),
+      ),
+    ).toBe(true);
   });
 
   it("returns false for malformed JSON", () => {
