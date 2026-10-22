@@ -19,6 +19,8 @@ import {
   revalidateConnectedCartCheckoutUrls,
   type CartStore,
 } from "./cart";
+import { attachQuantityInput } from "./attach-quantity-input";
+import { createCartFormRegister } from "./form";
 import type { CartData, CartLine, CartPending, CartState } from "./state";
 import {
   EMPTY_CART_DATA,
@@ -1171,6 +1173,70 @@ describe("CartStore.handleFormSubmit — line mutations", () => {
       expect.anything(),
     );
   });
+
+  it.each([0, -2])(
+    "set: a positive quantity is sent as-is when quantityAvailable is %i (untracked or oversold inventory is not a cap)",
+    async (quantityAvailable) => {
+      const currentQuantity = 2;
+      const requestedQuantity = 3;
+
+      store.destroy();
+      store = createCartStore();
+      mockGetCart.mockResolvedValue({ cart: null });
+      store.connect();
+
+      const line = {
+        ...makeLine({ id: "line-1", quantity: currentQuantity }),
+        merchandise: {
+          id: "gid://shopify/ProductVariant/1",
+          title: "Small",
+          product: { title: "T-Shirt" },
+          quantityAvailable,
+        },
+      };
+      store.hydrate(makeCartState({ lines: [line], totalQuantity: currentQuantity }));
+
+      const register = createCartFormRegister();
+      const form = document.createElement("form");
+      const setButton = Object.assign(document.createElement("button"), register("set"));
+      const lineIdInput = Object.assign(
+        document.createElement("input"),
+        register("lineId", { value: "line-1" }),
+      );
+      const quantityInput = Object.assign(
+        document.createElement("input"),
+        register("quantity", { value: currentQuantity, interactive: true }),
+      );
+      form.append(setButton, lineIdInput, quantityInput);
+      document.body.appendChild(form);
+      attachQuantityInput(quantityInput, form);
+
+      let submission: Promise<void> | undefined;
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        submission = store.handleFormSubmit(event as SubmitEvent);
+      });
+
+      quantityInput.value = String(requestedQuantity);
+      quantityInput.dispatchEvent(new Event("change", { bubbles: true }));
+      await nextTick();
+      document.body.removeChild(form);
+
+      assert(submission, "Expected the quantity change to submit the form");
+
+      const optimisticLines = getCartLines(store.getState().data);
+      expect(optimisticLines.map((l) => ({ id: l.id, quantity: l.quantity }))).toEqual([
+        { id: "line-1", quantity: requestedQuantity },
+      ]);
+      expect(mockUpdateCart).toHaveBeenCalledWith(
+        { lines: [{ id: "line-1", quantity: requestedQuantity }] },
+        expect.anything(),
+      );
+
+      resolveUpdate(0, serverCart(requestedQuantity, [{ id: "line-1", quantity: requestedQuantity }]));
+      await submission;
+    },
+  );
 
   it("set: quantity 0 routes to remove", async () => {
     const event = submitForm({ lineId: "line-1", quantity: "0" }, "intent", "set");
