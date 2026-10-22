@@ -139,7 +139,6 @@ export type {
   ShopifyAccountWidgetData,
   ShopifyAccountWidgetShop,
   ShopifyAccountWidgetSocialLoginProvider,
-  ShopifyAccountWidgetVisitor,
   ShopifyRoutesOptions,
   ShopifyScriptsAnalyticsConfig,
   ShopifyScriptTagDescriptor,

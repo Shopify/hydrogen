@@ -1,6 +1,6 @@
-import { defineComponent, h, onMounted, watch, type PropType } from "vue";
+import { computed, defineComponent, h, onMounted, watch, type PropType } from "vue";
 
-import { serializeShopifyAccountWidgetData } from "../core/shopify-scripts/account-widget";
+import { findShopifyAccountWidgetDataScript } from "../core/shopify-scripts/account-widget";
 import {
   getShopifyScriptTags,
   initializeShopifyScripts,
@@ -104,16 +104,17 @@ export const ShopifyScripts = defineComponent({
       });
     });
 
+    const scriptTags = computed(() => getShopifyScriptTags(props));
+
     // `flush: "post"` runs after the JSON script tag updates, so remounted widgets read the new data.
     watch(
-      () =>
-        props.accountWidget ? serializeShopifyAccountWidgetData(props.accountWidget) : undefined,
+      () => findShopifyAccountWidgetDataScript(scriptTags.value.scripts)?.innerHTML,
       restartShopifyAccountWidgets,
       { flush: "post" },
     );
 
     return () =>
-      getShopifyScriptTags(props).tags.map(({ tagName, attributes, innerHTML }) =>
+      scriptTags.value.tags.map(({ tagName, attributes, innerHTML }) =>
         h(tagName, {
           ...attributes,
           ...(innerHTML ? { innerHTML } : {}),

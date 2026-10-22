@@ -23,18 +23,19 @@ Pass `accountWidget` whenever the page should show the widget:
 
 ```ts
 const accountWidget: ShopifyAccountWidgetData = {
-  customer: signedInCustomer ?? null, // null = signed out
-  shop: { id, legacyCustomerAccounts, b2bEnabled, marketingConsentSigninEnabled,
+  // null = signed out
+  customer: signedIn ? { firstName, lastName, email, avatarUrl, socialLoginProvider } : null,
+  shop: { legacyCustomerAccounts, b2bEnabled, marketingConsentSigninEnabled,
           marketingConsentPreselected, socialLoginProviders, customerAccountTranslations },
-  visitor: { sessionId, country, language },
 };
 ```
 
 - Option present = show the widget. `customer` present = signed in. Leave `accountWidget` out to omit the widget's data and script.
 - Every field is required. When the JSON is on the page, the component skips its own Storefront API requests, so a missing field silently turns off a feature such as social sign-in or the marketing opt-in.
-- `shop` and `visitor` are required for signed-out visitors too. Without the JSON, the component falls back to fetching through a `<shopify-store>` element; with no store on the page it renders a bare signed-out button with no social sign-in, translations, or shop settings.
-- The app owns where `shop` and `visitor` values come from, and the caching of pages that carry customer data. Pages with a signed-in `customer` contain personal data: serve them with private caching.
-- Load customer fields on the server with the Customer Account API. Pass only the fields the type lists. Hydrogen copies only known fields and escapes the JSON, but the token belongs in server code only.
+- Hydrogen adds the shop ID from the `shop` option and the country and language from the `i18n` option. Don't pass them in `accountWidget`.
+- Build each object from exactly the listed fields. Any other field throws, because the data is rendered into the HTML: map Customer Account API results field by field instead of spreading them, and keep access tokens in server code.
+- `shop` is required for signed-out visitors too. Without the JSON, the component falls back to fetching through a `<shopify-store>` element; with no store on the page it renders a bare signed-out button with no social sign-in, translations, or shop settings.
+- The app owns where the `shop` settings come from, and the caching of pages that carry customer data. Pages with a signed-in `customer` contain personal data: serve them with private caching.
 
 ## Rules
 

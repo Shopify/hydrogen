@@ -665,6 +665,7 @@ describe("shopify scripts", () => {
   it("renders the account widget data before the account module for signed-out visitors", () => {
     const descriptors = getShopifyScriptTags({
       nonce: "test-nonce",
+      i18n: { country: "CA", language: "FR" },
       shop: TEST_SHOP,
       accountWidget: TEST_ACCOUNT_WIDGET_DATA,
     });
@@ -681,7 +682,11 @@ describe("shopify scripts", () => {
       id: "shopify-customer-account-data",
       type: "application/json",
     });
-    expect(JSON.parse(dataScript.innerHTML)).toEqual(TEST_ACCOUNT_WIDGET_DATA);
+    expect(JSON.parse(dataScript.innerHTML)).toEqual({
+      customer: null,
+      shop: { id: TEST_SHOP_ID, ...TEST_ACCOUNT_WIDGET_DATA.shop },
+      visitor: { country: "CA", language: "FR" },
+    });
     expect(descriptors.scripts[moduleIndex]).toEqual({
       tagName: "script",
       attributes: {
@@ -701,13 +706,9 @@ describe("shopify scripts", () => {
     expect(dataIndex).toBeLessThan(moduleIndex);
   });
 
-  it("keeps account widget data inside its script tag and drops unknown fields", () => {
+  it("keeps account widget data inside its script tag", () => {
     const hostileName = "</script><script>alert(1)</script><!--\u2028\u2029";
-    const customer = {
-      ...TEST_ACCOUNT_WIDGET_CUSTOMER,
-      firstName: hostileName,
-      accessToken: "shcat_secret",
-    };
+    const customer = { ...TEST_ACCOUNT_WIDGET_CUSTOMER, firstName: hostileName };
     const [dataTag] = renderShopifyScriptTags({
       shop: TEST_SHOP,
       accountWidget: { ...TEST_ACCOUNT_WIDGET_DATA, customer },
@@ -716,10 +717,36 @@ describe("shopify scripts", () => {
     const json = dataTag.slice(dataTag.indexOf(">") + 1, -"</script>".length);
 
     expect(json).not.toMatch(/<|\u2028|\u2029/);
-    expect(JSON.parse(json)).toEqual({
-      ...TEST_ACCOUNT_WIDGET_DATA,
-      customer: { ...TEST_ACCOUNT_WIDGET_CUSTOMER, firstName: hostileName },
-    });
+    expect(JSON.parse(json).customer.firstName).toBe(hostileName);
+  });
+
+  it.each([
+    ["accountWidget", { ...TEST_ACCOUNT_WIDGET_DATA, customerAccessToken: "shcat_secret" }],
+    [
+      "accountWidget.customer",
+      {
+        ...TEST_ACCOUNT_WIDGET_DATA,
+        customer: { ...TEST_ACCOUNT_WIDGET_CUSTOMER, accessToken: "shcat_secret" },
+      },
+    ],
+    [
+      "accountWidget.shop",
+      { ...TEST_ACCOUNT_WIDGET_DATA, shop: { ...TEST_ACCOUNT_WIDGET_DATA.shop, token: "x" } },
+    ],
+    [
+      "accountWidget.shop.socialLoginProviders[]",
+      {
+        ...TEST_ACCOUNT_WIDGET_DATA,
+        shop: {
+          ...TEST_ACCOUNT_WIDGET_DATA.shop,
+          socialLoginProviders: [{ handle: "shop", token: "x" }],
+        },
+      },
+    ],
+  ])("rejects unknown fields in %s instead of rendering them", (path, accountWidget) => {
+    expect(() => getShopifyScriptTags({ shop: TEST_SHOP, accountWidget })).toThrow(
+      `${path} received unknown field(s)`,
+    );
   });
 
   it("omits the account module and data by default", () => {

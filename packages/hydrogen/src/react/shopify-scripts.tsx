@@ -9,7 +9,7 @@ import {
   type ShopifyRoutesOptions,
   type ShopifyScriptTagsOptions,
 } from "../core/shopify-scripts";
-import { serializeShopifyAccountWidgetData } from "../core/shopify-scripts/account-widget";
+import { findShopifyAccountWidgetDataScript } from "../core/shopify-scripts/account-widget";
 import { restartShopifyAccountWidgets } from "./shopify-account";
 
 /**
@@ -55,28 +55,25 @@ export function ShopifyScripts(options: ShopifyScriptsProps) {
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- ShopifyScripts browser startup is initialized once from initial props.
   }, []);
 
-  useRestartAccountWidgetsOnChange(scriptOptions.accountWidget);
+  const { scripts, tags } = getShopifyScriptTags({ ...scriptOptions, consent });
+  useRestartAccountWidgetsOnChange(findShopifyAccountWidgetDataScript(scripts)?.innerHTML);
 
   return createElement(
     Fragment,
     null,
-    getShopifyScriptTags({ ...scriptOptions, consent }).tags.map(
-      ({ tagName, attributes, innerHTML }) =>
-        createElement(tagName, {
-          // Optional tags come and go, so index keys would make React reuse already-run scripts.
-          key: getTagKey(attributes),
-          ...getReactAttributes(attributes),
-          ...(innerHTML ? { dangerouslySetInnerHTML: { __html: innerHTML } } : {}),
-        }),
+    tags.map(({ tagName, attributes, innerHTML }) =>
+      createElement(tagName, {
+        // Optional tags come and go, so index keys would make React reuse already-run scripts.
+        key: getTagKey(attributes),
+        ...getReactAttributes(attributes),
+        ...(innerHTML ? { dangerouslySetInnerHTML: { __html: innerHTML } } : {}),
+      }),
     ),
   );
 }
 
 // Runs after the commit that updates the JSON script tag, so remounted widgets read the new data.
-function useRestartAccountWidgetsOnChange(
-  accountWidget: ShopifyScriptTagsOptions["accountWidget"],
-) {
-  const serialized = accountWidget ? serializeShopifyAccountWidgetData(accountWidget) : undefined;
+function useRestartAccountWidgetsOnChange(serialized: string | undefined) {
   const previous = useRef(serialized);
 
   useEffect(() => {
