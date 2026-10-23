@@ -54,7 +54,8 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
       capability: "product-cart",
       routePath: product.path,
       expectation: "The discovered stock-limit product exposes an enabled Add to cart button.",
-      likelyFix: "Keep the discovered in-stock variant available on its product page.",
+      likelyFix:
+        'Keep the discovered in-stock variant available on its product page, and put data-testid="product-add-to-cart" on its Add to cart button.',
       docsAnchor: "#cart-line-items",
     });
   }
@@ -121,7 +122,7 @@ async function addProductToCart(
     routePath: cartPath,
     expectation: "At least one cart enabled product page exposes an enabled Add to cart button.",
     likelyFix:
-      "Ensure the test store has an in-stock product variant with an enabled Add to cart button.",
+      'Ensure the test store has an in-stock product variant, and that its enabled Add to cart button has data-testid="product-add-to-cart".',
     docsAnchor: "#cart-line-items",
   });
 }

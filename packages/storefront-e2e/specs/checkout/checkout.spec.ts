@@ -33,7 +33,7 @@ async function addProductToCart(
     routePath: cartPath,
     expectation: "At least one cart enabled product page exposes an enabled Add to cart button.",
     likelyFix:
-      "Ensure the test store has an in-stock product variant with an enabled Add to cart button.",
+      'Ensure the test store has an in-stock product variant, and that its enabled Add to cart button has data-testid="product-add-to-cart".',
     docsAnchor: "#cart-line-items",
   });
 }
