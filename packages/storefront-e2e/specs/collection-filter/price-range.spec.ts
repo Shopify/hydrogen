@@ -9,8 +9,10 @@ test("a decimal price bound keeps its value through the URL", async ({ data, pag
 
   await page.goto(data.paths.collection(collection.handle));
 
+  // Any non-empty accessible name, so other and localized labels pass but an unlabeled input fails.
   const minimumPrice = page
     .getByTestId("collection-filter-min-price")
+    .and(page.getByRole("spinbutton", { name: /\S/ }))
     .filter({ visible: true })
     .first();
   expect(new URL(page.url()).searchParams.has("filter.v.price.gte")).toBe(false);

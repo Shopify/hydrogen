@@ -39,7 +39,7 @@ The suite reads up to 20 visible `collection-filter-label` elements and the `col
 
 Filter labels must include a count like Color Red (4). The suite uses that count to choose a filter that narrows the visible product links, then asserts the filtered result count does not exceed the label count. Browser Back after a filter selection must restore the previous URL and show the same filter unchecked. Missing Storefront API filter data skips the collection filter group.
 
-When a probed collection exposes a Storefront API PRICE_RANGE filter, the page must render the price bounds as spinbuttons whose accessible names start with Minimum price and Maximum price. The suite finds the minimum price input with `collection-filter-min-price`. Typing a decimal bound such as 12.5 must put that exact value in the filter.v.price.gte or filter.v.price.lte URL param and keep it in the input. A storefront with no price range filter skips this check.
+When a probed collection exposes a Storefront API PRICE_RANGE filter, the page must render the price bounds as spinbuttons, such as `<input type="number">`, with non-empty accessible names. The label can be any text. The suite finds the minimum price input with `collection-filter-min-price` and fails if it is not a labeled spinbutton. Typing a decimal bound such as 12.5 must put that exact value in the filter.v.price.gte or filter.v.price.lte URL param and keep it in the input. A storefront with no price range filter skips this check.
 
 ## Search
 

@@ -64,10 +64,10 @@ The suite reads only visible `product-card` links inside the first visible `prod
 | --- | --- |
 | `collection-filter-value` | Each filter value checkbox |
 | `collection-filter-label` | The label that wraps a filter value checkbox |
-| `collection-filter-min-price` | The minimum price input of a price range filter |
+| `collection-filter-min-price` | The minimum price input of a price range filter. It must have the spinbutton role, such as `<input type="number">`, and a non-empty accessible name. The label can be any text |
 | `collection-filter-apply` | The control that applies the filters, if the page has one (optional) |
 
-Keep the checkbox inside its marked label. The suite clicks the label, expects the checkbox to be checked, and reads the count from the label text, such as `Red (4)`. `collection-filter-apply` is optional: it goes on the control that applies the filters, if the page has one, and the suite clicks it when it is visible. The price range test types into the visible `collection-filter-min-price`.
+Keep the checkbox inside its marked label. The suite clicks the label, expects the checkbox to be checked, and reads the count from the label text, such as `Red (4)`. `collection-filter-apply` is optional: it goes on the control that applies the filters, if the page has one, and the suite clicks it when it is visible. The price range test types into the visible `collection-filter-min-price`, and fails if it is not a labeled spinbutton.
 
 ## How to adopt
 
