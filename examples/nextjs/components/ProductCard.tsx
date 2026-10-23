@@ -81,7 +81,11 @@ export function ProductCard({
       </div>
       <div className="flex flex-col gap-0.5 text-left">
         <h3 className="type-body-sm text-on-surface line-clamp-2 font-medium">
-          <Link href={`/products/${product.handle}`} className="card-link text-on-surface">
+          <Link
+            href={`/products/${product.handle}`}
+            className="card-link text-on-surface"
+            data-testid="product-card"
+          >
             {product.title}
           </Link>
         </h3>

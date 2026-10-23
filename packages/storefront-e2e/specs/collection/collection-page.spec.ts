@@ -10,7 +10,12 @@ test("collection page shows products", async ({ data, page }) => {
   await page.goto(data.paths.collection(firstCollection.handle));
 
   await expect(
-    page.getByRole("link", { name: new RegExp(escapeRegExp(firstProduct.title), "i") }).first(),
+    page
+      .getByTestId("product-results")
+      .getByTestId("product-card")
+      .and(page.getByRole("link", { name: new RegExp(escapeRegExp(firstProduct.title), "i") }))
+      .filter({ visible: true })
+      .first(),
   ).toBeVisible();
 });
 

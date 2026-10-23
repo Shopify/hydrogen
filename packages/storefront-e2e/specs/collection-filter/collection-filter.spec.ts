@@ -2,7 +2,6 @@ import type { Locator, Page } from "@playwright/test";
 
 import { expect, test } from "./config";
 
-const MAX_ANCHOR_INSPECTION_PROBES = 200;
 const MAX_FILTER_CONTROL_PROBES = 20;
 const MAX_LINK_DISCOVERY_PROBES = 40;
 
@@ -15,6 +14,7 @@ type FilterCandidate = {
   readonly control: Locator;
   readonly expectedResultCount: number | null;
   readonly label: string;
+  readonly labelElement: Locator;
 };
 
 test("collection filter narrows products", async ({ data, page }) => {
@@ -63,14 +63,16 @@ async function uniqueProductLinkCount(page: Page, productPathSegment: string): P
 }
 
 async function applyFiltersIfNeeded(page: Page): Promise<void> {
-  const applyFilters = page.getByRole("button", { name: /apply filters|show results/i }).first();
+  const applyFilters = page
+    .getByTestId("collection-filter-apply")
+    .filter({ visible: true })
+    .first();
   if (await applyFilters.isVisible().catch(() => false)) await applyFilters.click();
 }
 
 async function selectFilter(filter: FilterCandidate): Promise<void> {
-  const wrappingLabel = filter.control.locator("xpath=ancestor::label[1]");
-  if (await wrappingLabel.isVisible().catch(() => false)) {
-    await wrappingLabel.click();
+  if (await filter.labelElement.isVisible().catch(() => false)) {
+    await filter.labelElement.click();
     return;
   }
 
@@ -78,51 +80,51 @@ async function selectFilter(filter: FilterCandidate): Promise<void> {
 }
 
 async function visibleLinksWithPath(page: Page, pathSegment: string): Promise<ProductCandidate[]> {
-  return page.evaluate(
-    ({ currentUrl, maxAnchorInspectionProbes, maxLinkDiscoveryProbes, targetPathSegment }) => {
-      const links = [...document.querySelectorAll<HTMLAnchorElement>("a[href]")].slice(
-        0,
-        maxAnchorInspectionProbes,
-      );
-      const candidates: ProductCandidate[] = [];
-
-      for (const link of links) {
-        if (candidates.length >= maxLinkDiscoveryProbes) break;
-
-        const url = new URL(link.href, currentUrl);
-        const rect = link.getBoundingClientRect();
-        const isVisible = rect.width > 0 && rect.height > 0;
-        if (!isVisible || !url.pathname.includes(targetPathSegment)) continue;
-
-        const title = link.textContent?.replace(/\s+/g, " ").trim() ?? "";
-        candidates.push({ href: url.toString(), title });
-      }
-
-      return candidates;
-    },
-    {
-      currentUrl: page.url(),
-      maxAnchorInspectionProbes: MAX_ANCHOR_INSPECTION_PROBES,
-      maxLinkDiscoveryProbes: MAX_LINK_DISCOVERY_PROBES,
-      targetPathSegment: pathSegment,
-    },
+  const cards = page
+    .getByTestId("product-results")
+    .getByTestId("product-card")
+    .filter({ visible: true });
+  const links = await cards.evaluateAll((elements) =>
+    elements.map((element) => ({
+      href: element.getAttribute("href"),
+      title: element.textContent?.replace(/\s+/g, " ").trim() ?? "",
+    })),
   );
+  const candidates: ProductCandidate[] = [];
+
+  for (const { href, title } of links) {
+    if (candidates.length >= MAX_LINK_DISCOVERY_PROBES) break;
+    if (href === null) continue;
+
+    const url = new URL(href, page.url());
+    if (!url.pathname.includes(pathSegment)) continue;
+
+    candidates.push({ href: url.toString(), title });
+  }
+
+  return candidates;
 }
 
 async function findUsableFilter(
   page: Page,
   initialResultCount: number,
 ): Promise<FilterCandidate | null> {
-  const controls = page.getByRole("checkbox");
-  const count = Math.min(await controls.count(), MAX_FILTER_CONTROL_PROBES);
+  const labels = page.getByTestId("collection-filter-label").filter({ visible: true });
+  const count = Math.min(await labels.count(), MAX_FILTER_CONTROL_PROBES);
 
   for (let index = 0; index < count; index += 1) {
-    const control = controls.nth(index);
+    const labelElement = labels.nth(index);
+    const control = labelElement.getByTestId("collection-filter-value").first();
     const usable = (await control.isVisible()) && (await control.isEnabled());
     if (!usable) continue;
 
     const label = normalizeLabel(await controlText(control));
-    const candidate = { control, expectedResultCount: parseFilterCount(label), label };
+    const candidate = {
+      control,
+      expectedResultCount: parseFilterCount(label),
+      label,
+      labelElement,
+    };
 
     if (candidate.expectedResultCount === null) continue;
     if (candidate.expectedResultCount > 0 && candidate.expectedResultCount < initialResultCount) {
