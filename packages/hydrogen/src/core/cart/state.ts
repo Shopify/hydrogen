@@ -53,7 +53,7 @@ export interface CartLineMerchandise {
     height?: number | null;
     [key: string]: unknown;
   } | null;
-  /** Units available for sale. When your cart fragment selects the field, the store caps the quantity of a `set` submission at this number. */
+  /** Units available for sale. When your cart fragment selects the field and the value is positive, the store caps the quantity of a `set` submission at this number. Zero and negative values (untracked or oversold inventory) set no cap. */
   quantityAvailable?: number | null;
   /** Extra variant fields from your custom cart fragment, unchanged. */
   [key: string]: unknown;
