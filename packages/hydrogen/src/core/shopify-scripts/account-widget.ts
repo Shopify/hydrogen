@@ -18,36 +18,33 @@ const SOCIAL_LOGIN_PROVIDER_HANDLES = {
 /** A social sign-in provider that the account widget can offer. */
 export type ShopifyAccountWidgetSocialLoginProvider = keyof typeof SOCIAL_LOGIN_PROVIDER_HANDLES;
 
-const TRANSLATION_KEYS = [
-  "signed_out_state.sheet_title",
-  "signed_out_state.section_divider",
-  "signed_out_state.alternate_divider",
-  "signed_out_state.use_email_button",
-  "signed_out_state.email_field_label",
-  "signed_out_state.shop_login_button",
-  "signed_out_state.continue_with_google",
-  "signed_out_state.continue_with_facebook",
-  "signed_out_state.continue_with_apple",
-  "signed_out_state.orders_button",
-  "signed_out_state.profile_button",
-  "signed_in_state.greeting_with_name",
-  "signed_in_state.greeting_without_name",
-  "signed_in_state.orders_button",
-  "signed_in_state.profile_button",
-  "location_picker.sheet_title",
-  "location_picker.search_field_placeholder",
-  "aria_labels.close_menu",
-  "aria_labels.back_to_main_menu",
-  "aria_labels.open_submenu",
-  "aria_labels.loading_menu",
-  "aria_labels.loading",
-  "aria_labels.account",
-  "aria_labels.sign_in_with_email",
-  "aria_labels.sign_in",
-] as const;
-
 /** A string in the account sheet that can be translated. */
-export type ShopifyAccountWidgetTranslationKey = (typeof TRANSLATION_KEYS)[number];
+export type ShopifyAccountWidgetTranslationKey =
+  | "signed_out_state.sheet_title"
+  | "signed_out_state.section_divider"
+  | "signed_out_state.alternate_divider"
+  | "signed_out_state.use_email_button"
+  | "signed_out_state.email_field_label"
+  | "signed_out_state.shop_login_button"
+  | "signed_out_state.continue_with_google"
+  | "signed_out_state.continue_with_facebook"
+  | "signed_out_state.continue_with_apple"
+  | "signed_out_state.orders_button"
+  | "signed_out_state.profile_button"
+  | "signed_in_state.greeting_with_name"
+  | "signed_in_state.greeting_without_name"
+  | "signed_in_state.orders_button"
+  | "signed_in_state.profile_button"
+  | "location_picker.sheet_title"
+  | "location_picker.search_field_placeholder"
+  | "aria_labels.close_menu"
+  | "aria_labels.back_to_main_menu"
+  | "aria_labels.open_submenu"
+  | "aria_labels.loading_menu"
+  | "aria_labels.loading"
+  | "aria_labels.account"
+  | "aria_labels.sign_in_with_email"
+  | "aria_labels.sign_in";
 
 /** The signed-in customer that the account widget displays. */
 export type ShopifyAccountWidgetCustomer = {
@@ -65,9 +62,17 @@ export type ShopifyAccountWidgetCustomer = {
 
 /** The shop settings that control the account widget's sign-in options. */
 export type ShopifyAccountWidgetShop = {
-  /** The social sign-in providers to offer. Offer only providers enabled for the shop. */
+  /**
+   * The social sign-in providers to offer. Pass the shop's enabled providers from the Storefront
+   * API's `shop.socialLoginProviders`, lowercased: a provider that isn't enabled shows a button
+   * that fails.
+   */
   socialLoginProviders: ShopifyAccountWidgetSocialLoginProvider[];
-  /** Translated strings for the account sheet. Missing keys use the widget's English defaults. */
+  /**
+   * Translated strings for the account sheet, such as from the Storefront API's
+   * `shop.customerAccountTranslations` with the `account_menu.` key prefix removed. Missing keys
+   * use the widget's English defaults.
+   */
   translations?: Partial<Record<ShopifyAccountWidgetTranslationKey, string>>;
   /** Shows Shop sign-in as a button instead of a card, for B2B shops. Defaults to `false`. */
   b2bEnabled?: boolean;
@@ -170,8 +175,9 @@ function isSocialLoginProvider(
   return Object.hasOwn(SOCIAL_LOGIN_PROVIDER_HANDLES, provider);
 }
 
+// Keys aren't checked at runtime: they come from the Storefront API, which can add keys the
+// widget doesn't use yet. The widget ignores unknown keys, and the values are escaped strings.
 function getTranslations(translations: ShopifyAccountWidgetShop["translations"] = {}) {
-  assertFields(translations, { optional: TRANSLATION_KEYS }, "accountWidget.shop.translations");
   return Object.entries(translations).map(([key, value]) => ({
     key: `account_menu.${key}`,
     value,

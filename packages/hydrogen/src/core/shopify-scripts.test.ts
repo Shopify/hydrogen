@@ -772,13 +772,6 @@ describe("shopify scripts", () => {
       "accountWidget.shop",
       { ...TEST_ACCOUNT_WIDGET_DATA, shop: { ...TEST_ACCOUNT_WIDGET_DATA.shop, token: "x" } },
     ],
-    [
-      "accountWidget.shop.translations",
-      {
-        ...TEST_ACCOUNT_WIDGET_DATA,
-        shop: { ...TEST_ACCOUNT_WIDGET_DATA.shop, translations: { "account_menu.sheet": "x" } },
-      },
-    ],
   ])("rejects unknown fields in %s instead of rendering them", (path, accountWidget) => {
     expect(() =>
       getShopifyScriptTags({

@@ -34,14 +34,57 @@ const accountWidget: ShopifyAccountWidgetData = {
 
 - Option present = show the widget. `customer` present = signed in. Leave `accountWidget` out to omit the widget's data and script.
 - `customer` fields and `shop.socialLoginProviders` are required. When the JSON is on the page, the component skips its own Storefront API requests, so a missing field would silently turn off a feature.
-- `socialLoginProviders`: offer only providers enabled for the shop; a provider that isn't enabled renders a sign-in button that fails. Use the lowercase handles above. Hydrogen writes the casing the widget compares.
+- `socialLoginProviders`: offer only providers enabled for the shop; a provider that isn't enabled renders a sign-in button that fails. Read them from the Storefront API (see below). Hydrogen writes the casing the widget compares.
 - `translations` is optional. Missing keys use the widget's English defaults. Keys are typed by `ShopifyAccountWidgetTranslationKey`.
 - `customer.socialLoginProvider` is optional. Pass `"shop"` for customers who signed in with Shop to show the Shop-branded avatar. Other providers don't change how the widget looks.
 - `shop.b2bEnabled` is optional and only shows Shop sign-in as a button instead of a card.
 - Hydrogen adds the shop ID from the `shop` option and the country and language from the `i18n` option. It keeps legacy customer accounts and the email marketing opt-in off.
 - Build each object from exactly the listed fields. A missing required field or any other field throws, because the data is rendered into the HTML: map Customer Account API results field by field instead of spreading them (a spread brings `__typename` and other fields along), and keep access tokens in server code. The Customer Account API names two fields differently: `avatarUrl` is `imageUrl`, and `email` is `emailAddress.emailAddress`.
 - `shop` is required for signed-out visitors too. Without the JSON, the component falls back to fetching through a `<shopify-store>` element; with no store on the page it renders a bare signed-out button with no social sign-in or translations.
-- The app owns where the `shop` settings come from, and the caching of pages that carry customer data. Pages with a signed-in `customer` contain personal data: serve them with private caching.
+- Pages with a signed-in `customer` contain personal data: serve them with private caching. The `shop` settings are the same for every visitor and can be cached per shop and locale.
+
+## Shop Settings from the Storefront API
+
+The Storefront API returns the shop's enabled sign-in providers and its account sheet translations, the same data `<shopify-account>` would otherwise fetch itself. Changing the providers in the Shopify admin changes this list. Query it on the server and map it:
+
+```ts
+import {
+  gql,
+  type ShopifyAccountWidgetSocialLoginProvider,
+  type StorefrontApi,
+} from "@shopify/hydrogen";
+
+const ACCOUNT_WIDGET_SHOP_QUERY = gql(`
+  query AccountWidgetShop {
+    shop {
+      socialLoginProviders { handle }
+      customerAccountTranslations { key value }
+    }
+  }
+`);
+
+const SUPPORTED_PROVIDERS = ["shop", "apple", "google", "facebook"];
+
+function getAccountWidgetShop({ shop }: StorefrontApi.ResultOf<typeof ACCOUNT_WIDGET_SHOP_QUERY>) {
+  return {
+    // Handles arrive capitalized, such as `Shop`. Skip providers the widget doesn't support.
+    socialLoginProviders: shop.socialLoginProviders
+      .map(({ handle }) => handle.toLowerCase())
+      .filter((handle): handle is ShopifyAccountWidgetSocialLoginProvider =>
+        SUPPORTED_PROVIDERS.includes(handle),
+      ),
+    // Keys arrive prefixed, such as `account_menu.signed_in_state.greeting_with_name`.
+    translations: Object.fromEntries(
+      (shop.customerAccountTranslations ?? []).map(({ key, value }) => [
+        key.replace(/^account_menu\./, ""),
+        value,
+      ]),
+    ),
+  };
+}
+```
+
+Run the query with the app's Storefront API client and pass `getAccountWidgetShop(data)` as `accountWidget.shop`.
 
 ## Rules
 
