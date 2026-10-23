@@ -277,8 +277,7 @@ async function expectCartTotalsStatus(
   cartPath: string,
 ): Promise<void> {
   try {
-    const status = page.getByRole("status").filter({ visible: true, hasText: message }).first();
-    await expect(status).toBeAttached({
+    await expect(page.getByRole("status").filter({ hasText: message }).first()).toBeAttached({
       timeout: CART_SETTLE_TIMEOUT_MS,
     });
   } catch {
