@@ -10,7 +10,7 @@ import {
   type ShopifyScriptTagsOptions,
 } from "../core/shopify-scripts";
 import { findShopifyAccountWidgetDataScript } from "../core/shopify-scripts/account-widget";
-import { restartShopifyAccountWidgets } from "./shopify-account";
+import { restartAccountWidgets } from "./account-widget";
 
 /**
  * Props for the `ShopifyScripts` component in React and Vue. The component renders Shopify's script
@@ -79,7 +79,7 @@ function useRestartAccountWidgetsOnChange(serialized: string | undefined) {
   useEffect(() => {
     if (previous.current === serialized) return;
     previous.current = serialized;
-    restartShopifyAccountWidgets();
+    restartAccountWidgets();
   }, [serialized]);
 }
 

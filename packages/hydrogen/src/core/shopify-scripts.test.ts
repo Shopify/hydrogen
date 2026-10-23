@@ -684,7 +684,15 @@ describe("shopify scripts", () => {
     });
     expect(JSON.parse(dataScript.innerHTML)).toEqual({
       customer: null,
-      shop: { id: TEST_SHOP_ID, ...TEST_ACCOUNT_WIDGET_DATA.shop },
+      shop: {
+        id: TEST_SHOP_ID,
+        legacyCustomerAccounts: false,
+        b2bEnabled: false,
+        marketingConsentSigninEnabled: false,
+        marketingConsentPreselected: false,
+        socialLoginProviders: [{ handle: "Shop" }],
+        customerAccountTranslations: [],
+      },
       visitor: { country: "CA", language: "FR" },
     });
     expect(descriptors.scripts[moduleIndex]).toEqual({
@@ -720,6 +728,37 @@ describe("shopify scripts", () => {
     expect(JSON.parse(json).customer.firstName).toBe(hostileName);
   });
 
+  it("writes the provider casing and translation keys that the widget compares", () => {
+    const descriptors = getShopifyScriptTags({
+      shop: TEST_SHOP,
+      accountWidget: {
+        customer: { ...TEST_ACCOUNT_WIDGET_CUSTOMER, socialLoginProvider: "shop" },
+        shop: {
+          socialLoginProviders: ["shop", "apple", "google", "facebook"],
+          translations: { "signed_in_state.greeting_with_name": "Bonjour, {{first_name}}" },
+          b2bEnabled: true,
+        },
+      },
+    });
+    const dataScript = descriptors.scripts.find(
+      ({ attributes }) => attributes?.id === "shopify-customer-account-data",
+    );
+    assert(dataScript?.innerHTML, "Expected the account widget data script");
+    const { customer, shop } = JSON.parse(dataScript.innerHTML);
+
+    expect(customer.socialLoginProvider).toEqual({ handle: "Shop" });
+    expect(shop.socialLoginProviders).toEqual([
+      { handle: "Shop" },
+      { handle: "Apple" },
+      { handle: "Google" },
+      { handle: "Facebook" },
+    ]);
+    expect(shop.customerAccountTranslations).toEqual([
+      { key: "account_menu.signed_in_state.greeting_with_name", value: "Bonjour, {{first_name}}" },
+    ]);
+    expect(shop.b2bEnabled).toBe(true);
+  });
+
   it.each([
     ["accountWidget", { ...TEST_ACCOUNT_WIDGET_DATA, customerAccessToken: "shcat_secret" }],
     [
@@ -734,27 +773,40 @@ describe("shopify scripts", () => {
       { ...TEST_ACCOUNT_WIDGET_DATA, shop: { ...TEST_ACCOUNT_WIDGET_DATA.shop, token: "x" } },
     ],
     [
-      "accountWidget.shop.socialLoginProviders[]",
+      "accountWidget.shop.translations",
       {
         ...TEST_ACCOUNT_WIDGET_DATA,
-        shop: {
-          ...TEST_ACCOUNT_WIDGET_DATA.shop,
-          socialLoginProviders: [{ handle: "shop", token: "x" }],
-        },
+        shop: { ...TEST_ACCOUNT_WIDGET_DATA.shop, translations: { "account_menu.sheet": "x" } },
       },
     ],
   ])("rejects unknown fields in %s instead of rendering them", (path, accountWidget) => {
-    expect(() => getShopifyScriptTags({ shop: TEST_SHOP, accountWidget })).toThrow(
-      `${path} received unknown field(s)`,
-    );
+    expect(() =>
+      getShopifyScriptTags({
+        shop: TEST_SHOP,
+        accountWidget: accountWidget as typeof TEST_ACCOUNT_WIDGET_DATA,
+      }),
+    ).toThrow(`${path} received unknown field(s)`);
   });
 
   it("rejects missing fields instead of silently turning features off", () => {
-    const { b2bEnabled: _b2bEnabled, ...shop } = TEST_ACCOUNT_WIDGET_DATA.shop;
-    const accountWidget = { ...TEST_ACCOUNT_WIDGET_DATA, shop } as typeof TEST_ACCOUNT_WIDGET_DATA;
+    const accountWidget = {
+      ...TEST_ACCOUNT_WIDGET_DATA,
+      shop: {},
+    } as typeof TEST_ACCOUNT_WIDGET_DATA;
 
     expect(() => getShopifyScriptTags({ shop: TEST_SHOP, accountWidget })).toThrow(
-      "accountWidget.shop is missing required field(s): b2bEnabled",
+      "accountWidget.shop is missing required field(s): socialLoginProviders",
+    );
+  });
+
+  it("rejects providers in a casing or name the widget doesn't recognize", () => {
+    const accountWidget = {
+      ...TEST_ACCOUNT_WIDGET_DATA,
+      shop: { socialLoginProviders: ["Shop"] },
+    } as unknown as typeof TEST_ACCOUNT_WIDGET_DATA;
+
+    expect(() => getShopifyScriptTags({ shop: TEST_SHOP, accountWidget })).toThrow(
+      "accountWidget.shop.socialLoginProviders received an unknown provider: Shop",
     );
   });
 

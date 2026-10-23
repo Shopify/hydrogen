@@ -21,12 +21,12 @@ import {
 import { createShopifyRouteTemplates } from "../core/standard-routes/index";
 import {
   assert,
-  getRenderedAccountWidgetData,
+  getRenderedSignedOutAccountWidgetData,
   recordShopifyAccountConnections,
   TEST_ACCOUNT_WIDGET_CUSTOMER,
   TEST_ACCOUNT_WIDGET_DATA,
 } from "../core/test-utils";
-import { ShopifyAccount } from "./shopify-account";
+import { AccountWidget } from "./account-widget";
 import { ShopifyScripts } from "./shopify-scripts";
 
 afterEach(() => {
@@ -70,10 +70,8 @@ function accountPage(accountWidget: typeof TEST_ACCOUNT_WIDGET_DATA, nonce?: str
   return (
     <>
       <ShopifyScripts shop={TEST_SHOP} accountWidget={accountWidget} nonce={nonce} />
-      <ShopifyAccount menu="customer-account-main-menu" signInUrl="/sign-in">
-        <span slot="signed-out-avatar">Sign in</span>
-      </ShopifyAccount>
-      <ShopifyAccount />
+      <AccountWidget fallback={<span>Sign in</span>} />
+      <AccountWidget />
     </>
   );
 }
@@ -146,7 +144,7 @@ describe("ShopifyScripts", () => {
       `<script id="shopify-account" type="module" async="" crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_ACCOUNT_SCRIPT}"></script>`,
     );
     expect(html).toContain(
-      `<script id="shopify-customer-account-data" type="application/json">${JSON.stringify(getRenderedAccountWidgetData(TEST_ACCOUNT_WIDGET_DATA, TEST_SHOP_ID))}</script>`,
+      `<script id="shopify-customer-account-data" type="application/json">${JSON.stringify(getRenderedSignedOutAccountWidgetData(TEST_SHOP_ID))}</script>`,
     );
     expect(html).not.toContain("<shopify-chat");
     expect(html).toContain(`id="shopify-perfkit"`);
@@ -163,7 +161,7 @@ describe("ShopifyScripts", () => {
     expect(html).not.toContain(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT);
   });
 
-  it("remounts every ShopifyAccount after the account widget data changes", () => {
+  it("remounts every AccountWidget after the account widget data changes", () => {
     vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts").mockResolvedValue(undefined);
     const connectedData = recordShopifyAccountConnections();
     const { container, rerender } = render(accountPage(TEST_ACCOUNT_WIDGET_DATA));
@@ -171,9 +169,9 @@ describe("ShopifyScripts", () => {
     assert(header, "Expected a shopify-account element");
     assert(menu, "Expected a second shopify-account element");
 
-    expect(header.getAttribute("sign-in-url")).toBe("/sign-in");
-    expect(menu.getAttribute("sign-in-url")).toBe("/account/login");
-    expect(header.querySelector('[slot="signed-out-avatar"]')?.textContent).toBe("Sign in");
+    expect(header.getAttribute("sign-in-url")).toBe("/account/login");
+    expect(header.querySelector('div[slot="signed-out-avatar"]')?.textContent).toBe("Sign in");
+    expect(menu.querySelector('[slot="signed-out-avatar"]')).toBeNull();
 
     rerender(accountPage({ ...TEST_ACCOUNT_WIDGET_DATA }));
     expect(container.querySelector("shopify-account")).toBe(header);

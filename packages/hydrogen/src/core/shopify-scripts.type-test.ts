@@ -56,10 +56,12 @@ export function accountWidgetTypes(widget: ShopifyAccountWidgetData) {
   const missingCustomer: ShopifyAccountWidgetData = { shop: widget.shop };
   void missingCustomer;
 
-  const { b2bEnabled: _b2bEnabled, ...shopWithoutB2b } = widget.shop;
-  // @ts-expect-error every shop field is required because the widget skips its own fetch
-  const partialShop: ShopifyAccountWidgetData = { ...widget, shop: shopWithoutB2b };
-  void partialShop;
+  const wrongCasing: ShopifyAccountWidgetData = {
+    ...widget,
+    // @ts-expect-error providers are lowercase handles; Hydrogen writes the casing the widget compares
+    shop: { socialLoginProviders: ["Shop"] },
+  };
+  void wrongCasing;
 }
 
 // @ts-expect-error setup must return a promise representing initial consent readiness
