@@ -141,7 +141,10 @@ type RunBuildOptions = {
   lockfileCheck?: boolean;
   watch?: boolean;
   onServerBuildStart?: () => void | Promise<void>;
-  onServerBuildFinish?: () => void | Promise<void>;
+  onServerBuildFinish?: (
+    cycle: number,
+    result: BuildResult,
+  ) => void | Promise<void>;
   onBuildStart?: (cycle: number) => void;
   onBuildFinish?: (cycle: number, result: BuildResult) => void;
   onBuildError?: (cycle: number, error: Error) => void;
@@ -432,7 +435,7 @@ export async function runBuild({
                 !duplicateServerBuild &&
                 serverBuildStatus?.state !== 'rejected'
               ) {
-                await onServerBuildFinish?.();
+                await onServerBuildFinish?.(cycle, result);
                 if (activeCycle) {
                   activeCycle = false;
                   onBuildFinish?.(cycle, result);
