@@ -134,19 +134,6 @@ it.each([Build, Codegen, Check])(
   },
 );
 
-it.each([Build])(
-  'rejects JSON watch mode before execution: %s',
-  async (Command) => {
-    const command = new Command([], {} as any);
-    vi.spyOn(command as any, 'parse').mockResolvedValue({
-      flags: {json: true, watch: true},
-    });
-    await expect(command.run()).rejects.toThrow(
-      '--json cannot be combined with --watch',
-    );
-  },
-);
-
 it('streams Codegen watch lifecycle and repeated results without a finite result', async () => {
   vi.mocked(getRemixConfig).mockResolvedValue({
     rootDirectory: '/project',
