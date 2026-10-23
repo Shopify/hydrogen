@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { extractHeaders } from "./headers";
+import { applyPrivateResponseCacheHeaders, extractHeaders } from "./headers";
 
 describe("extractHeaders", () => {
   it("extracts present headers and skips missing ones", () => {
@@ -29,5 +29,26 @@ describe("extractHeaders", () => {
     const result = extractHeaders((key) => (key === "x-test" ? "value" : null), ["x-test"]);
 
     expect(result).toEqual([["x-test", "value"]]);
+  });
+});
+
+describe("applyPrivateResponseCacheHeaders", () => {
+  it("sets a private Cache-Control and drops vendor cache headers", () => {
+    const headers = new Headers({
+      "cache-control": "public, max-age=3600",
+      "cdn-cache-control": "public, max-age=3600",
+      "cloudflare-cdn-cache-control": "public, max-age=3600",
+      "oxygen-cache-control": "public, max-age=3600",
+      "vercel-cdn-cache-control": "public, max-age=3600",
+      "surrogate-control": "max-age=3600",
+      "content-type": "text/html",
+    });
+
+    applyPrivateResponseCacheHeaders(headers);
+
+    expect(Array.from(headers.entries())).toEqual([
+      ["cache-control", "private, no-store, max-age=0, must-revalidate"],
+      ["content-type", "text/html"],
+    ]);
   });
 });

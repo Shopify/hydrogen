@@ -601,6 +601,8 @@ describe("createShopifyRequestContext", () => {
       "cdn-cache-control": "public, s-maxage=600",
       "cloudflare-cdn-cache-control": "public, s-maxage=600",
       "netlify-cdn-cache-control": "public, s-maxage=600",
+      "oxygen-cache-control": "public, max-age=3600",
+      "acme-cache-control": "public, max-age=3600",
       "surrogate-control": "max-age=600",
     });
 
@@ -611,16 +613,23 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("cdn-cache-control")).toBeNull();
     expect(headers.get("cloudflare-cdn-cache-control")).toBeNull();
     expect(headers.get("netlify-cdn-cache-control")).toBeNull();
+    expect(headers.get("oxygen-cache-control")).toBeNull();
+    // Any vendor `*-Cache-Control` header, not only the ones named above.
+    expect(headers.get("acme-cache-control")).toBeNull();
     expect(headers.get("surrogate-control")).toBeNull();
   });
 
   it("keeps cache headers for non-personalized responses", () => {
     const context = createTestRequestContext(new Request("https://example.com/products"));
-    const headers = new Headers({ "cache-control": "public, s-maxage=600" });
+    const headers = new Headers({
+      "cache-control": "public, s-maxage=600",
+      "oxygen-cache-control": "public, max-age=3600",
+    });
 
     context.applyResponseHeaders(headers);
 
     expect(headers.get("cache-control")).toBe("public, s-maxage=600");
+    expect(headers.get("oxygen-cache-control")).toBe("public, max-age=3600");
   });
 
   it("preserves captured cookies when applying personalized cache safety", () => {

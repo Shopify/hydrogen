@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 
 import type { ProductFilter } from "../../../../vendor/standard-events";
 import {
@@ -78,6 +78,18 @@ describe("parseCollectionParams", () => {
     it("parses variant option filter", () => {
       const result = parseCollectionParams(params("filter.v.option.Color=Red"));
       expect(result.filters).toEqual([{ variantOption: { name: "Color", value: "Red" } }]);
+    });
+
+    it.each([
+      ["filter.v.option.%25FF=Red", { variantOption: { name: "%FF", value: "Red" } }],
+      // `%2B` survives URLSearchParams as a literal `+`, so the fallback must still turn it into a space.
+      ["filter.v.option.Big%2B%ZZ=Red", { variantOption: { name: "Big %ZZ", value: "Red" } }],
+      [
+        "filter.p.m.%25ZZ.material=leather",
+        { productMetafield: { namespace: "%ZZ", key: "material", value: "leather" } },
+      ],
+    ])("keeps malformed percent sequences literal in %s", (query, filter) => {
+      expect(parseCollectionParams(params(query)).filters).toEqual([filter]);
     });
 
     it("parses lowercase variant option key (mock.shop color facet)", () => {
@@ -871,5 +883,50 @@ describe("category filter", () => {
 
     expect(filterEquals(a, b)).toBe(true);
     expect(filterEquals(a, c)).toBe(false);
+  });
+});
+
+describe("price bounds under window.Shopify.locale", () => {
+  const state = {
+    filters: [{ price: { min: 12.5, max: 1234.5 } }],
+    sortKey: undefined,
+    reverse: false,
+  };
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it.each(["en", "fr", "de", "nl", "tr"])(
+    "reads its own serialized price bounds back unchanged when the shop locale is %s",
+    (locale) => {
+      vi.stubGlobal("window", { Shopify: { locale } });
+
+      const result = parseCollectionParams(serializeCollectionParams(state));
+
+      expect(result.filters).toEqual(state.filters);
+    },
+  );
+
+  it("treats the URL it wrote as matching its own state when the shop locale groups with a dot", () => {
+    vi.stubGlobal("window", { Shopify: { locale: "de" } });
+
+    expect(collectionParamsMatchState(serializeCollectionParams(state), state)).toBe(true);
+  });
+
+  it("parses a locale-formatted comma decimal under de", () => {
+    vi.stubGlobal("window", { Shopify: { locale: "de" } });
+
+    const result = parseCollectionParams(params("filter.v.price.gte=12,50"));
+
+    expect(result.filters).toEqual([{ price: { min: 12.5 } }]);
+  });
+
+  it("treats a dot-only numeric string as a canonical decimal under de, not a grouped thousand", () => {
+    vi.stubGlobal("window", { Shopify: { locale: "de" } });
+
+    const result = parseCollectionParams(params("filter.v.price.gte=1.000"));
+
+    expect(result.filters).toEqual([{ price: { min: 1 } }]);
   });
 });

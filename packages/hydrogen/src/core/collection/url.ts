@@ -322,7 +322,13 @@ function parseCollectionSortKey(
   return rawSortBy ? STANDARD_EVENTS_COLLECTION_SORT_KEY[rawSortBy] : undefined;
 }
 
+const CANONICAL_DECIMAL = /^-?\d+(\.\d+)?$/;
+
 function parseLocalizedNumber(value: string): number {
+  // Canonical decimals come from String(n) in the serializer and from
+  // <input type="number">, so they must survive regardless of shop locale.
+  if (CANONICAL_DECIMAL.test(value)) return Number(value);
+
   try {
     const locale = typeof window !== "undefined" ? window.Shopify?.locale : undefined;
     const parts = new Intl.NumberFormat(locale ?? "en").formatToParts(1234.5);
@@ -337,7 +343,13 @@ function parseLocalizedNumber(value: string): number {
 }
 
 function decodeFilterKeyPart(value: string): string {
-  return decodeURIComponent(value.replace(/\+/g, " "));
+  const spaced = value.replace(/\+/g, " ");
+  try {
+    return decodeURIComponent(spaced);
+  } catch {
+    // Keep a malformed percent sequence as literal text instead of failing the request.
+    return spaced;
+  }
 }
 
 function getFilterParamEntries(filter: ProductFilter): Array<{ key: string; value: string }> {
