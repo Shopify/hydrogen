@@ -2,6 +2,12 @@ import {createRequire} from 'node:module';
 
 const COMPATIBILITY_DATE_FORMAT = /^\d{4}-\d{2}-\d{2}$/;
 
+function isCalendarDate(value: string) {
+  if (!COMPATIBILITY_DATE_FORMAT.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
+}
+
 export const OXYGEN_COMPAT_PARAMS = {
   compatibilityFlags: [],
   compatibilityDate: '2025-04-01' as const,
@@ -39,7 +45,7 @@ function getRuntimeCompatibilityDate() {
 
       runtimeCompatibilityDate =
         typeof compatibilityDate === 'string' &&
-        COMPATIBILITY_DATE_FORMAT.test(compatibilityDate)
+        isCalendarDate(compatibilityDate)
           ? compatibilityDate
           : null;
     } catch {
@@ -58,7 +64,7 @@ const warnedCompatibilityDates = new Set<string>();
  */
 export function toRuntimeCompatibilityDate(requested: string) {
   // Leave malformed dates for Miniflare to reject.
-  if (!COMPATIBILITY_DATE_FORMAT.test(requested)) return requested;
+  if (!isCalendarDate(requested)) return requested;
 
   const today = new Date().toISOString().slice(0, 10);
   // If the runtime's date can't be read, only guard against future dates.

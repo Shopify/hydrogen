@@ -30,5 +30,7 @@ describe('capCompatibilityDate', () => {
 describe('toRuntimeCompatibilityDate', () => {
   it('leaves malformed dates for Miniflare to reject', () => {
     expect(toRuntimeCompatibilityDate('not-a-date')).toBe('not-a-date');
+    expect(toRuntimeCompatibilityDate('2026-99-99')).toBe('2026-99-99');
+    expect(toRuntimeCompatibilityDate('2026-02-30')).toBe('2026-02-30');
   });
 });
