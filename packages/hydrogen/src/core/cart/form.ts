@@ -17,6 +17,22 @@ export interface SetButtonAttributes {
 }
 
 /**
+ * HTML attributes for the submit button that removes a line from the cart.
+ *
+ * `register("remove")` returns the attributes. Removing a line reads only the line ID, so the button skips form validation. Invalid text in the line's quantity input doesn't block the removal.
+ *
+ * @publicDocs
+ */
+export interface RemoveButtonAttributes {
+  /** The form field that names the cart change. */
+  name: "intent";
+  /** Removes the line. */
+  value: "remove";
+  /** Submits the form without checking its fields, such as the quantity input's digits-only pattern. */
+  formNoValidate: true;
+}
+
+/**
  * HTML attributes for a quantity input that submits the form when the customer changes the quantity.
  *
  * `register("quantity", { value, interactive: true })` returns the attributes. The input shows a number keyboard on mobile devices and has no spinner arrows.
@@ -100,7 +116,7 @@ export type CartFormRegister = {
   (action: "add"): { name: "intent"; value: "add" };
   (action: "increase"): { name: "intent"; value: "increase" };
   (action: "decrease"): { name: "intent"; value: "decrease" };
-  (action: "remove"): { name: "intent"; value: "remove" };
+  (action: "remove"): RemoveButtonAttributes;
   (action: "set"): SetButtonAttributes;
   (action: "discount-apply"): { name: "intent"; value: "discount-apply" };
   (action: "discount-remove"): { name: "intent"; value: "discount-remove" };
@@ -207,6 +223,14 @@ export function createCartFormRegister(): CartFormRegister {
         type: "submit",
         hidden: true,
       } satisfies SetButtonAttributes;
+    }
+
+    if (nameOrAction === "remove") {
+      return {
+        name: "intent",
+        value: "remove",
+        formNoValidate: true,
+      } satisfies RemoveButtonAttributes;
     }
 
     return { name: "intent", value: nameOrAction };

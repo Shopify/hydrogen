@@ -656,7 +656,7 @@ describe("useCartForm", () => {
       value: "increase",
     });
     expect(register("add")).toEqual({ name: "intent", value: "add" });
-    expect(register("remove")).toEqual({ name: "intent", value: "remove" });
+    expect(register("remove")).toEqual({ name: "intent", value: "remove", formNoValidate: true });
   });
 
   it("interactive quantity register returns defaultValue instead of value", () => {

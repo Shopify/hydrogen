@@ -42,6 +42,15 @@ test("cart removes product", async ({ data, page }) => {
   await removeCartLine(page, expectation);
 });
 
+test("cart removes product while its quantity input holds invalid text", async ({ data, page }) => {
+  const expectation = await addProductToCart(page, data.products, data.paths.cart);
+  const line = await expectCartLine(page, expectation);
+  const quantityInput = await quantityInputFor(line, expectation.cartPath);
+
+  await quantityInput.fill("abc");
+  await removeCartLine(page, expectation);
+});
+
 test("cart rolls back an optimistic add beyond available stock", async ({ data, page }) => {
   const product = data.stockLimitProduct;
   if (!product) {
