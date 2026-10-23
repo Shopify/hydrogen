@@ -5490,6 +5490,64 @@ describe("multi-line update and remove events", () => {
       },
     );
 
+    it("keeps the server quantity for a line the response warns about when the refresh fails", async () => {
+      // Warnings scope to a line by its `gid://shopify/CartLine/` target, so this cart uses real IDs.
+      const warned = "gid://shopify/CartLine/a";
+      const accepted = "gid://shopify/CartLine/b";
+      const untouched = "gid://shopify/CartLine/c";
+      const notEnoughStock = {
+        code: "MERCHANDISE_NOT_ENOUGH_STOCK",
+        message: "Only 2 available",
+        target: warned,
+      };
+      store.destroy();
+      store = createCartStore({ initialData: { cart: null } });
+      store.connect();
+      store.hydrate(
+        makeCartState({
+          lines: [
+            makeLine({ id: warned, quantity: 2 }),
+            makeLine({ id: accepted, quantity: 1 }),
+            makeLine({ id: untouched, quantity: 1 }),
+          ],
+          totalQuantity: 4,
+        }),
+      );
+      mockGetCart.mockRejectedValue(new Error("Refresh failed"));
+      const update = mockUpdateCart({
+        lines: [
+          { id: warned, quantity: 5 },
+          { id: accepted, quantity: 4 },
+        ],
+      });
+
+      resolveUpdate(0, {
+        ...serverCart(7, [
+          { id: renamed(warned), quantity: 2 },
+          { id: renamed(accepted), quantity: 4 },
+          { id: renamed(untouched), quantity: 1 },
+        ]),
+        warnings: [notEnoughStock],
+      });
+      await update;
+      await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+      await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+
+      expect(lines()).toEqual([
+        { id: warned, quantity: 2 },
+        { id: accepted, quantity: 4 },
+        { id: untouched, quantity: 1 },
+      ]);
+      expect(store.getState().data.totalQuantity).toBe(7);
+      expect(store.getState().data.cost.totalAmount.amount).toBe("70");
+      expect(store.getState().pending.lines.size).toBe(0);
+      expect(store.getState().errors.lines.get(warned)?.warnings).toEqual([
+        { code: notEnoughStock.code, message: notEnoughStock.message },
+      ]);
+      expect(store.getState().errors.lines.has(accepted)).toBe(false);
+      expect(store.getState().errors.network).toHaveLength(1);
+    });
+
     it("keeps every line's previous quantity when the response has a cart-level userError", async () => {
       mockGetCart.mockRejectedValue(new Error("Refresh failed"));
       const update = mockUpdateCart({
