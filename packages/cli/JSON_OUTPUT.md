@@ -35,3 +35,14 @@ then emit `{"type":"watch-stopped"}`. Their exit codes are 130 and 143,
 respectively. Fatal setup or watcher errors close owned resources and use CLI
 Kit's existing compact `{error: {...}}` document on stdout with a nonzero exit.
 An abruptly killed process cannot emit a shutdown record.
+
+`hydrogen debug cpu --json` uses the same watch and build records. Each successful
+server build is followed by `profile-started`, then `profile-completed` or
+`profile-failed`. These records share the build's `cycle`. A completed profile
+includes the absolute `path`, `format: "cpuprofile"`, `totalTimeMs` for the sampled
+interval, and `totalScriptTimeMs` for module startup. Measurements are nonnegative
+milliseconds. The file retains the native Chrome DevTools CPU profile format;
+its nodes and sampling fields are never wrapped or copied into the stream.
+Each success replaces the configured profile file. Evaluation failures preserve
+the previous file and allow the next build to retry. Shutdown waits for active
+profiling and file writes before closing both build watchers.
