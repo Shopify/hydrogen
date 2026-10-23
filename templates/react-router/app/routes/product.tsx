@@ -439,7 +439,6 @@ function VariantOptions({ product }: { product: ProductData }) {
       {options.map((option) => {
         const selectedValue = option.values.find((value) => value.selected)?.name;
         const renderSwatches = hasSwatchData(product, option.name);
-        const isColorOption = option.name.toLowerCase().includes("color");
 
         return (
           <fieldset key={option.name} className="space-y-2">
@@ -462,7 +461,6 @@ function VariantOptions({ product }: { product: ProductData }) {
                   baseParams,
                 );
                 const soldOut = !variantOption.available;
-                const testId = isColorOption ? "color-swatch" : undefined;
                 const swatch = renderSwatches ? swatches.get(`${option.name}:${valueName}`) : null;
                 const swatchStyle = swatch?.imageUrl
                   ? { backgroundImage: `url("${swatch.imageUrl}")` }
@@ -511,7 +509,7 @@ function VariantOptions({ product }: { product: ProductData }) {
                       className={className}
                       aria-label={renderSwatches ? valueName : undefined}
                       aria-pressed={variantOption.selected}
-                      data-testid={testId}
+                      data-testid="product-variant-option"
                     >
                       {content}
                     </button>
@@ -531,7 +529,7 @@ function VariantOptions({ product }: { product: ProductData }) {
                     className={className}
                     aria-label={renderSwatches ? valueName : undefined}
                     aria-current={variantOption.selected ? "true" : undefined}
-                    data-testid={testId}
+                    data-testid={isCrossProduct ? undefined : "product-variant-option"}
                     onClick={
                       isCrossProduct
                         ? undefined
@@ -638,7 +636,7 @@ function AddToCart({
           {...register("addToCart", {})}
           className="rounded-button button-primary focus-visible:outline-accent inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 px-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
           disabled={!addable || pending}
-          data-testid="add-to-cart"
+          data-testid="product-add-to-cart"
         >
           {buttonText}
         </button>

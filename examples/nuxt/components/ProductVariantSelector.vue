@@ -126,6 +126,7 @@ function searchParamsToQuery(params: URLSearchParams) {
               :href="href"
               :aria-current="value.selected ? 'true' : undefined"
               :aria-label="isColor(option.name) ? value.name : undefined"
+              data-testid="product-variant-option"
               class="inline-flex items-center justify-center"
               :class="
                 isColor(option.name)
@@ -158,6 +159,7 @@ function searchParamsToQuery(params: URLSearchParams) {
               })
             "
             :aria-label="isColor(option.name) ? value.name : undefined"
+            data-testid="product-variant-option"
             :class="
               isColor(option.name)
                 ? value.selected

@@ -51,6 +51,7 @@ const addable = computed(() => canAddToCart(props.product, form.options));
       <button
         v-bind="form.register('addToCart', {})"
         :disabled="!addable || form.pending.value"
+        data-testid="product-add-to-cart"
         class="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-black px-6 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-300"
       >
         <svg

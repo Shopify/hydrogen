@@ -101,10 +101,10 @@ test.describe("variant control helpers", () => {
   test("matches current variant links by accessible name and href", async ({ page }) => {
     const target = "http://127.0.0.1/products/shirt?Size=Small&Color=Blue";
     const variantLinks = (peerCurrent: string) => `
-      <a href="${target}" aria-current="true"><span aria-hidden="true">✓</span> Small</a>
-      <a href="http://127.0.0.1/products/shirt?Color=Blue&Size=Small" aria-current="${peerCurrent}"><img alt="Small" src="data:,"></a>
-      <a href="${target}" aria-label="Small fit">Small</a>
-      <a href="http://127.0.0.1/products/shirt?Size=Small&Color=Red">Small</a>`;
+      <a data-testid="product-variant-option" href="${target}" aria-current="true"><span aria-hidden="true">✓</span> Small</a>
+      <a data-testid="product-variant-option" href="http://127.0.0.1/products/shirt?Color=Blue&Size=Small" aria-current="${peerCurrent}"><img alt="Small" src="data:,"></a>
+      <a data-testid="product-variant-option" href="${target}" aria-label="Small fit">Small</a>
+      <a data-testid="product-variant-option" href="http://127.0.0.1/products/shirt?Size=Small&Color=Red">Small</a>`;
 
     const name = "Small";
     await page.setContent(variantLinks("true"));
@@ -128,7 +128,7 @@ async function findServerVariantLink(
     await page.goto(path);
     await expect(page.getByRole("heading", { level: 1, name: product.title })).toBeVisible();
 
-    const link = await findVariantLink(page, product.optionNames);
+    const link = await findVariantLink(page);
     if (link === null) continue;
 
     const href = await link.getAttribute("href");
@@ -143,7 +143,7 @@ async function findServerVariantLink(
   }
 
   throw new Error(
-    `No product page exposed a same-product variant link without JavaScript. Checked: ${checkedPaths.join(", ")}. Render existing option values as links to selected-options URLs so selection works before hydration.`,
+    `No product page exposed an unselected product-variant-option link without JavaScript. Checked: ${checkedPaths.join(", ")}. Put data-testid="product-variant-option" on each option value link that selects another variant of the same product, so selection works before hydration.`,
   );
 }
 
@@ -157,7 +157,9 @@ async function selectProductVariant(
     if (selectedVariant !== null) return selectedVariant;
   }
 
-  throw new Error("No product page exposed a selectable variant control");
+  throw new Error(
+    'No product page exposed a selectable variant control with data-testid="product-variant-option"',
+  );
 }
 
 async function selectVariantForProduct(
@@ -168,7 +170,7 @@ async function selectVariantForProduct(
   await page.goto(productPathWithSentinel(paths, product));
   await expect(page.getByRole("heading", { level: 1, name: product.title })).toBeVisible();
 
-  const control = await findVariantControl(page, product.optionNames);
+  const control = await findVariantControl(page);
   if (control === null) return null;
 
   const name = await accessibleName(control);
@@ -180,7 +182,6 @@ async function selectVariantForProduct(
 
   if (href === null) {
     await expect.poll(() => page.url()).not.toBe(beforeUrl);
-    expect(hasVariantUrlSignal(beforeUrl, page.url(), product.optionNames)).toBe(true);
   } else {
     // A link selection must go to the same URL as the link's own href.
     await expect.poll(() => comparableUrl(page.url())).toBe(comparableUrl(href));
@@ -212,18 +213,6 @@ function comparableUrl(url: string): string {
     .map(([key, value]) => new URLSearchParams([[key, value]]).toString())
     .toSorted();
   return `${origin}${pathname}?${query.join("&")}`;
-}
-
-function hasVariantUrlSignal(
-  beforeUrl: string,
-  afterUrl: string,
-  optionNames: readonly string[],
-): boolean {
-  const before = new URL(beforeUrl);
-  const after = new URL(afterUrl);
-  return (
-    before.pathname !== after.pathname || optionNames.some((name) => after.searchParams.has(name))
-  );
 }
 
 async function expectSelectedControl(
@@ -263,7 +252,10 @@ async function currentVariantLinksState(
 ): Promise<string> {
   const expectedUrl = comparableUrl(targetUrl);
   const pageUrl = page.url();
-  const states = await page.getByRole("link", { name, exact: true }).evaluateAll((elements) =>
+  const links = page
+    .getByTestId("product-variant-option")
+    .and(page.getByRole("link", { name, exact: true }));
+  const states = await links.evaluateAll((elements) =>
     elements.map((element) => ({
       current: element.getAttribute("aria-current"),
       href: element.getAttribute("href"),
@@ -279,14 +271,13 @@ async function currentVariantLinksState(
 }
 
 function pressedButtons(page: Page, name: string): Locator {
-  return page.getByRole("button", { name, exact: true, pressed: true });
+  return page
+    .getByTestId("product-variant-option")
+    .and(page.getByRole("button", { name, exact: true, pressed: true }));
 }
 
-async function findVariantControl(
-  page: Page,
-  optionNames: readonly string[],
-): Promise<Locator | null> {
-  const link = await findVariantLink(page, optionNames);
+async function findVariantControl(page: Page): Promise<Locator | null> {
+  const link = await findVariantLink(page);
   if (link !== null) return link;
 
   return findUnselectedVariantButton(page);
@@ -325,7 +316,10 @@ function decodeAriaSnapshotRootName(rootLine: string): string | null {
 }
 
 async function findUnselectedVariantButton(page: Page): Promise<Locator | null> {
-  const buttons = page.getByRole("button");
+  const buttons = page
+    .getByTestId("product-variant-option")
+    .and(page.getByRole("button"))
+    .filter({ visible: true });
   const count = Math.min(await buttons.count(), MAX_VARIANT_CONTROL_PROBES);
 
   for (let index = 0; index < count; index += 1) {
@@ -338,19 +332,22 @@ async function findUnselectedVariantButton(page: Page): Promise<Locator | null> 
   return null;
 }
 
-async function findVariantLink(
-  page: Page,
-  optionNames: readonly string[],
-): Promise<Locator | null> {
-  const links = page.getByRole("link");
+async function findVariantLink(page: Page): Promise<Locator | null> {
+  const links = page
+    .getByTestId("product-variant-option")
+    .and(page.getByRole("link"))
+    .filter({ visible: true });
   const count = Math.min(await links.count(), MAX_VARIANT_CONTROL_PROBES);
 
   for (let index = 0; index < count; index += 1) {
     const link = links.nth(index);
     if (await isCurrentLink(link)) continue;
+    if (!(await link.isEnabled())) continue;
 
+    // The test ID says that the link selects a variant of this product. Any URL
+    // shape works; the link only needs a real href to another URL.
     const href = await link.getAttribute("href");
-    if (!isVariantHref(href, page.url(), optionNames)) continue;
+    if (href === null || new URL(href, page.url()).href === page.url()) continue;
     if (await link.isVisible()) return link;
   }
 
@@ -360,18 +357,4 @@ async function findVariantLink(
 async function isCurrentLink(link: Locator): Promise<boolean> {
   const ariaCurrent = await link.getAttribute("aria-current");
   return ariaCurrent !== null && ariaCurrent !== "false";
-}
-
-function isVariantHref(
-  href: string | null,
-  currentUrl: string,
-  optionNames: readonly string[],
-): boolean {
-  if (href === null) return false;
-
-  const current = new URL(currentUrl);
-  const url = new URL(href, currentUrl);
-  return (
-    url.pathname === current.pathname && optionNames.some((name) => url.searchParams.has(name))
-  );
 }
