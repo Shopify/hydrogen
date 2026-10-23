@@ -256,8 +256,6 @@ async function removeCartLine(page: Page, expectation: CartExpectation): Promise
 function cartOverlayLineFor(page: Page, productTitle: string): Locator {
   return page
     .getByTestId("cart-drawer")
-    .filter({ visible: true })
-    .first()
     .getByTestId("cart-line")
     .filter({ hasText: productTitle, visible: true })
     .first();
@@ -295,8 +293,6 @@ async function expectCartTotalsStatus(
 function cartLineFor(page: Page, productTitle: string): Locator {
   return page
     .getByTestId("cart-page")
-    .filter({ visible: true })
-    .first()
     .getByTestId("cart-line")
     .filter({ hasText: productTitle, visible: true })
     .first();
