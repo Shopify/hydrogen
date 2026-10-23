@@ -1,6 +1,19 @@
 import type { ShopifyAttributeValue, ShopifyScriptTagDescriptor } from "./types";
 
 /**
+ * Returns a stable key for a script/link descriptor, for frameworks that render the descriptors as
+ * a list. Optional tags come and go, so index keys would make a framework reuse already-run
+ * scripts for different tags.
+ */
+export function getShopifyScriptTagKey(
+  attributes: ShopifyScriptTagDescriptor["attributes"] = {},
+): string {
+  return "id" in attributes && attributes.id !== undefined
+    ? attributes.id
+    : `${"rel" in attributes ? attributes.rel : ""}:${"href" in attributes ? attributes.href : ""}`;
+}
+
+/**
  * Renders a Shopify script/link descriptor to an HTML string.
  */
 export function renderShopifyScriptTag({

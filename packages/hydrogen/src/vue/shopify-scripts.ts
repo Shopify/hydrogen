@@ -9,6 +9,7 @@ import {
   type ShopifyScriptTagsOptions,
   type ShopifyRoutesOptions,
 } from "../core/shopify-scripts/index";
+import { getShopifyScriptTagKey } from "../core/shopify-scripts/render";
 import { restartAccountWidgets } from "./account-widget";
 
 /**
@@ -116,6 +117,7 @@ export const ShopifyScripts = defineComponent({
     return () =>
       scriptTags.value.tags.map(({ tagName, attributes, innerHTML }) =>
         h(tagName, {
+          key: getShopifyScriptTagKey(attributes),
           ...attributes,
           ...(innerHTML ? { innerHTML } : {}),
         }),
