@@ -207,7 +207,8 @@ async function increaseCartLineQuantity(page: Page, expectation: CartExpectation
   const quantityInput = await quantityInputFor(line, expectation.cartPath);
   const initialQuantity = await numericInputValue(quantityInput);
   const increase = await lineButton(
-    line.getByTestId("cart-line-increase"),
+    line,
+    "cart-line-increase",
     "increase quantity",
     expectation.cartPath,
   );
@@ -225,7 +226,8 @@ async function decreaseCartLineQuantity(page: Page, expectation: CartExpectation
   const quantityInput = await quantityInputFor(line, expectation.cartPath);
   const initialQuantity = await numericInputValue(quantityInput);
   const decrease = await lineButton(
-    line.getByTestId("cart-line-decrease"),
+    line,
+    "cart-line-decrease",
     "decrease quantity",
     expectation.cartPath,
   );
@@ -241,7 +243,8 @@ async function decreaseCartLineQuantity(page: Page, expectation: CartExpectation
 async function removeCartLine(page: Page, expectation: CartExpectation): Promise<void> {
   const line = await expectCartLine(page, expectation);
   const remove = await lineButton(
-    line.getByTestId("cart-line-remove"),
+    line,
+    "cart-line-remove",
     "remove line item",
     expectation.cartPath,
   );
@@ -301,7 +304,11 @@ function cartLineFor(page: Page, productTitle: string): Locator {
 }
 
 async function quantityInputFor(line: Locator, cartPath: string): Promise<Locator> {
-  const input = line.getByTestId("cart-line-quantity").filter({ visible: true }).first();
+  const input = line
+    .getByTestId("cart-line-quantity")
+    .and(line.getByRole("spinbutton").or(line.getByRole("textbox")))
+    .filter({ visible: true })
+    .first();
   if (await input.isVisible().catch(() => false)) return input;
 
   throw createContractError({
@@ -309,7 +316,7 @@ async function quantityInputFor(line: Locator, cartPath: string): Promise<Locato
     routePath: cartPath,
     expectation: "Cart line item exposes a visible quantity input.",
     likelyFix:
-      'Put data-testid="cart-line-quantity" on the quantity input and keep it inside the line item.',
+      'Put data-testid="cart-line-quantity" on a text or number input inside the line item.',
     docsAnchor: "#cart-line-items",
   });
 }
@@ -325,18 +332,23 @@ function shouldAssertVariant(variantLabel: string): boolean {
 }
 
 async function lineButton(
-  candidates: Locator,
+  line: Locator,
+  testId: string,
   purpose: string,
   cartPath: string,
 ): Promise<Locator> {
-  const button = candidates.filter({ visible: true }).first();
+  const button = line
+    .getByTestId(testId)
+    .and(line.getByRole("button"))
+    .filter({ visible: true })
+    .first();
   if (await button.isVisible().catch(() => false)) return button;
 
   throw createContractError({
     capability: "cart-line",
     routePath: cartPath,
     expectation: "Cart line item exposes a visible button for " + purpose + ".",
-    likelyFix: "Keep the cart line quantity and remove controls visible inside the line item.",
+    likelyFix: `Put data-testid="${testId}" on a visible button, such as a native <button>, inside the line item.`,
     docsAnchor: "#cart-line-items",
   });
 }

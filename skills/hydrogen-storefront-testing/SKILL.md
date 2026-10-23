@@ -40,12 +40,12 @@ The product title needs no test ID. The suite requires it to be the page's `<h1>
 | `cart-drawer` | The cart drawer |
 | `cart-trigger` | The control that opens the cart drawer |
 | `cart-line` | The element that holds one cart line |
-| `cart-line-quantity` | The quantity input of a cart line |
-| `cart-line-increase` | The increase quantity control of a cart line |
-| `cart-line-decrease` | The decrease quantity control of a cart line |
-| `cart-line-remove` | The remove control of a cart line |
+| `cart-line-quantity` | The quantity input of a cart line. It must be a text or number input |
+| `cart-line-increase` | The increase quantity button of a cart line |
+| `cart-line-decrease` | The decrease quantity button of a cart line |
+| `cart-line-remove` | The remove button of a cart line |
 
-The suite finds a cart line by its product title inside the visible `cart-page` or the visible `cart-drawer`. After Add to cart, it clicks `cart-trigger` only when it needs the drawer and the added line is not visible. It finds the quantity input and the line controls inside that line.
+The suite finds a cart line by its product title inside the visible `cart-page` or the visible `cart-drawer`. After Add to cart, it clicks `cart-trigger` only when it needs the drawer and the added line is not visible. It finds the quantity input and the line buttons inside that line, and fails if the buttons do not have the button role, such as a native `<button>`.
 
 ## How to adopt
 
