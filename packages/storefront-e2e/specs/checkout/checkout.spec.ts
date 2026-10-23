@@ -79,8 +79,6 @@ async function startCheckoutFromPopulatedCart(
 
   const checkout = page
     .getByTestId("cart-page")
-    .filter({ visible: true })
-    .first()
     .getByTestId("cart-checkout")
     .filter({ visible: true })
     .first();
@@ -107,8 +105,6 @@ async function startCheckoutFromPopulatedCart(
 async function expectCartLine(page: Page, expectation: CartExpectation): Promise<Locator> {
   const line = page
     .getByTestId("cart-page")
-    .filter({ visible: true })
-    .first()
     .getByTestId("cart-line")
     .filter({ hasText: expectation.productTitle, visible: true })
     .first();
@@ -124,8 +120,6 @@ async function expectCartLine(page: Page, expectation: CartExpectation): Promise
 function cartOverlayLineFor(page: Page, productTitle: string): Locator {
   return page
     .getByTestId("cart-drawer")
-    .filter({ visible: true })
-    .first()
     .getByTestId("cart-line")
     .filter({ hasText: productTitle, visible: true })
     .first();
