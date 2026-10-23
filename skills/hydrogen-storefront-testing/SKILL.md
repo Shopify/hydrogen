@@ -24,11 +24,11 @@ Use this skill when you prepare a custom storefront, in any framework, so that t
 | Test ID | Put it on |
 | --- | --- |
 | `product-variant-option` | Each option value link or button that selects another variant of the same product, including sold-out values and disabled values for combinations that do not exist |
-| `product-add-to-cart` | The add to cart button. It must be a button whose accessible name contains Add to cart |
+| `product-add-to-cart` | The add to cart button. It must have the button role, such as a native `<button>`, and a non-empty accessible name. The label can be any text; an icon-only button needs `aria-label` or visually hidden text |
 
 `product-variant-option` marks option values that select another variant of the same product, including sold-out values and disabled values for combinations that do not exist. The suite tries unselected links first, then buttons, and skips current and disabled values. It follows a link's real `href`, so any URL format works. The no-JavaScript check needs links; `STOREFRONT_SKIP_NO_JS_VARIANTS=true` skips only that check.
 
-The cart and checkout tests click the first visible `product-add-to-cart` button named Add to cart.
+The cart and checkout tests click the first visible `product-add-to-cart` button.
 
 The product title needs no test ID. The suite requires it to be the page's `<h1>`.
 
@@ -55,12 +55,12 @@ Add the attribute to the existing element:
 <button type="submit" class="add" data-testid="product-add-to-cart">Add to cart</button>
 ```
 
-The suite starts with `getByTestId`, requires the button role and name, then narrows to visible elements:
+The suite starts with `getByTestId`, requires the button role and a non-empty accessible name, then narrows to visible elements:
 
 ```ts
 await page
   .getByTestId('product-add-to-cart')
-  .and(page.getByRole('button', {name: /add to cart/i}))
+  .and(page.getByRole('button', {name: /\S/}))
   .filter({visible: true})
   .first()
   .click();

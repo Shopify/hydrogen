@@ -4,6 +4,8 @@ import { createContractError } from "../../src/contract";
 import { test, type CheckoutTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
+// Any non-empty accessible name, so other and localized labels pass but an unlabeled icon button fails.
+const ADD_TO_CART_CONTROL_NAME = /\S/;
 const CHECKOUT_CONTROL_NAME = /check\s*out|checkout|continue to checkout/i;
 
 type CartExpectation = {
@@ -52,7 +54,7 @@ async function tryAddProductToCart(
   };
   const addToCart = page
     .getByTestId("product-add-to-cart")
-    .and(page.getByRole("button", { name: /add to cart/i }))
+    .and(page.getByRole("button", { name: ADD_TO_CART_CONTROL_NAME }))
     .filter({ visible: true })
     .first();
   const isCartEnabled =
