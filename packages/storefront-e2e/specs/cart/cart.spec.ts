@@ -6,10 +6,6 @@ import { test, type CartTestProduct } from "./config";
 const CART_SETTLE_TIMEOUT_MS = 15_000;
 // Any non-empty accessible name, so other and localized labels pass but an unlabeled icon button fails.
 const ADD_TO_CART_CONTROL_NAME = /\S/;
-const CART_CONTROL_NAME = /^(?:open |view )?cart\b/i;
-const REMOVE_CONTROL_NAME = /remove/i;
-const INCREASE_CONTROL_NAME = /increase|^\+$/i;
-const DECREASE_CONTROL_NAME = /decrease|^[-−]$/i;
 const CART_ENDPOINT_PATTERN = "**/api/cart";
 const CART_TOTALS_UPDATING_TEXT = "Updating cart totals";
 const CART_TOTALS_UPDATED_TEXT = "Cart totals updated";
@@ -212,7 +208,7 @@ async function increaseCartLineQuantity(page: Page, expectation: CartExpectation
   const initialQuantity = await numericInputValue(quantityInput);
   const increase = await lineButton(
     line,
-    INCREASE_CONTROL_NAME,
+    "cart-line-increase",
     "increase quantity",
     expectation.cartPath,
   );
@@ -231,7 +227,7 @@ async function decreaseCartLineQuantity(page: Page, expectation: CartExpectation
   const initialQuantity = await numericInputValue(quantityInput);
   const decrease = await lineButton(
     line,
-    DECREASE_CONTROL_NAME,
+    "cart-line-decrease",
     "decrease quantity",
     expectation.cartPath,
   );
@@ -248,7 +244,7 @@ async function removeCartLine(page: Page, expectation: CartExpectation): Promise
   const line = await expectCartLine(page, expectation);
   const remove = await lineButton(
     line,
-    REMOVE_CONTROL_NAME,
+    "cart-line-remove",
     "remove line item",
     expectation.cartPath,
   );
@@ -258,18 +254,18 @@ async function removeCartLine(page: Page, expectation: CartExpectation): Promise
 }
 
 function cartOverlayLineFor(page: Page, productTitle: string): Locator {
-  return page.getByRole("dialog").getByRole("listitem").filter({ hasText: productTitle }).first();
+  return page
+    .getByTestId("cart-drawer")
+    .getByTestId("cart-line")
+    .filter({ hasText: productTitle, visible: true })
+    .first();
 }
 
 async function openCartOverlayFor(page: Page, productTitle: string): Promise<Locator> {
   const line = cartOverlayLineFor(page, productTitle);
   if (await line.isVisible().catch(() => false)) return line;
 
-  await page
-    .getByRole("button", { name: CART_CONTROL_NAME })
-    .or(page.getByRole("link", { name: CART_CONTROL_NAME }))
-    .first()
-    .click();
+  await page.getByTestId("cart-trigger").filter({ visible: true }).first().click();
   return line;
 }
 
@@ -295,21 +291,27 @@ async function expectCartTotalsStatus(
 }
 
 function cartLineFor(page: Page, productTitle: string): Locator {
-  return page.getByRole("main").getByRole("listitem").filter({ hasText: productTitle }).first();
+  return page
+    .getByTestId("cart-page")
+    .getByTestId("cart-line")
+    .filter({ hasText: productTitle, visible: true })
+    .first();
 }
 
 async function quantityInputFor(line: Locator, cartPath: string): Promise<Locator> {
-  const textbox = line.getByRole("textbox").first();
-  if (await textbox.isVisible().catch(() => false)) return textbox;
-
-  const spinbutton = line.getByRole("spinbutton").first();
-  if (await spinbutton.isVisible().catch(() => false)) return spinbutton;
+  const input = line
+    .getByTestId("cart-line-quantity")
+    .and(line.getByRole("spinbutton").or(line.getByRole("textbox")))
+    .filter({ visible: true })
+    .first();
+  if (await input.isVisible().catch(() => false)) return input;
 
   throw createContractError({
     capability: "cart-line",
     routePath: cartPath,
     expectation: "Cart line item exposes a visible quantity input.",
-    likelyFix: "Label the cart line quantity control and keep it inside the line item.",
+    likelyFix:
+      'Put data-testid="cart-line-quantity" on a text or number input inside the line item.',
     docsAnchor: "#cart-line-items",
   });
 }
@@ -326,18 +328,22 @@ function shouldAssertVariant(variantLabel: string): boolean {
 
 async function lineButton(
   line: Locator,
-  name: RegExp,
+  testId: string,
   purpose: string,
   cartPath: string,
 ): Promise<Locator> {
-  const button = line.getByRole("button", { name }).first();
+  const button = line
+    .getByTestId(testId)
+    .and(line.getByRole("button"))
+    .filter({ visible: true })
+    .first();
   if (await button.isVisible().catch(() => false)) return button;
 
   throw createContractError({
     capability: "cart-line",
     routePath: cartPath,
     expectation: "Cart line item exposes a visible button for " + purpose + ".",
-    likelyFix: "Add accessible names to cart line quantity and remove controls.",
+    likelyFix: `Put data-testid="${testId}" on a visible button, such as a native <button>, inside the line item.`,
     docsAnchor: "#cart-line-items",
   });
 }

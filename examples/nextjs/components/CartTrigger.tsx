@@ -38,6 +38,7 @@ export function CartTrigger() {
         aria-expanded={cartDrawerOpen}
         className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded bg-transparent p-0 hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
         aria-label={cartLabel}
+        data-testid="cart-trigger"
       >
         <CartIcon count={totalQuantity} display={countDisplay} />
       </button>

@@ -13,7 +13,12 @@ onMounted(() => configureOpenCartAction());
 </script>
 
 <template>
-  <dialog :id="CART_DRAWER_ID" aria-labelledby="cart-drawer-title" closedby="any">
+  <dialog
+    :id="CART_DRAWER_ID"
+    aria-labelledby="cart-drawer-title"
+    data-testid="cart-drawer"
+    closedby="any"
+  >
     <div class="flex h-full flex-col">
       <div class="shrink-0 border-b border-black/10">
         <div class="flex items-center justify-between px-6 py-4">
