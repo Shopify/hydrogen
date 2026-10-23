@@ -23,22 +23,7 @@ Required groups fail on route HTTP failures; optional groups skip.
 
 ## Test IDs
 
-The suite finds the elements in this table with `data-testid` attributes and Playwright `getByTestId`. Put each ID on the existing element that has this meaning; its markup, styles, behavior, and accessibility stay as they are. The sections below describe what each test checks.
-
-| Test ID | Put it on |
-| --- | --- |
-| `product-variant-option` | Each option value link or button that selects another variant of the same product, including sold-out values and disabled values for combinations that do not exist |
-| `product-add-to-cart` | The add to cart button. It must have the button role, such as a native `<button>`, and a non-empty accessible name. The label can be any text; an icon-only button needs `aria-label` or visually hidden text |
-| `cart-page` | The element that holds the cart page content |
-| `cart-drawer` | The cart drawer |
-| `cart-trigger` | The control that opens the cart drawer |
-| `cart-line` | The element that holds one cart line |
-| `cart-line-quantity` | The quantity input of a cart line. It must be a text or number input |
-| `cart-line-increase` | The increase quantity button of a cart line |
-| `cart-line-decrease` | The decrease quantity button of a cart line |
-| `cart-line-remove` | The remove button of a cart line |
-
-IDs can repeat, for example a main and a sticky add to cart. The suite narrows each ID to visible elements, and to the expected text or accessible name when it needs a specific one. The storefront can have other test IDs for its own tests. The suite does not read them.
+The suite finds some elements with `data-testid` attributes and Playwright `getByTestId`. The IDs, and the element each one goes on, are listed only in `skills/hydrogen-storefront-testing/SKILL.md`. The sections below describe what each test checks.
 
 ## Product Results
 
@@ -139,4 +124,4 @@ Operational expectations:
 
 When the storefront contract changes, update the relevant spec matcher, shared helper, and this document together.
 
-The suite reads test IDs only from Test IDs. It finds all other UI by semantic roles and label strings.
+The suite reads only the test IDs listed in `skills/hydrogen-storefront-testing/SKILL.md`. It finds all other UI by semantic roles and label strings. When the suite starts reading a new test ID, or stops reading one, update that skill too.
