@@ -101,7 +101,7 @@ export type CallableRouteHandler<
 export type ShopifyRouteHandler<
   TPathname extends string = string,
   TMethod extends string = string,
-  TContext = ShopifyRouteHandlerContext,
+  TContext extends Partial<ShopifyRouteHandlerContext> = ShopifyRouteHandlerContext,
 > = CallableRouteHandler<TContext, ShopifyRouteHandlerResult, TPathname, TMethod>;
 
 /**

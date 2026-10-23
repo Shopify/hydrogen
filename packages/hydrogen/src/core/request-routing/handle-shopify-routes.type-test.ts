@@ -140,4 +140,11 @@ describe("handleShopifyRoutes sessionManager requirement", () => {
       handlers: [{ get: pathnameOnly, post: pathnameAndMethod }],
     });
   });
+
+  it("constrains the context type argument of ShopifyRouteHandler like the factory", () => {
+    // @ts-expect-error the context must be a partial route handler context
+    type _InvalidContext = ShopifyRouteHandler<"/api/hello", "GET", string>;
+    // @ts-expect-error context properties must match the route handler context
+    type _MismatchedContext = ShopifyRouteHandler<"/api/hello", "GET", { sessionManager: string }>;
+  });
 });
