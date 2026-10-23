@@ -1,4 +1,4 @@
-# React Router 7
+# React Router
 
 Middleware creates a per-request public client. `requestContext` carries request lifecycle headers and captures SFAPI response headers so middleware can merge them into the final response. `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` per the `hydrogen-storefront-client` buyer-IP guidance.
 
