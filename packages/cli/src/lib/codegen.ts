@@ -16,6 +16,8 @@ import type {
 } from '@graphql-codegen/cli';
 import type {GraphQLConfig, GraphQLProjectConfig} from 'graphql-config';
 import {importLocal} from './import-utils.js';
+import {watch as watchFiles} from 'chokidar';
+import type {CodegenWatchRecord} from './codegen/types.js';
 
 const nodePath = process.argv[1];
 const modulePath = fileURLToPath(import.meta.url);
@@ -142,6 +144,7 @@ type CodegenOptions = ProjectDirs & {
   watch?: boolean;
   configFilePath?: string;
   forceSfapiVersion?: string;
+  onConfig?: (config: CodegenConfig) => void;
 };
 
 export async function codegen(options: CodegenOptions) {
@@ -157,6 +160,127 @@ export async function codegen(options: CodegenOptions) {
 
     throw new AbortError(message, details);
   });
+}
+
+/** Serialize generation cycles and wait for active writes before closing. */
+export async function watchCodegen(
+  options: CodegenOptions,
+  signal: AbortSignal,
+  onRecord: (record: CodegenWatchRecord) => void,
+) {
+  const generatedPaths = new Set<string>();
+  const initialPaths = [
+    joinPath(options.rootDirectory, '*.{ts,tsx,js,jsx,cjs,mjs,cts,mts}'),
+    joinPath(options.rootDirectory, 'codegen.{json,yml,yaml}'),
+    joinPath(options.rootDirectory, 'graphql.config.{json,yml,yaml}'),
+    joinPath(options.rootDirectory, '.graphqlrc*'),
+    joinPath(options.rootDirectory, 'package.json'),
+    joinPath(
+      options.appDirectory ?? joinPath(options.rootDirectory, 'app'),
+      '**/*.{ts,tsx,js,jsx}',
+    ),
+    ...(options.configFilePath
+      ? [resolvePath(options.rootDirectory, options.configFilePath)]
+      : []),
+  ];
+  const watchedPaths = new Set(initialPaths);
+  const watcher = watchFiles(initialPaths, {
+    ignoreInitial: true,
+    ignored: (path) =>
+      /(^|[/\\])(?:node_modules|\.git|\.react-router|dist|build)(?:[/\\]|$)/.test(
+        path,
+      ) || generatedPaths.has(resolvePath(path)),
+  });
+  let pending = true;
+  let wake = () => {};
+  let watcherError: Error | undefined;
+  const changed = () => {
+    pending = true;
+    wake();
+  };
+  const stopped = () => wake();
+  watcher.on('add', changed).on('change', changed).on('unlink', changed);
+  watcher.on('error', (error) => {
+    watcherError = error;
+    wake();
+  });
+  signal.addEventListener('abort', stopped);
+  let cycle = 0;
+  try {
+    await new Promise<void>((resolve, reject) => {
+      watcher.once('ready', resolve);
+      watcher.once('error', reject);
+    });
+    while (!signal.aborted) {
+      if (watcherError) throw watcherError;
+      if (!pending) {
+        await new Promise<void>((resolve) => {
+          wake = resolve;
+        });
+        continue;
+      }
+      pending = false;
+      onRecord({type: 'generation-started', cycle: ++cycle});
+      let generated: Record<string, string[]>;
+      try {
+        generated = await codegen({
+          ...options,
+          watch: false,
+          onConfig(config) {
+            const pointers: unknown[] = [config.schema, config.documents];
+            for (const [path, value] of Object.entries(config.generates)) {
+              const output = Array.isArray(value) ? undefined : value;
+              const absoluteOutput = resolvePath(options.rootDirectory, path);
+              if (!output?.preset) generatedPaths.add(absoluteOutput);
+              pointers.push(output?.schema, output?.documents);
+            }
+            const paths = pointers
+              .flat()
+              .flatMap((pointer) =>
+                typeof pointer === 'string'
+                  ? [pointer]
+                  : pointer
+                    ? Object.keys(pointer)
+                    : [],
+              )
+              .filter(
+                (pointer) => !/^(?:https?:|type\s|schema\s)/.test(pointer),
+              );
+            if (options.configFilePath) paths.push(options.configFilePath);
+            const newPaths = paths
+              .map((path) =>
+                path.startsWith('!')
+                  ? '!' + resolvePath(options.rootDirectory, path.slice(1))
+                  : resolvePath(options.rootDirectory, path),
+              )
+              .filter((path) => !watchedPaths.has(path));
+            if (newPaths.length) {
+              for (const path of newPaths) watchedPaths.add(path);
+              watcher.add(newPaths);
+            }
+          },
+        });
+      } catch (error) {
+        onRecord({
+          type: 'generation-failed',
+          cycle,
+          error: {
+            message: error instanceof Error ? error.message : String(error),
+          },
+        });
+        continue;
+      }
+      const files = Object.entries(generated).map(([path, sources]) => ({
+        path: resolvePath(options.rootDirectory, path),
+        sources,
+      }));
+      for (const file of files) generatedPaths.add(file.path);
+      onRecord({type: 'generation-completed', cycle, files});
+    }
+  } finally {
+    signal.removeEventListener('abort', stopped);
+    await watcher.close();
+  }
 }
 
 export async function executeReactRouterCodegen(options: {
@@ -198,6 +322,7 @@ async function runGraphQLCodegen({
   watch,
   configFilePath,
   forceSfapiVersion,
+  onConfig,
   ...dirs
 }: CodegenOptions) {
   type CodegenType = typeof import('@graphql-codegen/cli');
@@ -222,6 +347,7 @@ async function runGraphQLCodegen({
     (await generateDefaultConfig(dirs, forceSfapiVersion));
 
   await addHooksToHydrogenOptions(codegenConfig, dirs);
+  onConfig?.(codegenConfig);
 
   const codegenContext = new CodegenContext({
     config: {
