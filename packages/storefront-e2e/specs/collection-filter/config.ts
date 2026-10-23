@@ -24,6 +24,7 @@ const COLLECTIONS_WITH_FILTERS_QUERY = gql(`
         products(first: $productCount) {
           filters {
             label
+            type
             values {
               count
               label

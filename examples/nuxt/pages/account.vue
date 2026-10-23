@@ -6,18 +6,20 @@ type AccountCustomer = {
 };
 
 type AccountPageData = {
+  available: boolean;
   customer: AccountCustomer | null;
   error: string | null;
   loginFailed: boolean;
 };
 
 const EMPTY_ACCOUNT_DATA: AccountPageData = {
+  available: false,
   customer: null,
   error: null,
   loginFailed: false,
 };
 
-const { data: accountData, error: accountError } = await useFetch("/api/account", {
+const { data: accountData, error: accountError } = await useFetch<AccountPageData>("/api/account", {
   default: () => EMPTY_ACCOUNT_DATA,
 });
 if (accountError.value) throw createError(accountError.value);
@@ -40,12 +42,16 @@ useHead({ title: "Account — Mock.shop" });
     aria-labelledby="account-heading"
   >
     <h1 id="account-heading" class="text-4xl font-black tracking-tight">Account</h1>
-    <p class="mt-4 max-w-xl text-black/70">
+    <p v-if="!accountData.available" class="mt-4 max-w-xl text-black/70">
+      Customer accounts are not available in this demo store. You can still browse products and use
+      the cart.
+    </p>
+    <p v-else class="mt-4 max-w-xl text-black/70">
       Sign in with Shopify Customer Accounts to view your basic account identity.
     </p>
 
     <p
-      v-if="accountData.error"
+      v-if="accountData.available && accountData.error"
       role="alert"
       class="mt-8 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-900"
     >
@@ -53,7 +59,7 @@ useHead({ title: "Account — Mock.shop" });
     </p>
 
     <section
-      v-if="accountData.customer"
+      v-if="accountData.available && accountData.customer"
       class="bg-paper mt-8 rounded-3xl border border-black/10 p-8"
       aria-labelledby="identity-heading"
     >
@@ -78,7 +84,7 @@ useHead({ title: "Account — Mock.shop" });
     </section>
 
     <section
-      v-else
+      v-else-if="accountData.available"
       class="mt-8 rounded-3xl border border-black/10 p-8"
       aria-labelledby="login-heading"
     >

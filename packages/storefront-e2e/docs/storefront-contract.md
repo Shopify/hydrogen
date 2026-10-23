@@ -33,6 +33,8 @@ At least one probed collection must expose a visible, enabled checkbox filter th
 
 Filter labels must include a count like Color Red (4). The suite uses that count to choose a filter that narrows the visible product links, then asserts the filtered result count does not exceed the label count. Browser Back after a filter selection must restore the previous URL and show the same filter unchecked. Missing Storefront API filter data skips the collection filter group.
 
+When a probed collection exposes a Storefront API PRICE_RANGE filter, the page must render the price bounds as spinbuttons whose accessible names start with Minimum price and Maximum price. Typing a decimal bound such as 12.5 must put that exact value in the filter.v.price.gte or filter.v.price.lte URL param and keep it in the input. A storefront with no price range filter skips this check.
+
 ## Search
 
 The search page must expose a searchbox. A visible button with an accessible name containing Search is supported; otherwise the suite submits the searchbox with Enter.
@@ -60,7 +62,11 @@ Set STOREFRONT_SKIP_NO_JS_VARIANTS=true to skip the no-JavaScript check for a st
 
 Cart lines must be visible list items containing the product title.
 
-After Add to cart, the suite must be able to inspect the added line in a cart drawer dialog before navigating to the cart page. Either open the drawer immediately with the optimistic line, or expose a visible page-level button whose accessible name begins with Cart, Open cart, or View cart so the suite can open the drawer while the update is pending.
+After Add to cart, the suite must be able to inspect the added line in a cart drawer dialog before navigating to the cart page. Either open the drawer immediately with the optimistic line, or expose a visible page-level button or link whose accessible name begins with Cart, Open cart, or View cart so the suite can open the drawer while the update is pending.
+
+Render the cart on the server. If the cart loads in the browser, an Add to cart that starts before the load finishes builds on an empty cart, and the stock-limit rollback test fails.
+
+A document that contains a server-rendered cart holds buyer-specific state. Give it the same cache policy as the cart GET route: `Cache-Control: private, no-store, max-age=0, must-revalidate`, with no `Surrogate-Control` or vendor `*-Cache-Control` headers. Otherwise a shared cache can serve one buyer's cart to another buyer. Call `requestContext.markResponseAsPersonalized()` on requests that render a cart, and `requestContext.applyResponseHeaders()` applies that policy.
 
 Each line must expose:
 
