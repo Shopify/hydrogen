@@ -10,6 +10,7 @@ import {
   type ShopifyScriptTagsOptions,
 } from "../core/shopify-scripts";
 import { findShopifyAccountWidgetDataScript } from "../core/shopify-scripts/account-widget";
+import { getShopifyScriptTagKey } from "../core/shopify-scripts/render";
 import { restartAccountWidgets } from "./account-widget";
 
 /**
@@ -63,8 +64,7 @@ export function ShopifyScripts(options: ShopifyScriptsProps) {
     null,
     tags.map(({ tagName, attributes, innerHTML }) =>
       createElement(tagName, {
-        // Optional tags come and go, so index keys would make React reuse already-run scripts.
-        key: getTagKey(attributes),
+        key: getShopifyScriptTagKey(attributes),
         ...getReactAttributes(attributes),
         ...(innerHTML ? { dangerouslySetInnerHTML: { __html: innerHTML } } : {}),
       }),
@@ -81,10 +81,6 @@ function useRestartAccountWidgetsOnChange(serialized: string | undefined) {
     previous.current = serialized;
     restartAccountWidgets();
   }, [serialized]);
-}
-
-function getTagKey(attributes: Record<string, string | boolean> = {}) {
-  return String(attributes.id ?? `${attributes.rel}:${attributes.href}`);
 }
 
 function getReactAttributes(attributes: Record<string, string | boolean> = {}) {
