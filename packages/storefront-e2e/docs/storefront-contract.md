@@ -64,6 +64,8 @@ Cart lines must be visible list items containing the product title.
 
 After Add to cart, the suite must be able to inspect the added line in a cart drawer dialog before navigating to the cart page. Either open the drawer immediately with the optimistic line, or expose a visible page-level button or link whose accessible name begins with Cart, Open cart, or View cart so the suite can open the drawer while the update is pending.
 
+Render the cart on the server. If the cart loads in the browser, an Add to cart that starts before the load finishes builds on an empty cart, and the stock-limit rollback test fails.
+
 Each line must expose:
 
 - Variant text when the product has a non-default variant

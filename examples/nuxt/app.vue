@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { defaultI18n } from "@shared/config";
-import { getShopifyScriptTags, initializeShopifyScripts } from "@shopify/hydrogen";
+import {
+  getShopifyScriptTags,
+  initializeShopifyScripts,
+  type CartDataFromHandlers,
+  type CartGetData,
+} from "@shopify/hydrogen";
 
 import { CartProvider } from "~/storefront/cart";
+import type { cartHandlers } from "~/storefront/cart-handlers";
 import { resolveShopIdentity } from "~/storefront/shop-identity";
 import type { StorefrontModeConfig } from "~/storefront/storefront-config";
 import { routeTemplates } from "~/utils/route-templates";
@@ -11,6 +17,11 @@ const route = useRoute();
 const router = useRouter();
 const storefrontConfig = useState<StorefrontModeConfig>("storefront-config");
 const shopIdentity = resolveShopIdentity(storefrontConfig.value);
+// Server-render the cart so the client starts with it instead of fetching it after mount.
+const { data: cartData } = await useFetch<CartGetData<CartDataFromHandlers<typeof cartHandlers>>>(
+  "/api/cart",
+  { key: "cart" },
+);
 const shopifyScriptTags = getShopifyScriptTags({
   ...shopIdentity,
   i18n: defaultI18n,
@@ -45,7 +56,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <CartProvider>
+  <CartProvider :initial-data="cartData ?? undefined">
     <div class="bg-white text-black">
       <a
         href="#main-content"
