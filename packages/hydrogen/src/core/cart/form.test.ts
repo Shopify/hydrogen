@@ -103,7 +103,7 @@ describe("createCartFormRegister", () => {
     });
 
     it("remove returns intent", () => {
-      expect(register("remove")).toEqual({ name: "intent", value: "remove" });
+      expect(register("remove")).toEqual({ name: "intent", value: "remove", formNoValidate: true });
     });
 
     it("discount-apply returns intent", () => {

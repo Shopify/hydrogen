@@ -6,7 +6,12 @@ export {
 } from "./cart";
 export type { CartActions, CartStore, CreateCartStoreOptions } from "./cart";
 export { createCartFormRegister } from "./form";
-export type { CartFormRegister, QuantityInputAttributes, SetButtonAttributes } from "./form";
+export type {
+  CartFormRegister,
+  QuantityInputAttributes,
+  RemoveButtonAttributes,
+  SetButtonAttributes,
+} from "./form";
 export { attachQuantityInput } from "./attach-quantity-input";
 export { parseCartRequest } from "./actions";
 export type {
