@@ -1,28 +1,43 @@
 import { describe, expectTypeOf, it } from "vitest";
 
-import type { PredictiveSearchData, PredictiveSearchState } from "../core/predictive-search";
+import {
+  createPredictiveSearchServerHandlers,
+  type PredictiveSearchDataFromHandlers,
+} from "../core/index";
+import { gql } from "../graphql";
 import { usePredictiveSearch, usePredictiveSearchForm } from "./predictive-search";
 
-type CustomPredictiveSearchData = PredictiveSearchData & {
-  merchandising: {
-    campaignId: string;
-  };
-};
+const predictiveSearchHandlers = createPredictiveSearchServerHandlers({
+  fragments: {
+    product: gql(`
+      fragment PredictiveSearchProductFragment on Product {
+        vendor
+      }
+    `),
+  },
+});
+
+type SearchData = PredictiveSearchDataFromHandlers<typeof predictiveSearchHandlers>;
 
 describe("predictive search React types", () => {
-  it("preserves caller-provided result data on state", () => {
-    type State = PredictiveSearchState<CustomPredictiveSearchData>;
+  it("types state from custom predictive search server handlers", () => {
+    function Consumer() {
+      const state = usePredictiveSearch<SearchData>();
+      type Product = (typeof state)["result"]["items"]["products"][number];
 
-    expectTypeOf<State["result"]["merchandising"]["campaignId"]>().toEqualTypeOf<string>();
+      expectTypeOf<Product["vendor"]>().toEqualTypeOf<string>();
+    }
+
+    void Consumer;
   });
 
-  it("types selectors from caller-provided result data", () => {
+  it("types selectors from custom predictive search server handlers", () => {
     function Consumer() {
-      const campaignId = usePredictiveSearch<CustomPredictiveSearchData, string>(
-        (state) => state.result.merchandising.campaignId,
+      const vendor = usePredictiveSearch<SearchData, string>(
+        (state) => state.result.items.products[0]?.vendor ?? "",
       );
 
-      expectTypeOf(campaignId).toEqualTypeOf<string>();
+      expectTypeOf(vendor).toEqualTypeOf<string>();
     }
 
     void Consumer;

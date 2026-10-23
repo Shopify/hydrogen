@@ -20,6 +20,7 @@ examples/**/customer-account-graphql-env.d.ts
 examples/**/storefront-graphql-env.d.ts
 packages/*/playwright-report/
 packages/*/test-results/
+packages/*/playwright-results.json
 examples/hydrogen/.tmp/
 /templates/*/package-lock.json
 /templates/*/pnpm-lock.yaml

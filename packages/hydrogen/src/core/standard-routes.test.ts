@@ -149,6 +149,25 @@ describe("standard routes", () => {
     });
   });
 
+  it("gives a collection-scoped product match without a collection handle the product's standard path", () => {
+    const routeTemplates = createShopifyRouteTemplates({
+      productInCollection: "/shop/:productHandle",
+    });
+
+    expect(
+      matchStandardRouteUrl({ routeTemplates, pathPrefix: "/fr-ca", url: "/fr-ca/shop/snowboard" }),
+    ).toEqual({
+      route: "productInCollection",
+      pageTemplateName: "product",
+      params: { productHandle: "snowboard" },
+      standardPathname: "/fr-ca/products/snowboard",
+      templates: {
+        standard: "/products/:productHandle",
+        custom: "/shop/:productHandle",
+      },
+    });
+  });
+
   it("matches the root as the index route", () => {
     const routeTemplates = createShopifyRouteTemplates({ collectionList: "/" });
 

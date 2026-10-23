@@ -34,6 +34,7 @@ export default defineConfig({
         outputFolder: path.join(packageRoot, "playwright-report"),
       },
     ],
+    ["json", { outputFile: path.join(packageRoot, "playwright-results.json") }],
   ],
   outputDir: path.join(packageRoot, "test-results"),
   use: {
