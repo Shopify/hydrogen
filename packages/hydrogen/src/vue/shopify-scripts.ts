@@ -9,7 +9,7 @@ import {
   type ShopifyScriptTagsOptions,
   type ShopifyRoutesOptions,
 } from "../core/shopify-scripts/index";
-import { restartShopifyAccountWidgets } from "./shopify-account";
+import { restartAccountWidgets } from "./account-widget";
 
 /**
  * Props for the Vue ShopifyScripts component.
@@ -109,7 +109,7 @@ export const ShopifyScripts = defineComponent({
     // `flush: "post"` runs after the JSON script tag updates, so remounted widgets read the new data.
     watch(
       () => findShopifyAccountWidgetDataScript(scriptTags.value.scripts)?.innerHTML,
-      restartShopifyAccountWidgets,
+      restartAccountWidgets,
       { flush: "post" },
     );
 

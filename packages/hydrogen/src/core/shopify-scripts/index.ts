@@ -43,6 +43,7 @@ export type {
   ShopifyAccountWidgetData,
   ShopifyAccountWidgetShop,
   ShopifyAccountWidgetSocialLoginProvider,
+  ShopifyAccountWidgetTranslationKey,
 } from "./account-widget";
 export { getShopifyGlobal, getShopifyGlobalBootstrapScript } from "./global";
 export { initializeShopifyScripts } from "./initialize";

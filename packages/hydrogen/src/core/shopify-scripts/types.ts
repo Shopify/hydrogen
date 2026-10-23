@@ -103,14 +103,14 @@ export type ShopifyScriptsShop = {
 /** The shop details and the features whose scripts to load. */
 export type ShopifyScriptTagsOptions = {
   /**
-   * Loads the customer account component and renders the data it reads. Render `ShopifyAccount`,
+   * Loads the customer account component and renders the data it reads. Render `AccountWidget`,
    * or `shopify-account`, where you want the account UI to appear.
    *
    * Pass this option whenever you want the widget, including for signed-out visitors: set
    * `customer` to `null` when nobody is signed in. Leave the option out to omit the widget.
    *
    * `shopify-account` reads the data once, when it connects. If you change the data without
-   * `ShopifyAccount`, remount every `shopify-account` element yourself.
+   * `AccountWidget`, remount every `shopify-account` element yourself.
    * @see [shopify-account](https://shopify.dev/docs/api/storefront-web-components/components/shopify-account)
    */
   accountWidget?: ShopifyAccountWidgetData;
