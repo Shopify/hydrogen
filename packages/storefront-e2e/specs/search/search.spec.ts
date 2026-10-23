@@ -58,8 +58,6 @@ async function matchingProductLinkCount(
   const productTitleMatcher = new RegExp(escapeRegExp(productTitle), "i");
   const productLinks = page
     .getByTestId("product-results")
-    .filter({ visible: true })
-    .first()
     .getByTestId("product-card")
     .and(page.getByRole("link", { name: productTitleMatcher }));
   const count = Math.min(await productLinks.count(), MAX_LINK_DISCOVERY_PROBES);
