@@ -1,11 +1,11 @@
 import {Flags} from '@oclif/core';
-import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
+import {resolvePath} from '@shopify/cli-kit/node/path';
 import Command from '../../../lib/hydrogen-command.js';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {writeFile} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
 import ansiEscapes from 'ansi-escapes';
-import {getProjectPaths, isClassicProject} from '../../../lib/remix-config.js';
+import {isClassicProject} from '../../../lib/remix-config.js';
 import {muteDevLogs} from '../../../lib/log.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {setupResourceCleanup} from '../../../lib/resource-cleanup.js';
@@ -16,16 +16,31 @@ import {
   REMIX_COMPILER_ERROR_MESSAGE,
 } from '../../../lib/vite-config.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {isJsonOutput} from '../../../lib/json-output.js';
+import {
+  cpuJsonOutputSchema,
+  type CpuWatchRecord,
+} from '../../../lib/cpu-profiler/types.js';
+import {runWatchCommand, writeWatchRecord} from '../../../lib/watch.js';
+import type {BuildResult} from '../../../lib/build-tooling/types.js';
 
 const DEFAULT_OUTPUT_PATH = 'startup.cpuprofile';
 
 export default class DebugCpu extends Command {
+  static get jsonOutputSchema(): typeof cpuJsonOutputSchema {
+    return cpuJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown = `Builds the app and runs the resulting code to profile the server startup time, watching for changes. This command can be used to [debug slow app startup times](https://shopify.dev/docs/custom-storefronts/hydrogen/debugging/cpu-startup) that cause failed deployments in Oxygen.
 
-  The profiling results are written to a \`.cpuprofile\` file that can be viewed with certain tools such as [Flame Chart Visualizer for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-js-profile-flame).`;
+  The profiling results are written to a \`.cpuprofile\` file that can be viewed with certain tools such as [Flame Chart Visualizer for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-js-profile-flame).
 
-  static description = 'Builds and profiles the server startup time the app.';
+  With \`--json\`, emits JSONL lifecycle, build, and profile records to stdout and diagnostics to stderr until stopped. The native profile file format is unchanged.`;
+
+  static description = this.descriptionForHelp();
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
     ...commonFlags.entry,
     output: Flags.string({
@@ -38,6 +53,26 @@ export default class DebugCpu extends Command {
   async run(): Promise<void> {
     const {flags} = await this.parse(DebugCpu);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
+
+    if (flags.json) {
+      await runWatchCommand(async (signal) => {
+        const {close} = await runDebugCpu({
+          ...flagsToCamelObject(flags),
+          directory,
+          output: resolvePath(directory, flags.output),
+          onRecord: (record) => writeWatchRecord(cpuJsonOutputSchema, record),
+        });
+        try {
+          if (!signal.aborted)
+            await new Promise<void>((resolve) =>
+              signal.addEventListener('abort', () => resolve(), {once: true}),
+            );
+        } finally {
+          await close();
+        }
+      });
+      return;
+    }
 
     const {close} = await runDebugCpu({
       ...flagsToCamelObject(flags),
@@ -55,47 +90,82 @@ type RunDebugCpuOptions = {
   directory: string;
   output: string;
   entry?: string;
+  json?: boolean;
+  onRecord?: (record: CpuWatchRecord) => void;
 };
 
-async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
+export async function runDebugCpu({
+  directory,
+  entry,
+  output,
+  json = isJsonOutput(),
+  onRecord,
+}: RunDebugCpuOptions) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
-  muteDevLogs({workerReload: false});
+  if (!json) muteDevLogs({workerReload: false});
 
-  let {buildPath, buildPathWorkerFile} = getProjectPaths(directory);
-
-  outputInfo(
-    '⏳️ Starting profiler for CPU startup... Profile will be written to:\n' +
-      colors.dim(output),
-  );
+  if (!json)
+    outputInfo(
+      '⏳️ Starting profiler for CPU startup... Profile will be written to:\n' +
+        colors.dim(output),
+    );
 
   let times = 0;
+  let cycle = 0;
   let sourceEntrypoint: string;
   const profiler = await createCpuStartupProfiler();
 
   const hooks = {
     onServerBuildStart() {
+      if (json) return;
       if (times > 0) {
         process.stdout.write(ansiEscapes.eraseLines(4));
       }
 
       outputInfo(`\n#${++times} Building and profiling...`);
     },
-    async onServerBuildFinish() {
-      const {profile, totalScriptTimeMs} = await profiler.run(
-        buildPathWorkerFile,
-        sourceEntrypoint,
-      );
+    async onServerBuildFinish(result: BuildResult) {
+      if (json) {
+        onRecord?.({type: 'build-completed', cycle, ...result});
+        onRecord?.({type: 'profile-started', cycle});
+      }
+      try {
+        const {profile, totalScriptTimeMs, totalTimeMs} = await profiler.run(
+          result.serverPath,
+          sourceEntrypoint,
+        );
 
-      process.stdout.write(ansiEscapes.eraseLines(2));
-      outputInfo(
-        `#${times} Total time: ${totalScriptTimeMs.toLocaleString()} ms` +
-          `\n${colors.dim(output)}`,
-      );
+        if (!json) {
+          process.stdout.write(ansiEscapes.eraseLines(2));
+          outputInfo(
+            `#${times} Total time: ${totalScriptTimeMs.toLocaleString()} ms` +
+              `\n${colors.dim(output)}`,
+          );
+        }
 
-      await writeFile(output, JSON.stringify(profile, null, 2));
+        await writeFile(output, JSON.stringify(profile, null, 2));
 
-      outputInfo(`\nWaiting for changes...`);
+        if (json)
+          onRecord?.({
+            type: 'profile-completed',
+            cycle,
+            path: output,
+            format: 'cpuprofile',
+            totalTimeMs,
+            totalScriptTimeMs,
+          });
+        else outputInfo(`\nWaiting for changes...`);
+      } catch (error) {
+        if (!json) throw error;
+        onRecord?.({
+          type: 'profile-failed',
+          cycle,
+          error: {
+            message: error instanceof Error ? error.message : String(error),
+          },
+        });
+      }
     },
   };
 
@@ -106,12 +176,12 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
   }
 
   const maybeViteConfig = await getViteConfig(directory).catch(() => null);
-  buildPathWorkerFile =
-    maybeViteConfig?.serverOutFile ?? joinPath(buildPath, 'server', 'index.js');
-
   sourceEntrypoint = maybeViteConfig?.remixConfig.serverEntryPoint ?? '';
 
+  if (json)
+    onRecord?.({type: 'watch-started', directory: resolvePath(directory)});
   const buildProcess = await runBuild({
+    json,
     entry,
     directory,
     watch: true,
@@ -120,17 +190,36 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
     lockfileCheck: false,
     bundleStats: false,
     ...hooks,
+    ...(json
+      ? {
+          onBuildStart(buildCycle: number) {
+            cycle = buildCycle;
+            onRecord?.({type: 'build-started', cycle});
+          },
+          onBuildError(buildCycle: number, error: Error) {
+            onRecord?.({
+              type: 'build-failed',
+              cycle: buildCycle,
+              error: {message: error.message},
+            });
+          },
+        }
+      : {}),
     onServerBuildStart() {
-      if (times === 0) {
+      if (!json && times === 0) {
         process.stdout.write(ansiEscapes.eraseLines(1));
       }
       return hooks.onServerBuildStart();
     },
   });
 
+  let closing: Promise<void> | undefined;
   return {
-    async close() {
-      await buildProcess.close();
+    close() {
+      closing ??= buildProcess.close().then(() => {
+        if (json) onRecord?.({type: 'watch-stopped'});
+      });
+      return closing;
     },
   };
 }
