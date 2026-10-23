@@ -5,14 +5,7 @@ import type { ShopifyAccountWidgetData } from "./shopify-scripts/account-widget"
 
 export const TEST_ACCOUNT_WIDGET_DATA: ShopifyAccountWidgetData = {
   customer: null,
-  shop: {
-    legacyCustomerAccounts: false,
-    b2bEnabled: false,
-    marketingConsentSigninEnabled: true,
-    marketingConsentPreselected: false,
-    socialLoginProviders: [{ handle: "shop" }],
-    customerAccountTranslations: [],
-  },
+  shop: { socialLoginProviders: ["shop"] },
 };
 
 export const TEST_ACCOUNT_WIDGET_CUSTOMER: NonNullable<ShopifyAccountWidgetData["customer"]> = {
@@ -20,19 +13,27 @@ export const TEST_ACCOUNT_WIDGET_CUSTOMER: NonNullable<ShopifyAccountWidgetData[
   lastName: "Lovelace",
   email: "ada@example.com",
   avatarUrl: null,
-  socialLoginProvider: null,
 };
 
-/** The JSON that `<shopify-account>` reads for the given data, with the default US English locale. */
-export function getRenderedAccountWidgetData(data: ShopifyAccountWidgetData, shopId: string) {
+/** The JSON that `<shopify-account>` reads for `TEST_ACCOUNT_WIDGET_DATA` in US English. */
+export function getRenderedSignedOutAccountWidgetData(shopId: string) {
   return {
-    customer: data.customer,
-    shop: { id: shopId, ...data.shop },
+    customer: null,
+    shop: {
+      id: shopId,
+      legacyCustomerAccounts: false,
+      b2bEnabled: false,
+      marketingConsentSigninEnabled: false,
+      marketingConsentPreselected: false,
+      socialLoginProviders: [{ handle: "Shop" }],
+      customerAccountTranslations: [],
+    },
     visitor: { country: "US", language: "EN" },
   };
 }
 
-const shopifyAccountConnections: Array<ReturnType<typeof getRenderedAccountWidgetData> | null> = [];
+type RenderedAccountWidgetData = { customer: { firstName: string | null } | null };
+const shopifyAccountConnections: Array<RenderedAccountWidgetData | null> = [];
 
 /**
  * Defines a stand-in `shopify-account` element that, like account.js, reads the JSON script tag

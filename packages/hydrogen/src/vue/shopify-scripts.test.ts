@@ -20,13 +20,13 @@ import * as shopifyScriptsCore from "../core/shopify-scripts";
 import { defineShopifyRouteTemplates } from "../core/standard-routes/index";
 import {
   assert,
-  getRenderedAccountWidgetData,
+  getRenderedSignedOutAccountWidgetData,
   recordShopifyAccountConnections,
   TEST_ACCOUNT_WIDGET_CUSTOMER,
   TEST_ACCOUNT_WIDGET_DATA,
 } from "../core/test-utils";
 import type { ShopifyGlobal } from "../globals";
-import { ShopifyAccount } from "./shopify-account";
+import { AccountWidget } from "./account-widget";
 import { ShopifyScripts } from "./shopify-scripts";
 
 afterEach(() => {
@@ -86,7 +86,7 @@ describe("ShopifyScripts", () => {
       `<script id="shopify-account" type="module" async crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_ACCOUNT_SCRIPT}"></script>`,
     );
     expect(html).toContain(
-      `<script id="shopify-customer-account-data" type="application/json">${JSON.stringify(getRenderedAccountWidgetData(TEST_ACCOUNT_WIDGET_DATA, TEST_SHOP_ID))}</script>`,
+      `<script id="shopify-customer-account-data" type="application/json">${JSON.stringify(getRenderedSignedOutAccountWidgetData(TEST_SHOP_ID))}</script>`,
     );
     expect(html).not.toContain(`id="shopify-storefront-analytics"`);
     expect(html).not.toContain("<shopify-chat");
@@ -124,7 +124,7 @@ describe("ShopifyScripts", () => {
     expect(html).not.toContain("&quot;templates&quot;");
   });
 
-  it("remounts every ShopifyAccount after the account widget data changes", async () => {
+  it("remounts every AccountWidget after the account widget data changes", async () => {
     vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts").mockResolvedValue(undefined);
     // The widgets must be in the document to connect, which makes Happy DOM try to load the CDN scripts.
     vi.spyOn(console, "error").mockImplementation(() => {});
@@ -133,10 +133,8 @@ describe("ShopifyScripts", () => {
     const wrapper = mount(
       // Widgets render before ShopifyScripts, so they must wait for the JSON script tag to update.
       defineComponent(() => () => [
-        h(ShopifyAccount, { menu: "customer-account-main-menu", signInUrl: "/sign-in" }, () =>
-          h("span", { slot: "signed-out-avatar" }, "Sign in"),
-        ),
-        h(ShopifyAccount),
+        h(AccountWidget, null, { fallback: () => h("span", "Sign in") }),
+        h(AccountWidget),
         h(ShopifyScripts, { shop: TEST_SHOP, accountWidget: accountWidget.value }),
       ]),
       { attachTo: document.body },
@@ -145,9 +143,9 @@ describe("ShopifyScripts", () => {
     assert(header, "Expected a shopify-account element");
     assert(menu, "Expected a second shopify-account element");
 
-    expect(header.getAttribute("sign-in-url")).toBe("/sign-in");
-    expect(menu.getAttribute("sign-in-url")).toBe("/account/login");
-    expect(header.querySelector('[slot="signed-out-avatar"]')?.textContent).toBe("Sign in");
+    expect(header.getAttribute("sign-in-url")).toBe("/account/login");
+    expect(header.querySelector('div[slot="signed-out-avatar"]')?.textContent).toBe("Sign in");
+    expect(menu.querySelector('[slot="signed-out-avatar"]')).toBeNull();
 
     accountWidget.value = { ...TEST_ACCOUNT_WIDGET_DATA };
     await nextTick();

@@ -23,8 +23,7 @@ export type {
 export { createProductComponents, useProductForm } from "./product";
 export { ShopPayButton } from "./shop-pay";
 export type { ShopPayButtonProps } from "./shop-pay";
-export { ShopifyAccount } from "./shopify-account";
-export type { ShopifyAccountProps } from "./shopify-account";
+export { AccountWidget } from "./account-widget";
 export { ShopifyScripts } from "./shopify-scripts";
 export type { ShopifyScriptsProps } from "./shopify-scripts";
 export type {

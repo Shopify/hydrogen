@@ -19,13 +19,17 @@ This renders, in order, the JSON script tag and `account.js`:
 <script id="shopify-account" type="module" async crossorigin="anonymous" src="https://cdn.shopify.com/storefront/web-components/account.js"></script>
 ```
 
-Use `getShopifyScriptTags()` instead when the framework's head API takes tag objects. Both helpers escape the JSON and copy only the known fields; always render the tag through them.
+Use `getShopifyScriptTags()` instead when the framework's head API takes tag objects. Both helpers validate the fields, write the casing the widget expects, and escape the JSON; always render the tag through them.
 
-Render the element where the widget should appear:
+Render the element where the widget should appear. Keep `sign-in-url` on Hydrogen's login route. To replace the signed-out avatar, wrap your content in an element with `slot="signed-out-avatar"`:
 
 ```html
-<shopify-account sign-in-url="/account/login"></shopify-account>
+<shopify-account sign-in-url="/account/login">
+  <div slot="signed-out-avatar"><img src="/icons/user.svg" alt="Sign in" /></div>
+</shopify-account>
 ```
+
+Leave out the `menu` attribute: it loads through a `<shopify-store>` element, which this setup doesn't use.
 
 ## Browser: Remount on Change
 
