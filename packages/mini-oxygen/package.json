@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@mjackson/node-fetch-server": "^0.7.0",
-    "body-parser": "1.20.4",
+    "body-parser": "1.20.9",
     "connect": "^3.7.0",
     "get-port": "^7.1.0",
     "miniflare": "3.20250310.1",
