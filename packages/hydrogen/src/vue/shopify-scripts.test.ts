@@ -120,6 +120,28 @@ describe("ShopifyScripts", () => {
     expect(html).not.toContain('"templates"');
   });
 
+  it("keeps already-rendered scripts in place when the account widget is toggled", async () => {
+    vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts").mockResolvedValue(undefined);
+    // Attached so the multi-root component has a parent to query. Happy DOM then tries to load the
+    // CDN scripts, which logs errors.
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const wrapper = mount(ShopifyScripts, { props: { shop: TEST_SHOP }, attachTo: document.body });
+    const root = document.body;
+    const bus = root.querySelector("#shopify-analytics-bus");
+    const busScript = bus?.innerHTML;
+    assert(bus, "Expected the analytics bus script");
+
+    await wrapper.setProps({ accountWidget: TEST_ACCOUNT_WIDGET_DATA });
+    expect(root.querySelector("#shopify-analytics-bus")).toBe(bus);
+    expect(root.querySelector("#shopify-customer-account-data")).not.toBeNull();
+
+    await wrapper.setProps({ accountWidget: undefined });
+    expect(root.querySelector("#shopify-analytics-bus")).toBe(bus);
+    expect(bus.innerHTML).toBe(busScript);
+    expect(root.querySelector("#shopify-customer-account-data")).toBeNull();
+    wrapper.unmount();
+  });
+
   it("remounts every AccountWidget after the account widget data changes", async () => {
     vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts").mockResolvedValue(undefined);
     // The widgets must be in the document to connect, which makes Happy DOM try to load the CDN scripts.
