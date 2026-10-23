@@ -29,7 +29,7 @@ async function searchForMatchingProduct(
   productTitle: string,
 ): Promise<boolean> {
   await page.goto(searchPath);
-  const searchbox = page.getByRole("searchbox").first();
+  const searchbox = page.getByTestId("search-input").filter({ visible: true }).first();
   await searchbox.fill(productTitle);
   await submitSearch(searchbox);
 
@@ -37,8 +37,11 @@ async function searchForMatchingProduct(
 }
 
 async function submitSearch(searchbox: Locator): Promise<void> {
-  const form = searchbox.locator("xpath=ancestor::form[1]");
-  const searchButton = form.getByRole("button", { name: /search/i }).first();
+  const searchButton = searchbox
+    .page()
+    .getByTestId("search-submit")
+    .filter({ visible: true })
+    .first();
   if (await searchButton.isVisible().catch(() => false)) {
     await searchButton.click();
     return;
@@ -53,7 +56,10 @@ async function matchingProductLinkCount(
   productTitle: string,
 ): Promise<number> {
   const productTitleMatcher = new RegExp(escapeRegExp(productTitle), "i");
-  const productLinks = page.getByRole("link", { name: productTitleMatcher });
+  const productLinks = page
+    .getByTestId("product-results")
+    .getByTestId("product-card")
+    .and(page.getByRole("link", { name: productTitleMatcher }));
   const count = Math.min(await productLinks.count(), MAX_LINK_DISCOVERY_PROBES);
   let matchingLinkCount = 0;
 

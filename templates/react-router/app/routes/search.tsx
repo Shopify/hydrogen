@@ -136,6 +136,7 @@ function SearchHeader({ term }: { term: string }) {
             key={term}
             {...registerSearchForm("query")}
             id="search-q"
+            data-testid="search-input"
             defaultValue={term}
             placeholder="Search"
             className="peer h-11 w-full ps-10 pe-14"
@@ -180,7 +181,7 @@ function ProductGrid({ products }: { products: readonly ProductNode[] }) {
 
 function NoResults({ term }: { term: string }) {
   return (
-    <div aria-live="polite">
+    <div aria-live="polite" data-testid="product-results">
       <p className="type-body text-on-surface-secondary">No results for “{term}”</p>
       <p className="text-on-surface-secondary mt-2 text-sm">
         Check your spelling or try a more general term.
