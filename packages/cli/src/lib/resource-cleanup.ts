@@ -9,8 +9,7 @@
 export function setupResourceCleanup(cleanup: () => Promise<void>) {
   let closingPromise: Promise<void>;
   const processExit = process.exit;
-  // @ts-expect-error - Async function
-  process.exit = async (code?: number | undefined) => {
+  const exitWithCleanup = async (code?: number | undefined) => {
     // This function will be called multiple times,
     // but we only want to cleanup resources once.
     closingPromise ??= cleanup();
@@ -18,9 +17,16 @@ export function setupResourceCleanup(cleanup: () => Promise<void>) {
     // If the cleanup function hangs, we want to ensure the process exits.
     const timeout = setTimeout(() => processExit(code), 5000);
 
-    await closingPromise;
-
-    clearTimeout(timeout);
+    try {
+      await closingPromise;
+    } finally {
+      clearTimeout(timeout);
+    }
     return processExit(code);
+  };
+  // @ts-expect-error - Cleanup must finish before the original exit runs.
+  process.exit = exitWithCleanup;
+  return () => {
+    if (process.exit === exitWithCleanup) process.exit = processExit;
   };
 }

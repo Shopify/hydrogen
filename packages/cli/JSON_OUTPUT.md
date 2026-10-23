@@ -1,0 +1,30 @@
+# Streaming JSON output
+
+`hydrogen codegen --json --watch` writes one compact JSON object per line
+(JSONL) to stdout. This is a continuous stream with no final result object.
+Without `--watch`, the existing single JSON result is unchanged. `--no-input`
+controls prompts independently from the output format.
+
+The stream starts with `{"type":"watch-started","directory":"/absolute/project"}`.
+Each generation has a positive, increasing `cycle`: `generation-started`, then
+`generation-completed` with `files: [{path, sources}]`, or `generation-failed`
+with `error: {message}`. Paths are absolute native filesystem paths; source
+patterns and generated file contents retain their existing formats. A failed
+generation is recoverable; later source changes retry it.
+
+JSON mode watches configured schemas and documents, project configuration, and
+React Router sources, excluding dependencies, Git data, build output,
+React Router's generated types, and the reported GraphQL output files. Generation
+cycles run serially and coalesce changes received during a cycle. Configurations
+are reloaded for each cycle. Text mode retains GraphQL Codegen's native watcher.
+
+Diagnostics belong to stderr. CLI Kit diagnostics use its existing JSON event
+schema; dependencies may also write native warnings to stderr. Consumers must
+read stdout and stderr separately. `--json-schema` and non-interactive help
+describe both the finite result and watch records.
+
+SIGINT and SIGTERM stop the watcher, wait for active generation and file writes,
+then emit `{"type":"watch-stopped"}`. Their exit codes are 130 and 143,
+respectively. Fatal setup or watcher errors close owned resources and use CLI
+Kit's existing compact `{error: {...}}` document on stdout with a nonzero exit.
+An abruptly killed process cannot emit a shutdown record.
