@@ -37,7 +37,6 @@ The suite finds the elements in this table with `data-testid` attributes and Pla
 | `cart-line-increase` | The increase quantity control of a cart line |
 | `cart-line-decrease` | The decrease quantity control of a cart line |
 | `cart-line-remove` | The remove control of a cart line |
-| `cart-status` | The cart totals status region |
 
 IDs can repeat, for example a main and a sticky add to cart. The suite narrows each ID to visible elements, and to the expected text or accessible name when it needs a specific one. The storefront can have other test IDs for its own tests. The suite does not read them.
 
@@ -104,7 +103,7 @@ Each line must expose:
 - A visible decrease control with `cart-line-decrease`
 - A visible remove control with `cart-line-remove`
 
-Cart totals must expose a `role="status"` region that says `Updating cart totals` while cart totals are stale, then `Cart totals updated` after mutation settlement. Do not announce `Cart totals updated` on initial idle render before a mutation cycle. The region may be visually hidden if it remains available to assistive technology. The suite finds this region with `cart-status` and matches the English text.
+Cart totals must expose a `role="status"` region that says `Updating cart totals` while cart totals are stale, then `Cart totals updated` after mutation settlement. Do not announce `Cart totals updated` on initial idle render before a mutation cycle. The region may be visually hidden if it remains available to assistive technology.
 
 Cart UI that has no ID in Test IDs is found by role, label, and text.
 

@@ -19,5 +19,5 @@ const message = computed(() => {
 </script>
 
 <template>
-  <span role="status" class="sr-only" data-testid="cart-status">{{ message }}</span>
+  <span role="status" class="sr-only">{{ message }}</span>
 </template>

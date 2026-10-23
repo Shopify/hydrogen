@@ -274,10 +274,7 @@ async function expectCartTotalsStatus(
   cartPath: string,
 ): Promise<void> {
   try {
-    const status = page
-      .getByTestId("cart-status")
-      .filter({ visible: true, hasText: message })
-      .first();
+    const status = page.getByRole("status").filter({ visible: true, hasText: message }).first();
     await expect(status).toBeAttached({
       timeout: CART_SETTLE_TIMEOUT_MS,
     });
@@ -287,7 +284,7 @@ async function expectCartTotalsStatus(
       routePath: cartPath,
       expectation: `Cart exposes a status region containing "${message}" while totals settle.`,
       likelyFix:
-        'Put data-testid="cart-status" on the role="status" region that changes from updating to updated around cart mutations.',
+        'Render a role="status" region that changes from updating to updated around cart mutations.',
       docsAnchor: "#cart-line-items",
     });
   }

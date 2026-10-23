@@ -301,7 +301,6 @@ export function CartDrawer() {
         aria-live="polite"
         aria-atomic="true"
         data-cart-status
-        data-testid="cart-status"
       >
         {statusMessage}
       </span>
