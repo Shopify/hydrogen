@@ -236,6 +236,7 @@ export type {
   CreatePredictiveSearchStoreOptions,
   PredictiveSearchActions,
   PredictiveSearchData,
+  PredictiveSearchDataFromHandlers,
   PredictiveSearchArticleItem,
   PredictiveSearchCollectionItem,
   PredictiveSearchFormAttributes,
@@ -253,6 +254,7 @@ export type {
   PredictiveSearchStatus,
   PredictiveSearchStore,
   QueryPredictiveSearchOptions,
+  SearchResultUrlOptions,
 } from "./predictive-search";
 
 export { formatMoney } from "./money";

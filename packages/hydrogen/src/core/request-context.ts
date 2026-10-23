@@ -122,12 +122,6 @@ type ShopifyRequestContextBase = {
    */
   consumeStorefrontResponseHeaders(headers: Headers): void;
   /**
-   * Marks the final response as private and uncacheable because the response holds customer data.
-   * The Customer Account API client and the customer session call the method for you.
-   * @internal
-   */
-  markResponseAsPersonalized(reason: string): void;
-  /**
    * Lets the final response set Shopify cookies before the customer has a Shopify session, and
    * marks the response as private and uncacheable. The UCP MCP proxy calls the method for you.
    * @internal
@@ -140,9 +134,13 @@ type ShopifyRequestContextBase = {
   /** Returns the incoming request's headers with Shopify's request headers added. Pass the headers when you forward the request to a proxy or another origin. */
   getForwardedRequestHeaders(): Headers;
   /**
+   * Marks the final response as private and uncacheable because the response holds customer data, such as a server-rendered cart. `applyResponseHeaders()` then sets `Cache-Control: private, no-store, max-age=0, must-revalidate` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. Call the method before `applyResponseHeaders()`, and only on requests whose response holds customer data, so other responses stay cacheable. Pass a short `reason` that names the customer data. The Customer Account API client and the customer session call the method for you.
+   */
+  markResponseAsPersonalized(reason: string): void;
+  /**
    * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.
    *
-   * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses that hold customer data private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.
+   * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses marked with `markResponseAsPersonalized()` private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.
    */
   applyResponseHeaders(headers: Headers): void;
 };

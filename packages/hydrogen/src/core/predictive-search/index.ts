@@ -23,7 +23,10 @@ export type {
   QueryPredictiveSearchOptions,
 } from "./search";
 export { createPredictiveSearchServerHandlers } from "./server-handlers";
-export type { CreatePredictiveSearchServerHandlersOptions } from "./server-handlers";
+export type {
+  CreatePredictiveSearchServerHandlersOptions,
+  PredictiveSearchDataFromHandlers,
+} from "./server-handlers";
 export { DEFAULT_PREDICTIVE_SEARCH_DEBOUNCE_IN_MS, createPredictiveSearchStore } from "./store";
 export type {
   CreatePredictiveSearchStoreOptions,
@@ -43,4 +46,5 @@ export type {
   PredictiveSearchQueryItem,
   PredictiveSearchQueryItemUrlOptions,
   PredictiveSearchResourceItem,
+  SearchResultUrlOptions,
 } from "./url";
