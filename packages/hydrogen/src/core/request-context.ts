@@ -25,10 +25,10 @@ const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
 
 // UCP discovery (Web Linking): every response links to the shop's UCP profile on the storefront
 // origin, matching Liquid storefronts and Oxygen. Omitting `version` selects the latest stable
-// profile. The rel pattern matches Oxygen's, so Oxygen recognizes this link and does not add its
-// own.
+// profile. This exact form matches Oxygen's own rel pattern, so Oxygen recognizes this link and
+// does not add its own. Existing links are detected by parsing real `rel` parameters, which
+// accepts every well-formed link Oxygen's pattern does, plus relation lists and spaced `=`.
 const UCP_PROFILE_LINK = '</.well-known/ucp>; rel="ucp"';
-const UCP_LINK_REL_PATTERN = /;\s*rel="?ucp"?\s*(?:[;,]|$)/i;
 // Oxygen deployment hostnames route `/.well-known/ucp` to the Online Store, which cannot resolve
 // the shop from them, so a link there would advertise a profile that does not exist.
 // Deliberately unlike the HTML `<link rel="ucp">` tag, which renders here without request context.
@@ -361,8 +361,59 @@ function isUcpProfileHost(url: string | undefined): boolean {
 }
 
 function applyUcpProfileLink(headers: Headers): void {
-  if (UCP_LINK_REL_PATTERN.test(headers.get("link") ?? "")) return;
+  if (linkHeaderIncludesRel(headers.get("link"), "ucp")) return;
   headers.append("link", UCP_PROFILE_LINK);
+}
+
+/**
+ * Whether any link in a `Link` header lists `rel` among its relation types (RFC 8288). Parameter
+ * names and relation types compare case-insensitively; values may be tokens or quoted strings.
+ */
+function linkHeaderIncludesRel(header: string | null, rel: string): boolean {
+  if (!header) return false;
+  const relationType = rel.toLowerCase();
+  return splitLinkHeader(header, ",").some((linkValue) =>
+    // The first segment is the `<URI-Reference>`; the rest are `name [= value]` parameters.
+    splitLinkHeader(linkValue, ";")
+      .slice(1)
+      .some((param) => {
+        const equals = param.indexOf("=");
+        if (equals === -1 || param.slice(0, equals).trim().toLowerCase() !== "rel") return false;
+        return unquoteLinkParam(param.slice(equals + 1).trim())
+          .toLowerCase()
+          .split(/\s+/)
+          .includes(relationType);
+      }),
+  );
+}
+
+/** Splits on `separator` outside `<URI-Reference>`s and quoted strings. */
+function splitLinkHeader(value: string, separator: "," | ";"): string[] {
+  const parts: string[] = [];
+  let start = 0;
+  let inQuotes = false;
+  let inUri = false;
+  for (let index = 0; index < value.length; index++) {
+    const char = value[index];
+    if (inQuotes) {
+      if (char === "\\") index++;
+      else if (char === '"') inQuotes = false;
+    } else if (inUri) {
+      if (char === ">") inUri = false;
+    } else if (char === '"') inQuotes = true;
+    else if (char === "<") inUri = true;
+    else if (char === separator) {
+      parts.push(value.slice(start, index));
+      start = index + 1;
+    }
+  }
+  parts.push(value.slice(start));
+  return parts;
+}
+
+function unquoteLinkParam(value: string): string {
+  if (!value.startsWith('"')) return value;
+  return value.slice(1, value.endsWith('"') ? -1 : undefined).replace(/\\(.)/g, "$1");
 }
 
 function getUrlOrigin(url: string | undefined): string | undefined {

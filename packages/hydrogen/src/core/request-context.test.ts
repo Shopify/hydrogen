@@ -691,6 +691,11 @@ describe("UCP discovery link header", () => {
     '</.well-known/ucp>; rel="ucp"; version="2026-01-11"',
     "</.well-known/ucp>; REL=UCP",
     '</fonts/brand.woff2>; rel=preload, <https://profiles.example.com/ucp>; rel="ucp"',
+    '</.well-known/ucp>; rel="alternate ucp"',
+    '</.well-known/ucp>; rel="ucp alternate"',
+    '</.well-known/ucp>; rel = "ucp"',
+    "</.well-known/ucp>; rel=ucp, </fonts/brand.woff2>; rel=preload; as=font",
+    '</a,b>; rel=preload, </.well-known/ucp>; title="a, b; c"; rel="Alternate UCP"',
   ])("keeps an existing UCP link: %s", (existing) => {
     const headers = applyResponseHeaders(new Request("https://shop.example.com"), {
       link: existing,
@@ -709,8 +714,12 @@ describe("UCP discovery link header", () => {
     expect(headers.get("link")).toBe(UCP_PROFILE_LINK);
   });
 
-  it("does not treat a different relation containing ucp as a UCP link", () => {
-    const existing = '</ucp-docs>; rel="ucp-docs"';
+  it.each([
+    '</ucp-docs>; rel="ucp-docs"',
+    '</x>; title="; rel=ucp"',
+    '</x>; title="rel=\\"ucp\\""; rel=preload',
+    "</x;rel=ucp>; rel=preload",
+  ])("does not treat a link without a UCP relation as a UCP link: %s", (existing) => {
     const headers = applyResponseHeaders(new Request("https://shop.example.com"), {
       link: existing,
     });
