@@ -11,7 +11,7 @@ on:
 
 concurrency:
   # Hardcoded so a workflow_dispatch from any ref queues behind releases
-  # instead of racing their force-push to dist-preview
+  # instead of racing their force-push to dist
   group: release
   # Queue runs instead of cancelling: a cancel that lands between npm
   # publish and tag creation strands state a rerun cannot rebuild. Without
@@ -186,7 +186,7 @@ jobs:
           npx --yes "npm@$npm_version" ci --no-audit --no-fund
           npm run build
 
-      - name: Update dist-preview
+      - name: Update dist
         env:
           DIST_PUSH_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
           HYDROGEN_VERSION: ${{ steps.version.outputs.hydrogen }}
@@ -215,4 +215,4 @@ jobs:
           commit=$(printf 'Update preview templates for @shopify/hydrogen@%s and @shopify/mini-oxygen@%s\n\nSource: %s\n' "$HYDROGEN_VERSION" "$MINI_OXYGEN_VERSION" "$SOURCE_SHA" | git commit-tree "$tree")
           auth=$(printf 'x-access-token:%s' "$DIST_PUSH_TOKEN" | base64 | tr -d '\n')
           git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $auth" \
-            push origin "$commit:refs/heads/dist-preview" --force
+            push origin "$commit:refs/heads/dist" --force

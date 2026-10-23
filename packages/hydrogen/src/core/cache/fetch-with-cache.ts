@@ -145,6 +145,13 @@ export function createFetchWithCache({
               : init,
           );
 
+          // Opaque responses, such as a browser manual redirect, hide their status and body,
+          // so return them unchanged instead of serializing them.
+          if (isOpaqueResponse(response)) {
+            passthroughResponse = response;
+            throw new UnserializableResponseError();
+          }
+
           if (!response.ok) {
             if (isStaleIfErrorStatus(response.status)) {
               if (!canSerializeBodyAsText(response)) {
@@ -346,7 +353,8 @@ function annotateResponse(
   cacheStatus: string,
   options: FetchCacheOptions,
 ): Response {
-  if (options.annotateCacheStatus === false) return response;
+  // An opaque response has status 0, which `new Response()` rejects.
+  if (options.annotateCacheStatus === false || isOpaqueResponse(response)) return response;
 
   const headers = new Headers(response.headers);
   headers.append("Cache-Status", cacheStatus);
@@ -371,6 +379,10 @@ function getCacheStatusHeader(value: string): string {
 
 function isJsonResponse(response: Response): boolean {
   return response.headers.get("content-type")?.toLowerCase().includes("json") ?? false;
+}
+
+function isOpaqueResponse(response: Response): boolean {
+  return response.type === "opaque" || response.type === "opaqueredirect";
 }
 
 function isStaleIfErrorStatus(status: number): boolean {
