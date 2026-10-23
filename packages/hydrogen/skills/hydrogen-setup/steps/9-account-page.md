@@ -41,7 +41,7 @@ Invoke the `hydrogen-customer-account` skill for the session/token rules (read-o
 
 ## OAuth Caveat
 
-Completing a real login requires a public HTTPS origin whose `/account/authorize` callback is registered in the Customer Account app configuration. When the local origin is not registered, verify the signed-out rendering and handler wiring; skip the signed-in checks and say so instead of faking them.
+Completing a real login requires a public HTTPS origin whose `/account/authorize` callback is registered in the Customer Account app configuration. When account routes fail with "Customer Account OAuth origin must use HTTPS", follow the `hydrogen-local-https` skill. On Vite-based frameworks, the path is the `dev:https` script run in a real terminal outside CI: the `localHttps` Vite plugin then serves trusted HTTPS and registers the Customer Account callback, JavaScript origin, and logout URLs through Shopify CLI (Next.js needs those URLs configured manually; see that skill). Agent shells usually run with `CI` set and no TTY, which skips both, so ask the user to run `dev:https` themselves. `npx hydrogen certs install` only provisions certificate files; it registers no URLs. If the user can't run `dev:https`, verify the signed-out rendering and handler wiring; skip the signed-in checks and say so instead of faking them.
 
 ## Continue when
 

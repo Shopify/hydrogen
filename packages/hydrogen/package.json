@@ -40,7 +40,8 @@
     },
     "./customer-account": {
       "types": "./dist/customer-account/index.d.mts",
-      "import": "./dist/customer-account/index.mjs"
+      "import": "./dist/customer-account/index.mjs",
+      "default": "./dist/customer-account/index.mjs"
     },
     "./customer-account-api-types": "./dist/customer-account-api-types.d.ts",
     "./customer-account.schema.json": "./dist/customer-account.schema.json",
@@ -55,7 +56,8 @@
     },
     "./vite": {
       "types": "./dist/vite/index.d.mts",
-      "import": "./dist/vite/index.mjs"
+      "import": "./dist/vite/index.mjs",
+      "default": "./dist/vite/index.mjs"
     },
     "./react": {
       "types": {
@@ -63,6 +65,10 @@
         "default": "./dist/react/index.d.mts"
       },
       "import": {
+        "development": "./dist/development/react/index.mjs",
+        "default": "./dist/react/index.mjs"
+      },
+      "default": {
         "development": "./dist/development/react/index.mjs",
         "default": "./dist/react/index.mjs"
       }
@@ -73,6 +79,10 @@
         "default": "./dist/vue/index.d.mts"
       },
       "import": {
+        "development": "./dist/development/vue/index.mjs",
+        "default": "./dist/vue/index.mjs"
+      },
+      "default": {
         "development": "./dist/development/vue/index.mjs",
         "default": "./dist/vue/index.mjs"
       }
