@@ -15,6 +15,20 @@ describe("Customer Account API gql", () => {
     );
   });
 
+  it("appends a sub-fragment once when two composed fragments both spread it", () => {
+    const money = gql(`fragment Money on MoneyV2 { amount currencyCode }`);
+    const lineItem = gql(`fragment LineItem on LineItem { title price { ...Money } }`, [money]);
+    const order = gql(`fragment OrderFields on Order { id totalPrice { ...Money } }`, [money]);
+    const query = gql(
+      `query Orders { customer { orders(first: 1) { nodes { ...OrderFields lineItems(first: 1) { nodes { ...LineItem } } } } } }`,
+      [lineItem, order],
+    );
+
+    expect(query.source.split("fragment Money on MoneyV2").length - 1).toBe(1);
+    expect(query.source.split("fragment LineItem on LineItem").length - 1).toBe(1);
+    expect(query.source.split("fragment OrderFields on Order").length - 1).toBe(1);
+  });
+
   it("exposes declared variable names", () => {
     const query = gql(
       `query CurrentCustomer($language: LanguageCode) @inContext(language: $language) { customer { firstName } }`,

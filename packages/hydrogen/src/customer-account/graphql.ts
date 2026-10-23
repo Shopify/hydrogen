@@ -1,6 +1,7 @@
 import type { DocumentDecoration, initGraphQLTada as InitGraphQLTada } from "gql.tada";
 
 import { isObjectRecord } from "../core/utils/record";
+import { appendFragments } from "../graphql/fragments";
 import type { introspection } from "../graphql/generated/customer-account-graphql-env";
 import type { CustomerAccountScalars } from "../graphql/scalars";
 import type { InferResult, InferVariables } from "./type-resolver";
@@ -22,9 +23,12 @@ export type CustomerAccountDocument<
   Result = unknown,
   Variables = never,
   Source extends string = string,
+  Parts extends readonly string[] = readonly string[],
 > = DocumentDecoration<Result, Variables> & {
   readonly [CUSTOMER_ACCOUNT_DOCUMENT]: true;
   readonly source: Source;
+  /** The operation text followed by each distinct fragment text the document appends. The property exists only in types. */
+  readonly parts?: Parts;
 };
 
 /** Any Customer Account API document. Use the type as a constraint when a function accepts any document. */
@@ -35,20 +39,59 @@ export type SourceOf<Doc> = Doc extends { readonly source: infer Source extends 
   ? Source
   : never;
 
+/** The operation text and distinct fragment texts of a document. A document without parts is one part: its source. */
+type PartsOf<Doc> = Doc extends { readonly parts?: infer Parts extends readonly string[] }
+  ? string[] extends Parts
+    ? readonly [SourceOf<Doc>]
+    : Parts
+  : readonly [SourceOf<Doc>];
+
+type Includes<Items extends readonly string[], Item extends string> = Items extends readonly [
+  infer First,
+  ...infer Rest extends readonly string[],
+]
+  ? [First] extends [Item]
+    ? [Item] extends [First]
+      ? true
+      : Includes<Rest, Item>
+    : Includes<Rest, Item>
+  : false;
+
+type Dedupe<
+  Items extends readonly string[],
+  Seen extends readonly string[] = readonly [],
+> = Items extends readonly [infer First extends string, ...infer Rest extends readonly string[]]
+  ? Includes<Seen, First> extends true
+    ? Dedupe<Rest, Seen>
+    : readonly [First, ...Dedupe<Rest, readonly [...Seen, First]>]
+  : readonly [];
+
+type FlattenParts<Fragments extends readonly AnyCustomerAccountDocument[]> =
+  Fragments extends readonly [
+    infer First extends AnyCustomerAccountDocument,
+    ...infer Rest extends readonly AnyCustomerAccountDocument[],
+  ]
+    ? readonly [...PartsOf<First>, ...FlattenParts<Rest>]
+    : readonly [];
+
+type JoinParts<Parts extends readonly string[]> = Parts extends readonly [infer Only extends string]
+  ? Only
+  : Parts extends readonly [infer First extends string, ...infer Rest extends readonly string[]]
+    ? `${First}\n${JoinParts<Rest>}`
+    : "";
+
+/** The operation text of a document followed by every distinct fragment text from its fragments, nested fragments included. */
+type ComposedParts<
+  Source extends string,
+  Fragments extends readonly AnyCustomerAccountDocument[],
+> = Dedupe<readonly [Source, ...FlattenParts<Fragments>]>;
+
 /**
- * Joins the source strings of a tuple of fragment documents with newlines at the type level. An empty tuple produces `""`.
+ * Joins the source strings of a tuple of fragment documents with newlines at the type level, each distinct fragment once. An empty tuple produces `""`.
  */
-export type FragmentSources<Fragments extends readonly AnyCustomerAccountDocument[]> =
-  Fragments extends readonly []
-    ? ""
-    : Fragments extends readonly [infer Only extends AnyCustomerAccountDocument]
-      ? SourceOf<Only>
-      : Fragments extends readonly [
-            infer First extends AnyCustomerAccountDocument,
-            ...infer Rest extends readonly AnyCustomerAccountDocument[],
-          ]
-        ? `${SourceOf<First>}\n${FragmentSources<Rest>}`
-        : string;
+export type FragmentSources<Fragments extends readonly AnyCustomerAccountDocument[]> = JoinParts<
+  Dedupe<FlattenParts<Fragments>>
+>;
 
 /**
  * Combines an operation source with the sources of its fragments at the type level. With no fragments, the result is the operation source.
@@ -58,7 +101,7 @@ export type FragmentSources<Fragments extends readonly AnyCustomerAccountDocumen
 export type ComposedSource<
   Source extends string,
   Fragments extends readonly AnyCustomerAccountDocument[],
-> = FragmentSources<Fragments> extends "" ? Source : `${Source}\n${FragmentSources<Fragments>}`;
+> = string[] extends Fragments ? string : JoinParts<ComposedParts<Source, Fragments>>;
 
 type CustomerAccountDocumentValue = AnyCustomerAccountDocument & {
   readonly variableNames: ReadonlySet<string>;
@@ -78,7 +121,8 @@ type CustomerAccountGql = {
   ): CustomerAccountDocument<
     InferResult<DocumentSource>,
     InferVariables<DocumentSource>,
-    DocumentSource
+    DocumentSource,
+    ComposedParts<Source, Fragments>
   >;
 } & CustomerAccountTadaGql;
 
@@ -128,14 +172,11 @@ export const gql = ((source: string, fragments?: readonly CustomerAccountDocumen
   let query = source;
 
   if (fragments) {
-    const seen = new Set<string>();
-    for (const fragment of fragments) {
-      assertCustomerAccountDocument(fragment);
-      if (!seen.has(fragment.source)) {
-        seen.add(fragment.source);
-        query += "\n" + fragment.source;
-      }
-    }
+    for (const fragment of fragments) assertCustomerAccountDocument(fragment);
+    query = appendFragments(
+      source,
+      fragments.map((fragment) => fragment.source),
+    );
   }
 
   const document = {

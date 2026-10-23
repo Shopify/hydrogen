@@ -39,6 +39,19 @@ const CUSTOMER_ORDER_QUERY = customerAccountGql(`query Order($orderId: ID!) { or
 const CUSTOMER_LANGUAGE_QUERY = customerAccountGql(
   `query CustomerDetails($language: LanguageCode) @inContext(language: $language) { customer { id } }`,
 );
+const MONEY_FRAGMENT = customerAccountGql(`fragment Money on MoneyV2 { amount currencyCode }`);
+const LINE_ITEM_FRAGMENT = customerAccountGql(
+  `fragment LineItem on LineItem { title price { ...Money } }`,
+  [MONEY_FRAGMENT],
+);
+const ORDER_FIELDS_FRAGMENT = customerAccountGql(
+  `fragment OrderFields on Order { id totalPrice { ...Money } }`,
+  [MONEY_FRAGMENT],
+);
+const ORDERS_WITH_SHARED_SUB_FRAGMENT_QUERY = customerAccountGql(
+  `query Orders { customer { orders(first: 1) { nodes { ...OrderFields lineItems(first: 1) { nodes { ...LineItem } } } } } }`,
+  [LINE_ITEM_FRAGMENT, ORDER_FIELDS_FRAGMENT],
+);
 
 describe("Customer Account API type boundary", () => {
   it("exposes OAuth session helpers separately from the GraphQL client", () => {
@@ -67,6 +80,19 @@ describe("Customer Account API type boundary", () => {
   it("accepts Customer Account documents on the Customer Account client", () => {
     const call = () => customerAccount.graphql(CUSTOMER_QUERY, { accessToken: customerAccountAccessToken });
     expectTypeOf(call).toBeFunction();
+  });
+
+  it("infers fields when two composed fragments share a sub-fragment", () => {
+    const call = () =>
+      customerAccount.graphql(ORDERS_WITH_SHARED_SUB_FRAGMENT_QUERY, {
+        accessToken: customerAccountAccessToken,
+      });
+    type Data = NonNullable<Awaited<ReturnType<typeof call>>["data"]>;
+    type Order = Data["customer"]["orders"]["nodes"][number];
+    type LineItem = Order["lineItems"]["nodes"][number];
+
+    expectTypeOf<Order["totalPrice"]>().toHaveProperty("amount");
+    expectTypeOf<NonNullable<LineItem["price"]>>().toHaveProperty("currencyCode");
   });
 
   it("requires per-call access tokens", () => {

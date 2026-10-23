@@ -59,6 +59,19 @@ const SHOP_WITH_COMMA_SEPARATED_BRANDED_COMPOSED_FRAGMENT_QUERY = gql(
   gql(`query { shop { name, ...ShopFields } }`),
   [SHOP_FIELDS_FRAGMENT],
 );
+const IMAGE_FRAGMENT = gql(`fragment Image on Image { url altText }`);
+const PRODUCT_CARD_WITH_IMAGE_FRAGMENT = gql(
+  `fragment ProductCardWithImage on Product { handle featuredImage { ...Image } }`,
+  [IMAGE_FRAGMENT],
+);
+const COLLECTION_CARD_WITH_IMAGE_FRAGMENT = gql(
+  `fragment CollectionCardWithImage on Collection { handle image { ...Image } }`,
+  [IMAGE_FRAGMENT],
+);
+const HOME_WITH_SHARED_SUB_FRAGMENT_QUERY = gql(
+  `query HomeWithSharedSubFragment { collections(first: 1) { nodes { ...CollectionCardWithImage } } products(first: 1) { nodes { ...ProductCardWithImage } } }`,
+  [PRODUCT_CARD_WITH_IMAGE_FRAGMENT, COLLECTION_CARD_WITH_IMAGE_FRAGMENT],
+);
 const PRODUCT_WITH_FRAGMENT_FIRST_QUERY = gql(
   `fragment ProductSummary on Product { title handle }
    query ProductWithFragmentFirst($handle: String!) { product(handle: $handle) { ...ProductSummary } }`,
@@ -720,6 +733,16 @@ describe('type tests', () => {
       expectTypeOf<Shop>().not.toBeAny();
       expectTypeOf<Shop>().toHaveProperty('name');
       expectTypeOf<Shop>().toHaveProperty('description');
+    });
+
+    it('ResultOf includes fields when two composed fragments share a sub-fragment', () => {
+      type R = ResultOf<typeof HOME_WITH_SHARED_SUB_FRAGMENT_QUERY>;
+      type Product = R['products']['nodes'][number];
+      type Collection = R['collections']['nodes'][number];
+
+      expectTypeOf<Product>().not.toBeAny();
+      expectTypeOf<NonNullable<Product['featuredImage']>>().toHaveProperty('url');
+      expectTypeOf<NonNullable<Collection['image']>>().toHaveProperty('altText');
     });
 
     it('ResultOf uses the operation when a document starts with a fragment', () => {
