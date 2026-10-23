@@ -3,7 +3,10 @@ import { CUSTOMER_ACCOUNT_API_VERSION, DEFAULT_TIMEOUT_IN_MS } from "../core/con
 import type { ShopifyRequestContext } from "../core/request-context";
 import { isObjectRecord } from "../core/utils/record";
 import type { introspection } from "../graphql/generated/customer-account-graphql-env";
-import type { InferVariableNamesDeclaredAs } from "../graphql/type-resolver";
+import type {
+  InferVariableNamesByEnumValue,
+  InferVariableNamesDeclaredAs,
+} from "../graphql/type-resolver";
 import {
   CustomerAccountApiError,
   CustomerAccountAuthenticationError,
@@ -88,18 +91,11 @@ type ResultOfDoc<Doc> =
 type VariablesOfDoc<Doc> =
   Doc extends CustomerAccountDocument<unknown, infer Variables, string> ? Variables : never;
 type I18nVariableTypes = typeof CUSTOMER_ACCOUNT_I18N_VARIABLE_TYPES;
-type I18nEnum<K extends keyof I18nVariableTypes> =
-  introspection["types"][I18nVariableTypes[K]]["enumValues"];
-type IsExactly<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
-// Documents typed without a source literal only expose resolved variable types, so an exact enum match stands in for the declared type.
-type I18nVariableNamesByValue<Variables> = {
-  [K in keyof Variables & keyof I18nVariableTypes]-?: IsExactly<
-    NonNullable<Variables[K]>,
-    I18nEnum<K>
-  > extends true
-    ? K
-    : never;
-}[keyof Variables & keyof I18nVariableTypes];
+type I18nVariableNamesByValue<Variables> = InferVariableNamesByEnumValue<
+  Variables,
+  I18nVariableTypes,
+  introspection
+>;
 /** The variables the client fills when omitted: those declared with the expected type, such as `$language: LanguageCode`. */
 type I18nVariableNamesOfDoc<Doc> =
   string extends SourceOf<Doc>
