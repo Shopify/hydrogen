@@ -267,6 +267,8 @@ function OptionValueControl(
         href={href}
         style={style}
         aria-current={value.selected ? "true" : undefined}
+        // Links to another product in a combined listing navigate; the rest update in place.
+        data-rmx-prefetch={onSelect ? undefined : "intent"}
         data-rmx-reset-scroll="false"
         data-rmx-history="replace"
         mix={[

@@ -37,20 +37,8 @@ export function Document(handle: Handle<DocumentProps>) {
           <meta name="viewport" content="width=device-width,initial-scale=1" />
           <title>{title}</title>
           <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-          {/*
-           * Client navigations reconcile the head by position and can re-insert nodes, and
-           * re-inserting a stylesheet briefly unstyles the page. The key matches the stylesheet
-           * across pages (a new href after a deploy is a new key), and `data-rmx-preserve-dom`
-           * keeps it in place. Tags that only some pages render go last.
-           */}
           {assets.stylesheets.map((href) => (
-            <link
-              key={href}
-              data-rmx-key={`stylesheet:${href}`}
-              data-rmx-preserve-dom
-              rel="stylesheet"
-              href={href}
-            />
+            <link key={href} rel="stylesheet" href={href} />
           ))}
           <ImportMap value={assets.scriptEntry.importMap} />
           {assets.scriptEntry.preloads.map((href) => (
@@ -64,6 +52,7 @@ export function Document(handle: Handle<DocumentProps>) {
             <ShopifyTag descriptor={descriptor} />
           ))}
           <script type="module" src={assets.scriptEntry.href} />
+          {/* Client navigations match head tags by position, so tags only some pages render go last. */}
           {description ? <meta name="description" content={description} /> : null}
           {canonicalPath ? <link rel="canonical" href={canonicalPath} /> : null}
         </head>

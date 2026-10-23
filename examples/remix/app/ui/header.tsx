@@ -36,6 +36,7 @@ export function Header(handle: Handle<{ layout: Layout; pathname: string }>) {
       <header mix={headerStyle}>
         <a
           href={localizePath(routes.home.href(), pathPrefix)}
+          data-rmx-prefetch="intent"
           aria-current={pathname === "/" ? "page" : undefined}
         >
           <strong>{layout.header.shop.name}</strong>
@@ -46,6 +47,7 @@ export function Header(handle: Handle<{ layout: Layout; pathname: string }>) {
               key={link.id}
               mix={menuItem}
               href={link.url}
+              data-rmx-prefetch={link.external ? undefined : "intent"}
               aria-current={isCurrent(link, pathname, pathPrefix) ? "page" : undefined}
             >
               {link.title}

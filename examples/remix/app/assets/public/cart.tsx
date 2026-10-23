@@ -248,6 +248,7 @@ function CartEmpty(handle: Handle<{ layout: CartLayout; pathPrefix: string }>) {
       <br />
       <a
         href={localizePath(routes.collections.index.href(), handle.props.pathPrefix)}
+        data-rmx-prefetch="viewport"
         mix={handle.props.layout === "aside" ? on("click", closeAsides) : undefined}
       >
         Continue shopping →
@@ -292,7 +293,11 @@ function CartLineItem(
             />
           ) : null}
           <div>
-            <a href={productUrl} mix={layout === "aside" ? on("click", closeAsides) : undefined}>
+            <a
+              href={productUrl}
+              data-rmx-prefetch="intent"
+              mix={layout === "aside" ? on("click", closeAsides) : undefined}
+            >
               <p>
                 <strong>{merchandise.product.title}</strong>
               </p>

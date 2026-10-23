@@ -32,7 +32,7 @@ export function Footer(handle: Handle<{ layout: Layout }>) {
                 {link.title}
               </a>
             ) : (
-              <a key={link.id} href={link.url}>
+              <a key={link.id} href={link.url} data-rmx-prefetch="intent">
                 {link.title}
               </a>
             ),

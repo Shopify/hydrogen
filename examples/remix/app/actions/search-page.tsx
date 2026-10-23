@@ -218,7 +218,7 @@ export function SearchPage(
                       });
                       return (
                         <div mix={resultItemStyle} key={product.id}>
-                          <a href={href}>
+                          <a href={href} data-rmx-prefetch="intent">
                             {variant?.image ? (
                               <Image
                                 data={variant.image}
@@ -246,6 +246,7 @@ export function SearchPage(
                     {items.pages.map((page) => (
                       <div mix={resultItemStyle} key={page.id}>
                         <a
+                          data-rmx-prefetch="intent"
                           href={getSearchResultUrl({
                             baseUrl: localizePath(
                               routes.pages.show.href({ handle: page.handle }),
@@ -270,6 +271,7 @@ export function SearchPage(
                     {items.articles.map((article) => (
                       <div mix={resultItemStyle} key={article.id}>
                         <a
+                          data-rmx-prefetch="intent"
                           href={getSearchResultUrl({
                             baseUrl: localizePath(
                               routes.blogs.article.href({

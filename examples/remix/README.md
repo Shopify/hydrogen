@@ -77,6 +77,8 @@ Hydrogen primitives in use:
 - **Customer accounts.** Remix's cookie session middleware backs Hydrogen's session manager contract, so Hydrogen's OAuth handlers write to the request's session and Remix commits the cookie. Remix's auth middleware reads the result through a custom scheme around `getOrRefreshAccessToken`.
 - **Analytics.** `getShopifyScriptTags` in the document head, `initializeShopifyScripts` in the browser entry, page views on each top-frame reload, and product, collection, search, and cart view events from small islands.
 
+Links prefetch where the Skeleton's do, with Remix's `data-rmx-prefetch`: the header and footer menus, product and collection cards, the blog list, search results, cart lines, and option links to another product use `"intent"` (hover, focus, or press), and the empty cart's "Continue shopping" link uses `"viewport"`. External menu links aren't marked, and neither is Account, because a signed-out request to it starts the login flow.
+
 ## Verification
 
 The [storefront E2E suite](../../packages/storefront-e2e) runs against `dev` in CI (`.github/workflows/storefront-e2e.yml`), including the no-JavaScript variant checks. It also passes against `start`. To run it locally against a running server:
@@ -93,6 +95,7 @@ The collection filter group skips, because the Skeleton's collection page has no
 
 - **Pagination** uses previous and next page links instead of the Skeleton's client-side "load more" list.
 - **Asides** are native `<dialog>` elements instead of a React context.
+- **Prefetching warms assets, not page data.** The Skeleton's `prefetch="intent"` loads the route's modules and loader data. Here a prefetch loads the destination's HTML and starts fetching its scripts and styles, but the click requests the HTML again: Hydrogen marks pages that embed the cart and login state `private, no-store`, so the browser can't reuse the prefetched response.
 - **Styles** are split: the Skeleton's `app.css` keeps only global rules, and component rules are `css()` mixins next to their components. The rendered styles match the Skeleton's stylesheet.
 - **Runs on Node, not Oxygen.** The Skeleton deploys to Oxygen. This example uses Remix's own Node server, so it has no Worker build and no `shopify hydrogen deploy` script.
 - **Carts aren't connected to the signed-in customer.** Cart handlers are created without `customerSession`, like the other examples, so checkout isn't pre-authenticated and login doesn't attach the cart.

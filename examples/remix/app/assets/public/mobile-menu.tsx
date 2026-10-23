@@ -16,6 +16,7 @@ export const MobileMenuAside = clientEntry(
         <nav mix={mobileMenuStyle} role="navigation">
           <a
             href={localizePath(routes.home.href(), handle.props.pathPrefix)}
+            data-rmx-prefetch="intent"
             mix={on("click", closeAsides)}
           >
             Home
@@ -25,6 +26,7 @@ export const MobileMenuAside = clientEntry(
               key={link.id}
               href={link.url}
               target={link.external ? "_blank" : undefined}
+              data-rmx-prefetch={link.external ? undefined : "intent"}
               rel={link.external ? "noopener noreferrer" : undefined}
               mix={[menuItem, on("click", closeAsides)]}
             >

@@ -54,6 +54,7 @@ export function ProductItem(
       <a
         mix={productItemStyle}
         href={localizePath(routes.products.show.href({ handle: product.handle }), pathPrefix)}
+        data-rmx-prefetch="intent"
       >
         {image ? (
           <Image

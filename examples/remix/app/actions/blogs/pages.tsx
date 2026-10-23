@@ -154,6 +154,7 @@ export function BlogsPage(handle: Handle<{ blogs: Blogs; pathPrefix: string; url
                 key={blog.handle}
                 class="blog"
                 href={localizePath(routes.blogs.show.href({ blogHandle: blog.handle }), pathPrefix)}
+                data-rmx-prefetch="intent"
               >
                 <h2>{blog.title}</h2>
               </a>

@@ -143,6 +143,7 @@ export function CollectionsPage(
                   routes.collections.show.href({ handle: collection.handle }),
                   pathPrefix,
                 )}
+                data-rmx-prefetch="intent"
               >
                 {collection.image ? (
                   <Image
