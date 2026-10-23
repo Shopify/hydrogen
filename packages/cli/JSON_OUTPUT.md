@@ -1,6 +1,6 @@
 # Streaming JSON output
 
-`hydrogen codegen --json --watch` writes one compact JSON object per line
+`hydrogen codegen --json --watch` and `hydrogen build --json --watch` write one compact JSON object per line
 (JSONL) to stdout. This is a continuous stream with no final result object.
 Without `--watch`, the existing single JSON result is unchanged. `--no-input`
 controls prompts independently from the output format.
@@ -11,6 +11,13 @@ Each generation has a positive, increasing `cycle`: `generation-started`, then
 with `error: {message}`. Paths are absolute native filesystem paths; source
 patterns and generated file contents retain their existing formats. A failed
 generation is recoverable; later source changes retry it.
+
+Build watch uses `build-started`, followed by `build-completed` or `build-failed`,
+with the same cycle numbering. A completed build includes `directory`,
+`clientDirectory`, `serverDirectory`, and `serverPath`, using the finite build
+result's meanings. Completion follows the server's bundle write after the client
+build succeeds. Client and server compilation failures are recoverable. Shutdown
+closes both Vite watchers; a server setup failure also closes the client watcher.
 
 JSON mode watches configured schemas and documents, project configuration, and
 React Router sources, excluding dependencies, Git data, build output,
