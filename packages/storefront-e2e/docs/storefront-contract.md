@@ -62,7 +62,11 @@ Set STOREFRONT_SKIP_NO_JS_VARIANTS=true to skip the no-JavaScript check for a st
 
 Cart lines must be visible list items containing the product title.
 
-After Add to cart, the suite must be able to inspect the added line in a cart drawer dialog before navigating to the cart page. Either open the drawer immediately with the optimistic line, or expose a visible page-level button whose accessible name begins with Cart, Open cart, or View cart so the suite can open the drawer while the update is pending.
+After Add to cart, the suite must be able to inspect the added line in a cart drawer dialog before navigating to the cart page. Either open the drawer immediately with the optimistic line, or expose a visible page-level button or link whose accessible name begins with Cart, Open cart, or View cart so the suite can open the drawer while the update is pending.
+
+Render the cart on the server. If the cart loads in the browser, an Add to cart that starts before the load finishes builds on an empty cart, and the stock-limit rollback test fails.
+
+A document that contains a server-rendered cart holds buyer-specific state. Give it the same cache policy as the cart GET route: `Cache-Control: private, no-store, max-age=0, must-revalidate`, with no `Surrogate-Control` or vendor `*-Cache-Control` headers. Otherwise a shared cache can serve one buyer's cart to another buyer. Call `requestContext.markResponseAsPersonalized()` on requests that render a cart, and `requestContext.applyResponseHeaders()` applies that policy.
 
 Each line must expose:
 
