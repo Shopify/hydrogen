@@ -109,9 +109,7 @@ function ProductPage({ product }: { product: ProductData }) {
 
         {/* Info column */}
         <div className="flex flex-col gap-4 md:sticky md:top-8 md:self-start">
-          <h1 className="type-display" data-testid="product-title">
-            {product.title}
-          </h1>
+          <h1 className="type-display">{product.title}</h1>
           {product.vendor ? (
             <p className="text-on-surface-secondary text-sm">{product.vendor}</p>
           ) : null}

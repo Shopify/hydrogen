@@ -6,10 +6,5 @@ test("product page loads", async ({ data, page }) => {
 
   await page.goto(data.paths.product(firstProduct.handle));
 
-  await expect(
-    page
-      .getByTestId("product-title")
-      .filter({ hasText: firstProduct.title, visible: true })
-      .first(),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: firstProduct.title })).toBeVisible();
 });

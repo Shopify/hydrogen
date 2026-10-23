@@ -23,13 +23,14 @@ Use this skill when you prepare a custom storefront, in any framework, so that t
 
 | Test ID | Put it on |
 | --- | --- |
-| `product-title` | The product title heading |
 | `product-variant-option` | Each option value link or button that selects another variant of the same product, including sold-out values and disabled values for combinations that do not exist |
 | `product-add-to-cart` | The add to cart button |
 
 `product-variant-option` marks option values that select another variant of the same product, including sold-out values and disabled values for combinations that do not exist. The suite tries unselected links first, then buttons, and skips current and disabled values. It follows a link's real `href`, so any URL format works. The no-JavaScript check needs links; `STOREFRONT_SKIP_NO_JS_VARIANTS=true` skips only that check.
 
 The cart and checkout tests click the first visible `product-add-to-cart`.
+
+The product title needs no test ID. The suite requires it to be the page's `<h1>`.
 
 ## How to adopt
 
@@ -57,8 +58,5 @@ Add the attribute to the existing element:
 The suite starts with `getByTestId`, then narrows to visible elements:
 
 ```ts
-const title = page.getByTestId('product-title').filter({visible: true}).first();
-await expect(title).toContainText('Classic Tee');
-
 await page.getByTestId('product-add-to-cart').filter({visible: true}).first().click();
 ```

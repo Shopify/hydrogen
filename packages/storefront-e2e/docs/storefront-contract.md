@@ -27,7 +27,6 @@ The suite finds the elements in this table with `data-testid` attributes and Pla
 
 | Test ID | Put it on |
 | --- | --- |
-| `product-title` | The product title heading |
 | `product-variant-option` | Each option value link or button that selects another variant of the same product, including sold-out values and disabled values for combinations that do not exist |
 | `product-add-to-cart` | The add to cart button |
 
@@ -52,6 +51,10 @@ When a probed collection exposes a Storefront API PRICE_RANGE filter, the page m
 The search page must expose a searchbox. A visible button with an accessible name containing Search is supported; otherwise the suite submits the searchbox with Enter.
 
 The suite discovers a live product title, searches for it, and verifies that product appears in visible results.
+
+## Product Page
+
+The product title must be the page's level-one heading (`<h1>`), with the product title as its accessible name. The suite finds it by role, so it needs no test ID.
 
 ## Variant Options
 

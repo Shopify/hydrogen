@@ -691,9 +691,7 @@ function ProductInfo({
             {product.vendor}
           </p>
         ) : null}
-        <h1 className="type-display text-on-surface" data-testid="product-title">
-          {product.title}
-        </h1>
+        <h1 className="type-display text-on-surface">{product.title}</h1>
         <PriceBlock product={product} selectedVariant={selectedVariant} />
         <InventoryHint selectedVariant={selectedVariant} />
       </div>
