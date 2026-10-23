@@ -1,5 +1,6 @@
 import { createController } from "remix/router";
 
+import { BROWSING_HEADERS } from "../../lib/cache-control.ts";
 import { getPaginationVariables } from "../../lib/pagination.ts";
 import { redirectIfHandleIsLocalized } from "../../lib/redirect.ts";
 import { contentCache, requireData } from "../../lib/storefront.ts";
@@ -27,6 +28,7 @@ export default createController(routes.blogs, {
           pathPrefix={locale.pathPrefix}
           url={new URL(request.url)}
         />,
+        { headers: BROWSING_HEADERS },
       );
     },
 
@@ -42,7 +44,9 @@ export default createController(routes.blogs, {
 
       return (
         redirectIfHandleIsLocalized(request, { handle: params.blogHandle, data: blog }) ??
-        render(<BlogPage blog={blog} pathPrefix={locale.pathPrefix} url={new URL(request.url)} />)
+        render(<BlogPage blog={blog} pathPrefix={locale.pathPrefix} url={new URL(request.url)} />, {
+          headers: BROWSING_HEADERS,
+        })
       );
     },
 
@@ -62,7 +66,7 @@ export default createController(routes.blogs, {
           request,
           { handle: params.articleHandle, data: article },
           { handle: params.blogHandle, data: blog },
-        ) ?? render(<ArticlePage article={article} />)
+        ) ?? render(<ArticlePage article={article} />, { headers: BROWSING_HEADERS })
       );
     },
   },

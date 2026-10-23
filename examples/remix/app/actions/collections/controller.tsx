@@ -1,5 +1,6 @@
 import { createController } from "remix/router";
 
+import { BROWSING_HEADERS } from "../../lib/cache-control.ts";
 import { getPaginationVariables } from "../../lib/pagination.ts";
 import { redirectIfHandleIsLocalized } from "../../lib/redirect.ts";
 import { catalogCache, requireData } from "../../lib/storefront.ts";
@@ -27,6 +28,7 @@ export default createController(routes.collections, {
           pathPrefix={locale.pathPrefix}
           url={new URL(request.url)}
         />,
+        { headers: BROWSING_HEADERS },
       );
     },
 
@@ -41,6 +43,7 @@ export default createController(routes.collections, {
           pathPrefix={locale.pathPrefix}
           url={new URL(request.url)}
         />,
+        { headers: BROWSING_HEADERS },
       );
     },
 
@@ -66,6 +69,7 @@ export default createController(routes.collections, {
           pathPrefix={locale.pathPrefix}
           url={new URL(request.url)}
         />,
+        { headers: BROWSING_HEADERS },
       );
     },
   },

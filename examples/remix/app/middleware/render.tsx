@@ -8,7 +8,9 @@ import {
 import { createContextKey, createMiddleware, type Middleware } from "remix/router";
 
 import { assets, type DocumentAssets } from "../assets.ts";
+import { BROWSING } from "../lib/cache-control.ts";
 import { AppShell } from "../ui/app-shell.tsx";
+import { allowBrowsingCache } from "./browsing-cache.ts";
 import { LayoutContext, type LoadLayout } from "./layout.ts";
 import { LocaleContext } from "./locale.ts";
 
@@ -42,6 +44,14 @@ export function render(documentAssets: DocumentAssets) {
             })
           : null;
 
+        // `BROWSING_HEADERS` opts the page in; `browsingCache()` decides whether the response
+        // keeps the policy, after Hydrogen's response headers.
+        const headers = new Headers(init?.headers);
+        if (headers.get("Cache-Control") === BROWSING) {
+          headers.delete("Cache-Control");
+          allowBrowsingCache(context);
+        }
+
         return renderNode(
           <AppShell
             assets={documentAssets}
@@ -51,7 +61,7 @@ export function render(documentAssets: DocumentAssets) {
           >
             {node}
           </AppShell>,
-          init,
+          { ...init, headers },
         );
       };
     }),

@@ -1,6 +1,7 @@
 import { getSelectedProductOptions } from "@shopify/hydrogen";
 import { createController } from "remix/router";
 
+import { BROWSING_HEADERS } from "../../lib/cache-control.ts";
 import { redirectIfHandleIsLocalized } from "../../lib/redirect.ts";
 import { catalogCache, requireData } from "../../lib/storefront.ts";
 import { routes } from "../../routes.ts";
@@ -31,6 +32,7 @@ export default createController(routes.products, {
 
       return render(
         <ProductPage product={product} pathPrefix={locale.pathPrefix} search={url.search} />,
+        { headers: BROWSING_HEADERS },
       );
     },
   },

@@ -2,7 +2,7 @@ import { cartQueries, createCartCookie, getCartId } from "@shopify/hydrogen";
 import { redirect } from "remix/response/redirect";
 import { createController } from "remix/router";
 
-import { PRIVATE_NO_STORE } from "../lib/cache-control.ts";
+import { BROWSING_HEADERS, PRIVATE_NO_STORE } from "../lib/cache-control.ts";
 import { getDiscountRedirectLocation } from "../lib/discount.ts";
 import { getPaginationVariables } from "../lib/pagination.ts";
 import { localizePath } from "../lib/public/i18n.ts";
@@ -31,6 +31,7 @@ export default createController(routes, {
 
       return render(
         <HomePage featuredCollection={featuredCollection} pathPrefix={locale.pathPrefix} />,
+        { headers: BROWSING_HEADERS },
       );
     },
 
@@ -67,6 +68,7 @@ export default createController(routes, {
             pathPrefix={locale.pathPrefix}
             url={new URL(request.url)}
           />,
+          { headers: BROWSING_HEADERS },
         );
       }
 
@@ -83,6 +85,7 @@ export default createController(routes, {
           pathPrefix={locale.pathPrefix}
           url={new URL(request.url)}
         />,
+        { headers: BROWSING_HEADERS },
       );
     },
 

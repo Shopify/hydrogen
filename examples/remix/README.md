@@ -63,6 +63,7 @@ Every route also matches under a locale prefix (`/en-ca`, `/fr-ca`), like the Sk
 | `app/middleware/shopify.ts` | Request context, Storefront client, customer session, `handleShopifyRoutes`, and post-404 redirects. `shopifyResponseHeaders()` applies Hydrogen's response headers outside the session middleware, after its cookie is set |
 | `app/middleware/layout.ts` | Starts loading the shell (menus, cart, login state) in parallel with the page's own queries. Frame subrequests skip it |
 | `app/middleware/customer-auth.ts` | A `remix/middleware/auth` scheme over Hydrogen's Customer Account session. `requireCustomer()` protects the account controller, sends anonymous requests to Hydrogen's login handler, and gives actions the access token as `context.auth.identity` |
+| `app/middleware/browsing-cache.ts` | Lets the browser reuse an opted-in page's client navigation for 5 seconds, so prefetched pages serve the click that follows. It runs outside Hydrogen's response headers and the session |
 | `app/middleware/render.tsx` | Wraps Remix's streaming renderer so every page renders inside the app shell. `context.renderFragment()` renders frame content without it |
 | `app/actions/**` | Controllers and their pages |
 | `app/assets/public/**` | `clientEntry()` islands: cart, product form, header, predictive search, analytics |
@@ -78,6 +79,8 @@ Hydrogen primitives in use:
 - **Analytics.** `getShopifyScriptTags` in the document head, `initializeShopifyScripts` in the browser entry, page views on each top-frame reload, and product, collection, search, and cart view events from small islands.
 
 Links prefetch where the Skeleton's do, with Remix's `data-rmx-prefetch`: the header and footer menus, product and collection cards, the blog list, search results, cart lines, and option links to another product use `"intent"` (hover, focus, or press), and the empty cart's "Continue shopping" link uses `"viewport"`. External menu links aren't marked, and neither is Account, because a signed-out request to it starts the login flow.
+
+A click within 5 seconds of the prefetch reuses it. Hydrogen sends every page `private, no-store`, because the header reads the customer's login state, so catalog handlers opt in with `BROWSING_HEADERS` and `app/middleware/browsing-cache.ts` applies `private, max-age=5` after Hydrogen's headers. Only client navigations (`X-Remix-Frame: true`) that succeed without setting a cookie qualify, and they vary by `Cookie` and Remix's frame headers. Full documents stay uncacheable because they seed the browser cart store. A client navigation renders into a cart store that ignores embedded cart data once it holds a cart, and creating a cart sets a new cookie, so a cached page can't show a stale cart. The cart page and account pages don't opt in.
 
 ## Verification
 
@@ -95,7 +98,6 @@ The collection filter group skips, because the Skeleton's collection page has no
 
 - **Pagination** uses previous and next page links instead of the Skeleton's client-side "load more" list.
 - **Asides** are native `<dialog>` elements instead of a React context.
-- **Prefetching warms assets, not page data.** The Skeleton's `prefetch="intent"` loads the route's modules and loader data. Here a prefetch loads the destination's HTML and starts fetching its scripts and styles, but the click requests the HTML again: Hydrogen marks pages that embed the cart and login state `private, no-store`, so the browser can't reuse the prefetched response.
 - **Styles** are split: the Skeleton's `app.css` keeps only global rules, and component rules are `css()` mixins next to their components. The rendered styles match the Skeleton's stylesheet.
 - **Runs on Node, not Oxygen.** The Skeleton deploys to Oxygen. This example uses Remix's own Node server, so it has no Worker build and no `shopify hydrogen deploy` script.
 - **Carts aren't connected to the signed-in customer.** Cart handlers are created without `customerSession`, like the other examples, so checkout isn't pre-authenticated and login doesn't attach the cart.

@@ -18,6 +18,7 @@ import seoController from "./actions/seo/controller.ts";
 import type { DocumentAssets } from "./assets.ts";
 import type { Runtime } from "./env.ts";
 import { browserAssets } from "./middleware/browser-assets.ts";
+import { browsingCache } from "./middleware/browsing-cache.ts";
 import { errorPages } from "./middleware/error-pages.ts";
 import { layout } from "./middleware/layout.ts";
 import { locale } from "./middleware/locale.ts";
@@ -36,6 +37,7 @@ import { NotFoundPage } from "./ui/error-pages.tsx";
  * - Static files and compiled browser assets are served first, without sessions or
  *   Hydrogen's personalized-response headers.
  * - The renderer and the outer error boundary wrap everything else.
+ * - The browsing cache policy applies after Hydrogen's response headers and the session cookie.
  * - The locale prefix is resolved before routing.
  * - Hydrogen's response headers are applied outside the session, after its cookie is set.
  * - The session exists before Hydrogen's Customer Account handlers read or write it.
@@ -60,6 +62,7 @@ function createAppRouter(runtimeValue: Runtime, documentAssets: DocumentAssets) 
       browserAssets(),
       runtime(runtimeValue),
       ...render(documentAssets),
+      browsingCache(),
       errorPages(),
       locale(),
       shopifyResponseHeaders(),

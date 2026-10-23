@@ -2,6 +2,7 @@ import { gql } from "@shopify/hydrogen";
 import { unsafeHTML } from "remix/component";
 import { createController } from "remix/router";
 
+import { BROWSING_HEADERS } from "../../lib/cache-control.ts";
 import { localizePath } from "../../lib/public/i18n.ts";
 import { contentCache, requireData } from "../../lib/storefront.ts";
 import { routes } from "../../routes.ts";
@@ -123,6 +124,7 @@ export default createController(routes.policies, {
             </div>
           </div>
         </Document>,
+        { headers: BROWSING_HEADERS },
       );
     },
 
@@ -164,6 +166,7 @@ export default createController(routes.policies, {
             <div innerHTML={unsafeHTML(policy.body)} />
           </div>
         </Document>,
+        { headers: BROWSING_HEADERS },
       );
     },
   },
