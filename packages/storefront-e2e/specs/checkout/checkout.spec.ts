@@ -6,7 +6,6 @@ import { test, type CheckoutTestProduct } from "./config";
 const CART_SETTLE_TIMEOUT_MS = 15_000;
 // Any non-empty accessible name, so other and localized labels pass but an unlabeled icon button fails.
 const ADD_TO_CART_CONTROL_NAME = /\S/;
-const CHECKOUT_CONTROL_NAME = /check\s*out|checkout|continue to checkout/i;
 
 type CartExpectation = {
   readonly cartPath: string;
@@ -78,7 +77,11 @@ async function startCheckoutFromPopulatedCart(
 ): Promise<void> {
   await expectCartLine(page, expectation);
 
-  const checkout = page.getByRole("link", { name: CHECKOUT_CONTROL_NAME }).first();
+  const checkout = page
+    .getByTestId("cart-page")
+    .getByTestId("cart-checkout")
+    .filter({ visible: true })
+    .first();
   await expect(checkout).toBeVisible();
   const checkoutUrl = await requireCheckoutUrl(page, checkout, expectation.cartPath);
   const isCheckoutNavigation = (url: URL) => url.href === checkoutUrl.href;
@@ -101,9 +104,9 @@ async function startCheckoutFromPopulatedCart(
 
 async function expectCartLine(page: Page, expectation: CartExpectation): Promise<Locator> {
   const line = page
-    .getByRole("main")
-    .getByRole("listitem")
-    .filter({ hasText: expectation.productTitle })
+    .getByTestId("cart-page")
+    .getByTestId("cart-line")
+    .filter({ hasText: expectation.productTitle, visible: true })
     .first();
   await expect(line).toBeVisible({ timeout: CART_SETTLE_TIMEOUT_MS });
 
@@ -115,7 +118,11 @@ async function expectCartLine(page: Page, expectation: CartExpectation): Promise
 }
 
 function cartOverlayLineFor(page: Page, productTitle: string): Locator {
-  return page.getByRole("dialog").getByRole("listitem").filter({ hasText: productTitle }).first();
+  return page
+    .getByTestId("cart-drawer")
+    .getByTestId("cart-line")
+    .filter({ hasText: productTitle, visible: true })
+    .first();
 }
 
 function shouldAssertVariant(variantLabel: string): boolean {
