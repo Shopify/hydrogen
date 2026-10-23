@@ -78,6 +78,10 @@ export function createMiniOxygenDevEnvironment(
   let currentRuntimeOptions = runtimeOptions;
   let viteDevServer: ViteDevServer | undefined;
   let miniOxygen: ReturnType<typeof startMiniOxygenRuntime> | undefined;
+  // The runtime that `pendingRuntime` is waiting on, so closing the
+  // environment can dispose it without waiting for it to become ready.
+  let startingRuntime: ReturnType<typeof startMiniOxygenRuntime> | undefined;
+  let isClosed = false;
   // Deduplicate concurrent first requests so the runtime only starts once.
   let pendingRuntime:
     | Promise<ReturnType<typeof startMiniOxygenRuntime>>
@@ -137,7 +141,12 @@ export function createMiniOxygenDevEnvironment(
       viteDevServer,
     );
 
+    if (isClosed) {
+      throw new Error('MiniOxygen dev environment was closed.');
+    }
+
     const runtime = startMiniOxygenRuntime(options);
+    startingRuntime = runtime;
 
     try {
       // Fail this request instead of keeping a runtime that never started,
@@ -146,6 +155,8 @@ export function createMiniOxygenDevEnvironment(
     } catch (error) {
       await runtime.dispose().catch(() => {});
       throw error;
+    } finally {
+      startingRuntime = undefined;
     }
 
     return runtime;
@@ -179,16 +190,18 @@ export function createMiniOxygenDevEnvironment(
       );
     },
     async listen(server: ViteDevServer) {
+      isClosed = false;
       viteDevServer = server;
       await originalListen(server);
       void warmup();
     },
     async close() {
+      isClosed = true;
       await Promise.allSettled([
         originalClose(),
         miniOxygen?.dispose(),
         // A runtime can still be starting, e.g. from the warmup request.
-        pendingRuntime?.then((runtime) => runtime.dispose()),
+        startingRuntime?.dispose(),
       ]);
     },
   });
