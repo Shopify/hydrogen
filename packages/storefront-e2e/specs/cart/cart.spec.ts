@@ -67,7 +67,11 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
     await route.continue();
   });
 
-  const addToCart = page.getByTestId("product-add-to-cart").filter({ visible: true }).first();
+  const addToCart = page
+    .getByTestId("product-add-to-cart")
+    .and(page.getByRole("button", { name: /add to cart/i }))
+    .filter({ visible: true })
+    .first();
 
   try {
     await addToCart.click();
@@ -134,7 +138,11 @@ async function tryAddProductToCart(
     productTitle: product.productTitle,
     variantLabel: product.variantLabel,
   };
-  const addToCart = page.getByTestId("product-add-to-cart").filter({ visible: true }).first();
+  const addToCart = page
+    .getByTestId("product-add-to-cart")
+    .and(page.getByRole("button", { name: /add to cart/i }))
+    .filter({ visible: true })
+    .first();
   const isCartVisible = await addToCart
     .waitFor({ state: "visible", timeout: CART_SETTLE_TIMEOUT_MS })
     .then(() => true)

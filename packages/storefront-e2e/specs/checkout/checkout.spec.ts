@@ -50,7 +50,11 @@ async function tryAddProductToCart(
     productTitle: product.productTitle,
     variantLabel: product.variantLabel,
   };
-  const addToCart = page.getByTestId("product-add-to-cart").filter({ visible: true }).first();
+  const addToCart = page
+    .getByTestId("product-add-to-cart")
+    .and(page.getByRole("button", { name: /add to cart/i }))
+    .filter({ visible: true })
+    .first();
   const isCartEnabled =
     (await addToCart.isVisible().catch(() => false)) &&
     (await addToCart.isEnabled().catch(() => false));
