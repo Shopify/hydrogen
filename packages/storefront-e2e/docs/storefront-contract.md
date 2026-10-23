@@ -76,8 +76,6 @@ Each line must expose:
 - A visible decrease control named Decrease or -
 - A visible remove control named Remove
 
-Remove must work while the line's quantity input holds invalid text, such as letters. If Remove shares a form with the quantity input, give the Remove button `formnovalidate` so the browser doesn't cancel the submit. The suite skips this check when the quantity input is a number input, because Playwright can't fill letters into one. Number inputs can still hold invalid values, such as `1e` or a value below `min`, so the rule still applies to them.
-
 Cart totals must expose a `role="status"` region that says `Updating cart totals` while cart totals are stale, then `Cart totals updated` after mutation settlement. Do not announce `Cart totals updated` on initial idle render before a mutation cycle. The region may be visually hidden if it remains available to assistive technology.
 
 Accessible labels are preferred. Broad data-testid attributes should only be used when a semantic role or label cannot express the user-facing concept.
