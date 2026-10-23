@@ -47,7 +47,7 @@ test("cart removes product while its quantity input holds invalid text", async (
   const line = await expectCartLine(page, expectation);
   const quantityInput = await quantityInputFor(line, expectation.cartPath);
   if ((await quantityInput.getAttribute("type")) === "number") {
-    test.skip(true, "The quantity input is a number input, which can't hold invalid text");
+    test.skip(true, "Playwright can't fill letters into a number quantity input");
     return;
   }
 
