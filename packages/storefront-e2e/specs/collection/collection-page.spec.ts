@@ -12,8 +12,6 @@ test("collection page shows products", async ({ data, page }) => {
   await expect(
     page
       .getByTestId("product-results")
-      .filter({ visible: true })
-      .first()
       .getByTestId("product-card")
       .and(page.getByRole("link", { name: new RegExp(escapeRegExp(firstProduct.title), "i") }))
       .filter({ visible: true })

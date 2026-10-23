@@ -82,8 +82,6 @@ async function selectFilter(filter: FilterCandidate): Promise<void> {
 async function visibleLinksWithPath(page: Page, pathSegment: string): Promise<ProductCandidate[]> {
   const cards = page
     .getByTestId("product-results")
-    .filter({ visible: true })
-    .first()
     .getByTestId("product-card")
     .filter({ visible: true });
   const links = await cards.evaluateAll((elements) =>
