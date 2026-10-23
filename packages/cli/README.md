@@ -42,7 +42,9 @@ CLI-owned fields. Storefront and environment lists contain all fetched resources
 ```
 
 `dev`, `preview`, and `debug cpu` are streaming commands. The finite JSON result
-format also excludes `build --watch` and `codegen --watch`.
+format also excludes `build --watch`.
+
+`codegen --json --watch` emits typed JSONL records for each generation cycle.
 
 ## Contributing
 
