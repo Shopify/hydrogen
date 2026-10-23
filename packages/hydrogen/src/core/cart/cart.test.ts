@@ -9,6 +9,7 @@ import {
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "../shopify-scripts";
 import { assert, createTestLogger } from "../test-utils";
+import { attachQuantityInput } from "./attach-quantity-input";
 import {
   configureCartEndpoint,
   getShopifyStandardActions,
@@ -19,7 +20,6 @@ import {
   revalidateConnectedCartCheckoutUrls,
   type CartStore,
 } from "./cart";
-import { attachQuantityInput } from "./attach-quantity-input";
 import { createCartFormRegister } from "./form";
 import type { CartData, CartLine, CartPending, CartState } from "./state";
 import {
@@ -1233,7 +1233,10 @@ describe("CartStore.handleFormSubmit — line mutations", () => {
         expect.anything(),
       );
 
-      resolveUpdate(0, serverCart(requestedQuantity, [{ id: "line-1", quantity: requestedQuantity }]));
+      resolveUpdate(
+        0,
+        serverCart(requestedQuantity, [{ id: "line-1", quantity: requestedQuantity }]),
+      );
       await submission;
     },
   );
