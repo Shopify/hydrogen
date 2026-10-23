@@ -117,6 +117,14 @@ const HYDROGEN_CART_FRAGMENT = gql(`
       applicable
       code
     }
+    buyerIdentity {
+      countryCode
+      email
+      phone
+      customer {
+        id
+      }
+    }
   }
 `);
 
@@ -266,6 +274,28 @@ const CART_ATTRIBUTES_UPDATE_MUTATION = gql(
   `mutation CartAttributesUpdate($cartId: ID!, $attributes: [AttributeInput!]!, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     cartAttributesUpdate(cartId: $cartId, attributes: $attributes) {
+      cart {
+        ...HydrogenCartFragment
+      }
+      userErrors {
+        code
+        field
+        message
+      }
+      warnings {
+        code
+        message
+        target
+      }
+    }
+  }`,
+  [HYDROGEN_CART_FRAGMENT],
+);
+
+const CART_BUYER_IDENTITY_UPDATE_MUTATION = gql(
+  `mutation CartBuyerIdentityUpdate($cartId: ID!, $buyerIdentity: CartBuyerIdentityInput!, $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
       cart {
         ...HydrogenCartFragment
       }
@@ -461,22 +491,28 @@ const CUSTOM_CART_ATTRIBUTES_UPDATE_MUTATION = gql(
   [HYDROGEN_CART_FRAGMENT],
 );
 
-// Minimal payload on purpose: buyer identity sync callers only need success or
-// userErrors, never the cart body, so no custom-fragment variant exists.
-const CART_BUYER_IDENTITY_UPDATE_MUTATION_SOURCE = /* GraphQL */ `
-  mutation CartBuyerIdentityUpdate($cartId: ID!, $buyerIdentity: CartBuyerIdentityInput!) {
+const CUSTOM_CART_BUYER_IDENTITY_UPDATE_MUTATION = gql(
+  `mutation CartBuyerIdentityUpdate($cartId: ID!, $buyerIdentity: CartBuyerIdentityInput!, $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
     cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
       cart {
-        id
+        ...HydrogenCartFragment
+        ...${CART_FRAGMENT_NAME}
       }
       userErrors {
         code
         field
         message
       }
+      warnings {
+        code
+        message
+        target
+      }
     }
-  }
-`;
+  }`,
+  [HYDROGEN_CART_FRAGMENT],
+);
 
 const DEFAULT_CART_QUERIES = {
   /** Query that fetches a cart by ID. */
@@ -495,11 +531,11 @@ const DEFAULT_CART_QUERIES = {
   cartNoteUpdate: CART_NOTE_UPDATE_MUTATION,
   /** Mutation that sets a cart's custom attributes. */
   cartAttributesUpdate: CART_ATTRIBUTES_UPDATE_MUTATION,
+  /** Mutation that sets a cart's buyer identity. */
+  cartBuyerIdentityUpdate: CART_BUYER_IDENTITY_UPDATE_MUTATION,
 } as const satisfies CartQueriesForDocs;
 
 type DefaultCartQueries = typeof DEFAULT_CART_QUERIES;
-
-export const cartBuyerIdentityUpdateMutation = gql(CART_BUYER_IDENTITY_UPDATE_MUTATION_SOURCE);
 
 type QueryFor<
   Source extends string,
@@ -531,6 +567,10 @@ type CartQueriesForFragment<TCartFragment extends CartFragmentDocument> = {
   readonly cartNoteUpdate: CustomQueryFor<typeof CUSTOM_CART_NOTE_UPDATE_MUTATION, TCartFragment>;
   readonly cartAttributesUpdate: CustomQueryFor<
     typeof CUSTOM_CART_ATTRIBUTES_UPDATE_MUTATION,
+    TCartFragment
+  >;
+  readonly cartBuyerIdentityUpdate: CustomQueryFor<
+    typeof CUSTOM_CART_BUYER_IDENTITY_UPDATE_MUTATION,
     TCartFragment
   >;
 };
@@ -620,6 +660,8 @@ function createCartQueries<const TCartFragment extends CartFragmentDocument>(
 
   const cartAttributesUpdate = gql(CUSTOM_CART_ATTRIBUTES_UPDATE_MUTATION, fragments);
 
+  const cartBuyerIdentityUpdate = gql(CUSTOM_CART_BUYER_IDENTITY_UPDATE_MUTATION, fragments);
+
   return {
     cart,
     cartCreate,
@@ -629,6 +671,7 @@ function createCartQueries<const TCartFragment extends CartFragmentDocument>(
     cartDiscountCodesUpdate,
     cartNoteUpdate,
     cartAttributesUpdate,
+    cartBuyerIdentityUpdate,
   } as const;
 }
 
@@ -694,4 +737,6 @@ export interface CartQueriesForDocs {
   readonly cartNoteUpdate: StorefrontQueryString;
   /** Mutation that sets a cart's custom attributes. */
   readonly cartAttributesUpdate: StorefrontQueryString;
+  /** Mutation that sets a cart's buyer identity. */
+  readonly cartBuyerIdentityUpdate: StorefrontQueryString;
 }

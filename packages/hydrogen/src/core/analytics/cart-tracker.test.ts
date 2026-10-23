@@ -243,6 +243,7 @@ const SERVER_CART = {
     ],
   },
   discountCodes: [],
+  buyerIdentity: { countryCode: "US", email: null, phone: null, customer: null },
 };
 
 const storefrontSchema = buildSchema(
