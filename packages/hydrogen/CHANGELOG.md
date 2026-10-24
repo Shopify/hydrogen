@@ -1,5 +1,32 @@
 # @shopify/hydrogen
 
+## 2026.10.3
+
+### Minor Changes
+
+- 6bd7464: Export `PredictiveSearchDataFromHandlers` and `SearchResultUrlOptions` from `@shopify/hydrogen`. `PredictiveSearchDataFromHandlers` types `usePredictiveSearch()` state from the same custom fragments as the server handlers: `usePredictiveSearch<PredictiveSearchDataFromHandlers<typeof predictiveSearchHandlers>>()`. `SearchResultUrlOptions` is the options type of `getSearchResultUrl()`.
+- 721727f: `requestContext.markResponseAsPersonalized(reason)` is now public. Call it when a response holds customer data that Hydrogen can't see, such as a page that server-renders the buyer's cart. `requestContext.applyResponseHeaders()` then makes that response private and uncacheable, and removes `Surrogate-Control` and vendor `*-Cache-Control` headers. Responses that you don't mark stay cacheable.
+- 9b81fff: `ShopifyRouteHandler` accepts an optional third type parameter for the handler's context, defaulting to `ShopifyRouteHandlerContext`, and `createShopifyRouteHandler` now returns `ShopifyRouteHandler<TPathname, TMethod, TContext>`. Use it to type a handler whose context omits `sessionManager`, for example `ShopifyRouteHandler<"/api/cart", "POST", Omit<ShopifyRouteHandlerContext, "sessionManager">>`. Existing uses are unchanged.
+
+### Patch Changes
+
+- 4e7fdeb: `/checkout` and `/cart/<permalink>` redirects now send `Cache-Control: private, no-store, max-age=0, must-revalidate`, so shared caches can't store a buyer-specific checkout URL. The checkout redirect also no longer intercepts `/account/login`, `/account/authorize`, `/account/refresh`, or `/account/logout`, so apps that serve these routes with their own handlers now receive the requests.
+- 27c467a: The Customer Account client now fills an omitted `$language` only when the document declares it as `$language: LanguageCode`, matching the Storefront client. A same-named variable of any other type, such as `$language: String!`, is left to the caller and keeps its declared requiredness in the variables type. A value you pass still wins over the request context.
+  
+  If a nullable `$language` of another type relied on the autofill, the client now leaves it out of the request when you omit it, so its GraphQL default or `null` applies. Declare it as `LanguageCode` or pass the value explicitly.
+- 8cc32d8: Fix price filter parsing for shops whose locale uses a dot as the group separator (e.g. de, nl, tr). Canonical decimal values like `12.5` from serialized URLs and number inputs now parse correctly regardless of shop locale.
+- ddb7aa5: Give a collection-scoped product match without a collection handle the product's standard path. A `productInCollection` template that leaves out `:collectionHandle` used to match with a `standardPathname` of `/collections/:collectionHandle/products/<handle>`, placeholder included. It is now `/products/<handle>`, and `templates.standard` is the product template to match.
+- 1d99e40: A malformed `cart` cookie is treated as a missing cart, and malformed percent sequences in collection filter keys stay literal, instead of failing the request.
+- b2d0356: Responses that Hydrogen makes private, such as personalized, session, and checkout redirect responses, now also drop `Oxygen-Cache-Control` and any other vendor `*-Cache-Control` header. Oxygen's full-page cache prefers `Oxygen-Cache-Control` over `Cache-Control`, so before this change a route that opted into the full-page cache could still store a page with customer data and serve it to other visitors.
+- 8fe4e23: `hydrogen setup` now downloads the React Router template from the `dist` branch instead of `dist-preview`.
+- f1b9b22: The `hydrogen-setup` account-page step and the `hydrogen-smoke-test` account checks now point at the `hydrogen-local-https` skill when a real login needs a registered HTTPS origin. Because agent shells usually run with `CI` set and no TTY, they tell agents to ask the user to run `dev:https` in a real terminal on Vite-based frameworks, which serves trusted HTTPS and registers the Customer Account URLs, and note that Next.js uses its own HTTPS command with manual URL configuration. They note that `npx hydrogen certs install` only provisions certificate files. If the user can't provide a registered HTTPS local origin, agents fall back to the signed-out checks and say so.
+- 93c0ccc: The `hydrogen-request-handlers`, `hydrogen-storefront-client`, `hydrogen-oxygen`, and `migrate-to-hydrogen-2026-10` skills no longer hardcode the `future.v8_middleware` flag. They now tell agents to make sure middleware is enabled for the app's version of React Router. The migration skill also checks that the root middleware actually runs: `GET /api/cart` must return JSON from the cart handler.
+- 7eecd1c: Since 2026.10.2, the Storefront client injects the request's market only into variables declared as `$country: CountryCode` or `$language: LanguageCode`. If your query declared a nullable `$country` or `$language` with another type, such as `$country: String`, and relied on the client filling in the market, the client no longer injects it and leaves it out of the request unless you pass it, so its GraphQL default or `null` applies. The variables type doesn't flag this because the variable is optional. Declare it as `$country: CountryCode` or `$language: LanguageCode` to keep injection, or pass `client.i18n.country` / `client.i18n.language` explicitly.
+- c4d7b05: The Storefront API client no longer follows redirects. Runtimes forward custom Shopify headers such as `Shopify-Storefront-Private-Token` across origins when they follow a redirect, so a `3xx` response from the Storefront API now throws a `StorefrontApiError` instead. Rejected redirects no longer contribute `Set-Cookie` headers to the response.
+  
+  `createFetchWithCache()` now returns opaque responses, such as a browser `redirect: "manual"` response, unchanged instead of failing with a `RangeError` while serializing their `0` status.
+- c23444d: Resolve `@shopify/hydrogen/react`, `/vue`, `/customer-account`, and `/vite` for `require`-based resolvers, such as Jest in its default CommonJS mode, the same way the root entry point already resolves. They still point at the ESM build, so those tools load them through `require(esm)` or a transform, as with the root.
+
 ## 2026.10.2
 
 ### Patch Changes
