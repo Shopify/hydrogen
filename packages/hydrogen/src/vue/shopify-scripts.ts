@@ -1,5 +1,6 @@
-import { defineComponent, h, onMounted, type PropType } from "vue";
+import { computed, defineComponent, h, onMounted, watch, type PropType } from "vue";
 
+import { findShopifyAccountWidgetDataScript } from "../core/shopify-scripts/account-widget";
 import {
   getShopifyScriptTags,
   initializeShopifyScripts,
@@ -8,6 +9,8 @@ import {
   type ShopifyScriptTagsOptions,
   type ShopifyRoutesOptions,
 } from "../core/shopify-scripts/index";
+import { getShopifyScriptTagKey } from "../core/shopify-scripts/render";
+import { restartAccountWidgets } from "./account-widget";
 
 /**
  * Props for the Vue ShopifyScripts component.
@@ -32,7 +35,7 @@ const consentProp: PropType<ShopifyScriptTagsOptions["consent"]> = Object;
 const analyticsProp: PropType<ShopifyScriptTagsOptions["analytics"]> = Object;
 const debugProp: PropType<ShopifyScriptTagsOptions["debug"]> = Object;
 const inboxProp: PropType<ShopifyScriptTagsOptions["inbox"]> = Boolean;
-const accountProp: PropType<ShopifyScriptTagsOptions["account"]> = Boolean;
+const accountWidgetProp: PropType<ShopifyScriptTagsOptions["accountWidget"]> = Object;
 
 /**
  * Renders Shopify's script tags during server rendering and starts the scripts once, when the
@@ -79,8 +82,8 @@ export const ShopifyScripts = defineComponent({
       type: inboxProp,
       default: undefined,
     },
-    account: {
-      type: accountProp,
+    accountWidget: {
+      type: accountWidgetProp,
       default: undefined,
     },
     shopifyAnalytics: {
@@ -102,9 +105,19 @@ export const ShopifyScripts = defineComponent({
       });
     });
 
+    const scriptTags = computed(() => getShopifyScriptTags(props));
+
+    // `flush: "post"` runs after the JSON script tag updates, so remounted widgets read the new data.
+    watch(
+      () => findShopifyAccountWidgetDataScript(scriptTags.value.scripts)?.innerHTML,
+      restartAccountWidgets,
+      { flush: "post" },
+    );
+
     return () =>
-      getShopifyScriptTags(props).tags.map(({ tagName, attributes, innerHTML }) =>
+      scriptTags.value.tags.map(({ tagName, attributes, innerHTML }) =>
         h(tagName, {
+          key: getShopifyScriptTagKey(attributes),
           ...attributes,
           ...(innerHTML ? { innerHTML } : {}),
         }),

@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { cleanup, render, waitFor } from "@testing-library/react";
-import { act, createElement } from "react";
+import { act, createElement, type ReactElement } from "react";
 import { hydrateRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -19,7 +19,14 @@ import {
   SHOPIFY_STOREFRONT_WEBMCP_SCRIPT,
 } from "../core/shopify-scripts/index";
 import { createShopifyRouteTemplates } from "../core/standard-routes/index";
-import { assert } from "../core/test-utils";
+import {
+  assert,
+  getRenderedSignedOutAccountWidgetData,
+  recordShopifyAccountConnections,
+  TEST_ACCOUNT_WIDGET_CUSTOMER,
+  TEST_ACCOUNT_WIDGET_DATA,
+} from "../core/test-utils";
+import { AccountWidget } from "./account-widget";
 import { ShopifyScripts } from "./shopify-scripts";
 
 afterEach(() => {
@@ -59,7 +66,17 @@ function concealScriptNonceAttributes() {
   );
 }
 
-async function hydrateShopifyScripts(serverHtml: string, nonce: string) {
+function accountPage(accountWidget: typeof TEST_ACCOUNT_WIDGET_DATA, nonce?: string) {
+  return (
+    <>
+      <ShopifyScripts shop={TEST_SHOP} accountWidget={accountWidget} nonce={nonce} />
+      <AccountWidget fallback={<span>Sign in</span>} />
+      <AccountWidget />
+    </>
+  );
+}
+
+async function hydrateShopifyScripts(serverHtml: string, element: ReactElement) {
   const container = document.createElement("div");
   container.innerHTML = serverHtml;
   // Happy DOM inserts an empty text node into every parsed script element. Browsers do not, and
@@ -73,7 +90,7 @@ async function hydrateShopifyScripts(serverHtml: string, nonce: string) {
 
   let root: Root | undefined;
   await act(async () => {
-    root = hydrateRoot(container, createElement(ShopifyScripts, { nonce, shop: TEST_SHOP }));
+    root = hydrateRoot(container, element);
   });
   assert(root, "Expected ShopifyScripts hydration to create a React root");
 
@@ -99,7 +116,7 @@ describe("ShopifyScripts", () => {
         routes: routeTemplates,
         shop: TEST_SHOP,
         inbox: true,
-        account: true,
+        accountWidget: TEST_ACCOUNT_WIDGET_DATA,
       }),
     );
 
@@ -126,6 +143,9 @@ describe("ShopifyScripts", () => {
     expect(html).toContain(
       `<script id="shopify-account" type="module" async="" crossorigin="anonymous" nonce="test-nonce" src="${SHOPIFY_ACCOUNT_SCRIPT}"></script>`,
     );
+    expect(html).toContain(
+      `<script id="shopify-customer-account-data" type="application/json">${JSON.stringify(getRenderedSignedOutAccountWidgetData(TEST_SHOP_ID))}</script>`,
+    );
     expect(html).not.toContain("<shopify-chat");
     expect(html).toContain(`id="shopify-perfkit"`);
     expect(html).toContain(`async=""`);
@@ -141,6 +161,71 @@ describe("ShopifyScripts", () => {
     expect(html).not.toContain(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT);
   });
 
+  it("remounts every AccountWidget after the account widget data changes", () => {
+    vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts").mockResolvedValue(undefined);
+    const connectedData = recordShopifyAccountConnections();
+    const { container, rerender } = render(accountPage(TEST_ACCOUNT_WIDGET_DATA));
+    const [header, menu] = container.querySelectorAll("shopify-account");
+    assert(header, "Expected a shopify-account element");
+    assert(menu, "Expected a second shopify-account element");
+
+    expect(header.getAttribute("sign-in-url")).toBe("/account/login");
+    expect(header.querySelector('div[slot="signed-out-avatar"]')?.textContent).toBe("Sign in");
+    expect(menu.querySelector('[slot="signed-out-avatar"]')).toBeNull();
+
+    rerender(accountPage({ ...TEST_ACCOUNT_WIDGET_DATA }));
+    expect(container.querySelector("shopify-account")).toBe(header);
+
+    const signedIn = { ...TEST_ACCOUNT_WIDGET_DATA, customer: TEST_ACCOUNT_WIDGET_CUSTOMER };
+    rerender(accountPage(signedIn));
+
+    expect(container.querySelector("shopify-account")).not.toBe(header);
+    expect(connectedData.map((data) => data?.customer?.firstName ?? null)).toEqual([
+      null,
+      null,
+      TEST_ACCOUNT_WIDGET_CUSTOMER.firstName,
+      TEST_ACCOUNT_WIDGET_CUSTOMER.firstName,
+    ]);
+  });
+
+  it("keeps already-rendered scripts in place when the account widget is toggled", () => {
+    vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts").mockResolvedValue(undefined);
+    const { container, rerender } = render(<ShopifyScripts shop={TEST_SHOP} />);
+    const bus = container.querySelector("#shopify-analytics-bus");
+    const busScript = bus?.innerHTML;
+    assert(bus, "Expected the analytics bus script");
+
+    rerender(<ShopifyScripts shop={TEST_SHOP} accountWidget={TEST_ACCOUNT_WIDGET_DATA} />);
+    expect(container.querySelector("#shopify-analytics-bus")).toBe(bus);
+    expect(container.querySelector("#shopify-customer-account-data")).not.toBeNull();
+
+    rerender(<ShopifyScripts shop={TEST_SHOP} />);
+    expect(container.querySelector("#shopify-analytics-bus")).toBe(bus);
+    expect(bus.innerHTML).toBe(busScript);
+    expect(container.querySelector("#shopify-customer-account-data")).toBeNull();
+  });
+
+  it("hydrates account widgets without remounting them", async () => {
+    vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts").mockResolvedValue(undefined);
+    const connectedData = recordShopifyAccountConnections();
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    // The nonce suppresses an unrelated Happy DOM mismatch in the inline analytics bus script.
+    // The JSON script tag has no nonce, so its hydration is still checked.
+    const page = accountPage(TEST_ACCOUNT_WIDGET_DATA, "test-nonce");
+    const html = renderToString(page);
+    concealScriptNonceAttributes();
+
+    const root = await hydrateShopifyScripts(html, page);
+    const [header] = document.querySelectorAll("shopify-account");
+    assert(header, "Expected a server-rendered shopify-account element");
+    await act(async () => {});
+
+    expect(document.querySelector("shopify-account")).toBe(header);
+    expect(connectedData).toHaveLength(2);
+    expect(consoleError).not.toHaveBeenCalled();
+    await act(async () => root.unmount());
+  });
+
   it("suppresses hydration warnings caused by concealed script nonces", async () => {
     const html = renderToString(
       createElement(ShopifyScripts, { nonce: "test-nonce", shop: TEST_SHOP }),
@@ -148,7 +233,10 @@ describe("ShopifyScripts", () => {
     concealScriptNonceAttributes();
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    const root = await hydrateShopifyScripts(html, "test-nonce");
+    const root = await hydrateShopifyScripts(
+      html,
+      createElement(ShopifyScripts, { nonce: "test-nonce", shop: TEST_SHOP }),
+    );
 
     expect(consoleError).not.toHaveBeenCalled();
     await act(async () => root.unmount());
@@ -169,7 +257,10 @@ describe("ShopifyScripts", () => {
     ).replace('data-test="expected"', 'data-test="unexpected"');
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    const root = await hydrateShopifyScripts(html, "test-nonce");
+    const root = await hydrateShopifyScripts(
+      html,
+      createElement(ShopifyScripts, { nonce: "test-nonce", shop: TEST_SHOP }),
+    );
 
     expect(consoleError.mock.calls.flat().join(" ")).toContain("data-test");
     await act(async () => root.unmount());
@@ -182,7 +273,10 @@ describe("ShopifyScripts", () => {
     concealScriptNonceAttributes();
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    const root = await hydrateShopifyScripts(html, "");
+    const root = await hydrateShopifyScripts(
+      html,
+      createElement(ShopifyScripts, { nonce: "", shop: TEST_SHOP }),
+    );
 
     expect(consoleError).not.toHaveBeenCalled();
     await act(async () => root.unmount());

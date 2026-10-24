@@ -161,7 +161,7 @@ The core depends on web platform APIs (`fetch`, `Request`, `Response`, and Web C
 - **Data and requests**: `hydrogen-storefront-client`, `hydrogen-request-handlers`, `hydrogen-routing`, `hydrogen-markets`
 - **Cart**: `hydrogen-cart-ui`, `hydrogen-cart-drawer`, `hydrogen-cart-metafields`
 - **Products, collections, and search**: `hydrogen-variant-form`, `hydrogen-collection-browser`, `hydrogen-predictive-search`, `hydrogen-image`, `hydrogen-money`
-- **Checkout, accounts, and analytics**: `hydrogen-shop-pay`, `hydrogen-customer-account`, `hydrogen-analytics`
+- **Checkout, accounts, and analytics**: `hydrogen-shop-pay`, `hydrogen-customer-account`, `hydrogen-account-widget`, `hydrogen-analytics`
 - **Hosting and local development**: `hydrogen-oxygen`, `hydrogen-local-https`
 - **Migration from classic Hydrogen**: `migrate-to-hydrogen-2026-10`
 

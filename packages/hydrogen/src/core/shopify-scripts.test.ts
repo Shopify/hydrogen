@@ -22,7 +22,7 @@ import {
 } from "./shopify-scripts/index";
 import { getPerfKitScript } from "./shopify-scripts/perfkit";
 import { createShopifyRouteTemplates } from "./standard-routes/index";
-import { assert } from "./test-utils";
+import { assert, TEST_ACCOUNT_WIDGET_CUSTOMER, TEST_ACCOUNT_WIDGET_DATA } from "./test-utils";
 import { loadScript } from "./utils/load-script";
 
 vi.mock("./utils/load-script", () => ({
@@ -662,14 +662,40 @@ describe("shopify scripts", () => {
     );
   });
 
-  it("includes the async account module when enabled", () => {
+  it("renders the account widget data before the account module for signed-out visitors", () => {
     const descriptors = getShopifyScriptTags({
       nonce: "test-nonce",
+      i18n: { country: "CA", language: "FR" },
       shop: TEST_SHOP,
-      account: true,
+      accountWidget: TEST_ACCOUNT_WIDGET_DATA,
     });
+    const dataIndex = descriptors.scripts.findIndex(
+      ({ attributes }) => attributes?.id === "shopify-customer-account-data",
+    );
+    const moduleIndex = descriptors.scripts.findIndex(
+      ({ attributes }) => attributes?.src === SHOPIFY_ACCOUNT_SCRIPT,
+    );
+    const dataScript = descriptors.scripts[dataIndex];
+    assert(dataScript?.innerHTML, "Expected the account widget data script");
 
-    expect(descriptors.scripts).toContainEqual({
+    expect(dataScript.attributes).toEqual({
+      id: "shopify-customer-account-data",
+      type: "application/json",
+    });
+    expect(JSON.parse(dataScript.innerHTML)).toEqual({
+      customer: null,
+      shop: {
+        id: TEST_SHOP_ID,
+        legacyCustomerAccounts: false,
+        b2bEnabled: false,
+        marketingConsentSigninEnabled: false,
+        marketingConsentPreselected: false,
+        socialLoginProviders: [{ handle: "Shop" }],
+        customerAccountTranslations: [],
+      },
+      visitor: { country: "CA", language: "FR" },
+    });
+    expect(descriptors.scripts[moduleIndex]).toEqual({
       tagName: "script",
       attributes: {
         id: "shopify-account",
@@ -684,17 +710,110 @@ describe("shopify scripts", () => {
       descriptors.scripts.findIndex(
         ({ attributes }) => attributes?.src === SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
       ),
-    ).toBeLessThan(
-      descriptors.scripts.findIndex(({ attributes }) => attributes?.src === SHOPIFY_ACCOUNT_SCRIPT),
+    ).toBeLessThan(dataIndex);
+    expect(dataIndex).toBeLessThan(moduleIndex);
+  });
+
+  it("keeps account widget data inside its script tag", () => {
+    const hostileName = "</script><script>alert(1)</script><!--\u2028\u2029";
+    const customer = { ...TEST_ACCOUNT_WIDGET_CUSTOMER, firstName: hostileName };
+    const [dataTag] = renderShopifyScriptTags({
+      shop: TEST_SHOP,
+      accountWidget: { ...TEST_ACCOUNT_WIDGET_DATA, customer },
+    }).filter((tag) => tag.includes('id="shopify-customer-account-data"'));
+    assert(dataTag, "Expected the account widget data tag");
+    const json = dataTag.slice(dataTag.indexOf(">") + 1, -"</script>".length);
+
+    expect(json).not.toMatch(/<|\u2028|\u2029/);
+    expect(JSON.parse(json).customer.firstName).toBe(hostileName);
+  });
+
+  it("writes the provider casing and translation keys that the widget compares", () => {
+    const descriptors = getShopifyScriptTags({
+      shop: TEST_SHOP,
+      accountWidget: {
+        customer: { ...TEST_ACCOUNT_WIDGET_CUSTOMER, socialLoginProvider: "shop" },
+        shop: {
+          socialLoginProviders: ["shop", "apple", "google", "facebook"],
+          translations: { "signed_in_state.greeting_with_name": "Bonjour, {{first_name}}" },
+          b2bEnabled: true,
+        },
+      },
+    });
+    const dataScript = descriptors.scripts.find(
+      ({ attributes }) => attributes?.id === "shopify-customer-account-data",
+    );
+    assert(dataScript?.innerHTML, "Expected the account widget data script");
+    const { customer, shop } = JSON.parse(dataScript.innerHTML);
+
+    expect(customer.socialLoginProvider).toEqual({ handle: "Shop" });
+    expect(shop.socialLoginProviders).toEqual([
+      { handle: "Shop" },
+      { handle: "Apple" },
+      { handle: "Google" },
+      { handle: "Facebook" },
+    ]);
+    expect(shop.customerAccountTranslations).toEqual([
+      { key: "account_menu.signed_in_state.greeting_with_name", value: "Bonjour, {{first_name}}" },
+    ]);
+    expect(shop.b2bEnabled).toBe(true);
+  });
+
+  it.each([
+    ["accountWidget", { ...TEST_ACCOUNT_WIDGET_DATA, customerAccessToken: "shcat_secret" }],
+    [
+      "accountWidget.customer",
+      {
+        ...TEST_ACCOUNT_WIDGET_DATA,
+        customer: { ...TEST_ACCOUNT_WIDGET_CUSTOMER, accessToken: "shcat_secret" },
+      },
+    ],
+    [
+      "accountWidget.shop",
+      { ...TEST_ACCOUNT_WIDGET_DATA, shop: { ...TEST_ACCOUNT_WIDGET_DATA.shop, token: "x" } },
+    ],
+  ])("rejects unknown fields in %s instead of rendering them", (path, accountWidget) => {
+    expect(() =>
+      getShopifyScriptTags({
+        shop: TEST_SHOP,
+        accountWidget: accountWidget as typeof TEST_ACCOUNT_WIDGET_DATA,
+      }),
+    ).toThrow(`${path} received unknown field(s)`);
+  });
+
+  it("rejects missing fields instead of silently turning features off", () => {
+    const accountWidget = {
+      ...TEST_ACCOUNT_WIDGET_DATA,
+      shop: {},
+    } as typeof TEST_ACCOUNT_WIDGET_DATA;
+
+    expect(() => getShopifyScriptTags({ shop: TEST_SHOP, accountWidget })).toThrow(
+      "accountWidget.shop is missing required field(s): socialLoginProviders",
     );
   });
 
-  it("omits the account module by default", () => {
+  it("rejects providers in a casing or name the widget doesn't recognize", () => {
+    const accountWidget = {
+      ...TEST_ACCOUNT_WIDGET_DATA,
+      shop: { socialLoginProviders: ["Shop"] },
+    } as unknown as typeof TEST_ACCOUNT_WIDGET_DATA;
+
+    expect(() => getShopifyScriptTags({ shop: TEST_SHOP, accountWidget })).toThrow(
+      "accountWidget.shop.socialLoginProviders received an unknown provider: Shop",
+    );
+  });
+
+  it("omits the account module and data by default", () => {
     const descriptors = getShopifyScriptTags({ shop: TEST_SHOP });
 
     expect(descriptors.scripts).not.toContainEqual(
       expect.objectContaining({
         attributes: expect.objectContaining({ src: SHOPIFY_ACCOUNT_SCRIPT }),
+      }),
+    );
+    expect(descriptors.scripts).not.toContainEqual(
+      expect.objectContaining({
+        attributes: expect.objectContaining({ id: "shopify-customer-account-data" }),
       }),
     );
   });
