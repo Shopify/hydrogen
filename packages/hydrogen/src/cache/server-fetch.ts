@@ -15,6 +15,7 @@ export type FetchCacheOptions<T = any> = {
   shouldCacheResponse: (body: T, response: Response) => boolean;
   waitUntil?: WaitUntil;
   debugInfo?: DebugOptions;
+  onRevalidationError?: (error: unknown) => void;
   streamConfig?: {
     query: string;
     variables: Record<string, unknown>;
@@ -64,6 +65,7 @@ export async function fetchWithServerCache<T = unknown>(
     shouldCacheResponse,
     waitUntil,
     debugInfo,
+    onRevalidationError,
     streamConfig,
     onRawHeaders,
   }: FetchCacheOptions,
@@ -135,6 +137,7 @@ export async function fetchWithServerCache<T = unknown>(
       waitUntil,
       strategy: cacheOptions ?? null,
       debugInfo,
+      onRevalidationError,
       shouldCacheResult: (payload) => {
         return 'ok' in payload
           ? false

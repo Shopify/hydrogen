@@ -210,6 +210,11 @@ type HydrogenClientProps<TI18n> = {
   i18n?: TI18n;
   /** Whether it should print GraphQL errors automatically. Defaults to true */
   logErrors?: boolean | ((error?: Error) => boolean);
+  /** Called only when stale-while-revalidate refresh fails in the background.
+   * Provide an allowlisted reporter to avoid logging raw provider errors.
+   * Without a callback, Hydrogen keeps its existing console.error behavior.
+   */
+  onRevalidationError?: (error: unknown) => void;
 };
 
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> =
@@ -248,6 +253,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     i18n,
     storefrontId,
     logErrors = true,
+    onRevalidationError,
     ...clientOptions
   } = options;
   const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';
@@ -402,6 +408,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       cache: cacheOptions || CacheDefault(),
       cacheKey,
       waitUntil,
+      onRevalidationError,
       // Check if the response body has GraphQL errors:
       // https://spec.graphql.org/June2018/#sec-Response-Format
       shouldCacheResponse: (body: any) => !body?.errors,
