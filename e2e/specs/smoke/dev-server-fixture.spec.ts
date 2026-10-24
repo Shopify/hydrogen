@@ -5,8 +5,9 @@ import {test, expect} from '@playwright/test';
 import {DevServer, MAX_STARTUP_ATTEMPTS} from '../../fixtures/server';
 
 const STORE_KEY = 'mockShop';
-const STARTUP_ERROR =
-  "Error: ENOTEMPTY: directory not empty, rmdir '.react-router/types'";
+// Deliberately unlike any real CLI error: these tests log retries to the
+// same CI output that is searched for real startup crashes.
+const STARTUP_ERROR = 'Error: simulated startup crash from a fake Shopify CLI';
 // The real CLI prints a stack trace after the error, so the error is not the
 // last line of output.
 const STACK_FRAME = '    at watch (vite.js:1392:3)';
