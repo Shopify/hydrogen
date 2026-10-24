@@ -1216,6 +1216,36 @@ describe('customer', () => {
           ).toBe('/account');
         });
       });
+
+      it.each(['return_to', 'redirect'])(
+        'Saves the default path and warns for a %s param without a leading slash',
+        async (param) => {
+          const warnSpy = vi
+            .spyOn(console, 'warn')
+            .mockImplementation(() => {});
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(
+              `https://localhost/account/login?${new URLSearchParams({
+                [param]: 'account/orders',
+              })}`,
+            ),
+            waitUntil: vi.fn(),
+          });
+
+          await customer.login();
+
+          expect(session.set).toHaveBeenCalledWith(
+            CUSTOMER_ACCOUNT_SESSION_KEY,
+            expect.objectContaining({redirectPath: '/account'}),
+          );
+          expect(warnSpy).toHaveBeenCalledWith(
+            `Ignoring ${param} because it isn't a same-origin path. Tried to redirect from /account/login?${param}=account%2Forders to account/orders`,
+          );
+        },
+      );
     });
   });
 
