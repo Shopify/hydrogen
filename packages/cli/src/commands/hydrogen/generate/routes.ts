@@ -11,7 +11,7 @@ export default class GenerateRoutes extends Command {
   static descriptionWithMarkdown =
     'Generates all supported standard shopify routes.';
   static description = this.descriptionForHelp();
-  static hidden: true;
+  static hidden = true;
   static flags = {...GenerateRoute.flags, ...jsonFlag};
 
   async run(): Promise<void> {
