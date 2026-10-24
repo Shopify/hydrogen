@@ -44,7 +44,6 @@ const CART_GET_METHOD = "GET" as const;
 const CART_POST_METHOD = "POST" as const;
 const CART_MUTATION_FAILED_STATUS = 500;
 const CART_MUTATION_FAILED_MESSAGE = "Cart mutation failed. Please try again.";
-const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
 
 /**
  * The response body that the cart GET handler returns.
@@ -161,8 +160,6 @@ export type CartServerHandlers<
   TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
   TCart extends CartData = CartDataFromQuery<TCartQuery>,
 > = {
-  /** The cart query document that the handlers run. */
-  readonly [cartServerHandlersCartQuery]: TCartQuery | undefined;
   /**
    * Returns the current cart. The handler reads the cart ID from the request's `cartId` search parameter or `cart` cookie. Without a request, the handler reads the cart ID from the Storefront API client's request context.
    *
@@ -186,8 +183,6 @@ export type CartServerHandlersWithCustomerSession<
   TCartQuery extends AnyStorefrontQueryString = typeof cartQueries.cart,
   TCart extends CartData = CartDataFromQuery<TCartQuery>,
 > = {
-  /** The cart query document that the handlers run. */
-  readonly [cartServerHandlersCartQuery]: TCartQuery | undefined;
   readonly [cartBuyerIdentitySync]: CartBuyerIdentitySync;
   /** Returns the cart like the GET handler in `CartServerHandlers`. For a logged-in customer, the handler adds `logged_in=true` to the checkout URL. */
   get: CartGetHandler<TCart, CartGetHandlerContext & CartCustomerSessionReadContext>;
@@ -330,7 +325,6 @@ export function createCartServerHandlers(
     ),
   };
 
-  Object.defineProperty(handlers, cartServerHandlersCartQuery, { value: queries.cart });
   if (customerSession) {
     // Symbol-keyed and non-enumerable so the capability never registers as a
     // route in handleShopifyRoutes and stays uncallable outside Hydrogen wiring.
