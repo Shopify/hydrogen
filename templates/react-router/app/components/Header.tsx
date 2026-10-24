@@ -38,7 +38,7 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
             to="/"
             aria-label={shopInfo.name}
             title={shopInfo.name}
-            className="text-on-surface focus-visible:outline-accent inline-flex max-w-48 min-w-0 items-center rounded-sm text-lg font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="text-on-surface focus-visible:outline-focus-ring inline-flex max-w-48 min-w-0 items-center rounded-sm text-lg font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             {logo && failedLogoUrl !== logo.url ? (
               <img
@@ -66,7 +66,7 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
         >
           <Link
             to="/collections"
-            className="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
+            className="text-on-surface focus-visible:outline-focus-ring shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
           >
             Collections
           </Link>
@@ -75,7 +75,7 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
         <div className="flex shrink-0 items-center gap-0">
           <Link
             to="/search"
-            className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center gap-2 rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
+            className="button-icon focus-visible:outline-focus-ring inline-flex h-11 w-11 cursor-pointer items-center justify-center gap-2 rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
             aria-label="Search"
             aria-controls={SEARCH_DRAWER_ID}
             aria-haspopup="dialog"
@@ -86,14 +86,14 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
           </Link>
           <Link
             to="/account"
-            className="text-on-surface focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
+            className="text-on-surface focus-visible:outline-focus-ring inline-flex h-11 w-11 items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
             aria-label="Account"
           >
             <img src="/icons/icon-user.svg" alt="" className="size-5" aria-hidden="true" />
           </Link>
           <Link
             to="/cart"
-            className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
+            className="text-on-surface focus-visible:outline-focus-ring relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
             aria-label={cartCountLabel(totalQuantity)}
             aria-controls={CART_DRAWER_ID}
             aria-haspopup="dialog"

@@ -163,7 +163,7 @@ function EmptyState({ collectionPath }: { collectionPath: string }) {
       <Link
         to={collectionPath}
         preventScrollReset
-        className="rounded-button button-primary focus-visible:outline-accent mt-6 inline-flex h-11 items-center justify-center px-4 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
+        className="rounded-button button-primary focus-visible:outline-focus-ring mt-6 inline-flex h-11 items-center justify-center px-4 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
       >
         Clear all filters
       </Link>
