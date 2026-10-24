@@ -194,7 +194,11 @@ jobs:
   test_e2e:
     name: ⬣ E2E tests
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Passing runs take 9-14 minutes, and retries of a failing test add a
+    # minute or more each. A run that hits this limit is reported as cancelled
+    # and skips the Playwright report upload, which hides the failing tests,
+    # so leave room for a failing run to finish.
+    timeout-minutes: 30
     concurrency:
       group: ci-e2e-${{ github.ref }}
       cancel-in-progress: true
