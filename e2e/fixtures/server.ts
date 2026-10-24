@@ -1,8 +1,12 @@
 import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import path from 'node:path';
+import {stripVTControlCharacters} from 'node:util';
 
 export const STARTUP_TIMEOUT_IN_MS = 120_000;
+// Enough for the CLI's final error and its stack, without letting a chatty
+// server flood the Playwright report.
+const STARTUP_OUTPUT_TAIL_IN_CHARS = 4_000;
 const SIGKILL_GRACE_PERIOD_IN_MS = 5_000;
 const TUNNEL_URL_PATTERN = /(https:\/\/[\w-]+\.tryhydrogen\.dev)\b/;
 const TUNNEL_POLL_INTERVAL_IN_MS = 1_000;
@@ -108,12 +112,15 @@ export class DevServer {
       });
 
       let started = false;
+      // The CLI's own error is the only clue to why startup failed, so keep
+      // the end of its output until the server is ready.
+      let startupOutput = '';
       const timeout = setTimeout(() => {
         if (!started) {
           this.stop();
           reject(
             new Error(
-              `Server ${this.id} failed to start within ${STARTUP_TIMEOUT_IN_MS / 1000}s timeout`,
+              `${this.startupLabel()} failed to start within ${STARTUP_TIMEOUT_IN_MS / 1000}s timeout.${describeStartupOutput(startupOutput)}`,
             ),
           );
         }
@@ -123,6 +130,10 @@ export class DevServer {
       let tunnelUrl: string | undefined;
 
       const handleOutput = (output: string) => {
+        if (!started) {
+          startupOutput = keepTail(startupOutput + output);
+        }
+
         if (!localUrl) {
           const match = output.match(/(http:\/\/localhost:(\d+))/);
           // Reject port 0 — it means the server echoed back the requested
@@ -205,13 +216,30 @@ export class DevServer {
         reject(error);
       });
 
-      this.process.on('exit', (code) => {
+      this.process.on('exit', (code, signal) => {
         if (!started) {
           clearTimeout(timeout);
-          reject(new Error(`Server ${this.id} exited with code ${code}`));
+          const exitReason = signal
+            ? `was killed by ${signal}`
+            : `exited with code ${code}`;
+          reject(
+            new Error(
+              `${this.startupLabel()} ${exitReason} before it was ready.${describeStartupOutput(startupOutput)}`,
+            ),
+          );
         }
       });
     });
+  }
+
+  /**
+   * `id` is only assigned once the server reports its port, so startup
+   * failures are labelled by store and project instead. Recipe fixtures share
+   * a store, so the project directory is what tells them apart.
+   */
+  private startupLabel() {
+    const store = this.storeKey ? ` for ${this.storeKey}` : '';
+    return `Dev server${store} in ${path.basename(this.projectPath)}`;
   }
 
   stop() {
@@ -264,6 +292,17 @@ export class DevServer {
       }
     });
   }
+}
+
+function keepTail(output: string) {
+  return output.slice(-STARTUP_OUTPUT_TAIL_IN_CHARS);
+}
+
+function describeStartupOutput(output: string) {
+  const readableOutput = stripVTControlCharacters(output).trim();
+  return readableOutput
+    ? `\nLast dev server output:\n${readableOutput}`
+    : '\nThe dev server produced no output.';
 }
 
 function getPnpmCommand(args: string[]) {
