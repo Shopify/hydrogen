@@ -31,6 +31,25 @@ describe("appendFragments", () => {
     expect(appendFragments(source, [IMAGE])).toBe(source);
   });
 
+  it("does not treat a hash in a string as a comment", () => {
+    const source = `query Search { products(query: "#sale") { nodes { ...Card } } } fragment Card on Product { id }`;
+    const card = `fragment Card on Product { id }`;
+
+    const query = appendFragments(source, [card]);
+
+    expect(count(query, "fragment Card on Product")).toBe(1);
+  });
+
+  it("detects conflicting definitions when a string contains a closing brace", () => {
+    const query = `query Product { product(handle: "shirt") { ...Card } }`;
+    const firstCard = `fragment Card on Product { metafield(namespace: "custom", key: "}") { value } }`;
+    const extendedCard = `fragment Card on Product { metafield(namespace: "custom", key: "}") { value } handle }`;
+
+    expect(() => appendFragments(query, [firstCard, extendedCard])).toThrow(
+      'Fragment "Card" has two different definitions',
+    );
+  });
+
   it("recognizes the same definition whether a comment precedes it or another fragment follows it", () => {
     const commented = `# shared image fields\n${IMAGE}`;
     const card = `fragment Card on Product { ...Image price { ...Price } }\n${commented}\nfragment Price on MoneyV2 { amount }`;
