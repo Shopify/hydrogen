@@ -158,14 +158,16 @@ describe('MiniOxygen Worker Runtime', () => {
         // until we start using stdio for logging.
 
         // console.error with stack:
-        expect(spy, 'Logged with sourcemaps').toHaveBeenCalledWith(
-          expect.objectContaining({
-            stack: expect.stringMatching(
-              // Shows `doStuff` and the offending line by mapping
-              // the minified code with sourcemaps:
-              /Error: test\nthrow new Error\("test"\);\n.*at doStuff \(/s,
-            ),
-          }),
+        await vi.waitFor(() =>
+          expect(spy, 'Logged with sourcemaps').toHaveBeenCalledWith(
+            expect.objectContaining({
+              stack: expect.stringMatching(
+                // Shows `doStuff` and the offending line by mapping
+                // the minified code with sourcemaps:
+                /Error: test\nthrow new Error\("test"\);\n.*at doStuff \(/s,
+              ),
+            }),
+          ),
         );
 
         // Thrown error is also logged
@@ -184,13 +186,15 @@ describe('MiniOxygen Worker Runtime', () => {
         );
 
         // console.error with stack:
-        expect(spy, 'Logged without sourcemaps').toHaveBeenCalledWith(
-          expect.objectContaining({
-            stack: expect.stringMatching(
-              // Doesn't show `doStuff` because it's minified
-              /Error: test\n\s+at \w .*at Object\.fetch/s,
-            ),
-          }),
+        await vi.waitFor(() =>
+          expect(spy, 'Logged without sourcemaps').toHaveBeenCalledWith(
+            expect.objectContaining({
+              stack: expect.stringMatching(
+                // Doesn't show `doStuff` because it's minified
+                /Error: test\n\s+at \w .*at Object\.fetch/s,
+              ),
+            }),
+          ),
         );
 
         // Thrown error is also logged
@@ -199,6 +203,59 @@ describe('MiniOxygen Worker Runtime', () => {
         spy.mockRestore();
       },
     );
+  });
+
+  it('runs workers whose compatibility date the runtime does not support yet', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      await withFixtures(
+        async ({writeHandler}) => {
+          await writeHandler(() => new Response('ok'));
+          return {compatibilityDate: '9999-12-31'};
+        },
+        async ({fetch, reloadMiniOxygen}) => {
+          let response = await fetch('/');
+          await expect(response.text()).resolves.toEqual('ok');
+
+          await reloadMiniOxygen();
+          response = await fetch('/');
+          await expect(response.text()).resolves.toEqual('ok');
+
+          const warnings = warn.mock.calls.filter(([message]) =>
+            String(message).includes('9999-12-31'),
+          );
+          expect(warnings).toHaveLength(1);
+          expect(warnings[0]?.[0]).toMatch(
+            /compatibility date 9999-12-31 isn't supported by the local Workers runtime yet\. Running locally with \d{4}-\d{2}-\d{2} instead\./,
+          );
+        },
+      );
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('reports why the runtime failed to start', async () => {
+    const miniOxygen = createMiniOxygen({
+      requestHook: null,
+      workers: [
+        {
+          name: 'test',
+          modules: true,
+          script: 'export default {fetch: () => new Response("ok")}',
+          compatibilityFlags: ['not_a_real_compatibility_flag'],
+        },
+      ],
+    });
+
+    try {
+      await expect(miniOxygen.ready).rejects.toThrow(
+        /not_a_real_compatibility_flag/,
+      );
+    } finally {
+      await miniOxygen.dispose().catch(() => {});
+    }
   });
 });
 
@@ -226,7 +283,12 @@ type WithFixturesTestParams = WithFixturesSetupParams & {
   miniOxygenOptions: Partial<MiniOxygenOptions>;
 };
 
-type ReloadOptions = Pick<MiniOxygenOptions['workers'][0], 'bindings'>;
+type ReloadOptions = Partial<
+  Pick<
+    MiniOxygenOptions['workers'][0],
+    'bindings' | 'compatibilityDate' | 'compatibilityFlags'
+  >
+>;
 
 /**
  * Runs MiniOxygen in a temporary project directory.
@@ -298,6 +360,7 @@ function withFixtures(
               contents: await readFile(absoluteBundlePath, 'utf-8'),
             },
           ],
+          ...optionsFromSetup,
           bindings: {...optionsFromSetup?.bindings},
         },
       ],

@@ -1,3 +1,4 @@
+import type {Readable} from 'node:stream';
 import {
   Miniflare,
   NoOpLog,
@@ -29,7 +30,10 @@ import {
 } from './handler.js';
 import {OXYGEN_HEADERS_MAP} from '../common/headers.js';
 import {findPort} from '../common/find-port.js';
-import {OXYGEN_COMPAT_PARAMS} from '../common/compat.js';
+import {
+  OXYGEN_COMPAT_PARAMS,
+  toRuntimeCompatibilityDate,
+} from '../common/compat.js';
 import {isO2Verbose} from '../common/debug.js';
 import type {OnlyBindings, OnlyServices} from './utils.js';
 
@@ -319,16 +323,17 @@ function buildMiniflareOptions(
       : {
           verbose: false,
           log: new NoOpLog(),
-          handleRuntimeStdio(stdout, stderr) {
+          handleRuntimeStdio(stdout: Readable, stderr: Readable) {
             // TODO: handle runtime stdio and remove inspector logs
             // stdout.pipe(process.stdout);
             // stderr.pipe(process.stderr);
 
-            // Destroy these streams to prevent memory leaks
-            // until we start piping them to the terminal.
-            // https://github.com/Shopify/hydrogen/issues/1720
-            stdout.destroy();
-            stderr.destroy();
+            // Drain these streams to prevent memory leaks until we start
+            // piping them to the terminal (#1720). Don't destroy them:
+            // Miniflare buffers startup output from these streams to explain
+            // why workerd failed to start.
+            stdout.resume();
+            stderr.resume();
           },
         }),
     ...mfOverwriteOptions,
@@ -361,6 +366,11 @@ function buildMiniflareOptions(
             OXYGEN_COMPAT_PARAMS),
           ...(useOutboundService && OUTBOUND_SERVICE),
           ...worker,
+          ...(worker.compatibilityDate && {
+            compatibilityDate: toRuntimeCompatibilityDate(
+              worker.compatibilityDate,
+            ),
+          }),
         };
       }),
     ],
