@@ -924,7 +924,7 @@
         "name": "FetchWithCache",
         "value": "FetchWithCache"
       },
-      "value": "export function createFetchWithCache({\n  fetch: customFetch,\n  ...options\n}: CreateFetchWithCacheOptions): FetchWithCache {\n  const resolvedFetch = customFetch ?? globalThis.fetch;\n  const runWithCache =\n    \"runWithCache\" in options ? options.runWithCache : createRunWithCache(options);\n\n  return async function fetchWithCache(\n    input: FetchInput,\n    init?: FetchInit,\n    cacheOptions?: FetchCacheOptions,\n  ): Promise<Response> {\n    if (!cacheOptions) return resolvedFetch(input, init);\n\n    if (cacheOptions.strategy.mode === NO_STORE) {\n      return annotateResponse(\n        await resolvedFetch(input, init),\n        getCacheStatusHeader(\"fwd=bypass\"),\n        cacheOptions,\n      );\n    }\n\n    let passthroughResponse: Response | undefined;\n    let result: RunWithCacheResult<SerializableResponse>;\n\n    try {\n      result = await runWithCache<SerializableResponse>(\n        {\n          key: cacheOptions.key,\n          strategy: cacheOptions.strategy,\n        },\n        async (context) => {\n          const response = await resolvedFetch(\n            input,\n            context?.background && cacheOptions.backgroundSignal\n              ? { ...init, signal: cacheOptions.backgroundSignal() }\n              : init,\n          );\n\n          if (!response.ok) {\n            if (isStaleIfErrorStatus(response.status)) {\n              if (!canSerializeBodyAsText(response)) {\n                passthroughResponse = response;\n                throw new StaleFallbackEligibleResponseError();\n              }\n\n              throw new ServerResponseError(\n                await serializeResponse(response, {\n                  cacheable: false,\n                  fallbackOnError: true,\n                }),\n              );\n            }\n\n            return {\n              data: await serializeResponse(response, {\n                cacheable: false,\n                fallbackOnError: true,\n              }),\n              shouldCache: false,\n            };\n          }\n\n          if (!canSerializeBodyAsText(response)) {\n            passthroughResponse = response;\n\n            // Signal bypass so the original streaming response can be returned\n            // to this caller without attempting to serialize it for storage.\n            throw new UnserializableResponseError();\n          }\n\n          const bodyReader = createBodyReader(response);\n          const shouldCache = await shouldCacheResponse(response, bodyReader, cacheOptions);\n\n          if (!shouldCache) {\n            return {\n              data: await serializeResponse(response, {\n                bodyReader,\n                cacheable: false,\n                fallbackOnError: true,\n              }),\n              shouldCache: false,\n            };\n          }\n\n          const data = await serializeResponse(response, {\n            bodyReader,\n            cacheable: true,\n            fallbackOnError: true,\n          });\n\n          return {\n            data,\n            shouldCache: data.cacheable,\n          };\n        },\n      );\n    } catch (error) {\n      if (error instanceof ServerResponseError) {\n        return annotateResponse(\n          fromSerializableResponse(error.response),\n          getCacheStatusHeader(\"fwd=bypass\"),\n          cacheOptions,\n        );\n      }\n\n      if (error instanceof UnserializableResponseError) {\n        return annotateResponse(\n          // The raw Response body is not cache-serializable, so return the\n          // original response. Refetch defensively if the response was not kept.\n          passthroughResponse ?? (await resolvedFetch(input, init)),\n          getCacheStatusHeader(\"fwd=bypass\"),\n          cacheOptions,\n        );\n      }\n\n      if (error instanceof StaleFallbackEligibleResponseError) {\n        return annotateResponse(\n          // Return the original unserializable response. This error type can\n          // also trigger stale-if-error fallback when a stale entry exists.\n          passthroughResponse ?? (await resolvedFetch(input, init)),\n          getCacheStatusHeader(\"fwd=bypass\"),\n          cacheOptions,\n        );\n      }\n\n      throw error;\n    }\n\n    return annotateResponse(\n      fromSerializableResponse(result.data),\n      result.cacheStatus === \"hit\"\n        ? getCacheStatusHeader(\"hit\")\n        : getNonHitCacheStatusHeader(result.data.cacheable, result.cacheStatus),\n      cacheOptions,\n    );\n  };\n}"
+      "value": "export function createFetchWithCache({\n  fetch: customFetch,\n  ...options\n}: CreateFetchWithCacheOptions): FetchWithCache {\n  const resolvedFetch = customFetch ?? globalThis.fetch;\n  const runWithCache =\n    \"runWithCache\" in options ? options.runWithCache : createRunWithCache(options);\n\n  return async function fetchWithCache(\n    input: FetchInput,\n    init?: FetchInit,\n    cacheOptions?: FetchCacheOptions,\n  ): Promise<Response> {\n    if (!cacheOptions) return resolvedFetch(input, init);\n\n    if (cacheOptions.strategy.mode === NO_STORE) {\n      return annotateResponse(\n        await resolvedFetch(input, init),\n        getCacheStatusHeader(\"fwd=bypass\"),\n        cacheOptions,\n      );\n    }\n\n    let passthroughResponse: Response | undefined;\n    let result: RunWithCacheResult<SerializableResponse>;\n\n    try {\n      result = await runWithCache<SerializableResponse>(\n        {\n          key: cacheOptions.key,\n          strategy: cacheOptions.strategy,\n        },\n        async (context) => {\n          const response = await resolvedFetch(\n            input,\n            context?.background && cacheOptions.backgroundSignal\n              ? { ...init, signal: cacheOptions.backgroundSignal() }\n              : init,\n          );\n\n          // Opaque responses, such as a browser manual redirect, hide their status and body,\n          // so return them unchanged instead of serializing them.\n          if (isOpaqueResponse(response)) {\n            passthroughResponse = response;\n            throw new UnserializableResponseError();\n          }\n\n          if (!response.ok) {\n            if (isStaleIfErrorStatus(response.status)) {\n              if (!canSerializeBodyAsText(response)) {\n                passthroughResponse = response;\n                throw new StaleFallbackEligibleResponseError();\n              }\n\n              throw new ServerResponseError(\n                await serializeResponse(response, {\n                  cacheable: false,\n                  fallbackOnError: true,\n                }),\n              );\n            }\n\n            return {\n              data: await serializeResponse(response, {\n                cacheable: false,\n                fallbackOnError: true,\n              }),\n              shouldCache: false,\n            };\n          }\n\n          if (!canSerializeBodyAsText(response)) {\n            passthroughResponse = response;\n\n            // Signal bypass so the original streaming response can be returned\n            // to this caller without attempting to serialize it for storage.\n            throw new UnserializableResponseError();\n          }\n\n          const bodyReader = createBodyReader(response);\n          const shouldCache = await shouldCacheResponse(response, bodyReader, cacheOptions);\n\n          if (!shouldCache) {\n            return {\n              data: await serializeResponse(response, {\n                bodyReader,\n                cacheable: false,\n                fallbackOnError: true,\n              }),\n              shouldCache: false,\n            };\n          }\n\n          const data = await serializeResponse(response, {\n            bodyReader,\n            cacheable: true,\n            fallbackOnError: true,\n          });\n\n          return {\n            data,\n            shouldCache: data.cacheable,\n          };\n        },\n      );\n    } catch (error) {\n      if (error instanceof ServerResponseError) {\n        return annotateResponse(\n          fromSerializableResponse(error.response),\n          getCacheStatusHeader(\"fwd=bypass\"),\n          cacheOptions,\n        );\n      }\n\n      if (error instanceof UnserializableResponseError) {\n        return annotateResponse(\n          // The raw Response body is not cache-serializable, so return the\n          // original response. Refetch defensively if the response was not kept.\n          passthroughResponse ?? (await resolvedFetch(input, init)),\n          getCacheStatusHeader(\"fwd=bypass\"),\n          cacheOptions,\n        );\n      }\n\n      if (error instanceof StaleFallbackEligibleResponseError) {\n        return annotateResponse(\n          // Return the original unserializable response. This error type can\n          // also trigger stale-if-error fallback when a stale entry exists.\n          passthroughResponse ?? (await resolvedFetch(input, init)),\n          getCacheStatusHeader(\"fwd=bypass\"),\n          cacheOptions,\n        );\n      }\n\n      throw error;\n    }\n\n    return annotateResponse(\n      fromSerializableResponse(result.data),\n      result.cacheStatus === \"hit\"\n        ? getCacheStatusHeader(\"hit\")\n        : getNonHitCacheStatusHeader(result.data.cacheable, result.cacheStatus),\n      cacheOptions,\n    );\n  };\n}"
     }
   },
   "CreateFetchWithCacheOptions": {
@@ -1017,7 +1017,7 @@
       "filePath": "src/core/request-context.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyRequestContextBase",
-      "value": "{\n  // -- Private fields --\n  /**\n   * A type-only marker. Create request contexts only with `createShopifyRequestContext`.\n   * @internal\n   */\n  readonly __hydrogenShopifyRequestContextBrand: never;\n  /**\n   * The incoming request's `Cookie` header. Hydrogen forwards the header to the Storefront API.\n   * @internal\n   */\n  cookie?: string;\n  /**\n   * The customer's trusted IP address. Private Storefront API clients require it.\n   * @internal\n   */\n  readonly buyerIp?: string;\n  /**\n   * The ID that groups this request's Shopify API calls. Hydrogen reads the ID from the request headers or generates one.\n   * @internal\n   */\n  requestGroupId: string;\n  /**\n   * The incoming request's abort signal. Hydrogen's API clients stop their requests when the signal aborts.\n   * @internal\n   */\n  signal?: AbortSignal;\n  /**\n   * The incoming request's URL.\n   * @internal\n   */\n  url?: string;\n  /**\n   * The origin of the incoming request's URL. Hydrogen forwards the origin to the Storefront API.\n   * @internal\n   */\n  storefrontOrigin?: string;\n  /**\n   * Adds the Hydrogen SDK headers and the customer's cookie, privacy, and origin headers to a\n   * Storefront API request. The Storefront API client and the API proxies call the method for you.\n   * @internal\n   */\n  applyStorefrontRequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from the first Storefront API response that sets cookies. The Storefront API\n   * client calls the method for you, and `applyResponseHeaders()` can add the cookies to your response.\n   * @internal\n   */\n  captureSubrequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from a proxied Storefront API response and removes the `set-cookie` header\n   * from that response. The API proxies in `handleShopifyRoutes` call the method for you.\n   * @internal\n   */\n  consumeStorefrontResponseHeaders(headers: Headers): void;\n  /**\n   * Marks the final response as private and uncacheable because the response holds customer data.\n   * The Customer Account API client and the customer session call the method for you.\n   * @internal\n   */\n  markResponseAsPersonalized(reason: string): void;\n  /**\n   * Lets the final response set Shopify cookies before the customer has a Shopify session, and\n   * marks the response as private and uncacheable. The UCP MCP proxy calls the method for you.\n   * @internal\n   */\n  markResponseAsSessionEstablishing(reason: string): void;\n\n  // -- Public fields --\n  /** The request's language, country, and path prefix. The path prefix starts with `/` and has no trailing slash, or is an empty string when you don't set one. */\n  i18n: NormalizedI18nConfig;\n  /** Returns the incoming request's headers with Shopify's request headers added. Pass the headers when you forward the request to a proxy or another origin. */\n  getForwardedRequestHeaders(): Headers;\n  /**\n   * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.\n   *\n   * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses that hold customer data private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.\n   */\n  applyResponseHeaders(headers: Headers): void;\n}",
+      "value": "{\n  // -- Private fields --\n  /**\n   * A type-only marker. Create request contexts only with `createShopifyRequestContext`.\n   * @internal\n   */\n  readonly __hydrogenShopifyRequestContextBrand: never;\n  /**\n   * The incoming request's `Cookie` header. Hydrogen forwards the header to the Storefront API.\n   * @internal\n   */\n  cookie?: string;\n  /**\n   * The customer's trusted IP address. Private Storefront API clients require it.\n   * @internal\n   */\n  readonly buyerIp?: string;\n  /**\n   * The ID that groups this request's Shopify API calls. Hydrogen reads the ID from the request headers or generates one.\n   * @internal\n   */\n  requestGroupId: string;\n  /**\n   * The incoming request's abort signal. Hydrogen's API clients stop their requests when the signal aborts.\n   * @internal\n   */\n  signal?: AbortSignal;\n  /**\n   * The incoming request's URL.\n   * @internal\n   */\n  url?: string;\n  /**\n   * The origin of the incoming request's URL. Hydrogen forwards the origin to the Storefront API.\n   * @internal\n   */\n  storefrontOrigin?: string;\n  /**\n   * Adds the Hydrogen SDK headers and the customer's cookie, privacy, and origin headers to a\n   * Storefront API request. The Storefront API client and the API proxies call the method for you.\n   * @internal\n   */\n  applyStorefrontRequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from the first Storefront API response that sets cookies. The Storefront API\n   * client calls the method for you, and `applyResponseHeaders()` can add the cookies to your response.\n   * @internal\n   */\n  captureSubrequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from a proxied Storefront API response and removes the `set-cookie` header\n   * from that response. The API proxies in `handleShopifyRoutes` call the method for you.\n   * @internal\n   */\n  consumeStorefrontResponseHeaders(headers: Headers): void;\n  /**\n   * Lets the final response set Shopify cookies before the customer has a Shopify session, and\n   * marks the response as private and uncacheable. The UCP MCP proxy calls the method for you.\n   * @internal\n   */\n  markResponseAsSessionEstablishing(reason: string): void;\n\n  // -- Public fields --\n  /** The request's language, country, and path prefix. The path prefix starts with `/` and has no trailing slash, or is an empty string when you don't set one. */\n  i18n: NormalizedI18nConfig;\n  /** Returns the incoming request's headers with Shopify's request headers added. Pass the headers when you forward the request to a proxy or another origin. */\n  getForwardedRequestHeaders(): Headers;\n  /**\n   * Marks the final response as private and uncacheable because the response holds customer data, such as a server-rendered cart. `applyResponseHeaders()` then sets `Cache-Control: private, no-store, max-age=0, must-revalidate` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. Call the method before `applyResponseHeaders()`, and only on requests whose response holds customer data, so other responses stay cacheable. Pass a short `reason` that names the customer data. The Customer Account API client and the customer session call the method for you.\n   */\n  markResponseAsPersonalized(reason: string): void;\n  /**\n   * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.\n   *\n   * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses marked with `markResponseAsPersonalized()` private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.\n   */\n  applyResponseHeaders(headers: Headers): void;\n}",
       "description": "The fields and methods on every request context.",
       "members": [
         {
@@ -1032,7 +1032,7 @@
           "syntaxKind": "MethodSignature",
           "name": "applyResponseHeaders",
           "value": "(headers: Headers) => void",
-          "description": "Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.\n\nAppend your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses that hold customer data private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`."
+          "description": "Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.\n\nAppend your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses marked with `markResponseAsPersonalized()` private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`."
         },
         {
           "filePath": "src/core/request-context.ts",
@@ -1090,7 +1090,7 @@
           "syntaxKind": "MethodSignature",
           "name": "markResponseAsPersonalized",
           "value": "(reason: string) => void",
-          "description": "Marks the final response as private and uncacheable because the response holds customer data. The Customer Account API client and the customer session call the method for you."
+          "description": "Marks the final response as private and uncacheable because the response holds customer data, such as a server-rendered cart. `applyResponseHeaders()` then sets `Cache-Control: private, no-store, max-age=0, must-revalidate` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. Call the method before `applyResponseHeaders()`, and only on requests whose response holds customer data, so other responses stay cacheable. Pass a short `reason` that names the customer data. The Customer Account API client and the customer session call the method for you."
         },
         {
           "filePath": "src/core/request-context.ts",
@@ -1371,7 +1371,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@19600",
+          "name": "__@toStringTag@20180",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         }
@@ -1452,7 +1452,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@19600",
+          "name": "__@toStringTag@20180",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         }
@@ -1777,8 +1777,8 @@
       "filePath": "src/client/types.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "UserVariables",
-      "value": "Omit<VariablesOfDoc<Doc>, AutoAddedVariableNames>",
-      "description": "The variables that you pass for a document, without `country` and `language`. The client fills both from the request context.",
+      "value": "Omit<VariablesOfDoc<Doc>, I18nVariableNamesOfDoc<Doc>>",
+      "description": "Variables the caller passes: everything except the i18n variables the client injects.",
       "members": []
     }
   },
@@ -1876,7 +1876,7 @@
           "syntaxKind": "PropertySignature",
           "name": "graphql",
           "value": "<const Doc extends DocLike | string>(doc: Doc, ...options: GqlRestParam<ResolveDoc<Doc>, Extra>) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>",
-          "description": "Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a plain query string. When the operation declares `$country` or `$language`, the client sets the variable from the request context and overrides any value you pass.\n\nThe method throws an error when a query passes a `cache` strategy and the client has no cache, or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch this configuration error. To cache customer-specific data, use `createRunWithCache` with a key unique to the customer."
+          "description": "Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a plain query string. When the operation declares `$country: CountryCode` or `$language: LanguageCode`, the client sets the variable from the request context and overrides any value you pass. Variables with other types stay caller-owned.\n\nThe method throws an error when a query passes a `cache` strategy and the client has no cache, or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch this configuration error. To cache customer-specific data, use `createRunWithCache` with a key unique to the customer."
         },
         {
           "filePath": "src/client/types.ts",
@@ -2006,7 +2006,7 @@
           "syntaxKind": "PropertySignature",
           "name": "graphql",
           "value": "<const Doc extends DocLike | string>(doc: Doc, ...options: GqlRestParam<ResolveDoc<Doc>, Extra>) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>",
-          "description": "Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a plain query string. When the operation declares `$country` or `$language`, the client sets the variable from the request context and overrides any value you pass.\n\nThe method throws an error when a query passes a `cache` strategy and the client has no cache, or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch this configuration error. To cache customer-specific data, use `createRunWithCache` with a key unique to the customer."
+          "description": "Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a plain query string. When the operation declares `$country: CountryCode` or `$language: LanguageCode`, the client sets the variable from the request context and overrides any value you pass. Variables with other types stay caller-owned.\n\nThe method throws an error when a query passes a `cache` strategy and the client has no cache, or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch this configuration error. To cache customer-specific data, use `createRunWithCache` with a key unique to the customer."
         },
         {
           "filePath": "src/client/types.ts",
@@ -2068,7 +2068,7 @@
           "syntaxKind": "PropertySignature",
           "name": "graphql",
           "value": "<const Doc extends DocLike | string>(doc: Doc, ...options: GqlRestParam<ResolveDoc<Doc>, Extra>) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>",
-          "description": "Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a plain query string. When the operation declares `$country` or `$language`, the client sets the variable from the request context and overrides any value you pass.\n\nThe method throws an error when a query passes a `cache` strategy and the client has no cache, or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch this configuration error. To cache customer-specific data, use `createRunWithCache` with a key unique to the customer."
+          "description": "Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a plain query string. When the operation declares `$country: CountryCode` or `$language: LanguageCode`, the client sets the variable from the request context and overrides any value you pass. Variables with other types stay caller-owned.\n\nThe method throws an error when a query passes a `cache` strategy and the client has no cache, or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch this configuration error. To cache customer-specific data, use `createRunWithCache` with a key unique to the customer."
         },
         {
           "filePath": "src/client/types.ts",
@@ -2130,7 +2130,7 @@
           "syntaxKind": "PropertySignature",
           "name": "graphql",
           "value": "<const Doc extends DocLike | string>(doc: Doc, ...options: GqlRestParam<ResolveDoc<Doc>, Extra>) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>",
-          "description": "Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a plain query string. When the operation declares `$country` or `$language`, the client sets the variable from the request context and overrides any value you pass.\n\nThe method throws an error when a query passes a `cache` strategy and the client has no cache, or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch this configuration error. To cache customer-specific data, use `createRunWithCache` with a key unique to the customer."
+          "description": "Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a plain query string. When the operation declares `$country: CountryCode` or `$language: LanguageCode`, the client sets the variable from the request context and overrides any value you pass. Variables with other types stay caller-owned.\n\nThe method throws an error when a query passes a `cache` strategy and the client has no cache, or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch this configuration error. To cache customer-specific data, use `createRunWithCache` with a key unique to the customer."
         },
         {
           "filePath": "src/client/types.ts",
@@ -2191,7 +2191,7 @@
         "name": "StorefrontClient",
         "value": "StorefrontClient"
       },
-      "value": "export function createStorefrontClient(args: CreateStorefrontClientArgs): StorefrontClient {\n  const { config, requestContext, type: clientType } = args;\n\n  if (!config.storeDomain) {\n    throw new Error(\"storeDomain is required and must be non-empty\");\n  }\n\n  const storeUrl = normalizeStoreDomain(config.storeDomain);\n  const apiVersion = config.apiVersion ?? STOREFRONT_API_VERSION;\n  const apiUrl = `${storeUrl}/api/${apiVersion}/graphql.json`;\n\n  const originFetch = config.fetch ?? globalThis.fetch;\n  if (typeof originFetch !== \"function\") {\n    throw new Error(\n      \"No fetch function available. Pass a fetch option or ensure globalThis.fetch exists.\",\n    );\n  }\n  const resolvedFetch = config.cache\n    ? createFetchWithCache({\n        cache: config.cache,\n        waitUntil: config.waitUntil,\n        fetch: originFetch as typeof globalThis.fetch,\n      })\n    : originFetch;\n\n  const timeoutInMs = config.defaultTimeoutInMs ?? DEFAULT_TIMEOUT_IN_MS;\n  if (timeoutInMs < 0 || Number.isNaN(timeoutInMs)) {\n    throw new Error(\"defaultTimeoutInMs must be a non-negative number\");\n  }\n\n  const staticHeaders: Record<string, string> = {\n    \"content-type\": \"application/json\",\n  };\n  if (config.storefrontId) {\n    staticHeaders[STOREFRONT_ID_HEADER] = config.storefrontId;\n  }\n\n  switch (clientType) {\n    case \"private\":\n    case \"private_no_buyer_context\":\n      if (typeof document !== \"undefined\") {\n        throw new Error(\n          \"private storefront tokens cannot be used in a browser context. Use a publicStorefrontToken instead.\",\n        );\n      }\n      if (!config.privateStorefrontToken) {\n        throw new Error(\"privateStorefrontToken is required\");\n      }\n      staticHeaders[STOREFRONT_PRIVATE_TOKEN_HEADER] = config.privateStorefrontToken;\n      break;\n    case \"public\":\n      if (config.publicStorefrontToken !== undefined && !config.publicStorefrontToken) {\n        throw new Error(\"publicStorefrontToken must be non-empty when provided\");\n      }\n      if (config.publicStorefrontToken) {\n        staticHeaders[STOREFRONT_ACCESS_TOKEN_HEADER] = config.publicStorefrontToken;\n      }\n      break;\n    default:\n      clientType satisfies never;\n      throw new Error(`Unsupported client type: ${clientType}`);\n  }\n\n  const i18n = requestContext.i18n;\n  const requestHeaders = new Headers(staticHeaders);\n  requestContext.applyStorefrontRequestHeaders(requestHeaders);\n\n  if (clientType === \"private\") {\n    const { buyerIp } = requestContext;\n    if (!buyerIp) {\n      throw new TypeError(\"requestContext.buyerIp is required for private Storefront API clients\");\n    }\n    requestHeaders.set(STOREFRONT_BUYER_IP_HEADER, buyerIp);\n  }\n\n  async function graphql(\n    doc: DocLike | string,\n    ...rest: [options?: Record<string, unknown>]\n  ): Promise<StorefrontGraphqlResult<DocLike>> {\n    const opts = (rest[0] ?? {}) as {\n      variables?: Record<string, unknown>;\n      signal?: AbortSignal;\n      cache?: CachingStrategy;\n      [SHOULD_CACHE_RESULT]?: ShouldCacheResult;\n    };\n\n    const queryText = typeof doc === \"string\" ? doc : (doc as unknown as string);\n    if (typeof queryText !== \"string\") {\n      throw new StorefrontApiError(\n        \"Expected gql() to return a string at runtime. Check gql.tada version compatibility.\",\n      );\n    }\n\n    if (opts.cache && !config.cache) {\n      throw new StorefrontCacheConfigError(\n        \"Storefront API cache options require a cache configured in createStorefrontClient().\",\n      );\n    }\n\n    if (opts.cache?.mode === \"private\") {\n      throw new StorefrontCacheConfigError(\n        \"Storefront API cache mode 'private' is not supported yet. Use Cache() without private mode, or cache buyer-specific work with createRunWithCache() and an explicit private key.\",\n      );\n    }\n\n    const variables = buildVariables(queryText, opts.variables, i18n);\n    const externalSignals = [requestContext.signal, opts.signal].filter(\n      (signal): signal is AbortSignal => Boolean(signal),\n    );\n\n    const earlyAbortSignal = externalSignals.find((signal) => signal.aborted);\n    if (earlyAbortSignal) {\n      throw (\n        earlyAbortSignal.reason ??\n        new DOMException(\"signal is aborted without reason\", \"AbortError\")\n      );\n    }\n\n    let requestId: string | undefined;\n    let responseHeaders: Headers;\n    let responseText: string;\n    let status: number;\n    let timeoutSignal: AbortSignal | undefined;\n\n    if (timeoutInMs > 0) {\n      timeoutSignal = AbortSignal.timeout(timeoutInMs);\n      externalSignals.push(timeoutSignal);\n    }\n\n    try {\n      const init: PlainRequestInit = {\n        method: \"POST\",\n        headers: new Headers(requestHeaders),\n        body: JSON.stringify({ query: queryText, variables }),\n        signal: externalSignals.length > 0 ? AbortSignal.any(externalSignals) : undefined,\n      };\n\n      const cacheOptions = createStorefrontCacheOptions(\n        apiUrl,\n        init,\n        queryText,\n        opts.cache,\n        opts[SHOULD_CACHE_RESULT],\n        timeoutInMs > 0 ? timeoutInMs : DEFAULT_TIMEOUT_IN_MS,\n      );\n      const response = await (resolvedFetch as ResolvedStorefrontFetch)(apiUrl, init, cacheOptions);\n\n      responseHeaders = response.headers;\n      const hydrogenCacheStatus = getHydrogenCacheStatus(responseHeaders);\n      if (hydrogenCacheStatus !== \"hit\") {\n        requestContext.captureSubrequestHeaders(responseHeaders);\n      }\n\n      requestId = responseHeaders.get(\"x-request-id\") ?? undefined;\n      status = response.status;\n\n      if (!response.ok) {\n        const bodyHint = await response.text().catch(() => \"\");\n        throw new StorefrontApiError(\n          `SFAPI responded with ${status}${bodyHint ? `: ${bodyHint.slice(0, 200)}` : \"\"}`,\n          { status, requestId, queryText, variables },\n        );\n      }\n\n      responseText = await response.text();\n    } catch (error) {\n      if (error instanceof StorefrontApiError) throw error;\n      if (error instanceof StorefrontTimeoutError) throw error;\n      if (error instanceof StorefrontCacheConfigError) throw error;\n      if (\n        error instanceof DOMException &&\n        error.name === \"TimeoutError\" &&\n        timeoutSignal?.aborted\n      ) {\n        throw new StorefrontTimeoutError(timeoutInMs);\n      }\n      if (error instanceof DOMException && error.name === \"AbortError\") {\n        throw error;\n      }\n      throw new StorefrontApiError(\"SFAPI request failed\", { cause: error });\n    }\n\n    let json: unknown;\n    try {\n      json = JSON.parse(responseText);\n    } catch (cause) {\n      throw new StorefrontApiError(\n        `Failed to parse SFAPI response as JSON (${apiUrl}, status ${status})` +\n          (responseText ? `: ${responseText.slice(0, 200)}` : \"\"),\n        { status, requestId, cause, queryText, variables },\n      );\n    }\n\n    if (typeof json !== \"object\" || json === null || Array.isArray(json)) {\n      throw new StorefrontApiError(\n        `SFAPI returned unexpected JSON type: ${Array.isArray(json) ? \"array\" : typeof json}`,\n        { status, requestId, queryText, variables },\n      );\n    }\n\n    const body = json as { data?: unknown; errors?: GraphQLFormattedError[] };\n    // Branch to populate the two arms of the StorefrontGraphqlResult union: callers\n    // narrowing on `errors` get a non-null `data` only when no errors are present.\n    if (body.errors) {\n      return {\n        data: body.data ?? null,\n        errors: body.errors,\n        headers: responseHeaders,\n      };\n    }\n    return {\n      data: body.data,\n      headers: responseHeaders,\n    };\n  }\n\n  const client: StorefrontClient = {\n    type: clientType,\n    i18n,\n    graphql: graphql as StorefrontClient[\"graphql\"],\n    apiUrl,\n    storeUrl,\n    storefrontId: config.storefrontId,\n    requestContext,\n  };\n\n  if (config.cache) CACHE_ENABLED_GRAPHQL_CLIENTS.add(client.graphql);\n\n  return client;\n}"
+      "value": "export function createStorefrontClient(args: CreateStorefrontClientArgs): StorefrontClient {\n  const { config, requestContext, type: clientType } = args;\n\n  if (!config.storeDomain) {\n    throw new Error(\"storeDomain is required and must be non-empty\");\n  }\n\n  const storeUrl = normalizeStoreDomain(config.storeDomain);\n  const apiVersion = config.apiVersion ?? STOREFRONT_API_VERSION;\n  const apiUrl = `${storeUrl}/api/${apiVersion}/graphql.json`;\n\n  const originFetch = config.fetch ?? globalThis.fetch;\n  if (typeof originFetch !== \"function\") {\n    throw new Error(\n      \"No fetch function available. Pass a fetch option or ensure globalThis.fetch exists.\",\n    );\n  }\n  const resolvedFetch = config.cache\n    ? createFetchWithCache({\n        cache: config.cache,\n        waitUntil: config.waitUntil,\n        fetch: originFetch as typeof globalThis.fetch,\n      })\n    : originFetch;\n\n  const timeoutInMs = config.defaultTimeoutInMs ?? DEFAULT_TIMEOUT_IN_MS;\n  if (timeoutInMs < 0 || Number.isNaN(timeoutInMs)) {\n    throw new Error(\"defaultTimeoutInMs must be a non-negative number\");\n  }\n\n  const staticHeaders: Record<string, string> = {\n    \"content-type\": \"application/json\",\n  };\n  if (config.storefrontId) {\n    staticHeaders[STOREFRONT_ID_HEADER] = config.storefrontId;\n  }\n\n  switch (clientType) {\n    case \"private\":\n    case \"private_no_buyer_context\":\n      if (typeof document !== \"undefined\") {\n        throw new Error(\n          \"private storefront tokens cannot be used in a browser context. Use a publicStorefrontToken instead.\",\n        );\n      }\n      if (!config.privateStorefrontToken) {\n        throw new Error(\"privateStorefrontToken is required\");\n      }\n      staticHeaders[STOREFRONT_PRIVATE_TOKEN_HEADER] = config.privateStorefrontToken;\n      break;\n    case \"public\":\n      if (config.publicStorefrontToken !== undefined && !config.publicStorefrontToken) {\n        throw new Error(\"publicStorefrontToken must be non-empty when provided\");\n      }\n      if (config.publicStorefrontToken) {\n        staticHeaders[STOREFRONT_ACCESS_TOKEN_HEADER] = config.publicStorefrontToken;\n      }\n      break;\n    default:\n      clientType satisfies never;\n      throw new Error(`Unsupported client type: ${clientType}`);\n  }\n\n  const i18n = requestContext.i18n;\n  const requestHeaders = new Headers(staticHeaders);\n  requestContext.applyStorefrontRequestHeaders(requestHeaders);\n\n  if (clientType === \"private\") {\n    const { buyerIp } = requestContext;\n    if (!buyerIp) {\n      throw new TypeError(\"requestContext.buyerIp is required for private Storefront API clients\");\n    }\n    requestHeaders.set(STOREFRONT_BUYER_IP_HEADER, buyerIp);\n  }\n\n  async function graphql(\n    doc: DocLike | string,\n    ...rest: [options?: Record<string, unknown>]\n  ): Promise<StorefrontGraphqlResult<DocLike>> {\n    const opts = (rest[0] ?? {}) as {\n      variables?: Record<string, unknown>;\n      signal?: AbortSignal;\n      cache?: CachingStrategy;\n      [SHOULD_CACHE_RESULT]?: ShouldCacheResult;\n    };\n\n    const queryText = typeof doc === \"string\" ? doc : (doc as unknown as string);\n    if (typeof queryText !== \"string\") {\n      throw new StorefrontApiError(\n        \"Expected gql() to return a string at runtime. Check gql.tada version compatibility.\",\n      );\n    }\n\n    if (opts.cache && !config.cache) {\n      throw new StorefrontCacheConfigError(\n        \"Storefront API cache options require a cache configured in createStorefrontClient().\",\n      );\n    }\n\n    if (opts.cache?.mode === \"private\") {\n      throw new StorefrontCacheConfigError(\n        \"Storefront API cache mode 'private' is not supported yet. Use Cache() without private mode, or cache buyer-specific work with createRunWithCache() and an explicit private key.\",\n      );\n    }\n\n    const variables = buildVariables(queryText, opts.variables, i18n);\n    const externalSignals = [requestContext.signal, opts.signal].filter(\n      (signal): signal is AbortSignal => Boolean(signal),\n    );\n\n    const earlyAbortSignal = externalSignals.find((signal) => signal.aborted);\n    if (earlyAbortSignal) {\n      throw (\n        earlyAbortSignal.reason ??\n        new DOMException(\"signal is aborted without reason\", \"AbortError\")\n      );\n    }\n\n    let requestId: string | undefined;\n    let responseHeaders: Headers;\n    let responseText: string;\n    let status: number;\n    let timeoutSignal: AbortSignal | undefined;\n\n    if (timeoutInMs > 0) {\n      timeoutSignal = AbortSignal.timeout(timeoutInMs);\n      externalSignals.push(timeoutSignal);\n    }\n\n    try {\n      const init: PlainRequestInit = {\n        method: \"POST\",\n        headers: new Headers(requestHeaders),\n        body: JSON.stringify({ query: queryText, variables }),\n        // Never follow redirects: runtimes forward custom Shopify credential headers across\n        // origins, so a 3xx fails closed through the redirect check below.\n        redirect: \"manual\",\n        signal: externalSignals.length > 0 ? AbortSignal.any(externalSignals) : undefined,\n      };\n\n      const cacheOptions = createStorefrontCacheOptions(\n        apiUrl,\n        init,\n        queryText,\n        opts.cache,\n        opts[SHOULD_CACHE_RESULT],\n        timeoutInMs > 0 ? timeoutInMs : DEFAULT_TIMEOUT_IN_MS,\n      );\n      const response = await (resolvedFetch as ResolvedStorefrontFetch)(apiUrl, init, cacheOptions);\n\n      responseHeaders = response.headers;\n      requestId = responseHeaders.get(\"x-request-id\") ?? undefined;\n      status = response.status;\n\n      // Reject redirects before capturing headers so a rejected response can't set cookies.\n      // Browsers hide a manual redirect's status behind an opaque response, so leave it out.\n      const isOpaqueRedirect = response.type === \"opaqueredirect\";\n      if (isOpaqueRedirect || REDIRECT_STATUSES.has(status)) {\n        // Don't await: a cancel waits on any unread clone (tee) a custom fetch kept.\n        void response.body?.cancel().catch(() => {});\n        // Name only the target origin, which diagnoses a misconfigured `storeDomain` (e.g. an\n        // `http://` domain redirected to https) without logging the target's path or query.\n        const locationOrigin = getLocationOrigin(responseHeaders.get(\"location\"), apiUrl);\n        throw new StorefrontApiError(\n          isOpaqueRedirect\n            ? \"SFAPI responded with a redirect; redirects are not followed\"\n            : `SFAPI responded with a redirect (${status}${locationOrigin ? ` to ${locationOrigin}` : \"\"}); redirects are not followed`,\n          { status: isOpaqueRedirect ? undefined : status, requestId, queryText, variables },\n        );\n      }\n\n      const hydrogenCacheStatus = getHydrogenCacheStatus(responseHeaders);\n      if (hydrogenCacheStatus !== \"hit\") {\n        requestContext.captureSubrequestHeaders(responseHeaders);\n      }\n\n      if (!response.ok) {\n        const bodyHint = await response.text().catch(() => \"\");\n        throw new StorefrontApiError(\n          `SFAPI responded with ${status}${bodyHint ? `: ${bodyHint.slice(0, 200)}` : \"\"}`,\n          { status, requestId, queryText, variables },\n        );\n      }\n\n      responseText = await response.text();\n    } catch (error) {\n      if (error instanceof StorefrontApiError) throw error;\n      if (error instanceof StorefrontTimeoutError) throw error;\n      if (error instanceof StorefrontCacheConfigError) throw error;\n      if (\n        error instanceof DOMException &&\n        error.name === \"TimeoutError\" &&\n        timeoutSignal?.aborted\n      ) {\n        throw new StorefrontTimeoutError(timeoutInMs);\n      }\n      if (error instanceof DOMException && error.name === \"AbortError\") {\n        throw error;\n      }\n      throw new StorefrontApiError(\"SFAPI request failed\", { cause: error });\n    }\n\n    let json: unknown;\n    try {\n      json = JSON.parse(responseText);\n    } catch (cause) {\n      throw new StorefrontApiError(\n        `Failed to parse SFAPI response as JSON (${apiUrl}, status ${status})` +\n          (responseText ? `: ${responseText.slice(0, 200)}` : \"\"),\n        { status, requestId, cause, queryText, variables },\n      );\n    }\n\n    if (typeof json !== \"object\" || json === null || Array.isArray(json)) {\n      throw new StorefrontApiError(\n        `SFAPI returned unexpected JSON type: ${Array.isArray(json) ? \"array\" : typeof json}`,\n        { status, requestId, queryText, variables },\n      );\n    }\n\n    const body = json as { data?: unknown; errors?: GraphQLFormattedError[] };\n    // Branch to populate the two arms of the StorefrontGraphqlResult union: callers\n    // narrowing on `errors` get a non-null `data` only when no errors are present.\n    if (body.errors) {\n      return {\n        data: body.data ?? null,\n        errors: body.errors,\n        headers: responseHeaders,\n      };\n    }\n    return {\n      data: body.data,\n      headers: responseHeaders,\n    };\n  }\n\n  const client: StorefrontClient = {\n    type: clientType,\n    i18n,\n    graphql: graphql as StorefrontClient[\"graphql\"],\n    apiUrl,\n    storeUrl,\n    storefrontId: config.storefrontId,\n    requestContext,\n  };\n\n  if (config.cache) CACHE_ENABLED_GRAPHQL_CLIENTS.add(client.graphql);\n\n  return client;\n}"
     }
   },
   "CreateStorefrontClientArgs": {
@@ -2208,7 +2208,7 @@
       "filePath": "src/client/types.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "StorefrontClient",
-      "value": "{\n  /** The client type that you passed to `createStorefrontClient`. */\n  type: Type;\n  /** The country and language that the client sends for `$country` and `$language` variables. */\n  i18n: RequestContext[\"i18n\"];\n  /**\n   * Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a\n   * plain query string. When the operation declares `$country` or `$language`, the client sets the\n   * variable from the request context and overrides any value you pass.\n   *\n   * The method throws an error when a query passes a `cache` strategy and the client has no cache,\n   * or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch\n   * this configuration error. To cache customer-specific data, use `createRunWithCache` with a key\n   * unique to the customer.\n   */\n  graphql: <const Doc extends DocLike | string>(\n    doc: Doc,\n    ...options: GqlRestParam<ResolveDoc<Doc>, Extra>\n  ) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>;\n  /** The Storefront API GraphQL endpoint that the client calls. */\n  apiUrl: string;\n  /** Your store's URL with its protocol, such as `https://my-store.myshopify.com`. */\n  storeUrl: string;\n  /** The storefront ID from the client options. */\n  storefrontId?: string;\n  /** The request context that you passed to `createStorefrontClient`. */\n  requestContext: RequestContext;\n}",
+      "value": "{\n  /** The client type that you passed to `createStorefrontClient`. */\n  type: Type;\n  /** The country and language that the client sends for `$country` and `$language` variables. */\n  i18n: RequestContext[\"i18n\"];\n  /**\n   * Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a\n   * plain query string. When the operation declares `$country: CountryCode` or\n   * `$language: LanguageCode`, the client sets the variable from the request context and overrides\n   * any value you pass. Variables with other types stay caller-owned.\n   *\n   * The method throws an error when a query passes a `cache` strategy and the client has no cache,\n   * or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch\n   * this configuration error. To cache customer-specific data, use `createRunWithCache` with a key\n   * unique to the customer.\n   */\n  graphql: <const Doc extends DocLike | string>(\n    doc: Doc,\n    ...options: GqlRestParam<ResolveDoc<Doc>, Extra>\n  ) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>;\n  /** The Storefront API GraphQL endpoint that the client calls. */\n  apiUrl: string;\n  /** Your store's URL with its protocol, such as `https://my-store.myshopify.com`. */\n  storeUrl: string;\n  /** The storefront ID from the client options. */\n  storefrontId?: string;\n  /** The request context that you passed to `createStorefrontClient`. */\n  requestContext: RequestContext;\n}",
       "description": "A Storefront API client. Call `graphql()` with a document to run a query or mutation and get a typed result.",
       "members": [
         {
@@ -2223,7 +2223,7 @@
           "syntaxKind": "PropertySignature",
           "name": "graphql",
           "value": "<const Doc extends DocLike | string>(doc: Doc, ...options: GqlRestParam<ResolveDoc<Doc>, Extra>) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>",
-          "description": "Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a plain query string. When the operation declares `$country` or `$language`, the client sets the variable from the request context and overrides any value you pass.\n\nThe method throws an error when a query passes a `cache` strategy and the client has no cache, or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch this configuration error. To cache customer-specific data, use `createRunWithCache` with a key unique to the customer."
+          "description": "Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a plain query string. When the operation declares `$country: CountryCode` or `$language: LanguageCode`, the client sets the variable from the request context and overrides any value you pass. Variables with other types stay caller-owned.\n\nThe method throws an error when a query passes a `cache` strategy and the client has no cache, or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch this configuration error. To cache customer-specific data, use `createRunWithCache` with a key unique to the customer."
         },
         {
           "filePath": "src/client/types.ts",
@@ -3591,7 +3591,7 @@
           "syntaxKind": "PropertySignature",
           "name": "graphql",
           "value": "<const Doc extends DocLike | string>(doc: Doc, ...options: GqlRestParam<ResolveDoc<Doc>, {}>) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>",
-          "description": "Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a plain query string. When the operation declares `$country` or `$language`, the client sets the variable from the request context and overrides any value you pass.\n\nThe method throws an error when a query passes a `cache` strategy and the client has no cache, or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch this configuration error. To cache customer-specific data, use `createRunWithCache` with a key unique to the customer."
+          "description": "Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a plain query string. When the operation declares `$country: CountryCode` or `$language: LanguageCode`, the client sets the variable from the request context and overrides any value you pass. Variables with other types stay caller-owned.\n\nThe method throws an error when a query passes a `cache` strategy and the client has no cache, or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch this configuration error. To cache customer-specific data, use `createRunWithCache` with a key unique to the customer."
         }
       ]
     }
@@ -3677,101 +3677,6 @@
         "value": "ShopifyRouteHandler<const TPathname extends string, const TMethod extends string, TContext extends Partial<ShopifyRouteHandlerContext> = ShopifyRouteHandlerContext>"
       },
       "value": "export function createShopifyRouteHandler<\n  const TPathname extends string,\n  const TMethod extends string,\n  TContext extends Partial<ShopifyRouteHandlerContext> = ShopifyRouteHandlerContext,\n>(\n  pathname: TPathname,\n  method: TMethod,\n  handler: (context: TContext) => Promise<ShopifyRouteHandlerResult>,\n): ShopifyRouteHandler<TPathname, TMethod, TContext> {\n  return createCallableRouteHandler(pathname, method, handler);\n}"
-    }
-  },
-  "ShopifyRouteHandlerContext": {
-    "src/core/request-routing/route-types.ts": {
-      "filePath": "src/core/request-routing/route-types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "ShopifyRouteHandlerContext",
-      "value": "{\n  /** The incoming request that matched the handler's pathname and method. */\n  request: Request;\n  /** Your app's session storage for the current request. `handleShopifyRoutes` requires it only when a registered handler's context includes this field. */\n  sessionManager: ShopifyRouteSessionManager;\n  /** The Storefront API client for the current request. */\n  storefrontClient: StorefrontClient;\n  /** The current request's context, the same one the Storefront API client uses. */\n  requestContext: ShopifyRequestContext;\n}",
-      "description": "The values that Hydrogen passes to each registered route handler.",
-      "members": [
-        {
-          "filePath": "src/core/request-routing/route-types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "request",
-          "value": "Request",
-          "description": "The incoming request that matched the handler's pathname and method."
-        },
-        {
-          "filePath": "src/core/request-routing/route-types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "requestContext",
-          "value": "ShopifyRequestContext",
-          "description": "The current request's context, the same one the Storefront API client uses."
-        },
-        {
-          "filePath": "src/core/request-routing/route-types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "sessionManager",
-          "value": "ShopifyRouteSessionManager",
-          "description": "Your app's session storage for the current request. `handleShopifyRoutes` requires it only when a registered handler's context includes this field."
-        },
-        {
-          "filePath": "src/core/request-routing/route-types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "storefrontClient",
-          "value": "StorefrontClient",
-          "description": "The Storefront API client for the current request."
-        }
-      ]
-    }
-  },
-  "ShopifyRouteSessionManager": {
-    "src/core/request-routing/route-types.ts": {
-      "filePath": "src/core/request-routing/route-types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "ShopifyRouteSessionManager",
-      "value": "{\n  /** Returns your storefront's HTTPS origin. Customer account sign-in builds its OAuth redirect URL from the origin. */\n  getSessionOrigin(): Awaitable<string>;\n  /** Returns the session value stored under a key. */\n  getSessionItem(key: string): Awaitable<unknown>;\n  /** Stores a value in the session under a key. */\n  setSessionItem(key: string, value: unknown): Awaitable<void>;\n  /** Deletes the session value stored under a key. */\n  removeSessionItem(key: string): Awaitable<void>;\n  /** Saves session changes and returns the headers, such as a cookie, to add to the response. */\n  commit?(): Awaitable<HeadersInit | void>;\n}",
-      "description": "The session storage that route handlers and the customer session read and write. Implement the methods with your app's session.",
-      "members": [
-        {
-          "filePath": "src/core/request-routing/route-types.ts",
-          "syntaxKind": "MethodSignature",
-          "name": "commit",
-          "value": "() => Awaitable<void | HeadersInit>",
-          "description": "Saves session changes and returns the headers, such as a cookie, to add to the response.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/request-routing/route-types.ts",
-          "syntaxKind": "MethodSignature",
-          "name": "getSessionItem",
-          "value": "(key: string) => unknown",
-          "description": "Returns the session value stored under a key."
-        },
-        {
-          "filePath": "src/core/request-routing/route-types.ts",
-          "syntaxKind": "MethodSignature",
-          "name": "getSessionOrigin",
-          "value": "() => Awaitable<string>",
-          "description": "Returns your storefront's HTTPS origin. Customer account sign-in builds its OAuth redirect URL from the origin."
-        },
-        {
-          "filePath": "src/core/request-routing/route-types.ts",
-          "syntaxKind": "MethodSignature",
-          "name": "removeSessionItem",
-          "value": "(key: string) => Awaitable<void>",
-          "description": "Deletes the session value stored under a key."
-        },
-        {
-          "filePath": "src/core/request-routing/route-types.ts",
-          "syntaxKind": "MethodSignature",
-          "name": "setSessionItem",
-          "value": "(key: string, value: unknown) => Awaitable<void>",
-          "description": "Stores a value in the session under a key."
-        }
-      ]
-    }
-  },
-  "Awaitable": {
-    "src/core/request-routing/route-types.ts": {
-      "filePath": "src/core/request-routing/route-types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "Awaitable",
-      "value": "T | Promise<T>",
-      "description": "A value or a promise for that value."
     }
   },
   "ShopifyRouteHandlerResult": {
@@ -3914,6 +3819,101 @@
       "value": "ShopifyRouteHandler",
       "members": [],
       "override": "A route handler that createShopifyRouteHandler returns for one pathname and HTTP method. Call the handler with the route context to get a JSON, redirect, or error result, and read its `pathname` and `method` to see what it matches. The handler's context type comes from the annotated context parameter and defaults to `ShopifyRouteHandlerContext`."
+    }
+  },
+  "ShopifyRouteHandlerContext": {
+    "src/core/request-routing/route-types.ts": {
+      "filePath": "src/core/request-routing/route-types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyRouteHandlerContext",
+      "value": "{\n  /** The incoming request that matched the handler's pathname and method. */\n  request: Request;\n  /** Your app's session storage for the current request. `handleShopifyRoutes` requires it only when a registered handler's context includes this field. */\n  sessionManager: ShopifyRouteSessionManager;\n  /** The Storefront API client for the current request. */\n  storefrontClient: StorefrontClient;\n  /** The current request's context, the same one the Storefront API client uses. */\n  requestContext: ShopifyRequestContext;\n}",
+      "description": "The values that Hydrogen passes to each registered route handler.",
+      "members": [
+        {
+          "filePath": "src/core/request-routing/route-types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "request",
+          "value": "Request",
+          "description": "The incoming request that matched the handler's pathname and method."
+        },
+        {
+          "filePath": "src/core/request-routing/route-types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "requestContext",
+          "value": "ShopifyRequestContext",
+          "description": "The current request's context, the same one the Storefront API client uses."
+        },
+        {
+          "filePath": "src/core/request-routing/route-types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "sessionManager",
+          "value": "ShopifyRouteSessionManager",
+          "description": "Your app's session storage for the current request. `handleShopifyRoutes` requires it only when a registered handler's context includes this field."
+        },
+        {
+          "filePath": "src/core/request-routing/route-types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "storefrontClient",
+          "value": "StorefrontClient",
+          "description": "The Storefront API client for the current request."
+        }
+      ]
+    }
+  },
+  "ShopifyRouteSessionManager": {
+    "src/core/request-routing/route-types.ts": {
+      "filePath": "src/core/request-routing/route-types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyRouteSessionManager",
+      "value": "{\n  /** Returns your storefront's HTTPS origin. Customer account sign-in builds its OAuth redirect URL from the origin. */\n  getSessionOrigin(): Awaitable<string>;\n  /** Returns the session value stored under a key. */\n  getSessionItem(key: string): Awaitable<unknown>;\n  /** Stores a value in the session under a key. */\n  setSessionItem(key: string, value: unknown): Awaitable<void>;\n  /** Deletes the session value stored under a key. */\n  removeSessionItem(key: string): Awaitable<void>;\n  /** Saves session changes and returns the headers, such as a cookie, to add to the response. */\n  commit?(): Awaitable<HeadersInit | void>;\n}",
+      "description": "The session storage that route handlers and the customer session read and write. Implement the methods with your app's session.",
+      "members": [
+        {
+          "filePath": "src/core/request-routing/route-types.ts",
+          "syntaxKind": "MethodSignature",
+          "name": "commit",
+          "value": "() => Awaitable<void | HeadersInit>",
+          "description": "Saves session changes and returns the headers, such as a cookie, to add to the response.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/request-routing/route-types.ts",
+          "syntaxKind": "MethodSignature",
+          "name": "getSessionItem",
+          "value": "(key: string) => unknown",
+          "description": "Returns the session value stored under a key."
+        },
+        {
+          "filePath": "src/core/request-routing/route-types.ts",
+          "syntaxKind": "MethodSignature",
+          "name": "getSessionOrigin",
+          "value": "() => Awaitable<string>",
+          "description": "Returns your storefront's HTTPS origin. Customer account sign-in builds its OAuth redirect URL from the origin."
+        },
+        {
+          "filePath": "src/core/request-routing/route-types.ts",
+          "syntaxKind": "MethodSignature",
+          "name": "removeSessionItem",
+          "value": "(key: string) => Awaitable<void>",
+          "description": "Deletes the session value stored under a key."
+        },
+        {
+          "filePath": "src/core/request-routing/route-types.ts",
+          "syntaxKind": "MethodSignature",
+          "name": "setSessionItem",
+          "value": "(key: string, value: unknown) => Awaitable<void>",
+          "description": "Stores a value in the session under a key."
+        }
+      ]
+    }
+  },
+  "Awaitable": {
+    "src/core/request-routing/route-types.ts": {
+      "filePath": "src/core/request-routing/route-types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "Awaitable",
+      "value": "T | Promise<T>",
+      "description": "A value or a promise for that value."
     }
   },
   "HandleShopifyRoutesForDocs": {
@@ -5136,7 +5136,7 @@
       "filePath": "src/core/standard-routes/types.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyStandardRouteMatch",
-      "value": "{\n  /** Shopify's default path for the matched resource, with the locale path prefix applied. */\n  standardPathname: string;\n  /** The decoded handle values from the matched URL. */\n  params: StandardRouteParams;\n  /** The standard route name that the URL matched, or `index` for the home page. */\n  route: TRoute;\n  /** The page template name for the matched route, such as `product` or `list-collections`. */\n  pageTemplateName: ShopifyPageTemplateName<TRoute>;\n  /** Shopify's default template for the matched route and your app's custom template, which falls back to the default. */\n  templates: {\n    standard: string;\n    custom: string;\n  };\n}",
+      "value": "{\n  /** Shopify's default path for the matched resource, with the locale path prefix applied. */\n  standardPathname: string;\n  /** The decoded handle values from the matched URL. */\n  params: StandardRouteParams;\n  /** The standard route name that the URL matched, or `index` for the home page. */\n  route: TRoute;\n  /** The page template name for the matched route, such as `product` or `list-collections`. */\n  pageTemplateName: ShopifyPageTemplateName<TRoute>;\n  /**\n   * Shopify's default template for the matched resource and your app's custom template, which\n   * falls back to the default. A collection-scoped product match without a collection handle uses\n   * the product template as its standard template.\n   */\n  templates: {\n    standard: string;\n    custom: string;\n  };\n}",
       "description": "The standard route that a storefront URL matches, with its handles, page template name, and templates.",
       "members": [
         {
@@ -5172,7 +5172,7 @@
           "syntaxKind": "PropertySignature",
           "name": "templates",
           "value": "{ standard: string; custom: string; }",
-          "description": "Shopify's default template for the matched route and your app's custom template, which falls back to the default."
+          "description": "Shopify's default template for the matched resource and your app's custom template, which falls back to the default. A collection-scoped product match without a collection handle uses the product template as its standard template."
         }
       ]
     }
@@ -5679,7 +5679,7 @@
         "name": "{\n  /**\n   * Starts handling cart events, and loads the cart when you created the store without initial data. Repeated calls have no effect. During server rendering, the method does nothing.\n   */\n  connect(): void;\n\n  /** Stops the store. Cancels in-flight cart requests and stops handling cart events. */\n  destroy(): void;\n\n  /** Replaces the store's cart with a different cart that the server loaded. The method ignores data for the cart that the store already holds, and ignores data while cart changes are in flight. */\n  hydrate(data: CartData): void;\n\n  /** Returns the current cart state, including changes that the server hasn't confirmed yet. */\n  getState(): CartState;\n\n  /**\n   * Calls the listener on every state change and returns a function that removes the listener. The method works with React's `useSyncExternalStore`.\n   *\n   * @param listener - The function that receives each new state.\n   */\n  subscribe(listener: (state: CartState) => void): () => void;\n\n  /**\n   * Loads the full cart from the server.\n   *\n   * The promise rejects when the load fails, with a `CartNetworkError` when your cart endpoint returns a non-2xx status.\n   */\n  fetch(): Promise<void>;\n\n  /**\n   * Reloads the cart after a cart change that skipped the store, such as a server action. When the store has no cart yet, the method picks up the cart that the server created.\n   *\n   * A failed reload adds an entry to the network errors in the cart state.\n   */\n  refresh(): void;\n\n  /** Clears the cart data and errors and cancels in-flight cart requests. After you connect the store, the method also loads the cart again when the store held a cart. */\n  reset(): void;\n\n  /**\n   * Runs the cart change that a cart form submission describes. Pass the form's submit event, and call `event.preventDefault()` to stop the browser's own form submission. The method connects the store when you haven't connected it.\n   *\n   * The submit button's value sets the change: `add`, `increase`,\n   * `decrease`, `remove`, `set`, `discount-apply`, `discount-remove`,\n   * `note-update`, or `attributes-update`. A button without a value adds\n   * the line when the form has a `merchandiseId` field. A `set` with an empty or\n   * zero quantity removes the line. When your cart fragment selects the variant's\n   * available quantity, the store caps a `set` quantity at that number.\n   *\n   * The promise rejects with a type error when the event target isn't a form or\n   * the event has no submitter. The promise rejects with an error when the button's\n   * value isn't a recognized change, or when the form lacks a required field\n   * such as the line ID.\n   */\n  handleFormSubmit(event: SubmitEvent, eventDetail?: Record<string, unknown>): Promise<void>;\n}",
         "value": "{\n  /**\n   * Starts handling cart events, and loads the cart when you created the store without initial data. Repeated calls have no effect. During server rendering, the method does nothing.\n   */\n  connect(): void;\n\n  /** Stops the store. Cancels in-flight cart requests and stops handling cart events. */\n  destroy(): void;\n\n  /** Replaces the store's cart with a different cart that the server loaded. The method ignores data for the cart that the store already holds, and ignores data while cart changes are in flight. */\n  hydrate(data: CartData): void;\n\n  /** Returns the current cart state, including changes that the server hasn't confirmed yet. */\n  getState(): CartState;\n\n  /**\n   * Calls the listener on every state change and returns a function that removes the listener. The method works with React's `useSyncExternalStore`.\n   *\n   * @param listener - The function that receives each new state.\n   */\n  subscribe(listener: (state: CartState) => void): () => void;\n\n  /**\n   * Loads the full cart from the server.\n   *\n   * The promise rejects when the load fails, with a `CartNetworkError` when your cart endpoint returns a non-2xx status.\n   */\n  fetch(): Promise<void>;\n\n  /**\n   * Reloads the cart after a cart change that skipped the store, such as a server action. When the store has no cart yet, the method picks up the cart that the server created.\n   *\n   * A failed reload adds an entry to the network errors in the cart state.\n   */\n  refresh(): void;\n\n  /** Clears the cart data and errors and cancels in-flight cart requests. After you connect the store, the method also loads the cart again when the store held a cart. */\n  reset(): void;\n\n  /**\n   * Runs the cart change that a cart form submission describes. Pass the form's submit event, and call `event.preventDefault()` to stop the browser's own form submission. The method connects the store when you haven't connected it.\n   *\n   * The submit button's value sets the change: `add`, `increase`,\n   * `decrease`, `remove`, `set`, `discount-apply`, `discount-remove`,\n   * `note-update`, or `attributes-update`. A button without a value adds\n   * the line when the form has a `merchandiseId` field. A `set` with an empty or\n   * zero quantity removes the line. When your cart fragment selects the variant's\n   * available quantity, the store caps a `set` quantity at that number.\n   *\n   * The promise rejects with a type error when the event target isn't a form or\n   * the event has no submitter. The promise rejects with an error when the button's\n   * value isn't a recognized change, or when the form lacks a required field\n   * such as the line ID.\n   */\n  handleFormSubmit(event: SubmitEvent, eventDetail?: Record<string, unknown>): Promise<void>;\n}"
       },
-      "value": "export function createCartStore<TData extends CartData = CartData>(\n  options: CreateCartStoreOptions<TData> = {},\n): CartStore {\n  const initialData = options.initialData;\n  const asyncInitialData = isPromiseLike<CartInitialData<TData>>(initialData);\n  const syncInitialData = initialData !== undefined && !asyncInitialData;\n  const initialCart = syncInitialData ? initialData.cart : null;\n  const settled = initialCart\n    ? createCartState(initialCart)\n    : syncInitialData\n      ? createEmptyCartState({ loading: false })\n      : createEmptyCartState();\n  let context: CartStoreContext | null = null;\n  const observable = createCartObservable(settled, () => {\n    if (context) invalidateActiveCartLoad(context);\n  });\n  const store: CartStoreContext = {\n    observable,\n    settled,\n    transactions: [],\n    projectedErrors: [],\n    observedPromises: new Set(),\n    activeMutationTransports: new Set(),\n    expectedEvents: [],\n    nextTransactionId: 1,\n    generation: 0,\n    lifecycleController: new AbortController(),\n    keyedOwners: new Map(),\n    activeCartLoad: null,\n    revalidation: { requested: false, active: null, visible: false },\n    mutationRevision: 0,\n    identityTransportGate: { active: null, waiting: [] },\n    cartSyncAttached: false,\n    reservation: null,\n    lastSnapshotSequence: 0,\n  };\n  context = store;\n  const handlers: CartEventHandlers = {\n    lines: ((event: Event) =>\n      handleLinesEvent(store, event as CartLinesUpdateEvent)) as EventListener,\n    discount: ((event: Event) =>\n      handleDiscountEvent(store, event as CartDiscountUpdateEvent)) as EventListener,\n    note: ((event: Event) => handleNoteEvent(store, event as CartNoteUpdateEvent)) as EventListener,\n    attributes: ((event: Event) =>\n      handleAttributesEvent(store, event as CartAttributesUpdateEvent)) as EventListener,\n  };\n  if (asyncInitialData) {\n    loadCartInStore(\n      store,\n      Promise.resolve(initialData).then((data) => data.cart),\n    ).catch((error: unknown) => log.error(\"cart initial load failed\", { error }));\n  }\n\n  let initialCartLoadStarted = syncInitialData || asyncInitialData;\n\n  return {\n    connect: () => {\n      const connected = connectCartStore(store, handlers);\n      if (!connected || initialCartLoadStarted) return;\n      initialCartLoadStarted = true;\n      loadCartInStore(store).catch((error: unknown) =>\n        log.error(\"cart initial load failed\", { error }),\n      );\n    },\n    destroy: () => destroyCartStore(store, handlers),\n    hydrate: (data) => hydrateCartInStore(store, data),\n    getState: () => store.observable.state,\n    subscribe: (listener) => store.observable.subscribe(listener),\n    fetch: () => loadCartInStore(store),\n    refresh: () => refreshCartInStore(store),\n    reset: () => resetCartStore(store),\n    handleFormSubmit: (event, eventDetail) =>\n      handleFormSubmitInStore(store, handlers, event, eventDetail),\n  };\n}",
+      "value": "export function createCartStore<TData extends CartData = CartData>(\n  options: CreateCartStoreOptions<TData> = {},\n): CartStore {\n  const initialData = options.initialData;\n  const asyncInitialData = isPromiseLike<CartInitialData<TData>>(initialData);\n  const syncInitialData = initialData !== undefined && !asyncInitialData;\n  const initialCart = syncInitialData ? initialData.cart : null;\n  const settled = initialCart\n    ? createCartState(initialCart)\n    : syncInitialData\n      ? createEmptyCartState({ loading: false })\n      : createEmptyCartState();\n  let context: CartStoreContext | null = null;\n  const observable = createCartObservable(settled, () => {\n    if (context) invalidateActiveCartLoad(context);\n  });\n  const store: CartStoreContext = {\n    observable,\n    settled,\n    transactions: [],\n    projectedErrors: [],\n    observedPromises: new Set(),\n    activeMutationTransports: new Set(),\n    expectedEvents: [],\n    nextTransactionId: 1,\n    generation: 0,\n    lifecycleController: new AbortController(),\n    keyedOwners: new Map(),\n    activeCartLoad: null,\n    revalidation: { requested: false, active: null, visible: false },\n    mutationRevision: 0,\n    identityTransportGate: { active: null, waiting: [] },\n    cartSyncAttached: false,\n    revalidateOnConnect: false,\n    reservation: null,\n    lastSnapshotSequence: 0,\n  };\n  context = store;\n  const handlers: CartEventHandlers = {\n    lines: ((event: Event) =>\n      handleLinesEvent(store, event as CartLinesUpdateEvent)) as EventListener,\n    discount: ((event: Event) =>\n      handleDiscountEvent(store, event as CartDiscountUpdateEvent)) as EventListener,\n    note: ((event: Event) => handleNoteEvent(store, event as CartNoteUpdateEvent)) as EventListener,\n    attributes: ((event: Event) =>\n      handleAttributesEvent(store, event as CartAttributesUpdateEvent)) as EventListener,\n  };\n  if (asyncInitialData) {\n    loadCartInStore(\n      store,\n      Promise.resolve(initialData).then((data) => data.cart),\n    ).catch((error: unknown) => log.error(\"cart initial load failed\", { error }));\n  }\n\n  let initialCartLoadStarted = syncInitialData || asyncInitialData;\n\n  return {\n    connect: () => {\n      const connected = connectCartStore(store, handlers);\n      if (!connected || initialCartLoadStarted) return;\n      initialCartLoadStarted = true;\n      loadCartInStore(store).catch((error: unknown) =>\n        log.error(\"cart initial load failed\", { error }),\n      );\n    },\n    destroy: () => destroyCartStore(store, handlers),\n    hydrate: (data) => hydrateCartInStore(store, data),\n    getState: () => store.observable.state,\n    subscribe: (listener) => store.observable.subscribe(listener),\n    fetch: () => loadCartInStore(store),\n    refresh: () => refreshCartInStore(store),\n    reset: () => resetCartStore(store),\n    handleFormSubmit: (event, eventDetail) =>\n      handleFormSubmitInStore(store, handlers, event, eventDetail),\n  };\n}",
       "examples": [
         {
           "title": "Example",
@@ -6912,7 +6912,7 @@
         {
           "filePath": "src/core/cart/buyer-identity-sync.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@22178",
+          "name": "__@cartBuyerIdentitySync@23035",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to `createCustomerAccountServerHandlers` through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         }
@@ -7321,7 +7321,7 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@23708",
+          "name": "__@cartServerHandlersCartQuery@24561",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -7371,14 +7371,14 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@22178",
+          "name": "__@cartBuyerIdentitySync@23035",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to `createCustomerAccountServerHandlers` through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         },
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@23708",
+          "name": "__@cartServerHandlersCartQuery@24561",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -9954,7 +9954,7 @@
         "name": "PredictiveSearchServerHandlers<CreatePredictiveSearchServerHandlersOptions>",
         "value": "PredictiveSearchServerHandlers<CreatePredictiveSearchServerHandlersOptions>"
       },
-      "value": "export function createPredictiveSearchServerHandlers(\n  options: CreatePredictiveSearchServerHandlersOptions = {},\n): PredictiveSearchServerHandlers<CreatePredictiveSearchServerHandlersOptions> {\n  const queries = options.fragments\n    ? makePredictiveSearchQueries(options)\n    : predictiveSearchQueries;\n  const handler = createCallableRouteHandler(\n    options.path ?? PREDICTIVE_SEARCH_API_PATH,\n    PREDICTIVE_SEARCH_GET_METHOD,\n    (context: PredictiveSearchHandlerContext) => handleGet(context, options, queries),\n  );\n  const handlers = {\n    get: handler,\n  } as PredictiveSearchServerHandlers<CreatePredictiveSearchServerHandlersOptions>;\n\n  Object.defineProperty(handlers, predictiveSearchServerHandlersQuery, {\n    value: queries.predictiveSearch,\n  });\n  return handlers;\n}"
+      "value": "export function createPredictiveSearchServerHandlers(\n  options: CreatePredictiveSearchServerHandlersOptions = {},\n): PredictiveSearchServerHandlers<CreatePredictiveSearchServerHandlersOptions> {\n  const queries = options.fragments\n    ? makePredictiveSearchQueries(options)\n    : predictiveSearchQueries;\n  const handler = createCallableRouteHandler(\n    options.path ?? PREDICTIVE_SEARCH_API_PATH,\n    PREDICTIVE_SEARCH_GET_METHOD,\n    (context: PredictiveSearchHandlerContext) => handleGet(context, options, queries),\n  );\n  return { get: handler };\n}"
     }
   },
   "CreatePredictiveSearchServerHandlersOptions": {
@@ -10028,16 +10028,9 @@
       "filePath": "src/core/predictive-search/server-handlers.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "PredictiveSearchServerHandlers",
-      "value": "{\n  /** Query that the handlers run, with any custom fragments. */\n  readonly [predictiveSearchServerHandlersQuery]: PredictiveSearchQueriesForOptions<TOptions>[\"predictiveSearch\"];\n  /** Answers GET requests with predictive search results as JSON. */\n  get: PredictiveSearchGetHandler<TData>;\n}",
+      "value": "{\n  /** Answers GET requests with predictive search results as JSON. */\n  get: PredictiveSearchGetHandler<TData>;\n}",
       "description": "Predictive search route handlers to pass to `handleShopifyRoutes`.",
       "members": [
-        {
-          "filePath": "src/core/predictive-search/server-handlers.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "__@predictiveSearchServerHandlersQuery@26634",
-          "value": "PredictiveSearchQueryForOptions<TOptions>",
-          "description": "Query that the handlers run, with any custom fragments."
-        },
         {
           "filePath": "src/core/predictive-search/server-handlers.ts",
           "syntaxKind": "PropertySignature",
@@ -10810,7 +10803,7 @@
       "filePath": "src/customer-account/client.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CreateCustomerAccountClientOptions",
-      "value": "{\n  /** Numeric Shopify shop ID as a string of digits, such as `12345`. */\n  shopId: string;\n  /**\n   * Customer Account API version in `YYYY-MM` format. Defaults to `2026-10`.\n   */\n  customerApiVersion?: string;\n  /**\n   * The context for the current request, from `createShopifyRequestContext`.\n   *\n   * The context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.\n   *\n   * The client fills `$language` from the context's language and stops requests when the context's signal aborts.\n   */\n  requestContext: ShopifyRequestContext;\n  /** Custom fetch implementation. Defaults to the global fetch. */\n  fetch?: typeof globalThis.fetch;\n  /**\n   * Timeout for each request in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to `30000`.\n   */\n  defaultTimeoutInMs?: number;\n}",
+      "value": "{\n  /** Numeric Shopify shop ID as a string of digits, such as `12345`. */\n  shopId: string;\n  /**\n   * Customer Account API version in `YYYY-MM` format. Defaults to `2026-10`.\n   */\n  customerApiVersion?: string;\n  /**\n   * The context for the current request, from `createShopifyRequestContext`.\n   *\n   * The context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.\n   *\n   * The client fills `$language: LanguageCode` from the context's language and stops requests when the context's signal aborts.\n   */\n  requestContext: ShopifyRequestContext;\n  /** Custom fetch implementation. Defaults to the global fetch. */\n  fetch?: typeof globalThis.fetch;\n  /**\n   * Timeout for each request in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to `30000`.\n   */\n  defaultTimeoutInMs?: number;\n}",
       "description": "Options for creating a Customer Account API client.",
       "members": [
         {
@@ -10842,7 +10835,7 @@
           "syntaxKind": "PropertySignature",
           "name": "requestContext",
           "value": "ShopifyRequestContext",
-          "description": "The context for the current request, from `createShopifyRequestContext`.\n\nThe context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.\n\nThe client fills `$language` from the context's language and stops requests when the context's signal aborts."
+          "description": "The context for the current request, from `createShopifyRequestContext`.\n\nThe context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.\n\nThe client fills `$language: LanguageCode` from the context's language and stops requests when the context's signal aborts."
         },
         {
           "filePath": "src/customer-account/client.ts",
@@ -10859,7 +10852,7 @@
       "filePath": "src/customer-account/client.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CustomerAccountClient",
-      "value": "{\n  /** The GraphQL endpoint, `https://shopify.com/{shopId}/account/customer/api/{version}/graphql`. */\n  readonly apiUrl: string;\n  /**\n   * Sends a Customer Account API query or mutation with the customer's access token, and returns the data, any GraphQL errors, and the response headers. Pass a document from the Customer Account `gql` function.\n   *\n   * The request makes the final response private and uncacheable when you call `applyResponseHeaders()`. When the document declares `$language` and you omit it, the client fills the variable from the request context's language.\n   *\n   * The method throws a `TypeError` for a document from any other `gql` function, including the Storefront API `gql` function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. A missing or malformed access token throws `CustomerAccountAuthenticationError`, a timeout throws `CustomerAccountTimeoutError`, and other request failures throw `CustomerAccountApiError`.\n   *\n   * @throws {TypeError} When another gql function created the document, or when the variables aren't an object.\n   * @throws {CustomerAccountAuthenticationError} When the options object is missing or the access token fails validation.\n   * @throws {CustomerAccountTimeoutError} When the request exceeds the client's timeout.\n   * @throws {CustomerAccountApiError} On a non-OK HTTP status, unparseable JSON, a response without data, or a network failure.\n   *\n   * @example\n   * ```ts\n   * const result = await client.graphql(\n   *   gql(`query { customer { firstName lastName } }`),\n   *   { accessToken },\n   * );\n   *\n   * if (result.errors) {\n   *   console.error(result.errors);\n   * } else {\n   *   console.log(result.data.customer.firstName);\n   * }\n   * ```\n   */\n  graphql: <const Doc extends AnyCustomerAccountDocument>(\n    document: Doc,\n    ...options: CustomerAccountGqlRestParam<Doc>\n  ) => Promise<CustomerAccountGraphqlResult<ResultOfDoc<Doc>>>;\n}",
+      "value": "{\n  /** The GraphQL endpoint, `https://shopify.com/{shopId}/account/customer/api/{version}/graphql`. */\n  readonly apiUrl: string;\n  /**\n   * Sends a Customer Account API query or mutation with the customer's access token, and returns the data, any GraphQL errors, and the response headers. Pass a document from the Customer Account `gql` function.\n   *\n   * The request makes the final response private and uncacheable when you call `applyResponseHeaders()`. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.\n   *\n   * The method throws a `TypeError` for a document from any other `gql` function, including the Storefront API `gql` function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. A missing or malformed access token throws `CustomerAccountAuthenticationError`, a timeout throws `CustomerAccountTimeoutError`, and other request failures throw `CustomerAccountApiError`.\n   *\n   * @throws {TypeError} When another gql function created the document, or when the variables aren't an object.\n   * @throws {CustomerAccountAuthenticationError} When the options object is missing or the access token fails validation.\n   * @throws {CustomerAccountTimeoutError} When the request exceeds the client's timeout.\n   * @throws {CustomerAccountApiError} On a non-OK HTTP status, unparseable JSON, a response without data, or a network failure.\n   *\n   * @example\n   * ```ts\n   * const result = await client.graphql(\n   *   gql(`query { customer { firstName lastName } }`),\n   *   { accessToken },\n   * );\n   *\n   * if (result.errors) {\n   *   console.error(result.errors);\n   * } else {\n   *   console.log(result.data.customer.firstName);\n   * }\n   * ```\n   */\n  graphql: <const Doc extends AnyCustomerAccountDocument>(\n    document: Doc,\n    ...options: CustomerAccountGqlRestParam<Doc>\n  ) => Promise<CustomerAccountGraphqlResult<ResultOfDoc<Doc>>>;\n}",
       "description": "A client that sends Customer Account API requests from your server for the current request.",
       "members": [
         {
@@ -10874,7 +10867,7 @@
           "syntaxKind": "PropertySignature",
           "name": "graphql",
           "value": "<const Doc extends AnyCustomerAccountDocument>(document: Doc, ...options: CustomerAccountGqlRestParam<Doc>) => Promise<CustomerAccountGraphqlResult<ResultOfDoc<Doc>>>",
-          "description": "Sends a Customer Account API query or mutation with the customer's access token, and returns the data, any GraphQL errors, and the response headers. Pass a document from the Customer Account `gql` function.\n\nThe request makes the final response private and uncacheable when you call `applyResponseHeaders()`. When the document declares `$language` and you omit it, the client fills the variable from the request context's language.\n\nThe method throws a `TypeError` for a document from any other `gql` function, including the Storefront API `gql` function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. A missing or malformed access token throws `CustomerAccountAuthenticationError`, a timeout throws `CustomerAccountTimeoutError`, and other request failures throw `CustomerAccountApiError`.",
+          "description": "Sends a Customer Account API query or mutation with the customer's access token, and returns the data, any GraphQL errors, and the response headers. Pass a document from the Customer Account `gql` function.\n\nThe request makes the final response private and uncacheable when you call `applyResponseHeaders()`. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.\n\nThe method throws a `TypeError` for a document from any other `gql` function, including the Storefront API `gql` function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. A missing or malformed access token throws `CustomerAccountAuthenticationError`, a timeout throws `CustomerAccountTimeoutError`, and other request failures throw `CustomerAccountApiError`.",
           "examples": [
             {
               "title": "Example",
@@ -10897,7 +10890,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CustomerAccountGqlRestParam",
       "value": "HasNoRequiredKeys<UserVariables<Doc>> extends true\n    ? [options: CustomerAccountGraphqlOptions<UserVariables<Doc>>]\n    : [\n        options: CustomerAccountGraphqlOptions<UserVariables<Doc>> & {\n          variables: UserVariables<Doc>;\n        },\n      ]",
-      "description": "The options argument for a Customer Account API request.\n\nPass `variables` when the document declares a required variable other than `language`. TypeScript reports an error when a required variable is missing."
+      "description": "The options argument for a Customer Account API request.\n\nPass `variables` when the document declares a required variable other than `$language: LanguageCode`. TypeScript reports an error when a required variable is missing."
     }
   },
   "VariablesOfDoc": {
@@ -10909,13 +10902,76 @@
       "description": "The variables that a Customer Account document declares."
     }
   },
-  "OptionalAutoVariables": {
+  "I18nVariableNamesOfDoc": {
     "src/customer-account/client.ts": {
       "filePath": "src/customer-account/client.ts",
       "syntaxKind": "TypeAliasDeclaration",
-      "name": "OptionalAutoVariables",
-      "value": "\"language\" extends keyof Variables\n  ? { language?: Variables[\"language\"] }\n  : {}",
-      "description": "An optional `language` variable for a document that declares `$language`. The client fills a missing value from the request context."
+      "name": "I18nVariableNamesOfDoc",
+      "value": "string extends SourceOf<Doc>\n    ? I18nVariableNamesByValue<VariablesOfDoc<Doc>>\n    : InferVariableNamesDeclaredAs<SourceOf<Doc>, I18nVariableTypes>",
+      "description": "The variables the client fills when omitted: those declared with the expected type, such as `$language: LanguageCode`."
+    }
+  },
+  "SourceOf": {
+    "src/customer-account/graphql.ts": {
+      "filePath": "src/customer-account/graphql.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "SourceOf",
+      "value": "Doc extends { readonly source: infer Source extends string }\n  ? Source\n  : never",
+      "description": "Extracts the source string literal type from a Customer Account document."
+    }
+  },
+  "I18nVariableNamesByValue": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "I18nVariableNamesByValue",
+      "value": "I18nVariableNamesByValue<Variables>",
+      "description": ""
+    }
+  },
+  "InferVariableNamesDeclaredAs": {
+    "src/graphql/type-resolver.ts": {
+      "filePath": "src/graphql/type-resolver.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "InferVariableNamesDeclaredAs",
+      "value": "parseDocument<T> extends infer Doc\n    ? Doc extends { kind: \"Document\"; definitions: infer Defs extends readonly unknown[] }\n      ? FirstOperation<Defs> extends { variableDefinitions: infer Vars extends readonly unknown[] }\n        ? DeclaredNameOfType<Vars[number], Types>\n        : never\n      : never\n    : never",
+      "description": "Names of the first operation's variables that are declared with the named type `Types` maps them to, nullable or non-null. List types never match."
+    }
+  },
+  "FirstOperation": {
+    "src/graphql/type-resolver.ts": {
+      "filePath": "src/graphql/type-resolver.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "FirstOperation",
+      "value": "Defs extends readonly [infer Def, ...infer Rest]\n  ? Def extends { kind: \"OperationDefinition\" }\n    ? Def\n    : FirstOperation<Rest>\n  : never",
+      "description": ""
+    }
+  },
+  "DeclaredNameOfType": {
+    "src/graphql/type-resolver.ts": {
+      "filePath": "src/graphql/type-resolver.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "DeclaredNameOfType",
+      "value": "Definition extends {\n  variable: { name: { value: infer Name extends keyof Types } };\n  type: infer Type;\n}\n  ? (Type extends { kind: \"NonNullType\"; type: infer Inner } ? Inner : Type) extends {\n      kind: \"NamedType\";\n      name: { value: Types[Name] };\n    }\n    ? Name\n    : never\n  : never",
+      "description": ""
+    }
+  },
+  "I18nVariableTypes": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "I18nVariableTypes",
+      "value": "typeof CUSTOMER_ACCOUNT_I18N_VARIABLE_TYPES",
+      "description": ""
+    }
+  },
+  "OptionalI18nVariables": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "OptionalI18nVariables",
+      "value": "{\n  [K in keyof Variables & Names]?: Variables[K];\n}",
+      "description": "Optional versions of the variables that the client fills from the request context when you omit them."
     }
   },
   "CustomerAccountGraphqlOptions": {
@@ -10923,7 +10979,7 @@
       "filePath": "src/customer-account/client.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CustomerAccountGraphqlOptions",
-      "value": "{\n  /** The customer's access token, such as one from the customer session's `getOrRefreshAccessToken()` method. */\n  accessToken: string;\n  /**\n   * The document's variables. When the document declares `$language` and you omit it, the client fills the variable from the request context's language.\n   */\n  variables?: Variables;\n  /**\n   * Stops this request when the signal aborts. The request also stops when the request context's signal aborts or the timeout passes.\n   */\n  signal?: AbortSignal;\n}",
+      "value": "{\n  /** The customer's access token, such as one from the customer session's `getOrRefreshAccessToken()` method. */\n  accessToken: string;\n  /**\n   * The document's variables. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.\n   */\n  variables?: Variables;\n  /**\n   * Stops this request when the signal aborts. The request also stops when the request context's signal aborts or the timeout passes.\n   */\n  signal?: AbortSignal;\n}",
       "description": "Options for a single Customer Account API request.",
       "members": [
         {
@@ -10946,7 +11002,7 @@
           "syntaxKind": "PropertySignature",
           "name": "variables",
           "value": "Variables",
-          "description": "The document's variables. When the document declares `$language` and you omit it, the client fills the variable from the request context's language.",
+          "description": "The document's variables. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.",
           "isOptional": true
         }
       ]
@@ -10974,7 +11030,7 @@
         "name": "TypedCartComponents<\n  CartDataFromHandlers<THandlers>\n>",
         "value": "TypedCartComponents<\n  CartDataFromHandlers<THandlers>\n>"
       },
-      "value": "export function createCartComponents<THandlers>(): TypedCartComponents<\n  CartDataFromHandlers<THandlers>\n> {\n  type TData = CartDataFromHandlers<THandlers>;\n\n  function TypedCartProvider({ initialData, children }: TypedCartProviderProps<TData>) {\n    return (\n      <CartProvider initialData={initialData as CartInitialData | undefined}>\n        {children}\n      </CartProvider>\n    );\n  }\n\n  function useTypedCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    return useCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useTypedOptionalCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S | undefined {\n    return useOptionalCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useSuspenseCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    const readyPromise = useCart((state) => state.readyPromise);\n    if (readyPromise) throw readyPromise;\n    return useCart(selector, isEqual);\n  }\n\n  return {\n    CartProvider: TypedCartProvider,\n    useCart: useTypedCart,\n    useSuspenseCart,\n    useOptionalCart: useTypedOptionalCart,\n    useCartActions,\n    useCartForm,\n  } as const;\n}",
+      "value": "export function createCartComponents<THandlers>(): TypedCartComponents<\n  CartDataFromHandlers<THandlers>\n> {\n  type TData = CartDataFromHandlers<THandlers>;\n\n  function TypedCartProvider({ initialData, children }: TypedCartProviderProps<TData>) {\n    return (\n      <CartProvider initialData={initialData as CartInitialData | undefined}>\n        {children}\n      </CartProvider>\n    );\n  }\n\n  function useTypedCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    return useCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useTypedOptionalCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S | undefined {\n    return useOptionalCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useSuspenseCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    return useSuspenseCartSelector(selector, isEqual);\n  }\n\n  return {\n    CartProvider: TypedCartProvider,\n    useCart: useTypedCart,\n    useSuspenseCart,\n    useOptionalCart: useTypedOptionalCart,\n    useCartActions,\n    useCartForm,\n  } as const;\n}",
       "examples": [
         {
           "title": "Example",
@@ -11224,7 +11280,7 @@
         "name": "",
         "value": ""
       },
-      "value": "export function CartProvider({\n  initialData,\n  children,\n}: {\n  initialData?: CartInitialData;\n  children?: ReactNode;\n}) {\n  // oxlint-disable-next-line react-hooks/exhaustive-deps -- store is created once with the initial server data\n  const store = useMemo(() => createCartStore({ initialData }), []);\n\n  useEffect(() => {\n    configureCoreCartEndpoint(cartEndpoint);\n    store.connect();\n    return () => {\n      store.destroy();\n    };\n  }, [store]);\n\n  return <CartContext.Provider value={store}>{children}</CartContext.Provider>;\n}",
+      "value": "export function CartProvider({\n  initialData,\n  children,\n}: {\n  initialData?: CartInitialData;\n  children?: ReactNode;\n}) {\n  const context = useMemo(() => {\n    const store = createCartStore({ initialData });\n    // Plain consumers must hydrate from the state used for SSR, even if the live store settles first.\n    return { store, hydrationSnapshot: store.getState() };\n    // oxlint-disable-next-line react-hooks/exhaustive-deps -- provider initialData seeds one store for its lifetime\n  }, []);\n  const { store } = context;\n\n  useEffect(() => {\n    configureCoreCartEndpoint(cartEndpoint);\n    store.connect();\n    return () => {\n      store.destroy();\n    };\n  }, [store]);\n\n  return <CartContext.Provider value={context}>{children}</CartContext.Provider>;\n}",
       "examples": [
         {
           "title": "Example",
@@ -11266,7 +11322,7 @@
         "name": "S = unknown",
         "value": "S = unknown"
       },
-      "value": "export function useCart<TData extends CartData = CartData, S = unknown>(\n  selector: (state: CartState<TData>) => S,\n  isEqual?: (a: S, b: S) => boolean,\n): S {\n  const store = useCartStore();\n  return useCartSelector(store, selector, isEqual) as S;\n}",
+      "value": "export function useCart<TData extends CartData = CartData, S = unknown>(\n  selector: (state: CartState<TData>) => S,\n  isEqual?: (a: S, b: S) => boolean,\n): S {\n  const { store, hydrationSnapshot } = useCartContext();\n  return useCartSelector(store, hydrationSnapshot, selector, isEqual) as S;\n}",
       "examples": [
         {
           "title": "Example",
@@ -11364,7 +11420,7 @@
         "name": "S = unknown | undefined",
         "value": "S = unknown | undefined"
       },
-      "value": "export function useOptionalCart<TData extends CartData = CartData, S = unknown>(\n  selector: (state: CartState<TData>) => S,\n  isEqual?: (a: S, b: S) => boolean,\n): S | undefined {\n  const store = useOptionalCartStore();\n  if (!store) return undefined;\n  return useCartSelector(store, selector, isEqual);\n}",
+      "value": "export function useOptionalCart<TData extends CartData = CartData, S = unknown>(\n  selector: (state: CartState<TData>) => S,\n  isEqual?: (a: S, b: S) => boolean,\n): S | undefined {\n  const context = useOptionalCartContext();\n  if (!context) return undefined;\n  return useCartSelector(context.store, context.hydrationSnapshot, selector, isEqual);\n}",
       "examples": [
         {
           "title": "Example",
