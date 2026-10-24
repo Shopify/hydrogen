@@ -8,6 +8,9 @@ export const STARTUP_TIMEOUT_IN_MS = 120_000;
 // server flood the Playwright report.
 const STARTUP_OUTPUT_TAIL_IN_CHARS = 4_000;
 const SIGKILL_GRACE_PERIOD_IN_MS = 5_000;
+// A transient startup crash recurring this many times in a row is not
+// transient, so give up and surface it instead of retrying forever.
+export const MAX_STARTUP_ATTEMPTS = 3;
 const TUNNEL_URL_PATTERN = /(https:\/\/[\w-]+\.tryhydrogen\.dev)\b/;
 const TUNNEL_POLL_INTERVAL_IN_MS = 1_000;
 export const TUNNEL_READY_TIMEOUT_IN_MS = 90_000;
@@ -66,7 +69,33 @@ export class DevServer {
     return `http://localhost:${this.port}`;
   }
 
+  /**
+   * Starts the dev server, retrying when it crashes before it is ready.
+   *
+   * Playwright workers start servers in the same project directory, and the
+   * startup work they share on disk can collide. React Router's type
+   * generation, for example, deletes and rewrites `.react-router/types` on
+   * every start, and an overlapping start fails with ENOTEMPTY. Those crashes
+   * are transient, so another attempt usually succeeds. Timeouts and Shopify
+   * CLI setup errors are not retried because another attempt cannot fix them.
+   */
   async start() {
+    for (let attempt = 1; attempt < MAX_STARTUP_ATTEMPTS; attempt++) {
+      try {
+        return await this.startOnce();
+      } catch (error) {
+        if (!(error instanceof EarlyExitError)) throw error;
+        console.log(
+          `[test-server] ${error.summary} Retrying (attempt ${attempt + 1} of ${MAX_STARTUP_ATTEMPTS}).`,
+        );
+        await this.stop();
+      }
+    }
+
+    return this.startOnce();
+  }
+
+  private async startOnce() {
     if (this.process) {
       throw new Error(`Server ${this.id} is already running`);
     }
@@ -223,8 +252,9 @@ export class DevServer {
             ? `was killed by ${signal}`
             : `exited with code ${code}`;
           reject(
-            new Error(
-              `${this.startupLabel()} ${exitReason} before it was ready.${describeStartupOutput(startupOutput)}`,
+            new EarlyExitError(
+              `${this.startupLabel()} ${exitReason} before it was ready.`,
+              startupOutput,
             ),
           );
         }
@@ -291,6 +321,22 @@ export class DevServer {
         }
       }
     });
+  }
+}
+
+/** The dev server process ended before it reported that it was ready. */
+class EarlyExitError extends Error {
+  /** One line for logs: what happened and the CLI's final line of output. */
+  readonly summary: string;
+
+  constructor(reason: string, startupOutput: string) {
+    super(`${reason}${describeStartupOutput(startupOutput)}`);
+    this.name = 'EarlyExitError';
+    const lastOutputLine = stripVTControlCharacters(startupOutput)
+      .trim()
+      .split('\n')
+      .at(-1);
+    this.summary = lastOutputLine ? `${reason} ${lastOutputLine}` : reason;
   }
 }
 
