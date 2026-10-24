@@ -7,6 +7,9 @@ import {DevServer, MAX_STARTUP_ATTEMPTS} from '../../fixtures/server';
 const STORE_KEY = 'mockShop';
 const STARTUP_ERROR =
   "Error: ENOTEMPTY: directory not empty, rmdir '.react-router/types'";
+// The real CLI prints a stack trace after the error, so the error is not the
+// last line of output.
+const STACK_FRAME = '    at watch (vite.js:1392:3)';
 const FAKE_APP_PORT = 4321;
 const ATTEMPTS_FILE = 'attempts.log';
 
@@ -14,8 +17,8 @@ const ATTEMPTS_FILE = 'attempts.log';
  * Creates a project whose `shopify` binary stands in for
  * `shopify hydrogen dev`. Each run appends to `attempts.log`, so tests can
  * count startups. The first `crashCount` runs crash the way the real CLI does
- * (an error on stderr, then exit code 1); later runs report ready and stay
- * alive until stopped.
+ * (an error and its stack on stderr, then exit code 1); later runs report
+ * ready and stay alive until stopped.
  */
 async function createProjectWithFakeCli(crashCount: number) {
   const projectPath = await mkdtemp(
@@ -35,6 +38,7 @@ async function createProjectWithFakeCli(crashCount: number) {
 echo attempt >> ${ATTEMPTS_FILE}
 if [ "$(wc -l < ${ATTEMPTS_FILE})" -le ${crashCount} ]; then
   echo "${STARTUP_ERROR}" >&2
+  echo "${STACK_FRAME}" >&2
   exit 1
 fi
 echo "View app: http://localhost:${FAKE_APP_PORT}"
@@ -114,5 +118,21 @@ test.describe('DevServer startup failures', () => {
 
     expect(server.getUrl()).toBe(`http://localhost:${FAKE_APP_PORT}`);
     expect(await countStartupAttempts(projectPath)).toBe(2);
+  });
+
+  test('logs the error, not a stack frame, when it retries', async () => {
+    projectPath = await createProjectWithFakeCli(1);
+    const logs: string[] = [];
+    const originalLog = console.log;
+    console.log = (...args: unknown[]) => logs.push(args.join(' '));
+
+    try {
+      await createServer().start();
+    } finally {
+      console.log = originalLog;
+    }
+
+    const retryLog = logs.find((log) => log.includes('Retrying'));
+    expect(retryLog).toContain(STARTUP_ERROR);
   });
 });

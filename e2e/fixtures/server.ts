@@ -326,18 +326,24 @@ export class DevServer {
 
 /** The dev server process ended before it reported that it was ready. */
 class EarlyExitError extends Error {
-  /** One line for logs: what happened and the CLI's final line of output. */
+  /** One line for logs: what happened and the CLI's error. */
   readonly summary: string;
 
   constructor(reason: string, startupOutput: string) {
     super(`${reason}${describeStartupOutput(startupOutput)}`);
     this.name = 'EarlyExitError';
-    const lastOutputLine = stripVTControlCharacters(startupOutput)
-      .trim()
-      .split('\n')
-      .at(-1);
-    this.summary = lastOutputLine ? `${reason} ${lastOutputLine}` : reason;
+    const errorLine = findErrorLine(startupOutput);
+    this.summary = errorLine ? `${reason} ${errorLine.trim()}` : reason;
   }
+}
+
+/**
+ * The CLI prints its error followed by a stack trace, so the last line is
+ * usually a stack frame. Prefer the last line that names an error.
+ */
+function findErrorLine(output: string) {
+  const lines = stripVTControlCharacters(output).trim().split('\n');
+  return lines.findLast((line) => /Error\b/.test(line)) ?? lines.at(-1);
 }
 
 function keepTail(output: string) {
