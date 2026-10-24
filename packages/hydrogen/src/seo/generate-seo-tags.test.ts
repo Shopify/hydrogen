@@ -337,6 +337,14 @@ describe('generateSeoTags', () => {
       expect(output).toEqual(
         expect.arrayContaining([
           {
+            key: 'meta-https://example.com/image-1.jpg-0-og:image',
+            props: {
+              content: 'https://example.com/image-1.jpg',
+              property: 'og:image',
+            },
+            tag: 'meta',
+          },
+          {
             key: 'meta-https://example.com/image-1.jpg-0-og:image:url',
             props: {
               content: 'https://example.com/image-1.jpg',
@@ -394,6 +402,14 @@ describe('generateSeoTags', () => {
       expect(output).toEqual(
         expect.arrayContaining([
           {
+            key: 'meta-https://example.com/image-1.jpg-0-og:image',
+            props: {
+              content: 'https://example.com/image-1.jpg',
+              property: 'og:image',
+            },
+            tag: 'meta',
+          },
+          {
             key: 'meta-https://example.com/image-1.jpg-0-og:image:url',
             props: {
               content: 'https://example.com/image-1.jpg',
@@ -422,6 +438,14 @@ describe('generateSeoTags', () => {
             props: {
               content: 'image/jpeg',
               property: 'og:image:type',
+            },
+            tag: 'meta',
+          },
+          {
+            key: 'meta-https://example.com/image-2.jpg-0-og:image',
+            props: {
+              content: 'https://example.com/image-2.jpg',
+              property: 'og:image',
             },
             tag: 'meta',
           },
@@ -489,6 +513,14 @@ describe('generateSeoTags', () => {
       expect(output).toEqual(
         expect.arrayContaining([
           {
+            key: 'meta-https://example.com/image-1.jpg-0-og:image',
+            props: {
+              content: 'https://example.com/image-1.jpg',
+              property: 'og:image',
+            },
+            tag: 'meta',
+          },
+          {
             key: 'meta-https://example.com/image-1.jpg-0-og:image:url',
             props: {
               content: 'https://example.com/image-1.jpg',
@@ -521,6 +553,14 @@ describe('generateSeoTags', () => {
             tag: 'meta',
           },
           {
+            key: 'meta-https://example.com/image-1.mp3-0-og:audio',
+            props: {
+              content: 'https://example.com/image-1.mp3',
+              property: 'og:audio',
+            },
+            tag: 'meta',
+          },
+          {
             key: 'meta-https://example.com/image-1.mp3-0-og:audio:url',
             props: {
               content: 'https://example.com/image-1.mp3',
@@ -541,6 +581,14 @@ describe('generateSeoTags', () => {
             props: {
               content: 'audio/mpeg',
               property: 'og:audio:type',
+            },
+            tag: 'meta',
+          },
+          {
+            key: 'meta-https://example.com/image-1.swf-0-og:video',
+            props: {
+              content: 'https://example.com/image-1.swf',
+              property: 'og:video',
             },
             tag: 'meta',
           },
