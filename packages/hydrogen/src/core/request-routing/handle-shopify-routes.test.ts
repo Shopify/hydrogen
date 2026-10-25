@@ -11,6 +11,7 @@ import { createShopifyRequestContext } from "../request-context";
 import { assert } from "../test-utils";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "./handle-shopify-routes";
 import { createShopifyRouteHandler } from "./registered-routes";
+import type { ShopifyRouteHandlerContext } from "./route-types";
 
 type TestStorefrontConfig = {
   storeDomain: string;
@@ -585,6 +586,45 @@ describe("handleShopifyRoutes", () => {
     expect(headers.get("Shopify-Storefront-Buyer-IP")).toBeNull();
   });
 
+  it("runs cart handlers without a session manager", async () => {
+    const request = new Request("https://my-app.com/api/cart");
+    const storefrontClient = createPrivateStorefrontClient(request);
+
+    const result = await handleShopifyRoutesImpl({
+      request,
+      requestContext: storefrontClient.requestContext,
+      storefrontClient,
+      handlers: [createCartServerHandlers()],
+    });
+
+    assert(result, "expected the cart handler to respond");
+    expect(result.status).toBe(200);
+    await expect(result.json()).resolves.toEqual({ cart: null });
+  });
+
+  it("never passes an undefined session manager to handlers that declare it optional", async () => {
+    const request = new Request("https://my-app.com/optional-session");
+    const storefrontClient = createPrivateStorefrontClient(request);
+    const handler = createShopifyRouteHandler(
+      "/optional-session",
+      "GET",
+      async ({ sessionManager }: Partial<ShopifyRouteHandlerContext>) => ({
+        type: "json" as const,
+        data: { origin: (await sessionManager?.getSessionOrigin()) ?? "anonymous" },
+      }),
+    );
+
+    await expect(
+      // @ts-expect-error the types require sessionManager when the context declares it
+      handleShopifyRoutesImpl({
+        request,
+        requestContext: storefrontClient.requestContext,
+        storefrontClient,
+        handlers: [{ handler }],
+      }),
+    ).rejects.toThrow(/\/optional-session.*sessionManager/);
+  });
+
   it("throws when the request context differs from the storefront client's context", () => {
     const request = new Request("https://my-app.com/custom");
     const storefrontClient = createPrivateStorefrontClient(request);
@@ -622,6 +662,7 @@ describe("handleShopifyRoutes", () => {
         headers: {
           "cache-control": "public, s-maxage=600",
           "cdn-cache-control": "public, s-maxage=600",
+          "oxygen-cache-control": "public, max-age=3600",
         },
       };
     });
@@ -637,6 +678,7 @@ describe("handleShopifyRoutes", () => {
       "private, no-store, max-age=0, must-revalidate",
     );
     expect(result?.headers.get("cdn-cache-control")).toBeNull();
+    expect(result?.headers.get("oxygen-cache-control")).toBeNull();
   });
 
   it("maps registered handler relative redirects to absolute same-origin Location headers", async () => {
@@ -712,13 +754,28 @@ describe("handleShopifyRoutes", () => {
       },
     });
 
-    await handleShopifyRoutes({ request, storefrontClient });
+    const result = await handleShopifyRoutes({ request, storefrontClient });
 
     const [, init] = mockFetch.mock.calls[0];
     const headers = new Headers(init.headers);
     expect(headers.get("Shopify-Storefront-Private-Token")).toBe("test-private-token");
     expect(headers.get("Shopify-Storefront-Buyer-IP")).toBe("10.0.0.2");
     expect(headers.get("X-Shopify-Storefront-Access-Token")).toBeNull();
+    // The private cache policy must survive `safeApplyResponseHeaders()`.
+    expect(result?.headers.get("cache-control")).toBe(
+      "private, no-store, max-age=0, must-revalidate",
+    );
+  });
+
+  it.each([
+    ["GET", "/account/login"],
+    ["POST", "/account/logout"],
+  ])("leaves unregistered %s %s to the app router", async (method, path) => {
+    const result = await handleShopifyRoutes({
+      request: new Request(`https://my-app.com${path}`, { method }),
+    });
+
+    expect(result).toBeNull();
   });
 
   it("forwards buy permalinks to the configured store domain", async () => {

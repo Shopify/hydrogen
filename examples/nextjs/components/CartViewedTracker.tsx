@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 import { AnalyticsEvent, getAnalytics } from "@/lib/analytics";
-import { useCart } from "@/lib/cart";
+import { useSuspenseCart } from "@/lib/cart";
 
 /**
  * Publishes `CART_VIEWED` when the `/cart` page is viewed
@@ -12,7 +12,7 @@ import { useCart } from "@/lib/cart";
  * `updatedAt` + connection-shaped `lines`; otherwise pass `cart: null`.
  */
 export function CartViewedTracker() {
-  const cart = useCart((state) => state.data);
+  const cart = useSuspenseCart((state) => state.data);
 
   useEffect(() => {
     const analytics = getAnalytics();

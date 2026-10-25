@@ -25,6 +25,7 @@ import type { I18nConfig, ShopifyRequestContext } from "../core/request-context"
 import { normalizeStoreDomain } from "../core/url";
 import type { AnyStorefrontQueryString } from "../graphql";
 import { StorefrontApiError, StorefrontTimeoutError } from "./errors";
+import { getI18nVariableNames } from "./i18n-variables";
 import type {
   ClientType,
   CreateStorefrontClientArgs,
@@ -42,8 +43,6 @@ type ResolvedStorefrontFetch = (
   cacheOptions: FetchCacheOptions | undefined,
 ) => Promise<Response>;
 
-const COUNTRY_VAR_RE = /\$country\s*:/;
-const LANGUAGE_VAR_RE = /\$language\s*:/;
 const REQUEST_CACHE_KEY_HEADERS = new Set([
   "content-type",
   "user-agent",
@@ -63,6 +62,8 @@ const REQUEST_IDENTITY_HEADERS = new Set([
   SHOPIFY_STOREFRONT_Y_HEADER.toLowerCase(),
   SHOPIFY_STOREFRONT_S_HEADER.toLowerCase(),
 ]);
+// 304 Not Modified is a 3xx but not a redirect, so it falls through to the non-OK handling.
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const CACHE_ENABLED_GRAPHQL_CLIENTS = new WeakSet<StorefrontClient["graphql"]>();
 const SHOULD_CACHE_RESULT = Symbol();
 
@@ -261,6 +262,9 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
         method: "POST",
         headers: new Headers(requestHeaders),
         body: JSON.stringify({ query: queryText, variables }),
+        // Never follow redirects: runtimes forward custom Shopify credential headers across
+        // origins, so a 3xx fails closed through the redirect check below.
+        redirect: "manual",
         signal: externalSignals.length > 0 ? AbortSignal.any(externalSignals) : undefined,
       };
 
@@ -275,13 +279,30 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       const response = await (resolvedFetch as ResolvedStorefrontFetch)(apiUrl, init, cacheOptions);
 
       responseHeaders = response.headers;
+      requestId = responseHeaders.get("x-request-id") ?? undefined;
+      status = response.status;
+
+      // Reject redirects before capturing headers so a rejected response can't set cookies.
+      // Browsers hide a manual redirect's status behind an opaque response, so leave it out.
+      const isOpaqueRedirect = response.type === "opaqueredirect";
+      if (isOpaqueRedirect || REDIRECT_STATUSES.has(status)) {
+        // Don't await: a cancel waits on any unread clone (tee) a custom fetch kept.
+        void response.body?.cancel().catch(() => {});
+        // Name only the target origin, which diagnoses a misconfigured `storeDomain` (e.g. an
+        // `http://` domain redirected to https) without logging the target's path or query.
+        const locationOrigin = getLocationOrigin(responseHeaders.get("location"), apiUrl);
+        throw new StorefrontApiError(
+          isOpaqueRedirect
+            ? "SFAPI responded with a redirect; redirects are not followed"
+            : `SFAPI responded with a redirect (${status}${locationOrigin ? ` to ${locationOrigin}` : ""}); redirects are not followed`,
+          { status: isOpaqueRedirect ? undefined : status, requestId, queryText, variables },
+        );
+      }
+
       const hydrogenCacheStatus = getHydrogenCacheStatus(responseHeaders);
       if (hydrogenCacheStatus !== "hit") {
         requestContext.captureSubrequestHeaders(responseHeaders);
       }
-
-      requestId = responseHeaders.get("x-request-id") ?? undefined;
-      status = response.status;
 
       if (!response.ok) {
         const bodyHint = await response.text().catch(() => "");
@@ -358,6 +379,15 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
   return client;
 }
 
+function getLocationOrigin(location: string | null, baseUrl: string): string | undefined {
+  if (!location) return undefined;
+  try {
+    return new URL(location, baseUrl).origin;
+  } catch {
+    return undefined;
+  }
+}
+
 function buildVariables(
   queryText: string,
   userVariables: Record<string, unknown> | undefined,
@@ -365,11 +395,8 @@ function buildVariables(
 ): Record<string, unknown> {
   const variables: Record<string, unknown> = { ...userVariables };
 
-  if (COUNTRY_VAR_RE.test(queryText)) {
-    variables.country = resolvedI18n.country;
-  }
-  if (LANGUAGE_VAR_RE.test(queryText)) {
-    variables.language = resolvedI18n.language;
+  for (const name of getI18nVariableNames(queryText)) {
+    variables[name] = resolvedI18n[name];
   }
 
   return variables;

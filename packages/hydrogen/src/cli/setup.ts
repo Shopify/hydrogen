@@ -141,9 +141,8 @@ function spawnRunCommand(command: string, args: string[], options: { cwd: string
   });
 }
 
-// TODO: Update branch from "dist-preview" to "dist" before GA launch
-const TEMPLATE_TARBALL_URL = "https://codeload.github.com/Shopify/hydrogen/tar.gz/dist-preview";
-const TEMPLATE_TARBALL_PREFIX = "hydrogen-dist-preview/templates/react-router/";
+const TEMPLATE_TARBALL_URL = "https://codeload.github.com/Shopify/hydrogen/tar.gz/dist";
+const TEMPLATE_TARBALL_PREFIX = "hydrogen-dist/templates/react-router/";
 const TEMPLATE_TARBALL_STRIP_COMPONENTS = TEMPLATE_TARBALL_PREFIX.split("/").filter(Boolean).length;
 
 type SetupChoice = "scaffold" | "skills";
@@ -242,21 +241,24 @@ async function ensureHydrogenInstalled(
   env: Record<string, string | undefined>,
   runCommand: RunCommand,
   log: (message: string) => void,
-): Promise<void> {
+): Promise<{ addedHydrogen: boolean }> {
   const packageJson = readPackageJson(appRoot);
 
-  if (hasHydrogenDependency(packageJson) && getInstalledPackageRoot(appRoot)) return;
+  if (hasHydrogenDependency(packageJson) && getInstalledPackageRoot(appRoot)) {
+    return { addedHydrogen: false };
+  }
 
   if (hasHydrogenDependency(packageJson)) {
     const packageManager = detectPackageManager(appRoot, packageJson, env);
     log(`${PACKAGE_NAME} is declared but not installed. Running ${packageManager} install...`);
     await runCommand(packageManager, ["install"], { cwd: appRoot });
-    return;
+    return { addedHydrogen: false };
   }
 
   const packageManager = detectPackageManager(appRoot, packageJson, env);
   log(`Installing ${PACKAGE_NAME} with ${packageManager}...`);
   await installHydrogen(appRoot, packageManager, runCommand);
+  return { addedHydrogen: true };
 }
 
 interface ResolvedSetupOptions {
@@ -286,9 +288,10 @@ function isEmptyDirectory(dir: string): boolean {
 
 export async function setupHydrogen(options: SetupHydrogenOptions = {}): Promise<void> {
   const { appRoot, env, runCommand, log, prompt } = resolveSetupOptions(options);
+  let addedHydrogen = false;
 
   if (hasPackageJson(appRoot)) {
-    await ensureHydrogenInstalled(appRoot, env, runCommand, log);
+    ({ addedHydrogen } = await ensureHydrogenInstalled(appRoot, env, runCommand, log));
   } else if (isEmptyDirectory(appRoot)) {
     let choice: SetupChoice;
     if (prompt) {
@@ -309,4 +312,8 @@ export async function setupHydrogen(options: SetupHydrogenOptions = {}): Promise
   }
 
   await syncSkills({ force: options.force, cwd: appRoot, packageRoot: options.packageRoot, log });
+
+  if (addedHydrogen) {
+    log("Setup is ready. Next: ask your agent to use the hydrogen-setup skill.");
+  }
 }

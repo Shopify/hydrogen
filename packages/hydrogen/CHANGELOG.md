@@ -1,5 +1,25 @@
 # @shopify/hydrogen
 
+## 2026.10.2
+
+### Patch Changes
+
+- 449b274: A cart change made while a cart load is still in flight no longer hides the shopper's other lines or leaves `loading` stuck on `true`. The store revalidates the cart once the change settles, including when the store is destroyed and reconnected before then.
+- ff8d38a: The cart store now applies `updateCart` calls that update or remove several lines at once. Each line is projected, marked pending, rolled back on failure and settled from the response, where before the event was ignored and the UI kept the old lines.
+- 2204575: `@shopify/hydrogen/vite` exports a deprecated `hydrogen()` again. It throws an error that names the installed version, the `~2026.4.0` pin that keeps a project on the version it was built for, and the migration guide for moving to 2026.10. Projects on 2026.4 whose `^2026.4.0` range resolved to 2026.10 previously failed at ESM link time with "does not provide an export named 'hydrogen'" and no hint about the cause.
+- 332ce9d: Apply script attributes before DOM insertion in `loadScript` utility
+- d88fd0d: `handleShopifyRoutes` only requires `sessionManager` when a registered handler's context includes it, such as Customer Account handlers or cart handlers created with `customerSession`, so cart-only apps can omit it. Custom handlers from `createShopifyRouteHandler` can opt out by annotating their context, for example `Omit<ShopifyRouteHandlerContext, "sessionManager">`.
+- f081d6a: Update the PerfKit script configuration rendered by `ShopifyScripts` in production builds.
+- 21b079e: `hydrogen setup` now ends a fresh install with `Setup is ready. Next: ask your agent to use the hydrogen-setup skill.` so the console points at the agent skill that finishes scaffolding. Runs that only resync skills on an existing install print no extra message.
+- 4254454: The Storefront client now injects the request's market only into variables declared as `$country: CountryCode` or `$language: LanguageCode`. Same-named variables of any other type, such as `$country: String!`, keep the caller's value and retain their declared requiredness in the `graphql()` variables type.
+- fea0f31: Prevent cart hydration mismatches when asynchronous initial cart data resolves before a `useCart` consumer hydrates.
+
+## 2026.10.1
+
+### Patch Changes
+
+- ee937aa: Add the `migrate-to-hydrogen-2026-10` packaged skill. The skill guides an AI agent through the migration of a classic Hydrogen storefront (Remix or React Router) to Hydrogen 2026-10 (`@shopify/hydrogen@^2026.10.0`). Run `hydrogen skills sync` to copy it into your project.
+
 ## 2026.10.0
 
 ### Minor Changes

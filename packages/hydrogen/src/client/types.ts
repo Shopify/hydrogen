@@ -11,7 +11,13 @@ import type {
 } from "../core/request-context";
 import type { AnyStorefrontQueryString, SourceOf, StorefrontQueryString } from "../graphql";
 import type { InferResult, InferVariables } from "../graphql";
-import type { InferOperationKind } from "../graphql/type-resolver";
+import type { introspection } from "../graphql/generated/graphql-env";
+import type {
+  InferOperationKind,
+  InferVariableNamesByEnumValue,
+  InferVariableNamesDeclaredAs,
+} from "../graphql/type-resolver";
+import type { I18N_VARIABLE_TYPES } from "./i18n-variables";
 
 export type { I18nConfig } from "../core/request-context";
 
@@ -193,9 +199,19 @@ export type CreateStorefrontClientArgs<
       requestContext: RequestContext;
       config: PrivateNoBuyerContextClientOptions<AnyFetch | undefined> & { cache?: CacheConfig };
     };
-type AutoAddedVariableNames = "country" | "language";
-/** The variables that you pass for a document, without `country` and `language`. The client fills both from the request context. */
-type UserVariables<Doc> = Omit<VariablesOfDoc<Doc>, AutoAddedVariableNames>;
+type I18nVariableTypes = typeof I18N_VARIABLE_TYPES;
+type I18nVariableNamesByValue<Variables> = InferVariableNamesByEnumValue<
+  Variables,
+  I18nVariableTypes,
+  introspection
+>;
+type I18nVariableNamesOfDoc<Doc> = [SourceText<Doc>] extends [never]
+  ? I18nVariableNamesByValue<VariablesOfDoc<Doc>>
+  : string extends SourceText<Doc>
+    ? I18nVariableNamesByValue<VariablesOfDoc<Doc>>
+    : InferVariableNamesDeclaredAs<SourceText<Doc>, I18nVariableTypes>;
+/** Variables the caller passes: everything except the i18n variables the client injects. */
+type UserVariables<Doc> = Omit<VariablesOfDoc<Doc>, I18nVariableNamesOfDoc<Doc>>;
 
 /** Resolves to `true` when an object type has no required keys. */
 type HasNoRequiredKeys<T> = Record<string, never> extends T ? true : false;
@@ -286,8 +302,9 @@ export type StorefrontClient<
   i18n: RequestContext["i18n"];
   /**
    * Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a
-   * plain query string. When the operation declares `$country` or `$language`, the client sets the
-   * variable from the request context and overrides any value you pass.
+   * plain query string. When the operation declares `$country: CountryCode` or
+   * `$language: LanguageCode`, the client sets the variable from the request context and overrides
+   * any value you pass. Variables with other types stay caller-owned.
    *
    * The method throws an error when a query passes a `cache` strategy and the client has no cache,
    * or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch

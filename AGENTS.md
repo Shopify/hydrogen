@@ -1,5 +1,22 @@
 # Agent Guidelines
 
+## Repo Skills
+
+Skills live in the top-level `skills/` directory — repo-development guidance for agents working
+in this repository. (User-facing skills shipped to merchants in the npm package live in
+`packages/hydrogen/skills/` instead.) Each skill is symlinked into both `.agents/skills/` and
+`.claude/skills/` so every agent harness discovers it. To add a new skill:
+
+1. Write it at `skills/<name>/SKILL.md`.
+2. Symlink it into both harness directories and commit the symlinks along with the skill:
+
+   ```bash
+   ln -s ../../skills/<name> .agents/skills/<name>
+   ln -s ../../skills/<name> .claude/skills/<name>
+   ```
+
+Don't add skills directly to `.agents/skills/` or `.claude/skills/` — those only hold symlinks.
+
 ## API Design Principles
 
 When designing or adjusting APIs for the `hydrogen` package, closely follow the following principles:

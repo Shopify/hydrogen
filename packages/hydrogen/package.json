@@ -1,6 +1,6 @@
 {
   "name": "@shopify/hydrogen",
-  "version": "2026.10.0",
+  "version": "2026.10.2",
   "description": "Framework-agnostic Shopify storefront SDK and agent skills.",
   "license": "MIT",
   "author": "Shopify",
@@ -61,7 +61,8 @@
     },
     "./vite": {
       "types": "./dist/vite/index.d.mts",
-      "import": "./dist/vite/index.mjs"
+      "import": "./dist/vite/index.mjs",
+      "default": "./dist/vite/index.mjs"
     },
     "./react": {
       "types": {
@@ -69,6 +70,10 @@
         "default": "./dist/react/index.d.mts"
       },
       "import": {
+        "development": "./dist/development/react/index.mjs",
+        "default": "./dist/react/index.mjs"
+      },
+      "default": {
         "development": "./dist/development/react/index.mjs",
         "default": "./dist/react/index.mjs"
       }
@@ -79,6 +84,10 @@
         "default": "./dist/vue/index.d.mts"
       },
       "import": {
+        "development": "./dist/development/vue/index.mjs",
+        "default": "./dist/vue/index.mjs"
+      },
+      "default": {
         "development": "./dist/development/vue/index.mjs",
         "default": "./dist/vue/index.mjs"
       }

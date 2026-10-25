@@ -18,6 +18,14 @@ export function loadScript(src: string, options?: LoadScriptOptions): Promise<bo
   const promise = new Promise<boolean>((resolve, reject) => {
     const script = document.createElement("script");
     script.type = options?.module ? "module" : "text/javascript";
+
+    if (options?.attributes) {
+      const { attributes } = options;
+      Object.keys(attributes).forEach((key) => {
+        script.setAttribute(key, attributes[key]);
+      });
+    }
+
     script.src = src;
     script.addEventListener("load", () => resolve(true));
     script.addEventListener("error", () => {
@@ -29,13 +37,6 @@ export function loadScript(src: string, options?: LoadScriptOptions): Promise<bo
       document.head.appendChild(script);
     } else {
       document.body.appendChild(script);
-    }
-
-    if (options?.attributes) {
-      const { attributes } = options;
-      Object.keys(attributes).forEach((key) => {
-        script.setAttribute(key, attributes[key]);
-      });
     }
   });
 

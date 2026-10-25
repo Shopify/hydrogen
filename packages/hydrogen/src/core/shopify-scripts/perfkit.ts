@@ -1,3 +1,4 @@
+import { SHOPIFY_API_PROXY_PREFIX } from "../url";
 import { SHOPIFY_PERF_KIT_SCRIPT, SHOPIFY_PERF_KIT_SCRIPT_ID } from "./constants";
 import type {
   ShopifyScriptDescriptor,
@@ -6,10 +7,16 @@ import type {
 } from "./types";
 
 const SHOPIFY_SHOP_ID_PATTERN = /^\d+$/;
+const SHS_BEACON_ENDPOINT = `${SHOPIFY_API_PROXY_PREFIX}/api/collect`;
+
+type PerfKitScriptOptions = {
+  shs?: boolean;
+};
 
 export function getPerfKitScript(
   shop: ShopifyScriptsShop,
   extraAttributes?: Pick<ShopifyScriptTagAttributes, "nonce">,
+  { shs = !__DEV__ }: PerfKitScriptOptions = {},
 ): ShopifyScriptDescriptor | undefined {
   if (!shop.storefrontId) return;
 
@@ -29,6 +36,12 @@ export function getPerfKitScript(
       "data-monorail-region": "global",
       "data-spa-mode": "true",
       "data-resource-timing-sampling-rate": "10",
+      ...(shs
+        ? {
+            "data-shs": "true",
+            "data-shs-beacon-endpoint": SHS_BEACON_ENDPOINT,
+          }
+        : {}),
     },
   };
 }

@@ -8,7 +8,7 @@ import {
   type ShopifyRequestContext,
   type ShopifyRequestContextWithBuyerIp,
 } from "../core/request-context";
-import { assert } from "../core/test-utils";
+import { assert, createOpaqueResponse } from "../core/test-utils";
 import { gql } from "../graphql";
 import { createStorefrontClient } from "./client";
 import { StorefrontApiError, StorefrontTimeoutError } from "./errors";
@@ -322,11 +322,13 @@ describe("createStorefrontClient", () => {
   });
 
   describe("i18n", () => {
-    it("auto-injects country and language when declared in query", async () => {
+    it("auto-injects country and language over caller values when declared in query", async () => {
       const client = createPublicClient({
         fetch: mockFetch,
       });
-      await client.graphql(LOCALIZED_QUERY);
+      await client.graphql(LOCALIZED_QUERY as any, {
+        variables: { country: "CA", language: "FR" } as any,
+      });
 
       const body = getBody(mockFetch);
       expect(body.variables).toMatchObject({
@@ -398,6 +400,18 @@ describe("createStorefrontClient", () => {
       const body = getBody(mockFetch);
       expect(body.variables).not.toHaveProperty("country");
       expect(body.variables).toHaveProperty("countryCode", "US");
+    });
+
+    it("keeps caller values for same-named variables of other types", async () => {
+      const client = createPublicClient({ fetch: mockFetch });
+      await client.graphql(
+        gql(
+          `query Promo($country: String!, $language: Int) { shop { metafield(namespace: "promo", key: $country) { value } } }`,
+        ),
+        { variables: { country: "promo-key", language: 2 } },
+      );
+
+      expect(getBody(mockFetch).variables).toEqual({ country: "promo-key", language: 2 });
     });
 
     it("merges user variables with i18n variables", async () => {
@@ -607,6 +621,134 @@ describe("createStorefrontClient", () => {
       } catch (error) {
         expect((error as StorefrontApiError).cause).toBeInstanceOf(TypeError);
       }
+    });
+  });
+
+  describe("redirect handling", () => {
+    function createCachedPublicClient(cache: MemoryKeyValueCache) {
+      return createStorefrontClient({
+        type: "public",
+        requestContext: createTestRequestContext(),
+        config: {
+          storeDomain: "test.myshopify.com",
+          publicStorefrontToken: "test-pub-token",
+          cache,
+          fetch: mockFetch,
+        },
+      });
+    }
+
+    it('passes `redirect: "manual"`, including through the cache wrapper', async () => {
+      mockFetch.mockImplementation(async () =>
+        mockResponse({ data: { shop: { name: "Test Shop" } } }),
+      );
+      await createPublicClient({ fetch: mockFetch }).graphql(SHOP_QUERY);
+      await createCachedPublicClient(new MemoryKeyValueCache()).graphql(SHOP_QUERY, {
+        cache: Cache.long(),
+      });
+
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      for (const [, init] of mockFetch.mock.calls) {
+        expect((init as RequestInit).redirect).toBe("manual");
+      }
+    });
+
+    it("rejects a redirect without capturing its headers or waiting on its body", async () => {
+      const requestContext = createTestRequestContext();
+      const capture = vi.spyOn(requestContext, "captureSubrequestHeaders");
+      const retainedClones: Response[] = [];
+      const fetch = vi.fn(async () => {
+        const response = new Response("redirect body", {
+          status: 307,
+          headers: {
+            location: "https://attacker.example/collect",
+            "set-cookie": "_shopify_y=bad",
+            "x-request-id": "req-3xx",
+          },
+        });
+        // A wrapper that keeps an unread clone makes awaiting `body.cancel()` hang.
+        retainedClones.push(response.clone());
+        return response;
+      });
+
+      const error = await createPublicClient({ fetch, requestContext })
+        .graphql(SHOP_QUERY)
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(StorefrontApiError);
+      expect((error as StorefrontApiError).status).toBe(307);
+      expect((error as StorefrontApiError).requestId).toBe("req-3xx");
+      expect((error as StorefrontApiError).message).toMatch(/redirect/);
+      expect((error as StorefrontApiError).message).toContain("https://attacker.example");
+      expect((error as StorefrontApiError).message).not.toContain("/collect");
+      expect(capture).not.toHaveBeenCalled();
+    });
+
+    it("names a relative redirect's resolved origin", async () => {
+      mockFetch.mockResolvedValueOnce(
+        new Response(null, { status: 301, headers: { location: "/api/graphql.json" } }),
+      );
+
+      const error = await createPublicClient({ fetch: mockFetch })
+        .graphql(SHOP_QUERY)
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(StorefrontApiError);
+      expect((error as StorefrontApiError).message).toBe(
+        "SFAPI responded with a redirect (301 to https://test.myshopify.com); redirects are not followed",
+      );
+    });
+
+    it("treats 304 Not Modified as a non-OK response, not a redirect", async () => {
+      mockFetch.mockResolvedValueOnce(new Response(null, { status: 304 }));
+
+      const error = await createPublicClient({ fetch: mockFetch })
+        .graphql(SHOP_QUERY)
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(StorefrontApiError);
+      expect((error as StorefrontApiError).status).toBe(304);
+      expect((error as StorefrontApiError).message).not.toMatch(/redirect/);
+    });
+
+    // Node and workerd return a real 3xx for `redirect: "manual"`, which the cache wrapper reserializes.
+    it("rejects a cached request's redirect without storing it", async () => {
+      mockFetch.mockImplementation(
+        async () =>
+          new Response(null, { status: 302, headers: { location: "https://attacker.example/" } }),
+      );
+      const cache = new MemoryKeyValueCache();
+      const client = createCachedPublicClient(cache);
+
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const error = await client
+          .graphql(SHOP_QUERY, { cache: Cache.long() })
+          .catch((caught: unknown) => caught);
+        expect(error).toBeInstanceOf(StorefrontApiError);
+        expect((error as StorefrontApiError).status).toBe(302);
+      }
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    // A wrapped `RangeError` from the cache wrapper would also be a StorefrontApiError, so check
+    // for the redirect error itself.
+    it.each([
+      ["without a cache", () => createPublicClient({ fetch: mockFetch }).graphql(SHOP_QUERY)],
+      [
+        "through the cache wrapper",
+        () =>
+          createCachedPublicClient(new MemoryKeyValueCache()).graphql(SHOP_QUERY, {
+            cache: Cache.long(),
+          }),
+      ],
+    ])("rejects an opaque browser redirect %s without exposing status 0", async (_name, run) => {
+      mockFetch.mockResolvedValueOnce(createOpaqueResponse("opaqueredirect"));
+
+      const error = await run().catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(StorefrontApiError);
+      expect((error as StorefrontApiError).message).toMatch(/redirect/);
+      expect((error as StorefrontApiError).status).toBeUndefined();
     });
   });
 
