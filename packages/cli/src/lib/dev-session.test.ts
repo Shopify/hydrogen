@@ -17,6 +17,8 @@ import {listDevInstances} from '@shopify/cli-kit/node/dev-instance';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {renderFatalError, renderSuccess} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {emitCommandEvent} from '@shopify/cli-kit/node/command-events';
+import {devSessionJsonOutputSchema} from './dev-session/types.js';
 import {runDevSession} from './dev-session.js';
 import {deferPromise} from './defer.js';
 
@@ -303,3 +305,84 @@ it('awaits resources registered during shutdown before releasing ownership', asy
   });
   expect(close).toHaveBeenCalledTimes(1);
 });
+
+it('streams identical JSONL bytes to stdout and the log while diagnostics use stderr', async () => {
+  const {options, controller, log} = await fixture();
+  const output = await withCapturedStandardStreams(async (streams) => {
+    await runDevSession({...options, json: true}, async (session) => {
+      await session.ready(['http://localhost:3000/']);
+      outputInfo('Dependency setup diagnostic');
+      console.log('\u001b[32mWorker ready\u001b[0m');
+      console.error('Recoverable worker error');
+      console.dir({worker: 'Hydrogen'});
+      console.table([{request: '/products', status: 200}]);
+      console.assert(false, 'Recoverable assertion');
+      session.log('Rebuilt storefront');
+      session.log('Rebuilt storefront');
+      controller.abort();
+    });
+    return {stdout: streams.stdout(), stderr: streams.stderr()};
+  });
+  expect(output.stdout).toBe(await log());
+  const records = output.stdout
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line));
+  expect(
+    records.map((record) => devSessionJsonOutputSchema.validate(record)),
+  ).toEqual(records);
+  expect(
+    records.filter(({message}) => message === 'Rebuilt storefront'),
+  ).toHaveLength(2);
+  expect(records).toContainEqual(
+    expect.objectContaining({message: 'Worker ready'}),
+  );
+  expect(records).toContainEqual(
+    expect.objectContaining({message: expect.stringContaining('Hydrogen')}),
+  );
+  expect(records).toContainEqual(
+    expect.objectContaining({message: expect.stringContaining('/products')}),
+  );
+  expect(records).toContainEqual(
+    expect.objectContaining({
+      level: 'error',
+      message: expect.stringContaining('Recoverable assertion'),
+    }),
+  );
+  expect(JSON.parse(output.stderr)).toMatchObject({
+    type: 'diagnostic',
+    message: 'Dependency setup diagnostic',
+  });
+});
+
+it.each([false, true])(
+  'includes setup progress in the session log only in terminal mode (JSON: %s)',
+  async (json) => {
+    const {options, controller, log} = await fixture();
+    const output = await withCapturedStandardStreams(async (streams) => {
+      await runDevSession({...options, json}, async () => {
+        emitCommandEvent({
+          type: 'progress',
+          operation: 'storefront-setup',
+          status: 'started',
+          message: 'Creating storefront',
+        });
+        controller.abort();
+      });
+      return {stdout: streams.stdout(), stderr: streams.stderr()};
+    });
+    const sessionLog = await log();
+    if (json) {
+      expect(output.stdout).toBe(sessionLog);
+      expect(sessionLog).not.toContain('Creating storefront');
+      expect(JSON.parse(output.stderr)).toMatchObject({
+        type: 'progress',
+        operation: 'storefront-setup',
+        status: 'started',
+        message: 'Creating storefront',
+      });
+    } else {
+      expect(sessionLog).toContain('Creating storefront');
+    }
+  },
+);
