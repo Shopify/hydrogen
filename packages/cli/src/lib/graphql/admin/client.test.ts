@@ -12,6 +12,33 @@ interface TestSchema {
 }
 
 describe('adminRequest', () => {
+  it('cancels the underlying request and stops waiting when the session aborts', async () => {
+    const controller = new AbortController();
+    let requestSignal: AbortSignal | undefined;
+    vi.mocked(graphqlRequest).mockImplementation(async (options) => {
+      const behaviour = options.preferredBehaviour;
+      expect(behaviour).toMatchObject({maxRetryTimeMs: expect.any(Number)});
+      if (
+        typeof behaviour === 'object' &&
+        typeof behaviour.useAbortSignal === 'function'
+      ) {
+        requestSignal = behaviour.useAbortSignal() as AbortSignal;
+      }
+      return new Promise(() => {});
+    });
+    const running = adminRequest(
+      '',
+      {token: '', storeFqdn: ''},
+      {},
+      controller.signal,
+    );
+    await vi.waitFor(() => expect(requestSignal).toBeDefined());
+    controller.abort();
+
+    await expect(running).rejects.toBe(controller.signal.reason);
+    expect(requestSignal?.aborted).toBe(true);
+  });
+
   it('sends a query to the Admin API and returns the successful response', async () => {
     const fakeResponse = {
       test: 'test',

@@ -12,11 +12,13 @@ let debouncedBannerTimeout: NodeJS.Timeout | undefined;
 
 export function createEntryPointErrorHandler({
   disableDepsOptimizer,
+  onError = renderFatalError,
   showSuccessBanner,
   configFile,
   formatOptionsPromise,
 }: {
   showSuccessBanner: () => void;
+  onError?: (error: Parameters<typeof renderFatalError>[0]) => void;
   disableDepsOptimizer?: boolean;
   configFile?: string;
   formatOptionsPromise: Promise<FormatOptions>;
@@ -46,7 +48,7 @@ export function createEntryPointErrorHandler({
           )}' to your Vite config in ssr.optimizeDeps.include`,
         );
         depError.stack = cleanStack;
-        renderFatalError(depError);
+        onError(depError);
       } else if (!throttledOptimizableDeps.has(optimizableDependency)) {
         // When multiple requests hit the same error, we only want to
         // to log and add the dependency to the Vite config once.
@@ -76,7 +78,7 @@ export function createEntryPointErrorHandler({
           })
           .catch((error) => {
             clearTimeout(debouncedBannerTimeout);
-            renderFatalError(error);
+            onError(error);
           });
       }
     } else {
@@ -84,7 +86,7 @@ export function createEntryPointErrorHandler({
         headline + ':\n\n' + colors.dim(message),
       );
       unknownError.stack = cleanStack;
-      renderFatalError(unknownError);
+      onError(unknownError);
     }
   };
 }

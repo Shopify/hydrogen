@@ -7,6 +7,8 @@ import CustomerAccountPush, {
   pushCustomerAccountConfig,
 } from './customer-account-push.js';
 import {captureJsonOutput} from '../../../tests/output.js';
+import {deferPromise} from '../../lib/defer.js';
+import {abandonOnAbort} from '../../lib/abort.js';
 
 vi.mock('../../lib/auth.js');
 vi.mock('../../lib/graphql/admin/customer-application-update.js');
@@ -49,6 +51,93 @@ describe('runCustomerAccountPush', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('does not mutate configuration after authentication is cancelled', async () => {
+    const controller = new AbortController();
+    const authenticated = deferPromise();
+    vi.mocked(login).mockImplementation(async (_root, _shop, signal) => {
+      await abandonOnAbort(() => authenticated.promise, signal);
+      return {session: ADMIN_SESSION, config: SHOPIFY_CONFIG};
+    });
+    const running = runCustomerAccountPush({
+      devOrigin: DEV_ORIGIN,
+      storefrontId: STOREFRONT_ID,
+      signal: controller.signal,
+    });
+    await vi.waitFor(() => expect(login).toHaveBeenCalled());
+    controller.abort();
+    await expect(running).rejects.toBe(controller.signal.reason);
+    authenticated.resolve();
+    await Promise.resolve();
+    expect(replaceCustomerApplicationUrls).not.toHaveBeenCalled();
+    expect(setCustomerAccountConfig).not.toHaveBeenCalled();
+  });
+
+  it('forwards cancellation to the Customer Account mutation', async () => {
+    const controller = new AbortController();
+    vi.mocked(replaceCustomerApplicationUrls).mockImplementation(
+      async (_session, _storefront, _urls, signal) =>
+        new Promise((_resolve, reject) => {
+          signal!.addEventListener('abort', () => reject(signal!.reason), {
+            once: true,
+          });
+        }),
+    );
+    const running = runCustomerAccountPush({
+      devOrigin: DEV_ORIGIN,
+      storefrontId: STOREFRONT_ID,
+      signal: controller.signal,
+    });
+    await vi.waitFor(() =>
+      expect(replaceCustomerApplicationUrls).toHaveBeenCalled(),
+    );
+    controller.abort();
+    await expect(running).rejects.toBe(controller.signal.reason);
+    expect(replaceCustomerApplicationUrls).toHaveBeenCalledWith(
+      ADMIN_SESSION,
+      STOREFRONT_ID,
+      expect.any(Object),
+      controller.signal,
+    );
+    expect(setCustomerAccountConfig).not.toHaveBeenCalled();
+  });
+
+  it('restores previous URLs if cancellation races with a successful mutation', async () => {
+    const controller = new AbortController();
+    const reason = new Error('Cancelled');
+    vi.mocked(replaceCustomerApplicationUrls).mockImplementationOnce(
+      async () => {
+        controller.abort(reason);
+        return {success: true, userErrors: []};
+      },
+    );
+    await expect(
+      runCustomerAccountPush({
+        devOrigin: DEV_ORIGIN,
+        storefrontId: STOREFRONT_ID,
+        signal: controller.signal,
+      }),
+    ).rejects.toBe(reason);
+    expect(replaceCustomerApplicationUrls).toHaveBeenLastCalledWith(
+      ADMIN_SESSION,
+      STOREFRONT_ID,
+      {
+        redirectUri: {
+          add: [PREVIOUS_CONFIG.redirectUri],
+          removeRegex: `${DEV_ORIGIN}/account/authorize`,
+        },
+        javascriptOrigin: {
+          add: [PREVIOUS_CONFIG.javascriptOrigin],
+          removeRegex: DEV_ORIGIN,
+        },
+        logoutUris: {
+          add: [PREVIOUS_CONFIG.logoutUri],
+          removeRegex: DEV_ORIGIN,
+        },
+      },
+    );
+    expect(setCustomerAccountConfig).not.toHaveBeenCalled();
   });
 
   it('writes configured URLs as one JSON document through the command', async () => {
@@ -168,6 +257,7 @@ describe('runCustomerAccountPush', () => {
         },
         logoutUris: {add: [DEV_ORIGIN], removeRegex: PREVIOUS_CONFIG.logoutUri},
       },
+      undefined,
     );
   });
 
@@ -205,6 +295,7 @@ describe('runCustomerAccountPush', () => {
       expect.objectContaining({
         javascriptOrigin: expect.objectContaining({add: [DEV_ORIGIN]}),
       }),
+      undefined,
     );
   });
 
@@ -231,6 +322,7 @@ describe('runCustomerAccountPush', () => {
           removeRegex: PREVIOUS_CONFIG.logoutUri,
         },
       },
+      undefined,
     );
   });
 
@@ -261,6 +353,7 @@ describe('runCustomerAccountPush', () => {
           removeRegex: PREVIOUS_CONFIG.javascriptOrigin,
         }),
       }),
+      undefined,
     );
   });
 });

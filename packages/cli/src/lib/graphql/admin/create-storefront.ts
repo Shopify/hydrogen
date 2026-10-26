@@ -42,6 +42,7 @@ export interface CreateStorefrontSchema {
 export async function createStorefront(
   adminSession: AdminSession,
   title: string,
+  signal?: AbortSignal,
 ) {
   const {
     hydrogenStorefrontCreate: {hydrogenStorefront, userErrors, jobId},
@@ -49,6 +50,7 @@ export async function createStorefront(
     CreateStorefrontMutation,
     adminSession,
     {title},
+    signal,
   );
 
   if (!hydrogenStorefront || !jobId || userErrors.length > 0) {
