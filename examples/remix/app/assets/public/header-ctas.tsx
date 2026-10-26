@@ -64,10 +64,12 @@ export const HeaderCtas = clientEntry(
           >
             <h3>☰</h3>
           </a>
+          {/* Account routes can start Shopify OAuth when the session expires. */}
           {isLoggedIn ? (
-            <a href={accountPath}>Account</a>
+            <a href={accountPath} data-rmx-document>
+              Account
+            </a>
           ) : (
-            // Customer Account routes redirect to Shopify, so they need document navigation.
             <a href={loginPath} data-rmx-document>
               Sign in
             </a>

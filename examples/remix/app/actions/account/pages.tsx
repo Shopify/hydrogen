@@ -63,6 +63,7 @@ export function AccountLayout(
     const link = (target: AccountSection, label: string) => (
       <a
         href={localizePath(routes.account[target].href(), pathPrefix)}
+        data-rmx-document
         aria-current={section === target ? "page" : undefined}
         style={{ fontWeight: section === target ? "bold" : undefined }}
       >
@@ -118,7 +119,13 @@ export function OrdersPage(
     return (
       <AccountLayout customer={customer} pathPrefix={pathPrefix} section="orders" title="Orders">
         <div class="orders">
-          <form method="get" action={ordersPath} mix={orderSearchStyle} aria-label="Search orders">
+          <form
+            method="get"
+            action={ordersPath}
+            mix={orderSearchStyle}
+            aria-label="Search orders"
+            data-rmx-document
+          >
             <fieldset mix={orderSearchFieldsetStyle}>
               <legend mix={orderSearchLegendStyle}>Filter Orders</legend>
               <div mix={orderSearchInputsStyle}>
@@ -141,13 +148,17 @@ export function OrdersPage(
               </div>
               <div mix={orderSearchButtonsStyle}>
                 <button type="submit">Search</button>
-                {hasFilters ? <a href={ordersPath}>Clear</a> : null}
+                {hasFilters ? (
+                  <a href={ordersPath} data-rmx-document>
+                    Clear
+                  </a>
+                ) : null}
               </div>
             </fieldset>
           </form>
           <div class="acccount-orders" aria-live="polite">
             {orders.nodes.length ? (
-              <PaginatedResourceSection pageInfo={orders.pageInfo} url={url}>
+              <PaginatedResourceSection pageInfo={orders.pageInfo} url={url} documentNavigation>
                 {orders.nodes.map((order) => {
                   const orderHref = localizePath(
                     routes.account.order.href({ id: btoa(order.id) }),
@@ -157,7 +168,7 @@ export function OrdersPage(
                   return (
                     <div key={order.id}>
                       <fieldset>
-                        <a href={orderHref}>
+                        <a href={orderHref} data-rmx-document>
                           <strong>#{order.number}</strong>
                         </a>
                         <p>{new Date(order.processedAt).toDateString()}</p>
@@ -167,7 +178,9 @@ export function OrdersPage(
                         <p>{order.financialStatus}</p>
                         {fulfillmentStatus ? <p>{fulfillmentStatus}</p> : null}
                         {formatMoney(order.totalPrice)}
-                        <a href={orderHref}>View Order →</a>
+                        <a href={orderHref} data-rmx-document>
+                          View Order →
+                        </a>
                       </fieldset>
                       <br />
                     </div>
@@ -179,7 +192,9 @@ export function OrdersPage(
                 <p>No orders found matching your search.</p>
                 <br />
                 <p>
-                  <a href={ordersPath}>Clear filters →</a>
+                  <a href={ordersPath} data-rmx-document>
+                    Clear filters →
+                  </a>
                 </p>
               </div>
             ) : (
@@ -329,7 +344,11 @@ export function ProfilePage(
         <div class="account-profile">
           <h2>My profile</h2>
           <br />
-          <form method="post" action={localizePath(routes.account.profile.href(), pathPrefix)}>
+          <form
+            method="post"
+            action={localizePath(routes.account.profile.href(), pathPrefix)}
+            data-rmx-document
+          >
             <legend>Personal information</legend>
             <fieldset>
               <label htmlFor="firstName">First name</label>
@@ -504,6 +523,7 @@ function AddressForm(
         id={addressId}
         method="post"
         action={localizePath(routes.account.addresses.href(), pathPrefix)}
+        data-rmx-document
       >
         <fieldset>
           <input type="hidden" name="addressId" value={addressId} />

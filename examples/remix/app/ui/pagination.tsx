@@ -20,16 +20,20 @@ export function PaginatedResourceSection(
     url: URL;
     resourcesMix?: CSSMixinDescriptor;
     ariaLabel?: string;
+    documentNavigation?: boolean;
     children?: RemixNode;
   }>,
 ) {
   return () => {
-    const { ariaLabel, children, pageInfo, resourcesMix, url } = handle.props;
+    const { ariaLabel, children, documentNavigation, pageInfo, resourcesMix, url } = handle.props;
 
     return (
       <div>
         {pageInfo.hasPreviousPage && pageInfo.startCursor ? (
-          <a href={pageHref(url, pageInfo.startCursor, "previous")}>
+          <a
+            href={pageHref(url, pageInfo.startCursor, "previous")}
+            data-rmx-document={documentNavigation || undefined}
+          >
             <span aria-hidden="true">←</span> Previous page
           </a>
         ) : null}
@@ -37,7 +41,10 @@ export function PaginatedResourceSection(
           {children}
         </div>
         {pageInfo.hasNextPage && pageInfo.endCursor ? (
-          <a href={pageHref(url, pageInfo.endCursor, "next")}>
+          <a
+            href={pageHref(url, pageInfo.endCursor, "next")}
+            data-rmx-document={documentNavigation || undefined}
+          >
             Next page <span aria-hidden="true">→</span>
           </a>
         ) : null}

@@ -127,11 +127,21 @@ export default createController(routes.account, {
     async updateProfile({ auth, formData, locale, render, shopify }) {
       const { customerAccount } = shopify;
       const { accessToken } = auth.identity;
-      const customer = s.parse(ProfileForm, formData);
+      const profile = s.parseSafe(ProfileForm, formData);
+      if (!profile.success) {
+        return render(
+          <ProfilePage
+            customer={await getCustomer(customerAccount, accessToken)}
+            error={firstIssue(profile)}
+            pathPrefix={locale.pathPrefix}
+          />,
+          { status: 400, headers: NO_STORE_HEADERS },
+        );
+      }
 
       const result = await customerAccount.client.graphql(CUSTOMER_UPDATE_MUTATION, {
         accessToken,
-        variables: { customer },
+        variables: { customer: profile.value },
       });
       const error =
         result.errors?.[0]?.message ??
@@ -164,7 +174,18 @@ export default createController(routes.account, {
     async updateAddresses({ auth, formData, locale, render, shopify }) {
       const { customerAccount } = shopify;
       const { accessToken } = auth.identity;
-      const { addressId, defaultAddress, intent } = s.parse(AddressActionForm, formData);
+      const action = s.parseSafe(AddressActionForm, formData);
+      if (!action.success) {
+        return render(
+          <AddressesPage
+            customer={await getCustomer(customerAccount, accessToken)}
+            errors={{ general: firstIssue(action) }}
+            pathPrefix={locale.pathPrefix}
+          />,
+          { status: 400, headers: NO_STORE_HEADERS },
+        );
+      }
+      const { addressId, defaultAddress, intent } = action.value;
 
       let error: string | undefined;
       try {

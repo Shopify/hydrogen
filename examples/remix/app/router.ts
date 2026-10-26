@@ -69,6 +69,7 @@ function createAppRouter(runtimeValue: Runtime, documentAssets: DocumentAssets) 
       errorPages(),
       locale(),
       shopifyResponseHeaders(),
+      // Cookie storage is signed, not encrypted; it contains Customer Account tokens.
       session(sessionCookie, createCookieSessionStorage()),
       shopify(),
       layout(),
