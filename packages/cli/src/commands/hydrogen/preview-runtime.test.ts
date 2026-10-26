@@ -4,6 +4,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {afterEach, expect, it, vi} from 'vitest';
 import {withCapturedStandardStreams} from '@shopify/cli-kit/node/testing/output';
+import {resetAllLogs} from '../../lib/log.js';
 import {runDevSession} from '../../lib/dev-session.js';
 import {getProjectPaths, isClassicProject} from '../../lib/remix-config.js';
 import {getViteConfig} from '../../lib/vite-config.js';
@@ -25,13 +26,13 @@ vi.mock('../../lib/environment-variables.js');
 vi.mock('../../lib/find-port.js');
 vi.mock('../../lib/mini-oxygen/index.js');
 vi.mock('./build.js');
-vi.mock('../../lib/log.js', () => ({
-  isH2Verbose: () => true,
-  muteDevLogs: vi.fn(),
+vi.mock('../../lib/log.js', async (original) => ({
+  ...(await original<typeof import('../../lib/log.js')>()),
   setH2OVerbose: vi.fn(),
 }));
 
 afterEach(() => {
+  resetAllLogs();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
@@ -96,77 +97,141 @@ async function withPreviewFixture(
   }
 }
 
-it('records readiness and repeated preview rebuilds while preserving build options', async () => {
-  await withPreviewFixture(
-    async ({directory, controller, runtime, buildResult}) => {
-      let buildOptions: Parameters<typeof runBuild>[0];
-      const closeBuild = vi.fn();
-      vi.mocked(runBuild).mockImplementation(async (options) => {
-        buildOptions = options;
-        options.registerCleanup?.(closeBuild);
-        await options.onServerBuildStart?.();
-        await options.onServerBuildFinish?.(1, buildResult);
-        return {close: closeBuild, result: buildResult};
-      });
-      await withCapturedStandardStreams(async () => {
-        await runDevSession(
-          {
-            command: 'hydrogen preview',
-            directory,
-            envFile: '.env',
-            watch: true,
-            signal: controller.signal,
-          },
-          async (session) => {
-            await runPreview({
+it.each([false, true])(
+  'records readiness and repeated preview rebuilds while preserving build options (JSON: %s)',
+  async (json) => {
+    await withPreviewFixture(
+      async ({directory, controller, runtime, buildResult}) => {
+        let buildOptions: Parameters<typeof runBuild>[0];
+        const closeBuild = vi.fn();
+        vi.mocked(runBuild).mockImplementation(async (options) => {
+          buildOptions = options;
+          options.registerCleanup?.(closeBuild);
+          await options.onServerBuildStart?.();
+          await options.onServerBuildFinish?.(1, buildResult);
+          return {close: closeBuild, result: buildResult};
+        });
+        const output = await withCapturedStandardStreams(async (streams) => {
+          await runDevSession(
+            {
+              command: 'hydrogen preview',
+              json,
               directory,
               envFile: '.env',
-              debug: false,
-              build: true,
               watch: true,
-              codegen: true,
-              entry: 'server.ts',
-              session,
-            });
-            await buildOptions.onServerBuildFinish?.(2, buildResult);
-            await buildOptions.onServerBuildFinish?.(3, buildResult);
-            controller.abort();
-          },
+              signal: controller.signal,
+            },
+            async (session) => {
+              await runPreview({
+                directory,
+                envFile: '.env',
+                debug: false,
+                build: true,
+                watch: true,
+                codegen: true,
+                entry: 'server.ts',
+                session,
+              });
+              const runtimeOptions = vi
+                .mocked(startMiniOxygen)
+                .mock.calls.at(-1)![0];
+              runtimeOptions.logRequestLine?.({
+                request: {
+                  url: 'http://localhost:3000/products?view=all',
+                  method: 'GET',
+                  headers: {},
+                },
+                response: {status: 200, statusText: 'OK', headers: {}},
+                meta: {startTimeMs: 0, endTimeMs: 5, durationMs: 5},
+              });
+              console.error('Recoverable preview failure');
+              buildOptions.onCodegenOutput?.('Types generated', 'info');
+              await buildOptions.onServerBuildFinish?.(2, buildResult);
+              await buildOptions.onServerBuildFinish?.(3, buildResult);
+              console.log('Repeated worker message');
+              console.log('Repeated worker message');
+              for (const method of ['GET', 'POST']) {
+                runtimeOptions.logRequestLine?.({
+                  request: {
+                    url: 'http://localhost:3000/products?view=all&_data=routes/products',
+                    method,
+                    headers: {},
+                  },
+                  response: {status: 200, statusText: 'OK', headers: {}},
+                  meta: {startTimeMs: 0, endTimeMs: 5, durationMs: 5},
+                });
+              }
+              controller.abort();
+            },
+          );
+          return {stdout: streams.stdout(), stderr: streams.stderr()};
+        });
+        expect(runtime.reload).toHaveBeenCalledTimes(2);
+        if (json) expect(runtime.showBanner).not.toHaveBeenCalled();
+        else
+          expect(runtime.showBanner).toHaveBeenCalledWith({
+            mode: 'preview',
+            headlinePrefix: 'Watching for changes. ',
+          });
+        expect(runtime.close).toHaveBeenCalledTimes(1);
+        expect(closeBuild).toHaveBeenCalledTimes(1);
+        expect(runBuild).toHaveBeenCalledWith(
+          expect.objectContaining({
+            json,
+            watch: true,
+            useCodegen: true,
+            entry: 'server.ts',
+          }),
         );
-      });
-      expect(runtime.reload).toHaveBeenCalledTimes(2);
-      expect(runtime.showBanner).toHaveBeenCalledWith({
-        mode: 'preview',
-        headlinePrefix: 'Watching for changes. ',
-      });
-      expect(runtime.close).toHaveBeenCalledTimes(1);
-      expect(closeBuild).toHaveBeenCalledTimes(1);
-      expect(runBuild).toHaveBeenCalledWith(
-        expect.objectContaining({
-          watch: true,
-          useCodegen: true,
-          entry: 'server.ts',
-        }),
-      );
-      const folder = join(directory, '.shopify', 'dev');
-      const files = await readdir(folder);
-      expect(files).toHaveLength(1);
-      const records = (await readFile(join(folder, files[0]!), 'utf8'))
-        .trim()
-        .split('\n')
-        .map((line) => JSON.parse(line));
-      expect(
-        records.filter(({message}) => message === 'Runtime reloaded'),
-      ).toHaveLength(2);
-      expect(records).toContainEqual(
-        expect.objectContaining({
-          message: 'Ready: http://localhost:3000',
-          source: 'hydrogen preview',
-        }),
-      );
-    },
-  );
-});
+        const folder = join(directory, '.shopify', 'dev');
+        const files = await readdir(folder);
+        expect(files).toHaveLength(1);
+        const log = await readFile(join(folder, files[0]!), 'utf8');
+        if (json) expect(output.stdout).toBe(log);
+        const records = log
+          .trim()
+          .split('\n')
+          .map((line) => JSON.parse(line));
+        expect(
+          records.filter(({message}) => message === 'Runtime reloaded'),
+        ).toHaveLength(2);
+        expect(records).toContainEqual(
+          expect.objectContaining({
+            message: 'Ready: http://localhost:3000',
+            source: 'hydrogen preview',
+          }),
+        );
+        expect(
+          records.filter(({message}) =>
+            message.includes('/products?view=all '),
+          ),
+        ).toHaveLength(1);
+        expect(records).toContainEqual(
+          expect.objectContaining({
+            level: 'error',
+            message: 'Recoverable preview failure',
+          }),
+        );
+        expect(records).toContainEqual(
+          expect.objectContaining({message: 'Types generated'}),
+        );
+        if (json) {
+          expect(output.stderr).toBe('');
+          expect(
+            records.filter(
+              ({message}) => message === 'Repeated worker message',
+            ),
+          ).toHaveLength(2);
+          expect(
+            records.filter(({message}) =>
+              message.includes('/products?view=all&_data=routes/products'),
+            ),
+          ).toHaveLength(2);
+        }
+      },
+    );
+  },
+);
 
 it('releases an initial build watcher when preview startup fails', async () => {
   await withPreviewFixture(async ({directory, controller, runtime}) => {

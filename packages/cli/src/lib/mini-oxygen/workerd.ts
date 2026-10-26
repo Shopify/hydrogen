@@ -27,6 +27,7 @@ import {importLocal} from '../import-utils.js';
 export async function startWorkerdServer({
   root,
   registerCleanup,
+  logRequestLine: writeRequestLine = logRequestLine,
   appPort,
   inspectorPort: publicInspectorPort,
   assetsPort,
@@ -71,7 +72,7 @@ export async function startWorkerdServer({
     port: appPort,
     host: 'localhost',
     liveReload: watch,
-    requestHook: logRequestLine,
+    requestHook: writeRequestLine,
     inspectorPort: publicInspectorPort,
     inspectWorkerName: mainWorkerName,
     assets: {port: assetsPort, directory: buildPathClient},

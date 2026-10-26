@@ -142,6 +142,7 @@ type RunBuildOptions = {
   watch?: boolean;
   signal?: AbortSignal;
   registerCleanup?: (close: () => Promise<unknown>) => void;
+  onCodegenOutput?: Parameters<typeof spawnCodegenProcess>[0]['onOutput'];
   onServerBuildStart?: () => void | Promise<void>;
   onServerBuildFinish?: (
     cycle: number,
@@ -197,6 +198,7 @@ export async function runBuild({
   watch = false,
   signal,
   registerCleanup,
+  onCodegenOutput,
   onServerBuildStart,
   onServerBuildFinish,
   onBuildStart,
@@ -545,6 +547,7 @@ export async function runBuild({
   }
 
   const codegenOptions = {
+    onOutput: onCodegenOutput,
     rootDirectory: root,
     appDirectory: remixConfig.appDirectory,
     configFilePath: codegenConfigPath,

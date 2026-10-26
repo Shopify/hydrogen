@@ -1,7 +1,4 @@
 // Exact repository-relative command paths exempt from the typed JSON output rule.
-const commandExceptions = [
-  // Streaming commands without a single finite result.
-  'packages/cli/src/commands/hydrogen/preview.ts',
-];
+const commandExceptions = [];
 
 module.exports = {commandExceptions};

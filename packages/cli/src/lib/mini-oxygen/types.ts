@@ -1,5 +1,8 @@
+import type {logRequestLine} from './common.js';
+
 export type MiniOxygenOptions = {
   root: string;
+  logRequestLine?: typeof logRequestLine;
   registerCleanup?: (close: () => Promise<unknown>) => void;
   appPort?: number;
   watch?: boolean;
