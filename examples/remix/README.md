@@ -17,18 +17,18 @@ pnpm --filter @shopify/hydrogen-example-remix dev
 
 The server listens on `http://localhost:44100` (Remix's default). Set `PORT` or pass `--port` to change it.
 
-For `dev`, `.env.example` works as is: without `PRIVATE_STOREFRONT_API_TOKEN`, the Storefront client falls back to the public token. Run `pnpm run examples:secrets:decrypt` to add the private token and get buyer-aware server rendering. For `start`, set `SESSION_SECRET` to a private generated value of at least 32 characters (for example, `openssl rand -base64 32`); production rejects the local example secret.
+For `dev`, `.env.example` works as is: without `PRIVATE_STOREFRONT_API_TOKEN`, the Storefront client falls back to the public token. If you have access to the example secrets, run `pnpm run examples:secrets:decrypt` to add the private token for buyer-aware server rendering. For `start`, set `SESSION_SECRET` to a private generated value of at least 32 characters (for example, `openssl rand -base64 32`); production rejects the local example secret.
 
-| Script | What it does |
+| Script | Does |
 | --- | --- |
 | `dev` | Runs `server.ts` with `node --watch`, restarting on server changes. The asset server picks up browser changes on reload |
 | `dev:https` | `dev` on `https://local.tryhydrogen.dev:5173` for Customer Account OAuth. The first run creates and trusts a local certificate with mkcert, which can ask for your password |
 | `hmr` | `server.ts` behind Remix's hot module replacement proxy (`remix/node-hmr`) |
 | `start` | Production mode: minified, fingerprinted assets with immutable caching |
-| `test` | Unit and router tests with Remix's test runner (`remix test`), colocated as `app/**/*.test.ts`: discount redirects, locale resolution, environment validation, account form schemas, the Storefront cache, and routes that answer without Shopify APIs |
+| `test` | Run colocated unit and router tests (`app/**/*.test.ts`) with `remix test` |
 | `typecheck` | `tsc`, `hydrogen gql check` for every `gql()` document, then `remix doctor --strict` for the project's Remix conventions |
 
-Unlike the Vite plugin the other examples use for `dev:https`, `server.ts` doesn't push the Customer Account API URLs with Shopify CLI. If the store doesn't already allow them, add the callback URL `https://local.tryhydrogen.dev:5173/account/authorize`, the JavaScript origin `https://local.tryhydrogen.dev:5173`, and the logout URL `https://local.tryhydrogen.dev:5173` in the store's Customer Account API settings.
+Unlike the local HTTPS plugin used by Astro, Nuxt, SolidStart, and SvelteKit, `server.ts` doesn't push the Customer Account API URLs with Shopify CLI. If the store doesn't already allow them, add the callback URL `https://local.tryhydrogen.dev:5173/account/authorize`, the JavaScript origin `https://local.tryhydrogen.dev:5173`, and the logout URL `https://local.tryhydrogen.dev:5173` in the store's Customer Account API settings.
 
 ## Routes
 
@@ -41,11 +41,11 @@ Every route also matches under a locale prefix (`/en-ca`, `/fr-ca`), like the Sk
 | `/products/:handle` | Variant options as GET links; add to cart opens the cart drawer |
 | `/cart` | Server-rendered from the cart handler; the same component as the drawer |
 | `/search` | Full search. The header's Search opens predictive search in an aside |
-| `/blogs`, `/blogs/:blogHandle`, `/blogs/:blogHandle/:articleHandle` | |
-| `/pages/:handle`, `/policies`, `/policies/:handle` | |
+| `/blogs`, `/blogs/:blogHandle`, `/blogs/:blogHandle/:articleHandle` | Blog index, paginated articles, and article pages |
+| `/pages/:handle`, `/policies`, `/policies/:handle` | Merchant-authored pages and policies from the Storefront API |
 | `/account`, `/account/orders`, `/account/orders/:id`, `/account/profile`, `/account/addresses` | Customer Account API. Profile and address forms are native POST forms, parsed with `remix/data-schema`. Other `/account/*` paths require login, then redirect to `/account` |
 | `/discount/:code` | Applies a discount code, then redirects |
-| `/robots.txt`, `/sitemap.xml`, `/sitemap/:type/:page.xml` | |
+| `/robots.txt`, `/sitemap.xml`, `/sitemap/:type/:page.xml` | Crawler rules and paginated sitemaps |
 
 `handleShopifyRoutes` answers the Shopify-owned routes before the Remix router runs: `/api/cart`, `/api/predictive-search`, `/account/login`, `/account/authorize`, `/account/refresh`, `/account/logout`, cart permalinks, `?variant=` redirects, `/.well-known/ucp`, and the Storefront API proxy. After the router returns a 404, `handleShopifyRedirects` checks for a Shopify redirect.
 
@@ -60,6 +60,7 @@ Every route also matches under a locale prefix (`/en-ca`, `/fr-ca`), like the Sk
 | `app/router.ts` | Middleware order and controller mapping. Request logging (`remix/middleware/logger`) and compression (`remix/middleware/compression`) wrap everything. An inner error boundary turns errors and thrown redirects into responses before the session saves, and an outer one catches middleware failures |
 | `app/routes.ts` | The typed URL contract (`remix/routes`). Links, form actions, and redirects use `routes.*.href()` with the active locale's prefix |
 | `app/middleware/locale.ts` | Resolves the locale prefix, then routes the prefix-free path |
+| `app/middleware/csp.ts` | Adds a per-response script nonce and CSP header; the document passes the nonce to Remix's import map, app script, and Shopify script tags. Inline styles remain allowed for Remix's generated CSS and style attributes |
 | `app/middleware/shopify.ts` | Request context, Storefront client, customer session, `handleShopifyRoutes`, and post-404 redirects. `shopifyResponseHeaders()` applies Hydrogen's response headers outside the session middleware, after its cookie is set |
 | `app/middleware/layout.ts` | Starts loading the shell (menus, cart, login state) in parallel with the page's own queries. Frame subrequests skip it |
 | `app/middleware/customer-auth.ts` | A `remix/middleware/auth` scheme over Hydrogen's Customer Account session. `requireCustomer()` protects the account controller, sends anonymous requests to Hydrogen's login handler, and gives actions the access token as `context.auth.identity` |
@@ -70,7 +71,7 @@ Every route also matches under a locale prefix (`/en-ca`, `/fr-ca`), like the Sk
 | `app/assets/public/app.css` | Global styles only: element defaults and design tokens in `@layer base`, plus `.sr-only`. Component styles are `css()` mixins next to their components, which Remix emits in the `rmx` cascade layer after `base`. Shared ones live in `app/ui/public/styles.ts` |
 | `app/lib/storefront.ts` | The Storefront client and a process-local LRU cache for Storefront API responses |
 
-Hydrogen primitives in use:
+### Hydrogen primitives
 
 - **Cart.** One browser `createCartStore` shared by the drawer, the `/cart` page, the header count, and the product form. Line forms follow the Hydrogen contract (hidden `set` button first, editable quantity input with `attachQuantityInput`, increase, decrease, and remove submitters), so the cart page and drawer forms also work without JavaScript. Add to cart on the product page stays disabled until its island hydrates, as in the Skeleton.
 - **Product form.** `createProductFormStore` drives option state. On the server it runs against an empty cart store, so the first HTML already shows the selected variant. Option values are links; a hydrated click selects the variant locally, then replaces the URL with one in-place navigation.
@@ -78,13 +79,17 @@ Hydrogen primitives in use:
 - **Customer accounts.** Remix's cookie session middleware backs Hydrogen's session manager contract, so Hydrogen's OAuth handlers write to the request's session and Remix commits the cookie. Remix's auth middleware reads the result through a custom scheme around `getOrRefreshAccessToken`.
 - **Analytics.** `getShopifyScriptTags` in the document head, `initializeShopifyScripts` in the browser entry, page views on each top-frame reload, and product, collection, search, and cart view events from small islands.
 
+### Prefetch and browsing cache
+
 Links prefetch where the Skeleton's do, with Remix's `data-rmx-prefetch`: the header and footer menus, product and collection cards, the blog list, search results, cart lines, and option links to another product use `"intent"` (hover, focus, or press), and the empty cart's "Continue shopping" link uses `"viewport"`. External menu links aren't marked, and neither is Account, because a signed-out request to it starts the login flow.
 
-A click within 5 seconds of the prefetch reuses it. Hydrogen sends every page `private, no-store`, because the header reads the customer's login state, so catalog handlers opt in with `BROWSING_HEADERS` and `app/middleware/browsing-cache.ts` applies `private, max-age=5` after Hydrogen's headers. Only client navigations (`X-Remix-Frame: true`) that succeed without setting a cookie qualify, and they vary by `Cookie` and Remix's frame headers. Full documents stay uncacheable because they seed the browser cart store. A client navigation renders into a cart store that ignores embedded cart data once it holds a cart, and creating a cart sets a new cookie, so a cached page can't show a stale cart. The cart page and account pages don't opt in.
+A click within 5 seconds of the prefetch reuses it. Hydrogen sends every page `private, no-store` because the header reads the customer's login state. Catalog handlers opt in with `BROWSING_HEADERS`, and `app/middleware/browsing-cache.ts` applies `private, max-age=5` after Hydrogen's headers.
+
+Only successful client navigations (`X-Remix-Frame: true`) that set no cookie qualify; they vary by `Cookie` and Remix's frame headers. Full documents stay uncacheable because they seed the browser cart store. A client navigation renders into a cart store that ignores embedded cart data once it holds a cart, and creating a cart sets a new cookie, so a cached page can't show a stale cart. The cart page and account pages don't opt in.
 
 ## Verification
 
-The [storefront E2E suite](../../packages/storefront-e2e) runs against `dev` in CI (`.github/workflows/storefront-e2e.yml`), including the no-JavaScript variant checks. It also passes against `start`. To run it locally against a running server:
+The [storefront E2E suite](../../packages/storefront-e2e) runs against `dev` in CI (`.github/workflows/storefront-e2e.yml`), including the no-JavaScript variant checks. You can also run it locally against `start`. To target a running server:
 
 ```sh
 STOREFRONT_BASE_URL=http://localhost:44100/ pnpm test:e2e:storefront
@@ -92,7 +97,7 @@ STOREFRONT_BASE_URL=http://localhost:44100/ pnpm test:e2e:storefront
 
 The collection filter group skips, because the Skeleton's collection page has no filters.
 
-`pnpm test` runs the colocated `*.test.ts` files with `remix test`, using `remix/assert`. `remix.json` denies test files to the browser.
+From the repository root, `pnpm --filter @shopify/hydrogen-example-remix test` runs the colocated `*.test.ts` files with `remix test`, using `remix/assert`. `remix.json` denies test files to the browser.
 
 ## Differences from the Skeleton
 
@@ -103,7 +108,6 @@ The collection filter group skips, because the Skeleton's collection page has no
 - **Carts aren't connected to the signed-in customer.** Cart handlers are created without `customerSession`, like the other examples, so checkout isn't pre-authenticated and login doesn't attach the cart.
 - **Cart delivery instructions** (the Skeleton's cart metafield route) aren't ported. The gift message cart attribute is.
 - **Custom consent banner.** The Skeleton's `consent.custom-banner` route and custom-banner consent mode aren't ported; analytics uses Shopify's `no-banner` mode.
-- **Content Security Policy** headers use a per-response nonce for scripts, including Shopify's script tags and Remix's import map. Inline styles remain allowed for Remix's generated CSS and style attributes.
 - **Mock.shop** isn't supported; the example targets the shared `hydrogen-preview` store.
 
 ## Notes for the core SDK
