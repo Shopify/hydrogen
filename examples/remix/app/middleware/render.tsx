@@ -11,6 +11,8 @@ import { assets, type DocumentAssets } from "../assets.ts";
 import { BROWSING } from "../lib/cache-control.ts";
 import { AppShell } from "../ui/app-shell.tsx";
 import { allowBrowsingCache } from "./browsing-cache.ts";
+import { requireContext } from "./context.ts";
+import { NonceContext } from "./csp.ts";
 import { LayoutContext, type LoadLayout } from "./layout.ts";
 import { LocaleContext } from "./locale.ts";
 
@@ -58,6 +60,7 @@ export function render(documentAssets: DocumentAssets) {
             layout={layout}
             locale={context.get(LocaleContext)}
             pathname={context.url.pathname}
+            nonce={requireContext(context, NonceContext, "nonce")}
           >
             {node}
           </AppShell>,

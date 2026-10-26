@@ -2,6 +2,7 @@ import { createController } from "remix/router";
 
 import { BROWSING_HEADERS } from "../../lib/cache-control.ts";
 import { getPaginationVariables } from "../../lib/pagination.ts";
+import { localizePath } from "../../lib/public/i18n.ts";
 import { redirectIfHandleIsLocalized } from "../../lib/redirect.ts";
 import { contentCache, requireData } from "../../lib/storefront.ts";
 import { routes } from "../../routes.ts";
@@ -43,14 +44,18 @@ export default createController(routes.blogs, {
       }
 
       return (
-        redirectIfHandleIsLocalized(request, { handle: params.blogHandle, data: blog }) ??
+        redirectIfHandleIsLocalized(
+          request,
+          localizePath(routes.blogs.show.href({ blogHandle: blog.handle }), locale.pathPrefix),
+          { handle: params.blogHandle, data: blog },
+        ) ??
         render(<BlogPage blog={blog} pathPrefix={locale.pathPrefix} url={new URL(request.url)} />, {
           headers: BROWSING_HEADERS,
         })
       );
     },
 
-    async article({ params, render, request, shopify }) {
+    async article({ locale, params, render, request, shopify }) {
       const result = await shopify.storefront.graphql(ARTICLE_QUERY, {
         cache: contentCache(),
         variables: { blogHandle: params.blogHandle, articleHandle: params.articleHandle },
@@ -64,8 +69,12 @@ export default createController(routes.blogs, {
       return (
         redirectIfHandleIsLocalized(
           request,
-          { handle: params.articleHandle, data: article },
+          localizePath(
+            routes.blogs.article.href({ blogHandle: blog.handle, articleHandle: article.handle }),
+            locale.pathPrefix,
+          ),
           { handle: params.blogHandle, data: blog },
+          { handle: params.articleHandle, data: article },
         ) ?? render(<ArticlePage article={article} />, { headers: BROWSING_HEADERS })
       );
     },

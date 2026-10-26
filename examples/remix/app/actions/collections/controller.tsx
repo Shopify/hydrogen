@@ -2,6 +2,7 @@ import { createController } from "remix/router";
 
 import { BROWSING_HEADERS } from "../../lib/cache-control.ts";
 import { getPaginationVariables } from "../../lib/pagination.ts";
+import { localizePath } from "../../lib/public/i18n.ts";
 import { redirectIfHandleIsLocalized } from "../../lib/redirect.ts";
 import { catalogCache, requireData } from "../../lib/storefront.ts";
 import { routes } from "../../routes.ts";
@@ -57,10 +58,14 @@ export default createController(routes.collections, {
         return render(<NotFoundPage pathname={new URL(request.url).pathname} />, { status: 404 });
       }
 
-      const localizedRedirect = redirectIfHandleIsLocalized(request, {
-        handle: params.handle,
-        data: collection,
-      });
+      const localizedRedirect = redirectIfHandleIsLocalized(
+        request,
+        localizePath(
+          routes.collections.show.href({ handle: collection.handle }),
+          locale.pathPrefix,
+        ),
+        { handle: params.handle, data: collection },
+      );
       if (localizedRedirect) return localizedRedirect;
 
       return render(

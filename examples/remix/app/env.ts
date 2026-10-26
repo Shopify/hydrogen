@@ -25,6 +25,9 @@ export interface Runtime {
   buyerIp: string;
 }
 
+const DEVELOPMENT_SESSION_SECRET = "local-dev-session-secret-32-characters";
+const SESSION_SECRET_MIN_LENGTH = 32;
+
 const REQUIRED_KEYS = [
   "PUBLIC_STORE_DOMAIN",
   "SESSION_SECRET",
@@ -38,6 +41,18 @@ export function readEnv(source: Record<string, string | undefined> = process.env
   if (missing.length) {
     throw new Error(
       `${missing.join(", ")} ${missing.length === 1 ? "is" : "are"} required. Copy .env.example to .env to run the example.`,
+    );
+  }
+
+  const sessionSecret = source.SESSION_SECRET ?? "";
+  const isDevelopment = source.NODE_ENV === "development" || source.NODE_ENV === "test";
+  if (
+    !isDevelopment &&
+    (sessionSecret.length < SESSION_SECRET_MIN_LENGTH ||
+      sessionSecret === DEVELOPMENT_SESSION_SECRET)
+  ) {
+    throw new Error(
+      `SESSION_SECRET must be at least ${SESSION_SECRET_MIN_LENGTH} characters and must not use the example value outside development and tests.`,
     );
   }
 

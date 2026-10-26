@@ -56,6 +56,8 @@ if (isLocalHttps) {
   origin = `https://${host}:${port}`;
 } else {
   port = Number(args.port ?? process.env.PORT ?? 44100);
+  // HMR trusts forwarded headers from its proxy, so keep the app listener private to it.
+  if (isHmr) host = "127.0.0.1";
   server = http.createServer(listener);
   origin = `http://localhost:${hmrProxyPort ?? port}`;
 }

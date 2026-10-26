@@ -3,6 +3,7 @@ import { unsafeHTML } from "remix/component";
 import { createController } from "remix/router";
 
 import { BROWSING_HEADERS } from "../../lib/cache-control.ts";
+import { localizePath } from "../../lib/public/i18n.ts";
 import { redirectIfHandleIsLocalized } from "../../lib/redirect.ts";
 import { contentCache, requireData } from "../../lib/storefront.ts";
 import { routes } from "../../routes.ts";
@@ -27,7 +28,7 @@ const PAGE_QUERY = gql(`
 
 export default createController(routes.pages, {
   actions: {
-    async show({ params, render, request, shopify }) {
+    async show({ locale, params, render, request, shopify }) {
       const result = await shopify.storefront.graphql(PAGE_QUERY, {
         cache: contentCache(),
         variables: { handle: params.handle },
@@ -38,7 +39,11 @@ export default createController(routes.pages, {
       }
 
       return (
-        redirectIfHandleIsLocalized(request, { handle: params.handle, data: page }) ??
+        redirectIfHandleIsLocalized(
+          request,
+          localizePath(routes.pages.show.href({ handle: page.handle }), locale.pathPrefix),
+          { handle: params.handle, data: page },
+        ) ??
         render(
           <Document
             title={`Hydrogen | ${page.seo?.title ?? page.title}`}

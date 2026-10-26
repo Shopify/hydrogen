@@ -19,6 +19,7 @@ import type { DocumentAssets } from "./assets.ts";
 import type { Runtime } from "./env.ts";
 import { browserAssets } from "./middleware/browser-assets.ts";
 import { browsingCache } from "./middleware/browsing-cache.ts";
+import { csp } from "./middleware/csp.ts";
 import { errorPages } from "./middleware/error-pages.ts";
 import { layout } from "./middleware/layout.ts";
 import { locale } from "./middleware/locale.ts";
@@ -61,6 +62,8 @@ function createAppRouter(runtimeValue: Runtime, documentAssets: DocumentAssets) 
       staticFiles("./public", { index: false }),
       browserAssets(),
       runtime(runtimeValue),
+      // Seeds the streaming renderer's nonce and applies the matching header to its response.
+      csp(),
       ...render(documentAssets),
       browsingCache(),
       errorPages(),

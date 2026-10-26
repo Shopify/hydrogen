@@ -26,9 +26,9 @@ export type DocumentProps = {
 /** The full HTML document every page renders: head, header, asides, main, and footer. */
 export function Document(handle: Handle<DocumentProps>) {
   return () => {
-    const { assets, layout, locale, pathname } = handle.context.get(AppShell);
+    const { assets, layout, locale, nonce, pathname } = handle.context.get(AppShell);
     const { canonicalPath, children, description, title } = handle.props;
-    const shopifyScripts = getScripts(layout);
+    const shopifyScripts = getScripts(layout, nonce);
 
     return (
       <html lang={toHtmlLang(locale)} data-path-prefix={locale.pathPrefix || undefined}>
@@ -40,7 +40,7 @@ export function Document(handle: Handle<DocumentProps>) {
           {assets.stylesheets.map((href) => (
             <link key={href} rel="stylesheet" href={href} />
           ))}
-          <ImportMap value={assets.scriptEntry.importMap} />
+          <ImportMap value={assets.scriptEntry.importMap} nonce={nonce} />
           {assets.scriptEntry.preloads.map((href) => (
             <link key={href} rel="modulepreload" href={href} />
           ))}
@@ -51,7 +51,7 @@ export function Document(handle: Handle<DocumentProps>) {
           {shopifyScripts.scripts.map((descriptor) => (
             <ShopifyTag descriptor={descriptor} />
           ))}
-          <script type="module" src={assets.scriptEntry.href} />
+          <script type="module" src={assets.scriptEntry.href} nonce={nonce} />
           {/* Client navigations match head tags by position, so tags only some pages render go last. */}
           {description ? <meta name="description" content={description} /> : null}
           {canonicalPath ? <link rel="canonical" href={canonicalPath} /> : null}
@@ -82,10 +82,11 @@ const NO_SCRIPTS: ShopifyScriptTagDescriptors = { links: [], scripts: [], tags: 
  * Shopify's runtime scripts: Standard Actions (which the cart store requires), consent,
  * and analytics. The browser entry calls `initializeShopifyScripts` with the same routes.
  */
-function getScripts(layout: Layout | null): ShopifyScriptTagDescriptors {
+function getScripts(layout: Layout | null, nonce: string): ShopifyScriptTagDescriptors {
   if (!layout) return NO_SCRIPTS;
   return getShopifyScriptTags({
     consent: { mode: "no-banner" },
+    nonce,
     i18n: {
       country: layout.locale.country,
       language: layout.locale.language,

@@ -11,6 +11,7 @@ export type AppShellValue = {
   locale: Locale;
   /** The prefix-free app pathname, for active navigation links. */
   pathname: string;
+  nonce: string;
 };
 
 /** Provides request-scoped shell values to `<Document>` through component context. */

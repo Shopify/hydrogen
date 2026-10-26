@@ -1,24 +1,14 @@
 import { redirect } from "remix/response/redirect";
 
-/**
- * The Storefront API resolves a translated handle to the resource's canonical handle in
- * the active locale. Redirect so the URL always uses that locale's handle.
- */
+/** Redirects to the typed canonical route when the Storefront API resolves translated handles. */
 export function redirectIfHandleIsLocalized(
   request: Request,
+  canonicalPath: string,
   ...resources: Array<{ handle: string; data: { handle: string } }>
 ): Response | null {
+  if (resources.every(({ handle, data }) => handle === data.handle)) return null;
+
   const url = new URL(request.url);
-  let changed = false;
-
-  for (const { handle, data } of resources) {
-    if (handle === data.handle) continue;
-    url.pathname = url.pathname.replace(
-      encodeURIComponent(handle),
-      encodeURIComponent(data.handle),
-    );
-    changed = true;
-  }
-
-  return changed ? redirect(`${url.pathname}${url.search}`) : null;
+  url.pathname = canonicalPath;
+  return redirect(`${url.pathname}${url.search}`);
 }

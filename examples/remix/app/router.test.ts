@@ -8,6 +8,7 @@ import { createApp } from "./router.ts";
 import { routes } from "./routes.ts";
 
 const env = readEnv({
+  NODE_ENV: "test",
   PUBLIC_STORE_DOMAIN: "hydrogen-preview.myshopify.com",
   SESSION_SECRET: "test-session-secret",
   SHOP_ID: "1",
@@ -25,6 +26,18 @@ function fetchApp(path: string) {
 
 // These routes answer without calling the Storefront or Customer Account APIs.
 describe("app router", () => {
+  it("sets a nonce-bearing Content Security Policy", async () => {
+    const response = await fetchApp(routes.seo.robots.href());
+    const policy = response.headers.get("Content-Security-Policy");
+
+    assert.ok(policy);
+    const nonce = policy.match(/'nonce-([a-f0-9]{32})'/)?.[1];
+    assert.ok(nonce);
+    const scriptSrc = policy.split("; ").find((directive) => directive.startsWith("script-src "));
+    assert.ok(scriptSrc?.includes(`'nonce-${nonce}'`));
+    assert.ok(policy.includes("https://hydrogen-preview.myshopify.com"));
+  });
+
   it("serves robots.txt with the sitemap URL and a day of caching", async () => {
     const response = await fetchApp(routes.seo.robots.href());
 
