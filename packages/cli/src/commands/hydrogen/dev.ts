@@ -1,9 +1,15 @@
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {devSessionJsonOutputSchema} from '../../lib/dev-session/types.js';
 import type {ViteDevServer} from 'vite';
 import {Flags, Config} from '@oclif/core';
 import Command from '../../lib/hydrogen-command.js';
 import colors from '@shopify/cli-kit/node/colors';
 import {joinPath, normalizePath, resolvePath} from '@shopify/cli-kit/node/path';
-import {collectLog} from '@shopify/cli-kit/node/output';
+import {
+  collectLog,
+  outputInfo,
+  stringifyMessage,
+} from '@shopify/cli-kit/node/output';
 import {
   type AlertCustomSection,
   renderSuccess,
@@ -55,17 +61,24 @@ import {runDevSession, type DevSession} from '../../lib/dev-session.js';
 import {hydrogenPackagesPath} from '../../lib/build.js';
 
 export default class Dev extends Command {
+  static get jsonOutputSchema(): typeof devSessionJsonOutputSchema {
+    return devSessionJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown = `Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.
 
   If your project is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) to a Hydrogen storefront, then its environment variables will be loaded with the runtime.
 
   Session status and JSONL logs are stored in your project's \`.shopify/dev/\` directory. The instance JSON includes the PID, session ID, \`logFile\`, and \`details.urls\`. Status becomes \`running\` when the server is ready.
 
-  Only one dev session can run for the same project, environment, environment branch, and environment file, even with a different port. Shutdown removes the instance and lock files and retains the log. The log resets on each run.`;
+  Only one dev session can run for the same project, environment, environment branch, and environment file, even with a different port. Shutdown removes the instance and lock files and retains the log. The log resets on each run.
+
+  Use \`--json\` to stream the same JSONL records to stdout. Readiness URLs appear in the \`Ready: ...\` message and \`details.urls\`. Diagnostics use stderr. Fatal errors write the standard JSON error envelope to stdout and exit nonzero; they are excluded from the session log. There is no final success result. JSON output does not disable prompts; use \`--no-input\` to disable interactivity.`;
 
   static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
     ...commonFlags.entry,
     ...overrideFlag(commonFlags.port, {
@@ -171,7 +184,7 @@ export async function runDev({
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   if (verbose) setH2OVerbose();
-  if (!isH2Verbose()) muteDevLogs();
+  if (!isH2Verbose()) muteDevLogs({debounce: !session?.json});
 
   // Port 0 (OS-assigned) breaks tunnel-based dev: cloudflared and Vite
   // receive the same 0, but Vite resolves it internally to a concrete port
@@ -270,24 +283,34 @@ export async function runDev({
             entry: ssrEntry,
             envPromise: runtimeEnvPromise,
             inspectorPort,
-            logRequestLine,
+            logRequestLine: (info) =>
+              logRequestLine(
+                info,
+                (message) => {
+                  if (session?.json) session.log(stringifyMessage(message));
+                  else outputInfo(message);
+                },
+                {preserveQuery: session?.json},
+              ),
             entryPointErrorHandler: createEntryPointErrorHandler({
               disableDepsOptimizer,
               onError: (error) => {
                 session?.log(error.stack ?? error.message, 'error');
-                renderFatalError(error);
+                if (!session?.json) renderFatalError(error);
               },
               configFile: config.configFile,
               formatOptionsPromise,
               showSuccessBanner: () =>
-                showSuccessBanner({
-                  disableVirtualRoutes,
-                  debug,
-                  inspectorPort,
-                  finalHost,
-                  localHost: tunnel?.host ? publicUrl.origin : undefined,
-                  storefrontTitle,
-                }),
+                session?.json
+                  ? session.log('Runtime recovered')
+                  : showSuccessBanner({
+                      disableVirtualRoutes,
+                      debug,
+                      inspectorPort,
+                      finalHost,
+                      localHost: tunnel?.host ? publicUrl.origin : undefined,
+                      storefrontTitle,
+                    }),
             }),
           });
         },
@@ -340,6 +363,7 @@ export async function runDev({
           rootDirectory: root,
           configFilePath: codegenConfigPath,
           appDirectory: remixConfig?.appDirectory,
+          onOutput: session?.json ? session.log : undefined,
         });
       }
     : undefined;
@@ -393,11 +417,12 @@ export async function runDev({
   const finalHost = tunnel?.host || publicUrl.toString() || publicUrl.origin;
 
   // Start the public facing server with the port passed by the user.
-  enhanceH2Logs({
-    rootDirectory: root,
-    host: finalHost,
-    cliCommand,
-  });
+  if (!session?.json)
+    enhanceH2Logs({
+      rootDirectory: root,
+      host: finalHost,
+      cliCommand,
+    });
 
   const {logInjectedVariables, allVariables} = await envPromise;
 
@@ -411,20 +436,23 @@ export async function runDev({
 
   logInjectedVariables();
   console.log('');
-  viteServer.printUrls();
-  viteServer.bindCLIShortcuts({print: true});
+  if (!session?.json) {
+    viteServer.printUrls();
+    viteServer.bindCLIShortcuts({print: true});
+  }
   console.log('\n');
 
   const storefrontTitle = (await backgroundPromise).storefrontTitle;
 
-  showSuccessBanner({
-    disableVirtualRoutes,
-    debug,
-    inspectorPort,
-    finalHost,
-    localHost: tunnel?.host ? publicUrl.origin : undefined,
-    storefrontTitle,
-  });
+  if (!session?.json)
+    showSuccessBanner({
+      disableVirtualRoutes,
+      debug,
+      inspectorPort,
+      finalHost,
+      localHost: tunnel?.host ? publicUrl.origin : undefined,
+      storefrontTitle,
+    });
 
   if (!disableVersionCheck) {
     displayDevUpgradeNotice({targetPath: root});

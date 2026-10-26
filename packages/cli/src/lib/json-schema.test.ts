@@ -13,6 +13,7 @@ import * as schemas9 from './environments/types.js';
 import * as schemas10 from './build-tooling/types.js';
 import * as schemas11 from './onboarding/types.js';
 import * as schemas12 from './cpu-profiler/types.js';
+import * as sessionSchemas from './dev-session/types.js';
 
 const exports: unknown[] = [
   ...Object.values(schemas0),
@@ -28,6 +29,7 @@ const exports: unknown[] = [
   ...Object.values(schemas10),
   ...Object.values(schemas11),
   ...Object.values(schemas12),
+  ...Object.values(sessionSchemas),
 ];
 
 const schemas = exports.filter(
