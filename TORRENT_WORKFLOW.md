@@ -314,7 +314,20 @@ do is `Done` (§1).
 ## 10. Working in Hydrogen
 
 Read [`AGENTS.md`](AGENTS.md) before your first edit. It is binding: a PR that trips a rule it
-carries comes back. Read the skills in [`skills/`](skills) that apply to the change.
+carries comes back.
+
+- **Skills.** The repository skills are in [`skills/`](skills). Read each skill that applies
+  before you start the change:
+  - [`hydrogen-branches`](skills/hydrogen-branches/SKILL.md): read it if the ticket names a
+    version, a branch, or a back-fix.
+  - [`error-reporting`](skills/error-reporting/SKILL.md): read it for each runtime change in
+    `packages/hydrogen`.
+  - [`playwright-tests`](skills/playwright-tests/SKILL.md): read it for each change to a
+    Playwright test or to `packages/storefront-e2e`.
+  - [`create-oxygen-template`](skills/create-oxygen-template/SKILL.md): read it for each change
+    to `templates/react-router`.
+  - [`pull-request-standards`](skills/pull-request-standards/SKILL.md): read it before you write
+    or update a PR body.
 
 - **Branches.** `main` is the new version of Hydrogen. Classic Hydrogen lives on `2026-04`, which
   this project does not target. If the ticket names a classic-only path (`cli`, `create-hydrogen`,
