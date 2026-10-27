@@ -39,9 +39,14 @@
       }
     },
     "./customer-account": {
-      "types": "./dist/customer-account/index.d.mts",
-      "import": "./dist/customer-account/index.mjs",
-      "default": "./dist/customer-account/index.mjs"
+      "types": {
+        "development": "./dist/development/customer-account/index.d.mts",
+        "default": "./dist/customer-account/index.d.mts"
+      },
+      "import": {
+        "development": "./dist/development/customer-account/index.mjs",
+        "default": "./dist/customer-account/index.mjs"
+      }
     },
     "./customer-account-api-types": "./dist/customer-account-api-types.d.ts",
     "./customer-account.schema.json": "./dist/customer-account.schema.json",
