@@ -13,8 +13,13 @@ const outRoot = process.env.STOREFRONT_AGENT_OUT ?? packageRoot;
 if (existsSync(envFile)) process.loadEnvFile(envFile);
 
 export default defineConfig({
-  testDir: path.join(packageRoot, "specs"),
   testMatch: "**/*.spec.ts",
+  projects: [
+    // Agent runs and the scripted verifier checks.
+    { name: "agent", testDir: path.join(packageRoot, "specs") },
+    // Deterministic scripts generated from passing agent runs; no LLM.
+    { name: "replay", testDir: path.join(packageRoot, "generated") },
+  ],
   fullyParallel: false,
   workers: 1,
   retries: 0,

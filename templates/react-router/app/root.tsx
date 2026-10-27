@@ -18,6 +18,7 @@ import { CartDrawer } from "~/components/CartDrawer";
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
 import { SearchDrawer } from "~/components/SearchDrawer";
+import { SpikeDiscountBanner } from "~/components/SpikeDiscountBanner";
 import { SpikeNewsletterModal } from "~/components/SpikeNewsletterModal";
 import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
@@ -166,6 +167,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       {loaderData.spikeUx === "cart-page" ? null : <CartDrawer />}
       <SearchDrawer />
       {loaderData.spikeUx === "newsletter-modal" ? <SpikeNewsletterModal /> : null}
+      {loaderData.spikeUx === "discount-banner" ? <SpikeDiscountBanner /> : null}
     </CartProvider>
   );
 }

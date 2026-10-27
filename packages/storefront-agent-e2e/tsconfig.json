@@ -10,5 +10,5 @@
     "target": "ES2024",
     "types": ["node"]
   },
-  "include": ["playwright.config.ts", "scripts/**/*.ts", "specs/**/*.ts", "src/**/*.ts"]
+  "include": ["generated/**/*.ts", "playwright.config.ts", "scripts/**/*.ts", "specs/**/*.ts", "src/**/*.ts"]
 }
