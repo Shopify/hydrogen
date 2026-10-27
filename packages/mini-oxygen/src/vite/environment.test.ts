@@ -49,6 +49,7 @@ vi.mock('./utils.js', () => ({
 }));
 
 type MockRuntime = {
+  ready: Promise<unknown>;
   isDisposed: boolean;
   dispatchFetch: ReturnType<typeof vi.fn>;
   dispose: ReturnType<typeof vi.fn>;
@@ -56,8 +57,12 @@ type MockRuntime = {
 
 const TEST_SERVER = {} as any;
 
-function createMockRuntime(label: string): MockRuntime {
+function createMockRuntime(
+  label: string,
+  ready: Promise<unknown> = Promise.resolve(),
+): MockRuntime {
   const runtime = {
+    ready,
     isDisposed: false,
     dispatchFetch: vi.fn(async (request: Request) => {
       return new Response(`${label}:${new URL(request.url).pathname}`);
@@ -221,6 +226,50 @@ describe('createMiniOxygenDevEnvironment', () => {
     expect(secondRuntime.dispatchFetch).toHaveBeenCalledTimes(1);
   });
 
+  it('fails the request and retries when the runtime fails to start', async () => {
+    const startupError = new Error('The Workers runtime failed to start.');
+    let failedRuntime: MockRuntime | undefined;
+    const workingRuntime = createMockRuntime('runtime-2');
+    const resolveRuntimeOptions = vi.fn(async (_, viteDevServer) => {
+      return {
+        entry: './server',
+        viteDevServer,
+      };
+    });
+
+    mocks.startMiniOxygenRuntime
+      .mockImplementationOnce(() => {
+        failedRuntime = createMockRuntime(
+          'runtime-1',
+          Promise.reject(startupError),
+        );
+        return failedRuntime;
+      })
+      .mockReturnValueOnce(workingRuntime);
+
+    const environment = createMiniOxygenDevEnvironment(
+      'ssr',
+      {} as any,
+      {},
+      resolveRuntimeOptions,
+    );
+
+    await environment.listen(TEST_SERVER);
+
+    await expect(
+      environment.dispatchFetch(new Request('http://localhost/first')),
+    ).rejects.toBe(startupError);
+    expect(failedRuntime?.dispose).toHaveBeenCalledTimes(1);
+    expect(failedRuntime?.dispatchFetch).not.toHaveBeenCalled();
+
+    const response = await environment.dispatchFetch(
+      new Request('http://localhost/second'),
+    );
+
+    expect(await response.text()).toBe('runtime-2:/second');
+    expect(mocks.startMiniOxygenRuntime).toHaveBeenCalledTimes(2);
+  });
+
   it('rejects runtime reconfiguration after startup', async () => {
     const resolveRuntimeOptions = vi.fn(async (_, viteDevServer) => {
       return {
@@ -316,6 +365,67 @@ describe('createMiniOxygenDevEnvironment', () => {
     const warmupRequest = mocks.toMiniflareRequest.mock.calls[0]?.[0];
     expect(warmupRequest).toBeInstanceOf(Request);
     expect(new URL(warmupRequest.url).pathname).toBe('/__vite_warmup');
+  });
+
+  it('disposes a runtime that is still starting when the environment closes', async () => {
+    // Never settles, like a workerd startup that hangs.
+    const ready = new Promise<void>(() => {});
+    const runtime = createMockRuntime('runtime-1', ready);
+    const resolveRuntimeOptions = vi.fn(async (_, viteDevServer) => {
+      return {
+        entry: './server',
+        viteDevServer,
+      };
+    });
+
+    mocks.startMiniOxygenRuntime.mockReturnValue(runtime);
+
+    const environment = createMiniOxygenDevEnvironment(
+      'ssr',
+      {} as any,
+      {},
+      resolveRuntimeOptions,
+    );
+
+    await environment.listen(TEST_SERVER);
+
+    void environment
+      .dispatchFetch(new Request('http://localhost/pending'))
+      .catch(() => {});
+    await vi.waitFor(() =>
+      expect(mocks.startMiniOxygenRuntime).toHaveBeenCalledTimes(1),
+    );
+
+    await environment.close();
+
+    expect(runtime.dispose).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not start a runtime after the environment closes', async () => {
+    const options = createDeferred<{entry: string; viteDevServer: any}>();
+    const resolveRuntimeOptions = vi.fn(() => options.promise);
+
+    const environment = createMiniOxygenDevEnvironment(
+      'ssr',
+      {} as any,
+      {},
+      resolveRuntimeOptions,
+    );
+
+    await environment.listen(TEST_SERVER);
+
+    const pendingRequest = environment.dispatchFetch(
+      new Request('http://localhost/pending'),
+    );
+    await vi.waitFor(() => expect(resolveRuntimeOptions).toHaveBeenCalled());
+
+    await environment.close();
+    options.resolve({entry: './server', viteDevServer: TEST_SERVER});
+
+    await expect(pendingRequest).rejects.toThrow(
+      'MiniOxygen dev environment was closed.',
+    );
+    expect(mocks.startMiniOxygenRuntime).not.toHaveBeenCalled();
   });
 
   it('closes the Vite environment and disposes the active runtime', async () => {
