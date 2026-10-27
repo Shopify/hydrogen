@@ -1,0 +1,9 @@
+---
+"@shopify/hydrogen": patch
+---
+
+Storefront responses now include a `Link: </.well-known/ucp>; rel="ucp"` header, so AI agents can discover your store's Universal Commerce Protocol (UCP) profile from any URL, as they already can on Online Store themes. `requestContext.applyResponseHeaders()` adds it to every response. Any existing `Link` header is kept, and the UCP link isn't added again if the response already has a `rel="ucp"` link. The header is left off Oxygen deployment URLs on `myshopify.dev`, because the profile isn't served there. The `<link rel="ucp">` tag rendered by `ShopifyScripts` ([#4154](https://github.com/Shopify/hydrogen/pull/4154)) still renders on those preview domains, because its descriptors are often built without request context.
+
+On Oxygen custom domains, Shopify serves `/.well-known/ucp` before the request reaches your app. Everywhere else, `handleShopifyRoutes` serves it, starting with [#3976](https://github.com/Shopify/hydrogen/pull/3976). This header ships together with or after that change.
+
+**Behavior change for Next.js apps:** if your `proxy.ts` (or `middleware.ts`) calls `applyResponseHeaders()` directly on the `NextResponse.next()` response, your route handlers' `Link` headers will be dropped after upgrading. Next.js copies the proxy's headers onto the final response first, then drops any route handler header with the same name. To fix it, adopt the save-and-restore pattern in the updated `examples/nextjs` proxy helper, `applyProxyResponseHeaders()`: save the `Link` header of the `NextResponse.next()` response before calling `applyResponseHeaders()`, then restore it afterwards. Any `Link` your proxy sets itself is kept. Next.js pages then don't send the UCP header. Instead, they advertise UCP through the `<link rel="ucp">` tag rendered by `ShopifyScripts` ([#4154](https://github.com/Shopify/hydrogen/pull/4154)).
