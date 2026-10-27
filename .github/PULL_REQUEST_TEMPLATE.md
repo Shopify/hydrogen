@@ -1,25 +1,45 @@
 <!--
-  How to write a good PR title:
-  - Start with a verb, for example: Add, Delete, Improve, Fix…
-  - Give as much context as necessary and as little as possible
+  Title: start with a verb and describe the outcome, for example "Fix price filter parsing under dot-grouping shop locales".
+
+  Body: delete every section that does not apply. Do not assume the reader has full context.
+  Use short paragraphs, plain language, and bullets. Do not paste the whole diff.
 -->
 
-### WHY are these changes introduced?
+Closes #0000 <!-- Remove if there is no issue -->
 
-Fixes #0000 <!-- link to issue if one exists -->
+TL;DR: <!-- What was the problem, and why does this PR exist? -->
+
+## Before
+
+<!-- Short code snippet or behavior summary showing the previous state. -->
+
+## After
+
+<!-- Short code snippet or behavior summary showing the new state. -->
+
+## What this changes
+
+- <!-- Concrete change -->
+
+## Developer impact
 
 <!--
-  Context about the problem that this PR is addressing. If this is a relatively large or complex change, kick off the discussion by explaining why you chose the solution you did and what alternatives you considered.
+  Only if public exports, types, examples, packaged skills, or migration paths change.
+
+  Say whether a changeset is included and why the level fits (see CONTRIBUTING.md#changesets):
+  - patch: bug fixes, internal refactors, skill/example hardening with no new public API
+  - minor: new exports, helpers, or supported patterns that are additive
+  - major: breaking changes to public exports or taught patterns
+
+  If no changeset is needed, say why.
 -->
 
-### WHAT is this pull request doing?
+## UX impact
 
 <!--
-  Summary of the changes committed.
+  Only if routes, UI, forms, buttons, navigation, loading states, copy, or accessibility behavior change.
 
-  Before / after screenshots are appreciated for UI changes. Make sure to include alt text that describes the screenshot.
-
-  If you include an animated gif showing your change, wrapping it in a details tag is recommended. Gifs usually autoplay, which can cause accessibility issues for people reviewing your PR:
+  Screenshots need alt text. Wrap animated gifs in a <details> tag so they don't autoplay:
 
     <details>
       <summary>Summary of your gif(s)</summary>
@@ -27,30 +47,25 @@ Fixes #0000 <!-- link to issue if one exists -->
     </details>
 -->
 
-<!-- ℹ️ Delete the following for small / trivial changes -->
+## Out of scope
 
-### HOW to test your changes?
+<!-- What this PR deliberately does not address. This is not a roadmap. -->
 
-<!--
-  Give as much information for the reviewer to test your changes locally. A thorough step-by-step guide will go along-way.
--->
+## Risk
 
-#### Post-merge steps
+<!-- What could break, tradeoffs you're accepting, or what needs extra reviewer attention (including cross-platform impact on Mac, Linux, and Windows). -->
 
-<!--
-  If changes require post-merge steps, for example merging and publishing [documentation](https://shopify.dev) changes,
-  specify it in this section and add the label "includes-post-merge-steps".
-  If it doesn't, feel free to remove this section.
--->
-
-#### Checklist
-
-- [ ] I've read the [Contributing Guidelines](https://github.com/Shopify/hydrogen/blob/main/CONTRIBUTING.md)
-- [ ] I've considered possible cross-platform impacts (Mac, Linux, Windows)
-- [ ] I've added a [changeset](https://github.com/Shopify/hydrogen/blob/main/CONTRIBUTING.md#changesets) if this PR contains user-facing or functional changes. Test changes or internal-only config changes do not require a changeset. 
-- [ ] I've added [tests](https://github.com/Shopify/hydrogen/blob/main/CONTRIBUTING.md#testing) to cover my changes
-- [ ] I've added or updated the documentation
+## How to Test
 
 <!--
- THANK YOU for your pull request! Members from the Hydrogen team will review these changes and provide feedback as soon as they are available.
+  Manual steps a human runs locally: setup, folders, dev server commands, URLs, and the behavior to confirm.
+  Lint, typecheck, unit tests, and CI do not belong here. Omit this section if there is nothing to test by hand.
+
+  1. Run `pnpm install && pnpm build:pkgs`
+  2. ...
+  3. Confirm ...
 -->
+
+## Post-merge steps
+
+<!-- Only if something must happen after merge (for example, publishing docs). Add the "includes-post-merge-steps" label. -->
