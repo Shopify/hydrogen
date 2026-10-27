@@ -9,6 +9,8 @@ export type Env = {
   PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID?: string;
   SESSION_SECRET?: string;
   SHOP_ID?: string;
+  /** SPIKE ONLY: injects a cart fault for agentic E2E calibration. */
+  SPIKE_FAULT?: string;
 };
 
 export const envContext = createContext<Env>();

@@ -27,6 +27,7 @@ import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
 import { analyticsConsent, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
+import { applySpikeFault, parseSpikeFault } from "~/lib/spike-faults";
 import {
   createRequestStorefrontClient,
   storefrontClientContext,
@@ -43,13 +44,18 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export const middleware: Route.MiddlewareFunction[] = [
-  async ({ context, request }, next) => {
+  async ({ context, request: incomingRequest }, next) => {
     const env = context.get(envContext);
     const storefrontClient = createRequestStorefrontClient(
-      request,
+      incomingRequest,
       env,
       context.cache,
       context.waitUntil,
+    );
+    const request = await applySpikeFault(
+      incomingRequest,
+      parseSpikeFault(env.SPIKE_FAULT),
+      storefrontClient,
     );
     const requestContext = storefrontClient.requestContext;
     const customerAccount = await createRequestCustomerAccount(request, env, requestContext);

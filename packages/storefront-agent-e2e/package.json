@@ -1,0 +1,23 @@
+{
+  "name": "@shopify/storefront-agent-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "oxlint .",
+    "test": "vitest run src",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@shopify/hydrogen": "workspace:*"
+  },
+  "devDependencies": {
+    "@browserbasehq/stagehand": "3.6.0",
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^25.8.0",
+    "typescript": "catalog:",
+    "vitest": "^3.0.0",
+    "zod": "^4.4.3"
+  }
+}
