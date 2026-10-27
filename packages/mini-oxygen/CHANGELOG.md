@@ -1,5 +1,11 @@
 # @shopify/mini-oxygen
 
+## 4.2.4
+
+### Patch Changes
+
+- b695c43: Bump `undici` from 7.24.0 to 7.30.1 to pick up upstream security fixes.
+
 ## 4.2.3
 
 ### Patch Changes
