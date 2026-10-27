@@ -13,6 +13,7 @@ import {exec} from '@shopify/cli-kit/node/system';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {
   fileExists,
+  inTemporaryDirectory,
   mkdirSync,
   readFile,
   removeFile,
@@ -22,6 +23,8 @@ import {runCheckRoutes} from './check.js';
 import {runCodegen} from './codegen.js';
 import {setupTemplate} from '../../lib/onboarding/index.js';
 import path from 'node:path';
+import {realpath} from 'node:fs/promises';
+import {captureJsonOutput} from '../../../tests/output.js';
 
 vi.mock('../../lib/check-cli-version.js');
 
@@ -82,6 +85,31 @@ describe('init', () => {
     });
   });
 
+  it.each([
+    {quickstart: true},
+    {styling: 'none' as const, i18n: 'none' as const},
+  ])('preserves none choices in JSON for %j', async (options) => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      const {stdout} = await captureJsonOutput(() =>
+        runInit({
+          ...options,
+          path: tmpDir,
+          language: 'ts',
+          mockShop: true,
+          git: false,
+          shortcut: false,
+          installDeps: false,
+        }),
+      );
+      expect(JSON.parse(stdout)).toMatchObject({
+        status: 'success',
+        project: {cssStrategy: 'none', i18n: 'none'},
+      });
+      expect(await fileExists(`${tmpDir}/app/lib/i18n.ts`)).toBe(false);
+      expect(await fileExists(`${tmpDir}/app/styles/tailwind.css`)).toBe(false);
+    });
+  });
+
   describe('project validity', () => {
     let tmpDir: string;
 
@@ -110,9 +138,19 @@ describe('init', () => {
     });
 
     it('typechecks the project', async () => {
-      // This will throw if TSC fails
+      // Resolve the installed binaries before running them: pnpm's bin wrappers
+      // use relative paths that break when node_modules is linked into this fixture.
+      await exec(
+        await realpath(path.join(tmpDir, 'node_modules/.bin/react-router')),
+        ['typegen'],
+        {cwd: tmpDir},
+      );
       await expect(
-        exec('npm', ['run', 'typecheck'], {cwd: tmpDir}),
+        exec(
+          await realpath(path.join(tmpDir, 'node_modules/.bin/tsc')),
+          ['--noEmit'],
+          {cwd: tmpDir},
+        ),
       ).resolves.not.toThrow();
     });
 

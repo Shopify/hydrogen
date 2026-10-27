@@ -216,10 +216,11 @@ describe('link', () => {
       );
     });
 
-    it('handles the job errors when creating the storefront on Admin', async () => {
-      vi.mocked(waitForJob).mockRejectedValue(undefined);
-
-      await expect(runLink({})).rejects.toThrow(Error);
+    it('preserves the reason storefront provisioning failed', async () => {
+      vi.mocked(waitForJob).mockRejectedValue(
+        new Error('Reinstall the Hydrogen app'),
+      );
+      await expect(runLink({})).rejects.toThrow('Reinstall the Hydrogen app');
     });
   });
 
@@ -278,14 +279,12 @@ describe('link', () => {
     });
 
     describe('and there is no matching storefront', () => {
-      it('renders a warning message and returns early', async () => {
-        const outputMock = mockAndCaptureOutput();
-
-        await runLink({storefront: 'Does not exist'});
+      it('fails when the requested storefront does not exist', async () => {
+        await expect(runLink({storefront: 'Does not exist'})).rejects.toThrow(
+          "Couldn't find Does not exist",
+        );
 
         expect(setStorefront).not.toHaveBeenCalled();
-
-        expect(outputMock.warn()).toMatch(/Couldn\'t find Does not exist/g);
       });
     });
 

@@ -9,6 +9,8 @@ export default defineConfig({
   test: {
     globalSetup: './vitest.setup.ts',
     include: ['src/**/*-e2e.test.ts'],
-    testTimeout: 600000,
+    // The full matrix scaffolds and installs dependencies for nine upgrade paths
+    // sequentially, which can exceed ten minutes on hosted runners.
+    testTimeout: 20 * 60 * 1000,
   },
 });

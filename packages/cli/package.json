@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "13.0.5",
+  "version": "13.1.0",
   "license": "MIT",
   "type": "module",
   "repository": {
@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@react-router/dev": "7.16.0",
+    "@shopify/mini-oxygen": "workspace:*",
     "@types/diff": "^5.0.2",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/node": "catalog:",
@@ -40,10 +41,9 @@
   },
   "dependencies": {
     "@ast-grep/napi": "0.34.1",
-    "@oclif/core": "3.26.5",
-    "@shopify/cli-kit": "^3.80.4",
+    "@oclif/core": "4.8.3",
+    "@shopify/cli-kit": "4.9.0",
     "@shopify/oxygen-cli": "4.6.18",
-    "@shopify/plugin-cloudflare": "^3.78.1",
     "ansi-escapes": "^6.2.0",
     "chokidar": "3.5.3",
     "cli-truncate": "^4.0.0",
@@ -65,7 +65,7 @@
     "@graphql-codegen/cli": "^5.0.2",
     "@react-router/dev": "~7.16.0",
     "@shopify/hydrogen-codegen": "workspace:*",
-    "@shopify/mini-oxygen": "workspace:*",
+    "@shopify/mini-oxygen": "^3.1.0 || ^4.2.3",
     "graphql-config": "^5.0.3",
     "vite": "^5.1.0 || ^6.2.0 || ^7.0.0 || ^8.0.0"
   },
@@ -129,9 +129,6 @@
       "hydrogen:setup": {
         "description": "Scaffolds new functionality."
       }
-    },
-    "plugins": [
-      "@shopify/plugin-cloudflare"
-    ]
+    }
   }
 }

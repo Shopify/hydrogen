@@ -3,11 +3,11 @@ import {setTestStore, test, expect} from '../../fixtures';
 setTestStore('defaultConsentDisallowed_cookiesEnabled');
 
 test.describe('Privacy Banner - Session Migration', () => {
-  test.describe('Consent Allowed (with existing old tracking cookies)', () => {
-    test('should preserve tracking values from old cookies after migration', async ({
+  test.describe('Consent Allowed (with existing deprecated tracking cookies)', () => {
+    test('should preserve tracking values from deprecated cookies after migration', async ({
       storefront,
     }) => {
-      // Enable privacy banner via JS bundle interception (preserves server-timing)
+      // Enable privacy banner via JS bundle interception
       await storefront.setWithPrivacyBanner(true);
 
       // === SETUP: Establish consent and get initial tracking values ===
@@ -15,123 +15,85 @@ test.describe('Privacy Banner - Session Migration', () => {
       // 1. Navigate to main page
       await storefront.goto('/');
 
-      // 2. Accept privacy banner to establish consent
-      await storefront.acceptPrivacyBanner();
-
-      // 3. Get the established Y/S values after consent
-      const establishedServerTiming =
-        await storefront.getServerTimingValues(true);
-
-      // Verify they are real UUIDs (not mock values)
-      storefront.expectRealServerTimingValues(establishedServerTiming);
-
-      const originalYValue = establishedServerTiming._y!;
-      const originalSValue = establishedServerTiming._s!;
-
-      // 4. Verify all cookies are present
-      const {shopifyY, shopifyS} =
-        await storefront.expectAnalyticsCookiesPresent();
-
-      expect(shopifyY!.value, '_shopify_y should match server-timing').toBe(
-        originalYValue,
-      );
-      expect(shopifyS!.value, '_shopify_s should match server-timing').toBe(
-        originalSValue,
+      // 2. Accept privacy banner and get the established tracking values from
+      // the consent response. Verify they are real UUIDs (not mock values).
+      const tokens = await storefront.expectAllowedConsent(
+        await storefront.acceptPrivacyBanner(),
       );
 
-      // === MIGRATION: Remove new cookies but keep old ones ===
+      // 3. New visitors receive the modern http-only cookies only.
+      await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+      await storefront.expectNoLegacyAnalyticsCookies();
 
-      // 5. Remove ONLY the new HTTP-only cookies (simulate migration scenario)
-      // Keep: _shopify_y, _shopify_s (old tracking cookies)
-      // Remove: _shopify_analytics, _shopify_marketing, _shopify_essential(s)
-      await storefront.removeHttpOnlyCookies();
+      // === MIGRATION: Remove new cookies but keep the deprecated ones ===
+
+      // Model cookies left by an older storefront version.
+      await storefront.context.addCookies([
+        {
+          name: '_shopify_y',
+          value: tokens.uniqueToken!,
+          url: storefront.page.url(),
+        },
+        {
+          name: '_shopify_s',
+          value: tokens.visitToken!,
+          url: storefront.page.url(),
+        },
+      ]);
+
+      // 4. Remove ONLY the analytics HTTP-only cookies (simulate migration scenario)
+      // Keep: _shopify_y, _shopify_s (deprecated tracking cookies)
+      // Keep: _shopify_essential(s), which persist the saved consent choice.
+      // Remove: _shopify_analytics, _shopify_marketing
+      await storefront.removeCookies([
+        '_shopify_analytics',
+        '_shopify_marketing',
+      ]);
 
       // Verify HTTP-only cookies are removed
-      const analyticsAfterRemoval =
-        await storefront.getCookie('_shopify_analytics');
-      const marketingAfterRemoval =
-        await storefront.getCookie('_shopify_marketing');
+      expect(await storefront.getCookie('_shopify_analytics')).toBeUndefined();
+      expect(await storefront.getCookie('_shopify_marketing')).toBeUndefined();
 
-      expect(
-        analyticsAfterRemoval,
-        '_shopify_analytics should be removed',
-      ).toBeUndefined();
-      expect(
-        marketingAfterRemoval,
-        '_shopify_marketing should be removed',
-      ).toBeUndefined();
-
-      // Verify old tracking cookies are still present
-      const yAfterRemoval = await storefront.getCookie('_shopify_y');
-      const sAfterRemoval = await storefront.getCookie('_shopify_s');
-
-      expect(yAfterRemoval, '_shopify_y should still exist').toBeDefined();
-      expect(sAfterRemoval, '_shopify_s should still exist').toBeDefined();
-      expect(yAfterRemoval!.value, '_shopify_y value should be unchanged').toBe(
-        originalYValue,
+      // Verify the deprecated tracking cookies are still present with their values
+      expect((await storefront.getCookie('_shopify_y'))?.value).toBe(
+        tokens.uniqueToken,
       );
-      expect(sAfterRemoval!.value, '_shopify_s value should be unchanged').toBe(
-        originalSValue,
+      expect((await storefront.getCookie('_shopify_s'))?.value).toBe(
+        tokens.visitToken,
       );
 
       // Clear tracked requests before reload
       storefront.clearRequests();
 
-      // 6. Reload the page - this initiates the migration test
-      await storefront.page.reload();
-      await storefront.page.waitForLoadState('networkidle');
+      // 5. Reload the page - this initiates the migration test
+      const response = await storefront.withConsentResponse(() =>
+        storefront.reload(),
+      );
 
       // === VERIFY: Tracking values should be preserved after migration ===
+
+      // 6. Verify tracking values from the consent response match the original
+      // established values: the deprecated cookie values are forwarded upstream
+      // on the consent request, so the same session continues.
+      expect(
+        await storefront.expectAllowedConsent(response),
+        'Migration should preserve the original tokens',
+      ).toEqual(tokens);
 
       // 7. Privacy banner should NOT show (consent was previously saved)
       await storefront.expectPrivacyBannerNotVisible();
 
-      // 8. Verify server-timing Y/S values match the original established values
-      const serverTimingAfterReload = await storefront.getServerTimingValues();
+      // 8. Verify migration re-establishes the modern HTTP-only cookies and
+      // expires the deprecated ones.
+      await storefront.expectHttpOnlyAnalyticsCookiesPresent();
+      await storefront.expectNoLegacyAnalyticsCookies();
 
-      expect(
-        serverTimingAfterReload._y,
-        'Server-timing _y after migration should match original value',
-      ).toBe(originalYValue);
-      expect(
-        serverTimingAfterReload._s,
-        'Server-timing _s after migration should match original value',
-      ).toBe(originalSValue);
-
-      // 9. Verify new HTTP-only cookies are recreated with correct values
-      const {
-        shopifyY: yAfterReload,
-        shopifyS: sAfterReload,
-        shopifyAnalytics: analyticsAfterReload,
-        shopifyMarketing: marketingAfterReload,
-      } = await storefront.expectAnalyticsCookiesPresent();
-
-      expect(
-        analyticsAfterReload,
-        '_shopify_analytics should be recreated after migration',
-      ).toBeDefined();
-      expect(
-        marketingAfterReload,
-        '_shopify_marketing should be recreated after migration',
-      ).toBeDefined();
-
-      // Verify cookie values match original tracking session
-      expect(
-        yAfterReload!.value,
-        '_shopify_y should keep original value after migration',
-      ).toBe(originalYValue);
-      expect(
-        sAfterReload!.value,
-        '_shopify_s should keep original value after migration',
-      ).toBe(originalSValue);
-
-      // 10. Wait for analytics requests and verify they use original tracking values
+      // 9. Wait for analytics requests and verify they use original tracking values
       await storefront.waitForPerfKit();
       await storefront.waitForMonorailRequests();
-
       storefront.verifyMonorailRequests(
-        originalYValue,
-        originalSValue,
+        tokens.uniqueToken,
+        tokens.visitToken,
         'after migration',
       );
     });
@@ -141,7 +103,7 @@ test.describe('Privacy Banner - Session Migration', () => {
     test('should not send analytics or set tracking params when consent was declined', async ({
       storefront,
     }) => {
-      // Enable privacy banner via JS bundle interception (preserves server-timing)
+      // Enable privacy banner via JS bundle interception
       await storefront.setWithPrivacyBanner(true);
 
       // === SETUP: Decline consent ===
@@ -149,8 +111,10 @@ test.describe('Privacy Banner - Session Migration', () => {
       // 1. Navigate to main page
       await storefront.goto('/');
 
-      // 2. Decline privacy banner
-      await storefront.declinePrivacyBanner();
+      // 2. Decline privacy banner and verify analytics consent is denied
+      await storefront.expectDeclinedConsent(
+        await storefront.declinePrivacyBanner(),
+      );
 
       // 3. Verify _shopify_essential cookie is set after declining
       await storefront.expectEssentialCookiePresent();
@@ -158,48 +122,37 @@ test.describe('Privacy Banner - Session Migration', () => {
       // 4. Verify analytics cookies are NOT set
       await storefront.expectNoAnalyticsCookies();
 
-      // === MIGRATION: Remove new cookies AND old tracking cookies ===
+      // === MIGRATION: Remove new cookies AND deprecated tracking cookies ===
 
-      // 5. Remove HTTP-only cookies AND _shopify_y and _shopify_s
+      // 5. Remove analytics cookies AND _shopify_y and _shopify_s.
+      // Keep _shopify_essential(s), which persist the declined consent choice.
       // This simulates a migration where user had declined consent and
       // we're testing the system handles missing tracking cookies correctly
-      await storefront.removeHttpOnlyCookies();
-      await storefront.removeCookies(['_shopify_y', '_shopify_s']);
+      await storefront.removeCookies([
+        '_shopify_analytics',
+        '_shopify_marketing',
+        '_shopify_y',
+        '_shopify_s',
+      ]);
 
       // Verify all tracking-related cookies are removed
-      const yAfterRemoval = await storefront.getCookie('_shopify_y');
-      const sAfterRemoval = await storefront.getCookie('_shopify_s');
-      const analyticsAfterRemoval =
-        await storefront.getCookie('_shopify_analytics');
-      const marketingAfterRemoval =
-        await storefront.getCookie('_shopify_marketing');
-
-      expect(yAfterRemoval, '_shopify_y should be removed').toBeUndefined();
-      expect(sAfterRemoval, '_shopify_s should be removed').toBeUndefined();
-      expect(
-        analyticsAfterRemoval,
-        '_shopify_analytics should be removed',
-      ).toBeUndefined();
-      expect(
-        marketingAfterRemoval,
-        '_shopify_marketing should be removed',
-      ).toBeUndefined();
+      await storefront.expectNoAnalyticsCookies();
 
       // Clear tracked requests before reload
       storefront.clearRequests();
 
       // 6. Reload the page - this initiates the migration test
-      await storefront.page.reload();
-      await storefront.page.waitForLoadState('networkidle');
+      const response = await storefront.withConsentResponse(() =>
+        storefront.reload(),
+      );
 
       // === VERIFY: No tracking should occur ===
 
-      // 7. Privacy banner should NOT show (consent choice was previously saved)
-      await storefront.expectPrivacyBannerNotVisible();
+      // 7. Verify analytics consent remains declined
+      await storefront.expectDeclinedConsent(response);
 
-      // 8. Verify server-timing values are mock values (not real tracking values)
-      const serverTimingAfterReload = await storefront.getServerTimingValues();
-      storefront.expectMockServerTimingValues(serverTimingAfterReload);
+      // 8. Privacy banner should NOT show (consent choice was previously saved)
+      await storefront.expectPrivacyBannerNotVisible();
 
       // 9. Verify analytics cookies are still NOT present
       await storefront.expectNoAnalyticsCookies();
@@ -207,8 +160,7 @@ test.describe('Privacy Banner - Session Migration', () => {
       // 10. Wait for perf-kit to load (it should still load for performance metrics)
       await storefront.waitForPerfKit();
 
-      // 11. Wait and verify NO Monorail analytics requests are made
-      await storefront.page.waitForTimeout(1500);
+      // 11. Verify NO Monorail analytics requests are made
       storefront.expectNoMonorailRequests();
     });
   });

@@ -52,7 +52,12 @@ export default defineConfig(({mode, isSsrBuild}) => {
         mode === 'devbuild' ? 'dev' : 'prod'
       }/`,
       lib: {
-        entry: resolve(__dirname, 'src/index.ts'),
+        entry: {
+          index: resolve(__dirname, 'src/index.ts'),
+          // Imported by Hydrogen as a subpath. As an entry, it keeps exports
+          // that the root barrel doesn't re-export, such as `loadScript`.
+          'load-script': resolve(__dirname, 'src/load-script.tsx'),
+        },
         name: 'hydrogen-react',
         /**
          * we keep the default to commonjs (and package.json#type to "commonjs")

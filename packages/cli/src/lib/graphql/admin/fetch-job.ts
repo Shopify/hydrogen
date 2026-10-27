@@ -1,4 +1,6 @@
 import {adminRequest, type AdminSession} from './client.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {setTimeout} from 'node:timers/promises';
 
 export const FetchJobQuery = `#graphql
   query FetchJob($id: ID!) {
@@ -36,20 +38,15 @@ export async function fetchJob(adminSession: AdminSession, jobId: string) {
   return hydrogenStorefrontJob;
 }
 
-export function waitForJob(adminSession: AdminSession, jobId: string) {
-  return new Promise<void>((resolve, reject) => {
-    const interval = setInterval(async () => {
-      const job = await fetchJob(adminSession, jobId);
-
-      if (job.errors.length > 0) {
-        clearInterval(interval);
-        return reject();
-      }
-
-      if (job.done) {
-        clearInterval(interval);
-        return resolve();
-      }
-    }, 500);
-  });
+export async function waitForJob(adminSession: AdminSession, jobId: string) {
+  while (true) {
+    await setTimeout(500);
+    const job = await fetchJob(adminSession, jobId);
+    if (job.errors.length > 0) {
+      throw new AbortError(
+        `Storefront setup failed: ${job.errors.map(({message, code}) => message || code).join(', ')}`,
+      );
+    }
+    if (job.done) return;
+  }
 }

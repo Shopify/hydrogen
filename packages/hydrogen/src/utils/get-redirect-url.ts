@@ -19,6 +19,31 @@ export function getRedirectUrl(requestUrl?: string): string | undefined {
   }
 }
 
+/**
+ * Normalizes `target` to a path on `origin` that is safe to use as a redirect location.
+ * Returns `undefined` unless `target` is a path starting with `/` or an absolute URL,
+ * stays on `origin`, and its normalized pathname does not start with `//`.
+ */
+export function getSameOriginPath(
+  target: string | null | undefined,
+  origin: string,
+): string | undefined {
+  if (!target) return undefined;
+
+  try {
+    // Absolute values are parsed without a base so their host is never inherited from `origin`.
+    const url = target.startsWith('/')
+      ? new URL(target, origin)
+      : new URL(target);
+    if (url.origin !== origin) return undefined;
+    const path = `${url.pathname}${url.search}${url.hash}`;
+    // A normalized path can begin with `//`, which a browser reads as a host, not a path.
+    return path.startsWith('//') ? undefined : path;
+  } catch {
+    return undefined;
+  }
+}
+
 function isLocalPath(requestUrl: string, redirectUrl: string) {
   // We don't want to redirect cross domain,
   // doing so could create phishing vulnerability

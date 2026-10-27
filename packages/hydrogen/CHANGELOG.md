@@ -1,5 +1,47 @@
 # @shopify/hydrogen
 
+## 2026.4.8
+
+### Patch Changes
+
+- When the login request has no `return_to` or `redirect` search param, `customerAccount.login()` now saves the post-sign-in redirect as a normalized path on your storefront's origin, falling back to `defaultRedirectPath` otherwise. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- The `hydrogen dev` developer tooling routes (GraphiQL, the Subrequest Profiler, and the endpoints behind them) now respond only to requests from the machine running the dev server. Requests from other devices, for example when running with `--host`, receive a 404. Storefront routes are unaffected. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Fix a race condition in `loadScript` where the browser could begin fetching a script before integrity or other security attributes were applied. Attributes are now set before the element is inserted into the DOM. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Updated dependencies [[`e4622144c83e9d9838b5c9336a4d9a021bbe0727`](https://github.com/Shopify/hydrogen/commit/e4622144c83e9d9838b5c9336a4d9a021bbe0727)]:
+  - @shopify/hydrogen-react@2026.4.5
+
+## 2026.4.7
+
+### Patch Changes
+
+- Fix React hydration interruption caused by Analytics.Provider state updates. Deferred cart, shop, and consent state updates are now wrapped in `startTransition`, preventing React from abandoning server-rendered HTML when Suspense boundaries are still dehydrating. ([#4111](https://github.com/Shopify/hydrogen/pull/4111)) by [@andguy95](https://github.com/andguy95)
+
+  `publish` from `useAnalytics()` also re-checks consent when called. If a visitor revokes consent while React is still holding that update, events published in the meantime no longer reach subscribers.
+
+## 2026.4.6
+
+### Patch Changes
+
+- Shopify's consent API now returns visitor tracking values in the `consentManagement` response. Hydrogen now enables asynchronous consent initialization so the Customer Privacy API fetches and caches these values before analytics starts. This replaces Hydrogen's separate consent query and cache writes, as well as `Server-Timing` headers, which are no longer collected or forwarded for tracking. The deprecated JavaScript-visible `_shopify_y` and `_shopify_s` cookies are no longer created. Hydrogen leaves migration and expiration of legacy analytics and consent cookies to the Customer Privacy API. Upgrade to keep visitor analytics and session continuity working as Shopify retires the deprecated cookies. ([#4085](https://github.com/Shopify/hydrogen/pull/4085)) by [@frandiox](https://github.com/frandiox)
+
+  Initial consent readiness also releases analytics for returning visitors when the privacy banner is enabled. Later consent changes refresh tracking permissions, and the Customer Privacy API can renew expired session tokens.
+
+  Consent and analytics now require the same-origin Storefront API proxy that Hydrogen's `createRequestHandler` (from `@shopify/hydrogen` or `@shopify/hydrogen/oxygen`) includes, and consent requests always use it, [notice](https://shopify.dev/changelog/posts/tracking-cookie-deprecation-hydrogen). The `consent.sameDomainForStorefrontApi` option is deprecated and ignored, as if it were `true`; setting it to `false` logs a warning. If your `server.ts` still uses the deprecated `createRequestHandler` from `@shopify/remix-oxygen`, or a custom server without the proxy, switch to Hydrogen's `createRequestHandler`: without the proxy, consent can't load, so analytics stay off and the privacy banner doesn't show.
+
+  `useCustomerPrivacy`'s `onReady` callback now waits for consent as well as the selected APIs. If initial consent fails to load, analytics and PerfKit stay blocked until a successful consent update. Custom consent interfaces should use the returned `customerPrivacy` API when available to allow recovery, rather than relying only on `onReady` to display their controls.
+
+  `Analytics.Provider`'s `cookieDomain` prop and `useShopifyCookies`'s `hasUserConsent`, `domain`, and `ignoreDeprecatedCookies` options are now deprecated no-ops. The Customer Privacy API manages Shopify cookies and expires deprecated ones. Standalone `hydrogen-react` integrations that passed `hasUserConsent: false` to clear cookies should remove the option; cookie lifecycle is handled automatically.
+
+  For standalone `hydrogen-react` apps, `<ShopifyProvider>` still sends cart requests to your store domain when `sameDomainForStorefrontApi` is off or can't be detected, so the cart keeps working. Visitor analytics and session attribution require a same-origin Storefront API proxy: proxy `/api/{version}/graphql.json` on your storefront domain to your store and set `sameDomainForStorefrontApi: true`. Client-side analytics also require the Customer Privacy API to be loaded and initialized on the page so `getTrackingValues()` can obtain current tracking values. Configuring the proxy alone does not initialize the Customer Privacy API. See the [tracking-cookie deprecation notice](https://shopify.dev/changelog/posts/tracking-cookie-deprecation-hydrogen).
+
+- Fix `og:image:type` falling back to `image/jpeg` for media URLs that include a query string, such as Shopify CDN URLs ending in `?v=...`. ([#4067](https://github.com/Shopify/hydrogen/pull/4067)) by [@kwy404](https://github.com/kwy404)
+
+- Updated dependencies [[`76cdc6c538dc680a3f1ce96a6d704d463afde0ce`](https://github.com/Shopify/hydrogen/commit/76cdc6c538dc680a3f1ce96a6d704d463afde0ce)]:
+  - @shopify/hydrogen-react@2026.4.4
+
 ## 2026.4.5
 
 ### Patch Changes
