@@ -15,7 +15,7 @@ Migrate a classic-Hydrogen storefront (Remix- or React-Router-based) to Hydrogen
 
 ## The mental model (get this right first)
 
-1. **Hydrogen 2026-10 is a server-handler library, not a framework.** (A `@shopify/hydrogen` version **before `2026.10` is still the old framework**, not the library — the classic line runs through `2026.4.x` — so an installed version below `2026.10` means the store hasn't been migrated yet, regardless of its React Router status.) You compose the request lifecycle yourself: `createShopifyRequestContext({request, i18n, buyerIp})` → `createStorefrontClient({type: 'private', requestContext, config})` (config carries `storeDomain`, `privateStorefrontToken`, `storefrontId`, `cache`, `waitUntil`; a store without a private token uses `type: 'public'` instead — see the `hydrogen-storefront-client` packaged skill for the choice) → `handleShopifyRoutes({request, requestContext, sessionManager, storefrontClient, routeTemplates, handlers})` (returns a `Promise<Response>` for handler-owned paths, else `null` — decided synchronously, so truthy-check it without `await`) → `handleShopifyRedirects` on 404 → handler groups for the rest: `createCartServerHandlers()` for cart and `createCustomerAccountServerHandlers(…)` (from `@shopify/hydrogen/customer-account`) for auth, both registered through the `handlers` array. Hydrogen no longer owns routing or the entry — you wire these into your React Router server/middleware.
+1. **Hydrogen 2026-10 is a server-handler library, not a framework.** (A `@shopify/hydrogen` version **before `2026.10` is still the old framework**, not the library — the classic line runs through `2026.4.x` — so an installed version below `2026.10` means the store hasn't been migrated yet, regardless of its React Router status.) You compose the request lifecycle yourself: `createShopifyRequestContext({request, i18n, buyerIp})` → `createStorefrontClient({type: 'private', requestContext, config})` (config carries `storeDomain`, `privateStorefrontToken`, `storefrontId`, `cache`, `waitUntil`; a store without a private token uses `type: 'public'` instead — see the `hydrogen-storefront-client` packaged skill for the choice) → `handleShopifyRoutes({request, requestContext, storefrontClient, routeTemplates, handlers})`, plus `sessionManager` when a registered handler reads the session (returns a `Promise<Response>` for handler-owned paths, else `null` — decided synchronously, so truthy-check it without `await`) → `handleShopifyRedirects` on 404 → handler groups for the rest: `createCartServerHandlers()` for cart and `createCustomerAccountServerHandlers(…)` (from `@shopify/hydrogen/customer-account`) for auth, both registered through the `handlers` array. Hydrogen no longer owns routing or the entry — you wire these into your React Router server/middleware.
 
 2. **Dev and build are plain Vite/React Router — the classic `shopify hydrogen dev|build` commands and the `hydrogen()` Vite plugin are gone.** `dev` is `vite dev` with the `oxygen()` plugin from `@shopify/mini-oxygen/vite` (workerd runtime, `.env` injection); `build` is `react-router build`; `preview` is `vite preview` after a build. The `hydrogen` bin that ships with the library covers the rest: `hydrogen setup`, `hydrogen skills check|sync`, `hydrogen gql check`, `npx hydrogen certs install|uninstall` for local HTTPS. `@shopify/cli` stays a devDependency for the `shopify hydrogen` commands the library does not replace: `deploy`, `link`, `env pull`. Do **not** add `@shopify/hydrogen-classic` or any aliased classic package — the 2026-10 library has no classic sibling.
 
@@ -33,19 +33,20 @@ Hydrogen migration:
 - [ ] 1. Dependencies + version pins (@shopify/hydrogen ^2026.10.0 and the seed below; drop classic-era deps)
 - [ ] 2. Scripts: hydrogen skills check --mode=warn && vite dev / react-router build / vite preview; deploy via @shopify/cli
 - [ ] 3. vite.config plugins: [localHttps({enabled}), ...oxygen(), reactRouter()]
-- [ ] 4. react-router.config.ts added (v8_middleware on, buildDirectory 'dist')
-- [ ] 5. Request wiring (request context + storefront client + route templates + session manager)
+- [ ] 4. react-router.config.ts added (middleware enabled for your React Router version, buildDirectory 'dist')
+- [ ] 5. Request wiring (request context + storefront client + route templates, plus a session manager when a handler needs one)
 - [ ] 6. Route filename + import + json()/defer() sweep
 - [ ] CSP/nonce: classic's utilities are gone — port CSP/nonce as app code, then check the browser console for CSP violations
 - [ ] 7. Connect a store — env vars in .env (private token, or public token), or MOCK_SHOP=1 for the tokenless mock.shop demo
 - [ ] Optional subsystems: detect each → migrate or skip, and report every skip
+- [ ] Root middleware runs: GET /api/cart returns 200 JSON from the cart handler; a 404 or the app's 404 page means middleware isn't enabled for your React Router version (step 4)
 - [ ] 8. Verify (build/typecheck gate, hydrogen-smoke-test, browser console on the home page), then hand off to the user
 ```
 
 1. **Dependencies** — *(Remix swap only if not already on React Router)* replace `@remix-run/react`, `@remix-run/node`, `@remix-run/server-runtime`, `@remix-run/dev` and `@shopify/remix-oxygen` with `react-router` + `@react-router/dev` (pin all React Router packages to one version; `react-router-dom` is not needed). Add `@shopify/hydrogen`, `@shopify/mini-oxygen`, `vite`, the `@types/*` packages and `@shopify/cli` at the versions in the seed below. Remove `@shopify/cli-hydrogen` and any `@shopify/hydrogen-classic`-style alias if present. Align versions to the seed rather than picking latest of each independently, and never pin React Router below the version the app already runs.
 2. **Scripts** — `dev`: `hydrogen skills check --mode=warn && vite dev` (the prefix prints the resync command after a later `@shopify/hydrogen` bump without blocking dev; plain `hydrogen skills check` belongs in CI); `build`: `react-router build`; `preview`: `react-router build && vite preview`; `deploy`: `shopify hydrogen deploy --assets-dir dist/client --worker-dir dist/server`. Add `dev:https` with the **same** command — the vite.config computes the `localHttps` `enabled` flag from `npm_lifecycle_event` (step 3), not the script body.
 3. **`vite.config`** — plugins are `[localHttps({enabled}), ...oxygen(), reactRouter()]`, with `localHttps` from `@shopify/hydrogen/vite` and `oxygen` from `@shopify/mini-oxygen/vite` (it returns an **array** — spread it). `localHttps` takes a **required** `enabled: boolean` — it does not self-detect; compute it in the config: `const enabled = process.env.npm_lifecycle_event === 'dev:https'`. There is no `hydrogen()` plugin anymore. You do **not** pass an oxygen `entry` — it picks up the React Router server build.
-4. **`react-router.config.ts`** — add it (React Router framework config + future flags; `v8_middleware: true` is required for the middleware skeleton below). Set `buildDirectory: 'dist'` — React Router defaults to `build/`, and the deploy script's `--assets-dir dist/client --worker-dir dist/server` flags silently point at nothing without it. Explicit `routes.ts` route config and flat routes via `@react-router/fs-routes` both work — for a migration, fs-routes preserves the existing flat route filenames with the least churn.
+4. **`react-router.config.ts`** — add it (React Router framework config + future flags). Make sure middleware is enabled for your version of React Router — the middleware skeleton below depends on it. Set `buildDirectory: 'dist'` — React Router defaults to `build/`, and the deploy script's `--assets-dir dist/client --worker-dir dist/server` flags silently point at nothing without it. Explicit `routes.ts` route config and flat routes via `@react-router/fs-routes` both work — for a migration, fs-routes preserves the existing flat route filenames with the least churn.
 5. **Request wiring** — in your server entry or a root middleware, build the request context and clients (mental-model step 1) and expose the storefront client to loaders via typed React Router contexts. If you already thread Oxygen `env`/`executionContext` through a context provider, keep it — the library does not force a specific context shape.
 6. **Routes & imports** — *(skip the import swap if already on React Router)* swap `@remix-run/*` imports to `react-router`; migrate `json()`/`defer()` loader/action return helpers.
 7. **Connect a store** — set `PUBLIC_STORE_DOMAIN`, `PUBLIC_STOREFRONT_ID` and `PRIVATE_STOREFRONT_API_TOKEN` in `.env` (on Oxygen, a linked storefront injects them); a store with only `PUBLIC_STOREFRONT_API_TOKEN` still uses the real store through the public client. Customer accounts add `SHOP_ID`, `PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID` and `SESSION_SECRET` (full list in `references/dependencies-and-tooling.md`). With `MOCK_SHOP=1`, or no store domain at all, the skeleton's client factory falls back to the tokenless mock.shop demo store — useful to verify the migration before the user supplies credentials. mock.shop only accepts a **tokenless public client** (it rejects the private-token header with a 401), and it is a catalog of fictional stores: https://mock.shop/llms.txt lists them.
@@ -231,13 +232,12 @@ export const routeTemplates = createShopifyRouteTemplates({
 
 **Classic data-layer call-sites map mechanically:** `storefront.query()` → `client.graphql(QUERY, {variables, cache})`, which returns `{data, errors, headers}` instead of merging errors into the result — check `errors` before reading `data`; `$country`/`$language` are auto-injected, so drop them from `variables`; `storefront.CacheLong()` → the per-call `Cache.long()` (classic's implicit default caching is **gone**, so give every query that relied on it an explicit `cache`, `Cache.short()` or `Cache.long()`, or it hits the API on every request); `storefront.i18n` → `client.i18n`.
 
-Root **middleware** in `app/root.tsx` (needs `future.v8_middleware`) — the request lifecycle from mental-model step 1:
+Root **middleware** in `app/root.tsx` (needs middleware enabled, see step 4) — the request lifecycle from mental-model step 1:
 
 ```ts
 import {handleShopifyRedirects, handleShopifyRoutes} from '@shopify/hydrogen';
 import {cartHandlers} from '~/lib/cart-handlers';
 import {routeTemplates} from '~/lib/route-templates';
-import {createEphemeralSessionManager} from '~/lib/session';
 import {
   createRequestStorefrontClient, envContext, storefrontClientContext, storefrontRequestContext,
 } from '~/lib/storefront';
@@ -248,10 +248,9 @@ export const middleware: Route.MiddlewareFunction[] = [
     const env = context.get(envContext);
     const storefrontClient = createRequestStorefrontClient(request, env, context.cache, context.waitUntil);
     const requestContext = storefrontClient.requestContext;    // reuse — a fresh one throws in handleShopifyRoutes
-    const sessionManager = createEphemeralSessionManager(request);
 
     const shopifyRoute = handleShopifyRoutes({                 // handler-owned paths (e.g. /api/cart) return early
-      request, requestContext, sessionManager, storefrontClient, routeTemplates, handlers: [cartHandlers],
+      request, requestContext, storefrontClient, routeTemplates, handlers: [cartHandlers],  // cart handlers don't read the session
     });
     if (shopifyRoute) return shopifyRoute;                     // Promise<Response> or null — do NOT await the call
 
@@ -259,9 +258,6 @@ export const middleware: Route.MiddlewareFunction[] = [
     context.set(storefrontRequestContext, requestContext);
 
     const response = await next();
-
-    const sessionHeaders = new Headers((await sessionManager.commit?.()) ?? undefined);
-    for (const [name, value] of sessionHeaders) response.headers.append(name, value);
     if (response.status === 404) {                             // 404 → Shopify URL redirects
       const redirect = await handleShopifyRedirects({request, storefrontClient, routeTemplates});
       if (redirect) return redirect;                           // headers already applied by the library
@@ -272,7 +268,7 @@ export const middleware: Route.MiddlewareFunction[] = [
 ];
 ```
 
-`app/lib/session.ts` — the `sessionManager` contract is **four required methods** (item values are typed `unknown`, not `string`) plus an optional `commit()` that returns cookie headers, which the middleware above applies. A per-request in-memory map satisfies the contract and is enough for carts, but it **cannot complete Customer Account login**: the OAuth state is written on `/account/login` and read back on `/account/authorize`, two different requests. For customer accounts, copy the template's cookie-backed `createRequestSessionManager` (a signed `__Host-session` cookie built on `@remix-run/cookie` + `@remix-run/session`, keyed by `SESSION_SECRET`):
+**Session manager — only when a handler reads the session.** Plain `createCartServerHandlers()` doesn't, so the cart-only middleware above passes no `sessionManager`. Customer Account handlers and cart handlers created with `customerSession` do, and `handleShopifyRoutes` then requires one at the type level. The `sessionManager` contract is **four required methods** (item values are typed `unknown`, not `string`) plus an optional `commit()` that returns cookie headers; after `next()`, append those headers to the response before the 404 check, as the template's root middleware does. For customer accounts, copy the template's cookie-backed `createRequestSessionManager` from `app/lib/session.ts` (a signed `__Host-session` cookie built on `@remix-run/cookie` + `@remix-run/session`, keyed by `SESSION_SECRET`). An in-memory map can't complete Customer Account login: the OAuth state is written on `/account/login` and read back on `/account/authorize`, two different requests. If you register the account handlers only when Customer Accounts are configured, as the template does, the handler types still require a session manager on every request. For requests without Customer Accounts, the template passes an in-memory stand-in:
 
 ```ts
 import type {WritableCustomerSessionManager} from '@shopify/hydrogen/customer-account';
@@ -293,9 +289,9 @@ export function createEphemeralSessionManager(request: Request): WritableCustome
 }
 ```
 
-Supporting files: `app/lib/cart-handlers.ts` → `export const cartHandlers = createCartServerHandlers()` (options: `fragment` to extend the cart query, `customerSession` to sync buyer identity — see `references/cart.md`); `app/lib/cart.ts` → `createCartComponents<typeof cartHandlers>()` yields `CartProvider`/`useCart`/`useCartForm`; when the store has customer accounts, add the `createCustomerAccountServerHandlers({customerSession, …})` group next to `cartHandlers` in the middleware's `handlers` array and swap the session manager for the cookie-backed one (see `references/customer-account.md`); `react-router.config.ts` → `{buildDirectory: 'dist', future: {v8_middleware: true}}`.
+Supporting files: `app/lib/cart-handlers.ts` → `export const cartHandlers = createCartServerHandlers()` (options: `fragment` to extend the cart query, `customerSession` to sync buyer identity — see `references/cart.md`); `app/lib/cart.ts` → `createCartComponents<typeof cartHandlers>()` yields `CartProvider`/`useCart`/`useCartForm`; when the store has customer accounts, add the `createCustomerAccountServerHandlers({customerSession, …})` group next to `cartHandlers` in the middleware's `handlers` array and pass the cookie-backed session manager as `sessionManager` (see `references/customer-account.md`); `react-router.config.ts` → `{buildDirectory: 'dist'}` plus middleware enabled for your version of React Router (step 4).
 
-Two lines in that middleware are easy to omit and fail **silently**: `applyResponseHeaders` on the normal response path (Shopify response headers disappear) and `routeTemplates` into both handler calls (handler-owned URLs and redirect targets come out wrong). A third, `buyerIp` into `createShopifyRequestContext`, fails **loudly** for the private client (`TypeError: requestContext.buyerIp is required for private Storefront API clients`) — keep the `getBuyerIp` helper rather than deleting the option to silence it. For the customer-account session wiring, follow the `hydrogen-customer-account` packaged skill rather than extending the in-memory manager by hand.
+Two lines in that middleware are easy to omit and fail **silently**: `applyResponseHeaders` on the normal response path (Shopify response headers disappear) and `routeTemplates` into both handler calls (handler-owned URLs and redirect targets come out wrong). A third, `buyerIp` into `createShopifyRequestContext`, fails **loudly** for the private client (`TypeError: requestContext.buyerIp is required for private Storefront API clients`) — keep the `getBuyerIp` helper rather than deleting the option to silence it. For the customer-account session wiring, follow the `hydrogen-customer-account` packaged skill rather than extending the in-memory stand-in by hand.
 
 ## Optional subsystems
 
@@ -321,7 +317,7 @@ Each file is a short list of the specific "it renders but is wrong" traps for th
 
 ## Verification
 
-Don't trust "it renders." Gate on the build first: `react-router build` and `react-router typegen && tsc && hydrogen gql check --fail-on-warn` must both exit 0 (most import/return-helper and gql traps surface here — fix the root cause, don't suppress it; a red build makes everything downstream meaningless). Then run the local `hydrogen-smoke-test` skill for functional/runtime verification — request handlers, product, cart, collection/search, analytics, money, and the production pass. That skill owns "does the storefront work"; don't restate its checks here.
+Don't trust "it renders." Gate on the build first: `react-router build` and `react-router typegen && tsc && hydrogen gql check --fail-on-warn` must both exit 0 (most import/return-helper and gql traps surface here — fix the root cause, don't suppress it; a red build makes everything downstream meaningless). Next, prove the root middleware actually runs: with the dev server up, `GET /api/cart` must return 200 JSON from the Hydrogen cart handler. A 404, or the app's own 404 page, means middleware isn't enabled for your React Router version (step 4), so cart routes, redirects, the storefront context and response headers are all silently skipped. Then run the local `hydrogen-smoke-test` skill for functional/runtime verification — request handlers, product, cart, collection/search, analytics, money, and the production pass. That skill owns "does the storefront work"; don't restate its checks here.
 
 After the build gate and smoke test pass, **keep the dev server running and load the home page in a browser.** Fix every console error and warning before handing off. If you have no browser tool, say so in the handoff and ask the user to check the console themselves. Then hand off to the user. Tell them to test the migrated code with `npm run dev` (or `npm run dev:https` when they need customer login locally), and to pay special attention to the areas a migration most often gets subtly wrong while still compiling:
 

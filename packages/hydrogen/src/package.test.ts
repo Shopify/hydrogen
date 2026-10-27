@@ -54,6 +54,27 @@ describe("package metadata", () => {
     expect(packageJson.exports["./package.json"]).toBe("./package.json");
   });
 
+  it("resolves every ESM entry point for require-based resolvers", () => {
+    const esmEntries = Object.entries(packageJson.exports).flatMap(([exportPath, target]) =>
+      typeof target === "object" && "import" in target
+        ? [
+            {
+              exportPath,
+              importTargets:
+                typeof target.import === "string" ? [target.import] : Object.values(target.import),
+            },
+          ]
+        : [],
+    );
+    expect(esmEntries.map(({ exportPath }) => exportPath)).toContain("./react");
+
+    for (const { exportPath, importTargets } of esmEntries) {
+      expect(importTargets.map((target) => resolve(PACKAGE_ROOT, target))).toContain(
+        require.resolve(`@shopify/hydrogen${exportPath.slice(1)}`),
+      );
+    }
+  });
+
   it("exports copied generated GraphQL assets from dist", () => {
     execFileSync(process.execPath, [COPY_GENERATED_GRAPHQL_ASSETS_SCRIPT_PATH]);
 

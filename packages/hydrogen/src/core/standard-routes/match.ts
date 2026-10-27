@@ -57,7 +57,7 @@ function addStandardRouteContext(
   pathPrefix: string | undefined,
   routeTemplates: ShopifyRouteTemplates,
 ): ShopifyStandardRouteMatch {
-  const standardTemplate = match.route === "index" ? "/" : DEFAULT_STANDARD_ROUTES[match.route][0];
+  const standardTemplate = standardTemplateFor(match);
   const customTemplate =
     match.route === "index" ? standardTemplate : (routeTemplates[match.route] ?? standardTemplate);
 
@@ -69,6 +69,19 @@ function addStandardRouteContext(
       custom: customTemplate,
     },
   };
+}
+
+/**
+ * Shopify's default template for a match. A collection-scoped product template may leave out
+ * `:collectionHandle`; a match through one has no collection to put in the default
+ * collection-scoped path, so its standard path is the product's.
+ */
+function standardTemplateFor(match: Pick<ShopifyStandardRouteMatch, "params" | "route">): string {
+  if (match.route === "index") return "/";
+  if (match.route === "productInCollection" && match.params.collectionHandle === undefined) {
+    return DEFAULT_STANDARD_ROUTES.product[0];
+  }
+  return DEFAULT_STANDARD_ROUTES[match.route][0];
 }
 
 /**
