@@ -4,7 +4,7 @@
 //
 //   node scripts/run-matrix.ts [--rows H1,B1] [--trials 1]
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -91,20 +91,24 @@ const flag = (name: string) => {
 const onlyRows = flag("rows")?.split(",");
 const trialsFlag = flag("trials");
 const trialsOverride = trialsFlag ? Number(trialsFlag) : undefined;
-const runDir = path.join(
-  packageRoot,
-  "matrix-runs",
-  new Date().toISOString().replaceAll(/[:.]/g, "-"),
-);
+// --rebuild <dir> recomputes results.jsonl from the per-row Playwright reports already saved there.
+const rebuildDir = flag("rebuild");
+const runDir = rebuildDir
+  ? path.resolve(rebuildDir)
+  : path.join(packageRoot, "matrix-runs", new Date().toISOString().replaceAll(/[:.]/g, "-"));
 mkdirSync(runDir, { recursive: true });
 const resultsFile = path.join(runDir, "results.jsonl");
 
-const groups = new Map<string, Row[]>();
-for (const row of ROWS.filter((r) => !onlyRows || onlyRows.includes(r.id))) {
-  const key = `${row.server.fault ?? ""}|${row.server.ux ?? ""}`;
-  groups.set(key, [...(groups.get(key) ?? []), row]);
+if (rebuildDir) {
+  rebuild();
+} else {
+  const groups = new Map<string, Row[]>();
+  for (const row of ROWS.filter((r) => !onlyRows || onlyRows.includes(r.id))) {
+    const key = `${row.server.fault ?? ""}|${row.server.ux ?? ""}`;
+    groups.set(key, [...(groups.get(key) ?? []), row]);
+  }
+  for (const groupRows of groups.values()) await runGroup(groupRows);
 }
-for (const groupRows of groups.values()) await runGroup(groupRows);
 
 console.log(`\nResults: ${path.relative(process.cwd(), resultsFile)}`);
 console.log(`Summary: node scripts/summarize-matrix.ts ${path.relative(packageRoot, runDir)}`);
@@ -134,7 +138,24 @@ function runRow(row: Row) {
       stdio: "inherit",
     },
   );
-  const results = firstSpecTests(out).flatMap((test) => test.results ?? []);
+  recordRow(row, out);
+}
+
+function rebuild() {
+  const scriptLines = existsSync(resultsFile)
+    ? readFileSync(resultsFile, "utf8")
+        .split("\n")
+        .filter((line) => line.includes('"kind":"script"'))
+    : [];
+  writeFileSync(resultsFile, scriptLines.map((line) => `${line}\n`).join(""));
+  for (const row of ROWS) {
+    const out = path.join(runDir, row.id);
+    if (existsSync(path.join(out, "playwright-results.json"))) recordRow(row, out);
+  }
+}
+
+function recordRow(row: Row, out: string) {
+  const results = allTests(out).flatMap((test) => test.results ?? []);
   results.forEach((result, trial) => {
     const base = {
       kind: "agent",
@@ -175,15 +196,18 @@ function runScripted(server: ServerConfig): { scriptPassed: boolean; detail: str
 }
 
 function firstErrorLine(out: string): string {
-  const message = firstSpecTests(out)[0]?.results?.[0]?.error?.message ?? "";
+  const message = allTests(out)[0]?.results?.[0]?.error?.message ?? "";
   return message.split("\n")[0] ?? "";
 }
 
-function firstSpecTests(out: string): { results?: TestResult[] }[] {
+function allTests(out: string): { results?: TestResult[] }[] {
   const file = path.join(out, "playwright-results.json");
   if (!existsSync(file)) return [];
   const report: ResultsFile = JSON.parse(readFileSync(file, "utf8"));
-  return report.suites?.[0]?.specs?.[0]?.tests ?? [];
+  // --repeat-each lists each repeat as its own spec entry.
+  return (report.suites ?? []).flatMap((suite) =>
+    (suite.specs ?? []).flatMap((spec) => spec.tests ?? []),
+  );
 }
 
 function record(entry: Record<string, unknown>) {
