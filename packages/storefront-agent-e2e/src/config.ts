@@ -1,7 +1,7 @@
 import { isCountryCode, type CountryCode } from "./storefront-api";
 
 /** Stagehand attaches to the Chrome that Playwright launches here, so both drive one page. */
-export const CDP_PORT = 9333;
+export const CDP_PORT = Number(process.env.STOREFRONT_AGENT_CDP_PORT ?? "9333");
 
 export type RunConfig = {
   /** The storefront under test. */
