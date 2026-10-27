@@ -8,6 +8,8 @@ import { CDP_PORT, readRunConfig } from "./src/config";
 
 const packageRoot = fileURLToPath(new URL(".", import.meta.url));
 const envFile = path.join(packageRoot, ".env.local");
+// The matrix runner points each batch at its own output folder.
+const outRoot = process.env.STOREFRONT_AGENT_OUT ?? packageRoot;
 if (existsSync(envFile)) process.loadEnvFile(envFile);
 
 export default defineConfig({
@@ -20,10 +22,10 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   reporter: [
     ["list"],
-    ["html", { open: "never", outputFolder: path.join(packageRoot, "playwright-report") }],
-    ["json", { outputFile: path.join(packageRoot, "playwright-results.json") }],
+    ["html", { open: "never", outputFolder: path.join(outRoot, "playwright-report") }],
+    ["json", { outputFile: path.join(outRoot, "playwright-results.json") }],
   ],
-  outputDir: path.join(packageRoot, "test-results"),
+  outputDir: path.join(outRoot, "test-results"),
   use: {
     baseURL: readRunConfig().storefrontBaseUrl,
     channel: process.env.PLAYWRIGHT_BROWSER_CHANNEL,

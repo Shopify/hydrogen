@@ -11,6 +11,8 @@ export type Env = {
   SHOP_ID?: string;
   /** SPIKE ONLY: injects a cart fault for agentic E2E calibration. */
   SPIKE_FAULT?: string;
+  /** SPIKE ONLY: healthy UX variant for agentic E2E calibration. */
+  SPIKE_UX?: string;
 };
 
 export const envContext = createContext<Env>();

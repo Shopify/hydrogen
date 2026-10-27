@@ -2,3 +2,4 @@ playwright-results.json
 playwright-report/
 test-results/
 .env.local
+matrix-runs/

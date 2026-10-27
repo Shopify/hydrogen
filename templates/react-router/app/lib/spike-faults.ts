@@ -26,6 +26,19 @@ const DEFAULT_VARIANT_QUERY = gql(`
 
 type FaultedLine = { merchandiseId: string; quantity: number };
 
+/** Healthy UX variants: the storefront still works, it just looks or flows differently. */
+export type SpikeUx = "cart-page" | "newsletter-modal";
+
+const SPIKE_UX_VARIANTS: readonly SpikeUx[] = ["cart-page", "newsletter-modal"];
+
+export function parseSpikeUx(value: string | undefined): SpikeUx | null {
+  if (!value) return null;
+  const variant = SPIKE_UX_VARIANTS.find((candidate) => candidate === value);
+  if (!variant)
+    throw new Error(`Unknown SPIKE_UX "${value}". Use: ${SPIKE_UX_VARIANTS.join(", ")}`);
+  return variant;
+}
+
 export function parseSpikeFault(value: string | undefined): SpikeFault | null {
   if (!value) return null;
   const fault = SPIKE_FAULTS.find((candidate) => candidate === value);

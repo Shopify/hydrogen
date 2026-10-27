@@ -18,6 +18,7 @@ import { CartDrawer } from "~/components/CartDrawer";
 import { Footer } from "~/components/Footer";
 import { Header } from "~/components/Header";
 import { SearchDrawer } from "~/components/SearchDrawer";
+import { SpikeNewsletterModal } from "~/components/SpikeNewsletterModal";
 import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
 import { createRequestCustomerAccount, customerAccountContext } from "~/lib/customer-account";
@@ -27,7 +28,7 @@ import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
 import { analyticsConsent, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
-import { applySpikeFault, parseSpikeFault } from "~/lib/spike-faults";
+import { applySpikeFault, parseSpikeFault, parseSpikeUx } from "~/lib/spike-faults";
 import {
   createRequestStorefrontClient,
   storefrontClientContext,
@@ -110,6 +111,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     shopInfo: layout.shopInfo,
     shopIdentity: resolveShopIdentity(env, layout.shopId),
     currency: layout.currency,
+    spikeUx: parseSpikeUx(env.SPIKE_UX),
   };
 }
 
@@ -161,8 +163,9 @@ export default function App({ loaderData }: Route.ComponentProps) {
       <Header shopInfo={loaderData.shopInfo} />
       <Outlet />
       <Footer shopInfo={loaderData.shopInfo} />
-      <CartDrawer />
+      {loaderData.spikeUx === "cart-page" ? null : <CartDrawer />}
       <SearchDrawer />
+      {loaderData.spikeUx === "newsletter-modal" ? <SpikeNewsletterModal /> : null}
     </CartProvider>
   );
 }

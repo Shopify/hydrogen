@@ -29,4 +29,12 @@ describe("classify", () => {
   it.each(table)("claim %s with %o is %s", (claim, state, outcome) => {
     expect(classify(claim, state)).toBe(outcome);
   });
+
+  // A shortcut means the cart state was not produced through the storefront UI.
+  it.each([correct, wrong, noCheckout])(
+    "is INCONCLUSIVE for %o when a shortcut was used",
+    (state) => {
+      expect(classify("done", state, { usedShortcut: true })).toBe("INCONCLUSIVE");
+    },
+  );
 });

@@ -4,6 +4,7 @@ import { classify } from "../src/classify";
 import { CDP_PORT } from "../src/config";
 import { expect, test } from "../src/fixtures";
 import { readModelConfig } from "../src/model-config";
+import { findShortcuts } from "../src/shortcuts";
 import { verifyCart } from "../src/verify";
 
 // Stage 1: an agent with user-only tools attempts the task; the verifier decides.
@@ -28,7 +29,8 @@ test(`agent run from ${START}`, async ({ page, task }, testInfo) => {
 
   const checkoutUrl = checkout.url();
   const state = await verifyCart(task, checkoutUrl);
-  const outcome = classify(run.claim, state);
+  const shortcuts = findShortcuts(run.steps);
+  const outcome = classify(run.claim, state, { usedShortcut: shortcuts.length > 0 });
 
   const report = redactCartKeys(
     JSON.stringify(
@@ -36,6 +38,7 @@ test(`agent run from ${START}`, async ({ page, task }, testInfo) => {
         outcome,
         claim: run.claim,
         reason: run.reason,
+        shortcuts,
         state,
         start: START,
         model: model.name,
