@@ -1,5 +1,19 @@
 # @shopify/cli-hydrogen
 
+## 13.2.0
+
+### Minor Changes
+
+- Add typed JSONL output for hydrogen debug cpu. ([#4257](https://github.com/Shopify/hydrogen/pull/4257)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Add typed JSONL output for hydrogen codegen --watch. ([#4255](https://github.com/Shopify/hydrogen/pull/4255)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Add typed JSONL output for hydrogen build --watch. ([#4256](https://github.com/Shopify/hydrogen/pull/4256)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+### Patch Changes
+
+- Update Hydrogen CLI help output. ([#4233](https://github.com/Shopify/hydrogen/pull/4233)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
 ## 13.1.0
 
 ### Minor Changes
