@@ -61,9 +61,8 @@ import {runDevSession, type DevSession} from '../../lib/dev-session.js';
 import {hydrogenPackagesPath} from '../../lib/build.js';
 
 export default class Dev extends Command {
-  static get jsonOutputSchema(): typeof devSessionJsonOutputSchema {
-    return devSessionJsonOutputSchema;
-  }
+  static jsonOutputSchema: typeof devSessionJsonOutputSchema =
+    devSessionJsonOutputSchema;
 
   static descriptionWithMarkdown = `Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.
 
