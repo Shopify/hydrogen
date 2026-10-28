@@ -13,12 +13,15 @@ import { readModelConfig } from "../src/model-config";
 import { recordClicks } from "../src/recorder";
 import { findShortcuts } from "../src/shortcuts";
 import { verifyCart } from "../src/verify";
+import { sizeWindowToViewport } from "../src/viewport";
 
 // Stage 1: an agent with user-only tools attempts the task; the verifier decides.
 // STOREFRONT_AGENT_START picks the start point: "product" (default variant page) or "home".
 // STOREFRONT_AGENT_GENERATE=1 also writes a deterministic replay spec when the run passes.
 const START = process.env.STOREFRONT_AGENT_START === "home" ? "home" : "product";
-const MAX_STEPS = Number(process.env.STOREFRONT_AGENT_MAX_STEPS ?? "150");
+// Healthy runs took 9–13 steps; the cap leaves ~2x headroom. The give-up rule in the agent prompt
+// is what stops broken stores early; the cap is the backstop.
+const MAX_STEPS = Number(process.env.STOREFRONT_AGENT_MAX_STEPS ?? (START === "home" ? 30 : 20));
 // Below the 15-minute test timeout, so a stuck agent still reports its steps, cost and verdict.
 const MAX_MINUTES = Number(process.env.STOREFRONT_AGENT_MAX_MINUTES ?? "10");
 const GENERATE = process.env.STOREFRONT_AGENT_GENERATE === "1";
@@ -30,6 +33,7 @@ test(`agent run from ${START}`, async ({ page, task }, testInfo) => {
   // Always record click targets: they label the journey report; generation also uses them.
   const recording = await recordClicks(page.context());
   const startPath = START === "home" ? "/" : `/products/${task.productHandle}`;
+  await sizeWindowToViewport(page);
   // The only navigation the harness performs; the agent takes over from here.
   await page.goto(startPath);
   if (process.env.STOREFRONT_AGENT_DEBUG === "1") console.log("[spec] start page loaded");

@@ -34,12 +34,13 @@ export default defineConfig({
   use: {
     baseURL: readRunConfig().storefrontBaseUrl,
     channel: process.env.PLAYWRIGHT_BROWSER_CHANNEL,
-    launchOptions: { args: [`--remote-debugging-port=${CDP_PORT}`] },
+    // Real window, no viewport emulation: Stagehand screenshots the window itself (see src/viewport.ts).
+    launchOptions: { args: [`--remote-debugging-port=${CDP_PORT}`, "--window-size=1280,900"] },
     actionTimeout: 15_000,
     navigationTimeout: 30_000,
     screenshot: "only-on-failure",
     // Traces record full checkout URLs, including the cart key (a bearer secret). Opt in locally.
     trace: process.env.STOREFRONT_AGENT_TRACE === "1" ? "retain-on-failure" : "off",
-    viewport: { width: 1280, height: 800 },
+    viewport: null,
   },
 });

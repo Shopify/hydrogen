@@ -46,8 +46,9 @@ You only see screenshots, and you only use the mouse and keyboard, like a normal
 Never type a web address; get around the store using what is on the page.
 After each action, look at the new screenshot to confirm it worked before moving on.
 When the whole task is complete, call the finish tool with status "done".
-If something on the site stops you from completing the task after reasonable attempts,
-call the finish tool with status "blocked" and say what stopped you.
+If the same thing fails three times (for example the cart shows the wrong item or quantity,
+a button does nothing, or an error keeps appearing), stop retrying: call the finish tool with
+status "blocked" and say what went wrong.
 Nobody will answer questions, so do not ask any.`;
 
 const finishInput = z.object({
@@ -87,6 +88,20 @@ async function assertBrowserOwnsPage(cdpHttpUrl: string, pageUrl: string): Promi
   if (!urls.includes(pageUrl)) {
     throw new Error(
       `The browser on ${cdpHttpUrl} does not have ${pageUrl} open. Another browser is probably holding the CDP port; stop it or set STOREFRONT_AGENT_CDP_PORT.`,
+    );
+  }
+}
+
+// The model must see the whole viewport it acts on. A mismatch (e.g. viewport emulation on a
+// smaller real window) silently hides the bottom of the page, such as a cart's checkout button.
+async function assertScreenshotMatchesViewport(stagehand: Stagehand): Promise<void> {
+  const page = await stagehand.context.awaitActivePage();
+  const viewport = String(await page.mainFrame().evaluate("`${innerWidth}x${innerHeight}`"));
+  const shot = await page.screenshot({ fullPage: false });
+  const size = `${shot.readUInt32BE(16)}x${shot.readUInt32BE(20)}`;
+  if (size !== viewport) {
+    throw new Error(
+      `Agent screenshots are ${size} but the page viewport is ${viewport}; the model would not see the whole page.`,
     );
   }
 }
@@ -154,6 +169,7 @@ export async function runAgent(options: {
     log("stagehand init");
     await stagehand.init();
     log("stagehand ready");
+    await assertScreenshotMatchesViewport(stagehand);
     const agent = stagehand.agent({
       mode: "cua",
       model: { modelName: model.name, apiKey: model.token, baseURL: meter.url },
