@@ -5,7 +5,13 @@ import {isJsonOutput} from './json-output.js';
 import {setupResourceCleanup} from './resource-cleanup.js';
 import {basename, dirname, resolvePath} from '@shopify/cli-kit/node/path';
 import {hashString} from '@shopify/cli-kit/node/crypto';
-import {unstyled} from '@shopify/cli-kit/node/output';
+import {
+  outputInfo,
+  stringifyMessage,
+  unstyled,
+} from '@shopify/cli-kit/node/output';
+import {logRequestLine} from './mini-oxygen/common.js';
+import type {RequestHook} from '~/mini-oxygen/worker/index.js';
 import {
   acquireDevInstance,
   type DevInstanceLogEntry,
@@ -33,6 +39,18 @@ export type DevSession = {
   log: (message: string, level?: DevInstanceLogEntry['level']) => void;
   ready: (urls: string[]) => Promise<void>;
 };
+
+export function createRequestLogger(session?: DevSession): RequestHook {
+  return (info) =>
+    logRequestLine(
+      info,
+      (message) => {
+        if (session?.json) session.log(stringifyMessage(message));
+        else outputInfo(message);
+      },
+      {preserveQuery: session?.json},
+    );
+}
 
 /** Own the runtime and its output until shutdown has drained the session log. */
 export async function runDevSession(
