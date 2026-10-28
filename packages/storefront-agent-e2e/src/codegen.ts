@@ -64,8 +64,10 @@ export function generateSpec(options: {
     }
     if (step.action === "keypress") {
       const keys = Array.isArray(step.args.keys) ? step.args.keys : [step.args.text];
+      // One action can carry a sequence such as "Tab Tab Return": one press per key.
       return keys
         .filter((key): key is string => typeof key === "string")
+        .flatMap((key) => key.trim().split(/\s+/))
         .map((key) => ({
           label: `press ${key}`,
           code: `page.keyboard.press(${q(toPlaywrightKey(key))})`,
