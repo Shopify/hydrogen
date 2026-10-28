@@ -191,7 +191,6 @@ describe('link', () => {
       expect(createStorefront).toHaveBeenCalledWith(
         ADMIN_SESSION,
         expectedStorefrontName,
-        undefined,
       );
     });
 
@@ -203,7 +202,6 @@ describe('link', () => {
       expect(createStorefront).toHaveBeenCalledWith(
         ADMIN_SESSION,
         expectedStorefrontName,
-        undefined,
       );
     });
 
@@ -219,7 +217,6 @@ describe('link', () => {
       expect(createStorefront).toHaveBeenCalledWith(
         ADMIN_SESSION,
         expectedStorefrontName,
-        undefined,
       );
     });
 

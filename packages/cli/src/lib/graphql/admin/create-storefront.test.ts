@@ -50,7 +50,6 @@ describe('createStorefront', () => {
       expect.stringMatching(/^#graphql.+mutation.+hydrogenStorefrontCreate\(/s),
       ADMIN_SESSION,
       {title: TITLE},
-      undefined,
     );
   });
 

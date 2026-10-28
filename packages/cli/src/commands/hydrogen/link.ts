@@ -197,7 +197,7 @@ export async function linkStorefront(
       );
     }
   } else if (flagCreateStorefront || storefrontName) {
-    selectedStorefront = await createNewStorefront(
+    return createNewStorefront(
       root,
       session,
       storefronts,
@@ -209,13 +209,7 @@ export async function linkStorefront(
     signal?.throwIfAborted();
 
     if (!selectedStorefront) {
-      selectedStorefront = await createNewStorefront(
-        root,
-        session,
-        storefronts,
-        undefined,
-        signal,
-      );
+      return createNewStorefront(root, session, storefronts, undefined, signal);
     }
   }
 
@@ -260,10 +254,12 @@ async function createNewStorefront(
       title: 'Creating storefront',
       task: async () => {
         signal?.throwIfAborted();
-        const result = await createStorefront(session, projectName, signal);
-        signal?.throwIfAborted();
+        const result = await createStorefront(session, projectName);
         storefront = result.storefront;
         jobId = result.jobId;
+        // Keep the remote identity before cancellation can stop provisioning.
+        await setStorefront(root, storefront);
+        signal?.throwIfAborted();
       },
     },
     {
