@@ -1,10 +1,22 @@
 import {Parser} from '@oclif/core';
+import {fileURLToPath} from 'node:url';
 import {afterEach, expect, it, vi} from 'vitest';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import ShopifyCommand from '@shopify/cli-kit/node/base-command';
+import {inTemporaryDirectory, writeFile} from '@shopify/cli-kit/node/fs';
+import {joinPath} from '@shopify/cli-kit/node/path';
 import {captureJsonOutput} from '../../../tests/output.js';
+import {isClassicProject} from '../../lib/remix-config.js';
+import {resetAllLogs} from '../../lib/log.js';
 import Preview from './preview.js';
 
+vi.mock('../../lib/remix-config.js', async (original) => ({
+  ...(await original<typeof import('../../lib/remix-config.js')>()),
+  isClassicProject: vi.fn(),
+}));
+
 afterEach(() => {
+  resetAllLogs();
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });
@@ -45,13 +57,37 @@ it('accepts JSON from the environment and exposes the shared stream schema', asy
   ).toMatchObject({source: 'hydrogen preview'});
 });
 
-it('writes fatal preview errors through the standard command error handler', async () => {
-  const command = new Preview(['--json'], {} as any);
-  vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
-  const {stdout} = await captureJsonOutput(() =>
-    (command as any).catch(new AbortError('Preview startup failed')),
-  );
-  expect(JSON.parse(stdout)).toMatchObject({
-    error: {message: 'Preview startup failed'},
+it('writes a JSON error envelope when preview startup fails with --json', async () => {
+  await inTemporaryDirectory(async (directory) => {
+    await writeFile(
+      joinPath(directory, 'package.json'),
+      JSON.stringify({dependencies: {'@shopify/hydrogen': '*'}}),
+    );
+    vi.spyOn(
+      ShopifyCommand.prototype as unknown as {init(): Promise<unknown>},
+      'init',
+    ).mockResolvedValue(undefined);
+    vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.mocked(isClassicProject).mockRejectedValue(
+      new AbortError('Preview startup failed'),
+    );
+    const {stdout} = await captureJsonOutput(() =>
+      Preview.run(['--json', '--path', directory], {
+        root: fileURLToPath(new URL('../../..', import.meta.url)),
+      }),
+    );
+    expect(isClassicProject).toHaveBeenCalledWith(directory);
+    const records = stdout
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line));
+    expect(records[0]).toMatchObject({
+      source: 'hydrogen preview',
+      message: 'Starting runtime',
+    });
+    expect(records.at(-1)).toMatchObject({
+      error: {message: 'Preview startup failed'},
+    });
   });
 });

@@ -219,6 +219,11 @@ it.each([false, true])(
           expect(output.stderr).toBe('');
           expect(
             records.filter(
+              ({message}) => message === 'Project rebuilt. Reloading server',
+            ),
+          ).toHaveLength(2);
+          expect(
+            records.filter(
               ({message}) => message === 'Repeated worker message',
             ),
           ).toHaveLength(2);

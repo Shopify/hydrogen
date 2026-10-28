@@ -89,6 +89,7 @@ it.skipIf(process.platform === 'win32').each([
         .trim()
         .split('\n')
         .map((line) => JSON.parse(line));
+      expect(records.every(({source}) => source === command)).toBe(true);
       expect(
         records.filter(({message}) => message.startsWith('Shutdown ')),
       ).toHaveLength(1000);

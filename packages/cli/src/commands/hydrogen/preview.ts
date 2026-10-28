@@ -1,10 +1,9 @@
 import {jsonFlag} from '@shopify/cli-kit/node/cli';
 import {devSessionJsonOutputSchema} from '../../lib/dev-session/types.js';
-import {logRequestLine} from '../../lib/mini-oxygen/common.js';
 import {Flags} from '@oclif/core';
 import Command from '../../lib/hydrogen-command.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {outputInfo, stringifyMessage} from '@shopify/cli-kit/node/output';
+import {outputInfo} from '@shopify/cli-kit/node/output';
 import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {isH2Verbose, muteDevLogs, setH2OVerbose} from '../../lib/log.js';
 import {getProjectPaths, isClassicProject} from '../../lib/remix-config.js';
@@ -24,14 +23,20 @@ import {
   REMIX_COMPILER_ERROR_MESSAGE,
 } from '../../lib/vite-config.js';
 import {runBuild} from './build.js';
-import {runDevSession, type DevSession} from '../../lib/dev-session.js';
+import {
+  createRequestLogger,
+  runDevSession,
+  type DevSession,
+} from '../../lib/dev-session.js';
 import {deferPromise} from '../../lib/defer.js';
 
 export default class Preview extends Command {
   static jsonOutputSchema: typeof devSessionJsonOutputSchema =
     devSessionJsonOutputSchema;
 
-  static descriptionWithMarkdown = `Runs a server in your local development environment that serves your Hydrogen app's production build. Run the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-build) command first, or use \`--build\` to build before starting the server.
+  static descriptionWithMarkdown = `Runs a server in your local development environment that serves your Hydrogen app's production build.
+
+  Run the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-build) command first, or use \`--build\` to build before starting the server.
 
   Session status and JSONL logs are stored in your project's \`.shopify/dev/\` directory. The instance JSON includes the PID, session ID, \`logFile\`, and \`details.urls\`. Status becomes \`running\` when the server is ready.
 
@@ -227,15 +232,7 @@ export async function runPreview({
     debug,
     watch,
     registerCleanup: session?.cleanup,
-    logRequestLine: (info) =>
-      logRequestLine(
-        info,
-        (message) => {
-          if (session?.json) session.log(stringifyMessage(message));
-          else outputInfo(message);
-        },
-        {preserveQuery: session?.json},
-      ),
+    logRequestLine: createRequestLogger(session),
   });
 
   await session?.ready([miniOxygen.listeningAt]);

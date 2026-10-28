@@ -1,8 +1,8 @@
-import type {logRequestLine} from './common.js';
+import type {RequestHook} from '~/mini-oxygen/worker/index.js';
 
 export type MiniOxygenOptions = {
   root: string;
-  logRequestLine?: typeof logRequestLine;
+  logRequestLine?: RequestHook;
   registerCleanup?: (close: () => Promise<unknown>) => void;
   appPort?: number;
   watch?: boolean;
