@@ -4,14 +4,43 @@ import {joinPath} from '@shopify/cli-kit/node/path';
 import {handler, AbortError} from '@shopify/cli-kit/node/error';
 import {captureJsonOutput} from '../../../tests/output.js';
 import {importVite} from '../../lib/import-utils.js';
-import {getViteConfig} from '../../lib/vite-config.js';
+import {getViteConfig, isViteProject} from '../../lib/vite-config.js';
 import {writeWatchRecord} from '../../lib/watch.js';
+import * as watch from '../../lib/watch.js';
 import {buildCommandOutputSchema} from '../../lib/build-tooling/types.js';
-import {runBuildWatch} from './build.js';
+import Build, {runBuildWatch} from './build.js';
 
 vi.mock('../../lib/import-utils.js');
 vi.mock('../../lib/vite-config.js');
 afterEach(() => vi.restoreAllMocks());
+
+it('writes JSON lifecycle records through the command and closes both watchers', async () => {
+  await inTemporaryDirectory(async (directory) => {
+    const {closeClient, closeServer} = mockBuilds(directory);
+    vi.mocked(isViteProject).mockResolvedValue(true);
+    vi.spyOn(watch, 'runWatchCommand').mockImplementationOnce((run) =>
+      run(AbortSignal.abort()),
+    );
+    const command = new Build(['--json', '--watch'], {} as any);
+    vi.spyOn(command as any, 'parse').mockResolvedValue({
+      flags: {
+        json: true,
+        watch: true,
+        path: directory,
+        'lockfile-check': false,
+      },
+    });
+    const {stdout} = await captureJsonOutput(() => command.run());
+    expect(
+      stdout
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line)),
+    ).toEqual([{type: 'watch-started', directory}, {type: 'watch-stopped'}]);
+    expect(closeClient).toHaveBeenCalledOnce();
+    expect(closeServer).toHaveBeenCalledOnce();
+  });
+});
 
 function mockBuilds(directory: string) {
   const builds: any[] = [];
