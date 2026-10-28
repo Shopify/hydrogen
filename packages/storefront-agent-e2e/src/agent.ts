@@ -72,6 +72,25 @@ async function browserWebSocketUrl(cdpHttpUrl: string): Promise<string> {
   return body.webSocketDebuggerUrl;
 }
 
+// A leftover browser can hold the CDP port; the new one then fails to bind it silently and
+// Stagehand would attach to the wrong browser. Check the page is really there first.
+async function assertBrowserOwnsPage(cdpHttpUrl: string, pageUrl: string): Promise<void> {
+  const response = await fetch(new URL("/json/list", cdpHttpUrl), {
+    signal: AbortSignal.timeout(5_000),
+  });
+  const targets: unknown = await response.json();
+  const urls = Array.isArray(targets)
+    ? targets.flatMap((t) =>
+        typeof t === "object" && t !== null && "url" in t ? [String(t.url)] : [],
+      )
+    : [];
+  if (!urls.includes(pageUrl)) {
+    throw new Error(
+      `The browser on ${cdpHttpUrl} does not have ${pageUrl} open. Another browser is probably holding the CDP port; stop it or set STOREFRONT_AGENT_CDP_PORT.`,
+    );
+  }
+}
+
 export async function runAgent(options: {
   page: Page;
   cdpUrl: string;
@@ -97,6 +116,7 @@ export async function runAgent(options: {
   };
   page.on("framenavigated", onNavigated);
 
+  await assertBrowserOwnsPage(cdpUrl, page.url());
   const meter = await startMeteringProxy(model.url);
   const stagehand = new Stagehand({
     env: "LOCAL",
