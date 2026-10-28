@@ -4,6 +4,7 @@ import { captureCheckout, CHECKOUT_STUB_HEADING, redactCartKeys } from "./checko
 import { classify } from "./classify";
 import type { AddToCartTask } from "./task";
 import { verifyCart } from "./verify";
+import { sizeWindowToViewport } from "./viewport";
 
 /** Annotation types the regenerate flow reads from the Playwright JSON report. */
 export const STALE_ANNOTATION = "replay-stale";
@@ -24,9 +25,13 @@ export type Replay = {
 export const test = base.extend<{ replay: Replay }>({
   replay: async ({ page }, use, testInfo) => {
     const checkout = await captureCheckout(page.context());
+    // Same window as the agent run, so coordinate steps land where they were recorded.
+    await sizeWindowToViewport(page);
+    const network = trackNetwork(page);
     await use({
       start: async (path) => {
         await page.goto(path);
+        await network.settled();
       },
       step: (label, action, options = {}) =>
         base.step(label, async () => {
@@ -35,6 +40,9 @@ export const test = base.extend<{ replay: Replay }>({
             // Wait for the page the recorded click led to, so the next step can't land on the old one.
             const { thenUrl } = options;
             if (thenUrl) await page.waitForURL((url) => samePathAndQuery(url, thenUrl));
+            // The agent paused to look after every action; give the page the same chance to settle
+            // (e.g. a cart update re-enabling Checkout) before the next recorded step.
+            await network.settled();
           } catch (error) {
             markStale(testInfo, `step "${label}": ${firstLine(error)}`);
             throw error;
@@ -62,6 +70,40 @@ export const test = base.extend<{ replay: Replay }>({
     });
   },
 });
+
+const QUIET_MS = 500;
+const SETTLE_TIMEOUT_MS = 5_000;
+
+function isData(type: string): boolean {
+  return type === "fetch" || type === "xhr";
+}
+
+// Counts in-flight fetch/XHR requests so a step can wait until the page has gone quiet.
+function trackNetwork(page: Page): { settled: () => Promise<void> } {
+  let inFlight = 0;
+  let lastChange = Date.now();
+  page.on("request", (request) => {
+    if (!isData(request.resourceType())) return;
+    inFlight += 1;
+    lastChange = Date.now();
+  });
+  const done = (request: { resourceType(): string }) => {
+    if (!isData(request.resourceType())) return;
+    inFlight = Math.max(0, inFlight - 1);
+    lastChange = Date.now();
+  };
+  page.on("requestfinished", done);
+  page.on("requestfailed", done);
+  return {
+    settled: async () => {
+      const deadline = Date.now() + SETTLE_TIMEOUT_MS;
+      while (Date.now() < deadline) {
+        if (inFlight === 0 && Date.now() - lastChange >= QUIET_MS) return;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    },
+  };
+}
 
 function samePathAndQuery(actual: URL, expected: string): boolean {
   const wanted = new URL(expected, actual);
