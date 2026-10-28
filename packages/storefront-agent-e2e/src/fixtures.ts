@@ -2,6 +2,7 @@ import { test as base } from "@playwright/test";
 
 import { readRunConfig } from "./config";
 import { resolveLanguage } from "./language";
+import { resolveMarket } from "./market";
 import {
   generateAddToCartTask,
   generateFindProductTask,
@@ -12,14 +13,15 @@ import {
 export const TASK_QUANTITY = 2;
 
 async function taskOptions() {
-  const { storefrontBaseUrl, shopDomain, country, seed } = readRunConfig();
+  const { storefrontBaseUrl, shopDomain, countryOverride, seed } = readRunConfig();
+  const market = await resolveMarket({ shopDomain, override: countryOverride });
   const language = await resolveLanguage({
     storefrontBaseUrl,
     shopDomain,
-    country,
+    country: market.country,
     override: process.env.STOREFRONT_LANGUAGE?.trim() || undefined,
   });
-  return { shopDomain, country, language, seed };
+  return { shopDomain, market, language, seed };
 }
 
 // Worker-scoped and lazy: a spec only pays for discovering the task it uses.

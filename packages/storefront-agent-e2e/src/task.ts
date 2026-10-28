@@ -1,5 +1,6 @@
 import { gql, type StorefrontClient } from "@shopify/hydrogen";
 
+import { marketInstruction, type Market } from "./market";
 import { normalizeTitle } from "./product-page";
 import {
   assertNoGraphQLErrors,
@@ -152,7 +153,7 @@ type ListedProduct = {
 
 type TaskOptions = {
   shopDomain: string;
-  country: CountryCode;
+  market: Market;
   language: LanguageCode;
   seed: number;
 };
@@ -173,14 +174,14 @@ async function* productSources(client: StorefrontClient): AsyncGenerator<readonl
 export async function generateAddToCartTask(
   options: TaskOptions & { quantity: number },
 ): Promise<AddToCartTask> {
-  const { shopDomain, country, language, quantity, seed } = options;
-  const client = createStorefrontApiClient(shopDomain, country, language);
+  const { shopDomain, market, language, quantity, seed } = options;
+  const client = createStorefrontApiClient(shopDomain, market.country, language);
   const rejections: string[] = [];
   for await (const listed of productSources(client)) {
     const target = await findTarget(client, listed, {
       quantity,
       seed,
-      country,
+      market,
       language,
       rejections,
     });
@@ -197,8 +198,8 @@ export async function generateAddToCartTask(
  * not also a collection's title (whose page heading would look identical).
  */
 export async function generateFindProductTask(options: TaskOptions): Promise<FindProductTask> {
-  const { shopDomain, country, language, seed } = options;
-  const client = createStorefrontApiClient(shopDomain, country, language);
+  const { shopDomain, market, language, seed } = options;
+  const client = createStorefrontApiClient(shopDomain, market.country, language);
   const collections = await client.graphql(COLLECTION_TITLES_QUERY, { signal: requestSignal() });
   assertNoGraphQLErrors("Collection titles", collections.errors);
   const collectionTitles = new Set(
@@ -215,10 +216,10 @@ export async function generateFindProductTask(options: TaskOptions): Promise<Fin
         goal:
           `Find the product page for "${product.title}". If the store has search, try it first; ` +
           "if that doesn't work, use collections or menus; otherwise browse all products. " +
-          "Call finish when you are on the product page.",
+          `Call finish when you are on the product page. ${marketInstruction(market)}`,
         productTitle: product.title,
         productHandle: product.handle,
-        country,
+        country: market.country,
         language,
       };
     }
@@ -232,12 +233,12 @@ async function findTarget(
   context: {
     quantity: number;
     seed: number;
-    country: CountryCode;
+    market: Market;
     language: LanguageCode;
     rejections: string[];
   },
 ): Promise<AddToCartTask | null> {
-  const { quantity, seed, country, language, rejections } = context;
+  const { quantity, seed, market, language, rejections } = context;
   const products = [...new Map(listed.map((p) => [p.handle, p])).values()]
     .filter((p) => !p.requiresSellingPlan && p.options.some((o) => o.optionValues.length > 1))
     .toSorted((a, b) => a.handle.localeCompare(b.handle));
@@ -259,7 +260,7 @@ async function findTarget(
     for (const variant of rankTargetVariants(variants, defaultVariant, seed)) {
       if (await cartAccepts(client, variant.id, quantity)) {
         return {
-          goal: describeGoal(product.title, variant.selectedOptions, quantity),
+          goal: `${describeGoal(product.title, variant.selectedOptions, quantity)} ${marketInstruction(market)}`,
           productTitle: product.title,
           productHandle: product.handle,
           variantId: variant.id,
@@ -267,7 +268,7 @@ async function findTarget(
           selectedOptions: variant.selectedOptions,
           defaultVariantTitle: defaultVariant.title,
           quantity,
-          country,
+          country: market.country,
           language,
         };
       }

@@ -8,8 +8,8 @@ export type RunConfig = {
   readonly storefrontBaseUrl: string;
   /** The shop's myshopify domain, used for tokenless Storefront API discovery. */
   readonly shopDomain: string;
-  /** The market the storefront resolves; discovery probes carts in this country. */
-  readonly country: CountryCode;
+  /** Shop in this market instead of the shop's default (STOREFRONT_COUNTRY). */
+  readonly countryOverride: CountryCode | undefined;
   /** Picks among eligible target variants so runs are reproducible. */
   readonly seed: number;
   /** Where this storefront serves a product page; {handle} is replaced. Only the product-page start uses it. */
@@ -19,8 +19,8 @@ export type RunConfig = {
 export function readRunConfig(): RunConfig {
   const storefrontBaseUrl = requireEnv("STOREFRONT_BASE_URL");
   const shopDomain = requireEnv("STOREFRONT_SHOP_DOMAIN");
-  const country = process.env.STOREFRONT_COUNTRY?.trim() || "US";
-  if (!isCountryCode(country)) {
+  const countryOverride = process.env.STOREFRONT_COUNTRY?.trim() || undefined;
+  if (countryOverride !== undefined && !isCountryCode(countryOverride)) {
     throw new Error("STOREFRONT_COUNTRY must be an ISO 3166-1 alpha-2 code, e.g. US.");
   }
   const seed = Number(process.env.STOREFRONT_AGENT_SEED ?? "0");
@@ -34,7 +34,7 @@ export function readRunConfig(): RunConfig {
   return {
     storefrontBaseUrl: new URL(storefrontBaseUrl).toString(),
     shopDomain,
-    country,
+    countryOverride,
     seed,
     productPathTemplate,
   };
