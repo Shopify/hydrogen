@@ -17,6 +17,8 @@ export type AgentStep = {
   readonly reasoning: string;
   readonly ok: boolean;
   readonly error?: string;
+  /** Index into AgentRun.screenshots of the screenshot this step was decided from. */
+  readonly screenshotIndex?: number;
 };
 
 export type AgentRun = {
@@ -127,6 +129,7 @@ export async function runAgent(options: {
           );
           if (event.type === "step_finished") {
             steps.push({
+              ...(screenshots.length > 0 ? { screenshotIndex: screenshots.length - 1 } : {}),
               action: event.actionName,
               args: event.actionArgs,
               reasoning: event.reasoning,

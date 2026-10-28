@@ -3,3 +3,4 @@ playwright-report/
 test-results/
 .env.local
 matrix-runs/
+journey-report/
