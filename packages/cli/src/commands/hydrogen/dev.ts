@@ -5,11 +5,7 @@ import {Flags, Config} from '@oclif/core';
 import Command from '../../lib/hydrogen-command.js';
 import colors from '@shopify/cli-kit/node/colors';
 import {joinPath, normalizePath, resolvePath} from '@shopify/cli-kit/node/path';
-import {
-  collectLog,
-  outputInfo,
-  stringifyMessage,
-} from '@shopify/cli-kit/node/output';
+import {collectLog} from '@shopify/cli-kit/node/output';
 import {
   type AlertCustomSection,
   renderSuccess,
@@ -46,7 +42,6 @@ import {
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
 import {findPort} from '../../lib/find-port.js';
-import {logRequestLine} from '../../lib/mini-oxygen/common.js';
 import {
   findHydrogenPlugin,
   findOxygenPlugin,
@@ -57,7 +52,11 @@ import {
 import {importVite} from '../../lib/import-utils.js';
 import {createEntryPointErrorHandler} from '../../lib/deps-optimizer.js';
 import {getCodeFormatOptions} from '../../lib/format-code.js';
-import {runDevSession, type DevSession} from '../../lib/dev-session.js';
+import {
+  createRequestLogger,
+  runDevSession,
+  type DevSession,
+} from '../../lib/dev-session.js';
 import {hydrogenPackagesPath} from '../../lib/build.js';
 
 export default class Dev extends Command {
@@ -282,15 +281,7 @@ export async function runDev({
             entry: ssrEntry,
             envPromise: runtimeEnvPromise,
             inspectorPort,
-            logRequestLine: (info) =>
-              logRequestLine(
-                info,
-                (message) => {
-                  if (session?.json) session.log(stringifyMessage(message));
-                  else outputInfo(message);
-                },
-                {preserveQuery: session?.json},
-              ),
+            logRequestLine: createRequestLogger(session),
             entryPointErrorHandler: createEntryPointErrorHandler({
               disableDepsOptimizer,
               onError: (error) => {

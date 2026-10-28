@@ -8,15 +8,16 @@ import {build} from 'esbuild';
 import {expect, it, vi} from 'vitest';
 
 it.skipIf(process.platform === 'win32').each([
-  ['SIGINT', false, 130, false],
-  ['SIGTERM', false, 143, false],
-  ['SIGTERM', true, 143, false],
-  ['SIGINT', false, 130, true],
-  ['SIGTERM', false, 143, true],
-  ['SIGTERM', true, 143, true],
+  ['SIGINT', false, 130, false, false],
+  ['SIGTERM', false, 143, false, false],
+  ['SIGTERM', true, 143, false, false],
+  ['SIGINT', false, 130, true, false],
+  ['SIGTERM', false, 143, true, false],
+  ['SIGTERM', true, 143, true, false],
+  ['SIGINT', false, 130, true, true],
 ] as const)(
-  'drains output and releases resources on %s (startup pending: %s, exit: %s, JSON: %s)',
-  async (signal, pending, exitCode, json) => {
+  'drains output and releases resources on %s (startup pending: %s, exit: %s, JSON: %s, exit listener: %s)',
+  async (signal, pending, exitCode, json, exitListener) => {
     const sourceDirectory = fileURLToPath(new URL('.', import.meta.url));
     const fixtureDirectory = await mkdtemp(
       join(sourceDirectory, '.session-fixture-'),
@@ -42,6 +43,7 @@ it.skipIf(process.platform === 'win32').each([
           '--eval',
           `
       import {runDevSession} from ${JSON.stringify(pathToFileURL(bundle).href)};
+      ${exitListener ? `process.once('${signal}', () => process.exit(0));` : ''}
       await runDevSession({command: 'hydrogen dev', directory: ${JSON.stringify(projectDirectory)}, envFile: '.env', json: ${json}}, async (session) => {
         const timer = setInterval(() => console.log('Worker output'), 10);
         session.cleanup(async () => {
