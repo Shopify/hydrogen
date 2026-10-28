@@ -1,14 +1,21 @@
 // SPIKE ONLY (agentic storefront E2E). Never merge into the template.
-// Injects storefront bugs for calibration runs by rewriting cart "add" requests
-// before Hydrogen's cart handler sees them. The page UI is untouched.
+// Injects storefront bugs for calibration runs. Cart faults rewrite cart "add" requests before
+// Hydrogen's cart handler sees them; product faults change what the product route loads.
 import { gql, type StorefrontClient } from "@shopify/hydrogen";
 
-export type SpikeFault = "wrong-variant" | "quantity-ignored" | "add-to-cart-broken";
+type CartFault = "wrong-variant" | "quantity-ignored" | "add-to-cart-broken";
+type ProductFault = "product-links-wrong" | "product-page-error";
+export type SpikeFault = CartFault | ProductFault;
 
-const SPIKE_FAULTS: readonly SpikeFault[] = [
+const CART_FAULTS: readonly CartFault[] = [
   "wrong-variant",
   "quantity-ignored",
   "add-to-cart-broken",
+];
+const SPIKE_FAULTS: readonly SpikeFault[] = [
+  ...CART_FAULTS,
+  "product-links-wrong",
+  "product-page-error",
 ];
 // A variant that does not exist: the Storefront API rejects the add and the cart is unchanged.
 const MISSING_VARIANT_ID = "gid://shopify/ProductVariant/1";
@@ -25,6 +32,16 @@ const DEFAULT_VARIANT_QUERY = gql(`
             }
           }
         }
+      }
+    }
+  }
+`);
+
+const OTHER_PRODUCTS_QUERY = gql(`
+  query SpikeOtherProducts {
+    products(first: 2, sortKey: TITLE) {
+      nodes {
+        handle
       }
     }
   }
@@ -57,11 +74,12 @@ export async function applySpikeFault(
   fault: SpikeFault | null,
   storefrontClient: StorefrontClient,
 ): Promise<Request> {
-  if (!fault || request.method !== "POST") return request;
+  const cartFault = CART_FAULTS.find((candidate) => candidate === fault);
+  if (!cartFault || request.method !== "POST") return request;
   if (new URL(request.url).pathname !== CART_API_PATH) return request;
 
   const applyFault = (merchandiseId: string, quantity: unknown) =>
-    faultedLine(fault, merchandiseId, quantity, storefrontClient);
+    faultedLine(cartFault, merchandiseId, quantity, storefrontClient);
   const contentType = request.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) return faultJsonRequest(request, applyFault);
   if (contentType.includes("form")) return faultFormRequest(request, applyFault);
@@ -101,8 +119,24 @@ async function faultFormRequest(
   return new Request(request, { method: "POST", body: form, headers });
 }
 
+/**
+ * The handle the product route should load. "product-links-wrong" serves a different product than
+ * the one linked, as if every product link pointed at the wrong page; "product-page-error" makes
+ * every product page fail.
+ */
+export async function spikeProductHandle(
+  handle: string,
+  fault: SpikeFault | null,
+  storefrontClient: StorefrontClient,
+): Promise<string> {
+  if (fault === "product-page-error") throw new Response("Internal Server Error", { status: 500 });
+  if (fault !== "product-links-wrong") return handle;
+  const { data } = await storefrontClient.graphql(OTHER_PRODUCTS_QUERY);
+  return data?.products.nodes.find((product) => product.handle !== handle)?.handle ?? handle;
+}
+
 async function faultedLine(
-  fault: SpikeFault,
+  fault: CartFault,
   merchandiseId: string,
   rawQuantity: unknown,
   storefrontClient: StorefrontClient,

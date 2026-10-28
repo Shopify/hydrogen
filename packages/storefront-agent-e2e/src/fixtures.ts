@@ -1,17 +1,41 @@
 import { test as base } from "@playwright/test";
 
 import { readRunConfig } from "./config";
-import { generateAddToCartTask, type AddToCartTask } from "./task";
+import { resolveLanguage } from "./language";
+import {
+  generateAddToCartTask,
+  generateFindProductTask,
+  type AddToCartTask,
+  type FindProductTask,
+} from "./task";
 
 export const TASK_QUANTITY = 2;
 
-export const test = base.extend<{}, { task: AddToCartTask }>({
-  task: [
+async function taskOptions() {
+  const { storefrontBaseUrl, shopDomain, country, seed } = readRunConfig();
+  const language = await resolveLanguage({
+    storefrontBaseUrl,
+    shopDomain,
+    country,
+    override: process.env.STOREFRONT_LANGUAGE?.trim() || undefined,
+  });
+  return { shopDomain, country, language, seed };
+}
+
+// Worker-scoped and lazy: a spec only pays for discovering the task it uses.
+export const test = base.extend<
+  {},
+  { addToCartTask: AddToCartTask; findProductTask: FindProductTask }
+>({
+  addToCartTask: [
     async ({ browserName: _browserName }, use) => {
-      const { shopDomain, country, seed } = readRunConfig();
-      await use(
-        await generateAddToCartTask({ shopDomain, country, quantity: TASK_QUANTITY, seed }),
-      );
+      await use(await generateAddToCartTask({ ...(await taskOptions()), quantity: TASK_QUANTITY }));
+    },
+    { scope: "worker" },
+  ],
+  findProductTask: [
+    async ({ browserName: _browserName }, use) => {
+      await use(await generateFindProductTask(await taskOptions()));
     },
     { scope: "worker" },
   ],

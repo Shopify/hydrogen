@@ -2,65 +2,67 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { runAgent } from "../src/agent";
-import { captureCheckout, redactCartKeys } from "../src/checkout";
-import { classify } from "../src/classify";
-import { generateSpec } from "../src/codegen";
-import { CDP_PORT, readRunConfig } from "../src/config";
-import { estimateCostUsd } from "../src/cost";
-import { expect, test } from "../src/fixtures";
-import { detectFriction } from "../src/friction";
-import { readModelConfig } from "../src/model-config";
-import { recordClicks } from "../src/recorder";
-import { findShortcuts } from "../src/shortcuts";
-import { verifyCart } from "../src/verify";
-import { sizeWindowToViewport } from "../src/viewport";
+import { expect, type Page, type TestInfo } from "@playwright/test";
 
-// Stage 1: an agent with user-only tools attempts the task; the verifier decides.
-// STOREFRONT_AGENT_START picks the start point: "product" (default variant page) or "home".
-// STOREFRONT_AGENT_GENERATE=1 also writes a deterministic replay spec when the run passes.
-const START = process.env.STOREFRONT_AGENT_START === "home" ? "home" : "product";
-// Healthy runs took 9–13 steps; the cap leaves ~2x headroom. The give-up rule in the agent prompt
-// is what stops broken stores early; the cap is the backstop.
-const MAX_STEPS = Number(process.env.STOREFRONT_AGENT_MAX_STEPS ?? (START === "home" ? 30 : 20));
+import { runAgent } from "./agent";
+import { redactCartKeys } from "./checkout";
+import { classify, type VerifiedState } from "./classify";
+import { generateSpec, type GeneratedTest } from "./codegen";
+import { CDP_PORT } from "./config";
+import { estimateCostUsd } from "./cost";
+import { detectFriction } from "./friction";
+import { readModelConfig } from "./model-config";
+import { recordClicks } from "./recorder";
+import { findShortcuts } from "./shortcuts";
+import { sizeWindowToViewport } from "./viewport";
+
 // Below the 15-minute test timeout, so a stuck agent still reports its steps, cost and verdict.
 const MAX_MINUTES = Number(process.env.STOREFRONT_AGENT_MAX_MINUTES ?? "10");
 const GENERATE = process.env.STOREFRONT_AGENT_GENERATE === "1";
 const GENERATED_DIR = fileURLToPath(new URL("../generated", import.meta.url));
 
-test(`agent run from ${START}`, async ({ page, task }, testInfo) => {
+/**
+ * One agent test: open the start page, let the agent work with user-only tools, then let the
+ * verifier decide. Attaches run.json and the agent's screenshots for the journey report, and
+ * writes a deterministic replay script when the run passes and STOREFRONT_AGENT_GENERATE=1.
+ */
+export async function runAgentTest(options: {
+  readonly page: Page;
+  readonly testInfo: TestInfo;
+  readonly test: GeneratedTest;
+  readonly startPath: string;
+  /** The step cap when STOREFRONT_AGENT_MAX_STEPS is unset. A backstop: the prompt makes broken stores end early. */
+  readonly defaultMaxSteps: number;
+  /** Runs after the agent stops; reads the state the verdict is based on. */
+  readonly verify: () => Promise<VerifiedState>;
+}): Promise<void> {
+  const { page, testInfo, test, startPath, defaultMaxSteps, verify } = options;
   const model = readModelConfig();
-  const checkout = await captureCheckout(page.context());
+  const maxSteps = Number(process.env.STOREFRONT_AGENT_MAX_STEPS ?? defaultMaxSteps);
   // Always record click targets: they label the journey report; generation also uses them.
   const recording = await recordClicks(page.context());
-  const startPath =
-    START === "home"
-      ? "/"
-      : readRunConfig().productPathTemplate.replace(
-          "{handle}",
-          encodeURIComponent(task.productHandle),
-        );
   await sizeWindowToViewport(page);
+
   // The only navigation the harness performs; the agent takes over from here.
   const start = await page.goto(startPath);
-  // Not every storefront serves products at a fixed path. Skip rather than start the agent on an error page.
-  test.skip(
-    START === "product" && (start === null || start.status() >= 400),
-    `This storefront does not serve ${startPath} (HTTP ${start?.status() ?? "none"}); set STOREFRONT_PRODUCT_PATH or use the home start.`,
-  );
-  if (process.env.STOREFRONT_AGENT_DEBUG === "1") console.log("[spec] start page loaded");
+  // Not every storefront serves every path. Skip rather than start the agent on an error page.
+  if (start === null || start.status() >= 400) {
+    testInfo.skip(
+      true,
+      `This storefront does not serve ${startPath} (HTTP ${start?.status() ?? "none"}).`,
+    );
+  }
 
   const run = await runAgent({
     page,
     cdpUrl: `http://127.0.0.1:${CDP_PORT}`,
-    goal: task.goal,
+    goal: test.task.goal,
     model,
-    maxSteps: MAX_STEPS,
+    maxSteps,
     maxDurationMs: MAX_MINUTES * 60_000,
   });
 
-  const checkoutUrl = checkout.url();
-  const state = await verifyCart(task, checkoutUrl);
+  const state = await verify();
   const shortcuts = findShortcuts(run.steps);
   const outcome = classify(run.claim, state, { usedShortcut: shortcuts.length > 0 });
   const friction = outcome === "PASS" ? detectFriction(run.thoughts) : [];
@@ -68,15 +70,14 @@ test(`agent run from ${START}`, async ({ page, task }, testInfo) => {
   let generatedFile: string | null = null;
   if (GENERATE && outcome === "PASS") {
     const source = generateSpec({
-      task,
+      test,
       startPath,
-      startLabel: START,
       steps: run.steps,
       clicks: recording.clicks(),
       model: model.name,
     });
     mkdirSync(GENERATED_DIR, { recursive: true });
-    generatedFile = path.join(GENERATED_DIR, `add-to-cart-${START}.spec.ts`);
+    generatedFile = path.join(GENERATED_DIR, `${test.kind}.spec.ts`);
     writeFileSync(generatedFile, source);
     await testInfo.attach("generated.spec.ts", { body: source, contentType: "text/plain" });
   }
@@ -85,22 +86,23 @@ test(`agent run from ${START}`, async ({ page, task }, testInfo) => {
     JSON.stringify(
       {
         outcome,
+        test: test.kind,
         claim: run.claim,
         reason: run.reason,
         shortcuts,
         friction,
         exitInterview: run.exitInterview,
         state,
-        start: START,
+        startPath,
         model: model.name,
-        goal: task.goal,
+        goal: test.task.goal,
+        language: test.task.language,
         stepCount: run.steps.length,
         durationMs: run.durationMs,
         usage: run.usage,
         cost: estimateCostUsd(model.name, run.usage),
         thoughts: run.thoughts,
         navigations: run.navigations,
-        checkoutUrl,
         generatedFile,
         clicks: recording.clicks(),
         steps: run.steps,
@@ -120,4 +122,4 @@ test(`agent run from ${START}`, async ({ page, task }, testInfo) => {
   // Record-only for the spike matrix: the outcome is the result, not a test assertion,
   // but a broken harness (no steps at all) should still fail loudly.
   expect(run.steps.length, report).toBeGreaterThan(0);
-});
+}

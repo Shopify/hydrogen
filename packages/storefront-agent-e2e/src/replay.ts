@@ -1,8 +1,9 @@
 import { expect, test as base, type Page, type TestInfo } from "@playwright/test";
 
 import { captureCheckout, CHECKOUT_STUB_HEADING, redactCartKeys } from "./checkout";
-import { classify } from "./classify";
-import type { AddToCartTask } from "./task";
+import { classify, type VerifiedState } from "./classify";
+import { verifyProductPage } from "./product-page";
+import type { AddToCartTask, FindProductTask } from "./task";
 import { verifyCart } from "./verify";
 import { sizeWindowToViewport } from "./viewport";
 
@@ -19,7 +20,9 @@ export type Replay = {
     options?: { readonly thenUrl?: string },
   ) => Promise<void>;
   /** Checks the handoff happened and verifies the cart, exactly like an agent run. */
-  readonly finish: (task: AddToCartTask) => Promise<void>;
+  readonly finishAtCheckout: (task: AddToCartTask) => Promise<void>;
+  /** Checks the page the steps ended on is the product's, exactly like an agent run. */
+  readonly finishOnProductPage: (task: FindProductTask) => Promise<void>;
 };
 
 export const test = base.extend<{ replay: Replay }>({
@@ -48,28 +51,34 @@ export const test = base.extend<{ replay: Replay }>({
             throw error;
           }
         }),
-      finish: async (task) => {
+      finishAtCheckout: async (task) => {
         try {
           await expect(page.getByRole("heading", { name: CHECKOUT_STUB_HEADING })).toBeVisible();
         } catch (error) {
           markStale(testInfo, "the recorded steps never reached checkout");
           throw error;
         }
-        const state = await verifyCart(task, checkout.url());
-        const outcome = classify("done", state);
-        const verdict = redactCartKeys(JSON.stringify({ outcome, state }, null, 2));
-        const why =
-          state.kind === "wrong" || state.kind === "unverifiable" ? `: ${state.reason}` : "";
-        testInfo.annotations.push({
-          type: VERDICT_ANNOTATION,
-          description: redactCartKeys(`${outcome}${why}`),
-        });
-        await testInfo.attach("verdict.json", { body: verdict, contentType: "application/json" });
-        expect(outcome, verdict).toBe("PASS");
+        await judge(testInfo, await verifyCart(task, checkout.url()));
+      },
+      // All recorded steps succeeded, so a wrong page is the storefront's verdict, not staleness.
+      finishOnProductPage: async (task) => {
+        await judge(testInfo, await verifyProductPage(page, task));
       },
     });
   },
 });
+
+async function judge(testInfo: TestInfo, state: VerifiedState & { reason?: string }) {
+  const outcome = classify("done", state);
+  const verdict = redactCartKeys(JSON.stringify({ outcome, state }, null, 2));
+  const why = state.reason ? `: ${state.reason}` : "";
+  testInfo.annotations.push({
+    type: VERDICT_ANNOTATION,
+    description: redactCartKeys(`${outcome}${why}`),
+  });
+  await testInfo.attach("verdict.json", { body: verdict, contentType: "application/json" });
+  expect(outcome, verdict).toBe("PASS");
+}
 
 const QUIET_MS = 500;
 const SETTLE_TIMEOUT_MS = 5_000;

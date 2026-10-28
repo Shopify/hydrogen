@@ -13,7 +13,7 @@ type Row = {
   readonly id: string;
   readonly label: string;
   readonly server: ServerConfig;
-  readonly start: "home" | "product";
+  readonly test: "add-to-cart" | "find-product";
   readonly trials: number;
   readonly healthy: boolean;
 };
@@ -25,21 +25,29 @@ type TestResult = {
 type ResultsFile = { suites?: { specs?: { tests?: { results?: TestResult[] }[] }[] }[] };
 
 const ROWS: readonly Row[] = [
-  { id: "H1", label: "drawer", server: {}, start: "home", trials: 10, healthy: true },
-  { id: "H2", label: "drawer", server: {}, start: "product", trials: 10, healthy: true },
+  { id: "H1", label: "healthy", server: {}, test: "add-to-cart", trials: 10, healthy: true },
   {
-    id: "H3",
-    label: "cart page only",
-    server: { ux: "cart-page" },
-    start: "home",
+    id: "H2",
+    label: "newsletter popup",
+    server: { ux: "newsletter-modal" },
+    test: "add-to-cart",
+    trials: 5,
+    healthy: true,
+  },
+  { id: "H3", label: "healthy", server: {}, test: "find-product", trials: 10, healthy: true },
+  {
+    id: "H4",
+    label: "newsletter popup",
+    server: { ux: "newsletter-modal" },
+    test: "find-product",
     trials: 5,
     healthy: true,
   },
   {
-    id: "H4",
-    label: "newsletter modal",
-    server: { ux: "newsletter-modal" },
-    start: "home",
+    id: "H5",
+    label: "sale banner",
+    server: { ux: "discount-banner" },
+    test: "find-product",
     trials: 5,
     healthy: true,
   },
@@ -47,48 +55,40 @@ const ROWS: readonly Row[] = [
     id: "B1",
     label: "wrong-variant",
     server: { fault: "wrong-variant" },
-    start: "home",
+    test: "add-to-cart",
     trials: 5,
     healthy: false,
   },
   {
     id: "B2",
-    label: "wrong-variant",
-    server: { fault: "wrong-variant" },
-    start: "product",
+    label: "quantity-ignored",
+    server: { fault: "quantity-ignored" },
+    test: "add-to-cart",
     trials: 5,
     healthy: false,
   },
   {
     id: "B3",
-    label: "quantity-ignored",
-    server: { fault: "quantity-ignored" },
-    start: "home",
+    label: "add-to-cart-broken",
+    server: { fault: "add-to-cart-broken" },
+    test: "add-to-cart",
     trials: 5,
     healthy: false,
   },
   {
     id: "B4",
-    label: "quantity-ignored",
-    server: { fault: "quantity-ignored" },
-    start: "product",
+    label: "product-links-wrong",
+    server: { fault: "product-links-wrong" },
+    test: "find-product",
     trials: 5,
     healthy: false,
   },
   {
     id: "B5",
-    label: "add-to-cart-broken",
-    server: { fault: "add-to-cart-broken" },
-    start: "home",
-    trials: 2,
-    healthy: false,
-  },
-  {
-    id: "B6",
-    label: "add-to-cart-broken",
-    server: { fault: "add-to-cart-broken" },
-    start: "product",
-    trials: 2,
+    label: "product-page-error",
+    server: { fault: "product-page-error" },
+    test: "find-product",
+    trials: 5,
     healthy: false,
   },
 ];
@@ -153,14 +153,14 @@ async function runGroup(groupRows: Row[]) {
 
 function runRow(row: Row) {
   const trials = trialsOverride ?? row.trials;
-  console.log(`--- ${row.id} ${row.label} from ${row.start} x${trials}`);
+  console.log(`--- ${row.id} ${row.label}, ${row.test} x${trials}`);
   const out = path.join(runDir, row.id);
   spawnSync(
     "pnpm",
-    ["exec", "playwright", "test", "specs/stage1-agent.spec.ts", "--repeat-each", String(trials)],
+    ["exec", "playwright", "test", `specs/${row.test}.spec.ts`, "--repeat-each", String(trials)],
     {
       cwd: packageRoot,
-      env: { ...process.env, STOREFRONT_AGENT_START: row.start, STOREFRONT_AGENT_OUT: out },
+      env: { ...process.env, STOREFRONT_AGENT_OUT: out },
       stdio: "inherit",
     },
   );
@@ -190,7 +190,7 @@ function recordRow(row: Row, out: string, expectedTrials?: number) {
       kind: "agent",
       row: row.id,
       label: row.label,
-      start: row.start,
+      test: row.test,
       healthy: row.healthy,
       trial,
     };
@@ -209,7 +209,14 @@ function runScripted(server: ServerConfig): { scriptPassed: boolean; detail: str
   const out = path.join(runDir, `script-${server.fault ?? "none"}-${server.ux ?? "default"}`);
   const result = spawnSync(
     "pnpm",
-    ["exec", "playwright", "test", "specs/stage0-verifier.spec.ts", "--grep", "checkout link"],
+    [
+      "exec",
+      "playwright",
+      "test",
+      "specs/stage0-verifier.spec.ts",
+      "--grep",
+      "checkout link|product page",
+    ],
     {
       cwd: packageRoot,
       env: { ...process.env, SPIKE_FAULT: server.fault ?? "", STOREFRONT_AGENT_OUT: out },

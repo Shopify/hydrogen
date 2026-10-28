@@ -11,7 +11,7 @@ const agentEntrySchema = z.object({
   kind: z.literal("agent"),
   row: z.string(),
   label: z.string(),
-  start: z.string(),
+  test: z.string(),
   healthy: z.boolean(),
   outcome: z.string().optional(),
   stepCount: z.number().optional(),
@@ -84,7 +84,7 @@ function pct(x: number): string {
 
 function printRowTable() {
   console.log(
-    "| Row | Storefront | Start | Runs | PASS | (friction) | FAIL | BLOCKED | INCONCL. | Median steps | Median time | Median input tokens | Median cost |",
+    "| Row | Storefront | Test | Runs | PASS | (friction) | FAIL | BLOCKED | INCONCL. | Median steps | Median time | Median input tokens | Median cost |",
   );
   console.log("|---|---|---|---|---|---|---|---|---|---|---|---|---|");
   for (const row of new Set(agent.map((e) => e.row))) {
@@ -99,7 +99,7 @@ function printRowTable() {
     ).length;
     const cost = median(runs.map(costOf));
     console.log(
-      `| ${row} | ${runs[0]?.label} | ${runs[0]?.start} | ${runs.length} | ${count("PASS")} | ${withFriction} | ${count("FAIL")} | ${count("BLOCKED")} | ${inconclusive} | ${steps} | ${seconds}s | ${tokens}k | ${Number.isFinite(cost) ? "$" + cost.toFixed(2) : "–"} |`,
+      `| ${row} | ${runs[0]?.label} | ${runs[0]?.test} | ${runs.length} | ${count("PASS")} | ${withFriction} | ${count("FAIL")} | ${count("BLOCKED")} | ${inconclusive} | ${steps} | ${seconds}s | ${tokens}k | ${Number.isFinite(cost) ? "$" + cost.toFixed(2) : "–"} |`,
     );
   }
 }
@@ -143,7 +143,7 @@ function printThresholds() {
 }
 
 function printScripts() {
-  console.log("\nScripted DOM-contract flow (checkout link) per server:");
+  console.log("\nScripted flows (add to cart via checkout link, product page check) per server:");
   for (const s of scripts) {
     const server = `fault=${s.server.fault ?? "none"} ux=${s.server.ux ?? "default"}`;
     console.log(`- ${server}: ${s.scriptPassed ? "passed" : "failed"}`);

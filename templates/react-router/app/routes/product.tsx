@@ -12,8 +12,10 @@ import { Link, useLocation, useNavigate } from "react-router";
 
 import { ProductCard, PRODUCT_CARD_FRAGMENT } from "~/components/ProductCard";
 import { openCartDrawer } from "~/lib/cart-drawer";
+import { envContext } from "~/lib/env";
 import { formatPrice, salePercent } from "~/lib/money";
 import { ProductProvider, useProductForm } from "~/lib/product";
+import { parseSpikeFault, spikeProductHandle } from "~/lib/spike-faults";
 import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
@@ -145,10 +147,15 @@ export function meta({ matches }: Route.MetaArgs) {
 }
 
 export async function loader({ context, params, request }: Route.LoaderArgs) {
-  const handle = params.handle;
-  if (!handle) throw new Response("Not Found", { status: 404 });
+  if (!params.handle) throw new Response("Not Found", { status: 404 });
 
   const storefrontClient = context.get(storefrontClientContext);
+  // SPIKE ONLY: product-page faults for the agentic E2E calibration matrix.
+  const handle = await spikeProductHandle(
+    params.handle,
+    parseSpikeFault(context.get(envContext).SPIKE_FAULT),
+    storefrontClient,
+  );
   const selectedOptions = getSelectedProductOptions({
     searchParams: new URL(request.url).searchParams,
   });

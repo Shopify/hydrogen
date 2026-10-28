@@ -5,6 +5,7 @@ import {
   createStorefrontApiClient,
   requestSignal,
   type CountryCode,
+  type LanguageCode,
 } from "./storefront-api";
 
 export type SelectedOption = { readonly name: string; readonly value: string };
@@ -21,6 +22,17 @@ export type AddToCartTask = {
   readonly quantity: number;
   /** The market discovery probed the cart in. */
   readonly country: CountryCode;
+  /** The language product and option names are in: the one shoppers see. */
+  readonly language: LanguageCode;
+};
+
+export type FindProductTask = {
+  /** What the agent is asked to do, in buyer language. */
+  readonly goal: string;
+  readonly productTitle: string;
+  readonly productHandle: string;
+  readonly country: CountryCode;
+  readonly language: LanguageCode;
 };
 
 type Variant = {
@@ -127,51 +139,83 @@ type ListedProduct = {
   }[];
 };
 
-export async function generateAddToCartTask(options: {
+type TaskOptions = {
   shopDomain: string;
   country: CountryCode;
-  quantity: number;
+  language: LanguageCode;
   seed: number;
-}): Promise<AddToCartTask> {
-  const { shopDomain, country, quantity, seed } = options;
-  const client = createStorefrontApiClient(shopDomain, country);
-  const rejections: string[] = [];
+};
 
-  // Prefer products in collections (likely reachable by browsing), but don't require collections:
-  // fall back to the whole catalog. How the agent finds the product is up to the storefront.
+// Products to pick a target from, in order of preference. Products in collections are likely
+// reachable by browsing, but collections are optional: the whole catalog is the fallback. How the
+// agent finds the product is up to the storefront.
+async function* productSources(client: StorefrontClient): AsyncGenerator<readonly ListedProduct[]> {
   const collections = await client.graphql(COLLECTION_PRODUCTS_QUERY, { signal: requestSignal() });
   assertNoGraphQLErrors("Collection products", collections.errors);
-  const inCollections = collections.data?.collections.nodes.flatMap((c) => c.products.nodes) ?? [];
-  const fromCollections = await findTarget(client, inCollections, {
-    quantity,
-    seed,
-    country,
-    rejections,
-  });
-  if (fromCollections) return fromCollections;
+  yield collections.data?.collections.nodes.flatMap((c) => c.products.nodes) ?? [];
 
   const catalog = await client.graphql(CATALOG_PRODUCTS_QUERY, { signal: requestSignal() });
   assertNoGraphQLErrors("Catalog products", catalog.errors);
-  const fromCatalog = await findTarget(client, catalog.data?.products.nodes ?? [], {
-    quantity,
-    seed,
-    country,
-    rejections,
-  });
-  if (fromCatalog) return fromCatalog;
+  yield catalog.data?.products.nodes ?? [];
+}
 
+export async function generateAddToCartTask(
+  options: TaskOptions & { quantity: number },
+): Promise<AddToCartTask> {
+  const { shopDomain, country, language, quantity, seed } = options;
+  const client = createStorefrontApiClient(shopDomain, country, language);
+  const rejections: string[] = [];
+  for await (const listed of productSources(client)) {
+    const target = await findTarget(client, listed, {
+      quantity,
+      seed,
+      country,
+      language,
+      rejections,
+    });
+    if (target) return target;
+  }
   throw new Error(
     `No product has a non-default variant a cart accepts at quantity ${quantity}. ` +
       `Checked: ${rejections.join("; ") || "no multi-option products found"}`,
   );
 }
 
+/** Picks a product with a unique title (so "find X" has one right answer), rotated by seed. */
+export async function generateFindProductTask(options: TaskOptions): Promise<FindProductTask> {
+  const { shopDomain, country, language, seed } = options;
+  const client = createStorefrontApiClient(shopDomain, country, language);
+  for await (const listed of productSources(client)) {
+    const products = [...new Map(listed.map((p) => [p.handle, p])).values()]
+      .filter((p) => p.title.trim() !== "")
+      .toSorted((a, b) => a.handle.localeCompare(b.handle));
+    const offset = products.length === 0 ? 0 : seed % products.length;
+    for (const product of [...products.slice(offset), ...products.slice(0, offset)]) {
+      if (!(await hasUniqueTitle(client, product.title))) continue;
+      return {
+        goal: `Find the product page for "${product.title}". Call finish when you are on it.`,
+        productTitle: product.title,
+        productHandle: product.handle,
+        country,
+        language,
+      };
+    }
+  }
+  throw new Error(`No product on ${shopDomain} has a unique title to search for.`);
+}
+
 async function findTarget(
   client: StorefrontClient,
   listed: readonly ListedProduct[],
-  context: { quantity: number; seed: number; country: CountryCode; rejections: string[] },
+  context: {
+    quantity: number;
+    seed: number;
+    country: CountryCode;
+    language: LanguageCode;
+    rejections: string[];
+  },
 ): Promise<AddToCartTask | null> {
-  const { quantity, seed, country, rejections } = context;
+  const { quantity, seed, country, language, rejections } = context;
   const products = [...new Map(listed.map((p) => [p.handle, p])).values()]
     .filter((p) => !p.requiresSellingPlan && p.options.some((o) => o.optionValues.length > 1))
     .toSorted((a, b) => a.handle.localeCompare(b.handle));
@@ -202,6 +246,7 @@ async function findTarget(
           defaultVariantTitle: defaultVariant.title,
           quantity,
           country,
+          language,
         };
       }
       rejections.push(`${product.handle} ${variant.title}: cart rejected ${quantity}`);

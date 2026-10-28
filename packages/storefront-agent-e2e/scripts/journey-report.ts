@@ -43,7 +43,10 @@ type Run = {
   outcome: string;
   claim: string;
   reason: string;
-  start: string;
+  /** Older runs: "home" or "product". Newer runs record the test and start path instead. */
+  start?: string;
+  test?: string;
+  startPath?: string;
   model: string;
   goal: string;
   stepCount: number;
@@ -51,7 +54,13 @@ type Run = {
   usage: { inputTokens: number; outputTokens: number; cachedInputTokens?: number } | null;
   navigations: string[];
   shortcuts?: string[];
-  state: { kind: string; reason?: string; lines?: { quantity: number; label: string }[] };
+  state: {
+    kind: string;
+    reason?: string;
+    lines?: { quantity: number; label: string }[];
+    url?: string;
+    headings?: string[];
+  };
   clicks?: Click[] | null;
   thoughts?: string[];
   friction?: string[];
@@ -125,9 +134,29 @@ function dollars(usd: number | null): string {
   return usd === null ? "–" : "$" + usd.toFixed(2);
 }
 
+function testLabel(run: Run): string {
+  if (run.test) return `${run.test} from ${run.startPath ?? "?"}`;
+  return `add-to-cart from ${run.start ?? "?"}`;
+}
+
+// The cart for add-to-cart runs; the page the agent ended on for find-product runs.
+function verifierHtml(run: Run): string {
+  const { state } = run;
+  const title = run.test === "find-product" ? "Page (verifier)" : "Cart (verifier)";
+  let found = esc(state.kind);
+  if (state.lines?.length) {
+    found = state.lines.map((l) => `${l.quantity} × ${esc(l.label)}`).join("<br>");
+  } else if (state.url) {
+    const heading = state.headings?.length ? esc(state.headings.join(" · ")) : "no main heading";
+    found = `${esc(state.kind)}: ${heading}<br><span class="muted">${esc(shortUrl(state.url))}</span>`;
+  }
+  const reason = state.reason ? `<br><span class="muted">${esc(state.reason)}</span>` : "";
+  return `<div><h3>${title}</h3><p>${found}${reason}</p></div>`;
+}
+
 function indexRow(id: string, run: Run, source: string, startTime: string | undefined): string {
   const tokens = run.usage ? `${Math.round(run.usage.inputTokens / 1000)}k` : "–";
-  return `<tr><td><a href="#${id}">${esc(id)}</a></td><td>${outcomeBadges(run)}</td><td>${esc(source)}</td><td>${esc(run.start)}</td><td>${run.stepCount}</td><td>${Math.round(run.durationMs / 1000)}s</td><td>${tokens}</td><td>${dollars(runCost(run))}</td><td>${esc(startTime ? new Date(startTime).toLocaleString() : "")}</td></tr>`;
+  return `<tr><td><a href="#${id}">${esc(id)}</a></td><td>${outcomeBadges(run)}</td><td>${esc(source)}</td><td>${esc(testLabel(run))}</td><td>${run.stepCount}</td><td>${Math.round(run.durationMs / 1000)}s</td><td>${tokens}</td><td>${dollars(runCost(run))}</td><td>${esc(startTime ? new Date(startTime).toLocaleString() : "")}</td></tr>`;
 }
 
 function runSection(
@@ -159,19 +188,16 @@ function runSection(
   const cards = run.steps
     .map((step, i) => stepCard(step, i, screenshots, clickSteps.get(i)))
     .join("\n");
-  const cart = run.state.lines?.length
-    ? run.state.lines.map((l) => `${l.quantity} × ${esc(l.label)}`).join("<br>")
-    : esc(run.state.kind);
   const navs = run.navigations.map((u) => `<li>${esc(shortUrl(u))}</li>`).join("");
   const shortcuts = run.shortcuts?.length
     ? `<p class="warn">Shortcuts: ${esc(run.shortcuts.join("; "))}</p>`
     : "";
   return `<section id="${id}">
-  <h2>${esc(id)} ${outcomeBadges(run)} <small>${esc(source)} · start: ${esc(run.start)} · ${esc(run.model)}</small></h2>
+  <h2>${esc(id)} ${outcomeBadges(run)} <small>${esc(source)} · ${esc(testLabel(run))} · ${esc(run.model)}</small></h2>
   <div class="meta">
     <div><h3>Goal</h3><p>${esc(run.goal)}</p></div>
     <div><h3>Agent claim</h3><p><b>${esc(run.claim)}</b>: ${esc(run.reason)}</p>${run.exitInterview ? `<p class="muted">Exit interview: <b>${esc(run.exitInterview.status)}</b></p>` : ""}</div>
-    <div><h3>Cart (verifier)</h3><p>${cart}${run.state.reason ? `<br><span class="muted">${esc(run.state.reason)}</span>` : ""}</p></div>
+    ${verifierHtml(run)}
     <div><h3>Cost</h3><p>${run.stepCount} steps · ${Math.round(run.durationMs / 1000)}s · ${run.usage ? `${Math.round(run.usage.inputTokens / 1000)}k in / ${Math.round(run.usage.outputTokens / 1000)}k out tokens · ${dollars(runCost(run))}` : "no usage"}</p></div>
   </div>
   ${shortcuts}
@@ -291,7 +317,7 @@ function page(rows: string[], body: string[], totalRow: string): string {
   .thoughts{margin:4px 0;font-size:13px;max-height:260px;overflow-y:auto;background:#fff;border:1px solid #e3e3e3;padding:8px 8px 8px 32px}
   </style></head><body>
   <h1>Agent journeys</h1>
-  <table><tr><th>Run</th><th>Outcome</th><th>Source</th><th>Start</th><th>Steps</th><th>Time</th><th>Input tokens</th><th>Cost</th><th>When</th></tr>${rows.join("")}${totalRow}</table>
+  <table><tr><th>Run</th><th>Outcome</th><th>Source</th><th>Test</th><th>Steps</th><th>Time</th><th>Input tokens</th><th>Cost</th><th>When</th></tr>${rows.join("")}${totalRow}</table>
   ${body.join("\n")}
   </body></html>`;
 }
