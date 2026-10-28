@@ -69,28 +69,44 @@ function generate(start: Start): GenerateResult {
 
 function replayAll(regenerate: boolean) {
   const files = STARTS.map(specFile).filter((file) => existsSync(file));
-  const results = replay(files, "replay");
   console.log("\n| Script | Replay | Action |");
   console.log("|---|---|---|");
-  for (const result of results) {
+  for (const result of replay(files, "replay")) {
     const name = path.basename(result.file);
-    if (result.status === "passed") {
+    const verdict = confirm(result);
+    if (verdict.kind === "passed") {
       console.log(`| ${name} | passed | none |`);
-      continue;
+    } else if (verdict.kind === "storefront-fail") {
+      console.log(
+        `| ${name} | ${verdict.detail} (repeated) | storefront problem, not regenerated |`,
+      );
+    } else {
+      const start = startFor(result.file);
+      const action =
+        regenerate && start ? REGENERATION_RESULT[generate(start)] : "regenerate with --regenerate";
+      console.log(`| ${name} | stale: ${verdict.detail} | ${action} |`);
     }
-    const stale = result.annotations.find((a) => a.type === "replay-stale");
-    if (!stale) {
-      console.log(`| ${name} | ${describeFailure(result)} | storefront problem, not regenerated |`);
-      continue;
-    }
-    const start = startFor(result.file);
-    if (!regenerate || !start) {
-      console.log(`| ${name} | stale: ${stale.description} | regenerate with --regenerate |`);
-      continue;
-    }
-    const outcome = generate(start);
-    console.log(`| ${name} | stale: ${stale.description} | ${REGENERATION_RESULT[outcome]} |`);
   }
+}
+
+// A wrong cart after all recorded steps succeeded is only blamed on the storefront if it repeats;
+// a one-off failure means the replay itself is unreliable, which is treated as stale.
+function confirm(
+  result: ReplayResult,
+):
+  | { kind: "passed" }
+  | { kind: "stale"; detail: string }
+  | { kind: "storefront-fail"; detail: string } {
+  if (result.status === "passed") return { kind: "passed" };
+  const stale = result.annotations.find((a) => a.type === "replay-stale");
+  if (stale) return { kind: "stale", detail: stale.description ?? "step failed" };
+  const [retry] = replay([result.file], `confirm-${path.basename(result.file, ".spec.ts")}`);
+  if (retry?.status === "passed") {
+    return { kind: "stale", detail: `replay failed once (${describeFailure(result)}) then passed` };
+  }
+  const retryStale = retry?.annotations.find((a) => a.type === "replay-stale");
+  if (retryStale) return { kind: "stale", detail: retryStale.description ?? "step failed" };
+  return { kind: "storefront-fail", detail: describeFailure(retry ?? result) };
 }
 
 function replay(files: string[], label: string): ReplayResult[] {

@@ -27,6 +27,12 @@ export async function captureCheckout(context: BrowserContext): Promise<Checkout
   let firstUrl: string | null = null;
 
   const watch = async (page: Page) => {
+    // Fallback for a new tab whose first navigation beats Fetch.enable below: still record it.
+    page.on("framenavigated", (frame) => {
+      if (frame === page.mainFrame() && isCheckoutPath(new URL(frame.url()).pathname)) {
+        firstUrl ??= frame.url();
+      }
+    });
     const session = await context.newCDPSession(page);
     const { frameTree } = await session.send("Page.getFrameTree");
     const topFrameId = frameTree.frame.id;
@@ -52,6 +58,10 @@ export async function captureCheckout(context: BrowserContext): Promise<Checkout
   await Promise.all(context.pages().map(watch));
   context.on("page", (page) => void watch(page).catch(() => {}));
   return { url: () => firstUrl };
+}
+
+function isCheckoutPath(pathname: string): boolean {
+  return pathname.startsWith("/cart/c/") || pathname.startsWith("/checkouts/");
 }
 
 /** Removes cart keys (bearer secrets) from URLs, cart ids, or error text. */

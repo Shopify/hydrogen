@@ -138,7 +138,7 @@ function runRow(row: Row) {
       stdio: "inherit",
     },
   );
-  recordRow(row, out);
+  recordRow(row, out, trials);
 }
 
 function rebuild() {
@@ -154,8 +154,11 @@ function rebuild() {
   }
 }
 
-function recordRow(row: Row, out: string) {
+function recordRow(row: Row, out: string, expectedTrials?: number) {
   const results = allTests(out).flatMap((test) => test.results ?? []);
+  if (expectedTrials !== undefined && results.length !== expectedTrials) {
+    console.log(`    warning: ${row.id} recorded ${results.length} of ${expectedTrials} trials`);
+  }
   results.forEach((result, trial) => {
     const base = {
       kind: "agent",
@@ -214,8 +217,18 @@ function record(entry: Record<string, unknown>) {
   appendFileSync(resultsFile, `${JSON.stringify(entry)}\n`);
 }
 
+const READY_TIMEOUT_MS = 90_000;
+const PORT_FREE_TIMEOUT_MS = 30_000;
+let activeServer: ChildProcess | null = null;
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.on(signal, () => {
+    if (activeServer) stopServer(activeServer);
+    process.exit(130);
+  });
+}
+
 async function startServer(server: ServerConfig): Promise<ChildProcess> {
-  stopListeners();
+  await waitForPortFree();
   const child = spawn(
     "pnpm",
     [
@@ -232,15 +245,26 @@ async function startServer(server: ServerConfig): Promise<ChildProcess> {
       cwd: repoRoot,
       env: { ...process.env, SPIKE_FAULT: server.fault ?? "", SPIKE_UX: server.ux ?? "" },
       stdio: "ignore",
+      // Own process group, so stopping it also stops vite and workerd grandchildren.
+      detached: true,
     },
   );
-  const deadline = Date.now() + 90_000;
+  activeServer = child;
+  const expected = `fault=${server.fault ?? ""};ux=${server.ux ?? ""}`;
+  const deadline = Date.now() + READY_TIMEOUT_MS;
   while (Date.now() < deadline) {
-    const ok = await fetch(`http://localhost:${PORT}/`).then(
-      (r) => r.ok,
-      () => false,
+    if (child.exitCode !== null) throw new Error(`Template dev server exited (${child.exitCode})`);
+    const config = await fetch(`http://localhost:${PORT}/`, {
+      signal: AbortSignal.timeout(5_000),
+    }).then(
+      (r) => (r.ok ? r.headers.get("x-spike-config") : null),
+      () => null,
     );
-    if (ok) return child;
+    if (config === expected) return child;
+    if (config !== null) {
+      stopServer(child);
+      throw new Error(`Port ${PORT} answers with ${config}, expected ${expected}: a stale server?`);
+    }
     await new Promise((resolve) => setTimeout(resolve, 1500));
   }
   stopServer(child);
@@ -248,12 +272,24 @@ async function startServer(server: ServerConfig): Promise<ChildProcess> {
 }
 
 function stopServer(child: ChildProcess) {
-  child.kill();
-  stopListeners();
+  if (child.pid !== undefined && child.exitCode === null) {
+    try {
+      process.kill(-child.pid, "SIGTERM");
+    } catch {
+      // Already gone.
+    }
+  }
+  if (activeServer === child) activeServer = null;
 }
 
-function stopListeners() {
-  const listing = spawnSync("lsof", ["-ti", `tcp:${PORT}`, "-sTCP:LISTEN"], { encoding: "utf8" });
-  for (const pid of listing.stdout.trim().split("\n").filter(Boolean)) process.kill(Number(pid));
-  spawnSync("sleep", ["2"]);
+async function waitForPortFree() {
+  const deadline = Date.now() + PORT_FREE_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    const listing = spawnSync("lsof", ["-ti", `tcp:${PORT}`, "-sTCP:LISTEN"], { encoding: "utf8" });
+    if (listing.stdout.trim() === "") return;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(
+    `Port ${PORT} is still in use; stop whatever is listening before running the matrix`,
+  );
 }

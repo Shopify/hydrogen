@@ -12,7 +12,11 @@ export const VERDICT_ANNOTATION = "replay-verdict";
 export type Replay = {
   readonly start: (path: string) => Promise<void>;
   /** A recorded shopper step. A failure here means the script is stale, not that the store is. */
-  readonly step: (label: string, action: (page: Page) => Promise<unknown>) => Promise<void>;
+  readonly step: (
+    label: string,
+    action: (page: Page) => Promise<unknown>,
+    options?: { readonly thenUrl?: string },
+  ) => Promise<void>;
   /** Checks the handoff happened and verifies the cart, exactly like an agent run. */
   readonly finish: (task: AddToCartTask) => Promise<void>;
 };
@@ -24,10 +28,13 @@ export const test = base.extend<{ replay: Replay }>({
       start: async (path) => {
         await page.goto(path);
       },
-      step: (label, action) =>
+      step: (label, action, options = {}) =>
         base.step(label, async () => {
           try {
             await action(page);
+            // Wait for the page the recorded click led to, so the next step can't land on the old one.
+            const { thenUrl } = options;
+            if (thenUrl) await page.waitForURL((url) => samePathAndQuery(url, thenUrl));
           } catch (error) {
             markStale(testInfo, `step "${label}": ${firstLine(error)}`);
             throw error;
@@ -55,6 +62,18 @@ export const test = base.extend<{ replay: Replay }>({
     });
   },
 });
+
+function samePathAndQuery(actual: URL, expected: string): boolean {
+  const wanted = new URL(expected, actual);
+  return actual.pathname === wanted.pathname && sortedQuery(actual) === sortedQuery(wanted);
+}
+
+function sortedQuery(url: URL): string {
+  return [...url.searchParams]
+    .map(([key, value]) => `${key}=${value}`)
+    .toSorted()
+    .join("&");
+}
 
 function markStale(testInfo: TestInfo, description: string) {
   testInfo.annotations.push({ type: STALE_ANNOTATION, description });

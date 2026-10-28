@@ -95,6 +95,11 @@ export const middleware: Route.MiddlewareFunction[] = [
     }
 
     requestContext.applyResponseHeaders(response.headers);
+    // SPIKE ONLY: lets the matrix runner assert it is talking to the server it configured.
+    response.headers.set(
+      "x-spike-config",
+      `fault=${env.SPIKE_FAULT ?? ""};ux=${env.SPIKE_UX ?? ""}`,
+    );
     return response;
   },
 ];

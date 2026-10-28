@@ -176,19 +176,34 @@ function installClickRecorder(binding: string) {
   ) => {
     if (!role) return null;
     const needle = name.toLowerCase();
+    // getByRole ignores hidden elements (closed drawers, mobile nav), so .nth() must too.
     const matches = deepQueryAll(scopeEl, INTERACTIVE).filter(
-      (el) => roleOf(el) === role && stable(nameOf(el)).toLowerCase().includes(needle),
+      (el) =>
+        el.checkVisibility() &&
+        roleOf(el) === role &&
+        stable(nameOf(el)).toLowerCase().includes(needle),
     );
     const index = matches.indexOf(target);
     return matches.length > 1 && index >= 0 ? index : null;
   };
 
+  let pendingLabelControl: Element | null = null;
   document.addEventListener(
     "click",
     (event) => {
       const origin = event.composedPath()[0];
       const record: unknown = Reflect.get(window, binding);
       if (!event.isTrusted || !(origin instanceof Element) || typeof record !== "function") return;
+      // Implicit form submits (Enter) are trusted clicks with detail 0: a side effect, not a click.
+      if (event.detail === 0) return;
+      // Clicking a <label> also fires a trusted detail-1 click on its control in the same task.
+      // Record the label click only.
+      if (origin === pendingLabelControl) return;
+      const label = closestAcross(origin, (el) => el instanceof HTMLLabelElement);
+      if (label instanceof HTMLLabelElement && label.control) {
+        pendingLabelControl = label.control;
+        setTimeout(() => (pendingLabelControl = null), 0);
+      }
       const target = closestAcross(origin, (el) => el.matches(INTERACTIVE)) ?? origin;
       const { el: scopeEl, scope } = scopeOf(target);
       const role = roleOf(target);
