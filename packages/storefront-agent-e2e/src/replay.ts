@@ -2,6 +2,7 @@ import { expect, test as base, type Page, type TestInfo } from "@playwright/test
 
 import { captureCheckout, CHECKOUT_STUB_HEADING, redactCartKeys } from "./checkout";
 import { classify, type VerifiedState } from "./classify";
+import { renderSelectsInPage } from "./native-select";
 import { verifyProductPage } from "./product-page";
 import type { AddToCartTask, FindProductTask } from "./task";
 import { verifyCart } from "./verify";
@@ -28,6 +29,8 @@ export type Replay = {
 export const test = base.extend<{ replay: Replay }>({
   replay: async ({ page }, use, testInfo) => {
     const checkout = await captureCheckout(page.context());
+    // Same rendering as the agent run, so recorded clicks on option lists land.
+    await renderSelectsInPage(page.context());
     // Same window as the agent run, so coordinate steps land where they were recorded.
     await sizeWindowToViewport(page);
     const network = trackNetwork(page);

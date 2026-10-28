@@ -212,7 +212,10 @@ export async function generateFindProductTask(options: TaskOptions): Promise<Fin
     for (const product of [...products.slice(offset), ...products.slice(0, offset)]) {
       if (!(await hasUniqueTitle(client, product.title))) continue;
       return {
-        goal: `Find the product page for "${product.title}". Call finish when you are on it.`,
+        goal:
+          `Find the product page for "${product.title}". If the store has search, try it first; ` +
+          "if that doesn't work, use collections or menus; otherwise browse all products. " +
+          "Call finish when you are on the product page.",
         productTitle: product.title,
         productHandle: product.handle,
         country,

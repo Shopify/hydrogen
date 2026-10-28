@@ -53,6 +53,7 @@ If the store contradicts what you just did (for example the cart shows a differe
 quantity than you added, an error appears, or a button does nothing), retry once. If it happens
 again, call the finish tool with status "blocked" right away and describe what you saw.
 Do not look for workarounds: report the problem instead.
+Keep the store's country, language and currency unless the task asks you to change them.
 Nobody will answer questions, so do not ask any.`;
 
 const finishInput = z.object({

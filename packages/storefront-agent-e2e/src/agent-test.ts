@@ -12,6 +12,7 @@ import { CDP_PORT } from "./config";
 import { estimateCostUsd } from "./cost";
 import { detectFriction } from "./friction";
 import { readModelConfig } from "./model-config";
+import { renderSelectsInPage } from "./native-select";
 import { recordClicks } from "./recorder";
 import { findShortcuts } from "./shortcuts";
 import { sizeWindowToViewport } from "./viewport";
@@ -43,6 +44,7 @@ export async function runAgentTest(options: {
   const maxSteps = Number(process.env.STOREFRONT_AGENT_MAX_STEPS ?? defaultMaxSteps);
   // Always record click targets: they label the journey report; generation also uses them.
   const recording = await recordClicks(page.context());
+  await renderSelectsInPage(page.context());
   await sizeWindowToViewport(page);
 
   // The only navigation the harness performs; the agent takes over from here.
