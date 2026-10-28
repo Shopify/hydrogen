@@ -44,12 +44,12 @@ export function matchProductPage(input: {
 }): ProductPageState {
   const { url, title, handle } = input;
   const headings = input.headings.map((h) => h.replaceAll(/\s+/g, " ").trim()).filter(Boolean);
-  const wanted = normalize(title);
+  const wanted = normalizeTitle(title);
   const urlHasHandle = pathSegments(url).includes(handle);
   const correct =
-    headings.some((h) => normalize(h) === wanted) ||
+    headings.some((h) => normalizeTitle(h) === wanted) ||
     (urlHasHandle &&
-      (headings.length === 0 || headings.some((h) => normalize(h).includes(wanted))));
+      (headings.length === 0 || headings.some((h) => normalizeTitle(h).includes(wanted))));
   if (correct) return { kind: "correct", url, headings };
   const shown = headings.length ? `main heading "${headings.join('", "')}"` : "no main heading";
   return {
@@ -60,7 +60,8 @@ export function matchProductPage(input: {
   };
 }
 
-function normalize(text: string): string {
+/** Case- and whitespace-insensitive form used to compare titles and headings. */
+export function normalizeTitle(text: string): string {
   return text.normalize("NFKC").toLocaleLowerCase().replaceAll(/\s+/g, " ").trim();
 }
 

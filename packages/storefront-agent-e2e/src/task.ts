@@ -1,5 +1,6 @@
 import { gql, type StorefrontClient } from "@shopify/hydrogen";
 
+import { normalizeTitle } from "./product-page";
 import {
   assertNoGraphQLErrors,
   createStorefrontApiClient,
@@ -201,11 +202,11 @@ export async function generateFindProductTask(options: TaskOptions): Promise<Fin
   const collections = await client.graphql(COLLECTION_TITLES_QUERY, { signal: requestSignal() });
   assertNoGraphQLErrors("Collection titles", collections.errors);
   const collectionTitles = new Set(
-    collections.data?.collections.nodes.map((c) => c.title.trim().toLowerCase()) ?? [],
+    collections.data?.collections.nodes.map((c) => normalizeTitle(c.title)) ?? [],
   );
   for await (const listed of productSources(client)) {
     const products = [...new Map(listed.map((p) => [p.handle, p])).values()]
-      .filter((p) => p.title.trim() !== "" && !collectionTitles.has(p.title.trim().toLowerCase()))
+      .filter((p) => p.title.trim() !== "" && !collectionTitles.has(normalizeTitle(p.title)))
       .toSorted((a, b) => a.handle.localeCompare(b.handle));
     const offset = products.length === 0 ? 0 : seed % products.length;
     for (const product of [...products.slice(offset), ...products.slice(0, offset)]) {
