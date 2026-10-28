@@ -272,7 +272,9 @@ async function createNewStorefront(
     signal?.throwIfAborted();
   } catch (error) {
     // Cancellation can stop polling after creation has committed remotely.
-    if (signal?.aborted && storefront) await setStorefront(root, storefront);
+    if (signal?.aborted && error === signal.reason && storefront) {
+      await setStorefront(root, storefront);
+    }
     throw error;
   }
 

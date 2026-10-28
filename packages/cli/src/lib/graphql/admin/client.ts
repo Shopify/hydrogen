@@ -111,7 +111,7 @@ export async function adminRequest<T>(
       signal,
     );
   } catch (error: any) {
-    signal?.throwIfAborted();
+    if (signal?.aborted && error === signal.reason) throw error;
     const errors: GraphqlError[] = error.errors;
 
     for (const {pattern, abort} of KNOWN_USER_ERRORS) {

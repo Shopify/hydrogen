@@ -12,6 +12,29 @@ interface TestSchema {
 }
 
 describe('adminRequest', () => {
+  it('preserves a request failure if cancellation follows the settled request', async () => {
+    const controller = new AbortController();
+    const failure = new Error('Network unavailable');
+    vi.mocked(graphqlRequest).mockRejectedValue(failure);
+    const removeEventListener = controller.signal.removeEventListener.bind(
+      controller.signal,
+    );
+    const listener = vi
+      .spyOn(controller.signal, 'removeEventListener')
+      .mockImplementationOnce((...args) => {
+        removeEventListener(...args);
+        controller.abort();
+      });
+    try {
+      await expect(
+        adminRequest('', {token: '', storeFqdn: ''}, {}, controller.signal),
+      ).rejects.toBe(failure);
+      expect(controller.signal.aborted).toBe(true);
+    } finally {
+      listener.mockRestore();
+    }
+  });
+
   it('cancels the underlying request and stops waiting when the session aborts', async () => {
     const controller = new AbortController();
     let requestSignal: AbortSignal | undefined;

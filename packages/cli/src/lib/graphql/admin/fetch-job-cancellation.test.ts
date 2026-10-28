@@ -10,7 +10,7 @@ it('cancels the polling delay before sending a provisioning query', async () => 
   const controller = new AbortController();
   const running = waitForJob(session, 'job', controller.signal);
   controller.abort();
-  await expect(running).rejects.toMatchObject({name: 'AbortError'});
+  await expect(running).rejects.toBe(controller.signal.reason);
   expect(adminRequest).not.toHaveBeenCalled();
 });
 

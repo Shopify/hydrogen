@@ -50,7 +50,12 @@ export async function waitForJob(
 ) {
   signal?.throwIfAborted();
   while (true) {
-    await setTimeout(500, undefined, {signal});
+    try {
+      await setTimeout(500, undefined, {signal});
+    } catch (error) {
+      signal?.throwIfAborted();
+      throw error;
+    }
     const job = await fetchJob(adminSession, jobId, signal);
     if (job.errors.length > 0) {
       throw new AbortError(

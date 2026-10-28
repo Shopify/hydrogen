@@ -9,6 +9,7 @@ import {joinPath} from '@shopify/cli-kit/node/path';
 import {listDevInstances} from '@shopify/cli-kit/node/dev-instance';
 import {ensureAuthenticatedAdmin} from '@shopify/cli-kit/node/session';
 import {graphqlRequest} from '@shopify/cli-kit/node/api/graphql';
+import {AbortError} from '@shopify/cli-kit/node/error';
 import {
   renderConfirmationPrompt,
   renderSelectPrompt,
@@ -24,6 +25,7 @@ import {runDevSession} from '../../lib/dev-session.js';
 import {deferPromise} from '../../lib/defer.js';
 import {linkStorefront} from './link.js';
 import type {JobSchema} from '../../lib/graphql/admin/fetch-job.js';
+import * as storefrontJobs from '../../lib/graphql/admin/fetch-job.js';
 
 vi.mock('@shopify/cli-kit/node/session');
 vi.mock('@shopify/cli-kit/node/api/graphql');
@@ -281,6 +283,53 @@ it.each(['prompt', 'name'] as const)(
           hydrogenStorefrontJob: {id: 'job', done: true, errors: []},
         });
         await settled;
+      }
+    });
+  },
+);
+
+it.each(['provisioning', 'network'] as const)(
+  'preserves the previous link when a %s failure races with cancellation',
+  async (failure) => {
+    await inTemporaryDirectory(async (root) => {
+      await mkdir(joinPath(root, '.shopify'));
+      const configFile = joinPath(root, '.shopify/project.json');
+      const previousConfig = {
+        ...config,
+        storefront: {
+          id: 'gid://shopify/HydrogenStorefront/previous',
+          title: 'Previous storefront',
+          customerAccountConfig: {redirectUri: 'https://previous.example.com'},
+        },
+      };
+      const contents = JSON.stringify(previousConfig, null, 2) + '\n';
+      await writeFile(configFile, contents);
+      vi.mocked(createStorefront).mockResolvedValue({storefront, jobId: 'job'});
+      const controller = new AbortController();
+      const error =
+        failure === 'provisioning'
+          ? new AbortError('Storefront setup failed')
+          : new Error('Network unavailable');
+      const polling = vi
+        .spyOn(storefrontJobs, 'waitForJob')
+        .mockImplementationOnce(async () => {
+          controller.abort();
+          throw error;
+        });
+      try {
+        await expect(
+          linkStorefront(root, session, previousConfig, {
+            force: true,
+            storefrontName: 'New storefront',
+            cliCommand: 'shopify hydrogen',
+            storefronts: [storefront],
+            signal: controller.signal,
+          }),
+        ).rejects.toBe(error);
+        expect(controller.signal.aborted).toBe(true);
+        expect(await readFile(configFile)).toBe(contents);
+      } finally {
+        polling.mockRestore();
       }
     });
   },
