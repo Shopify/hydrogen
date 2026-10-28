@@ -97,3 +97,99 @@ it.skipIf(process.platform === 'win32').each([
   },
   20000,
 );
+
+it.skipIf(process.platform === 'win32').each([
+  ['SIGINT', 130],
+  ['SIGTERM', 143],
+] as const)(
+  'exits stuck startup on %s and allows the next session to reclaim ownership',
+  async (signal, exitCode) => {
+    const sourceDirectory = fileURLToPath(new URL('.', import.meta.url));
+    const fixtureDirectory = await mkdtemp(
+      join(sourceDirectory, '.session-fixture-'),
+    );
+    const projectDirectory = await mkdtemp(
+      join(tmpdir(), 'hydrogen-stuck-session-'),
+    );
+    let child: ReturnType<typeof spawn> | undefined;
+    try {
+      const bundle = join(fixtureDirectory, 'session.mjs');
+      await build({
+        entryPoints: [join(sourceDirectory, 'dev-session.ts')],
+        outfile: bundle,
+        bundle: true,
+        packages: 'external',
+        platform: 'node',
+        format: 'esm',
+      });
+      const importSession = `import {runDevSession} from ${JSON.stringify(pathToFileURL(bundle).href)};`;
+      const options = JSON.stringify({
+        command: 'hydrogen dev',
+        directory: projectDirectory,
+        envFile: '.env',
+      });
+      child = spawn(
+        process.execPath,
+        [
+          '--input-type=module',
+          '--eval',
+          `${importSession}
+          await runDevSession(${options}, async (session) => {
+            session.cleanup(() => console.log('Cleanup ran'));
+            setInterval(() => {}, 1000);
+            console.log('Fixture started');
+            await new Promise(() => {});
+          });`,
+        ],
+        {stdio: ['ignore', 'pipe', 'pipe']},
+      );
+      let stdout = '';
+      child.stdout!.on('data', (chunk) => {
+        stdout += chunk;
+      });
+      const exited = once(child, 'exit');
+      await vi.waitFor(() => expect(stdout).toContain('Fixture started'), {
+        timeout: 10000,
+      });
+      child.kill(signal);
+      await vi.waitFor(() => expect(child!.exitCode).toBe(exitCode), {
+        timeout: 10000,
+      });
+      expect((await exited)[0]).toBe(exitCode);
+      expect(stdout).toContain('Cleanup ran');
+
+      child = spawn(
+        process.execPath,
+        [
+          '--input-type=module',
+          '--eval',
+          `${importSession}
+          await runDevSession({...${options}, signal: AbortSignal.abort()}, async () => {});`,
+        ],
+        {stdio: ['ignore', 'pipe', 'pipe']},
+      );
+      const recovered = once(child, 'exit');
+      await vi.waitFor(() => expect(child!.exitCode).toBe(0), {
+        timeout: 10000,
+      });
+      expect((await recovered)[0]).toBe(0);
+      expect(
+        (await readdir(join(projectDirectory, '.shopify', 'dev'))).every(
+          (name) => name.endsWith('.jsonl'),
+        ),
+      ).toBe(true);
+    } finally {
+      if (child && child.exitCode === null) {
+        const exited = once(child, 'exit');
+        child.kill('SIGKILL');
+        await exited;
+      }
+      await Promise.all(
+        [fixtureDirectory, projectDirectory].map((directory) =>
+          rm(directory, {recursive: true, force: true}),
+        ),
+      );
+    }
+  },
+  30000,
+);

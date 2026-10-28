@@ -74,15 +74,14 @@ describe('runCustomerAccountPush', () => {
     expect(setCustomerAccountConfig).not.toHaveBeenCalled();
   });
 
-  it('forwards cancellation to the Customer Account mutation', async () => {
+  it('waits for an in-flight mutation before rolling back cancellation', async () => {
     const controller = new AbortController();
-    vi.mocked(replaceCustomerApplicationUrls).mockImplementation(
-      async (_session, _storefront, _urls, signal) =>
-        new Promise((_resolve, reject) => {
-          signal!.addEventListener('abort', () => reject(signal!.reason), {
-            once: true,
-          });
-        }),
+    const mutation = deferPromise();
+    vi.mocked(replaceCustomerApplicationUrls).mockImplementationOnce(
+      async () => {
+        await mutation.promise;
+        return {success: true, userErrors: []};
+      },
     );
     const running = runCustomerAccountPush({
       devOrigin: DEV_ORIGIN,
@@ -93,13 +92,16 @@ describe('runCustomerAccountPush', () => {
       expect(replaceCustomerApplicationUrls).toHaveBeenCalled(),
     );
     controller.abort();
-    await expect(running).rejects.toBe(controller.signal.reason);
+    expect(replaceCustomerApplicationUrls).toHaveBeenCalledTimes(1);
     expect(replaceCustomerApplicationUrls).toHaveBeenCalledWith(
       ADMIN_SESSION,
       STOREFRONT_ID,
       expect.any(Object),
-      controller.signal,
     );
+    expect(setCustomerAccountConfig).not.toHaveBeenCalled();
+    mutation.resolve();
+    await expect(running).rejects.toBe(controller.signal.reason);
+    expect(replaceCustomerApplicationUrls).toHaveBeenCalledTimes(2);
     expect(setCustomerAccountConfig).not.toHaveBeenCalled();
   });
 
@@ -257,7 +259,6 @@ describe('runCustomerAccountPush', () => {
         },
         logoutUris: {add: [DEV_ORIGIN], removeRegex: PREVIOUS_CONFIG.logoutUri},
       },
-      undefined,
     );
   });
 
@@ -295,7 +296,6 @@ describe('runCustomerAccountPush', () => {
       expect.objectContaining({
         javascriptOrigin: expect.objectContaining({add: [DEV_ORIGIN]}),
       }),
-      undefined,
     );
   });
 
@@ -322,7 +322,6 @@ describe('runCustomerAccountPush', () => {
           removeRegex: PREVIOUS_CONFIG.logoutUri,
         },
       },
-      undefined,
     );
   });
 
@@ -353,7 +352,6 @@ describe('runCustomerAccountPush', () => {
           removeRegex: PREVIOUS_CONFIG.javascriptOrigin,
         }),
       }),
-      undefined,
     );
   });
 });

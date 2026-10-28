@@ -97,7 +97,7 @@ it.each<{
       const cancellationReason = new Error('Cancelled');
       let mutations = 0;
       vi.mocked(replaceCustomerApplicationUrls).mockImplementation(
-        async (_session, target, input) => {
+        async (_session, target, input, requestSignal) => {
           expect(target).toBe(targetStorefrontId);
           for (const field of [
             'redirectUri',
@@ -118,6 +118,8 @@ it.each<{
             if (cancel) controller.abort(cancellationReason);
             else await removeFile(configFile);
           }
+          // The server can commit before the client observes cancellation.
+          requestSignal?.throwIfAborted();
           return {success: true, userErrors: []};
         },
       );
@@ -144,3 +146,31 @@ it.each<{
     });
   },
 );
+
+it('does not start a URL mutation when cancelled during login', async () => {
+  await inTemporaryDirectory(async (root) => {
+    const controller = new AbortController();
+    const reason = new Error('Cancelled');
+    vi.mocked(login).mockImplementation(async () => {
+      controller.abort(reason);
+      return {
+        session: {token: 'token', storeFqdn: 'example.myshopify.com'},
+        config: {
+          shop: 'example.myshopify.com',
+          shopName: 'Example',
+          email: 'developer@example.com',
+          storefront: {id: storefrontId, title: 'Example'},
+        },
+      };
+    });
+    await expect(
+      pushCustomerAccountConfig({
+        path: root,
+        storefrontId,
+        devOrigin,
+        signal: controller.signal,
+      }),
+    ).rejects.toBe(reason);
+    expect(replaceCustomerApplicationUrls).not.toHaveBeenCalled();
+  });
+});

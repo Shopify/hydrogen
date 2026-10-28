@@ -127,6 +127,8 @@ export async function pushCustomerAccountConfig({
         ? config.storefront.customerAccountConfig
         : undefined;
     const urls = {redirectUri, javascriptOrigin, logoutUri};
+    signal?.throwIfAborted();
+    // Finish side effects before cancellation so their rollback has a known result.
     const {success, userErrors} = await replaceCustomerApplicationUrls(
       session,
       storefrontId,
@@ -144,7 +146,6 @@ export async function pushCustomerAccountConfig({
           removeRegex: customerAccountConfig?.logoutUri,
         },
       },
-      signal,
     );
 
     if (!success || userErrors.length) {

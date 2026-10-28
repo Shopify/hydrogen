@@ -77,14 +77,14 @@ export async function runDevSession(
       });
   };
   const stop = () => controller.abort();
-  const interrupt = () => {
-    exitCode = 130;
+  const exitOnSignal = (code: number) => {
+    exitCode = code;
     stop();
+    // Start the shared exit deadline even when startup never settles.
+    process.exit(code);
   };
-  const terminate = () => {
-    exitCode = 143;
-    stop();
-  };
+  const interrupt = () => exitOnSignal(130);
+  const terminate = () => exitOnSignal(143);
   const loseOwnership = () => {
     failure ??= instance.abortSignal.reason;
     stop();
