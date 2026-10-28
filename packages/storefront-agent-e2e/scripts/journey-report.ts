@@ -65,6 +65,7 @@ type Run = {
   thoughts?: string[];
   friction?: string[];
   exitInterview?: { status: string; reason: string } | null;
+  uxNotes?: string[];
   steps: Step[];
 };
 
@@ -202,11 +203,18 @@ function runSection(
   </div>
   ${shortcuts}
   <details><summary>Navigation path (${run.navigations.length})</summary><ol class="navs">${navs}</ol></details>
+  ${uxNotesHtml(run.uxNotes)}
   ${frictionHtml(run.friction)}
   ${thoughtsHtml(run.thoughts)}
   ${generated ? `<details><summary>Generated replay script</summary><pre>${esc(generated)}</pre></details>` : ""}
   <div class="strip">${cards}</div>
 </section>`;
+}
+
+function uxNotesHtml(notes: string[] | undefined): string {
+  if (!notes?.length) return "";
+  const items = notes.map((n) => `<li>${esc(n)}</li>`).join("");
+  return `<details open><summary class="warn">UX notes from the shopper (${notes.length})</summary><ol class="thoughts">${items}</ol></details>`;
 }
 
 function frictionHtml(friction: string[] | undefined): string {

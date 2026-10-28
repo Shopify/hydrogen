@@ -96,6 +96,7 @@ export async function runAgentTest(options: {
         shortcuts,
         friction,
         exitInterview: run.exitInterview,
+        uxNotes: run.uxNotes,
         state,
         startPath,
         model: model.name,

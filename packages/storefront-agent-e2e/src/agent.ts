@@ -41,6 +41,8 @@ export type AgentRun = {
   readonly thoughts: readonly string[];
   /** The agent's own diagnosis when it ran out of steps or time without finishing. */
   readonly exitInterview: ExitInterview | null;
+  /** UX problems the agent reported when it finished, e.g. an empty message shown while loading. */
+  readonly uxNotes: readonly string[];
   readonly durationMs: number;
 };
 
@@ -48,6 +50,13 @@ const SHOPPER_SYSTEM_PROMPT = `You are a shopper using an online store in a web 
 You only see screenshots, and you only use the mouse and keyboard, like a normal customer.
 Never type a web address; get around the store using what is on the page.
 After each action, look at the new screenshot to confirm it worked before moving on.
+Pages can take a moment to update. Before judging the result of an action, look for signs the page
+is still working: spinners, skeleton placeholders, progress bars, disabled or greyed-out buttons,
+or "Loading" text. If you see any, wait and look again before deciding or repeating the action.
+A message such as "your cart is empty" shown while something is still loading is not final.
+Never repeat an add to cart without first checking what the cart contains.
+If something would confuse a real shopper (for example an empty or error message shown while the
+page was still loading), say so in uxNotes when you call finish.
 When the whole task is complete, call the finish tool with status "done".
 If the store contradicts what you just did (for example the cart shows a different item, size or
 quantity than you added, an error appears, or a button does nothing), retry once. If it happens
@@ -59,6 +68,10 @@ Nobody will answer questions, so do not ask any.`;
 const finishInput = z.object({
   status: z.enum(["done", "blocked"]),
   reason: z.string().describe("One sentence on what happened."),
+  uxNotes: z
+    .array(z.string())
+    .optional()
+    .describe("Anything that would confuse a real shopper, one short sentence each."),
 });
 
 // Stagehand connects over the browser's WebSocket endpoint, which Chrome publishes here.
@@ -167,6 +180,7 @@ export async function runAgent(options: {
     claim,
     reason,
     exitInterview: interview,
+    uxNotes: recorded.finish?.uxNotes ?? [],
     steps,
     navigations,
     screenshots,
