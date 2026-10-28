@@ -28,9 +28,8 @@ import {runDevSession, type DevSession} from '../../lib/dev-session.js';
 import {deferPromise} from '../../lib/defer.js';
 
 export default class Preview extends Command {
-  static get jsonOutputSchema(): typeof devSessionJsonOutputSchema {
-    return devSessionJsonOutputSchema;
-  }
+  static jsonOutputSchema: typeof devSessionJsonOutputSchema =
+    devSessionJsonOutputSchema;
 
   static descriptionWithMarkdown = `Runs a server in your local development environment that serves your Hydrogen app's production build. Run the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-build) command first, or use \`--build\` to build before starting the server.
 
