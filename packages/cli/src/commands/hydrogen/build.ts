@@ -140,6 +140,7 @@ type RunBuildOptions = {
   bundleStats?: boolean;
   lockfileCheck?: boolean;
   watch?: boolean;
+  rebuildServerOnClientChange?: boolean;
   signal?: AbortSignal;
   registerCleanup?: (close: () => Promise<unknown>) => void;
   onCodegenOutput?: Parameters<typeof spawnCodegenProcess>[0]['onOutput'];
@@ -166,6 +167,7 @@ export async function runBuildWatch(
     ...options,
     json: true,
     watch: true,
+    rebuildServerOnClientChange: true,
     onBuildStart: (cycle) => onRecord({type: 'build-started', cycle}),
     onBuildFinish: (cycle, result) =>
       onRecord({type: 'build-completed', cycle, ...result}),
@@ -196,6 +198,7 @@ export async function runBuild({
   assetPath,
   bundleStats = !isCI(),
   watch = false,
+  rebuildServerOnClientChange = false,
   signal,
   registerCleanup,
   onCodegenOutput,
@@ -297,11 +300,10 @@ export async function runBuild({
   let duplicateServerBuild = false;
   const serverChanges = new Set<string>();
   // A shared trigger also covers plugin watch files outside the client module graph.
-  // JSON cycles need a matching server result after every successful client build.
-  // Keep text and preview watch behavior unchanged here.
+  // Build and profiling cycles need a server result after every client build.
   // Resolve its directory so watcher subscriptions match filesystem event paths.
   const clientBuildTrigger =
-    json && watch
+    rebuildServerOnClientChange && watch
       ? joinPath(
           await realpath(tmpdir()),
           `hydrogen-client-build-${randomUUID()}`,
