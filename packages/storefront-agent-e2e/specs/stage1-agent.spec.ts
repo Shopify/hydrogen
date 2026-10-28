@@ -27,7 +27,8 @@ const GENERATED_DIR = fileURLToPath(new URL("../generated", import.meta.url));
 test(`agent run from ${START}`, async ({ page, task }, testInfo) => {
   const model = readModelConfig();
   const checkout = await captureCheckout(page.context());
-  const recording = GENERATE ? await recordClicks(page.context()) : null;
+  // Always record click targets: they label the journey report; generation also uses them.
+  const recording = await recordClicks(page.context());
   const startPath = START === "home" ? "/" : `/products/${task.productHandle}`;
   // The only navigation the harness performs; the agent takes over from here.
   await page.goto(startPath);
@@ -48,7 +49,7 @@ test(`agent run from ${START}`, async ({ page, task }, testInfo) => {
   const outcome = classify(run.claim, state, { usedShortcut: shortcuts.length > 0 });
 
   let generatedFile: string | null = null;
-  if (recording && outcome === "PASS") {
+  if (GENERATE && outcome === "PASS") {
     const source = generateSpec({
       task,
       startPath,
@@ -82,7 +83,7 @@ test(`agent run from ${START}`, async ({ page, task }, testInfo) => {
         navigations: run.navigations,
         checkoutUrl,
         generatedFile,
-        clicks: recording?.clicks() ?? null,
+        clicks: recording.clicks(),
         steps: run.steps,
       },
       null,
