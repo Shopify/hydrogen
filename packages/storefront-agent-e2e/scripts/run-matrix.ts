@@ -78,6 +78,16 @@ const ROWS: readonly Row[] = [
 ];
 
 const PORT = Number(process.env.STOREFRONT_MATRIX_PORT ?? "4201");
+const READY_TIMEOUT_MS = 90_000;
+const PORT_FREE_TIMEOUT_MS = 30_000;
+let activeServer: ChildProcess | null = null;
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.on(signal, () => {
+    if (activeServer) stopServer(activeServer);
+    process.exit(130);
+  });
+}
+
 // Children inherit this, so every batch points at the server this runner manages.
 process.env.STOREFRONT_BASE_URL = `http://localhost:${PORT}/`;
 const packageRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -215,16 +225,6 @@ function allTests(out: string): { results?: TestResult[] }[] {
 
 function record(entry: Record<string, unknown>) {
   appendFileSync(resultsFile, `${JSON.stringify(entry)}\n`);
-}
-
-const READY_TIMEOUT_MS = 90_000;
-const PORT_FREE_TIMEOUT_MS = 30_000;
-let activeServer: ChildProcess | null = null;
-for (const signal of ["SIGINT", "SIGTERM"] as const) {
-  process.on(signal, () => {
-    if (activeServer) stopServer(activeServer);
-    process.exit(130);
-  });
 }
 
 async function startServer(server: ServerConfig): Promise<ChildProcess> {
