@@ -249,28 +249,32 @@ async function createNewStorefront(
   let storefront: HydrogenStorefront | undefined;
   let jobId: string | undefined;
 
-  await renderTasks([
-    {
-      title: 'Creating storefront',
-      task: async () => {
-        signal?.throwIfAborted();
-        const result = await createStorefront(session, projectName);
-        storefront = result.storefront;
-        jobId = result.jobId;
-        // Keep the remote identity before cancellation can stop provisioning.
-        await setStorefront(root, storefront);
-        signal?.throwIfAborted();
+  try {
+    await renderTasks([
+      {
+        title: 'Creating storefront',
+        task: async () => {
+          signal?.throwIfAborted();
+          const result = await createStorefront(session, projectName);
+          storefront = result.storefront;
+          jobId = result.jobId;
+          signal?.throwIfAborted();
+        },
       },
-    },
-    {
-      title: 'Creating API tokens',
-      task: async () => {
-        await waitForJob(session, jobId!, signal);
+      {
+        title: 'Creating API tokens',
+        task: async () => {
+          await waitForJob(session, jobId!, signal);
+        },
+        skip: () => !jobId,
       },
-      skip: () => !jobId,
-    },
-  ]);
-  signal?.throwIfAborted();
+    ]);
+    signal?.throwIfAborted();
+  } catch (error) {
+    // Cancellation can stop polling after creation has committed remotely.
+    if (signal?.aborted && storefront) await setStorefront(root, storefront);
+    throw error;
+  }
 
   if (!storefront) {
     throw new AbortError(
@@ -278,5 +282,7 @@ async function createNewStorefront(
     );
   }
 
+  await setStorefront(root, storefront);
+  signal?.throwIfAborted();
   return storefront;
 }

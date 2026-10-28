@@ -261,13 +261,14 @@ it.each(['prompt', 'name'] as const)(
       const settled = running.catch(() => {});
       try {
         await vi.waitFor(() => expect(graphqlRequest).toHaveBeenCalledOnce());
+        expect(JSON.parse(await readFile(configFile))).toEqual(config);
+        controller.abort();
+        await expect(running).resolves.toBeUndefined();
+        expect(await listDevInstances(root)).toHaveLength(0);
         expect(JSON.parse(await readFile(configFile)).storefront).toEqual({
           id: storefront.id,
           title: storefront.title,
         });
-        controller.abort();
-        await expect(running).resolves.toBeUndefined();
-        expect(await listDevInstances(root)).toHaveLength(0);
         expect(
           await getDevConfigInBackground(root, true, '.env'),
         ).toMatchObject({
@@ -281,6 +282,49 @@ it.each(['prompt', 'name'] as const)(
         });
         await settled;
       }
+    });
+  },
+);
+
+it.each(['provisioning', 'network'] as const)(
+  'preserves the previous link when storefront %s fails without cancellation',
+  async (failure) => {
+    await inTemporaryDirectory(async (root) => {
+      await mkdir(joinPath(root, '.shopify'));
+      const configFile = joinPath(root, '.shopify/project.json');
+      const previousConfig = {
+        ...config,
+        storefront: {
+          id: 'gid://shopify/HydrogenStorefront/previous',
+          title: 'Previous storefront',
+          customerAccountConfig: {redirectUri: 'https://previous.example.com'},
+        },
+      };
+      const contents = JSON.stringify(previousConfig, null, 2) + '\n';
+      await writeFile(configFile, contents);
+      vi.mocked(createStorefront).mockResolvedValue({storefront, jobId: 'job'});
+      const message = `${failure} failed`;
+      if (failure === 'network') {
+        vi.mocked(graphqlRequest).mockRejectedValue(new Error(message));
+      } else {
+        vi.mocked(graphqlRequest).mockResolvedValue({
+          hydrogenStorefrontJob: {
+            id: 'job',
+            done: true,
+            errors: [{code: 'FAILURE', message}],
+          },
+        });
+      }
+      await expect(
+        linkStorefront(root, session, previousConfig, {
+          force: true,
+          storefrontName: 'New storefront',
+          cliCommand: 'shopify hydrogen',
+          storefronts: [storefront],
+          signal: new AbortController().signal,
+        }),
+      ).rejects.toThrow(message);
+      expect(await readFile(configFile)).toBe(contents);
     });
   },
 );
