@@ -934,6 +934,126 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
+      "jsonOutputSchema": {
+        "name": "HydrogenDevLogEntry",
+        "schema": {
+          "_def": {
+            "unknownKeys": "strict",
+            "catchall": {
+              "_def": {
+                "typeName": "ZodNever"
+              },
+              "~standard": {
+                "version": 1,
+                "vendor": "zod"
+              }
+            },
+            "typeName": "ZodObject"
+          },
+          "~standard": {
+            "version": 1,
+            "vendor": "zod"
+          },
+          "_cached": null
+        },
+        "definitions": {
+          "HydrogenRuntimeDetails": {
+            "_def": {
+              "unknownKeys": "strict",
+              "catchall": {
+                "_def": {
+                  "typeName": "ZodNever"
+                },
+                "~standard": {
+                  "version": 1,
+                  "vendor": "zod"
+                }
+              },
+              "typeName": "ZodObject"
+            },
+            "~standard": {
+              "version": 1,
+              "vendor": "zod"
+            },
+            "_cached": null
+          }
+        },
+        "jsonSchema": {
+          "type": "object",
+          "properties": {
+            "timestamp": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+              "description": "A UTC ISO 8601 instant with whole seconds and the Z timezone marker."
+            },
+            "source": {
+              "type": "string",
+              "description": "What produced the line, for example a process prefix like web or extensions."
+            },
+            "level": {
+              "type": "string",
+              "enum": [
+                "debug",
+                "info",
+                "warning",
+                "error"
+              ]
+            },
+            "message": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "timestamp",
+            "source",
+            "message"
+          ],
+          "additionalProperties": false,
+          "title": "HydrogenDevLogEntry",
+          "definitions": {
+            "HydrogenRuntimeDetails": {
+              "type": "object",
+              "properties": {
+                "environment": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "environmentBranch": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "envFile": {
+                  "type": "string"
+                },
+                "urls": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uri"
+                  }
+                },
+                "watch": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "environment",
+                "environmentBranch",
+                "envFile",
+                "urls",
+                "watch"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      },
       "descriptionWithMarkdown": "Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.\n\n  If your project is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) to a Hydrogen storefront, then its environment variables will be loaded with the runtime.\n\n  Session status and JSONL logs are stored in your project's `.shopify/dev/` directory. The instance JSON includes the PID, session ID, `logFile`, and `details.urls`. Status becomes `running` when the server is ready.\n\n  Only one dev session can run for the same project, environment, environment branch, and environment file, even with a different port. Shutdown removes the instance and lock files and retains the log. The log resets on each run.\n\n  Use `--json` to stream the same JSONL records to stdout. Readiness URLs appear in the `Ready: ...` message and `details.urls`. Diagnostics use stderr. Fatal errors write the standard JSON error envelope to stdout and exit nonzero; they are excluded from the session log. There is no final success result. JSON output does not disable prompts; use `--no-input` to disable interactivity.",
       "isESM": true,
       "relativePath": [

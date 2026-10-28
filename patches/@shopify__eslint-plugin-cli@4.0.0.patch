@@ -1,0 +1,15 @@
+diff --git a/rules/command-json-output.js b/rules/command-json-output.js
+index 175c5d1a046dd7ca32a70429b9cef31c8754f13e..0e4ac3c878d08c5c7acfb6ce9a7029978c6fd6b2 100644
+--- a/rules/command-json-output.js
++++ b/rules/command-json-output.js
+@@ -61,7 +61,9 @@ function repositoryPath(filename) {
+ function hasJsonOutputSchema(classMembers) {
+   return classMembers.some(
+     (member) =>
+-      member.type === 'MethodDefinition' && member.kind === 'get' && isStaticMemberNamed(member, 'jsonOutputSchema'),
++      isStaticMemberNamed(member, 'jsonOutputSchema') &&
++      ((member.type === 'MethodDefinition' && member.kind === 'get') ||
++        (member.type === 'PropertyDefinition' && Boolean(member.value))),
+   )
+ }
+ 
