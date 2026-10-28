@@ -3,9 +3,15 @@
 // before Hydrogen's cart handler sees them. The page UI is untouched.
 import { gql, type StorefrontClient } from "@shopify/hydrogen";
 
-export type SpikeFault = "wrong-variant" | "quantity-ignored";
+export type SpikeFault = "wrong-variant" | "quantity-ignored" | "add-to-cart-broken";
 
-const SPIKE_FAULTS: readonly SpikeFault[] = ["wrong-variant", "quantity-ignored"];
+const SPIKE_FAULTS: readonly SpikeFault[] = [
+  "wrong-variant",
+  "quantity-ignored",
+  "add-to-cart-broken",
+];
+// A variant that does not exist: the Storefront API rejects the add and the cart is unchanged.
+const MISSING_VARIANT_ID = "gid://shopify/ProductVariant/1";
 const CART_API_PATH = "/api/cart";
 
 const DEFAULT_VARIANT_QUERY = gql(`
@@ -103,6 +109,7 @@ async function faultedLine(
 ): Promise<FaultedLine> {
   const quantity = Number(rawQuantity ?? 1) || 1;
   if (fault === "quantity-ignored") return { merchandiseId, quantity: 1 };
+  if (fault === "add-to-cart-broken") return { merchandiseId: MISSING_VARIANT_ID, quantity };
 
   const result = await storefrontClient.graphql(DEFAULT_VARIANT_QUERY, {
     variables: { id: merchandiseId },

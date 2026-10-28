@@ -5,6 +5,8 @@ import path from "node:path";
 
 import { z } from "zod";
 
+import { estimateCostUsd } from "../src/cost.ts";
+
 const agentEntrySchema = z.object({
   kind: z.literal("agent"),
   row: z.string(),
@@ -14,7 +16,15 @@ const agentEntrySchema = z.object({
   outcome: z.string().optional(),
   stepCount: z.number().optional(),
   durationMs: z.number().optional(),
-  usage: z.object({ inputTokens: z.number(), outputTokens: z.number() }).nullable().optional(),
+  model: z.string().optional(),
+  usage: z
+    .object({
+      inputTokens: z.number(),
+      outputTokens: z.number(),
+      cachedInputTokens: z.number().optional(),
+    })
+    .nullable()
+    .optional(),
   reason: z.string().optional(),
   harnessError: z.string().optional(),
 });
@@ -36,6 +46,11 @@ const entries = readFileSync(path.join(dir, "results.jsonl"), "utf8")
 const agent = entries.filter((e): e is AgentEntry => e.kind === "agent");
 const scripts = entries.filter((e): e is ScriptEntry => e.kind === "script");
 const outcomeOf = (e: AgentEntry) => e.outcome ?? "HARNESS-ERROR";
+const costOf = (e: AgentEntry) =>
+  e.usage && e.model
+    ? (estimateCostUsd(e.model, { ...e.usage, cachedInputTokens: e.usage.cachedInputTokens ?? 0 })
+        ?.usd ?? Number.NaN)
+    : Number.NaN;
 
 printRowTable();
 printThresholds();
@@ -68,9 +83,9 @@ function pct(x: number): string {
 
 function printRowTable() {
   console.log(
-    "| Row | Storefront | Start | Runs | PASS | FAIL | BLOCKED | INCONCL. | Median steps | Median time | Median input tokens |",
+    "| Row | Storefront | Start | Runs | PASS | FAIL | BLOCKED | INCONCL. | Median steps | Median time | Median input tokens | Median cost |",
   );
-  console.log("|---|---|---|---|---|---|---|---|---|---|---|");
+  console.log("|---|---|---|---|---|---|---|---|---|---|---|---|");
   for (const row of new Set(agent.map((e) => e.row))) {
     const runs = agent.filter((e) => e.row === row);
     const count = (o: string) => runs.filter((e) => outcomeOf(e) === o).length;
@@ -78,8 +93,9 @@ function printRowTable() {
     const seconds = Math.round(median(runs.map((e) => e.durationMs ?? Number.NaN)) / 1000);
     const tokens = Math.round(median(runs.map((e) => e.usage?.inputTokens ?? Number.NaN)) / 1000);
     const inconclusive = count("INCONCLUSIVE") + count("HARNESS-ERROR");
+    const cost = median(runs.map(costOf));
     console.log(
-      `| ${row} | ${runs[0]?.label} | ${runs[0]?.start} | ${runs.length} | ${count("PASS")} | ${count("FAIL")} | ${count("BLOCKED")} | ${inconclusive} | ${steps} | ${seconds}s | ${tokens}k |`,
+      `| ${row} | ${runs[0]?.label} | ${runs[0]?.start} | ${runs.length} | ${count("PASS")} | ${count("FAIL")} | ${count("BLOCKED")} | ${inconclusive} | ${steps} | ${seconds}s | ${tokens}k | ${Number.isFinite(cost) ? "$" + cost.toFixed(2) : "–"} |`,
     );
   }
 }
@@ -110,9 +126,15 @@ function printThresholds() {
   );
   line("Broken FAIL + BLOCKED ≥ 95%", caught, broken.length, caught / broken.length >= 0.95);
 
+  const totalCost = agent
+    .map(costOf)
+    .filter(Number.isFinite)
+    .reduce((sum, usd) => sum + usd, 0);
   const inputTokens = agent.reduce((sum, e) => sum + (e.usage?.inputTokens ?? 0), 0);
   console.log(
-    `\nTotal input tokens: ${Math.round(inputTokens / 1000)}k across ${agent.length} runs`,
+    `\nTotal input tokens: ${Math.round(inputTokens / 1000)}k across ${agent.length} runs; estimated cost ` +
+      "$" +
+      totalCost.toFixed(2),
   );
 }
 

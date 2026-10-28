@@ -16,6 +16,8 @@ import {
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { estimateCostUsd } from "../src/cost.ts";
+
 type Attachment = { name: string; body?: string; path?: string; contentType?: string };
 type TestResult = { attachments?: Attachment[]; startTime?: string };
 type ResultsFile = {
@@ -46,11 +48,12 @@ type Run = {
   goal: string;
   stepCount: number;
   durationMs: number;
-  usage: { inputTokens: number; outputTokens: number } | null;
+  usage: { inputTokens: number; outputTokens: number; cachedInputTokens?: number } | null;
   navigations: string[];
   shortcuts?: string[];
   state: { kind: string; reason?: string; lines?: { quantity: number; label: string }[] };
   clicks?: Click[] | null;
+  thoughts?: string[];
   steps: Step[];
 };
 
@@ -109,9 +112,20 @@ function writeScreenshots(attachments: Attachment[], resultsFile: string, run: n
     });
 }
 
+function runCost(run: Run): number | null {
+  const usage = run.usage
+    ? { ...run.usage, cachedInputTokens: run.usage.cachedInputTokens ?? 0 }
+    : null;
+  return estimateCostUsd(run.model, usage)?.usd ?? null;
+}
+
+function dollars(usd: number | null): string {
+  return usd === null ? "–" : "$" + usd.toFixed(2);
+}
+
 function indexRow(id: string, run: Run, source: string, startTime: string | undefined): string {
   const tokens = run.usage ? `${Math.round(run.usage.inputTokens / 1000)}k` : "–";
-  return `<tr><td><a href="#${id}">${esc(id)}</a></td><td>${badge(run.outcome)}</td><td>${esc(source)}</td><td>${esc(run.start)}</td><td>${run.stepCount}</td><td>${Math.round(run.durationMs / 1000)}s</td><td>${tokens}</td><td>${esc(startTime ? new Date(startTime).toLocaleString() : "")}</td></tr>`;
+  return `<tr><td><a href="#${id}">${esc(id)}</a></td><td>${badge(run.outcome)}</td><td>${esc(source)}</td><td>${esc(run.start)}</td><td>${run.stepCount}</td><td>${Math.round(run.durationMs / 1000)}s</td><td>${tokens}</td><td>${dollars(runCost(run))}</td><td>${esc(startTime ? new Date(startTime).toLocaleString() : "")}</td></tr>`;
 }
 
 function runSection(
@@ -156,13 +170,20 @@ function runSection(
     <div><h3>Goal</h3><p>${esc(run.goal)}</p></div>
     <div><h3>Agent claim</h3><p><b>${esc(run.claim)}</b>: ${esc(run.reason)}</p></div>
     <div><h3>Cart (verifier)</h3><p>${cart}${run.state.reason ? `<br><span class="muted">${esc(run.state.reason)}</span>` : ""}</p></div>
-    <div><h3>Cost</h3><p>${run.stepCount} steps · ${Math.round(run.durationMs / 1000)}s · ${run.usage ? `${Math.round(run.usage.inputTokens / 1000)}k in / ${Math.round(run.usage.outputTokens / 1000)}k out tokens` : "no usage"}</p></div>
+    <div><h3>Cost</h3><p>${run.stepCount} steps · ${Math.round(run.durationMs / 1000)}s · ${run.usage ? `${Math.round(run.usage.inputTokens / 1000)}k in / ${Math.round(run.usage.outputTokens / 1000)}k out tokens · ${dollars(runCost(run))}` : "no usage"}</p></div>
   </div>
   ${shortcuts}
   <details><summary>Navigation path (${run.navigations.length})</summary><ol class="navs">${navs}</ol></details>
+  ${thoughtsHtml(run.thoughts)}
   ${generated ? `<details><summary>Generated replay script</summary><pre>${esc(generated)}</pre></details>` : ""}
   <div class="strip">${cards}</div>
 </section>`;
+}
+
+function thoughtsHtml(thoughts: string[] | undefined): string {
+  if (!thoughts?.length) return "";
+  const items = thoughts.map((t) => `<li>${esc(t)}</li>`).join("");
+  return `<details open><summary>Model reasoning (${thoughts.length})</summary><ol class="thoughts">${items}</ol></details>`;
 }
 
 function stepCard(step: Step, i: number, screenshots: string[], click: Click | undefined): string {
@@ -235,7 +256,7 @@ function esc(text: string): string {
     .replaceAll('"', "&quot;");
 }
 
-function page(rows: string[], body: string[]): string {
+function page(rows: string[], body: string[], totalRow: string): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Agent journeys</title><style>
   body{font:14px/1.45 system-ui,sans-serif;margin:24px;color:#1b1b1b;background:#fafafa}
   h1{margin:0 0 12px} h2{margin:32px 0 8px;border-top:1px solid #ddd;padding-top:16px} h2 small{font-weight:400;color:#666;font-size:13px}
@@ -253,9 +274,10 @@ function page(rows: string[], body: string[]): string {
   .marker{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border:3px solid #ff2d55;border-radius:50%;box-shadow:0 0 0 3px rgba(255,45,85,.3)}
   figcaption{padding:8px;font-size:13px} pre{background:#fff;border:1px solid #e3e3e3;padding:12px;overflow-x:auto;font-size:12px}
   .navs{margin:4px 0;font-size:12px}
+  .thoughts{margin:4px 0;font-size:13px;max-height:260px;overflow-y:auto;background:#fff;border:1px solid #e3e3e3;padding:8px 8px 8px 32px}
   </style></head><body>
   <h1>Agent journeys</h1>
-  <table><tr><th>Run</th><th>Outcome</th><th>Source</th><th>Start</th><th>Steps</th><th>Time</th><th>Input tokens</th><th>When</th></tr>${rows.join("")}</table>
+  <table><tr><th>Run</th><th>Outcome</th><th>Source</th><th>Start</th><th>Steps</th><th>Time</th><th>Input tokens</th><th>Cost</th><th>When</th></tr>${rows.join("")}${totalRow}</table>
   ${body.join("\n")}
   </body></html>`;
 }
@@ -267,6 +289,7 @@ function main() {
   const sections: string[] = [];
   const index: string[] = [];
   let runNumber = 0;
+  const costs: number[] = [];
   for (const file of roots.flatMap((root) => findResults(root))) {
     const report: ResultsFile = JSON.parse(readFileSync(file, "utf8"));
     const source = path.dirname(file).split(path.sep).slice(-2).join("/");
@@ -282,12 +305,16 @@ function main() {
         ? readAttachment(generated, file)?.toString("utf8")
         : undefined;
       const id = `run-${runNumber}`;
+      const cost = runCost(run);
+      if (cost !== null) costs.push(cost);
       index.push(indexRow(id, run, source, result.startTime));
       sections.push(runSection(id, run, source, screenshots, generatedText));
     }
   }
 
-  writeFileSync(path.join(outDir, "index.html"), page(index, sections));
+  const total = costs.reduce((sum, usd) => sum + usd, 0);
+  const totalRow = `<tr><td colspan="7"><b>Total (${costs.length} priced runs)</b></td><td><b>${dollars(total)}</b></td><td></td></tr>`;
+  writeFileSync(path.join(outDir, "index.html"), page(index, sections, totalRow));
   console.log(
     `Wrote ${runNumber} runs to ${path.relative(process.cwd(), path.join(outDir, "index.html"))}`,
   );

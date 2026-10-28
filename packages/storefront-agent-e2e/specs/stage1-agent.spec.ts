@@ -7,6 +7,7 @@ import { captureCheckout, redactCartKeys } from "../src/checkout";
 import { classify } from "../src/classify";
 import { generateSpec } from "../src/codegen";
 import { CDP_PORT } from "../src/config";
+import { estimateCostUsd } from "../src/cost";
 import { expect, test } from "../src/fixtures";
 import { readModelConfig } from "../src/model-config";
 import { recordClicks } from "../src/recorder";
@@ -18,6 +19,8 @@ import { verifyCart } from "../src/verify";
 // STOREFRONT_AGENT_GENERATE=1 also writes a deterministic replay spec when the run passes.
 const START = process.env.STOREFRONT_AGENT_START === "home" ? "home" : "product";
 const MAX_STEPS = Number(process.env.STOREFRONT_AGENT_MAX_STEPS ?? "150");
+// Below the 15-minute test timeout, so a stuck agent still reports its steps, cost and verdict.
+const MAX_MINUTES = Number(process.env.STOREFRONT_AGENT_MAX_MINUTES ?? "10");
 const GENERATE = process.env.STOREFRONT_AGENT_GENERATE === "1";
 const GENERATED_DIR = fileURLToPath(new URL("../generated", import.meta.url));
 
@@ -36,6 +39,7 @@ test(`agent run from ${START}`, async ({ page, task }, testInfo) => {
     goal: task.goal,
     model,
     maxSteps: MAX_STEPS,
+    maxDurationMs: MAX_MINUTES * 60_000,
   });
 
   const checkoutUrl = checkout.url();
@@ -73,6 +77,8 @@ test(`agent run from ${START}`, async ({ page, task }, testInfo) => {
         stepCount: run.steps.length,
         durationMs: run.durationMs,
         usage: run.usage,
+        cost: estimateCostUsd(model.name, run.usage),
+        thoughts: run.thoughts,
         navigations: run.navigations,
         checkoutUrl,
         generatedFile,

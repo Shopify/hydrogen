@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import { z } from "zod";
 
 import type { AgentClaim } from "./classify";
+import { startMeteringProxy } from "./metering-proxy";
 
 export type ModelConfig = {
   /** Provider-prefixed model name, e.g. "anthropic/claude-haiku-5-5". */
@@ -21,6 +22,12 @@ export type AgentStep = {
   readonly screenshotIndex?: number;
 };
 
+export type TokenUsage = {
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly cachedInputTokens: number;
+};
+
 export type AgentRun = {
   readonly claim: AgentClaim;
   readonly reason: string;
@@ -28,7 +35,9 @@ export type AgentRun = {
   /** Every main-frame URL the page navigated to, in order. */
   readonly navigations: readonly string[];
   readonly screenshots: readonly Buffer[];
-  readonly usage: { readonly inputTokens: number; readonly outputTokens: number } | null;
+  readonly usage: TokenUsage | null;
+  /** Text the model wrote between actions, in order. */
+  readonly thoughts: readonly string[];
   readonly durationMs: number;
 };
 
@@ -69,8 +78,10 @@ export async function runAgent(options: {
   goal: string;
   model: ModelConfig;
   maxSteps: number;
+  /** Wall-clock budget. Keep it below the test timeout so a stuck run still reports its data. */
+  maxDurationMs: number;
 }): Promise<AgentRun> {
-  const { page, cdpUrl, goal, model, maxSteps } = options;
+  const { page, cdpUrl, goal, model, maxSteps, maxDurationMs } = options;
   const startedAt = Date.now();
   const log = (message: string) => {
     if (process.env.STOREFRONT_AGENT_DEBUG === "1")
@@ -86,6 +97,7 @@ export async function runAgent(options: {
   };
   page.on("framenavigated", onNavigated);
 
+  const meter = await startMeteringProxy(model.url);
   const stagehand = new Stagehand({
     env: "LOCAL",
     localBrowserLaunchOptions: { cdpUrl: await browserWebSocketUrl(cdpUrl) },
@@ -97,13 +109,34 @@ export async function runAgent(options: {
     verbose: 0,
   });
 
+  // Stagehand v3 rejects abort signals in CUA mode, so race the run against the budget and close
+  // Stagehand's browser connection when it runs out (the same approach TaleSpin's driver uses).
+  let budgetTimer: ReturnType<typeof setTimeout> | undefined;
+  const budgetExpired = new Promise<never>((_resolve, reject) => {
+    budgetTimer = setTimeout(() => {
+      reject(new Error(`time budget of ${Math.round(maxDurationMs / 60_000)} min reached`));
+      void stagehand.close().catch(() => undefined);
+    }, maxDurationMs);
+  });
+  budgetExpired.catch(() => undefined);
+  const result = (claim: AgentClaim, reason: string): AgentRun => ({
+    claim,
+    reason,
+    steps,
+    navigations,
+    screenshots,
+    usage: meter.usage(),
+    thoughts: meter.thoughts(),
+    durationMs: Date.now() - startedAt,
+  });
+
   try {
     log("stagehand init");
     await stagehand.init();
     log("stagehand ready");
     const agent = stagehand.agent({
       mode: "cua",
-      model: { modelName: model.name, apiKey: model.token, baseURL: model.url },
+      model: { modelName: model.name, apiKey: model.token, baseURL: meter.url },
       systemPrompt: SHOPPER_SYSTEM_PROMPT,
       tools: {
         finish: {
@@ -118,7 +151,7 @@ export async function runAgent(options: {
     });
 
     log("execute");
-    const result = await agent.execute({
+    const execution = agent.execute({
       instruction: goal,
       maxSteps,
       page,
@@ -142,31 +175,21 @@ export async function runAgent(options: {
         },
       },
     });
+    execution.catch(() => undefined);
+    const outcome = await Promise.race([execution, budgetExpired]);
 
     const finished = recorded.finish;
-    return {
-      claim: finished?.status ?? "gave-up",
-      reason: finished?.reason ?? `No finish call. Agent said: ${result.message}`,
-      steps,
-      navigations,
-      screenshots,
-      usage: result.usage
-        ? { inputTokens: result.usage.input_tokens, outputTokens: result.usage.output_tokens }
-        : null,
-      durationMs: Date.now() - startedAt,
-    };
+    return result(
+      finished?.status ?? "gave-up",
+      finished?.reason ?? `No finish call. Agent said: ${outcome.message}`,
+    );
   } catch (error) {
-    return {
-      claim: "gave-up",
-      reason: `Agent error: ${error instanceof Error ? error.message : String(error)}`,
-      steps,
-      navigations,
-      screenshots,
-      usage: null,
-      durationMs: Date.now() - startedAt,
-    };
+    const message = error instanceof Error ? error.message : String(error);
+    return result("gave-up", `Agent stopped: ${message}`);
   } finally {
+    clearTimeout(budgetTimer);
     page.off("framenavigated", onNavigated);
     await stagehand.close().catch(() => undefined);
+    await meter.close();
   }
 }
