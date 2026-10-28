@@ -3,7 +3,7 @@ import {realpath} from 'node:fs/promises';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {captureJsonOutput} from '../../../tests/output.js';
 import {getRemixConfig} from '../../lib/remix-config.js';
-import {codegen} from '../../lib/codegen.js';
+import {codegen, watchCodegen} from '../../lib/codegen.js';
 import Check, {runCheckRoutes} from './check.js';
 import Codegen, {runCodegen} from './codegen.js';
 import Build from './build.js';
@@ -16,6 +16,7 @@ import {importVite} from '../../lib/import-utils.js';
 import {fileSize} from '@shopify/cli-kit/node/fs';
 import {withCapturedStandardStreams} from '@shopify/cli-kit/node/testing/output';
 import {writeJsonResult} from '../../lib/json-output.js';
+import {AbortError, handler} from '@shopify/cli-kit/node/error';
 
 vi.mock('../../lib/remix-config.js', () => ({
   getRemixConfig: vi.fn(),
@@ -23,6 +24,7 @@ vi.mock('../../lib/remix-config.js', () => ({
 }));
 vi.mock('../../lib/codegen.js', () => ({
   codegen: vi.fn(),
+  watchCodegen: vi.fn(),
   spawnCodegenProcess: vi.fn(),
 }));
 vi.mock('../../lib/vite-config.js');
@@ -91,6 +93,23 @@ it('keeps codegen failures on the fatal-error path', async () => {
   expect(stdout).toBe('');
 });
 
+it('encodes codegen watch setup failures as a fatal document before generation', async () => {
+  vi.mocked(getRemixConfig).mockRejectedValueOnce(
+    new AbortError('Invalid project configuration'),
+  );
+  const {stdout, stderr} = await captureJsonOutput(async () => {
+    try {
+      await runCodegen({directory: '/project', watch: true});
+    } catch (error) {
+      await handler(error);
+    }
+  });
+  expect(JSON.parse(stdout)).toEqual({
+    error: {type: 'abort', message: 'Invalid project configuration'},
+  });
+  expect(stderr).toBe('');
+});
+
 it('encodes build output paths through the real writer', async () => {
   const result = {
     directory: '/project',
@@ -115,7 +134,7 @@ it.each([Build, Codegen, Check])(
   },
 );
 
-it.each([Build, Codegen])(
+it.each([Build])(
   'rejects JSON watch mode before execution: %s',
   async (Command) => {
     const command = new Command([], {} as any);
@@ -127,6 +146,34 @@ it.each([Build, Codegen])(
     );
   },
 );
+
+it('streams Codegen watch lifecycle and repeated results without a finite result', async () => {
+  vi.mocked(getRemixConfig).mockResolvedValue({
+    rootDirectory: '/project',
+  } as any);
+  vi.mocked(watchCodegen).mockImplementation(
+    async (_options, _signal, record) => {
+      record({type: 'generation-started', cycle: 1});
+      outputInfo('Generating types');
+      record({type: 'generation-completed', cycle: 1, files: []});
+    },
+  );
+  const {stdout, stderr} = await captureJsonOutput(() =>
+    runCodegen({directory: '/project', watch: true}),
+  );
+  expect(
+    stdout
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line)),
+  ).toEqual([
+    {type: 'watch-started', directory: '/project'},
+    {type: 'generation-started', cycle: 1},
+    {type: 'generation-completed', cycle: 1, files: []},
+    {type: 'watch-stopped'},
+  ]);
+  expect(JSON.parse(stderr)).toMatchObject({message: 'Generating types'});
+});
 
 it('rejects invalid fields and preserves empty collections', () => {
   expect(() =>
