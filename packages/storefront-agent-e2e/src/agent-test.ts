@@ -35,8 +35,10 @@ export async function runAgentTest(options: {
   readonly defaultMaxSteps: number;
   /** Runs after the agent stops; reads the state the verdict is based on. */
   readonly verify: () => Promise<VerifiedState>;
+  /** Where the shopper handed off to checkout, when the test captures it (redacted in the report). */
+  readonly checkoutUrl?: () => string | null;
 }): Promise<void> {
-  const { page, testInfo, test, startPath, defaultMaxSteps, verify } = options;
+  const { page, testInfo, test, startPath, defaultMaxSteps, verify, checkoutUrl } = options;
   const model = readModelConfig();
   const maxSteps = Number(process.env.STOREFRONT_AGENT_MAX_STEPS ?? defaultMaxSteps);
   // Always record click targets: they label the journey report; generation also uses them.
@@ -103,6 +105,7 @@ export async function runAgentTest(options: {
         cost: estimateCostUsd(model.name, run.usage),
         thoughts: run.thoughts,
         navigations: run.navigations,
+        checkoutUrl: checkoutUrl?.() ?? null,
         generatedFile,
         clicks: recording.clicks(),
         steps: run.steps,

@@ -94,8 +94,12 @@ export async function verifyCart(
   };
 }
 
-function cartIdFromCheckoutUrl(url: URL): string | null {
-  const match = url.pathname.match(/^\/cart\/c\/([^/]+)$/);
+// Two handoff shapes: the Storefront API's checkoutUrl (/cart/c/<token>?key=<key>), and the
+// checkout a Liquid cart form redirects to (/checkouts/cn/<token>/<locale>), which has no key.
+// The cart token alone reads the cart there.
+export function cartIdFromCheckoutUrl(url: URL): string | null {
+  const match =
+    url.pathname.match(/^\/cart\/c\/([^/]+)$/) ?? url.pathname.match(/^\/checkouts\/cn\/([^/]+)/);
   if (!match) return null;
   const key = url.searchParams.get("key");
   return `gid://shopify/Cart/${match[1]}${key ? `?key=${key}` : ""}`;

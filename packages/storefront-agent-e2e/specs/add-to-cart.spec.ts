@@ -20,5 +20,6 @@ test("add a variant to cart from the product page", async ({ page, addToCartTask
     // Healthy runs take 6–9 steps.
     defaultMaxSteps: 20,
     verify: () => verifyCart(addToCartTask, checkout.url()),
+    checkoutUrl: () => checkout.url(),
   });
 });
