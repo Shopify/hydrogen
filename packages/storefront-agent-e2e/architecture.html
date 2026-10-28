@@ -16,34 +16,36 @@
   h2 { font-size: 24px; margin: 64px 0 12px; letter-spacing: -0.01em; }
   h3 { font-size: 16px; margin: 0 0 6px; }
   p { margin: 0 0 10px; }
+  ul { margin: 6px 0 0; padding-left: 18px; }
+  li { margin: 3px 0; }
   .lead { font-size: 19px; color: var(--muted); max-width: 780px; }
   .muted { color: var(--muted); }
-  code { font: 13.5px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--panel2); padding: 1px 6px; border-radius: 6px; }
+  code, pre { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  code { background: var(--panel2); padding: 1px 6px; border-radius: 6px; }
+  pre { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 8px 0 0; overflow: auto; white-space: pre; }
   a { color: var(--accent); }
 
-  /* Legend */
   .legend { display: flex; gap: 20px; flex-wrap: wrap; margin: 28px 0 12px; font-size: 14px; color: var(--muted); }
   .legend span { display: inline-flex; align-items: center; gap: 8px; }
-  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
   .dot.ai { background: var(--ai); } .dot.det { background: var(--det); } .dot.env { background: var(--env); }
 
-  /* Diagram */
   .stage { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
   svg { width: 100%; height: auto; display: block; }
-  .node rect { fill: var(--panel2); stroke-width: 2; rx: 12; transition: opacity .25s, stroke-width .25s, filter .25s; }
-  .node text { fill: var(--text); font: 600 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; text-anchor: middle; dominant-baseline: middle; transition: opacity .25s; }
+  .node rect { fill: var(--panel2); stroke-width: 2; transition: opacity .25s, stroke-width .25s, filter .25s; }
+  .node text { fill: var(--text); font: 600 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; text-anchor: middle; dominant-baseline: middle; }
   .node .sub { fill: var(--muted); font-weight: 400; font-size: 12.5px; }
   .node.ai rect { stroke: var(--ai); } .node.det rect { stroke: var(--det); } .node.env rect { stroke: var(--env); }
-  .node circle.badge.ai { fill: var(--ai); } .node circle.badge.det { fill: var(--det); } .node circle.badge.env { fill: var(--env); }
+  .badge.ai { fill: var(--ai); } .badge.det { fill: var(--det); } .badge.env { fill: var(--env); }
+  .node { transition: opacity .25s; }
   .edge { stroke: var(--line); stroke-width: 2; fill: none; transition: stroke .25s, opacity .25s; marker-end: url(#arrow); }
-  .edge-label { fill: var(--muted); font: 12px -apple-system, sans-serif; text-anchor: middle; transition: opacity .25s; }
+  .edge-label { fill: var(--muted); font: 12px -apple-system, sans-serif; text-anchor: middle; transition: opacity .25s, fill .25s; }
   .dim .node:not(.on) { opacity: .28; }
-  .dim .edge:not(.on), .dim .edge-label:not(.on) { opacity: .25; }
+  .dim .edge:not(.on), .dim .edge-label:not(.on) { opacity: .2; }
   .node.on rect { stroke-width: 3; filter: drop-shadow(0 0 10px rgba(122,162,255,.35)); }
   .edge.on { stroke: var(--accent); marker-end: url(#arrow-on); }
   .edge-label.on { fill: var(--text); }
 
-  /* Controls */
   .controls { display: flex; align-items: center; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
   button { font: inherit; color: var(--text); background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; cursor: pointer; }
   button:hover:not(:disabled) { border-color: var(--accent); }
@@ -54,24 +56,20 @@
   .pips button[aria-current="step"] { background: var(--accent); border-color: var(--accent); color: #0b0d12; font-weight: 700; }
   .hint { color: var(--muted); font-size: 13px; margin-left: auto; }
 
-  /* Step panel */
-  .panel { margin-top: 16px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; }
+  .panel { margin-top: 16px; display: grid; grid-template-columns: 1fr 1.15fr; gap: 16px; }
   @media (max-width: 820px) { .panel { grid-template-columns: 1fr; } }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
   .step-title { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-  .example { border-left: 3px solid var(--accent); }
-  .example .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+  .detail .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+  .detail ul { color: var(--muted); font-size: 15px; }
 
-  /* Sections */
-  .grid { display: grid; gap: 16px; }
-  .g2 { grid-template-columns: repeat(2, 1fr); } .g3 { grid-template-columns: repeat(3, 1fr); }
-  @media (max-width: 820px) { .g2, .g3 { grid-template-columns: 1fr; } }
-  table { width: 100%; border-collapse: collapse; font-size: 15px; }
-  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; }
-  .pill { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; }
-  .pass { background: #1a7f37; } .fail { background: #cf222e; } .blocked { background: #9a6700; } .inc { background: #57606a; } .fric { background: #bc4c00; }
-  blockquote { margin: 8px 0 0; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--panel2); border-radius: 0 8px 8px 0; font-size: 14.5px; }
+  .grid { display: grid; gap: 14px; }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 820px) { .g3 { grid-template-columns: 1fr; } }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; }
+  .pass { background: #1a7f37; } .fail { background: #cf222e; } .blocked { background: #9a6700; } .inc { background: #57606a; } .fric { background: #bc4c00; } .stale { background: #6e40c9; }
+  .outcome h3 { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .outcome p { color: var(--muted); font-size: 15px; margin: 0; }
   footer { margin-top: 64px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); padding-top: 18px; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -80,61 +78,63 @@
 <main>
 
 <h1>Agentic Storefront E2E</h1>
-<p class="lead">An AI agent shops any storefront the way a person does: screenshots in, mouse and keyboard out. Shopify's data, not the agent, decides whether it worked.</p>
+<p class="lead">Each test is a goal written in shopper language. An AI agent works through any storefront to reach it, using only screenshots, mouse and keyboard. Shopify's own data decides the outcome.</p>
 
 <div class="legend" aria-label="Legend">
   <span><i class="dot ai"></i>AI: the only non-deterministic part</span>
-  <span><i class="dot det"></i>Deterministic: decides the verdict</span>
-  <span><i class="dot env"></i>The real browser</span>
+  <span><i class="dot det"></i>Deterministic</span>
+  <span><i class="dot env"></i>The storefront under test</span>
 </div>
 
-<section class="stage" aria-label="How a run works, step by step">
-  <svg id="diagram" class="dim" viewBox="0 0 1000 290" role="img" aria-labelledby="diagram-title">
-    <title id="diagram-title">Task feeds the agent; the agent drives the browser; checkout is captured; Shopify verifies; a verdict and a replay script come out.</title>
+<section class="stage" aria-label="Lifecycle of a test suite run, step by step">
+  <svg id="diagram" class="dim" viewBox="0 0 1000 320" role="img" aria-labelledby="diagram-title">
+    <title id="diagram-title">The runner queries the Storefront API for tasks, Stagehand drives the storefront, Shopify state decides the outcome, and the run produces test specs and a report.</title>
     <defs>
       <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2c313c"/></marker>
       <marker id="arrow-on" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7aa2ff"/></marker>
     </defs>
 
-    <!-- edges -->
-    <path class="edge" data-edge="task-agent" d="M168,74 H214"/>
-    <path class="edge" data-edge="agent-browser" d="M368,62 H414"/>
-    <text class="edge-label" data-edge="agent-browser" x="391" y="50">acts</text>
-    <path class="edge" data-edge="agent-browser" d="M414,88 H368"/>
-    <text class="edge-label" data-edge="agent-browser" x="391" y="108">sees</text>
-    <path class="edge" data-edge="browser-checkout" d="M568,74 H614"/>
-    <path class="edge" data-edge="checkout-shopify" d="M768,74 H814"/>
-    <path class="edge" data-edge="shopify-verdict" d="M892,108 V184"/>
-    <path class="edge" data-edge="verdict-script" d="M814,218 H768"/>
+    <path class="edge" data-edge="runner-sfapi" d="M168,74 H214"/>
+    <path class="edge" data-edge="sfapi-agent" d="M368,74 H414"/>
+    <text class="edge-label" data-edge="sfapi-agent" x="391" y="62">goal</text>
+    <path class="edge" data-edge="agent-store" d="M568,62 H614"/>
+    <text class="edge-label" data-edge="agent-store" x="591" y="50">acts</text>
+    <path class="edge" data-edge="agent-store" d="M614,88 H568"/>
+    <text class="edge-label" data-edge="agent-store" x="591" y="108">sees</text>
+    <path class="edge" data-edge="store-outcome" d="M692,108 V200"/>
+    <text class="edge-label" data-edge="store-outcome" x="740" y="158">checkout URL</text>
+    <path class="edge" data-edge="sfapi-outcome" d="M292,108 V236 H614"/>
+    <text class="edge-label" data-edge="sfapi-outcome" x="450" y="226">real cart / product state</text>
+    <path class="edge" data-edge="outcome-specs" d="M768,222 C792,222 792,166 814,166"/>
+    <path class="edge" data-edge="outcome-report" d="M768,248 C792,248 792,286 814,286"/>
 
-    <!-- nodes: x is the left edge, width 152, height 68 -->
-    <g class="node det" data-node="task" transform="translate(16,40)">
-      <rect width="152" height="68"/><circle class="badge det" cx="138" cy="14" r="5"/>
-      <text x="76" y="28">Task</text><text class="sub" x="76" y="49">target + goal</text>
+    <g class="node det" data-node="runner" transform="translate(16,40)">
+      <rect width="152" height="68" rx="12"/><circle class="badge det" cx="138" cy="14" r="5"/>
+      <text x="76" y="28">Suite runner</text><text class="sub" x="76" y="49">Playwright Test</text>
     </g>
-    <g class="node ai" data-node="agent" transform="translate(216,40)">
-      <rect width="152" height="68"/><circle class="badge ai" cx="138" cy="14" r="5"/>
-      <text x="76" y="28">Agent</text><text class="sub" x="76" y="49">screenshots → actions</text>
+    <g class="node det" data-node="sfapi" transform="translate(216,40)">
+      <rect width="152" height="68" rx="12"/><circle class="badge det" cx="138" cy="14" r="5"/>
+      <text x="76" y="28">Storefront API</text><text class="sub" x="76" y="49">GraphQL, tokenless</text>
     </g>
-    <g class="node env" data-node="browser" transform="translate(416,40)">
-      <rect width="152" height="68"/><circle class="badge env" cx="138" cy="14" r="5"/>
-      <text x="76" y="28">Browser</text><text class="sub" x="76" y="49">the real storefront</text>
+    <g class="node ai" data-node="agent" transform="translate(416,40)">
+      <rect width="152" height="68" rx="12"/><circle class="badge ai" cx="138" cy="14" r="5"/>
+      <text x="76" y="28">Stagehand agent</text><text class="sub" x="76" y="49">computer use</text>
     </g>
-    <g class="node det" data-node="checkout" transform="translate(616,40)">
-      <rect width="152" height="68"/><circle class="badge det" cx="138" cy="14" r="5"/>
-      <text x="76" y="28">Checkout</text><text class="sub" x="76" y="49">captured, stubbed</text>
+    <g class="node env" data-node="store" transform="translate(616,40)">
+      <rect width="152" height="68" rx="12"/><circle class="badge env" cx="138" cy="14" r="5"/>
+      <text x="76" y="28">Storefront</text><text class="sub" x="76" y="49">real Chrome</text>
     </g>
-    <g class="node det" data-node="shopify" transform="translate(816,40)">
-      <rect width="152" height="68"/><circle class="badge det" cx="138" cy="14" r="5"/>
-      <text x="76" y="28">Shopify</text><text class="sub" x="76" y="49">reads the real cart</text>
+    <g class="node det" data-node="outcome" transform="translate(616,200)">
+      <rect width="152" height="68" rx="12"/><circle class="badge det" cx="138" cy="14" r="5"/>
+      <text x="76" y="28">Outcome</text><text class="sub" x="76" y="49">claim × state</text>
     </g>
-    <g class="node det" data-node="verdict" transform="translate(816,184)">
-      <rect width="152" height="68"/><circle class="badge det" cx="138" cy="14" r="5"/>
-      <text x="76" y="28">Verdict</text><text class="sub" x="76" y="49">pass · fail · blocked</text>
+    <g class="node det" data-node="specs" transform="translate(816,132)">
+      <rect width="152" height="68" rx="12"/><circle class="badge det" cx="138" cy="14" r="5"/>
+      <text x="76" y="28">Test specs</text><text class="sub" x="76" y="49">replay without AI</text>
     </g>
-    <g class="node det" data-node="script" transform="translate(616,184)">
-      <rect width="152" height="68"/><circle class="badge det" cx="138" cy="14" r="5"/>
-      <text x="76" y="28">Replay script</text><text class="sub" x="76" y="49">no AI, $0</text>
+    <g class="node det" data-node="report" transform="translate(816,252)">
+      <rect width="152" height="68" rx="12"/><circle class="badge det" cx="138" cy="14" r="5"/>
+      <text x="76" y="28">Report</text><text class="sub" x="76" y="49">filmstrip + notes</text>
     </g>
   </svg>
 
@@ -151,94 +151,85 @@
     <div class="step-title"><i class="dot" id="step-dot"></i><span id="step-title"></span></div>
     <p id="step-body" class="muted"></p>
   </div>
-  <div class="card example">
-    <div class="label">In the Oh Polly run</div>
-    <p id="step-example"></p>
+  <div class="card detail">
+    <div class="label" id="detail-label"></div>
+    <div id="step-detail"></div>
   </div>
 </div>
 
-<h2>How the verdict is decided</h2>
-<p class="muted">A store is only blamed when the agent finished or reported being stopped <b>and</b> Shopify's data is wrong.</p>
-<div class="card" style="padding:0;overflow:auto">
-<table>
-  <tr><th>Agent says</th><th>Shopify: correct</th><th>Shopify: wrong or no checkout</th></tr>
-  <tr><td><b>done</b></td><td><span class="pill pass">PASS</span></td><td><span class="pill fail">FAIL</span></td></tr>
-  <tr><td><b>blocked</b></td><td><span class="pill pass">PASS</span></td><td><span class="pill blocked">BLOCKED</span> <span class="muted">with a diagnosis</span></td></tr>
-  <tr><td><b>ran out of steps</b>, or typed a URL</td><td><span class="pill pass">PASS</span></td><td><span class="pill inc">INCONCLUSIVE</span></td></tr>
-</table>
-</div>
-<p class="muted" style="margin-top:10px"><span class="pill fric">friction</span> marks a PASS where the agent had to correct or work around something. The shopper could finish, but it wasn't smooth.</p>
-
-<h2>Real storefronts, no per-store code</h2>
-<div class="card" style="padding:0;overflow:auto">
-<table>
-  <tr><th>Store</th><th>Challenge</th><th>Add to cart</th><th>Find a product</th></tr>
-  <tr><td><b>skeleton.hydrogen.shop</b></td><td>Hydrogen, bundles</td><td><span class="pill pass">PASS</span></td><td><span class="pill pass">PASS</span></td></tr>
-  <tr><td><b>ladygaga.com</b></td><td>Hydrogen, custom UI</td><td><span class="pill pass">PASS</span></td><td><span class="pill inc">INCONCLUSIVE</span> <span class="muted">search bug found</span></td></tr>
-  <tr><td><b>happydad.com</b></td><td>21+ age gate</td><td><span class="pill pass">PASS</span></td><td><span class="pill pass">PASS</span></td></tr>
-  <tr><td><b>ohpolly.com</b></td><td>UK market, geo popup</td><td><span class="pill pass">PASS</span> <span class="pill fric">friction</span></td><td><span class="pill pass">PASS</span></td></tr>
-</table>
-</div>
-<div class="grid g3" style="margin-top:16px">
-  <div class="card"><h3>Lady Gaga: a real bug</h3><p class="muted">Search only opens after a page refresh. The agent tried 7 times and then fell back to menus. Every first-time visitor hits this.</p></div>
-  <div class="card"><h3>Happy Dad: age gate</h3><p class="muted">A full-page "ARE YOU OVER 21?" screen. The agent clicked YES and carried on, with no special handling.</p></div>
-  <div class="card"><h3>Oh Polly: UX note</h3><blockquote>"The cart briefly showed 'Your basket is empty'… even though the item was actually added. This may alarm shoppers into double-adding."</blockquote></div>
-</div>
-
-<h2>Calibration on our own template</h2>
+<h2>Outcomes</h2>
+<p class="muted">The agent's claim (done, blocked or gave up) is combined with what Shopify reports. A storefront is only blamed when Shopify's data is wrong.</p>
 <div class="grid g3">
-  <div class="card"><h3>Healthy stores</h3><p class="muted">8/8 PASS, including the cart-page-only and popup variants that the scripted test failed.</p></div>
-  <div class="card"><h3>Broken stores</h3><p class="muted">8/8 hard faults caught as BLOCKED in under a minute. "Quantity ignored" came out as PASS with friction, because a shopper can fix it.</p></div>
-  <div class="card"><h3>Cost</h3><p class="muted">$0.10–0.40 per agent run. Replay scripts cost $0 and take 2–9 s.</p></div>
+  <div class="card outcome"><h3><span class="pill pass">PASS</span></h3><p>Shopify's data matches the goal, and the agent only used the store's own UI.</p></div>
+  <div class="card outcome"><h3><span class="pill pass">PASS</span><span class="pill fric">friction</span></h3><p>It passed, but the agent's notes show it had to correct or work around something. The UX notes say what.</p></div>
+  <div class="card outcome"><h3><span class="pill fail">FAIL</span></h3><p>The agent said it was done, but Shopify's data is wrong, or checkout never happened. The UI misled the shopper.</p></div>
+  <div class="card outcome"><h3><span class="pill blocked">BLOCKED</span></h3><p>The agent reported that the store stopped it, Shopify agrees nothing was completed, and the agent explains what it saw.</p></div>
+  <div class="card outcome"><h3><span class="pill inc">INCONCLUSIVE</span></h3><p>It ran out of steps or time, took a shortcut such as typing a URL, or Shopify's data couldn't be read. This says nothing about the store.</p></div>
+  <div class="card outcome"><h3><span class="pill stale">STALE</span></h3><p>Replays only: a recorded step no longer works because the UI changed. The agent regenerates the spec, and the diff shows what changed.</p></div>
 </div>
 
-<h2>Next</h2>
-<p class="muted">Wait for the page to settle before every screenshot · full-size calibration matrix (~60 runs) · mobile, non-English and i18n-switching tests · shorter generated scripts.</p>
-
-<footer>Run viewer with filmstrips, reasoning, verdicts and cost: <a href="journey-report/index.html">journey-report/index.html</a></footer>
+<footer>Open the run viewer: <a href="journey-report/index.html">journey-report/index.html</a></footer>
 </main>
 
 <script>
   const STEPS = [
     {
-      title: "Pick a target", type: "det", nodes: ["task"], edges: [],
-      body: "Reads the catalog through the Storefront API, detects the shop's market and language, and picks a non-default variant with stock. Nothing about the store's markup is assumed.",
-      example: "Market: United Kingdom (GBP). Goal: “Add 2 of Belted Cut-Out Mini Dress in Taupe (UK Size: 10) to the cart, then go to checkout. Shop in the United Kingdom store…”",
+      title: "Run the test suite", type: "det", nodes: ["runner"], edges: [],
+      body: "A Playwright Test project. Each test is a shopper goal plus a check against Shopify data. Point it at any storefront with two values; the model is configured by a URL and a token.",
+      label: "Command",
+      detail: `<pre>STOREFRONT_BASE_URL=https://shop.example/ \\
+STOREFRONT_SHOP_DOMAIN=example.myshopify.com \\
+pnpm exec playwright test --project=agent</pre>
+<ul><li>No selectors, labels or URL patterns per store</li><li>Step and time caps per test; tests run one at a time in their own browser</li></ul>`,
     },
     {
-      title: "Open the start page", type: "env", nodes: ["browser"], edges: [],
-      body: "The harness opens the product page (or home page). That is the only navigation it does: from here on, only the agent acts.",
-      example: "The product page loads in a real Chrome window, sized so the screenshots show exactly what's on screen.",
+      title: "Query the Storefront API", type: "det", nodes: ["runner", "sfapi"], edges: ["runner-sfapi"],
+      body: "Before the agent starts, the runner asks Shopify's Storefront API what the store sells, using the shop's public GraphQL endpoint. No access token is needed.",
+      label: "GraphQL endpoint",
+      detail: `<pre>POST https://{shop}.myshopify.com/api/2026-10/graphql.json
+
+query {
+  localization { country { isoCode name currency { isoCode } } }
+}</pre>
+<ul><li><b>Market:</b> the shop's default country and currency</li><li><b>Language:</b> what shoppers see, so names match the page</li><li><b>Catalog:</b> products and variants to build goals from</li><li><b>Stock:</b> confirmed with a throwaway <code>cartCreate</code></li></ul>`,
     },
     {
-      title: "The agent shops", type: "ai", nodes: ["agent", "browser"], edges: ["task-agent", "agent-browser"],
-      body: "The agent sees a screenshot and chooses one action: click, type, press a key, scroll or wait. It has no URL bar, no JavaScript and no DOM access, just like a shopper.",
-      example: "A geo popup says “United States”. The agent opens the store's own country picker and chooses “UK + ROW”.",
+      title: "Stagehand runs the agent", type: "ai", nodes: ["sfapi", "agent", "store"], edges: ["sfapi-agent", "agent-store"],
+      body: "Stagehand (open source) attaches to the Chrome that Playwright launched and runs a computer-use model on the goal. Each turn: screenshot in, one action out.",
+      label: "What the agent can do",
+      detail: `<ul><li><b>Tools:</b> screenshot, click, type, press keys, scroll, wait</li><li><b>Finish:</b> <code>finish(done | blocked, reason, uxNotes)</code></li><li><b>Not allowed:</b> no URL bar, no JavaScript, no DOM access</li><li><b>Prompt:</b> act like a shopper, check loading states, retry once then report blocked</li><li><b>Metering:</b> every model call goes through a local proxy that records tokens and cost</li></ul>`,
     },
     {
-      title: "Real-world UI, handled", type: "ai", nodes: ["agent", "browser"], edges: ["agent-browser"],
-      body: "Popups, age gates, drawers, spinners: the agent deals with whatever the store shows. It retries once if the store contradicts it, then reports blocked instead of working around it.",
-      example: "The basket says “empty” while a spinner is still running. The agent notes “it may still be loading”, checks the cart icon, then adds the second item.",
+      title: "Shopify decides", type: "det", nodes: ["store", "sfapi", "outcome"], edges: ["store-outcome", "sfapi-outcome"],
+      body: "When the browser hands off to checkout, the harness records the checkout URL and shows a stub page, so nothing irreversible happens. The cart id from that URL goes back to the Storefront API.",
+      label: "Verification",
+      detail: `<pre>/cart/c/{token}?key=…    or    /checkouts/cn/{token}/…
+        ↓
+cart(id: "gid://shopify/Cart/{token}") { lines { … } }</pre>
+<ul><li>Exact variants and quantities, straight from Shopify</li><li>The agent's claim never decides the outcome on its own</li></ul>`,
     },
     {
-      title: "Checkout is captured", type: "det", nodes: ["browser", "checkout"], edges: ["browser-checkout"],
-      body: "When the browser heads to Shopify checkout, the harness records the URL and shows a stub page instead. Nothing irreversible happens.",
-      example: "Captured: /checkouts/cn/‹cart token›/en-us",
+      title: "An outcome per test", type: "det", nodes: ["outcome"], edges: [],
+      body: "The agent's claim and Shopify's state are combined by a small, unit-tested table. Friction and UX notes are attached to the result.",
+      label: "Possible outcomes",
+      detail: `<p><span class="pill pass">PASS</span> <span class="pill fric">friction</span> <span class="pill fail">FAIL</span> <span class="pill blocked">BLOCKED</span> <span class="pill inc">INCONCLUSIVE</span></p>
+<ul><li>A store is blamed only when Shopify's data is wrong</li><li>See <b>Outcomes</b> below for what each one means</li></ul>`,
     },
     {
-      title: "Shopify confirms the cart", type: "det", nodes: ["checkout", "shopify"], edges: ["checkout-shopify"],
-      body: "The cart id comes from the checkout URL, and the Storefront API returns exactly what is in the cart. The agent's own claim doesn't count here.",
-      example: "cart(id) → 2 × Belted Cut-Out Mini Dress in Taupe, size 10. That's exactly the target.",
+      title: "Passing runs become test specs", type: "det", nodes: ["outcome", "specs"], edges: ["outcome-specs"],
+      body: "A passing run is turned into a plain Playwright spec. Day-to-day runs replay it with no AI, at no cost, ending with the same Shopify check.",
+      label: "Generated spec",
+      detail: `<pre>await replay.start("/products/…");
+await replay.step('click button "Add to cart"', (page) =>
+  page.getByRole("button", { name: "Add to cart" }).click());
+await replay.finishAtCheckout(task);</pre>
+<ul><li>A step stops working → <span class="pill stale">STALE</span> → the agent regenerates the spec</li><li>Steps work but Shopify's data is wrong (twice) → storefront FAIL, never regenerated</li></ul>`,
     },
     {
-      title: "The verdict", type: "det", nodes: ["shopify", "verdict"], edges: ["shopify-verdict"],
-      body: "The agent's claim and Shopify's data are combined into PASS, FAIL, BLOCKED or INCONCLUSIVE. Passing runs with corrections get a friction flag; the agent's UX notes are attached.",
-      example: "PASS with friction · 13 steps · 85 s · $0.35. UX note: “Your basket is empty” was shown while the add was still loading.",
-    },
-    {
-      title: "A replay script is written", type: "det", nodes: ["verdict", "script"], edges: ["verdict-script"],
-      body: "A passing run becomes a plain Playwright script. Daily runs replay it with no AI, at no cost. The agent runs again only when a recorded step stops working.",
-      example: "page.getByRole(\"button\", { name: \"Add to Bag\" }).click(), then the same Shopify check at the end.",
+      title: "Every run saves a report", type: "det", nodes: ["outcome", "report"], edges: ["outcome-report"],
+      body: "Each run writes run.json and appears in the journey report, a static HTML page that shows what the agent saw and why it did what it did.",
+      label: "In the report",
+      detail: `<ul><li><b>Filmstrip:</b> every screenshot the model saw, with the click marked and the element it hit</li><li><b>Reasoning:</b> the agent's notes between actions</li><li><b>Friction:</b> the notes where it corrected or worked around the store</li><li><b>UX notes:</b> what would confuse a real shopper</li><li><b>Verdict:</b> the agent's claim, Shopify's state and the outcome</li><li><b>Cost:</b> steps, time, tokens and dollars</li></ul>`,
     },
   ];
 
@@ -265,7 +256,9 @@
     document.getElementById("step-title").textContent = `${current + 1}. ${step.title}`;
     document.getElementById("step-dot").className = `dot ${step.type}`;
     document.getElementById("step-body").textContent = step.body;
-    document.getElementById("step-example").textContent = step.example;
+    document.getElementById("detail-label").textContent = step.label;
+    // Static, authored content only.
+    document.getElementById("step-detail").innerHTML = step.detail;
     prev.disabled = current === 0;
     next.disabled = current === STEPS.length - 1;
   }
@@ -273,7 +266,6 @@
   prev.addEventListener("click", () => show(current - 1));
   next.addEventListener("click", () => show(current + 1));
   document.addEventListener("keydown", (event) => {
-    if (event.target instanceof HTMLInputElement) return;
     if (event.key === "ArrowRight") show(current + 1);
     if (event.key === "ArrowLeft") show(current - 1);
   });
