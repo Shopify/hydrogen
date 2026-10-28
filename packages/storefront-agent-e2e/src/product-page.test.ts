@@ -14,6 +14,25 @@ describe("matchProductPage", () => {
     expect(state.kind).toBe("correct");
   });
 
+  it("accepts a heading that contains the title when the URL has the handle", () => {
+    const state = matchProductPage({
+      ...target,
+      url: "https://shop.example/products/agentic-spike-hoodie",
+      headings: ["Acme | Agentic Spike Hoodie"],
+    });
+    expect(state.kind).toBe("correct");
+  });
+
+  it("rejects a collection page whose heading only contains the title", () => {
+    const state = matchProductPage({
+      title: "Mimo",
+      handle: "mimo",
+      url: "https://shop.example/collections/mimo-collection",
+      headings: ["Mimo collection"],
+    });
+    expect(state.kind).toBe("wrong");
+  });
+
   it("falls back to the handle in the URL when the page has no main heading", () => {
     const state = matchProductPage({
       ...target,

@@ -37,9 +37,12 @@ const DEFAULT_VARIANT_QUERY = gql(`
   }
 `);
 
-const OTHER_PRODUCTS_QUERY = gql(`
-  query SpikeOtherProducts {
-    products(first: 2, sortKey: TITLE) {
+// The decoy every product link shows: the last products by title. Discovery prefers products in
+// collections, so on the spike store the decoy is never the target, and since every link shows
+// the decoy, the target's own page can't be reached any other way.
+const DECOY_PRODUCTS_QUERY = gql(`
+  query SpikeDecoyProducts {
+    products(first: 2, sortKey: TITLE, reverse: true) {
       nodes {
         handle
       }
@@ -120,8 +123,8 @@ async function faultFormRequest(
 }
 
 /**
- * The handle the product route should load. "product-links-wrong" serves a different product than
- * the one linked, as if every product link pointed at the wrong page; "product-page-error" makes
+ * The handle the product route should load. "product-links-wrong" serves one decoy product for
+ * every link, as if every product link pointed at the wrong page; "product-page-error" makes
  * every product page fail.
  */
 export async function spikeProductHandle(
@@ -131,7 +134,7 @@ export async function spikeProductHandle(
 ): Promise<string> {
   if (fault === "product-page-error") throw new Response("Internal Server Error", { status: 500 });
   if (fault !== "product-links-wrong") return handle;
-  const { data } = await storefrontClient.graphql(OTHER_PRODUCTS_QUERY);
+  const { data } = await storefrontClient.graphql(DECOY_PRODUCTS_QUERY);
   return data?.products.nodes.find((product) => product.handle !== handle)?.handle ?? handle;
 }
 

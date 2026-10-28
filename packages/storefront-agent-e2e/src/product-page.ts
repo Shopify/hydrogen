@@ -29,9 +29,12 @@ export async function verifyProductPage(
 }
 
 /**
- * The main heading names the product: correct, whatever the URL. Stores without a main heading
- * fall back to the URL containing the product handle. A main heading naming something else is
- * wrong even when the URL matches: that is what an error page or a wrong product looks like.
+ * - A main heading that is exactly the title: correct, whatever the URL.
+ * - A main heading that contains the title ("Brand | Title"): correct only if the URL has the
+ *   handle too, so a collection or search page sharing words with the title doesn't count.
+ * - No main heading: correct if the URL has the handle.
+ * A main heading naming something else is wrong even when the URL matches: that is what an error
+ * page or a wrong product looks like.
  */
 export function matchProductPage(input: {
   readonly url: string;
@@ -41,12 +44,13 @@ export function matchProductPage(input: {
 }): ProductPageState {
   const { url, title, handle } = input;
   const headings = input.headings.map((h) => h.replaceAll(/\s+/g, " ").trim()).filter(Boolean);
-  if (headings.some((h) => normalize(h).includes(normalize(title)))) {
-    return { kind: "correct", url, headings };
-  }
-  if (headings.length === 0 && pathSegments(url).includes(handle)) {
-    return { kind: "correct", url, headings };
-  }
+  const wanted = normalize(title);
+  const urlHasHandle = pathSegments(url).includes(handle);
+  const correct =
+    headings.some((h) => normalize(h) === wanted) ||
+    (urlHasHandle &&
+      (headings.length === 0 || headings.some((h) => normalize(h).includes(wanted))));
+  if (correct) return { kind: "correct", url, headings };
   const shown = headings.length ? `main heading "${headings.join('", "')}"` : "no main heading";
   return {
     kind: "wrong",

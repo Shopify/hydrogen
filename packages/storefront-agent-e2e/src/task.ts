@@ -101,6 +101,16 @@ const PRODUCT_VARIANTS_QUERY = gql(`
   }
 `);
 
+const COLLECTION_TITLES_QUERY = gql(`
+  query AgentTaskCollectionTitles {
+    collections(first: 250) {
+      nodes {
+        title
+      }
+    }
+  }
+`);
+
 const TITLE_MATCHES_QUERY = gql(`
   query AgentTaskTitleMatches($query: String!) {
     products(first: 5, query: $query) {
@@ -181,13 +191,21 @@ export async function generateAddToCartTask(
   );
 }
 
-/** Picks a product with a unique title (so "find X" has one right answer), rotated by seed. */
+/**
+ * Picks a product whose title names only that page, rotated by seed: unique among products, and
+ * not also a collection's title (whose page heading would look identical).
+ */
 export async function generateFindProductTask(options: TaskOptions): Promise<FindProductTask> {
   const { shopDomain, country, language, seed } = options;
   const client = createStorefrontApiClient(shopDomain, country, language);
+  const collections = await client.graphql(COLLECTION_TITLES_QUERY, { signal: requestSignal() });
+  assertNoGraphQLErrors("Collection titles", collections.errors);
+  const collectionTitles = new Set(
+    collections.data?.collections.nodes.map((c) => c.title.trim().toLowerCase()) ?? [],
+  );
   for await (const listed of productSources(client)) {
     const products = [...new Map(listed.map((p) => [p.handle, p])).values()]
-      .filter((p) => p.title.trim() !== "")
+      .filter((p) => p.title.trim() !== "" && !collectionTitles.has(p.title.trim().toLowerCase()))
       .toSorted((a, b) => a.handle.localeCompare(b.handle));
     const offset = products.length === 0 ? 0 : seed % products.length;
     for (const product of [...products.slice(offset), ...products.slice(0, offset)]) {
