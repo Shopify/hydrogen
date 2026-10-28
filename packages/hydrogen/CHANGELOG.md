@@ -1,5 +1,14 @@
 # @shopify/hydrogen
 
+## 2026.4.9
+
+### Patch Changes
+
+- Render rich text links with unsupported protocols or malformed URLs as text in the default components while preserving their formatting. ([#4247](https://github.com/Shopify/hydrogen/pull/4247)) by [@karreiro](https://github.com/karreiro)
+
+- Updated dependencies [[`9f644d42b42a41f0a35395e27270a7a049fe439e`](https://github.com/Shopify/hydrogen/commit/9f644d42b42a41f0a35395e27270a7a049fe439e)]:
+  - @shopify/hydrogen-react@2026.4.6
+
 ## 2026.4.8
 
 ### Patch Changes
