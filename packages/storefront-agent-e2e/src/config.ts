@@ -12,6 +12,8 @@ export type RunConfig = {
   readonly country: CountryCode;
   /** Picks among eligible target variants so runs are reproducible. */
   readonly seed: number;
+  /** Where this storefront serves a product page; {handle} is replaced. Only the product-page start uses it. */
+  readonly productPathTemplate: string;
 };
 
 export function readRunConfig(): RunConfig {
@@ -25,7 +27,17 @@ export function readRunConfig(): RunConfig {
   if (!Number.isInteger(seed) || seed < 0) {
     throw new Error("STOREFRONT_AGENT_SEED must be a non-negative integer.");
   }
-  return { storefrontBaseUrl: new URL(storefrontBaseUrl).toString(), shopDomain, country, seed };
+  const productPathTemplate = process.env.STOREFRONT_PRODUCT_PATH?.trim() || "/products/{handle}";
+  if (!productPathTemplate.includes("{handle}")) {
+    throw new Error("STOREFRONT_PRODUCT_PATH must contain {handle}, e.g. /products/{handle}.");
+  }
+  return {
+    storefrontBaseUrl: new URL(storefrontBaseUrl).toString(),
+    shopDomain,
+    country,
+    seed,
+    productPathTemplate,
+  };
 }
 
 function requireEnv(name: string): string {

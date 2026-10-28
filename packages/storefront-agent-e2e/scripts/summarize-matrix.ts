@@ -27,6 +27,7 @@ const agentEntrySchema = z.object({
     .optional(),
   reason: z.string().optional(),
   harnessError: z.string().optional(),
+  friction: z.array(z.string()).optional(),
 });
 const scriptEntrySchema = z.object({
   kind: z.literal("script"),
@@ -83,9 +84,9 @@ function pct(x: number): string {
 
 function printRowTable() {
   console.log(
-    "| Row | Storefront | Start | Runs | PASS | FAIL | BLOCKED | INCONCL. | Median steps | Median time | Median input tokens | Median cost |",
+    "| Row | Storefront | Start | Runs | PASS | (friction) | FAIL | BLOCKED | INCONCL. | Median steps | Median time | Median input tokens | Median cost |",
   );
-  console.log("|---|---|---|---|---|---|---|---|---|---|---|---|");
+  console.log("|---|---|---|---|---|---|---|---|---|---|---|---|---|");
   for (const row of new Set(agent.map((e) => e.row))) {
     const runs = agent.filter((e) => e.row === row);
     const count = (o: string) => runs.filter((e) => outcomeOf(e) === o).length;
@@ -93,9 +94,12 @@ function printRowTable() {
     const seconds = Math.round(median(runs.map((e) => e.durationMs ?? Number.NaN)) / 1000);
     const tokens = Math.round(median(runs.map((e) => e.usage?.inputTokens ?? Number.NaN)) / 1000);
     const inconclusive = count("INCONCLUSIVE") + count("HARNESS-ERROR");
+    const withFriction = runs.filter(
+      (e) => outcomeOf(e) === "PASS" && (e.friction?.length ?? 0) > 0,
+    ).length;
     const cost = median(runs.map(costOf));
     console.log(
-      `| ${row} | ${runs[0]?.label} | ${runs[0]?.start} | ${runs.length} | ${count("PASS")} | ${count("FAIL")} | ${count("BLOCKED")} | ${inconclusive} | ${steps} | ${seconds}s | ${tokens}k | ${Number.isFinite(cost) ? "$" + cost.toFixed(2) : "–"} |`,
+      `| ${row} | ${runs[0]?.label} | ${runs[0]?.start} | ${runs.length} | ${count("PASS")} | ${withFriction} | ${count("FAIL")} | ${count("BLOCKED")} | ${inconclusive} | ${steps} | ${seconds}s | ${tokens}k | ${Number.isFinite(cost) ? "$" + cost.toFixed(2) : "–"} |`,
     );
   }
 }

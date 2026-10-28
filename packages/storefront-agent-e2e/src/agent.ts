@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import { z } from "zod";
 
 import type { AgentClaim } from "./classify";
+import { exitInterview, type ExitInterview } from "./exit-interview";
 import { startMeteringProxy } from "./metering-proxy";
 
 export type ModelConfig = {
@@ -38,6 +39,8 @@ export type AgentRun = {
   readonly usage: TokenUsage | null;
   /** Text the model wrote between actions, in order. */
   readonly thoughts: readonly string[];
+  /** The agent's own diagnosis when it ran out of steps or time without finishing. */
+  readonly exitInterview: ExitInterview | null;
   readonly durationMs: number;
 };
 
@@ -46,9 +49,10 @@ You only see screenshots, and you only use the mouse and keyboard, like a normal
 Never type a web address; get around the store using what is on the page.
 After each action, look at the new screenshot to confirm it worked before moving on.
 When the whole task is complete, call the finish tool with status "done".
-If the same thing fails three times (for example the cart shows the wrong item or quantity,
-a button does nothing, or an error keeps appearing), stop retrying: call the finish tool with
-status "blocked" and say what went wrong.
+If the store contradicts what you just did (for example the cart shows a different item, size or
+quantity than you added, an error appears, or a button does nothing), retry once. If it happens
+again, call the finish tool with status "blocked" right away and describe what you saw.
+Do not look for workarounds: report the problem instead.
 Nobody will answer questions, so do not ask any.`;
 
 const finishInput = z.object({
@@ -154,9 +158,14 @@ export async function runAgent(options: {
     }, maxDurationMs);
   });
   budgetExpired.catch(() => undefined);
-  const result = (claim: AgentClaim, reason: string): AgentRun => ({
+  const result = (
+    claim: AgentClaim,
+    reason: string,
+    interview: ExitInterview | null = null,
+  ): AgentRun => ({
     claim,
     reason,
+    exitInterview: interview,
     steps,
     navigations,
     screenshots,
@@ -164,6 +173,20 @@ export async function runAgent(options: {
     thoughts: meter.thoughts(),
     durationMs: Date.now() - startedAt,
   });
+
+  // Ran out of steps or time without calling finish: ask once whether the store stopped it.
+  const unfinished = async (why: string, fallback: string): Promise<AgentRun> => {
+    const interview = await exitInterview({
+      model,
+      baseUrl: meter.url,
+      goal,
+      why,
+      thoughts: meter.thoughts(),
+      lastScreenshot: screenshots.at(-1),
+    });
+    if (!interview) return result("gave-up", fallback);
+    return result(interview.status, `${fallback} Exit interview: ${interview.reason}`, interview);
+  };
 
   try {
     log("stagehand init");
@@ -215,12 +238,15 @@ export async function runAgent(options: {
     const outcome = await Promise.race([execution, budgetExpired]);
 
     const finished = recorded.finish;
-    return result(
-      finished?.status ?? "gave-up",
-      finished?.reason ?? `No finish call. Agent said: ${outcome.message}`,
+    if (finished) return result(finished.status, finished.reason);
+    return await unfinished(
+      `it used all ${maxSteps} steps`,
+      `Out of steps. Agent said: ${outcome.message}`,
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    if (message.startsWith("time budget"))
+      return await unfinished(`the ${message}`, `Agent stopped: ${message}`);
     return result("gave-up", `Agent stopped: ${message}`);
   } finally {
     clearTimeout(budgetTimer);

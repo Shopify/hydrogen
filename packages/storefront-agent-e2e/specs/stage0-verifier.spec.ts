@@ -13,6 +13,7 @@ const EXPECTED: Record<string, Outcome> = {
   "": "PASS",
   "wrong-variant": "FAIL",
   "quantity-ignored": "FAIL",
+  "add-to-cart-broken": "FAIL",
 };
 
 // Both checkout entry points the template offers. Shop Pay goes through the storefront's own

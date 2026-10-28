@@ -54,6 +54,8 @@ type Run = {
   state: { kind: string; reason?: string; lines?: { quantity: number; label: string }[] };
   clicks?: Click[] | null;
   thoughts?: string[];
+  friction?: string[];
+  exitInterview?: { status: string; reason: string } | null;
   steps: Step[];
 };
 
@@ -125,7 +127,7 @@ function dollars(usd: number | null): string {
 
 function indexRow(id: string, run: Run, source: string, startTime: string | undefined): string {
   const tokens = run.usage ? `${Math.round(run.usage.inputTokens / 1000)}k` : "–";
-  return `<tr><td><a href="#${id}">${esc(id)}</a></td><td>${badge(run.outcome)}</td><td>${esc(source)}</td><td>${esc(run.start)}</td><td>${run.stepCount}</td><td>${Math.round(run.durationMs / 1000)}s</td><td>${tokens}</td><td>${dollars(runCost(run))}</td><td>${esc(startTime ? new Date(startTime).toLocaleString() : "")}</td></tr>`;
+  return `<tr><td><a href="#${id}">${esc(id)}</a></td><td>${outcomeBadges(run)}</td><td>${esc(source)}</td><td>${esc(run.start)}</td><td>${run.stepCount}</td><td>${Math.round(run.durationMs / 1000)}s</td><td>${tokens}</td><td>${dollars(runCost(run))}</td><td>${esc(startTime ? new Date(startTime).toLocaleString() : "")}</td></tr>`;
 }
 
 function runSection(
@@ -165,19 +167,26 @@ function runSection(
     ? `<p class="warn">Shortcuts: ${esc(run.shortcuts.join("; "))}</p>`
     : "";
   return `<section id="${id}">
-  <h2>${esc(id)} ${badge(run.outcome)} <small>${esc(source)} · start: ${esc(run.start)} · ${esc(run.model)}</small></h2>
+  <h2>${esc(id)} ${outcomeBadges(run)} <small>${esc(source)} · start: ${esc(run.start)} · ${esc(run.model)}</small></h2>
   <div class="meta">
     <div><h3>Goal</h3><p>${esc(run.goal)}</p></div>
-    <div><h3>Agent claim</h3><p><b>${esc(run.claim)}</b>: ${esc(run.reason)}</p></div>
+    <div><h3>Agent claim</h3><p><b>${esc(run.claim)}</b>: ${esc(run.reason)}</p>${run.exitInterview ? `<p class="muted">Exit interview: <b>${esc(run.exitInterview.status)}</b></p>` : ""}</div>
     <div><h3>Cart (verifier)</h3><p>${cart}${run.state.reason ? `<br><span class="muted">${esc(run.state.reason)}</span>` : ""}</p></div>
     <div><h3>Cost</h3><p>${run.stepCount} steps · ${Math.round(run.durationMs / 1000)}s · ${run.usage ? `${Math.round(run.usage.inputTokens / 1000)}k in / ${Math.round(run.usage.outputTokens / 1000)}k out tokens · ${dollars(runCost(run))}` : "no usage"}</p></div>
   </div>
   ${shortcuts}
   <details><summary>Navigation path (${run.navigations.length})</summary><ol class="navs">${navs}</ol></details>
+  ${frictionHtml(run.friction)}
   ${thoughtsHtml(run.thoughts)}
   ${generated ? `<details><summary>Generated replay script</summary><pre>${esc(generated)}</pre></details>` : ""}
   <div class="strip">${cards}</div>
 </section>`;
+}
+
+function frictionHtml(friction: string[] | undefined): string {
+  if (!friction?.length) return "";
+  const items = friction.map((t) => `<li>${esc(t)}</li>`).join("");
+  return `<details open><summary class="warn">Friction: the agent corrected or worked around the store (${friction.length})</summary><ol class="thoughts">${items}</ol></details>`;
 }
 
 function thoughtsHtml(thoughts: string[] | undefined): string {
@@ -244,6 +253,11 @@ function shortUrl(url: string): string {
   }
 }
 
+function outcomeBadges(run: Run): string {
+  const friction = run.friction?.length ? ` <span class="badge friction">friction</span>` : "";
+  return `${badge(run.outcome)}${friction}`;
+}
+
 function badge(outcome: string): string {
   return `<span class="badge ${esc(outcome.toLowerCase())}">${esc(outcome)}</span>`;
 }
@@ -263,7 +277,7 @@ function page(rows: string[], body: string[], totalRow: string): string {
   h3{margin:0 0 4px;font-size:12px;text-transform:uppercase;color:#666}
   table{border-collapse:collapse;background:#fff} td,th{border:1px solid #e3e3e3;padding:4px 8px;text-align:left}
   .badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:600;color:#fff;background:#888}
-  .pass{background:#1a7f37}.fail{background:#cf222e}.blocked{background:#9a6700}.inconclusive{background:#57606a}
+  .pass{background:#1a7f37}.friction{background:#bc4c00}.fail{background:#cf222e}.blocked{background:#9a6700}.inconclusive{background:#57606a}
   .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;background:#fff;padding:12px;border:1px solid #e3e3e3}
   .meta p{margin:0}.muted{color:#777}.warn{color:#cf222e}
   .strip{display:flex;gap:12px;overflow-x:auto;padding:12px 0}

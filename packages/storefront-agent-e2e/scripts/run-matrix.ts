@@ -75,6 +75,22 @@ const ROWS: readonly Row[] = [
     trials: 5,
     healthy: false,
   },
+  {
+    id: "B5",
+    label: "add-to-cart-broken",
+    server: { fault: "add-to-cart-broken" },
+    start: "home",
+    trials: 2,
+    healthy: false,
+  },
+  {
+    id: "B6",
+    label: "add-to-cart-broken",
+    server: { fault: "add-to-cart-broken" },
+    start: "product",
+    trials: 2,
+    healthy: false,
+  },
 ];
 
 const PORT = Number(process.env.STOREFRONT_MATRIX_PORT ?? "4201");

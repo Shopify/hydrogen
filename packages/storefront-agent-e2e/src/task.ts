@@ -52,6 +52,25 @@ const COLLECTION_PRODUCTS_QUERY = gql(`
   }
 `);
 
+// Fallback for stores whose products are not in collections: any product available for sale.
+const CATALOG_PRODUCTS_QUERY = gql(`
+  query AgentTaskCatalog {
+    products(first: 50, query: "available_for_sale:true") {
+      nodes {
+        handle
+        title
+        requiresSellingPlan
+        options {
+          name
+          optionValues {
+            name
+          }
+        }
+      }
+    }
+  }
+`);
+
 const PRODUCT_VARIANTS_QUERY = gql(`
   query AgentTaskVariants($handle: String!) {
     product(handle: $handle) {
@@ -98,6 +117,16 @@ const CART_PROBE_MUTATION = gql(`
   }
 `);
 
+type ListedProduct = {
+  readonly handle: string;
+  readonly title: string;
+  readonly requiresSellingPlan: boolean;
+  readonly options: readonly {
+    readonly name: string;
+    readonly optionValues: readonly { readonly name: string }[];
+  }[];
+};
+
 export async function generateAddToCartTask(options: {
   shopDomain: string;
   country: CountryCode;
@@ -106,15 +135,47 @@ export async function generateAddToCartTask(options: {
 }): Promise<AddToCartTask> {
   const { shopDomain, country, quantity, seed } = options;
   const client = createStorefrontApiClient(shopDomain, country);
+  const rejections: string[] = [];
 
+  // Prefer products in collections (likely reachable by browsing), but don't require collections:
+  // fall back to the whole catalog. How the agent finds the product is up to the storefront.
   const collections = await client.graphql(COLLECTION_PRODUCTS_QUERY, { signal: requestSignal() });
   assertNoGraphQLErrors("Collection products", collections.errors);
-  const listed = collections.data?.collections.nodes.flatMap((c) => c.products.nodes) ?? [];
+  const inCollections = collections.data?.collections.nodes.flatMap((c) => c.products.nodes) ?? [];
+  const fromCollections = await findTarget(client, inCollections, {
+    quantity,
+    seed,
+    country,
+    rejections,
+  });
+  if (fromCollections) return fromCollections;
+
+  const catalog = await client.graphql(CATALOG_PRODUCTS_QUERY, { signal: requestSignal() });
+  assertNoGraphQLErrors("Catalog products", catalog.errors);
+  const fromCatalog = await findTarget(client, catalog.data?.products.nodes ?? [], {
+    quantity,
+    seed,
+    country,
+    rejections,
+  });
+  if (fromCatalog) return fromCatalog;
+
+  throw new Error(
+    `No product has a non-default variant a cart accepts at quantity ${quantity}. ` +
+      `Checked: ${rejections.join("; ") || "no multi-option products found"}`,
+  );
+}
+
+async function findTarget(
+  client: StorefrontClient,
+  listed: readonly ListedProduct[],
+  context: { quantity: number; seed: number; country: CountryCode; rejections: string[] },
+): Promise<AddToCartTask | null> {
+  const { quantity, seed, country, rejections } = context;
   const products = [...new Map(listed.map((p) => [p.handle, p])).values()]
     .filter((p) => !p.requiresSellingPlan && p.options.some((o) => o.optionValues.length > 1))
     .toSorted((a, b) => a.handle.localeCompare(b.handle));
 
-  const rejections: string[] = [];
   for (const product of products) {
     if (!(await hasUniqueTitle(client, product.title))) {
       rejections.push(`${product.handle}: title is not unique`);
@@ -146,11 +207,7 @@ export async function generateAddToCartTask(options: {
       rejections.push(`${product.handle} ${variant.title}: cart rejected ${quantity}`);
     }
   }
-
-  throw new Error(
-    "No product in a collection has a non-default variant a cart accepts at quantity " +
-      `${quantity}. Checked: ${rejections.join("; ") || "no multi-option products found"}`,
-  );
+  return null;
 }
 
 // Prefer variants that differ from the default in every option, so the agent must change

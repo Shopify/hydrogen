@@ -6,9 +6,10 @@ import { runAgent } from "../src/agent";
 import { captureCheckout, redactCartKeys } from "../src/checkout";
 import { classify } from "../src/classify";
 import { generateSpec } from "../src/codegen";
-import { CDP_PORT } from "../src/config";
+import { CDP_PORT, readRunConfig } from "../src/config";
 import { estimateCostUsd } from "../src/cost";
 import { expect, test } from "../src/fixtures";
+import { detectFriction } from "../src/friction";
 import { readModelConfig } from "../src/model-config";
 import { recordClicks } from "../src/recorder";
 import { findShortcuts } from "../src/shortcuts";
@@ -32,10 +33,21 @@ test(`agent run from ${START}`, async ({ page, task }, testInfo) => {
   const checkout = await captureCheckout(page.context());
   // Always record click targets: they label the journey report; generation also uses them.
   const recording = await recordClicks(page.context());
-  const startPath = START === "home" ? "/" : `/products/${task.productHandle}`;
+  const startPath =
+    START === "home"
+      ? "/"
+      : readRunConfig().productPathTemplate.replace(
+          "{handle}",
+          encodeURIComponent(task.productHandle),
+        );
   await sizeWindowToViewport(page);
   // The only navigation the harness performs; the agent takes over from here.
-  await page.goto(startPath);
+  const start = await page.goto(startPath);
+  // Not every storefront serves products at a fixed path. Skip rather than start the agent on an error page.
+  test.skip(
+    START === "product" && (start === null || start.status() >= 400),
+    `This storefront does not serve ${startPath} (HTTP ${start?.status() ?? "none"}); set STOREFRONT_PRODUCT_PATH or use the home start.`,
+  );
   if (process.env.STOREFRONT_AGENT_DEBUG === "1") console.log("[spec] start page loaded");
 
   const run = await runAgent({
@@ -51,6 +63,7 @@ test(`agent run from ${START}`, async ({ page, task }, testInfo) => {
   const state = await verifyCart(task, checkoutUrl);
   const shortcuts = findShortcuts(run.steps);
   const outcome = classify(run.claim, state, { usedShortcut: shortcuts.length > 0 });
+  const friction = outcome === "PASS" ? detectFriction(run.thoughts) : [];
 
   let generatedFile: string | null = null;
   if (GENERATE && outcome === "PASS") {
@@ -75,6 +88,8 @@ test(`agent run from ${START}`, async ({ page, task }, testInfo) => {
         claim: run.claim,
         reason: run.reason,
         shortcuts,
+        friction,
+        exitInterview: run.exitInterview,
         state,
         start: START,
         model: model.name,
