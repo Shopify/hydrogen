@@ -41,10 +41,9 @@ CLI-owned fields. Storefront and environment lists contain all fetched resources
 {"storeDomain": "example.myshopify.com", "storefronts": []}
 ```
 
-`dev`, `preview`, and `debug cpu` are streaming commands. The finite JSON result
-format also excludes `build --watch`.
+`dev`, `preview`, and `debug cpu` are streaming commands.
 
-`codegen --json --watch` emits typed JSONL records for each generation cycle.
+`codegen --json --watch` and `build --json --watch` emit typed JSONL records for each cycle.
 
 ## Contributing
 
