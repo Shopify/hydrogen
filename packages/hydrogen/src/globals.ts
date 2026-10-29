@@ -11,6 +11,12 @@ import type { ShopifyStandardRouteMatch } from "./core/standard-routes/index";
 export type ShopifyGlobal = {
   actions: ShopifyStandardActions;
   analytics?: StorefrontAnalytics;
+  /** The application that rendered the page. */
+  application: {
+    name: "hydrogen";
+    /** The `@shopify/hydrogen` release in use. */
+    version: string;
+  };
   /** The store settings that Shopify's storefront web components read. */
   components: {
     config: {
