@@ -308,7 +308,13 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
         const bodyHint = await response.text().catch(() => "");
         throw new StorefrontApiError(
           `SFAPI responded with ${status}${bodyHint ? `: ${bodyHint.slice(0, 200)}` : ""}`,
-          { status, requestId, queryText, variables },
+          {
+            status,
+            requestId,
+            retryAfter: responseHeaders.get("retry-after") ?? undefined,
+            queryText,
+            variables,
+          },
         );
       }
 

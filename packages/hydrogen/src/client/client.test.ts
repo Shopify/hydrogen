@@ -525,6 +525,35 @@ describe("createStorefrontClient", () => {
       }
     });
 
+    it("exposes Retry-After on a 429 response", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse(
+          { errors: [{ message: "throttled" }] },
+          { status: 429, headers: { "retry-after": "5" } },
+        ),
+      );
+
+      const client = createPublicClient({ fetch: mockFetch });
+
+      const error = await client.graphql(SHOP_QUERY).catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(StorefrontApiError);
+      expect((error as StorefrontApiError).status).toBe(429);
+      expect((error as StorefrontApiError).retryAfter).toBe("5");
+    });
+
+    it("leaves retryAfter undefined when the response has no Retry-After header", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({ errors: [{ message: "server error" }] }, { status: 500 }),
+      );
+
+      const client = createPublicClient({ fetch: mockFetch });
+
+      const error = await client.graphql(SHOP_QUERY).catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(StorefrontApiError);
+      expect((error as StorefrontApiError).status).toBe(500);
+      expect((error as StorefrontApiError).retryAfter).toBeUndefined();
+    });
+
     it("returns data and errors for 200 with throttled GraphQL error", async () => {
       mockFetch.mockResolvedValueOnce(
         mockResponse({

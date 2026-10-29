@@ -4,6 +4,8 @@ import {
   canAddToCart,
   getSelectedProductOptions,
   gql,
+  storefrontRateLimitHeaders,
+  withStorefrontRateLimit,
   type SelectedOption,
 } from "@shopify/hydrogen";
 import { ShopPayButton } from "@shopify/hydrogen/react";
@@ -144,27 +146,31 @@ export function meta({ matches }: Route.MetaArgs) {
   ];
 }
 
-export async function loader({ context, params, request }: Route.LoaderArgs) {
-  const handle = params.handle;
-  if (!handle) throw new Response("Not Found", { status: 404 });
+export const headers = storefrontRateLimitHeaders;
 
-  const storefrontClient = context.get(storefrontClientContext);
-  const selectedOptions = getSelectedProductOptions({
-    searchParams: new URL(request.url).searchParams,
-  });
-  const { data } = await storefrontClient.graphql(PRODUCT_QUERY, {
-    variables: { handle, selectedOptions },
-  });
+export const loader = withStorefrontRateLimit(
+  async ({ context, params, request }: Route.LoaderArgs) => {
+    const handle = params.handle;
+    if (!handle) throw new Response("Not Found", { status: 404 });
 
-  if (!data?.product) throw new Response("Not Found", { status: 404 });
+    const storefrontClient = context.get(storefrontClientContext);
+    const selectedOptions = getSelectedProductOptions({
+      searchParams: new URL(request.url).searchParams,
+    });
+    const { data } = await storefrontClient.graphql(PRODUCT_QUERY, {
+      variables: { handle, selectedOptions },
+    });
 
-  return {
-    product: data.product,
-    relatedProducts: data.products.nodes
-      .filter((product) => product.handle !== data.product?.handle)
-      .slice(0, 4),
-  };
-}
+    if (!data?.product) throw new Response("Not Found", { status: 404 });
+
+    return {
+      product: data.product,
+      relatedProducts: data.products.nodes
+        .filter((product) => product.handle !== data.product?.handle)
+        .slice(0, 4),
+    };
+  },
+);
 
 type ProductData = Route.ComponentProps["loaderData"]["product"];
 type ProductVariant = NonNullable<ProductData["selectedOrFirstAvailableVariant"]>;

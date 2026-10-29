@@ -2,6 +2,8 @@ import {
   AnalyticsEvent,
   createPredictiveSearchFormRegister,
   getSortByValue,
+  storefrontRateLimitHeaders,
+  withStorefrontRateLimit,
 } from "@shopify/hydrogen";
 import { CollectionProvider } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
@@ -34,10 +36,12 @@ export function meta({ matches }: Route.MetaArgs) {
   ];
 }
 
-export async function loader({ context, request }: Route.LoaderArgs) {
+export const headers = storefrontRateLimitHeaders;
+
+export const loader = withStorefrontRateLimit(async ({ context, request }: Route.LoaderArgs) => {
   const storefrontClient = context.get(storefrontClientContext);
   return loadSearchPage({ storefrontClient, request });
-}
+});
 
 type PerformedSearchData = Extract<SearchPageData, { performed: true }>;
 type ProductNode = PerformedSearchData["products"][number];

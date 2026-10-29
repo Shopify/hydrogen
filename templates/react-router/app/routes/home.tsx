@@ -1,4 +1,4 @@
-import { gql } from "@shopify/hydrogen";
+import { gql, storefrontRateLimitHeaders, withStorefrontRateLimit } from "@shopify/hydrogen";
 import { Link, useRouteLoaderData } from "react-router";
 
 import {
@@ -67,7 +67,9 @@ export function meta({ matches }: Route.MetaArgs) {
   ];
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
+export const headers = storefrontRateLimitHeaders;
+
+export const loader = withStorefrontRateLimit(async ({ context }: Route.LoaderArgs) => {
   const storefrontClient = context.get(storefrontClientContext);
   const { data } = await storefrontClient.graphql(HOME_QUERY);
 
@@ -84,7 +86,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     featuredCollections,
     heroCollections,
   };
-}
+});
 
 function NewArrivals({ products }: { products: readonly ProductCardData[] }) {
   return (

@@ -286,6 +286,28 @@ Every successful result includes `headers` (the raw `Headers` object from the re
 
 A 200 response with GraphQL `errors` does NOT throw — partial success is valid in GraphQL. Non-200 responses, timeouts, network failures, and JSON parse errors all throw `StorefrontApiError` (or the `StorefrontTimeoutError` subclass).
 
+On a non-OK response, `StorefrontApiError` exposes `status`, `requestId`, and `retryAfter` (the raw, unvalidated `retry-after` header, when the response has one). Redirects, timeouts, network failures, and parse errors leave `retryAfter` undefined.
+
+### Return `429` from a rate-limited React Router loader
+
+An uncaught `StorefrontApiError` in a React Router loader renders as HTTP `500`, even when its `status` is `429`. Wrap the loader with `withStorefrontRateLimit`, and export `storefrontRateLimitHeaders` as the route's `headers`:
+
+```ts
+import { storefrontRateLimitHeaders, withStorefrontRateLimit } from "@shopify/hydrogen";
+
+export const headers = storefrontRateLimitHeaders;
+export const loader = withStorefrontRateLimit(async ({ context }: Route.LoaderArgs) => {
+  const { data } = await context.get(storefrontClientContext).graphql(QUERY);
+  return data;
+});
+```
+
+- The wrapper maps only `StorefrontApiError` with `status === 429`. It throws a `429` `Response` with a fixed body, `Cache-Control: no-store`, and `Retry-After` when the upstream value is delay-seconds or an IMF-fixdate. Other errors pass through unchanged.
+- The wrapper logs the original error once, at `error` level with scope `rate-limit`, because React Router doesn't pass thrown responses to `handleError`. Use `configureLogging({ logger })` to send the entry to error reporting. Don't log the error again in the loader.
+- Export `headers` from the root route **and** from each wrapped route. Page requests read the root route's headers. Single-fetch `.data` requests read the headers of the route that threw.
+- Don't build a `429` body from `error.message`, and don't copy upstream headers. The message holds part of the upstream response body.
+- Only work that the loader awaits can change the status. Handle deferred promises locally with `<Await errorElement>`.
+
 ---
 
 ## Testing
