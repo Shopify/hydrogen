@@ -24,6 +24,11 @@ function createTestRequestContext(request: StorefrontRequest, i18n: I18nConfig =
   return createShopifyRequestContext({ request, i18n });
 }
 
+function withoutGetSetCookie(headers: Headers): Headers {
+  Object.defineProperty(headers, "getSetCookie", { value: undefined });
+  return headers;
+}
+
 describe("createShopifyRequestContext", () => {
   it("requires i18n", () => {
     expect(() =>
@@ -313,6 +318,39 @@ describe("createShopifyRequestContext", () => {
     context.applyResponseHeaders(headers);
 
     expect(headers.get("powered-by")).toBe("Shopify, Hydrogen");
+  });
+
+  it("captures storefront cookies when getSetCookie is unavailable", () => {
+    const cookie = "session=1; Path=/; Secure";
+    const context = createTestRequestContext(
+      new Request("https://example.com/api/data", {
+        method: "POST",
+        headers: { cookie: "_shopify_essential=established" },
+      }),
+    );
+    const subrequestHeaders = withoutGetSetCookie(new Headers({ "set-cookie": cookie }));
+
+    context.captureSubrequestHeaders(subrequestHeaders);
+    const responseHeaders = new Headers();
+    context.applyResponseHeaders(responseHeaders);
+
+    expect(responseHeaders.get("set-cookie")).toBe(cookie);
+  });
+
+  it("applies captured storefront cookies when getSetCookie is unavailable", () => {
+    const cookie = "session=1; Path=/; Secure";
+    const context = createTestRequestContext(
+      new Request("https://example.com/api/data", {
+        method: "POST",
+        headers: { cookie: "_shopify_essential=established" },
+      }),
+    );
+    context.captureSubrequestHeaders(new Headers({ "set-cookie": cookie }));
+    const responseHeaders = withoutGetSetCookie(new Headers());
+
+    context.applyResponseHeaders(responseHeaders);
+
+    expect(responseHeaders.get("set-cookie")).toBe(cookie);
   });
 
   it.each(["_shopify_essential", "app_session"])(

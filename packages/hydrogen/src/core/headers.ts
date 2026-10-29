@@ -82,6 +82,12 @@ export function extractHeaders(
   }, []);
 }
 
+export function getSetCookieValues(headers: Headers): string[] {
+  if (typeof headers.getSetCookie === "function") return headers.getSetCookie();
+  const value = headers.get("set-cookie");
+  return value === null ? [] : [value];
+}
+
 export function applyPrivateResponseCacheHeaders(headers: Headers): void {
   headers.set(CACHE_CONTROL_HEADER, "private, no-store, max-age=0, must-revalidate");
   for (const header of Array.from(headers.keys())) {
