@@ -1,3 +1,4 @@
+import { getShopifyAccountWidgetDataScript } from "./account-widget";
 import { getShopifyAnalyticsBusScript, getShopifyAnalyticsConfig } from "./analytics";
 import {
   SHOPIFY_ACCOUNT_SCRIPT,
@@ -37,6 +38,13 @@ export {
   SHOPIFY_STOREFRONT_WEBMCP_SCRIPT,
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "./constants";
+export type {
+  ShopifyAccountWidgetCustomer,
+  ShopifyAccountWidgetData,
+  ShopifyAccountWidgetShop,
+  ShopifyAccountWidgetSocialLoginProvider,
+  ShopifyAccountWidgetTranslationKey,
+} from "./account-widget";
 export { getShopifyGlobal, getShopifyGlobalBootstrapScript } from "./global";
 export { initializeShopifyScripts } from "./initialize";
 export { renderShopifyScriptTag } from "./render";
@@ -64,7 +72,7 @@ export type {
  */
 // oxlint-disable-next-line complexity -- ordered assembly of optional Shopify script tags; each flag adds one branch and splitting would obscure the required load order
 export function getShopifyScriptTags({
-  account = false,
+  accountWidget,
   analytics,
   consent,
   debug,
@@ -147,7 +155,8 @@ export function getShopifyScriptTags({
     });
   }
 
-  if (account) {
+  if (accountWidget) {
+    scripts.push(getShopifyAccountWidgetDataScript(accountWidget, { shop, i18n }));
     scripts.push({
       tagName: "script",
       attributes: {
@@ -215,7 +224,7 @@ export function getShopifyScriptTags({
  *
  * Use the function when your framework accepts raw HTML in the document head.
  *
- * @param options The shop details and the features, such as account and analytics, whose scripts to load.
+ * @param options The shop details and the features, such as the account widget and analytics, whose scripts to load.
  * @returns One HTML string per tag, with link tags first.
  * @publicDocs
  */
