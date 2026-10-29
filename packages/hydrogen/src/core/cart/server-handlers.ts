@@ -10,6 +10,11 @@ import { applyPrivateResponseCacheHeaders } from "../headers";
 import { getLogger } from "../logging";
 import type { ShopifyRequestContext } from "../request-context";
 import { createProxyResponseHeaders } from "../request-routing/interceptors/proxy";
+import {
+  RATE_LIMITED_STATUS,
+  createRateLimitResponseHeaders,
+  isStorefrontRateLimitError,
+} from "../request-routing/rate-limit";
 import type {
   CallableRouteHandler,
   ShopifyRouteError,
@@ -44,6 +49,7 @@ const CART_GET_METHOD = "GET" as const;
 const CART_POST_METHOD = "POST" as const;
 const CART_MUTATION_FAILED_STATUS = 500;
 const CART_MUTATION_FAILED_MESSAGE = "Cart mutation failed. Please try again.";
+const CART_RATE_LIMITED_MESSAGE = "Cart mutation is rate limited. Please try again later.";
 const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
 
 /**
@@ -66,9 +72,13 @@ export type CartGetData<TCart = CartData> = {
 export type CartGetResult<TCart = CartData> = ShopifyRouteJsonResult<CartGetData<TCart>>;
 
 /**
- * Error codes that the cart POST handler returns. The handler returns `invalid_cart_request` when it can't parse a JSON request, and `missing_cart` when a JSON request changes the cart but has no cart ID. With `customerSession`, the handler returns `cart_mutation_failed` when a mutation fails after the handler refreshes the customer's access token.
+ * Error codes that the cart POST handler returns. The handler returns `invalid_cart_request` when it can't parse a JSON request, and `missing_cart` when a JSON request changes the cart but has no cart ID. The handler returns `rate_limited` with status `429` when the Storefront API rate limits the mutation; the response forwards a valid `Retry-After` header and never the upstream body. With `customerSession`, the handler returns `cart_mutation_failed` when a mutation fails after the handler refreshes the customer's access token.
  */
-export type CartErrorCode = "invalid_cart_request" | "missing_cart" | "cart_mutation_failed";
+export type CartErrorCode =
+  | "invalid_cart_request"
+  | "missing_cart"
+  | "rate_limited"
+  | "cart_mutation_failed";
 
 /**
  * An error that the cart POST handler returns, with a code that identifies the failure.
@@ -192,7 +202,7 @@ export type CartServerHandlersWithCustomerSession<
   /** Returns the cart like the GET handler in `CartServerHandlers`. For a logged-in customer, the handler adds `logged_in=true` to the checkout URL. */
   get: CartGetHandler<TCart, CartGetHandlerContext & CartCustomerSessionReadContext>;
   /**
-   * Runs cart changes like the POST handler in `CartServerHandlers`. When an add creates a cart for a logged-in customer, the handler attaches the customer to the new cart. When the handler refreshes the customer's access token and the mutation then fails, the handler returns a `cart_mutation_failed` error with status `500`.
+   * Runs cart changes like the POST handler in `CartServerHandlers`. When an add creates a cart for a logged-in customer, the handler attaches the customer to the new cart. When the Storefront API rate limits the mutation, the handler returns a `rate_limited` error with status `429`. When the handler refreshes the customer's access token and the mutation then fails otherwise, the handler returns a `cart_mutation_failed` error with status `500`.
    */
   post: CartPostHandler<CartPostHandlerContext & CartCustomerSessionWriteContext>;
 };
@@ -490,6 +500,18 @@ async function executeCartMutation(
       ...(await executeMutation(action, cartId, storefrontClient, queries, customerAccessToken)),
     };
   } catch (error) {
+    if (isStorefrontRateLimitError(error)) {
+      log.error("storefront api rate limited the cart mutation", { error });
+      return {
+        type: "response",
+        response: errorResult(
+          "rate_limited",
+          CART_RATE_LIMITED_MESSAGE,
+          createRateLimitResponseHeaders(error, customerSessionHeaders),
+          RATE_LIMITED_STATUS,
+        ),
+      };
+    }
     if (!customerSessionHeaders) throw error;
     log.error("cart mutation failed", { error });
     return {

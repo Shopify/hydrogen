@@ -1,3 +1,9 @@
+import { getLogger } from "../logging";
+import {
+  RATE_LIMITED_STATUS,
+  createRateLimitResponseHeaders,
+  isStorefrontRateLimitError,
+} from "./rate-limit";
 import type {
   CallableRouteHandler,
   HydrogenRouteInterceptor,
@@ -7,6 +13,9 @@ import type {
   ShopifyRedirectStatus,
   ShopifyRouteSessionManager,
 } from "./route-types";
+
+const log = getLogger("shopify-routes");
+const RATE_LIMITED_MESSAGE = "The request was rate limited. Please try again later.";
 
 export type {
   CallableRouteHandler,
@@ -34,7 +43,7 @@ const VALID_REDIRECT_STATUSES = [
  * Creates a custom endpoint in your app for one pathname and HTTP method. Collect handlers in an
  * object, and pass an array of handler objects to `handleShopifyRoutes` in its `handlers` option.
  *
- * Use paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, or error result from the handler. Hydrogen sends a JSON result with status `200`, an error result with status `400` by default, and a redirect result with status `303` by default. When a redirect result uses a status other than `301`, `302`, `303`, 307, or 308, the promise from `handleShopifyRoutes` rejects.
+ * Use paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, or error result from the handler. Hydrogen sends a JSON result with status `200`, an error result with status `400` by default, and a redirect result with status `303` by default. When a redirect result uses a status other than `301`, `302`, `303`, 307, or 308, the promise from `handleShopifyRoutes` rejects. When the handler throws a `StorefrontApiError` with status `429`, `handleShopifyRoutes` answers with a `429` error result (`code: "rate_limited"`) and a validated `Retry-After` header instead of rejecting; any other thrown error still rejects.
  *
  * Annotate the handler's context parameter with only the fields the handler reads, for example
  * `Omit<ShopifyRouteHandlerContext, "sessionManager">`, so apps without a session manager can
@@ -100,7 +109,24 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
     storefrontClient,
     requestContext,
   };
-  return match(context).then((result) => createShopifyRouteResponse(result, request));
+  return match(context).then(
+    (result) => createShopifyRouteResponse(result, request),
+    (error: unknown) => {
+      // Only a Storefront API `429` becomes a caller `429`. Every other failure keeps propagating
+      // so the application boundary decides; a direct handler call (`cartHandlers.get()`) still throws.
+      if (!isStorefrontRateLimitError(error)) throw error;
+      log.error("storefront api rate limited the route handler", { error });
+      return createShopifyRouteResponse(
+        {
+          type: "error",
+          error: { code: "rate_limited", message: RATE_LIMITED_MESSAGE },
+          status: RATE_LIMITED_STATUS,
+          headers: createRateLimitResponseHeaders(error),
+        },
+        request,
+      );
+    },
+  );
 };
 
 // The types already require `sessionManager` for handlers that read it; this

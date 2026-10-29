@@ -1,17 +1,15 @@
-import { StorefrontApiError } from "../client/errors";
 import { getLogger } from "./logging";
+import {
+  RATE_LIMITED_STATUS,
+  createRateLimitResponseHeaders,
+  getSafeRetryAfterValue,
+  isStorefrontRateLimitError,
+} from "./request-routing/rate-limit";
 
 const log = getLogger("rate-limit");
 
-const TOO_MANY_REQUESTS_STATUS = 429;
 // A fixed body: `error.message` holds part of the upstream response body.
 const TOO_MANY_REQUESTS_BODY = "Too many requests. Please try again later.";
-
-// `Retry-After` delay-seconds (RFC 9110, section 10.2.3). Hydrogen sends the value unchanged.
-const DELAY_SECONDS_PATTERN = /^\d+$/;
-// IMF-fixdate (RFC 9110, section 5.6.7), such as `Sun, 06 Nov 1994 08:49:37 GMT`.
-const IMF_FIXDATE_PATTERN =
-  /^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2} (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}:\d{2} GMT$/;
 
 /**
  * Wraps a React Router loader or action so that a Storefront API rate limit returns HTTP `429`
@@ -41,18 +39,15 @@ export function withStorefrontRateLimit<Args extends unknown[], Result>(
     try {
       return await loader(...args);
     } catch (error) {
-      if (!(error instanceof StorefrontApiError) || error.status !== TOO_MANY_REQUESTS_STATUS) {
-        throw error;
-      }
+      if (!isStorefrontRateLimitError(error)) throw error;
 
       // React Router doesn't pass a thrown `Response` to `handleError`, so report the cause here.
       log.error("storefront api rate limited the request", { error });
 
-      const headers = new Headers({ "Cache-Control": "no-store" });
-      const retryAfter = getSafeRetryAfter(error.retryAfter);
-      if (retryAfter !== undefined) headers.set("Retry-After", retryAfter);
-
-      throw new Response(TOO_MANY_REQUESTS_BODY, { status: TOO_MANY_REQUESTS_STATUS, headers });
+      throw new Response(TOO_MANY_REQUESTS_BODY, {
+        status: RATE_LIMITED_STATUS,
+        headers: createRateLimitResponseHeaders(error),
+      });
     }
   };
 }
@@ -85,16 +80,7 @@ export function storefrontRateLimitHeaders({
 }): Headers {
   const headers = new Headers(parentHeaders);
   if (errorHeaders?.get("cache-control") === "no-store") headers.set("Cache-Control", "no-store");
-  const retryAfter = getSafeRetryAfter(errorHeaders?.get("retry-after"));
+  const retryAfter = getSafeRetryAfterValue(errorHeaders?.get("retry-after"));
   if (retryAfter !== undefined) headers.set("Retry-After", retryAfter);
   return headers;
-}
-
-/** Returns `value` when it is delay-seconds or an IMF-fixdate. Never caps or changes the delay. */
-function getSafeRetryAfter(value: string | null | undefined): string | undefined {
-  if (value == null) return undefined;
-  if (DELAY_SECONDS_PATTERN.test(value)) return value;
-  // `new Date()` alone accepts values such as `1.5`. The round trip rejects dates such as `Feb 30`.
-  if (IMF_FIXDATE_PATTERN.test(value) && new Date(value).toUTCString() === value) return value;
-  return undefined;
 }

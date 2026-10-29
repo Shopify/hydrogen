@@ -1,3 +1,4 @@
+import { StorefrontApiError } from "../../client/errors";
 import type {
   PredictiveSearchLimitScope,
   PredictiveSearchType,
@@ -5,6 +6,11 @@ import type {
   SearchableField,
 } from "../../graphql/generated/storefront-api-types";
 import { createProxyResponseHeaders } from "../request-routing/interceptors/proxy";
+import {
+  RATE_LIMITED_STATUS,
+  createRateLimitResponseHeaders,
+  isStorefrontRateLimitError,
+} from "../request-routing/rate-limit";
 import type {
   CallableRouteHandler,
   ShopifyRouteError,
@@ -64,7 +70,10 @@ type PredictiveSearchGetResult<TData = PredictiveSearchDataForOptions<{}>> =
   | ShopifyRouteJsonResult<PredictiveSearchGetData<TData>>
   | ShopifyRouteErrorResult<PredictiveSearchError>;
 
-type PredictiveSearchErrorCode = "invalid_predictive_search_request";
+type PredictiveSearchErrorCode = "invalid_predictive_search_request" | "rate_limited";
+
+const RATE_LIMITED_MESSAGE = "Predictive search is rate limited. Please try again later.";
+const STOREFRONT_REQUEST_FAILED_MESSAGE = "Predictive search request failed";
 type PredictiveSearchError = ShopifyRouteError & {
   code: PredictiveSearchErrorCode;
 };
@@ -142,6 +151,7 @@ export interface CreatePredictiveSearchServerHandlersOptions extends CreatePredi
  * The route reads the search term from the `q` URL parameter. A URL parameter with the same name as a search setting overrides the setting's default.
  *
  * An invalid setting value or a failed Storefront API query returns HTTP status `400` with a JSON body of `{error: {code, message}}`. The `code` value is `invalid_predictive_search_request`.
+ * When the Storefront API rate limits the query with HTTP `429`, the route returns status `429` with the `code` value `rate_limited` and forwards a valid `Retry-After` header. The body never includes the upstream response.
  * A successful response forwards the Storefront API response headers except the content encoding, content length, and server timing headers.
  *
  * @publicDocs
@@ -192,7 +202,17 @@ async function handleGet(
       headers: createProxyResponseHeaders(result.headers),
     };
   } catch (error) {
-    return errorResult(getErrorMessage(error, "Predictive search request failed"));
+    if (isStorefrontRateLimitError(error)) {
+      return {
+        type: "error",
+        error: { code: "rate_limited", message: RATE_LIMITED_MESSAGE },
+        status: RATE_LIMITED_STATUS,
+        headers: createRateLimitResponseHeaders(error),
+      };
+    }
+    // A `StorefrontApiError` message can carry up to 200 characters of the upstream body; keep it out of the caller response.
+    if (error instanceof StorefrontApiError) return errorResult(STOREFRONT_REQUEST_FAILED_MESSAGE);
+    return errorResult(getErrorMessage(error, STOREFRONT_REQUEST_FAILED_MESSAGE));
   }
 }
 

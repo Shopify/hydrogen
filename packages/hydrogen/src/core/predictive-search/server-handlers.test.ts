@@ -368,5 +368,60 @@ describe("createPredictiveSearchServerHandlers", () => {
         },
       });
     });
+
+    it("returns 429 with Retry-After and a constant message when the Storefront API rate limits", async () => {
+      mockFetch.mockResolvedValueOnce(
+        new Response("<html>upstream rate limit page</html>", {
+          status: 429,
+          headers: { "retry-after": "7", "x-request-id": "req-429", "content-type": "text/html" },
+        }),
+      );
+
+      const result = await handlePredictiveSearchRequest(createPredictiveSearchRequest());
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(429);
+      expect(result.headers.get("retry-after")).toBe("7");
+      expect(result.headers.get("cache-control")).toBe("no-store");
+      expect(result.headers.get("x-request-id")).toBeNull();
+      const body = await result.json();
+      expect(body).toEqual({
+        error: {
+          code: "rate_limited",
+          message: "Predictive search is rate limited. Please try again later.",
+        },
+      });
+      expect(JSON.stringify(body)).not.toContain("upstream");
+    });
+
+    it("omits Retry-After when the Storefront API sends a malformed value", async () => {
+      mockFetch.mockResolvedValueOnce(
+        new Response("", { status: 429, headers: { "retry-after": "soon; internal=1" } }),
+      );
+
+      const result = await handlePredictiveSearchRequest(createPredictiveSearchRequest());
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(429);
+      expect(result.headers.has("retry-after")).toBe(false);
+    });
+
+    it("keeps other Storefront API HTTP failures at 400 without the upstream body", async () => {
+      mockFetch.mockResolvedValueOnce(
+        new Response("<html>upstream 503 page</html>", {
+          status: 503,
+          headers: { "retry-after": "30" },
+        }),
+      );
+
+      const result = await handlePredictiveSearchRequest(createPredictiveSearchRequest());
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(400);
+      expect(result.headers.has("retry-after")).toBe(false);
+      const body = await result.json();
+      expect(body.error.code).toBe("invalid_predictive_search_request");
+      expect(JSON.stringify(body)).not.toContain("upstream");
+    });
   });
 });

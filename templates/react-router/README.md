@@ -143,6 +143,9 @@ React Router doesn't report thrown responses to `handleError`. So the wrapper lo
 error at `error` level through Hydrogen's logger. To send these entries to your error reporting,
 pass your logger to `configureLogging`.
 
+The `/api/cart` and `/api/predictive-search` routes from `handleShopifyRoutes` don't need the
+wrapper. They return `429` with a valid `Retry-After` value on their own.
+
 Other HTTP errors and network failures keep their existing error handling. GraphQL `THROTTLED`
 results use the `errors` field of the result and aren't HTTP `429` errors. Only work that the
 loader awaits can change its status. Give deferred promises a local fallback, such as

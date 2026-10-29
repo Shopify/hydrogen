@@ -1,0 +1,5 @@
+---
+"@shopify/hydrogen": minor
+---
+
+`handleShopifyRoutes` now answers a Storefront API rate limit with HTTP `429`. This covers the built-in cart and predictive search routes, and any custom `createShopifyRouteHandler` handler that throws a `StorefrontApiError` with status `429`. The response body is `{error: {code: "rate_limited", message}}` with a constant message, and the response has `Cache-Control: no-store` and a validated `Retry-After` header. The response never includes the upstream body. Before, the cart route returned `500` (`cart_mutation_failed`) or rejected, the predictive search route returned `400` with part of the upstream body in the message, and a custom handler's throw rejected the promise. The cart route and `handleShopifyRoutes` log the original error at `error` level through Hydrogen's logger. `CartErrorCode` gains `"rate_limited"`, so an exhaustive `switch` on it needs a new case. A direct `cartHandlers.get()` call still throws the `StorefrontApiError`. Other Storefront API HTTP failures keep their previous handling, except that the predictive search error message no longer includes the upstream body.

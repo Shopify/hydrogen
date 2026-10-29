@@ -418,6 +418,60 @@ describe("createCartServerHandlers", () => {
       );
     });
 
+    it("returns 429 with Retry-After from the route when the Storefront API rate limits", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      mockFetch.mockResolvedValueOnce(
+        new Response("<html>upstream rate limit page</html>", {
+          status: 429,
+          headers: { "retry-after": "3", "x-request-id": "req-429" },
+        }),
+      );
+
+      const result = await handleCartRequest(createGetRequest("cart=123"), defaultConfig);
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(429);
+      expect(result.headers.get("retry-after")).toBe("3");
+      expect(result.headers.get("cache-control")).toBe("no-store");
+      expect(result.headers.get("x-request-id")).toBeNull();
+      const body = await result.json();
+      expect(body).toEqual({
+        error: {
+          code: "rate_limited",
+          message: "The request was rate limited. Please try again later.",
+        },
+      });
+      expect(JSON.stringify(body)).not.toContain("upstream");
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith("storefront api rate limited the route handler", {
+        scope: "shopify-routes",
+        error: expect.objectContaining({ status: 429 }),
+      });
+    });
+
+    it("still throws from a direct get() call when the Storefront API rate limits", async () => {
+      mockFetch.mockResolvedValueOnce(
+        new Response("", { status: 429, headers: { "retry-after": "3" } }),
+      );
+      const request = createGetRequest("cart=123");
+      const cartHandlers = createCartServerHandlers();
+
+      await expect(
+        cartHandlers.get({ request, storefrontClient: createPrivateStorefrontClient(request) }),
+      ).rejects.toMatchObject({ name: "StorefrontApiError", status: 429, retryAfter: "3" });
+    });
+
+    it("keeps throwing from the route for other Storefront API HTTP failures", async () => {
+      mockFetch.mockResolvedValueOnce(
+        new Response("", { status: 503, headers: { "retry-after": "3" } }),
+      );
+
+      await expect(handleCartRequest(createGetRequest("cart=123"), defaultConfig)).rejects.toThrow(
+        "SFAPI responded with 503",
+      );
+    });
+
     it("returns null cart with GraphQL errors", async () => {
       const logger = createTestLogger();
       configureLogging({ logger });
@@ -534,6 +588,75 @@ describe("createCartServerHandlers", () => {
         scope: "cart-api",
         error: expect.anything(),
       });
+    });
+
+    it("returns 429 with Retry-After when the Storefront API rate limits an anonymous mutation", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      mockFetch.mockResolvedValueOnce(
+        new Response("<html>upstream rate limit page</html>", {
+          status: 429,
+          headers: { "retry-after": "5", "x-request-id": "req-429", "content-type": "text/html" },
+        }),
+      );
+      const request = createJsonPostRequest({
+        lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+      });
+
+      const result = await handleCartRequest(request, defaultConfig);
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(429);
+      expect(result.headers.get("retry-after")).toBe("5");
+      expect(result.headers.get("x-request-id")).toBeNull();
+      expect(result.headers.get("cache-control")).toBe("no-store");
+      expect(result.headers.getSetCookie()).toEqual([]);
+      const body = await result.json();
+      expect(body).toEqual({
+        error: {
+          code: "rate_limited",
+          message: "Cart mutation is rate limited. Please try again later.",
+        },
+      });
+      expect(JSON.stringify(body)).not.toContain("upstream");
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith("storefront api rate limited the cart mutation", {
+        scope: "cart-api",
+        error: expect.objectContaining({ status: 429 }),
+      });
+    });
+
+    it("returns 429 and still commits the refreshed customer session when rate limited", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      mockFetch.mockResolvedValueOnce(
+        new Response("", { status: 429, headers: { "retry-after": "5" } }),
+      );
+      const customerSession = createCartCustomerSession(undefined, true, CUSTOMER_ACCESS_TOKEN);
+      const cartHandlers = createCartServerHandlers({ customerSession });
+      const request = createJsonPostRequest({
+        lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+      });
+      const sessionManager = createTestSessionManager(request);
+
+      const result = await handleCartRequest(request, defaultConfig, cartHandlers, sessionManager);
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(429);
+      expect(result.headers.get("retry-after")).toBe("5");
+      expect(result.headers.getSetCookie()).toEqual(["session=1"]);
+      await expect(result.json()).resolves.toMatchObject({ error: { code: "rate_limited" } });
+    });
+
+    it("keeps throwing for other Storefront API HTTP failures without a customer session", async () => {
+      mockFetch.mockResolvedValueOnce(new Response("", { status: 503 }));
+      const request = createJsonPostRequest({
+        lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+      });
+
+      await expect(handleCartRequest(request, defaultConfig)).rejects.toThrow(
+        "SFAPI responded with 503",
+      );
     });
 
     it("does not add buyer identity or commit the customer session when anonymous", async () => {

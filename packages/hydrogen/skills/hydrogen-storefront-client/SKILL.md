@@ -307,6 +307,7 @@ export const loader = withStorefrontRateLimit(async ({ context }: Route.LoaderAr
 - Export `headers` from the root route **and** from each wrapped route. Page requests read the root route's headers. Single-fetch `.data` requests read the headers of the route that threw.
 - Don't build a `429` body from `error.message`, and don't copy upstream headers. The message holds part of the upstream response body.
 - Only work that the loader awaits can change the status. Handle deferred promises locally with `<Await errorElement>`.
+- `handleShopifyRoutes` maps the same error without a wrapper. The built-in `/api/cart` and `/api/predictive-search` routes, and custom `createShopifyRouteHandler` handlers that throw it, return `429` with `{ error: { code: "rate_limited", message } }`, `Cache-Control: no-store`, and a valid `Retry-After`. A direct `cartHandlers.get()` call in a loader still throws, so wrap that loader.
 
 ---
 
