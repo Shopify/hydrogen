@@ -1,9 +1,8 @@
-import {
-  useLoaderData,
-} from 'react-router';
+import {useLoaderData} from 'react-router';
 import {Link} from '~/components/Link';
 import type {Route} from './+types/($locale).policies.$handle';
 import {type Shop} from '@shopify/hydrogen/storefront-api-types';
+import {sanitizeHtml} from '~/lib/sanitizeHtml';
 
 type SelectedPolicies = keyof Pick<
   Shop,
@@ -41,7 +40,8 @@ export async function loader({params, context}: Route.LoaderArgs) {
     throw new Response('Could not find the policy', {status: 404});
   }
 
-  return {policy};
+  // Policy bodies are merchant-managed HTML: sanitize before rendering it raw.
+  return {policy: {...policy, body: sanitizeHtml(policy.body)}};
 }
 
 export default function Policy() {
