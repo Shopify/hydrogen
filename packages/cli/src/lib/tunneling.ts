@@ -10,6 +10,8 @@ export async function startTunnelPlugin(
   port: number,
   provider: string,
 ): Promise<TunnelClient> {
+  // Shopify CLI 4.9 bundles the Cloudflare tunnel_start hook in its root plugin.
+  // Registering plugin-cloudflare again in Hydrogen would start duplicate tunnels.
   const hooks = await fanoutHooks(config, 'tunnel_start', {port, provider});
   const results = Object.values(hooks).filter(
     (tunnelResponse) =>

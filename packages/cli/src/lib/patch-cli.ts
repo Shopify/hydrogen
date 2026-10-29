@@ -64,24 +64,29 @@ if (monorepoRoot) {
   //
   // This uses the same pluginAdditions mechanism that ShopifyConfig
   // uses internally
-  const {fileURLToPath} = await import('node:url');
+  const {fileURLToPath, pathToFileURL} = await import('node:url');
   const {Config, run, flush} = await import('@oclif/core');
 
   // root must point to @shopify/cli's installed location so oclif
   // can find its package.json, oclif config, and bundled commands.
   const cliRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-  const c = '\\x1b[38;5;209m';
-  const d = '\\x1b[2m';
-  const r = '\\x1b[0m';
-  console.log('');
-  console.log(c + '  \u250c\u2500\u2500 hydrogen-monorepo \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510' + r);
-  console.log(c + '  \u2502' + r + '                                                          ' + c + '\u2502' + r);
-  console.log(c + '  \u2502' + r + '  Using local cli-hydrogen plugin from packages/cli       ' + c + '\u2502' + r);
-  console.log(c + '  \u2502' + r + d + '  Bundled commands replaced with local source             ' + r + c + '\u2502' + r);
-  console.log(c + '  \u2502' + r + '                                                          ' + c + '\u2502' + r);
-  console.log(c + '  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518' + r);
-  console.log('');
+  const machineOutput = process.argv.some((arg) => ['--json', '-j', '--json-schema'].includes(arg)) ||
+    /^(1|true)$/i.test(process.env.SHOPIFY_FLAG_JSON ?? '') ||
+    /^(1|true)$/i.test(process.env.SHOPIFY_FLAG_JSON_SCHEMA ?? '');
+  if (!machineOutput) {
+    const c = '\\x1b[38;5;209m';
+    const d = '\\x1b[2m';
+    const r = '\\x1b[0m';
+    console.log('');
+    console.log(c + '  \u250c\u2500\u2500 hydrogen-monorepo \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510' + r);
+    console.log(c + '  \u2502' + r + '                                                          ' + c + '\u2502' + r);
+    console.log(c + '  \u2502' + r + '  Using local cli-hydrogen plugin from packages/cli       ' + c + '\u2502' + r);
+    console.log(c + '  \u2502' + r + d + '  Bundled commands replaced with local source             ' + r + c + '\u2502' + r);
+    console.log(c + '  \u2502' + r + '                                                          ' + c + '\u2502' + r);
+    console.log(c + '  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518' + r);
+    console.log('');
+  }
 
   // Tell ShopifyConfig to skip its own monorepo detection since we
   // are handling pluginAdditions ourselves.
@@ -143,8 +148,31 @@ if (monorepoRoot) {
   // alias registration and command permutations correctly.
   config.loadCommands(externalPlugin);
 
-  await run(process.argv.slice(2), config);
-  await flush();
+  // The local plugin also owns the Hydrogen hook. Running the bundled hook
+  // would apply the older project's policy without our JSON error handling.
+  for (const plugin of config.plugins.values()) {
+    if (plugin.isRoot && plugin.hooks.init) {
+      plugin.hooks.init = plugin.hooks.init.filter((hook) =>
+        !hook.target.endsWith('/hydrogen-init.js'),
+      );
+    }
+  }
+
+  const argv = process.argv.slice(2);
+  const commandArguments = argv.slice(0, argv.indexOf('--') === -1 ? argv.length : argv.indexOf('--'));
+  if (commandArguments.includes('--json-schema') || /^(1|true)$/i.test(process.env.SHOPIFY_FLAG_JSON_SCHEMA ?? '')) {
+    // Match CLI Kit's launcher: schema discovery must run before command hooks.
+    // This development-only patch already depends on the pinned CLI's internals.
+    const {createRequire} = await import('node:module');
+    const localRequire = createRequire(resolve(monorepoRoot, 'packages/cli/package.json'));
+    const baseCommandPath = localRequire.resolve('@shopify/cli-kit/node/base-command');
+    const schemaModule = pathToFileURL(resolve(dirname(baseCommandPath), '../../private/node/command-json-schema.js'));
+    const {printCommandJsonSchema} = await import(schemaModule.href);
+    await printCommandJsonSchema(config, argv);
+  } else {
+    await run(argv, config);
+    await flush();
+  }
 } else {
   // Not in the monorepo — run the standard @shopify/cli entrypoint.
   const {default: runCLI} = await import('../dist/index.js');
@@ -187,7 +215,11 @@ export function applyPatch(runJsPath: string): boolean {
     throw err;
   }
 
-  if (isPatchApplied(current)) return false;
+  if (isPatchApplied(current)) {
+    if (current === generatePatchedContent()) return false;
+    writeFileSync(runJsPath, generatePatchedContent());
+    return true;
+  }
 
   const backupPath = runJsPath + '.backup';
   if (!existsSync(backupPath)) {

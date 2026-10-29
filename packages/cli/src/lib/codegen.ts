@@ -1,3 +1,6 @@
+import {execAsync} from './process.js';
+import {getWatchError} from './watch.js';
+import {isJsonOutput} from './json-output.js';
 import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
@@ -15,6 +18,8 @@ import type {
 } from '@graphql-codegen/cli';
 import type {GraphQLConfig, GraphQLProjectConfig} from 'graphql-config';
 import {importLocal} from './import-utils.js';
+import {watch as watchFiles} from 'chokidar';
+import type {CodegenWatchRecord} from './codegen/types.js';
 
 const nodePath = process.argv[1];
 const modulePath = fileURLToPath(import.meta.url);
@@ -141,12 +146,17 @@ type CodegenOptions = ProjectDirs & {
   watch?: boolean;
   configFilePath?: string;
   forceSfapiVersion?: string;
+  onConfig?: (config: CodegenConfig) => void;
 };
 
 export async function codegen(options: CodegenOptions) {
   await executeReactRouterCodegen(options);
 
-  return runGraphQLCodegen(options).catch((error: Error) => {
+  return runGraphQLCodegen(options);
+}
+
+function runGraphQLCodegen(options: CodegenOptions) {
+  return generateGraphQLTypes(options).catch((error: Error) => {
     if (error instanceof AbortError) throw error;
 
     const {message, details} = normalizeCodegenError(
@@ -156,6 +166,121 @@ export async function codegen(options: CodegenOptions) {
 
     throw new AbortError(message, details);
   });
+}
+
+/** Serialize generation cycles and wait for active writes before closing. */
+export async function watchCodegen(
+  options: CodegenOptions,
+  signal: AbortSignal,
+  onRecord: (record: CodegenWatchRecord) => void,
+) {
+  const generatedPaths = new Set<string>();
+  const initialPaths = [
+    joinPath(options.rootDirectory, '*.{ts,tsx,js,jsx,cjs,mjs,cts,mts}'),
+    joinPath(options.rootDirectory, 'codegen.{json,yml,yaml}'),
+    joinPath(options.rootDirectory, 'graphql.config.{json,yml,yaml}'),
+    joinPath(options.rootDirectory, '.graphqlrc*'),
+    joinPath(options.rootDirectory, 'package.json'),
+    joinPath(
+      options.appDirectory ?? joinPath(options.rootDirectory, 'app'),
+      '**/*.{ts,tsx,js,jsx}',
+    ),
+    ...(options.configFilePath
+      ? [resolvePath(options.rootDirectory, options.configFilePath)]
+      : []),
+  ];
+  const watchedPaths = new Set(initialPaths);
+  const watcher = watchFiles(initialPaths, {
+    ignoreInitial: true,
+    ignored: (path) =>
+      /(^|[/\\])(?:node_modules|\.git|\.react-router|dist|build)(?:[/\\]|$)/.test(
+        relativePath(options.rootDirectory, path),
+      ) || generatedPaths.has(resolvePath(path)),
+  });
+  let pending = true;
+  let wake = () => {};
+  let watcherError: Error | undefined;
+  const changed = () => {
+    pending = true;
+    wake();
+  };
+  const stopped = () => wake();
+  watcher.on('add', changed).on('change', changed).on('unlink', changed);
+  watcher.on('error', (error) => {
+    watcherError = error;
+    wake();
+  });
+  signal.addEventListener('abort', stopped);
+  let cycle = 0;
+  try {
+    await new Promise<void>((resolve, reject) => {
+      watcher.once('ready', resolve);
+      watcher.once('error', reject);
+    });
+    let hasReactRouter = true;
+    try {
+      await execAsync('npx react-router --version', {
+        cwd: options.rootDirectory,
+      });
+    } catch {
+      hasReactRouter = false;
+      renderInfo({body: 'React Router not found, skipping typegen'});
+    }
+    while (!signal.aborted) {
+      if (watcherError) throw watcherError;
+      if (!pending) {
+        await new Promise<void>((resolve) => {
+          wake = resolve;
+        });
+        continue;
+      }
+      pending = false;
+      onRecord({type: 'generation-started', cycle: ++cycle});
+      let generated: Record<string, string[]>;
+      try {
+        if (hasReactRouter) {
+          await execAsync('npx react-router typegen', {
+            cwd: options.rootDirectory,
+          });
+        }
+        generated = await runGraphQLCodegen({
+          ...options,
+          watch: false,
+          onConfig(config) {
+            for (const [path, output] of Object.entries(config.generates)) {
+              if (Array.isArray(output) || !output.preset) {
+                generatedPaths.add(resolvePath(options.rootDirectory, path));
+              }
+            }
+            const newPaths = getWatchTargets(
+              config,
+              options.rootDirectory,
+            ).filter((path) => !watchedPaths.has(path));
+            if (newPaths.length) {
+              for (const path of newPaths) watchedPaths.add(path);
+              watcher.add(newPaths);
+            }
+          },
+        });
+      } catch (error) {
+        onRecord({
+          type: 'generation-failed',
+          cycle,
+          error: getWatchError(error),
+        });
+        continue;
+      }
+      const files = Object.entries(generated).map(([path, sources]) => ({
+        path: resolvePath(options.rootDirectory, path),
+        sources,
+      }));
+      for (const file of files) generatedPaths.add(file.path);
+      onRecord({type: 'generation-completed', cycle, files});
+    }
+  } finally {
+    signal.removeEventListener('abort', stopped);
+    await watcher.close();
+  }
 }
 
 export async function executeReactRouterCodegen(options: {
@@ -188,15 +313,16 @@ export async function executeReactRouterCodegen(options: {
   } else {
     execSync('npx react-router typegen', {
       cwd: options.rootDirectory,
-      stdio: 'inherit',
+      stdio: isJsonOutput() ? 'pipe' : 'inherit',
     });
   }
 }
 
-async function runGraphQLCodegen({
+async function generateGraphQLTypes({
   watch,
   configFilePath,
   forceSfapiVersion,
+  onConfig,
   ...dirs
 }: CodegenOptions) {
   type CodegenType = typeof import('@graphql-codegen/cli');
@@ -221,6 +347,7 @@ async function runGraphQLCodegen({
     (await generateDefaultConfig(dirs, forceSfapiVersion));
 
   await addHooksToHydrogenOptions(codegenConfig, dirs);
+  onConfig?.(codegenConfig);
 
   const codegenContext = new CodegenContext({
     config: {
@@ -239,20 +366,60 @@ async function runGraphQLCodegen({
 
   codegenContext.cwd = dirs.rootDirectory;
 
-  await generate(codegenContext, true);
+  const outputs: {filename: string}[] = await generate(codegenContext, true);
+  // Watch mode returns a watcher rather than a finite set of generated files.
+  if (watch) return {} as Record<string, string[]>;
 
-  return Object.entries(codegenConfig.generates).reduce(
-    (acc, [key, value]) => {
-      if ('documents' in value) {
-        acc[key] = (
-          Array.isArray(value.documents) ? value.documents : [value.documents]
-        ).filter((document) => typeof document === 'string') as string[];
-      }
-
-      return acc;
-    },
-    {} as Record<string, string[]>,
+  const configuredOutputs = Object.entries(codegenConfig.generates);
+  return Object.fromEntries(
+    outputs.map(({filename}) => {
+      const path = resolvePath(dirs.rootDirectory, filename);
+      const configuration =
+        configuredOutputs.find(
+          ([key]) => resolvePath(dirs.rootDirectory, key) === path,
+        ) ??
+        configuredOutputs
+          .filter(
+            ([key, value]) =>
+              !Array.isArray(value) &&
+              value.preset &&
+              path.startsWith(resolvePath(dirs.rootDirectory, key) + '/'),
+          )
+          .sort(([left], [right]) => right.length - left.length)[0];
+      const options = configuration?.[1];
+      const sources = getCodegenPointers(
+        codegenConfig.documents,
+        options && !Array.isArray(options) ? options.documents : undefined,
+      );
+      return [filename, [...new Set(sources)]];
+    }),
   );
+}
+
+function getCodegenPointers(...pointers: unknown[]): string[] {
+  return pointers
+    .flat()
+    .flatMap((pointer) =>
+      typeof pointer === 'string'
+        ? [pointer]
+        : pointer
+          ? Object.keys(pointer)
+          : [],
+    );
+}
+
+function getWatchTargets(config: CodegenConfig, rootDirectory: string) {
+  const pointers: unknown[] = [config.schema, config.documents];
+  for (const output of Object.values(config.generates)) {
+    if (!Array.isArray(output)) pointers.push(output.schema, output.documents);
+  }
+  return getCodegenPointers(...pointers)
+    .filter((pointer) => !/^(?:https?:|type\s|schema\s)/.test(pointer))
+    .map((path) =>
+      path.startsWith('!')
+        ? '!' + resolvePath(rootDirectory, path.slice(1))
+        : resolvePath(rootDirectory, path),
+    );
 }
 
 export async function generateDefaultConfig(

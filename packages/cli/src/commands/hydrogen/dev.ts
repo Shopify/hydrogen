@@ -1,6 +1,6 @@
 import type {ViteDevServer} from 'vite';
 import {Flags, Config} from '@oclif/core';
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../lib/hydrogen-command.js';
 import colors from '@shopify/cli-kit/node/colors';
 import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {collectLog} from '@shopify/cli-kit/node/output';
@@ -258,6 +258,7 @@ export async function runDev({
                   debug,
                   inspectorPort,
                   finalHost,
+                  localHost: tunnel?.host ? publicUrl.origin : undefined,
                   storefrontTitle,
                 }),
             }),
@@ -354,6 +355,7 @@ export async function runDev({
     debug,
     inspectorPort,
     finalHost,
+    localHost: tunnel?.host ? publicUrl.origin : undefined,
     storefrontTitle,
   });
 
@@ -381,15 +383,17 @@ function showSuccessBanner({
   debug,
   inspectorPort,
   finalHost,
+  localHost,
   storefrontTitle,
 }: Pick<DevOptions, 'disableVirtualRoutes' | 'debug' | 'inspectorPort'> & {
   finalHost: string;
+  localHost?: string;
   storefrontTitle?: string;
 }) {
   const customSections: AlertCustomSection[] = [];
 
   if (!disableVirtualRoutes) {
-    customSections.push({body: getUtilityBannerlines(finalHost)});
+    customSections.push({body: getUtilityBannerlines(finalHost, localHost)});
   }
 
   if (debug && inspectorPort) {

@@ -1,19 +1,31 @@
-import Command from '@shopify/cli-kit/node/base-command';
+import {writeJsonResult, isJsonOutput} from '../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {
+  codegenJsonOutputSchema,
+  codegenCommandOutputSchema,
+  type CodegenWatchRecord,
+} from '../../lib/codegen/types.js';
+import Command from '../../lib/hydrogen-command.js';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {Flags} from '@oclif/core';
 import {getProjectPaths, getRemixConfig} from '../../lib/remix-config.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
-import {codegen} from '../../lib/codegen.js';
+import {codegen, watchCodegen} from '../../lib/codegen.js';
+import {runWatchCommand, writeWatchRecord} from '../../lib/watch.js';
 
 export default class Codegen extends Command {
-  static descriptionWithMarkdown =
-    'Automatically generates GraphQL types for your project’s Storefront API queries.';
+  static get jsonOutputSchema(): typeof codegenCommandOutputSchema {
+    return codegenCommandOutputSchema;
+  }
 
-  static description =
-    'Generate types for the Storefront API queries found in your project.';
+  static descriptionWithMarkdown =
+    'Automatically generates GraphQL types for your project’s Storefront API queries. With `--json --watch`, emits JSONL lifecycle and generation records to stdout and diagnostics to stderr until stopped.';
+
+  static description = this.descriptionForHelp();
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
     'codegen-config-path': Flags.string({
       description:
@@ -49,16 +61,37 @@ export async function runCodegen({
   codegenConfigPath,
   forceSfapiVersion,
   watch,
+  json = isJsonOutput(),
 }: {
   directory?: string;
   codegenConfigPath?: string;
   forceSfapiVersion?: string;
   watch?: boolean;
+  json?: boolean;
 }) {
   const {root} = getProjectPaths(directory);
   const remixConfig = await getRemixConfig(root);
 
-  console.log(''); // New line
+  if (json && watch) {
+    const write = (record: CodegenWatchRecord) =>
+      writeWatchRecord(codegenCommandOutputSchema, record);
+    await runWatchCommand(async (signal) => {
+      write({type: 'watch-started', directory: resolvePath(root)});
+      await watchCodegen(
+        {
+          ...remixConfig,
+          configFilePath: codegenConfigPath,
+          forceSfapiVersion,
+        },
+        signal,
+        write,
+      );
+      write({type: 'watch-stopped'});
+    });
+    return;
+  }
+
+  if (!json) console.log(''); // New line
 
   const generatedFiles = await codegen({
     ...remixConfig,
@@ -67,7 +100,13 @@ export async function runCodegen({
     watch,
   });
 
-  if (!watch) {
+  const result = {
+    files: Object.entries(generatedFiles).map(([path, sources]) => ({
+      path: resolvePath(root, path),
+      sources,
+    })),
+  };
+  if (!watch && !writeJsonResult(codegenJsonOutputSchema, result, json)) {
     renderSuccess({
       headline: 'Generated types for GraphQL:',
       body: {
@@ -82,4 +121,5 @@ export async function runCodegen({
       },
     });
   }
+  return result;
 }
