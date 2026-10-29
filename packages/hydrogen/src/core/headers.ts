@@ -84,10 +84,19 @@ export function extractHeaders(
 
 export function applyPrivateResponseCacheHeaders(headers: Headers): void {
   headers.set(CACHE_CONTROL_HEADER, "private, no-store, max-age=0, must-revalidate");
+  deleteTargetedCacheHeaders(headers);
+}
+
+export function applyNoStoreResponseCacheHeaders(headers: Headers): void {
+  headers.set(CACHE_CONTROL_HEADER, "no-store");
+  deleteTargetedCacheHeaders(headers);
+}
+
+function deleteTargetedCacheHeaders(headers: Headers): void {
   for (const header of Array.from(headers.keys())) {
     // Delete every vendor `*-Cache-Control` header (`CDN-`, `Cloudflare-CDN-`, `Oxygen-`, ...):
     // targeted caches such as Oxygen's full-page cache prefer their own header over
-    // `Cache-Control`, so leaving one in place would override the private value set above.
+    // `Cache-Control`, so leaving one in place would override the `Cache-Control` value.
     if (
       /^.+-cache-control$/i.test(header) ||
       header.toLowerCase() === SURROGATE_CONTROL_HEADER.toLowerCase()

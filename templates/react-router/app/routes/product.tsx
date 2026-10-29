@@ -4,7 +4,6 @@ import {
   canAddToCart,
   getSelectedProductOptions,
   gql,
-  storefrontRateLimitHeaders,
   withStorefrontRateLimit,
   type SelectedOption,
 } from "@shopify/hydrogen";
@@ -145,8 +144,6 @@ export function meta({ matches }: Route.MetaArgs) {
     },
   ];
 }
-
-export const headers = storefrontRateLimitHeaders;
 
 export const loader = withStorefrontRateLimit(
   async ({ context, params, request }: Route.LoaderArgs) => {

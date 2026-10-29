@@ -1,7 +1,6 @@
 import {
   handleShopifyRedirects,
   handleShopifyRoutes,
-  storefrontRateLimitHeaders,
   withStorefrontRateLimit,
 } from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
@@ -91,12 +90,10 @@ export const middleware: Route.MiddlewareFunction[] = [
       if (redirect) return redirect;
     }
 
-    requestContext.applyResponseHeaders(response.headers);
+    requestContext.applyResponseHeaders(response.headers, response.status);
     return response;
   },
 ];
-
-export const headers = storefrontRateLimitHeaders;
 
 export const loader = withStorefrontRateLimit(async ({ context, request }: Route.LoaderArgs) => {
   const env = context.get(envContext);

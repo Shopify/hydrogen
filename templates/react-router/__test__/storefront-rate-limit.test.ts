@@ -7,9 +7,9 @@ import {
   createShopifyRequestContext,
   createStorefrontClient,
   StorefrontApiError,
-  storefrontRateLimitHeaders,
   withStorefrontRateLimit,
   type HydrogenLogger,
+  type ShopifyRequestContext,
 } from "@shopify/hydrogen";
 import { createElement, Suspense } from "react";
 import { renderToReadableStream } from "react-dom/server";
@@ -21,6 +21,7 @@ import {
   ServerRouter,
   useLoaderData,
   useRouteError,
+  type MiddlewareFunction,
   type ServerBuild,
 } from "react-router";
 
@@ -46,13 +47,17 @@ beforeEach(() => {
   handledErrors.length = 0;
 });
 
+function createRequestContext() {
+  return createShopifyRequestContext({
+    request: new Request("https://storefront.example/"),
+    i18n: { country: "US", language: "EN" },
+  });
+}
+
 function createClient(response: () => Response | Promise<Response>) {
   return createStorefrontClient({
     type: "public",
-    requestContext: createShopifyRequestContext({
-      request: new Request("https://storefront.example/"),
-      i18n: { country: "US", language: "EN" },
-    }),
+    requestContext: createRequestContext(),
     config: {
       storeDomain: "store.myshopify.com",
       defaultTimeoutInMs: 0,
@@ -111,14 +116,30 @@ function manifestRoute(id: string, parentId?: string) {
   };
 }
 
+// Finalizes the response as the template's root middleware does after `next()`.
+function rootMiddleware(
+  requestContext: ShopifyRequestContext,
+  passStatus: boolean,
+): MiddlewareFunction<Response>[] {
+  return [
+    async (_args, next) => {
+      const response = await next();
+      if (passStatus) requestContext.applyResponseHeaders(response.headers, response.status);
+      else requestContext.applyResponseHeaders(response.headers);
+      return response;
+    },
+  ];
+}
+
 function handler(
   loader: () => unknown,
+  requestContext: ShopifyRequestContext,
   options: {
     map?: boolean;
-    headers?: boolean;
     child?: boolean;
     deferred?: boolean;
-    rootOnlyHeaders?: boolean;
+    /** Leaves out the response status, as an app with an older root middleware does. */
+    withoutStatus?: boolean;
   } = {},
 ) {
   const mappedLoader = options.map ? withStorefrontRateLimit(loader) : loader;
@@ -154,7 +175,7 @@ function handler(
               ? DeferredContent
               : () => createElement("p", null, "Success"),
           ErrorBoundary,
-          ...(options.headers && { headers: storefrontRateLimitHeaders }),
+          middleware: rootMiddleware(requestContext, !options.withoutStatus),
         },
       },
       ...(options.child && {
@@ -165,8 +186,6 @@ function handler(
           module: {
             loader: mappedLoader,
             default: () => createElement("p", null, "Child"),
-            ...(options.headers &&
-              !options.rootOnlyHeaders && { headers: storefrontRateLimitHeaders }),
           },
         },
       }),
@@ -181,7 +200,7 @@ function handler(
       version: "test",
     },
     future: {
-      v8_middleware: false,
+      v8_middleware: true,
       v8_passThroughRequests: false,
       unstable_trailingSlashAwareDataRequests: false,
     },
@@ -195,18 +214,20 @@ function handler(
   return createRequestHandler(build, "production");
 }
 
-test("baseline: an uncaught Storefront HTTP 429 is an HTML 500 despite preserved error status", async () => {
+test("baseline: an unwrapped Storefront HTTP 429 is an HTML 500 despite preserved error status", async () => {
   const client = createClient(() => upstream());
   await assert.rejects(client.graphql(QUERY), (error) => {
     assert.ok(error instanceof StorefrontApiError);
     assert.equal(error.status, 429);
     return true;
   });
-  const response = await handler(() => client.graphql(QUERY))(
-    new Request("https://storefront.example/"),
-  );
+  const response = await handler(
+    () => client.graphql(QUERY),
+    client.requestContext,
+  )(new Request("https://storefront.example/"));
   assert.equal(response.status, 500);
   assert.equal(response.headers.get("retry-after"), null);
+  assert.equal(response.headers.get("cache-control"), null);
   assert.doesNotMatch(await response.text(), new RegExp(UPSTREAM_SECRET));
   assert.equal(handledErrors.length, 1);
   assert.ok(handledErrors[0] instanceof StorefrontApiError);
@@ -215,9 +236,9 @@ test("baseline: an uncaught Storefront HTTP 429 is an HTML 500 despite preserved
 
 test("a mapped rate limit is logged once through Hydrogen, because React Router doesn't report thrown responses", async () => {
   const client = createClient(() => upstream());
-  const response = await handler(() => client.graphql(QUERY), { map: true, headers: true })(
-    new Request("https://storefront.example/"),
-  );
+  const response = await handler(() => client.graphql(QUERY), client.requestContext, {
+    map: true,
+  })(new Request("https://storefront.example/"));
   assert.equal(response.status, 429);
   await response.text();
   assert.equal(handledErrors.length, 0);
@@ -234,9 +255,8 @@ for (const child of [false, true]) {
   for (const path of ["/", "/_root.data"]) {
     test(`mapped ${child ? "child" : "root"} critical loader returns 429 and Retry-After for ${path}`, async () => {
       const client = createClient(() => upstream());
-      const response = await handler(() => client.graphql(QUERY), {
+      const response = await handler(() => client.graphql(QUERY), client.requestContext, {
         map: true,
-        headers: true,
         child,
       })(new Request(`https://storefront.example${path}`));
       assert.equal(response.status, 429);
@@ -250,36 +270,51 @@ for (const child of [false, true]) {
       assert.doesNotMatch(text, new RegExp(UPSTREAM_SECRET));
       assert.doesNotMatch(text, /internal-request-id|internal-value|upstream-private-cookie/);
     });
+
+    test(`without the response status, a mapped ${child ? "child" : "root"} 429 loses Retry-After for ${path}`, async () => {
+      const client = createClient(() => upstream());
+      const response = await handler(() => client.graphql(QUERY), client.requestContext, {
+        map: true,
+        child,
+        withoutStatus: true,
+      })(new Request(`https://storefront.example${path}`));
+      assert.equal(response.status, 429);
+      assert.equal(response.headers.get("retry-after"), null);
+      assert.equal(response.headers.get("cache-control"), null);
+      await response.text();
+    });
   }
 }
 
-test("a root-only headers export loses child Retry-After on single-fetch requests", async () => {
-  const response = await handler(
-    () => {
-      throw new Response("Too many requests", { status: 429, headers: { "Retry-After": "30" } });
-    },
-    { headers: true, rootOnlyHeaders: true, child: true },
-  )(new Request("https://storefront.example/_root.data"));
+test("an application 429 Response gets no Retry-After when no Storefront request was rate limited", async () => {
+  const response = await handler(() => {
+    throw new Response("Too many requests", { status: 429, headers: { "Retry-After": "30" } });
+  }, createRequestContext())(new Request("https://storefront.example/"));
   assert.equal(response.status, 429);
   assert.equal(response.headers.get("retry-after"), null);
+  assert.equal(response.headers.get("cache-control"), null);
   await response.text();
 });
 
-test("a thrown 429 Response without a root headers export loses Retry-After for HTML", async () => {
-  const response = await handler(() => {
-    throw new Response("Too many requests", { status: 429, headers: { "Retry-After": "30" } });
-  })(new Request("https://storefront.example/"));
-  assert.equal(response.status, 429);
+test("a loader that recovers from a rate limit keeps 200 without rate-limit headers", async () => {
+  const client = createClient(() => upstream());
+  const response = await handler(
+    () => client.graphql(QUERY).catch(() => ({ recovered: true })),
+    client.requestContext,
+    { map: true },
+  )(new Request("https://storefront.example/"));
+  assert.equal(response.status, 200);
   assert.equal(response.headers.get("retry-after"), null);
-  await response.text();
+  assert.equal(response.headers.get("cache-control"), null);
+  assert.match(await response.text(), /Success/);
 });
 
 for (const retryAfter of ["0", "00030", "Thu, 29 Oct 2026 19:00:00 GMT"]) {
   test(`valid Retry-After advice is preserved: ${retryAfter}`, async () => {
     const client = createClient(() => upstream(429, retryAfter));
-    const response = await handler(() => client.graphql(QUERY), { map: true, headers: true })(
-      new Request("https://storefront.example/"),
-    );
+    const response = await handler(() => client.graphql(QUERY), client.requestContext, {
+      map: true,
+    })(new Request("https://storefront.example/"));
     assert.equal(response.status, 429);
     assert.equal(response.headers.get("retry-after"), retryAfter);
     await response.text();
@@ -295,11 +330,12 @@ for (const retryAfter of [undefined, "-1", "1.5", "tomorrow", "Wed, 29 Oct 2026 
           headers: retryAfter === undefined ? {} : { "retry-after": retryAfter },
         }),
     );
-    const response = await handler(() => client.graphql(QUERY), { map: true, headers: true })(
-      new Request("https://storefront.example/"),
-    );
+    const response = await handler(() => client.graphql(QUERY), client.requestContext, {
+      map: true,
+    })(new Request("https://storefront.example/"));
     assert.equal(response.status, 429);
     assert.equal(response.headers.get("retry-after"), null);
+    assert.equal(response.headers.get("cache-control"), "no-store");
     await response.text();
   });
 }
@@ -307,9 +343,9 @@ for (const retryAfter of [undefined, "-1", "1.5", "tomorrow", "Wed, 29 Oct 2026 
 for (const status of [401, 403, 404, 500, 503]) {
   test(`unrelated downstream HTTP ${status} stays a sanitized caller 500`, async () => {
     const client = createClient(() => upstream(status));
-    const response = await handler(() => client.graphql(QUERY), { map: true, headers: true })(
-      new Request("https://storefront.example/"),
-    );
+    const response = await handler(() => client.graphql(QUERY), client.requestContext, {
+      map: true,
+    })(new Request("https://storefront.example/"));
     assert.equal(response.status, 500);
     assert.equal(response.headers.get("retry-after"), null);
     assert.doesNotMatch(await response.text(), new RegExp(UPSTREAM_SECRET));
@@ -340,7 +376,7 @@ test("explicit application redirects and 404 Responses pass through unchanged", 
   }
 });
 
-test("the template wraps each Storefront page loader and exports error headers", async () => {
+test("the template wraps each Storefront page loader and passes the status to applyResponseHeaders", async () => {
   for (const path of [
     "root",
     "routes/home",
@@ -351,17 +387,21 @@ test("the template wraps each Storefront page loader and exports error headers",
   ]) {
     const source = await readFile(new URL(`../app/${path}.tsx`, import.meta.url), "utf8");
     assert.match(source, /export const loader = withStorefrontRateLimit\(/, path);
-    assert.match(source, /export const headers = storefrontRateLimitHeaders;/, path);
   }
+  const root = await readFile(new URL("../app/root.tsx", import.meta.url), "utf8");
+  assert.match(
+    root,
+    /requestContext\.applyResponseHeaders\(response\.headers, response\.status\);/,
+  );
 });
 
 test("network failures are not classified as rate limits", async () => {
   const client = createClient(() => {
     throw new TypeError(UPSTREAM_SECRET);
   });
-  const response = await handler(() => client.graphql(QUERY), { map: true, headers: true })(
-    new Request("https://storefront.example/"),
-  );
+  const response = await handler(() => client.graphql(QUERY), client.requestContext, {
+    map: true,
+  })(new Request("https://storefront.example/"));
   assert.equal(response.status, 500);
   assert.equal(response.headers.get("retry-after"), null);
   assert.doesNotMatch(await response.text(), new RegExp(UPSTREAM_SECRET));
@@ -369,9 +409,9 @@ test("network failures are not classified as rate limits", async () => {
 
 test("successful Storefront work keeps caller 200", async () => {
   const client = createClient(() => Response.json({ data: { shop: { name: "Success" } } }));
-  const response = await handler(() => client.graphql(QUERY), { map: true, headers: true })(
-    new Request("https://storefront.example/"),
-  );
+  const response = await handler(() => client.graphql(QUERY), client.requestContext, {
+    map: true,
+  })(new Request("https://storefront.example/"));
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("retry-after"), null);
   assert.match(await response.text(), /Success/);
@@ -383,11 +423,11 @@ test("deferred rate limits keep an already committed 200 and use the local Await
     release = () => resolve(upstream());
   });
   const client = createClient(() => pending);
-  const response = await handler(() => ({ product: client.graphql(QUERY) }), {
-    map: true,
-    headers: true,
-    deferred: true,
-  })(new Request("https://storefront.example/"));
+  const response = await handler(
+    () => ({ product: client.graphql(QUERY) }),
+    client.requestContext,
+    { map: true, deferred: true },
+  )(new Request("https://storefront.example/"));
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("retry-after"), null);
   assert.ok(release);

@@ -1,4 +1,4 @@
-import { gql, storefrontRateLimitHeaders, withStorefrontRateLimit } from "@shopify/hydrogen";
+import { gql, withStorefrontRateLimit } from "@shopify/hydrogen";
 import { Link, useRouteLoaderData } from "react-router";
 
 import {
@@ -66,8 +66,6 @@ export function meta({ matches }: Route.MetaArgs) {
     },
   ];
 }
-
-export const headers = storefrontRateLimitHeaders;
 
 export const loader = withStorefrontRateLimit(async ({ context }: Route.LoaderArgs) => {
   const storefrontClient = context.get(storefrontClientContext);

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { StorefrontApiError, StorefrontTimeoutError } from "../client/errors";
 import { configureLogging } from "./logging";
-import { storefrontRateLimitHeaders, withStorefrontRateLimit } from "./storefront-rate-limit";
+import { withStorefrontRateLimit } from "./storefront-rate-limit";
 import { createTestLogger } from "./test-utils";
 
 const UPSTREAM_BODY = "upstream-private-diagnostic";
@@ -174,58 +174,5 @@ describe("withStorefrontRateLimit", () => {
 
     await expect(loader(1, "id-")).resolves.toEqual({ value: "id-1" });
     await expect(asyncLoader(21)).resolves.toBe(42);
-  });
-});
-
-describe("storefrontRateLimitHeaders", () => {
-  it("keeps the parent headers when the route didn't throw a response", () => {
-    const parentHeaders = new Headers({ "Cache-Control": "public, max-age=60", "X-Parent": "1" });
-
-    const headers = storefrontRateLimitHeaders({ parentHeaders, errorHeaders: undefined });
-
-    expect([...headers]).toEqual([...parentHeaders]);
-    expect(headers).not.toBe(parentHeaders);
-  });
-
-  it("adds no-store and a valid Retry-After value from the thrown response", () => {
-    const headers = storefrontRateLimitHeaders({
-      parentHeaders: new Headers({ "Cache-Control": "public, max-age=60", "X-Parent": "1" }),
-      errorHeaders: new Headers({ "Cache-Control": "no-store", "Retry-After": "30" }),
-    });
-
-    expect([...headers]).toEqual([
-      ["cache-control", "no-store"],
-      ["retry-after", "30"],
-      ["x-parent", "1"],
-    ]);
-  });
-
-  it("copies no other error headers", () => {
-    const headers = storefrontRateLimitHeaders({
-      parentHeaders: new Headers({ "Cache-Control": "public, max-age=60" }),
-      errorHeaders: new Headers({
-        "Cache-Control": "private, max-age=10",
-        "Retry-After": "later",
-        "X-Request-Id": "internal-request-id",
-        "Content-Type": "text/plain",
-      }),
-    });
-
-    expect([...headers]).toEqual([["cache-control", "public, max-age=60"]]);
-  });
-
-  it("keeps the headers of a response from withStorefrontRateLimit", async () => {
-    configureLogging({ logger: createTestLogger() });
-    const response = await rateLimitResponse(rateLimitError("Thu, 29 Oct 2026 19:00:00 GMT"));
-
-    const headers = storefrontRateLimitHeaders({
-      parentHeaders: new Headers(),
-      errorHeaders: response.headers,
-    });
-
-    expect([...headers]).toEqual([
-      ["cache-control", "no-store"],
-      ["retry-after", "Thu, 29 Oct 2026 19:00:00 GMT"],
-    ]);
   });
 });

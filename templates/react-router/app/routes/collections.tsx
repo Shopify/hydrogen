@@ -1,4 +1,4 @@
-import { storefrontRateLimitHeaders, withStorefrontRateLimit } from "@shopify/hydrogen";
+import { withStorefrontRateLimit } from "@shopify/hydrogen";
 import { Link } from "react-router";
 
 import { CollectionCard } from "~/components/CollectionCard";
@@ -18,8 +18,6 @@ export function meta({ matches }: Route.MetaArgs) {
     },
   ];
 }
-
-export const headers = storefrontRateLimitHeaders;
 
 export const loader = withStorefrontRateLimit(async ({ context, request }: Route.LoaderArgs) => {
   const storefrontClient = context.get(storefrontClientContext);

@@ -290,21 +290,25 @@ On a non-OK response, `StorefrontApiError` exposes `status`, `requestId`, and `r
 
 ### Return `429` from a rate-limited React Router loader
 
-An uncaught `StorefrontApiError` in a React Router loader renders as HTTP `500`, even when its `status` is `429`. Wrap the loader with `withStorefrontRateLimit`, and export `storefrontRateLimitHeaders` as the route's `headers`:
+An uncaught `StorefrontApiError` in a React Router loader renders as HTTP `500`, even when its `status` is `429`. Wrap the loader with `withStorefrontRateLimit`, and pass the response status to `applyResponseHeaders` in the root middleware:
 
 ```ts
-import { storefrontRateLimitHeaders, withStorefrontRateLimit } from "@shopify/hydrogen";
+import { withStorefrontRateLimit } from "@shopify/hydrogen";
 
-export const headers = storefrontRateLimitHeaders;
 export const loader = withStorefrontRateLimit(async ({ context }: Route.LoaderArgs) => {
   const { data } = await context.get(storefrontClientContext).graphql(QUERY);
   return data;
 });
+
+// app/root.tsx, at the end of the root middleware:
+const response = await next();
+requestContext.applyResponseHeaders(response.headers, response.status);
+return response;
 ```
 
 - The wrapper maps only `StorefrontApiError` with `status === 429`. It throws a `429` `Response` with a fixed body, `Cache-Control: no-store`, and `Retry-After` when the upstream value is delay-seconds or an IMF-fixdate. Other errors pass through unchanged.
 - The wrapper logs the original error once, at `error` level with scope `rate-limit`, because React Router doesn't pass thrown responses to `handleError`. Use `configureLogging({ logger })` to send the entry to error reporting. Don't log the error again in the loader.
-- Export `headers` from the root route **and** from each wrapped route. Page requests read the root route's headers. Single-fetch `.data` requests read the headers of the route that threw.
+- React Router drops the headers of a thrown response. With the status, `applyResponseHeaders` restores them: for a `429` after a Storefront API rate limit on the same request context, it sets `Cache-Control: no-store`, removes `Surrogate-Control` and vendor `*-Cache-Control` headers, and adds the valid `Retry-After` value when the response has none. This covers page responses and single-fetch `.data` responses, so routes don't need a `headers` export. Responses with other statuses keep their cache headers.
 - Don't build a `429` body from `error.message`, and don't copy upstream headers. The message holds part of the upstream response body.
 - Only work that the loader awaits can change the status. Handle deferred promises locally with `<Await errorElement>`.
 - `handleShopifyRoutes` maps the same error without a wrapper. The built-in `/api/cart` and `/api/predictive-search` routes, and custom `createShopifyRouteHandler` handlers that throw it, return `429` with `{ error: { code: "rate_limited", message } }`, `Cache-Control: no-store`, and a valid `Retry-After`. A direct `cartHandlers.get()` call in a loader still throws, so wrap that loader.

@@ -22,6 +22,7 @@ import {
   SHOPIFY_VISIT_TOKEN_HEADER,
 } from "../core/headers";
 import type { I18nConfig, ShopifyRequestContext } from "../core/request-context";
+import { RATE_LIMITED_STATUS } from "../core/request-routing/rate-limit";
 import { normalizeStoreDomain } from "../core/url";
 import type { AnyStorefrontQueryString } from "../graphql";
 import { StorefrontApiError, StorefrontTimeoutError } from "./errors";
@@ -305,16 +306,13 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       }
 
       if (!response.ok) {
+        const retryAfter = responseHeaders.get("retry-after") ?? undefined;
+        // `applyResponseHeaders()` adds the value when the app answers this error with a `429`.
+        if (status === RATE_LIMITED_STATUS) requestContext.captureStorefrontRateLimit(retryAfter);
         const bodyHint = await response.text().catch(() => "");
         throw new StorefrontApiError(
           `SFAPI responded with ${status}${bodyHint ? `: ${bodyHint.slice(0, 200)}` : ""}`,
-          {
-            status,
-            requestId,
-            retryAfter: responseHeaders.get("retry-after") ?? undefined,
-            queryText,
-            variables,
-          },
+          { status, requestId, retryAfter, queryText, variables },
         );
       }
 

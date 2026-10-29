@@ -21,7 +21,7 @@ export { createShopifyRequestContext } from "./request-context";
 export { Cache, createFetchWithCache, createRunWithCache } from "./cache";
 export type { CacheInstance, CacheOptions, CachingStrategy } from "./cache";
 export { StorefrontApiError, StorefrontTimeoutError } from "../client/errors";
-export { storefrontRateLimitHeaders, withStorefrontRateLimit } from "./storefront-rate-limit";
+export { withStorefrontRateLimit } from "./storefront-rate-limit";
 export { gql } from "../graphql";
 export type {
   I18nConfig,

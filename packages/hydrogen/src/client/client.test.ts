@@ -554,6 +554,42 @@ describe("createStorefrontClient", () => {
       expect((error as StorefrontApiError).retryAfter).toBeUndefined();
     });
 
+    it("lets applyResponseHeaders add the Retry-After value of a 429 response", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse(
+          { errors: [{ message: "throttled" }] },
+          { status: 429, headers: { "retry-after": "5" } },
+        ),
+      );
+      const requestContext = createTestRequestContext();
+      const client = createPublicClient({ fetch: mockFetch, requestContext });
+
+      await expect(client.graphql(SHOP_QUERY)).rejects.toBeInstanceOf(StorefrontApiError);
+
+      const headers = new Headers();
+      requestContext.applyResponseHeaders(headers, 429);
+      expect(headers.get("cache-control")).toBe("no-store");
+      expect(headers.get("retry-after")).toBe("5");
+    });
+
+    it("doesn't record a rate limit for other failed statuses", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse(
+          { errors: [{ message: "unavailable" }] },
+          { status: 503, headers: { "retry-after": "5" } },
+        ),
+      );
+      const requestContext = createTestRequestContext();
+      const client = createPublicClient({ fetch: mockFetch, requestContext });
+
+      await expect(client.graphql(SHOP_QUERY)).rejects.toBeInstanceOf(StorefrontApiError);
+
+      const headers = new Headers();
+      requestContext.applyResponseHeaders(headers, 429);
+      expect(headers.get("cache-control")).toBeNull();
+      expect(headers.get("retry-after")).toBeNull();
+    });
+
     it("returns data and errors for 200 with throttled GraphQL error", async () => {
       mockFetch.mockResolvedValueOnce(
         mockResponse({

@@ -123,21 +123,28 @@ When the Storefront API rate limits a page loader, this template returns HTTP `4
 The response keeps a valid `Retry-After` value and disables caching. It doesn't retry the
 request or show the upstream error body.
 
-Each Storefront page loader uses the helpers from `@shopify/hydrogen`:
+Each Storefront page loader uses the wrapper from `@shopify/hydrogen`:
 
 ```ts
-import { storefrontRateLimitHeaders, withStorefrontRateLimit } from "@shopify/hydrogen";
+import { withStorefrontRateLimit } from "@shopify/hydrogen";
 
-export const headers = storefrontRateLimitHeaders;
 export const loader = withStorefrontRateLimit(async ({ context }: Route.LoaderArgs) => {
   const { data } = await context.get(storefrontClientContext).graphql(QUERY);
   return data;
 });
 ```
 
-Keep the `headers` export on the root route **and on each wrapped route**. Without it, React
-Router drops `Retry-After` from page responses and from client-navigation `.data` responses. If a
-route already has a `headers` function, call `storefrontRateLimitHeaders` from it.
+React Router drops the headers of a thrown response. So the root middleware in `app/root.tsx`
+passes the response status as well:
+
+```ts
+requestContext.applyResponseHeaders(response.headers, response.status);
+```
+
+After a Storefront API rate limit, the method adds `Cache-Control: no-store` and the valid
+`Retry-After` value to the `429` page response and to client-navigation `.data` responses. Routes
+don't need a `headers` export. Keep the status argument: without it, the response stays `429` but
+loses `Retry-After` and `no-store`.
 
 React Router doesn't report thrown responses to `handleError`. So the wrapper logs the original
 error at `error` level through Hydrogen's logger. To send these entries to your error reporting,

@@ -1,9 +1,4 @@
-import {
-  AnalyticsEvent,
-  getSortByValue,
-  storefrontRateLimitHeaders,
-  withStorefrontRateLimit,
-} from "@shopify/hydrogen";
+import { AnalyticsEvent, getSortByValue, withStorefrontRateLimit } from "@shopify/hydrogen";
 import { CollectionProvider } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
 import { Link, useLocation, useNavigate, useNavigation, useSearchParams } from "react-router";
@@ -34,8 +29,6 @@ export function meta({ matches }: Route.MetaArgs) {
     },
   ];
 }
-
-export const headers = storefrontRateLimitHeaders;
 
 export const loader = withStorefrontRateLimit(
   async ({ context, params, request }: Route.LoaderArgs) => {

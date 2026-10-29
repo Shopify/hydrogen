@@ -2,7 +2,6 @@ import {
   AnalyticsEvent,
   createPredictiveSearchFormRegister,
   getSortByValue,
-  storefrontRateLimitHeaders,
   withStorefrontRateLimit,
 } from "@shopify/hydrogen";
 import { CollectionProvider } from "@shopify/hydrogen/react";
@@ -35,8 +34,6 @@ export function meta({ matches }: Route.MetaArgs) {
     },
   ];
 }
-
-export const headers = storefrontRateLimitHeaders;
 
 export const loader = withStorefrontRateLimit(async ({ context, request }: Route.LoaderArgs) => {
   const storefrontClient = context.get(storefrontClientContext);
