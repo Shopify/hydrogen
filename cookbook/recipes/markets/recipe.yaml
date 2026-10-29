@@ -67,6 +67,10 @@ ingredients:
     description: Comprehensive i18n utilities including locale detection, path
       transformation hooks, URL cleaning functions, and locale validation.
       Centralizes all localization logic in one place.
+  - path: templates/skeleton/app/lib/sanitizeHtml.ts
+    description: An allowlist HTML sanitizer for merchant-managed rich text (page
+      bodies, article content, policies and product descriptions) before it is
+      rendered with dangerouslySetInnerHTML.
   - path: templates/skeleton/app/routes/($locale)._index.tsx
     description: A route that renders a localized version of the home page.
   - path: templates/skeleton/app/routes/($locale).account.$.tsx
@@ -198,8 +202,23 @@ steps:
       7. Support for case-insensitive locale matching
     ingredients:
       - path: templates/skeleton/app/lib/i18n.ts
-  - type: PATCH
+  - type: NEW_FILE
     step: "1.6"
+    name: Create an HTML sanitizer for merchant-managed rich text
+    description: |
+      Pages, blog articles, policies and product descriptions come from the Storefront API
+      as HTML written by merchants, staff and apps, and the routes render that HTML with
+      `dangerouslySetInnerHTML`. Treat it as untrusted: create a `sanitizeHtml()` helper that
+      keeps formatting, tables, images and safe links, and removes anything that can run
+      script, such as `<script>` and `<iframe>` elements, event handler attributes,
+      `style` attributes and `javascript:` URLs.
+
+      Call it in each route's loader, so the sanitized HTML is what reaches the browser
+      in both the server render and client-side navigations.
+    ingredients:
+      - path: templates/skeleton/app/lib/sanitizeHtml.ts
+  - type: PATCH
+    step: "1.7"
     name: Update ProductItem to use locale-aware Link
     description: |
       Replace standard react-router Link imports with the new unified Link component.
@@ -208,7 +227,7 @@ steps:
       - file: app/components/ProductItem.tsx
         patchFile: ProductItem.tsx.c6506f.patch
   - type: PATCH
-    step: "1.7"
+    step: "1.8"
     name: Add the selected locale to the context
     description: |
       Detect the locale from the URL path, and add it to the HydrogenContext.
@@ -216,7 +235,7 @@ steps:
       - file: app/lib/context.ts
         patchFile: context.ts.c15041.patch
   - type: PATCH
-    step: "1.8"
+    step: "1.9"
     name: Update Header with CountrySelector and locale-aware Links
     description: |
       1. Add the `CountrySelector` component to the header navigation.
@@ -227,7 +246,7 @@ steps:
       - file: app/components/Header.tsx
         patchFile: Header.tsx.00776f.patch
   - type: PATCH
-    step: "1.9"
+    step: "1.10"
     name: Add the selected locale to the root route
     description: |
       1. Include the selected locale in the root route's loader data.
@@ -282,6 +301,7 @@ steps:
       1. Add the dynamic segment to the product page route.
       2. Update the `meta` function to also update the canonical URL to use the
       localized prefix.
+      3. Sanitize the product's `descriptionHtml` with `sanitizeHtml()` in the loader.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).products.$handle.tsx
         renamedFrom: templates/skeleton/app/routes/products.$handle.tsx
@@ -358,7 +378,9 @@ steps:
   - type: NEW_FILE
     step: "2.17"
     name: Show blog articles
-    description: Add a blog article page with locale-specific content and SEO metadata.
+    description: |
+      Add a blog article page with locale-specific content and SEO metadata.
+      Sanitize the article's `contentHtml` with `sanitizeHtml()` in the loader.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx
   - type: NEW_FILE
@@ -395,14 +417,17 @@ steps:
   - type: NEW_FILE
     step: "2.23"
     name: Display content pages
-    description: Add a dynamic page route for locale-specific content pages.
+    description: |
+      Add a dynamic page route for locale-specific content pages.
+      Sanitize the page `body` with `sanitizeHtml()` in the loader.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).pages.$handle.tsx
   - type: NEW_FILE
     step: "2.24"
     name: Show policy pages
-    description: Add a policy page (privacy, terms, etc.) with locale-specific legal
-      content.
+    description: |
+      Add a policy page (privacy, terms, etc.) with locale-specific legal content.
+      Sanitize the policy `body` with `sanitizeHtml()` in the loader.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).policies.$handle.tsx
   - type: NEW_FILE
@@ -421,7 +446,8 @@ steps:
   - type: PATCH
     step: "8"
     name: package.json
-    description: null
+    description: Use published versions of the Hydrogen, React and tooling packages
+      in `package.json` instead of the monorepo's workspace references.
     diffs:
       - file: package.json
         patchFile: package.json.8e0ff5.patch
