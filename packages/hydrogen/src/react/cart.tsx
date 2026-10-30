@@ -267,8 +267,8 @@ export function CartProvider({
  *
  * // Custom equality to avoid re-renders on unchanged totals
  * const total = useCart(
- *   (state) => state.data.cost.totalAmount,
- *   (a, b) => a.amount === b.amount,
+ *   (state) => state.data.cost?.totalAmount,
+ *   (a, b) => a?.amount === b?.amount,
  * );
  * ```
  * @publicDocs

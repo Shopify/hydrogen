@@ -1340,10 +1340,11 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
           amount: "0",
           currencyCode: "",
         };
+        const matchingLine = lines.find((line) => line.merchandise?.id === addition.merchandiseId);
         lines = [
           {
-            seller: lines.find((line) => line.merchandise?.id === addition.merchandiseId)?.seller,
-            cartId: lines.find((line) => line.merchandise?.id === addition.merchandiseId)?.cartId,
+            seller: matchingLine?.seller,
+            cartId: matchingLine?.cartId,
             id: optimisticLineId(addition),
             quantity: addition.quantity,
             attributes: addition.attributes ?? [],
@@ -1741,7 +1742,8 @@ function addSnapshotFields(state: CartState, result: CartMutationResult): CartSt
     data: {
       ...state.data,
       ...fields,
-      cost: cartResponseFromStandardEvent(result.cart).cost,
+      cost: fields.cost,
+      groups: fields.groups,
       checkoutUrl: checkoutUrl ?? state.data.checkoutUrl,
       updatedAt: updatedAt ?? state.data.updatedAt,
     },
@@ -2956,8 +2958,6 @@ function adoptServerLines<TData extends CartData>(previous: TData, authoritative
   );
   return {
     ...previous,
-    groups: authoritative.groups,
-    cost: authoritative.cost,
     lines: { ...previous.lines, ...authoritative.lines, nodes },
   };
 }
@@ -2978,6 +2978,7 @@ function mergeAuthoritativeCartData(previous: CartData, authoritative: CartData)
     ...previous,
     ...authoritativeFields,
     cost: cost === undefined ? undefined : { ...previous.cost, ...cost },
+    groups: authoritative.groups,
     lines: { ...previous.lines, ...authoritativeConnection, nodes: lines },
     ...(checkoutUrl !== undefined && { checkoutUrl }),
     ...(note !== undefined && { note }),

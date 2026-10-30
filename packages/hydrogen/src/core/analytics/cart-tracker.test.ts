@@ -460,6 +460,26 @@ describe("trackCartAnalytics", () => {
     expect(window.Shopify?.currency).toEqual({ active: "EUR" });
   });
 
+  it("does not choose a cart currency when line currencies differ", () => {
+    const { analytics } = createTestAnalytics();
+    setGlobalAnalytics(analytics);
+    const data = createCartDataWithLineCurrencyOnly(CART_DATA_WITH_LINE_CURRENCY_ONLY);
+    delete data.cost;
+    const first = data.lines.nodes[0];
+    assert(first, "expected a line");
+    data.lines.nodes.push({
+      ...first,
+      id: "jpy",
+      cost: {
+        ...first.cost,
+        amountPerQuantity: { amount: "10", currencyCode: "JPY" },
+      },
+    });
+    const store = createStore(data);
+    trackCartAnalytics(store);
+    expect(window.Shopify?.currency).toBeUndefined();
+  });
+
   it("does not duplicate cart_updated on same updatedAt", () => {
     const { analytics, publish } = createTestAnalytics();
     setGlobalAnalytics(analytics);
