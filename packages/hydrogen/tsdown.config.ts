@@ -11,6 +11,7 @@ export default defineConfig([
     entry: [
       "src/core/index.ts",
       "src/customer-account/index.ts",
+      "src/ucp/index.ts",
       "src/react/index.ts",
       "src/vite/index.ts",
       "src/vue/index.ts",

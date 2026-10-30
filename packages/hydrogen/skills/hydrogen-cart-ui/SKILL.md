@@ -13,6 +13,12 @@ description: >
 
 The cart primitive is a client-side store that syncs with Shopify via Standard Actions events. It provides optimistic updates, scoped error handling, and a form-based mutation API. The store is framework-neutral; framework-specific bindings are thin wrappers over the core store.
 
+## UCP buyer carts
+
+Import `createUcpCartTransport` from `@shopify/hydrogen/ucp` and pass its result as the cart provider's `transport`. Supply `call` for authenticated UCP operations and `resolveShop(merchandiseId)` for new sellers. The transport targets UCP 2026-08-25 and sends full-replacement child-cart updates. Persist its returned opaque cart ID and pass it back to reads and mutations; do not treat it as a Storefront API cart ID.
+
+Discount codes apply independently to every child cart. Note and attributes return `UNSUPPORTED` errors. Mixed-currency carts have no combined cost. Use each group's `checkoutUrl`; there is no synthesized multi-shop checkout URL.
+
 ## Framework Bindings
 
 Before building UI, check whether this skill has a reference file for the app's framework in `references/`. If one exists, read it and use that framework binding first; the reference owns provider setup, state selectors, and form helpers for that runtime.

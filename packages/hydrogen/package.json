@@ -38,6 +38,11 @@
         "default": "./dist/core/index.mjs"
       }
     },
+    "./ucp": {
+      "types": "./dist/ucp/index.d.mts",
+      "import": "./dist/ucp/index.mjs",
+      "default": "./dist/ucp/index.mjs"
+    },
     "./customer-account": {
       "types": "./dist/customer-account/index.d.mts",
       "import": "./dist/customer-account/index.mjs",
