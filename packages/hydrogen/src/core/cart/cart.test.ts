@@ -880,6 +880,79 @@ describe("CartStore lifecycle", () => {
 });
 
 describe("custom cart transport mutations", () => {
+  it("isolates transport events from another store, including an active reservation", async () => {
+    const deferred = createDeferred<UpdateCartResult>();
+    const custom = createCartStore({
+      initialData: { cart: makeCartState({ lines: [makeLine({ id: "custom", quantity: 1 })] }) },
+      transport: { getCart: async () => ({ cart: null }), updateCart: () => deferred.promise },
+    });
+    store.hydrate(makeCartState({ lines: [makeLine({ id: "standard", quantity: 2 })] }));
+    store.connect();
+    custom.connect();
+    let transportEvent: Event | undefined;
+    const capture = (event: Event) => {
+      transportEvent = event;
+    };
+    document.addEventListener("shopify:cart:lines-update", capture);
+    const customMutation = custom.handleFormSubmit(
+      submitForm({ lineId: "custom" }, "intent", "increase"),
+    );
+    await nextTick();
+    const standardMutation = store.handleFormSubmit(
+      submitForm({ lineId: "standard" }, "intent", "increase"),
+    );
+    await nextTick();
+    const snapshot = store.getState();
+    deferred.resolve({ cart: makeCartState() } as unknown as UpdateCartResult);
+    await customMutation;
+    expect(store.getState()).toBe(snapshot);
+    assert(transportEvent, "transport emitted a result event");
+    const event = transportEvent;
+    const original = mockUpdateCart.getMockImplementation();
+    assert(original, "Standard Actions mock has an implementation");
+    mockUpdateCart.mockImplementationOnce((...args) => {
+      const before = store.getState();
+      document.dispatchEvent(event);
+      expect(store.getState()).toBe(before);
+      return original(...args);
+    });
+    const nextMutation = store.handleFormSubmit(
+      submitForm({ lineId: "standard" }, "intent", "increase"),
+    );
+    await nextTick();
+    expect(store.getState().pending.lines).toContain("standard");
+    resolveUpdate(0, { cart: makeCartState() });
+    resolveUpdate(1, { cart: makeCartState() });
+    await Promise.all([standardMutation, nextMutation]);
+    document.removeEventListener("shopify:cart:lines-update", capture);
+    custom.destroy();
+  });
+
+  it("publishes mixed line payloads separately by kind", async () => {
+    const actions: string[] = [];
+    const capture = (event: Event) => actions.push((event as Event & { action: string }).action);
+    document.addEventListener("shopify:cart:lines-update", capture);
+    const custom = createCartStore({
+      initialData: { cart: null },
+      transport: {
+        getCart: async () => ({ cart: null }),
+        updateCart: async (payload) => {
+          // Exercise the mixed protocol payload before the result events are emitted.
+          payload.lines?.push({ id: "existing", quantity: 2 }, { id: "removed", quantity: 0 });
+          return { cart: makeCartState() } as unknown as UpdateCartResult;
+        },
+      },
+    });
+    try {
+      await custom.handleFormSubmit(
+        submitForm({ merchandiseId: "gid://shopify/ProductVariant/1" }, "intent", "add"),
+      );
+      expect(actions).toEqual(["add", "remove", "update"]);
+    } finally {
+      custom.destroy();
+      document.removeEventListener("shopify:cart:lines-update", capture);
+    }
+  });
   it("publishes lines results without Standard Actions metadata", async () => {
     const listener = vi.fn();
     document.addEventListener("shopify:cart:lines-update", listener);

@@ -55,6 +55,7 @@ type TypedCartProviderProps<TData extends CartData> = {
    * The `data` property of the cart GET handler's result, or a promise of that data. Without initial data, the store loads the cart from `/api/cart` after the provider mounts, and the server-rendered page shows an empty cart. The provider creates its store from the first value and ignores later changes.
    */
   initialData?: CartInitialData<TData>;
+  /** Backend used instead of Standard Actions. Fixed when the provider creates its store. */
   transport?: CartTransport;
   /** Content that can read the cart through the cart hooks. */
   children?: ReactNode;

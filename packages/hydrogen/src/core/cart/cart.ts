@@ -1884,12 +1884,9 @@ function createTransactionEventToken(): string {
   return crypto.randomUUID();
 }
 
-const transportEventOwners = new WeakMap<Event, CartStoreContext>();
+const transportEventOwners = new WeakSet<Event>();
 
-function transportUpdateCart(
-  store: CartStoreContext,
-  updateCart: UpdateCartTransport,
-): UpdateCartTransport {
+function transportUpdateCart(updateCart: UpdateCartTransport): UpdateCartTransport {
   return (payload, options) =>
     updateCart(payload, options).then((result) => {
       if (typeof document === "undefined" || options?.signal?.aborted) return result;
@@ -1903,16 +1900,21 @@ function transportUpdateCart(
           }),
         };
         const event = Object.assign(new Event(`shopify:cart:${name}-update`), metadata, fields);
-        transportEventOwners.set(event, store);
+        transportEventOwners.add(event);
         document.dispatchEvent(event);
       };
       if (payload.lines) {
-        const action = payload.lines.some((line) => "merchandiseId" in line)
-          ? "add"
-          : payload.lines.every((line) => line.quantity === 0)
-            ? "remove"
-            : "update";
-        emit("lines", { action, lines: payload.lines });
+        // Mixed payloads have no single action: publish each kind independently.
+        const adds = payload.lines.filter((line) => "merchandiseId" in line);
+        const removes = payload.lines.filter(
+          (line) => !("merchandiseId" in line) && line.quantity === 0,
+        );
+        const updates = payload.lines.filter(
+          (line) => !("merchandiseId" in line) && line.quantity !== 0,
+        );
+        if (adds.length) emit("lines", { action: "add", lines: adds });
+        if (removes.length) emit("lines", { action: "remove", lines: removes });
+        if (updates.length) emit("lines", { action: "update", lines: updates });
       }
       if (payload.discountCodes)
         emit("discount", { discountCodes: payload.discountCodes.map((code) => ({ code })) });
@@ -2012,7 +2014,7 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   // Standard Events can arrive asynchronously, so the reservation keeps signal ownership alive
   // until the correlated event consumes it.
   const correlatedUpdateCart = store.transport
-    ? transportUpdateCart(store, updateCart)
+    ? transportUpdateCart(updateCart)
     : withTransactionEventToken(updateCart, eventToken);
   let promise: Promise<UpdateCartResult>;
 
@@ -2073,7 +2075,7 @@ function startQueuedInitialAdd(
         queued.payload,
         queued.signal,
         store.transport
-          ? transportUpdateCart(store, updateCart)
+          ? transportUpdateCart(updateCart)
           : withTransactionEventToken(updateCart, eventToken),
         cartId,
       );
@@ -2161,7 +2163,7 @@ function payloadFromAddEvent(event: CartLinesUpdateEvent): AddToCartPayload {
 }
 
 function handleLinesEvent(store: CartStoreContext, event: CartLinesUpdateEvent): void {
-  if (transportEventOwners.get(event) === store) return;
+  if (transportEventOwners.has(event)) return;
   const eventToken = getTransactionEventToken(event.detail);
   if (event.action === "add") {
     enqueueTransaction(
@@ -2201,7 +2203,7 @@ function handleLinesEvent(store: CartStoreContext, event: CartLinesUpdateEvent):
 }
 
 function handleDiscountEvent(store: CartStoreContext, event: CartDiscountUpdateEvent): void {
-  if (transportEventOwners.get(event) === store) return;
+  if (transportEventOwners.has(event)) return;
   enqueueTransaction(
     store,
     "set_discount_codes",
@@ -2213,7 +2215,7 @@ function handleDiscountEvent(store: CartStoreContext, event: CartDiscountUpdateE
 }
 
 function handleNoteEvent(store: CartStoreContext, event: CartNoteUpdateEvent): void {
-  if (transportEventOwners.get(event) === store) return;
+  if (transportEventOwners.has(event)) return;
   enqueueTransaction(
     store,
     "set_note",
@@ -2225,7 +2227,7 @@ function handleNoteEvent(store: CartStoreContext, event: CartNoteUpdateEvent): v
 }
 
 function handleAttributesEvent(store: CartStoreContext, event: CartAttributesUpdateEvent): void {
-  if (transportEventOwners.get(event) === store) return;
+  if (transportEventOwners.has(event)) return;
   enqueueTransaction(
     store,
     "set_attributes",
