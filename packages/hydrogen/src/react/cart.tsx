@@ -289,13 +289,8 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
  * @returns Optimistic cart mutation actions and `refresh()`.
  * @example
  * ```ts
- * const {addLines} = useCartActions();
+ * const {addLines, refresh} = useCartActions();
  * await addLines([{merchandiseId: variantId, quantity: 1}]);
- * ```
- *
- * @example
- * ```tsx
- * const { refresh } = useCartActions();
  *
  * async function handleServerAction() {
  *   await createCartOnServer();

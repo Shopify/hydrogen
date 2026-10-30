@@ -204,12 +204,12 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
  * }
  * </script>
  * ```
- * @publicDocs
  * @example
  * ```ts
  * const {addLines} = useCartActions();
  * await addLines([{merchandiseId: variantId, quantity: 1}]);
  * ```
+ * @publicDocs
  */
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");

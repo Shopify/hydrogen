@@ -173,19 +173,19 @@ export type CartStore = {
    */
   refresh(): void;
 
-  /** Adds lines through the optimistic transaction pipeline. Resolves when the mutation settles. */
+  /** Adds lines through the optimistic transaction pipeline. Connects the store and resolves to the backend result, or undefined when cancelled. Empty input is a no-op. */
   addLines(lines: AddLinePayload[]): Promise<UpdateCartResult | undefined>;
-  /** Sets absolute line quantities; zero removes a line. */
+  /** Sets absolute line quantities; zero removes a line. Connects the store; resolves undefined when cancelled or empty. */
   updateLines(
     lines: Array<{ id: string; quantity: number }>,
   ): Promise<UpdateCartResult | undefined>;
-  /** Removes the given line IDs. */
+  /** Removes the given line IDs. Connects the store; resolves undefined when cancelled or empty. */
   removeLines(lineIds: string[]): Promise<UpdateCartResult | undefined>;
-  /** Replaces the cart note. */
+  /** Replaces the cart note. Connects the store; resolves undefined when cancelled. */
   setNote(note: string): Promise<UpdateCartResult | undefined>;
-  /** Replaces the cart discount codes. */
+  /** Replaces the cart discount codes. Connects the store; resolves undefined when cancelled. */
   setDiscountCodes(discountCodes: string[]): Promise<UpdateCartResult | undefined>;
-  /** Updates cart attributes. */
+  /** Updates cart attributes. Connects the store; resolves undefined when cancelled. */
   setAttributes(
     attributes: Array<{ key: string; value: string }>,
   ): Promise<UpdateCartResult | undefined>;
@@ -1438,9 +1438,8 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
     },
     getSignalKeys: (_state, payload) => lineKey(payload.lineId),
   },
-  // Created only from Standard Actions events, so the store never owns this transport. A newer
-  // change can supersede some of its lines; the rest still project and settle, and the overlap
-  // revalidates.
+  // Multi-line events and programmatic changes share this projection. A newer change can
+  // supersede some lines; the rest still project and settle, and the overlap revalidates.
   change_lines_quantity: {
     payload: {} as ChangeLinesQuantityPayload,
     transport: (payload, signal, updateCart) =>
@@ -2595,20 +2594,25 @@ export function createCartStore<TData extends CartData = CartData>(
     fetch: () => loadCartInStore(store),
     refresh: () => refreshCartInStore(store),
     addLines: (lines) => {
+      if (!lines.length) return Promise.resolve(undefined);
       connectCartStore(store, handlers);
       return dispatchTransaction(store, "add_to_cart", { lines, products: [] });
     },
     updateLines: (lines) => {
+      if (!lines.length) return Promise.resolve(undefined);
       connectCartStore(store, handlers);
-      return dispatchTransaction(store, "change_lines_quantity", {
-        lines: lines.map(({ id, quantity }) => ({ lineId: id, quantity })),
-      });
+      const payloads = lines.map(({ id, quantity }) => ({ lineId: id, quantity }));
+      return payloads.length === 1
+        ? dispatchTransaction(store, "change_line_quantity", payloads[0])
+        : dispatchTransaction(store, "change_lines_quantity", { lines: payloads });
     },
     removeLines: (lineIds) => {
+      if (!lineIds.length) return Promise.resolve(undefined);
       connectCartStore(store, handlers);
-      return dispatchTransaction(store, "change_lines_quantity", {
-        lines: lineIds.map((lineId) => ({ lineId, quantity: 0 })),
-      });
+      const lines = lineIds.map((lineId) => ({ lineId, quantity: 0 }));
+      return lines.length === 1
+        ? dispatchTransaction(store, "change_line_quantity", lines[0])
+        : dispatchTransaction(store, "change_lines_quantity", { lines });
     },
     setNote: (note) => {
       connectCartStore(store, handlers);

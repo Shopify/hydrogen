@@ -880,6 +880,83 @@ describe("CartStore lifecycle", () => {
 });
 
 describe("custom cart transport mutations", () => {
+  it("ignores empty programmatic line changes", async () => {
+    const updateCart = vi.fn();
+    const custom = createCartStore({ transport: { getCart: vi.fn(), updateCart } });
+    expect(await custom.addLines([])).toBeUndefined();
+    expect(await custom.updateLines([])).toBeUndefined();
+    expect(await custom.removeLines([])).toBeUndefined();
+    expect(updateCart).not.toHaveBeenCalled();
+    custom.destroy();
+  });
+
+  it("adopts swapped line IDs and projects single-line errors", async () => {
+    const result = {
+      cart: makeCartState({ lines: [makeLine({ id: "replacement", quantity: 2 })] }),
+      userErrors: [{ message: "Adjusted", code: "INVALID", field: ["lines", "0"] }],
+    } as unknown as UpdateCartResult;
+    const custom = createCartStore({
+      initialData: { cart: makeCartState({ lines: [makeLine({ id: "original", quantity: 1 })] }) },
+      transport: { getCart: async () => ({ cart: null }), updateCart: async () => result },
+    });
+    await custom.updateLines([{ id: "original", quantity: 2 }]);
+    expect(custom.getState().data.lines.nodes.map((line) => line.id)).toEqual(["replacement"]);
+    expect(custom.getState().errors.lines.get("original")?.userErrors).toEqual(result.userErrors);
+    custom.destroy();
+  });
+
+  it("routes note, discount and attribute actions", async () => {
+    const updateCart = vi.fn(
+      async () => ({ cart: makeCartState() }) as unknown as UpdateCartResult,
+    );
+    const custom = createCartStore({
+      initialData: { cart: null },
+      transport: { getCart: async () => ({ cart: null }), updateCart },
+    });
+    await custom.setNote("gift");
+    await custom.setDiscountCodes(["SAVE"]);
+    await custom.setAttributes([{ key: "gift", value: "yes" }]);
+    expect(updateCart).toHaveBeenNthCalledWith(1, { note: "gift" }, expect.anything());
+    expect(updateCart).toHaveBeenNthCalledWith(2, { discountCodes: ["SAVE"] }, expect.anything());
+    expect(updateCart).toHaveBeenNthCalledWith(
+      3,
+      { attributes: [{ key: "gift", value: "yes" }] },
+      expect.anything(),
+    );
+    custom.destroy();
+  });
+
+  it("resolves cancelled calls and records transport failures", async () => {
+    const custom = createCartStore({
+      initialData: { cart: null },
+      transport: {
+        getCart: async () => ({ cart: null }),
+        updateCart: (_payload, options) =>
+          new Promise((_resolve, reject) =>
+            options?.signal?.addEventListener("abort", () =>
+              reject(new DOMException("Aborted", "AbortError")),
+            ),
+          ),
+      },
+    });
+    const mutation = custom.setNote("gift");
+    await nextTick();
+    custom.destroy();
+    expect(await mutation).toBeUndefined();
+    const error = new CartNetworkError(503);
+    const failing = createCartStore({
+      initialData: { cart: null },
+      transport: {
+        getCart: async () => ({ cart: null }),
+        updateCart: async () => {
+          throw error;
+        },
+      },
+    });
+    await expect(failing.setNote("gift")).rejects.toBe(error);
+    expect(failing.getState().errors.network).not.toHaveLength(0);
+    failing.destroy();
+  });
   it("submits a form from an iframe document", async () => {
     const iframe = document.createElement("iframe");
     document.body.append(iframe);
@@ -940,6 +1017,8 @@ describe("custom cart transport mutations", () => {
   });
 
   it("routes programmatic updates through Standard Actions", async () => {
+    const listener = vi.fn();
+    document.addEventListener("shopify:cart:lines-update", listener);
     store.hydrate(makeCartState({ lines: [makeLine({ id: "line", quantity: 1 })] }));
     const mutation = store.updateLines([{ id: "line", quantity: 2 }]);
     await nextTick();
@@ -949,6 +1028,8 @@ describe("custom cart transport mutations", () => {
     );
     resolveUpdate(0, { cart: makeCartState() });
     await mutation;
+    expect(listener).toHaveBeenCalledOnce();
+    document.removeEventListener("shopify:cart:lines-update", listener);
   });
   it("isolates transport events from another store, including an active reservation", async () => {
     const deferred = createDeferred<UpdateCartResult>();

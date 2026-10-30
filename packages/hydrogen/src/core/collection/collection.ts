@@ -353,7 +353,9 @@ function settleStore(context: CollectionStoreContext): void {
 }
 
 function handleFormSubmit(context: CollectionStoreContext, event: SubmitEvent): void {
-  if (!(event.target instanceof HTMLFormElement)) {
+  const FormElement = (event.target as HTMLFormElement | null)?.ownerDocument?.defaultView
+    ?.HTMLFormElement;
+  if (!FormElement || !(event.target instanceof FormElement)) {
     throw new TypeError(`Expected event.target to be an HTMLFormElement, got ${event.target}`);
   }
 
