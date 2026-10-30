@@ -134,7 +134,7 @@ export const middleware: Route.MiddlewareFunction[] = [
       const redirect = await handleShopifyRedirects({ request, routeTemplates, storefrontClient });
       if (redirect) return redirect;
     }
-    storefrontClient.requestContext.applyResponseHeaders(response.headers);
+    storefrontClient.requestContext.applyResponseHeaders(response.headers, response.status);
     return response;
   },
 ];

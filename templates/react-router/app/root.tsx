@@ -1,4 +1,8 @@
-import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
+import {
+  handleShopifyRedirects,
+  handleShopifyRoutes,
+  withStorefrontRateLimit,
+} from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
 import type { ReactNode } from "react";
 import {
@@ -86,12 +90,12 @@ export const middleware: Route.MiddlewareFunction[] = [
       if (redirect) return redirect;
     }
 
-    requestContext.applyResponseHeaders(response.headers);
+    requestContext.applyResponseHeaders(response.headers, response.status);
     return response;
   },
 ];
 
-export async function loader({ context, request }: Route.LoaderArgs) {
+export const loader = withStorefrontRateLimit(async ({ context, request }: Route.LoaderArgs) => {
   const env = context.get(envContext);
   const storefrontClient = context.get(storefrontClientContext);
   const [cartResult, layout] = await Promise.all([
@@ -105,7 +109,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     shopIdentity: resolveShopIdentity(env, layout.shopId),
     currency: layout.currency,
   };
-}
+});
 
 export function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
@@ -167,9 +171,13 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
+    message = error.status === 429 ? "Too many requests" : error.status === 404 ? "404" : "Error";
     details =
-      error.status === 404 ? "The requested page could not be found." : error.statusText || details;
+      error.status === 429
+        ? "Please try again later."
+        : error.status === 404
+          ? "The requested page could not be found."
+          : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;

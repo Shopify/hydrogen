@@ -8,6 +8,7 @@ import type {
 } from "../graphql/generated/storefront-api-types";
 import { STOREFRONT_API_VERSION } from "./constants";
 import {
+  applyNoStoreResponseCacheHeaders,
   applyPrivateResponseCacheHeaders,
   CONSENT_MANAGEMENT_HEADER,
   HYDROGEN_VERSION_HEADER,
@@ -19,6 +20,7 @@ import {
   SHOPIFY_STOREFRONT_ORIGIN_HEADER,
   STOREFRONT_URL_HEADER,
 } from "./headers";
+import { getSafeRetryAfterValue, RATE_LIMITED_STATUS } from "./request-routing/rate-limit";
 import { normalizePathPrefix } from "./standard-routes/path";
 
 const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
@@ -122,6 +124,12 @@ type ShopifyRequestContextBase = {
    */
   consumeStorefrontResponseHeaders(headers: Headers): void;
   /**
+   * Saves the `Retry-After` value of a Storefront API `429` response. The Storefront API client
+   * calls the method for you, and `applyResponseHeaders()` adds the value to a `429` response.
+   * @internal
+   */
+  captureStorefrontRateLimit(retryAfter: string | undefined): void;
+  /**
    * Lets the final response set Shopify cookies before the customer has a Shopify session, and
    * marks the response as private and uncacheable. The UCP MCP proxy calls the method for you.
    * @internal
@@ -141,8 +149,10 @@ type ShopifyRequestContextBase = {
    * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.
    *
    * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses marked with `markResponseAsPersonalized()` private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.
+   *
+   * Pass the response's `status` as well. When the status is `429` and the Storefront API rate limited a request that used this context, the method sets `Cache-Control: no-store` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. It also adds the Storefront API's `Retry-After` value when the value is delay-seconds or an IMF-fixdate and the response has no `Retry-After` header. React Router doesn't copy the headers of a thrown response, so this keeps the headers of a `429` from `withStorefrontRateLimit`. Responses with other statuses keep their cache headers.
    */
-  applyResponseHeaders(headers: Headers): void;
+  applyResponseHeaders(headers: Headers, status?: number): void;
 };
 
 /** The context for one request. Pass the context to Hydrogen's API clients and route handlers for that request. */
@@ -237,6 +247,8 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
   let capturedCookies: string[] | undefined;
   let personalizedResponseReason: string | undefined;
   let sessionEstablishingReason: string | undefined;
+  let storefrontRateLimited = false;
+  let storefrontRetryAfter: string | undefined;
 
   const captureSubrequestHeaders = (headers: Headers): void => {
     // Capture the first fresh response cookies to increase the
@@ -263,14 +275,28 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
       captureSubrequestHeaders(headers);
       headers.delete("set-cookie");
     },
+    captureStorefrontRateLimit(retryAfter) {
+      storefrontRateLimited = true;
+      storefrontRetryAfter ??= getSafeRetryAfterValue(retryAfter);
+    },
     markResponseAsPersonalized(reason) {
       personalizedResponseReason ??= reason;
     },
     markResponseAsSessionEstablishing(reason) {
       sessionEstablishingReason ??= reason;
     },
-    applyResponseHeaders(headers) {
+    applyResponseHeaders(headers, status) {
       headers.set("powered-by", "Shopify, Hydrogen");
+
+      // A framework can drop the headers of a thrown `429` response, as React Router does, so add
+      // them here. Only a `429` changes: a page that recovered from the rate limit keeps its cache
+      // headers.
+      if (status === RATE_LIMITED_STATUS && storefrontRateLimited) {
+        applyNoStoreResponseCacheHeaders(headers);
+        if (storefrontRetryAfter && !headers.has("retry-after")) {
+          headers.set("Retry-After", storefrontRetryAfter);
+        }
+      }
 
       // Documents may be shared or streamed, so they must not carry buyer-specific state.
       const isDocumentResponse =

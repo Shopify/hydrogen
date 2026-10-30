@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
+import { configureLogging } from "../logging";
 import { createShopifyRequestContext } from "../request-context";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../request-routing/handle-shopify-routes";
-import { assert } from "../test-utils";
+import { assert, createTestLogger } from "../test-utils";
 import { DEFAULT_PREDICTIVE_SEARCH_LIMIT, getEmptyPredictiveSearchResult } from "./search";
 import { createPredictiveSearchServerHandlers } from "./server-handlers";
 
@@ -99,6 +100,11 @@ describe("createPredictiveSearchServerHandlers", () => {
   beforeEach(() => {
     mockFetch = vi.fn();
     vi.stubGlobal("fetch", mockFetch);
+  });
+
+  afterEach(() => {
+    configureLogging({});
+    vi.restoreAllMocks();
   });
 
   describe("handler contract", () => {
@@ -350,6 +356,8 @@ describe("createPredictiveSearchServerHandlers", () => {
 
   describe("errors", () => {
     it("returns a typed error when Storefront API errors", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
       mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify({ errors: [{ message: "Nope" }] }), {
           status: 200,
@@ -366,6 +374,116 @@ describe("createPredictiveSearchServerHandlers", () => {
           code: "invalid_predictive_search_request",
           message: "Shopify API errors: Nope",
         },
+      });
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith("predictive search request failed", {
+        scope: "predictive-search-api",
+        error: expect.objectContaining({ message: "Shopify API errors: Nope" }),
+      });
+    });
+
+    it("returns 429 with Retry-After and a constant message when the Storefront API rate limits", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      mockFetch.mockResolvedValueOnce(
+        new Response("<html>upstream rate limit page</html>", {
+          status: 429,
+          headers: { "retry-after": "7", "x-request-id": "req-429", "content-type": "text/html" },
+        }),
+      );
+
+      const result = await handlePredictiveSearchRequest(createPredictiveSearchRequest());
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(429);
+      expect(result.headers.get("retry-after")).toBe("7");
+      expect(result.headers.get("cache-control")).toBe("no-store");
+      expect(result.headers.get("x-request-id")).toBeNull();
+      const body = await result.json();
+      expect(body).toEqual({
+        error: {
+          code: "rate_limited",
+          message: "Predictive search is rate limited. Please try again later.",
+        },
+      });
+      expect(JSON.stringify(body)).not.toContain("upstream");
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith(
+        "storefront api rate limited the predictive search",
+        {
+          scope: "predictive-search-api",
+          error: expect.objectContaining({ name: "StorefrontApiError", status: 429 }),
+        },
+      );
+    });
+
+    it("still returns the 429 response when the configured logger fails", async () => {
+      const logger = createTestLogger();
+      logger.error.mockImplementation(() => {
+        throw new Error("logger unavailable");
+      });
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      configureLogging({ logger });
+      mockFetch.mockResolvedValueOnce(
+        new Response("", { status: 429, headers: { "retry-after": "7" } }),
+      );
+
+      const result = await handlePredictiveSearchRequest(createPredictiveSearchRequest());
+
+      assert(result, "expected a response");
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(result.status).toBe(429);
+      expect(result.headers.get("retry-after")).toBe("7");
+    });
+
+    it("doesn't log an invalid setting value", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+
+      const result = await handlePredictiveSearchRequest(
+        createPredictiveSearchRequest("?q=snow&limitScope=INVALID"),
+      );
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(400);
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it("omits Retry-After when the Storefront API sends a malformed value", async () => {
+      configureLogging({ logger: createTestLogger() });
+      mockFetch.mockResolvedValueOnce(
+        new Response("", { status: 429, headers: { "retry-after": "soon; internal=1" } }),
+      );
+
+      const result = await handlePredictiveSearchRequest(createPredictiveSearchRequest());
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(429);
+      expect(result.headers.has("retry-after")).toBe(false);
+    });
+
+    it("keeps other Storefront API HTTP failures at 400 without the upstream body", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      mockFetch.mockResolvedValueOnce(
+        new Response("<html>upstream 503 page</html>", {
+          status: 503,
+          headers: { "retry-after": "30" },
+        }),
+      );
+
+      const result = await handlePredictiveSearchRequest(createPredictiveSearchRequest());
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(400);
+      expect(result.headers.has("retry-after")).toBe(false);
+      const body = await result.json();
+      expect(body.error.code).toBe("invalid_predictive_search_request");
+      expect(JSON.stringify(body)).not.toContain("upstream");
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith("predictive search request failed", {
+        scope: "predictive-search-api",
+        error: expect.objectContaining({ name: "StorefrontApiError", status: 503 }),
       });
     });
   });

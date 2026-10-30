@@ -653,3 +653,100 @@ describe("createShopifyRequestContext", () => {
     expect(headers.getSetCookie()).toEqual(["session=1; Path=/; Secure"]);
   });
 });
+
+describe("applyResponseHeaders after a Storefront API rate limit", () => {
+  function rateLimitedContext(...retryAfterValues: (string | undefined)[]) {
+    const context = createTestRequestContext(new Request("https://example.com/products"));
+    for (const retryAfter of retryAfterValues) context.captureStorefrontRateLimit(retryAfter);
+    return context;
+  }
+
+  it("adds no-store and the Retry-After value to a 429 response", () => {
+    const context = rateLimitedContext("30");
+    const headers = new Headers({ "content-type": "text/html" });
+
+    context.applyResponseHeaders(headers, 429);
+
+    expect(headers.get("cache-control")).toBe("no-store");
+    expect(headers.get("retry-after")).toBe("30");
+  });
+
+  it("removes targeted cache headers from the 429 response", () => {
+    const context = rateLimitedContext("30");
+    const headers = new Headers({
+      "cache-control": "public, max-age=300",
+      "cdn-cache-control": "public, s-maxage=600",
+      "oxygen-cache-control": "public, max-age=3600",
+      "surrogate-control": "max-age=600",
+    });
+
+    context.applyResponseHeaders(headers, 429);
+
+    expect(headers.get("cache-control")).toBe("no-store");
+    expect(headers.get("cdn-cache-control")).toBeNull();
+    expect(headers.get("oxygen-cache-control")).toBeNull();
+    expect(headers.get("surrogate-control")).toBeNull();
+  });
+
+  it("keeps a Retry-After value that the response already has", () => {
+    const context = rateLimitedContext("30");
+    const headers = new Headers({ "retry-after": "120" });
+
+    context.applyResponseHeaders(headers, 429);
+
+    expect(headers.get("retry-after")).toBe("120");
+  });
+
+  it("uses the first valid Retry-After value", () => {
+    const context = rateLimitedContext("soon", undefined, "Thu, 29 Oct 2026 19:00:00 GMT", "60");
+    const headers = new Headers();
+
+    context.applyResponseHeaders(headers, 429);
+
+    expect(headers.get("retry-after")).toBe("Thu, 29 Oct 2026 19:00:00 GMT");
+  });
+
+  it.each([undefined, "-1", "1.5", "tomorrow", "30\r\nSet-Cookie: injected=1"])(
+    "sets no-store but omits a missing or invalid Retry-After value: %j",
+    (retryAfter) => {
+      const context = rateLimitedContext(retryAfter);
+      const headers = new Headers();
+
+      context.applyResponseHeaders(headers, 429);
+
+      expect(headers.get("cache-control")).toBe("no-store");
+      expect(headers.get("retry-after")).toBeNull();
+    },
+  );
+
+  it.each([undefined, 200, 302, 500, 503])("keeps the cache headers for status %s", (status) => {
+    const context = rateLimitedContext("30");
+    const headers = new Headers({ "cache-control": "public, max-age=300" });
+
+    context.applyResponseHeaders(headers, status);
+
+    expect(headers.get("cache-control")).toBe("public, max-age=300");
+    expect(headers.get("retry-after")).toBeNull();
+  });
+
+  it("keeps the cache headers of a 429 when no Storefront API request was rate limited", () => {
+    const context = createTestRequestContext(new Request("https://example.com/products"));
+    const headers = new Headers({ "cache-control": "public, max-age=300" });
+
+    context.applyResponseHeaders(headers, 429);
+
+    expect(headers.get("cache-control")).toBe("public, max-age=300");
+    expect(headers.get("retry-after")).toBeNull();
+  });
+
+  it("keeps the private cache policy for a personalized 429 response", () => {
+    const context = rateLimitedContext("30");
+    context.markResponseAsPersonalized("customer-account-test");
+    const headers = new Headers();
+
+    context.applyResponseHeaders(headers, 429);
+
+    expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
+    expect(headers.get("retry-after")).toBe("30");
+  });
+});
