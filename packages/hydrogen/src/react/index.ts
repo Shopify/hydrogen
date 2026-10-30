@@ -2,7 +2,7 @@
 
 export type { ShopifyStandardActions } from "../../vendor/standard-actions";
 export { createCartComponents, useCartAnalytics } from "./cart";
-export type { CartActions } from "./cart";
+export type { CartTransport, CartActions } from "./cart";
 export type { ShopifyGlobal } from "../globals";
 export type {
   QuantityInputAttributes,

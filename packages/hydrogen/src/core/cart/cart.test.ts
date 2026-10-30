@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-import type { CartActionError } from "../../../vendor/standard-actions";
+import type { UpdateCartResult, CartActionError } from "../../../vendor/standard-actions";
 import { configureLogging } from "../logging";
 import {
   CONSENT_TRACKING_API_LOADED_EVENT,
@@ -876,6 +876,44 @@ describe("CartStore lifecycle", () => {
     expect(discountSignal.aborted).toBe(true);
     await expect(linePromise).resolves.toBeUndefined();
     await expect(discountPromise).resolves.toBeUndefined();
+  });
+});
+
+describe("custom cart transport mutations", () => {
+  it("routes initial adds and user errors through a transport", async () => {
+    const updateCart = vi.fn(
+      async () =>
+        ({
+          cart: makeCartState(),
+          userErrors: [{ message: "Unavailable", code: "INVALID" }],
+        }) as unknown as UpdateCartResult,
+    );
+    const localStore = createCartStore({
+      initialData: { cart: null },
+      transport: { getCart: async () => ({ cart: null }), updateCart },
+    });
+    await localStore.handleFormSubmit(
+      submitForm({ merchandiseId: "gid://shopify/ProductVariant/1" }, "intent", "add"),
+    );
+    expect(updateCart).toHaveBeenCalledOnce();
+    localStore.destroy();
+  });
+  it.each(["increase", "remove"])("routes %s through the transport", async (intent) => {
+    const updateCart = vi.fn(
+      async () => ({ cart: makeCartState() }) as unknown as UpdateCartResult,
+    );
+    const localStore = createCartStore({
+      initialData: {
+        cart: makeCartState({ lines: [makeLine({ id: "line-1", quantity: 3 })], totalQuantity: 3 }),
+      },
+      transport: { getCart: async () => ({ cart: null }), updateCart },
+    });
+    await localStore.handleFormSubmit(submitForm({ lineId: "line-1" }, "intent", intent));
+    expect(updateCart).toHaveBeenCalledWith(
+      { lines: [{ id: "line-1", quantity: intent === "remove" ? 0 : 4 }] },
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
+    localStore.destroy();
   });
 });
 

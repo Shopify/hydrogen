@@ -56,7 +56,9 @@ The cart store combines its lifecycle, timeout, and caller signals with `AbortSi
 
 Some changes have no form: a free gift added when the cart crosses a threshold, removing a line that became unavailable, an attribute written by a script. Send them with `window.Shopify.actions.updateCart(payload, options)`. The store observes the events it dispatches, so these changes get the same optimistic projection, pending state and rollback as form submissions. Do not hand-roll `fetch` calls to the cart route.
 
-- **Wait for the store.** Call `updateCart` only after all of these hold:
+For a custom backend, pass a `CartTransport` as the store or React/Vue `CartProvider`'s `transport` option. Its `getCart({cartId, signal})` and `updateCart(payload, options)` replace all store network operations; this path needs neither Standard Actions nor `configureCartEndpoint`. Submit changes through the store's cart forms so they receive optimistic state and error handling.
+
+- **Wait for the store.** Call Standard Actions `updateCart` only after all of these hold:
   - `window.Shopify.actions.updateCart.isDefault()` returns `false`, which happens once a connected cart store has configured it. Before that, Shopify's default handler runs instead of the app's cart route. The framework cart providers also configure the cart endpoint; a store from `createCartStore()` keeps using Shopify's default handler until the app calls `configureCartEndpoint(path)`.
   - The initial cart load has finished: `state.loading` is `false` and `state.readyPromise` is absent (or await it). A change made during that load can hide the shopper's other lines.
   - A cart exists: `state.data.id` is set. While it is `null`, the first add creates the cart. The store queues form adds behind it, but not `updateCart` calls: an add from code sent before the cart exists, alongside another add from code or a form, creates a second cart, and the shopper keeps only one of them. Send the first add alone and wait for it to settle.

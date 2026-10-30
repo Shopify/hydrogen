@@ -19,6 +19,7 @@ import {
   configureCartEndpoint as configureCoreCartEndpoint,
   createCartStore,
   type CreateCartStoreOptions,
+  type CartTransport,
   type CartActions,
   type CartStore,
 } from "../core/cart/cart";
@@ -58,10 +59,10 @@ type CartInitialData<TData extends CartData = CartData> =
   CreateCartStoreOptions<TData>["initialData"];
 
 type TypedCartProvider<TData extends CartData> = {
-  new (): { $props: { initialData?: CartInitialData<TData> } };
+  new (): { $props: { initialData?: CartInitialData<TData>; transport?: CartTransport } };
 };
 
-export type { CartActions };
+export type { CartTransport, CartActions };
 
 /** Cart provider and composables whose cart state carries the custom fields from your cart server handlers. */
 type TypedCartComponents<TData extends CartData> = {
@@ -79,15 +80,18 @@ type TypedCartComponents<TData extends CartData> = {
 
 function createTypedCartProvider<TData extends CartData>(): TypedCartProvider<TData> {
   const TypedCartProvider = defineComponent(
-    (props: { initialData?: CartInitialData<TData> }, { slots }) => {
+    (props: { initialData?: CartInitialData<TData>; transport?: CartTransport }, { slots }) => {
       return () =>
         h(
           CartProvider,
-          { initialData: props.initialData as CartInitialData | undefined },
+          {
+            initialData: props.initialData as CartInitialData | undefined,
+            transport: props.transport,
+          },
           slots.default,
         );
     },
-    { name: "CartProvider", props: ["initialData"] },
+    { name: "CartProvider", props: ["initialData", "transport"] },
   );
 
   return TypedCartProvider as unknown as TypedCartProvider<TData>;
@@ -121,13 +125,17 @@ function useOptionalCartStore(): CartStore | null {
 export const CartProvider = defineComponent({
   name: "CartProvider",
   props: {
+    transport: { type: Object as PropType<CartTransport>, default: undefined },
     initialData: {
       type: Object as PropType<CartInitialData>,
       default: undefined,
     },
   },
   setup(props, { slots }) {
-    const store = createCartStore({ initialData: props.initialData });
+    const store = createCartStore({
+      initialData: props.initialData,
+      ...(props.transport && { transport: props.transport }),
+    });
     provide(CartStoreKey, store);
 
     onMounted(() => {

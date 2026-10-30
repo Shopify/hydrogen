@@ -19,6 +19,7 @@ import {
   configureCartEndpoint as configureCoreCartEndpoint,
   createCartStore,
   type CreateCartStoreOptions,
+  type CartTransport,
   type CartActions,
   type CartStore,
 } from "../core/cart/cart";
@@ -54,6 +55,7 @@ type TypedCartProviderProps<TData extends CartData> = {
    * The `data` property of the cart GET handler's result, or a promise of that data. Without initial data, the store loads the cart from `/api/cart` after the provider mounts, and the server-rendered page shows an empty cart. The provider creates its store from the first value and ignores later changes.
    */
   initialData?: CartInitialData<TData>;
+  transport?: CartTransport;
   /** Content that can read the cart through the cart hooks. */
   children?: ReactNode;
 };
@@ -61,7 +63,7 @@ type TypedCartProviderProps<TData extends CartData> = {
 type CartInitialData<TData extends CartData = CartData> =
   CreateCartStoreOptions<TData>["initialData"];
 
-export type { CartActions };
+export type { CartTransport, CartActions };
 
 /** A hook that returns the slice of cart state that your selector picks. */
 type CartStateHook<TData extends CartData> =
@@ -147,9 +149,9 @@ export function createCartComponents<THandlers>(): TypedCartComponents<
 > {
   type TData = CartDataFromHandlers<THandlers>;
 
-  function TypedCartProvider({ initialData, children }: TypedCartProviderProps<TData>) {
+  function TypedCartProvider({ initialData, transport, children }: TypedCartProviderProps<TData>) {
     return (
-      <CartProvider initialData={initialData as CartInitialData | undefined}>
+      <CartProvider initialData={initialData as CartInitialData | undefined} transport={transport}>
         {children}
       </CartProvider>
     );
@@ -218,13 +220,16 @@ function useOptionalCartContext(): CartContextValue | null {
  */
 export function CartProvider({
   initialData,
+  transport,
   children,
 }: {
   initialData?: CartInitialData;
+  /** Backend used instead of Shopify Standard Actions. */
+  transport?: CartTransport;
   children?: ReactNode;
 }) {
   const context = useMemo(() => {
-    const store = createCartStore({ initialData });
+    const store = createCartStore({ initialData, ...(transport && { transport }) });
     // Plain consumers must hydrate from the state used for SSR, even if the live store settles first.
     return { store, hydrationSnapshot: store.getState() };
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- provider initialData seeds one store for its lifetime

@@ -149,6 +149,11 @@ beforeEach(() => {
 });
 
 describe("CartProvider", () => {
+  it("passes a custom transport to the store", () => {
+    const transport = { getCart: vi.fn(), updateCart: vi.fn() };
+    render(createElement(CartProvider, { transport }, null));
+    expect(createCartStore).toHaveBeenCalledWith({ initialData: undefined, transport });
+  });
   it("creates cart store with initialData", () => {
     const data = makeCartData({ totalQuantity: 5 });
 

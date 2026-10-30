@@ -120,7 +120,7 @@ export class CartNetworkError extends Error {
  *
  * The store shows line and discount code changes before the server responds, then updates the cart from each server response. Cart costs change only when the server responds.
  *
- * Cart changes start from cart form submissions or from Standard Actions `shopify:cart:*` events. Cart changes need the Standard Actions script, which `ShopifyScripts` adds to the page. Cart loads and changes time out after 30 seconds.
+ * Cart changes start from cart form submissions or from Standard Actions `shopify:cart:*` events. Cart changes need the Standard Actions script, which `ShopifyScripts` adds to the page, unless a custom `transport` is provided. Standard Actions loads and changes time out after 30 seconds; custom transports manage their own timeouts.
  *
  * @example
  * ```ts
@@ -205,8 +205,21 @@ type CartInitialData<TData extends CartData = CartData> = {
   errors?: Array<{ message: string }>;
 };
 
+/** Backend operations for a cart store, without requiring Shopify Standard Actions.
+ * @publicDocs
+ */
+export interface CartTransport {
+  getCart(options: {
+    cartId?: string | null;
+    signal?: AbortSignal;
+  }): Promise<{ cart: CartResponse | null }>;
+  updateCart(payload: UpdateCartPayload, options?: UpdateCartOptions): Promise<UpdateCartResult>;
+}
+
 /** Options for creating a cart store. */
 export type CreateCartStoreOptions<TData extends CartData = CartData> = {
+  /** Backend used for all cart reads and mutations. Fixed when the store is created. */
+  transport?: CartTransport;
   /**
    * The cart that the server loaded, or a promise of the cart for streamed data.
    *
@@ -385,6 +398,8 @@ type TransactionIdentity = Pick<
 type CartObservable = ReturnType<typeof createCartObservable>;
 
 type CartStoreContext = {
+  transport?: CartTransport;
+  resolveTransport: () => Promise<Pick<CartTransport, "updateCart">>;
   observable: CartObservable;
   settled: CartState;
   transactions: PendingTransaction[];
@@ -1927,7 +1942,7 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   payload: TransactionPayload<TType>,
 ): Promise<void> {
   const generation = store.generation;
-  const { updateCart } = await getShopifyStandardActions();
+  const { updateCart } = await store.resolveTransport();
   if (generation !== store.generation) return;
   const reservation = reserveTransaction(store, type, payload);
   store.reservation = reservation;
@@ -1981,7 +1996,7 @@ function startQueuedInitialAdd(
     return;
   }
 
-  void getShopifyStandardActions().then(({ updateCart }) => {
+  void store.resolveTransport().then(({ updateCart }) => {
     if (queued.generation !== store.generation || queued.signal.aborted) {
       queued.deferred.reject(new DOMException("The operation was aborted.", "AbortError"));
       return;
@@ -2158,12 +2173,12 @@ function connectCartStore(store: CartStoreContext, handlers: CartEventHandlers):
   if (store.cartSyncAttached) return true;
   store.cartSyncAttached = true;
   connectedCartStores.add(store);
-  attachCartConsentListener();
+  attachCartConsentListener(!store.transport);
   document.addEventListener("shopify:cart:lines-update", handlers.lines);
   document.addEventListener("shopify:cart:discount-update", handlers.discount);
   document.addEventListener("shopify:cart:note-update", handlers.note);
   document.addEventListener("shopify:cart:attributes-update", handlers.attributes);
-  void getShopifyStandardActions().catch(() => {});
+  if (!store.transport) void store.resolveTransport().catch(() => {});
   if (store.revalidateOnConnect) {
     store.revalidateOnConnect = false;
     refreshCartInStore(store);
@@ -2220,12 +2235,12 @@ function handleConsentStateChanged(): void {
   revalidateConnectedCartCheckoutUrls();
 }
 
-function attachCartConsentListener(): void {
+function attachCartConsentListener(readPrivacyState: boolean): void {
   if (cartConsentListenerAttached) return;
   document.addEventListener(CONSENT_TRACKING_API_LOADED_EVENT, handleConsentStateChanged);
   document.addEventListener(VISITOR_CONSENT_COLLECTED_EVENT, handleConsentStateChanged);
   cartConsentListenerAttached = true;
-  if (window.Shopify?.customerPrivacy?.consentStatus === "loaded") {
+  if (readPrivacyState && window.Shopify?.customerPrivacy?.consentStatus === "loaded") {
     revalidateConnectedCartCheckoutUrls();
   }
 }
@@ -2346,7 +2361,9 @@ function loadCartInStore(
   });
   let request: ActiveCartLoad;
   const state = { ...store.observable.state, readyPromise };
-  const promise = Promise.resolve(cartPromise ?? fetchCartData(state.data.id))
+  const promise = Promise.resolve(
+    cartPromise ?? fetchCartData(state.data.id, undefined, store.transport),
+  )
     .then((data) => {
       if (!isCurrentCartLoad(store, request)) return;
       if (data) hydrateCartInStore(store, data);
@@ -2413,6 +2430,9 @@ export function createCartStore<TData extends CartData = CartData>(
     if (context) invalidateActiveCartLoad(context);
   });
   const store: CartStoreContext = {
+    transport: options.transport,
+    resolveTransport: () =>
+      options.transport ? Promise.resolve(options.transport) : getShopifyStandardActions(),
     observable,
     settled,
     transactions: [],
@@ -2733,16 +2753,21 @@ async function fetchCart(
   return { cart: result.cart };
 }
 
-function fetchCartData(cartId?: string | null, signal?: AbortSignal): Promise<CartData | null> {
-  return fetchCart(cartId, signal).then(({ cart }) =>
-    cart
-      ? {
-          ...cart,
-          checkoutUrl: cart.checkoutUrl ?? null,
-          note: extractNoteFromCart(cart),
-          attributes: cart.attributes ?? [],
-        }
-      : null,
+function fetchCartData(
+  cartId?: string | null,
+  signal?: AbortSignal,
+  transport?: CartTransport,
+): Promise<CartData | null> {
+  return (transport ? transport.getCart({ cartId, signal }) : fetchCart(cartId, signal)).then(
+    ({ cart }) =>
+      cart
+        ? {
+            ...cart,
+            checkoutUrl: cart.checkoutUrl ?? null,
+            note: extractNoteFromCart(cart),
+            attributes: cart.attributes ?? [],
+          }
+        : null,
   );
 }
 
@@ -2778,9 +2803,14 @@ function mergeAuthoritativeCartData(previous: CartData, authoritative: CartData)
   };
 }
 
-function fetchCartRevalidationData(cartId: string, signal: AbortSignal): Promise<CartData | null> {
-  return fetchCart(cartId, signal).then(({ cart }) =>
-    cart ? cartResponseFromStandardEvent(cart as unknown as StandardEventCart) : null,
+function fetchCartRevalidationData(
+  cartId: string,
+  signal: AbortSignal,
+  transport?: CartTransport,
+): Promise<CartData | null> {
+  return (transport ? transport.getCart({ cartId, signal }) : fetchCart(cartId, signal)).then(
+    ({ cart }) =>
+      cart ? cartResponseFromStandardEvent(cart as unknown as StandardEventCart) : null,
   );
 }
 
@@ -2874,8 +2904,8 @@ function revalidateCartWhenIdle(store: CartStoreContext): void {
   const controller = new AbortController();
   let request: ActiveCartRevalidation;
   const revalidationFetch = cartId
-    ? fetchCartRevalidationData(cartId, controller.signal)
-    : fetchCartData(null, controller.signal);
+    ? fetchCartRevalidationData(cartId, controller.signal, store.transport)
+    : fetchCartData(null, controller.signal, store.transport);
   const promise = revalidationFetch
     .then((cart) => applyCartRevalidation(store, request, cart))
     .catch((error: unknown) => {
@@ -2901,7 +2931,10 @@ function revalidateCartWhenIdle(store: CartStoreContext): void {
 }
 
 async function refreshCheckoutUrl(store: CartStoreContext): Promise<void> {
-  const { cart } = await fetchCart(store.observable.state.data.id);
+  const cartId = store.observable.state.data.id;
+  const { cart } = await (store.transport
+    ? store.transport.getCart({ cartId })
+    : fetchCart(cartId));
   const current = store.observable.state;
   if (!cart || (current.data.id && current.data.id !== cart.id)) return;
   const checkoutUrl = cart.checkoutUrl ?? null;
