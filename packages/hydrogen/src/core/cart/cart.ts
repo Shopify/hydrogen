@@ -26,7 +26,6 @@ import {
 import { getCartAttributeFormEntries } from "./form";
 import { DEFAULT_MINIMUM_QUANTITY, sanitizeQuantity } from "./quantity";
 import type {
-  CartCost,
   CartData,
   CartErrorGroup,
   CartLine,
@@ -41,12 +40,11 @@ import { syncQuantityInputs } from "./sync-quantity-inputs";
 const log = getLogger("cart");
 
 interface CartResponse extends CartData {
-  id: string;
-  cost: CartCost;
   checkoutUrl?: string | null;
 }
 
 type CartMutationResult =
+  | CartTransportUpdateResult
   | UpdateCartResult
   | CartAttributesUpdateResult
   | CartLinesUpdateResult
@@ -68,7 +66,7 @@ type TransactionSettlementOptions = {
 type UpdateCartTransport = (
   payload: UpdateCartPayload,
   options?: UpdateCartOptions,
-) => Promise<UpdateCartResult>;
+) => Promise<CartTransportUpdateResult>;
 
 const OPTIMISTIC_LINE_ID_PREFIX = "optimistic:";
 const LINE_KEY_PREFIX = "line:";
@@ -183,21 +181,21 @@ export type CartStore = {
   addLines(
     lines: AddLinePayload[],
     options?: { products: Array<Record<string, unknown>> },
-  ): Promise<UpdateCartResult | undefined>;
+  ): Promise<CartTransportUpdateResult | undefined>;
   /** Sets absolute line quantities; zero removes a line. Connects the store; resolves undefined when cancelled or empty. */
   updateLines(
     lines: Array<{ id: string; quantity: number }>,
-  ): Promise<UpdateCartResult | undefined>;
+  ): Promise<CartTransportUpdateResult | undefined>;
   /** Removes the given line IDs. Connects the store; resolves undefined when cancelled or empty. */
-  removeLines(lineIds: string[]): Promise<UpdateCartResult | undefined>;
+  removeLines(lineIds: string[]): Promise<CartTransportUpdateResult | undefined>;
   /** Replaces the cart note. Connects the store; resolves undefined when cancelled. */
-  setNote(note: string): Promise<UpdateCartResult | undefined>;
+  setNote(note: string): Promise<CartTransportUpdateResult | undefined>;
   /** Replaces the cart discount codes. Connects the store; resolves undefined when cancelled. */
-  setDiscountCodes(discountCodes: string[]): Promise<UpdateCartResult | undefined>;
+  setDiscountCodes(discountCodes: string[]): Promise<CartTransportUpdateResult | undefined>;
   /** Updates cart attributes. Connects the store; resolves undefined when cancelled. */
   setAttributes(
     attributes: Array<{ key: string; value: string }>,
-  ): Promise<UpdateCartResult | undefined>;
+  ): Promise<CartTransportUpdateResult | undefined>;
 
   /** Clears the cart data and errors and cancels in-flight cart requests. After you connect the store, the method also loads the cart again when the store held a cart. */
   reset(): void;
@@ -248,7 +246,16 @@ type CartInitialData<TData extends CartData = CartData> = {
 };
 
 /** A backend cart read, with null when no cart exists. */
-export type GetCartResult = { cart: CartResponse | null };
+export type GetCartResult = { cart: CartData | null };
+
+/**
+ * A transport mutation result, including backend validation and event details.
+ * Accepts Hydrogen cart data or the smaller Standard Actions cart summary for
+ * existing transports.
+ */
+export type CartTransportUpdateResult = Omit<UpdateCartResult, "cart"> & {
+  cart: CartData | UpdateCartResult["cart"];
+};
 
 /** Backend operations for a cart store, without requiring Shopify Standard Actions.
  * @publicDocs
@@ -269,7 +276,10 @@ export interface CartTransport {
   /** Apply a mutation, honoring options.signal for lifecycle cancellation and the 30-second timeout.
    * Throw CartNetworkError for transport failures; return userErrors and warnings for backend validation results.
    */
-  updateCart(payload: UpdateCartPayload, options?: UpdateCartOptions): Promise<UpdateCartResult>;
+  updateCart(
+    payload: UpdateCartPayload,
+    options?: UpdateCartOptions,
+  ): Promise<CartTransportUpdateResult>;
 }
 
 /** Options for creating a cart store. */
@@ -328,7 +338,7 @@ type TransactionDefinition<TPayload> = {
     payload: TPayload,
     signal: AbortSignal,
     updateCart: UpdateCartTransport,
-  ): Promise<UpdateCartResult>;
+  ): Promise<CartTransportUpdateResult>;
   projectPayload(state: CartState, payload: TPayload, ownsKey: (key: string) => boolean): CartState;
   projectPromise(
     state: CartState,
@@ -1261,7 +1271,7 @@ function transportAddToCart(
   signal: AbortSignal,
   updateCart: UpdateCartTransport,
   cartId?: string,
-): Promise<UpdateCartResult> {
+): Promise<CartTransportUpdateResult> {
   return updateCart(
     { ...(cartId && { cartId }), lines: payload.lines },
     {
@@ -1330,8 +1340,11 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
           amount: "0",
           currencyCode: "",
         };
+        const matchingLine = lines.find((line) => line.merchandise?.id === addition.merchandiseId);
         lines = [
           {
+            seller: matchingLine?.seller,
+            cartId: matchingLine?.cartId,
             id: optimisticLineId(addition),
             quantity: addition.quantity,
             attributes: addition.attributes ?? [],
@@ -1729,6 +1742,8 @@ function addSnapshotFields(state: CartState, result: CartMutationResult): CartSt
     data: {
       ...state.data,
       ...fields,
+      cost: fields.cost,
+      groups: fields.groups,
       checkoutUrl: checkoutUrl ?? state.data.checkoutUrl,
       updatedAt: updatedAt ?? state.data.updatedAt,
     },
@@ -1932,7 +1947,7 @@ function transportUpdateCart(updateCart: UpdateCartTransport): UpdateCartTranspo
     updateCart(payload, options).then((result) => {
       if (typeof document === "undefined" || options?.signal?.aborted) return result;
       const emit = (name: string, fields: object) => {
-        const metadata: Pick<CartLinesUpdateEvent, "context" | "detail" | "promise"> = {
+        const metadata = {
           context: options?.event?.context ?? "standard-action",
           detail: options?.event?.detail,
           promise: Promise.resolve({
@@ -2033,7 +2048,7 @@ async function dispatchTransaction<TType extends TransactionType>(
   store: CartStoreContext,
   type: TType,
   payload: TransactionPayload<TType>,
-): Promise<UpdateCartResult | undefined> {
+): Promise<CartTransportUpdateResult | undefined> {
   if (type === "add_to_cart" && !store.observable.state.data.id) {
     return dispatchInitialCartAdd(store, payload as AddToCartPayload);
   }
@@ -2044,7 +2059,7 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   store: CartStoreContext,
   type: TType,
   payload: TransactionPayload<TType>,
-): Promise<UpdateCartResult | undefined> {
+): Promise<CartTransportUpdateResult | undefined> {
   const generation = store.generation;
   const { updateCart } = await store.updateCartSource();
   if (generation !== store.generation) return;
@@ -2057,7 +2072,7 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   const correlatedUpdateCart = store.transport
     ? transportUpdateCart(updateCart)
     : withTransactionEventToken(updateCart, eventToken);
-  let promise: Promise<UpdateCartResult>;
+  let promise: Promise<CartTransportUpdateResult>;
 
   try {
     promise = getTransactionDefinition(type).transport(payload, signal, correlatedUpdateCart);
@@ -2110,7 +2125,7 @@ function startQueuedInitialAdd(
     const eventToken = createTransactionEventToken();
     const expectedEvent = { token: eventToken };
     if (!store.transport) store.expectedEvents.push(expectedEvent);
-    let transport: Promise<UpdateCartResult>;
+    let transport: Promise<CartTransportUpdateResult>;
     try {
       transport = transportAddToCart(
         queued.payload,
@@ -2157,7 +2172,7 @@ function releaseQueuedInitialAdds(store: CartStoreContext): void {
 async function dispatchInitialCartAdd(
   store: CartStoreContext,
   payload: AddToCartPayload,
-): Promise<UpdateCartResult | undefined> {
+): Promise<CartTransportUpdateResult | undefined> {
   const gate = store.identityTransportGate;
   const deferred = createDeferredCartMutation();
   const reservation = reserveTransaction(store, "add_to_cart", payload);
@@ -2184,7 +2199,7 @@ async function dispatchInitialCartAdd(
   );
 
   try {
-    return (await deferred.promise) as UpdateCartResult;
+    return (await deferred.promise) as CartTransportUpdateResult;
   } catch (error) {
     if (isAbortError(error)) return;
     throw error;
@@ -2941,7 +2956,10 @@ function adoptServerLines<TData extends CartData>(previous: TData, authoritative
   const nodes = getLines(authoritative).map((line) =>
     mergeServerLine(previousLines.get(line.id), line),
   );
-  return { ...previous, lines: { ...previous.lines, ...authoritative.lines, nodes } };
+  return {
+    ...previous,
+    lines: { ...previous.lines, ...authoritative.lines, nodes },
+  };
 }
 
 function mergeAuthoritativeCartData(previous: CartData, authoritative: CartData): CartData {
@@ -2959,7 +2977,8 @@ function mergeAuthoritativeCartData(previous: CartData, authoritative: CartData)
   return {
     ...previous,
     ...authoritativeFields,
-    cost: { ...previous.cost, ...cost },
+    cost: cost === undefined ? undefined : { ...previous.cost, ...cost },
+    groups: authoritative.groups,
     lines: { ...previous.lines, ...authoritativeConnection, nodes: lines },
     ...(checkoutUrl !== undefined && { checkoutUrl }),
     ...(note !== undefined && { note }),

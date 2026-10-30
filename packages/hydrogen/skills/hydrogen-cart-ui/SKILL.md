@@ -134,7 +134,10 @@ Errors survive unrelated cart work and clear when a new mutation begins for the 
 
 ### Money
 
-- **NEVER calculate currency amounts on the client.** Display server-provided amounts (`line.cost.totalAmount`, `state.data.cost.subtotalAmount`, etc.) directly. Client-side arithmetic drifts from the truth when discounts, taxes, duties, or rounding apply. If a value is stale because a mutation is in-flight, show it with pending UI — not a client-computed estimate.
+Type-only change: `CartData.cost` is now optional. Code typed against plain `CartData` that reads `cart.cost` must handle `undefined` (e.g. `cart.cost?.totalAmount`, or render `groups`). Stores typed from their cart server handlers are unaffected.
+
+- Multi-seller carts can expose `groups`, each with a `seller` (`shop`, optional `name`), child `cartId`, `currencyCode`, `cost`, `discountCodes`, and optional `checkoutUrl`. Lines can carry `seller` and child `cartId`. Cart-wide `cost` is absent exactly when group currencies differ: render each group's totals separately and use each line's cost currency. Never combine amounts across currencies.
+- **NEVER calculate currency amounts on the client.** Display server-provided amounts (`line.cost.totalAmount`, `state.data.cost?.subtotalAmount`, etc.) directly. Client-side arithmetic drifts from the truth when discounts, taxes, duties, or rounding apply. If a value is stale because a mutation is in-flight, show it with pending UI — not a client-computed estimate.
 - **Format with Hydrogen money helpers**, not string concatenation. Use the local `hydrogen-money` skill for an app wrapper around `formatMoney()`. The store provides `amount` (string) and `currencyCode` (string).
 
 ### Optimistic interactions

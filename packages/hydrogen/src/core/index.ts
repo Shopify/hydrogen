@@ -84,6 +84,7 @@ export {
 export type {
   GetCartResult,
   CartTransport,
+  CartTransportUpdateResult,
   CartActions,
   CartStore,
   CreateCartStoreOptions,
@@ -129,6 +130,8 @@ export type {
   CartLineCost,
   CartLineMerchandise,
   CartCost,
+  CartSeller,
+  CartGroup,
   DiscountCode,
   Attribute,
 } from "./cart";

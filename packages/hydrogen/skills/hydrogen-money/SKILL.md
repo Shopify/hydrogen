@@ -22,7 +22,7 @@ export function formatPrice(money: MoneyV2, locale = "en-US"): string {
 
 ## Rules
 
-- Display server-provided money fields: `variant.price`, `variant.compareAtPrice`, `product.priceRange.minVariantPrice`, `line.cost.totalAmount`, `cart.cost.subtotalAmount`, etc.
+- Display server-provided money fields: `variant.price`, `variant.compareAtPrice`, `product.priceRange.minVariantPrice`, `line.cost.totalAmount`, `cart.cost?.subtotalAmount`, etc.
 - Do not multiply quantity by unit price in the browser. Cart totals are affected by discounts, duties, tax, rounding, and selling plans.
 - Use the active market locale when the app has markets. Do not hardcode `en-US` in market-aware storefronts.
 - Prefer a small app wrapper such as `formatPrice()` so locale and display options are consistent.
