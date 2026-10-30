@@ -1,0 +1,143 @@
+{
+  "outcome": "success",
+  "auth": {
+    "authenticated": false
+  },
+  "response": {
+    "ucp": {
+      "version": "2026-08-25"
+    },
+    "id": "cart-a",
+    "line_items": [
+      {
+        "id": "line-a",
+        "item": {
+          "id": "variant-a",
+          "title": "Blue mug",
+          "price": 2000
+        },
+        "quantity": 1,
+        "totals": [
+          {
+            "type": "subtotal",
+            "amount": 2000
+          },
+          {
+            "type": "total",
+            "amount": 2000
+          }
+        ]
+      },
+      {
+        "id": "line-b",
+        "item": {
+          "id": "variant-b",
+          "title": "Green mug",
+          "price": 2000
+        },
+        "quantity": 1,
+        "totals": [
+          {
+            "type": "subtotal",
+            "amount": 2000
+          },
+          {
+            "type": "total",
+            "amount": 2000
+          }
+        ]
+      }
+    ],
+    "discounts": {
+      "codes": ["SAVE20", "EXPIRED"],
+      "applied": [
+        {
+          "code": "SAVE20",
+          "title": "Twenty percent off",
+          "amount": 500,
+          "automatic": false,
+          "method": "across",
+          "priority": 1,
+          "provisional": false,
+          "allocations": [
+            {
+              "path": "$.line_items[0]",
+              "amount": 250
+            },
+            {
+              "path": "$.line_items[1]",
+              "amount": 250
+            }
+          ]
+        }
+      ]
+    },
+    "currency": "USD",
+    "totals": [
+      {
+        "type": "subtotal",
+        "amount": 4000
+      },
+      {
+        "type": "discount",
+        "display_text": "Bundle savings",
+        "amount": -500
+      },
+      {
+        "type": "fulfillment",
+        "display_text": "Delivery",
+        "amount": 800,
+        "lines": [
+          {
+            "display_text": "Parcel A",
+            "amount": 500
+          },
+          {
+            "display_text": "Parcel B",
+            "amount": 300
+          }
+        ]
+      },
+      {
+        "type": "tax",
+        "display_text": "Regional tax",
+        "amount": 200
+      },
+      {
+        "type": "fee",
+        "display_text": "Handling",
+        "amount": 100
+      },
+      {
+        "type": "total",
+        "amount": 4600
+      }
+    ],
+    "messages": [
+      {
+        "type": "info",
+        "code": "notice",
+        "content": "Synthetic merchant information."
+      },
+      {
+        "type": "warning",
+        "code": "price_changed",
+        "content": "Synthetic price notice."
+      },
+      {
+        "type": "warning",
+        "code": "disclosure",
+        "presentation": "disclosure",
+        "path": "$.line_items[1]",
+        "content": "Synthetic care disclosure.",
+        "image_url": "https://merchant.example/care.png",
+        "url": "https://merchant.example/care"
+      },
+      {
+        "type": "warning",
+        "code": "availability_changed",
+        "content": "Synthetic availability notice."
+      }
+    ]
+  }
+}

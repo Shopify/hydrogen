@@ -1,0 +1,70 @@
+{
+  "outcome": "success",
+  "response": {
+    "ucp": {
+      "version": "2026-08-25"
+    },
+    "id": "gid://shopify/Cart/aggregate-fixture",
+    "line_items": [
+      {
+        "id": "line-a",
+        "shop": "a.example",
+        "item": {
+          "id": "variant-line-a",
+          "title": "Synthetic item",
+          "price": 1200
+        },
+        "quantity": 1,
+        "totals": [
+          {
+            "type": "total",
+            "amount": 1200
+          }
+        ],
+        "cart_id": "gid://shopify/Cart/child-a?key=synthetic-a"
+      }
+    ],
+    "carts": [
+      {
+        "id": "gid://shopify/Cart/child-a?key=synthetic-a",
+        "shop": "a.example",
+        "currency": "USD",
+        "line_items": [
+          {
+            "id": "line-a",
+            "shop": "a.example",
+            "item": {
+              "id": "variant-line-a",
+              "title": "Synthetic item",
+              "price": 1200
+            },
+            "quantity": 1,
+            "totals": [
+              {
+                "type": "total",
+                "amount": 1200
+              }
+            ]
+          }
+        ],
+        "totals": [
+          {
+            "type": "total",
+            "amount": 1200
+          }
+        ]
+      }
+    ],
+    "totals": [
+      {
+        "type": "total",
+        "amount": 1200,
+        "currency": "USD"
+      }
+    ],
+    "currency": "USD"
+  },
+  "auth": {
+    "authenticated": false
+  }
+}

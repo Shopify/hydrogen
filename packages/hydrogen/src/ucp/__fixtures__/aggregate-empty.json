@@ -1,0 +1,15 @@
+{
+  "outcome": "success",
+  "response": {
+    "ucp": {
+      "version": "2026-08-25"
+    },
+    "id": "gid://shopify/Cart/aggregate-fixture",
+    "carts": [],
+    "line_items": [],
+    "totals": []
+  },
+  "auth": {
+    "authenticated": false
+  }
+}

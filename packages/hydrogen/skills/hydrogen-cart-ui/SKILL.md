@@ -13,7 +13,21 @@ description: >
 
 The cart primitive is a client-side store that syncs with Shopify via Standard Actions events. It provides optimistic updates, scoped error handling, and a form-based mutation API. The store is framework-neutral; framework-specific bindings are thin wrappers over the core store.
 
+## UCP buyer carts
+
+Import `createUcpCartTransport` from `@shopify/hydrogen/ucp` and pass its result as the cart provider's `transport`. Supply `call` for authenticated UCP operations and `resolveShop(merchandiseId)` for new sellers. The transport targets UCP 2026-08-25 and sends full-replacement child-cart updates. Persist its returned opaque cart ID and pass it back to reads and mutations; do not treat it as a Storefront API cart ID.
+
+Updates are serialized per transport instance to avoid overlapping full-replacement writes losing changes. Keep one instance for a cart session. Child operations settle independently: failed shops report shop-qualified errors while successful updates and new child IDs are retained. Expired children are dropped from the returned ID.
+
+Pass `context: {address_country: 'US', currency: 'USD'}` to `createUcpCartTransport` to send buyer localization signals on creates and updates. For per-shop preferences use `context: (shop) => buyerContext`; returning `undefined` omits it. Without context the merchant may use geo-IP defaults. Currency is only a hint: display amounts using the response currency.
+
+Lines map `item.image_url` to `merchandise.image` (alt text is the item title); UCP items carry no variant or option titles.
+
+Discount codes apply independently to every child cart. Note and attributes return `UNSUPPORTED` errors. Mixed-currency carts have no combined cost. Use each group's `checkoutUrl`; there is no synthesized multi-shop checkout URL.
+
 ## Framework Bindings
+
+Mount the cart provider once, above your routes (in the root layout). A provider inside a route is destroyed on navigation, which aborts its initial load and loses the cart state.
 
 Before building UI, check whether this skill has a reference file for the app's framework in `references/`. If one exists, read it and use that framework binding first; the reference owns provider setup, state selectors, and form helpers for that runtime.
 
