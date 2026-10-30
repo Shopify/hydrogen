@@ -228,12 +228,15 @@ function syncShopifyCurrency(cart: AnalyticsCart): void {
 }
 
 function getCartCurrencyCode(cart: AnalyticsCart): string | undefined {
+  const currencies = new Set(
+    flattenConnection<AnalyticsCartLine>(cart.lines)
+      .map((line) => line.merchandise.price.currencyCode)
+      .filter(Boolean),
+  );
   return (
     nonEmptyCurrencyCode(cart.cost?.totalAmount?.currencyCode) ??
     nonEmptyCurrencyCode(cart.cost?.subtotalAmount?.currencyCode) ??
-    flattenConnection<AnalyticsCartLine>(cart.lines).find(
-      (line) => line.merchandise.price.currencyCode,
-    )?.merchandise.price.currencyCode
+    (currencies.size === 1 ? currencies.values().next().value : undefined)
   );
 }
 

@@ -26,7 +26,6 @@ import {
 import { getCartAttributeFormEntries } from "./form";
 import { DEFAULT_MINIMUM_QUANTITY, sanitizeQuantity } from "./quantity";
 import type {
-  CartCost,
   CartData,
   CartErrorGroup,
   CartLine,
@@ -42,7 +41,6 @@ const log = getLogger("cart");
 
 interface CartResponse extends CartData {
   id: string;
-  cost: CartCost;
   checkoutUrl?: string | null;
 }
 
@@ -1332,6 +1330,8 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
         };
         lines = [
           {
+            seller: lines.find((line) => line.merchandise?.id === addition.merchandiseId)?.seller,
+            cartId: lines.find((line) => line.merchandise?.id === addition.merchandiseId)?.cartId,
             id: optimisticLineId(addition),
             quantity: addition.quantity,
             attributes: addition.attributes ?? [],
@@ -1729,6 +1729,7 @@ function addSnapshotFields(state: CartState, result: CartMutationResult): CartSt
     data: {
       ...state.data,
       ...fields,
+      cost: cartResponseFromStandardEvent(result.cart).cost,
       checkoutUrl: checkoutUrl ?? state.data.checkoutUrl,
       updatedAt: updatedAt ?? state.data.updatedAt,
     },
@@ -2941,7 +2942,12 @@ function adoptServerLines<TData extends CartData>(previous: TData, authoritative
   const nodes = getLines(authoritative).map((line) =>
     mergeServerLine(previousLines.get(line.id), line),
   );
-  return { ...previous, lines: { ...previous.lines, ...authoritative.lines, nodes } };
+  return {
+    ...previous,
+    groups: authoritative.groups,
+    cost: authoritative.cost,
+    lines: { ...previous.lines, ...authoritative.lines, nodes },
+  };
 }
 
 function mergeAuthoritativeCartData(previous: CartData, authoritative: CartData): CartData {
@@ -2959,7 +2965,7 @@ function mergeAuthoritativeCartData(previous: CartData, authoritative: CartData)
   return {
     ...previous,
     ...authoritativeFields,
-    cost: { ...previous.cost, ...cost },
+    cost: cost === undefined ? undefined : { ...previous.cost, ...cost },
     lines: { ...previous.lines, ...authoritativeConnection, nodes: lines },
     ...(checkoutUrl !== undefined && { checkoutUrl }),
     ...(note !== undefined && { note }),

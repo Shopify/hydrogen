@@ -129,6 +129,8 @@ export type {
   CartLineCost,
   CartLineMerchandise,
   CartCost,
+  CartSeller,
+  CartGroup,
   DiscountCode,
   Attribute,
 } from "./cart";

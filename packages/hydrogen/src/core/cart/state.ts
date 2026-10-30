@@ -59,6 +59,22 @@ export interface CartLineMerchandise {
   [key: string]: unknown;
 }
 
+/** The merchant responsible for a cart line or group. */
+export interface CartSeller {
+  shop: string;
+  name?: string;
+}
+
+/** A seller's child cart, with totals in its own currency. */
+export interface CartGroup {
+  seller: CartSeller;
+  cartId: string;
+  currencyCode: string;
+  cost: CartCost;
+  discountCodes: DiscountCode[];
+  checkoutUrl?: string | null;
+}
+
 /**
  * A single line item in the cart.
  *
@@ -67,6 +83,10 @@ export interface CartLineMerchandise {
  * for a bundle.
  */
 export interface CartLine {
+  /** The merchant responsible for this line. */
+  seller?: CartSeller;
+  /** The child cart containing this line. */
+  cartId?: string;
   /** The cart line's Storefront API GID. Look up the line's pending state and errors with this ID. */
   id: string;
   /** Number of units of this merchandise in the cart. */
@@ -234,8 +254,10 @@ export interface CartData {
   checkoutUrl?: string | null;
   /** Sum of all line quantities. */
   totalQuantity: number;
-  /** The cart's subtotal, total, and checkout charge. */
-  cost: CartCost;
+  /** The cart's subtotal, total, and checkout charge. Absent exactly when the groups' currencies differ. */
+  cost?: CartCost;
+  /** Per-seller child carts, each with totals in its own currency. */
+  groups?: CartGroup[];
   /** Customer-supplied cart note, or `null` or empty when unset. */
   note?: string | null;
   /** Cart-level custom attributes. */

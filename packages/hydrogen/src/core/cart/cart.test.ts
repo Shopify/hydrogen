@@ -1746,7 +1746,7 @@ describe("CartStore.handleFormSubmit — discount mutations", () => {
     const [settledLine] = getCartLines(store.getState().data);
     assert(settledLine, "expected discount response to settle a cart line");
     expect(settledLine.cost.totalAmount.amount).toBe(discountedAmount);
-    expect(store.getState().data.cost.subtotalAmount.amount).toBe(discountedAmount);
+    expect(store.getState().data.cost?.subtotalAmount.amount).toBe(discountedAmount);
   });
 
   it("discount-apply preserves applicable status for existing codes during optimistic phase", async () => {
@@ -3997,7 +3997,7 @@ describe("event-driven sync", () => {
     await externalPromise;
 
     expect(getCartLines(store.getState().data)[0].quantity).toBe(5);
-    expect(store.getState().data.cost.totalAmount.amount).toBe("50");
+    expect(store.getState().data.cost?.totalAmount.amount).toBe("50");
     expect(store.getState().pending.lines).not.toContain("line-1");
   });
 
@@ -5705,7 +5705,7 @@ describe("multi-line update and remove events", () => {
       await change;
 
       expect(lines()).toEqual(expected);
-      expect(store.getState().data.cost.totalAmount.amount).toBe(String(total * 10));
+      expect(store.getState().data.cost?.totalAmount.amount).toBe(String(total * 10));
       expect(store.getState().pending.lines.size).toBe(0);
     },
   );

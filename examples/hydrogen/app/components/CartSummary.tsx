@@ -17,7 +17,7 @@ export function CartSummary({ cart, layout, totalsPending }: CartSummaryProps) {
   const summaryId = useId();
   const discountsHeadingId = useId();
   const discountCodeInputId = useId();
-  const subtotalAmount = toHydrogenMoney(cart.cost.subtotalAmount);
+  const subtotalAmount = toHydrogenMoney(cart.cost?.subtotalAmount);
 
   return (
     <div aria-labelledby={summaryId} className={className}>
@@ -95,8 +95,10 @@ function CartGiftMessage({ attributes }: { attributes: CartData["attributes"] })
   );
 }
 
-function toHydrogenMoney(value: CartData["cost"]["subtotalAmount"]): MoneyV2 | null {
-  if (!value.amount || !value.currencyCode) return null;
+function toHydrogenMoney(
+  value: NonNullable<CartData["cost"]>["subtotalAmount"] | undefined,
+): MoneyV2 | null {
+  if (!value?.amount || !value.currencyCode) return null;
   return { amount: value.amount, currencyCode: value.currencyCode };
 }
 
