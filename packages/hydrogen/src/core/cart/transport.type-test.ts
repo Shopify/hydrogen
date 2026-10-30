@@ -5,7 +5,7 @@ import type {
   UpdateCartOptions,
   UpdateCartResult,
 } from "../../../vendor/standard-actions";
-import type { CartTransport, CartTransportUpdateResult, CreateCartStoreOptions, CartData } from "../index";
+import type { CartTransport, CartTransportUpdateResult, CreateCartStoreOptions, CartData, CartStore } from "../index";
 
 it("accepts mixed-currency and Standard Actions transports without casts", () => {
   const cart: CartData = {
@@ -24,6 +24,11 @@ it("accepts mixed-currency and Standard Actions transports without casts", () =>
   expectTypeOf(mixed).toMatchTypeOf<CartTransport>();
   expectTypeOf<(payload: UpdateCartPayload, options?: UpdateCartOptions) => Promise<UpdateCartResult>>()
     .toExtend<CartTransport["updateCart"]>();
+});
+
+it("returns transport results from every programmatic cart action", () => {
+  type Action = "addLines" | "updateLines" | "removeLines" | "setNote" | "setDiscountCodes" | "setAttributes";
+  expectTypeOf<ReturnType<CartStore[Action]>>().toEqualTypeOf<Promise<CartTransportUpdateResult | undefined>>();
 });
 
 it("exports the transport contract", () => {
