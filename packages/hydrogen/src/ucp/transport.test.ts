@@ -58,7 +58,9 @@ it("updates and removes existing lines, and applies discounts per shop", async (
       id: child.id,
       cart: {
         line_items: [],
-        discounts: { codes: child.discounts?.codes?.map((d) => d.code) ?? [] },
+        discounts: {
+          codes: (child.discounts?.codes ?? []).filter((code) => typeof code === "string"),
+        },
       },
     },
     { signal: undefined },

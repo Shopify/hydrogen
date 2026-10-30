@@ -22,7 +22,10 @@ export interface UcpChildCart {
   line_items: UcpLineItem[];
   totals: UcpTotal[];
   continue_url?: string;
-  discounts?: { codes?: Array<{ code: string }> };
+  discounts?: {
+    codes?: string[];
+    applied?: Array<{ id?: string; title?: string; amount?: number; code?: string }>;
+  };
   messages?: UcpMessage[];
 }
 export interface UcpCart extends UcpChildCart {

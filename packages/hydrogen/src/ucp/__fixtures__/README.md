@@ -5,5 +5,6 @@ Copied from Shopify/shopd-mcp, `origin/multimerchant-checkouts` at
 
 Sources: `fixtures/cta/get_cart/{aggregate-read,aggregate-mixed-currency-read}.json`
 and `fixtures/cta/create_cart/{aggregate-single-session,aggregate-child-failure,aggregate-empty}.json`.
+Also copied `fixtures/cta/create_cart/estimated-totals-mixed-messages.json` from the same revision to cover string discount codes and applied details.
 Fixtures include the test runner envelope; the UCP document is `response`.
 There is no KWD cart fixture at this revision; KWD conversion is tested directly.

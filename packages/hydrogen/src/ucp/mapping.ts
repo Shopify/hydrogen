@@ -33,7 +33,12 @@ export function ucpCartToCartData(cart: UcpCart, id: string = cart.id): CartData
     cartId: c.id,
     currencyCode: c.currency,
     cost: cost(c.totals, c.currency),
-    discountCodes: (c.discounts?.codes ?? []).map((d) => ({ code: d.code, applicable: true })),
+    discountCodes: (c.discounts?.codes ?? [])
+      .filter((code) => typeof code === "string")
+      .map((code) => ({
+        code,
+        applicable: (c.discounts?.applied ?? []).some((d) => d.code === code || d.title === code),
+      })),
     checkoutUrl: c.continue_url ?? null,
   }));
   const nodes = children.flatMap((c) =>
@@ -84,7 +89,7 @@ export function ucpCartToCartData(cart: UcpCart, id: string = cart.id): CartData
   };
 }
 function existingCodes(child: UcpChildCart | undefined): string[] {
-  return child?.discounts?.codes?.map((d) => d.code) ?? [];
+  return (child?.discounts?.codes ?? []).filter((code) => typeof code === "string");
 }
 export function cartPayloadToUcpUpdate(
   child: UcpChildCart | undefined,
