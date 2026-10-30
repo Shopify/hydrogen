@@ -187,11 +187,11 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
 }
 
 /**
- * Returns the cart action that syncs the cart after a mutation outside cart forms.
+ * Returns optimistic cart mutation actions and cart revalidation.
  *
  * Call `refresh` after a server-side cart mutation that bypasses cart forms, such as a server action that creates the cart.
  *
- * @returns The `refresh` action.
+ * @returns Cart mutation actions and `refresh`.
  *
  * @example
  * ```vue
@@ -205,10 +205,23 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
  * </script>
  * ```
  * @publicDocs
+ * @example
+ * ```ts
+ * const {addLines} = useCartActions();
+ * await addLines([{merchandiseId: variantId, quantity: 1}]);
+ * ```
  */
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");
-  return { refresh: store.refresh };
+  return {
+    refresh: store.refresh,
+    addLines: store.addLines,
+    updateLines: store.updateLines,
+    removeLines: store.removeLines,
+    setNote: store.setNote,
+    setDiscountCodes: store.setDiscountCodes,
+    setAttributes: store.setAttributes,
+  };
 }
 
 /**

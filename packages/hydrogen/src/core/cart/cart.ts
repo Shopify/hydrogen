@@ -173,6 +173,23 @@ export type CartStore = {
    */
   refresh(): void;
 
+  /** Adds lines through the optimistic transaction pipeline. Resolves when the mutation settles. */
+  addLines(lines: AddLinePayload[]): Promise<UpdateCartResult | undefined>;
+  /** Sets absolute line quantities; zero removes a line. */
+  updateLines(
+    lines: Array<{ id: string; quantity: number }>,
+  ): Promise<UpdateCartResult | undefined>;
+  /** Removes the given line IDs. */
+  removeLines(lineIds: string[]): Promise<UpdateCartResult | undefined>;
+  /** Replaces the cart note. */
+  setNote(note: string): Promise<UpdateCartResult | undefined>;
+  /** Replaces the cart discount codes. */
+  setDiscountCodes(discountCodes: string[]): Promise<UpdateCartResult | undefined>;
+  /** Updates cart attributes. */
+  setAttributes(
+    attributes: Array<{ key: string; value: string }>,
+  ): Promise<UpdateCartResult | undefined>;
+
   /** Clears the cart data and errors and cancels in-flight cart requests. After you connect the store, the method also loads the cart again when the store held a cart. */
   reset(): void;
 
@@ -194,8 +211,24 @@ export type CartStore = {
   handleFormSubmit(event: SubmitEvent, eventDetail?: Record<string, unknown>): Promise<void>;
 };
 
-/** The store action that reloads the cart after a cart change outside the store. */
-export type CartActions = Pick<CartStore, "refresh">;
+/** Cart mutations and revalidation actions.
+ * @example
+ * ```ts
+ * await store.addLines([{merchandiseId: variantId, quantity: 1}]);
+ * await store.updateLines([{id: lineId, quantity: 2}]);
+ * await store.removeLines([lineId]);
+ * ```
+ */
+export type CartActions = Pick<
+  CartStore,
+  | "refresh"
+  | "addLines"
+  | "updateLines"
+  | "removeLines"
+  | "setNote"
+  | "setDiscountCodes"
+  | "setAttributes"
+>;
 
 /** The cart that the server loaded for the first render. */
 type CartInitialData<TData extends CartData = CartData> = {
@@ -1992,7 +2025,7 @@ async function dispatchTransaction<TType extends TransactionType>(
   store: CartStoreContext,
   type: TType,
   payload: TransactionPayload<TType>,
-): Promise<void> {
+): Promise<UpdateCartResult | undefined> {
   if (type === "add_to_cart" && !store.observable.state.data.id) {
     return dispatchInitialCartAdd(store, payload as AddToCartPayload);
   }
@@ -2003,7 +2036,7 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   store: CartStoreContext,
   type: TType,
   payload: TransactionPayload<TType>,
-): Promise<void> {
+): Promise<UpdateCartResult | undefined> {
   const generation = store.generation;
   const { updateCart } = await store.updateCartSource();
   if (generation !== store.generation) return;
@@ -2030,7 +2063,7 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   observeMutationTransport(store, promise);
 
   try {
-    await promise;
+    return await promise;
   } catch (error) {
     if (isAbortError(error)) return;
     throw error;
@@ -2116,7 +2149,7 @@ function releaseQueuedInitialAdds(store: CartStoreContext): void {
 async function dispatchInitialCartAdd(
   store: CartStoreContext,
   payload: AddToCartPayload,
-): Promise<void> {
+): Promise<UpdateCartResult | undefined> {
   const gate = store.identityTransportGate;
   const deferred = createDeferredCartMutation();
   const reservation = reserveTransaction(store, "add_to_cart", payload);
@@ -2143,7 +2176,7 @@ async function dispatchInitialCartAdd(
   );
 
   try {
-    await deferred.promise;
+    return (await deferred.promise) as UpdateCartResult;
   } catch (error) {
     if (isAbortError(error)) return;
     throw error;
@@ -2561,6 +2594,34 @@ export function createCartStore<TData extends CartData = CartData>(
     subscribe: (listener) => store.observable.subscribe(listener),
     fetch: () => loadCartInStore(store),
     refresh: () => refreshCartInStore(store),
+    addLines: (lines) => {
+      connectCartStore(store, handlers);
+      return dispatchTransaction(store, "add_to_cart", { lines, products: [] });
+    },
+    updateLines: (lines) => {
+      connectCartStore(store, handlers);
+      return dispatchTransaction(store, "change_lines_quantity", {
+        lines: lines.map(({ id, quantity }) => ({ lineId: id, quantity })),
+      });
+    },
+    removeLines: (lineIds) => {
+      connectCartStore(store, handlers);
+      return dispatchTransaction(store, "change_lines_quantity", {
+        lines: lineIds.map((lineId) => ({ lineId, quantity: 0 })),
+      });
+    },
+    setNote: (note) => {
+      connectCartStore(store, handlers);
+      return dispatchTransaction(store, "set_note", { note });
+    },
+    setDiscountCodes: (discountCodes) => {
+      connectCartStore(store, handlers);
+      return dispatchTransaction(store, "set_discount_codes", { discountCodes });
+    },
+    setAttributes: (attributes) => {
+      connectCartStore(store, handlers);
+      return dispatchTransaction(store, "set_attributes", { attributes });
+    },
     reset: () => resetCartStore(store),
     handleFormSubmit: (event, eventDetail) =>
       handleFormSubmitInStore(store, handlers, event, eventDetail),
@@ -2574,10 +2635,13 @@ function requireFormEvent(event: SubmitEvent): {
   form: HTMLFormElement;
   submitter: HTMLElement;
 } {
-  if (!(event.target instanceof HTMLFormElement)) {
+  const FormElement = (event.target as HTMLFormElement | null)?.ownerDocument?.defaultView
+    ?.HTMLFormElement;
+  if (!FormElement || !(event.target instanceof FormElement)) {
     throw new TypeError(`Expected event.target to be an HTMLFormElement, got ${event.target}`);
   }
-  if (!(event.submitter instanceof HTMLElement)) {
+  const Element = event.submitter?.ownerDocument?.defaultView?.HTMLElement;
+  if (!Element || !(event.submitter instanceof Element)) {
     throw new TypeError(`Expected event.submitter to be an HTMLElement, got ${event.submitter}`);
   }
   return { form: event.target, submitter: event.submitter };
@@ -2649,7 +2713,7 @@ function submitLineIntent(
   const lineId = formData.get("lineId") as string | null;
   if (!lineId) throw new Error('Missing "lineId" in form data');
   const payload = getLineQuantityPayload(store.observable.state, intent, lineId, formData);
-  return dispatchTransaction(store, "change_line_quantity", payload);
+  return dispatchTransaction(store, "change_line_quantity", payload).then(() => {});
 }
 
 function submitDiscountIntent(
@@ -2663,7 +2727,7 @@ function submitDiscountIntent(
     intent === "discount-apply"
       ? [...currentCodes, code]
       : currentCodes.filter((current) => current !== code);
-  return dispatchTransaction(store, "set_discount_codes", { discountCodes });
+  return dispatchTransaction(store, "set_discount_codes", { discountCodes }).then(() => {});
 }
 
 async function handleFormSubmitInStore(
@@ -2678,13 +2742,15 @@ async function handleFormSubmitInStore(
   const formData = new FormData(form);
 
   if (intent === "add" || (!intent && formData.has("merchandiseId"))) {
-    return dispatchTransaction(store, "add_to_cart", getAddPayload(formData, eventDetail));
+    return dispatchTransaction(store, "add_to_cart", getAddPayload(formData, eventDetail)).then(
+      () => {},
+    );
   }
   if (LINE_INTENTS.has(intent)) return submitLineIntent(store, intent, formData);
   if (DISCOUNT_INTENTS.has(intent)) return submitDiscountIntent(store, intent, formData);
   if (intent === "note-update") {
     const note = (formData.get("note") as string) ?? "";
-    return dispatchTransaction(store, "set_note", { note });
+    return dispatchTransaction(store, "set_note", { note }).then(() => {});
   }
   if (intent === "attributes-update") {
     const attributes = getCartAttributeFormEntries(formData)
@@ -2693,7 +2759,7 @@ async function handleFormSubmitInStore(
         key,
         value: String(value),
       }));
-    return dispatchTransaction(store, "set_attributes", { attributes });
+    return dispatchTransaction(store, "set_attributes", { attributes }).then(() => {});
   }
   throw new Error(`Unknown cart form intent: "${intent}"`);
 }

@@ -880,6 +880,76 @@ describe("CartStore lifecycle", () => {
 });
 
 describe("custom cart transport mutations", () => {
+  it("submits a form from an iframe document", async () => {
+    const iframe = document.createElement("iframe");
+    document.body.append(iframe);
+    const frameDocument = iframe.contentDocument;
+    assert(frameDocument, "iframe has a document");
+    const form = frameDocument.createElement("form");
+    form.innerHTML =
+      '<input name="merchandiseId" value="variant"><button name="intent" value="add">Add</button>';
+    frameDocument.body.append(form);
+    const button = form.querySelector("button");
+    assert(button, "form has a submitter");
+    const custom = createCartStore({
+      initialData: { cart: null },
+      transport: {
+        getCart: async () => ({ cart: null }),
+        updateCart: vi.fn(async () => ({ cart: makeCartState() }) as unknown as UpdateCartResult),
+      },
+    });
+    let submission: Promise<void> | undefined;
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      submission = custom.handleFormSubmit(event as SubmitEvent);
+    });
+    try {
+      form.dispatchEvent(new SubmitEvent("submit", { submitter: button }));
+      assert(submission, "form submitted");
+      await submission;
+    } finally {
+      custom.destroy();
+      iframe.remove();
+    }
+  });
+
+  it("routes programmatic add, update and remove through a transport", async () => {
+    const result = { cart: makeCartState() } as unknown as UpdateCartResult;
+    const updateCart = vi.fn(async () => result);
+    const custom = createCartStore({
+      initialData: { cart: null },
+      transport: { getCart: async () => ({ cart: null }), updateCart },
+    });
+    try {
+      expect(await custom.addLines([{ merchandiseId: "variant", quantity: 1 }])).toBe(result);
+      expect(await custom.updateLines([{ id: "line", quantity: 2 }])).toBe(result);
+      expect(await custom.removeLines(["line"])).toBe(result);
+      expect(updateCart).toHaveBeenNthCalledWith(
+        2,
+        { lines: [{ id: "line", quantity: 2 }] },
+        expect.anything(),
+      );
+      expect(updateCart).toHaveBeenNthCalledWith(
+        3,
+        { lines: [{ id: "line", quantity: 0 }] },
+        expect.anything(),
+      );
+    } finally {
+      custom.destroy();
+    }
+  });
+
+  it("routes programmatic updates through Standard Actions", async () => {
+    store.hydrate(makeCartState({ lines: [makeLine({ id: "line", quantity: 1 })] }));
+    const mutation = store.updateLines([{ id: "line", quantity: 2 }]);
+    await nextTick();
+    expect(mockUpdateCart).toHaveBeenCalledWith(
+      { lines: [{ id: "line", quantity: 2 }] },
+      expect.anything(),
+    );
+    resolveUpdate(0, { cart: makeCartState() });
+    await mutation;
+  });
   it("isolates transport events from another store, including an active reservation", async () => {
     const deferred = createDeferred<UpdateCartResult>();
     const custom = createCartStore({

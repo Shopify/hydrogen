@@ -116,7 +116,7 @@ type TypedCartComponents<TData extends CartData> = {
    * Returns the slice of cart state that the selector picks, or `undefined` outside the provider. Use the hook in a component that also renders above the provider, such as a cart badge on an error page.
    */
   useOptionalCart: OptionalCartStateHook<TData>;
-  /** Returns the `refresh()` action. Call `refresh()` after a server-side cart change that skips cart forms. */
+  /** Returns optimistic mutation actions and `refresh()` for server-side changes that skip the store. */
   useCartActions: typeof useCartActions;
   /** Returns form props and a register function for cart forms. */
   useCartForm: typeof useCartForm;
@@ -282,11 +282,16 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
 }
 
 /**
- * Returns the cart action that reloads the cart after a cart change outside cart forms.
+ * Returns optimistic cart mutation actions and cart revalidation.
  *
  * Call `refresh()` after a server-side cart change that skips cart forms, such as a server action that creates the cart.
  *
- * @returns The `refresh()` action.
+ * @returns Optimistic cart mutation actions and `refresh()`.
+ * @example
+ * ```ts
+ * const {addLines} = useCartActions();
+ * await addLines([{merchandiseId: variantId, quantity: 1}]);
+ * ```
  *
  * @example
  * ```tsx
@@ -302,7 +307,18 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");
 
-  return useMemo(() => ({ refresh: store.refresh }), [store]);
+  return useMemo(
+    () => ({
+      refresh: store.refresh,
+      addLines: store.addLines,
+      updateLines: store.updateLines,
+      removeLines: store.removeLines,
+      setNote: store.setNote,
+      setDiscountCodes: store.setDiscountCodes,
+      setAttributes: store.setAttributes,
+    }),
+    [store],
+  );
 }
 
 /**
