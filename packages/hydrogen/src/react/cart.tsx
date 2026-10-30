@@ -19,6 +19,7 @@ import {
   configureCartEndpoint as configureCoreCartEndpoint,
   createCartStore,
   type CreateCartStoreOptions,
+  type CartTransport,
   type CartActions,
   type CartStore,
 } from "../core/cart/cart";
@@ -54,6 +55,8 @@ type TypedCartProviderProps<TData extends CartData> = {
    * The `data` property of the cart GET handler's result, or a promise of that data. Without initial data, the store loads the cart from `/api/cart` after the provider mounts, and the server-rendered page shows an empty cart. The provider creates its store from the first value and ignores later changes.
    */
   initialData?: CartInitialData<TData>;
+  /** Backend used instead of Standard Actions. Fixed when the provider creates its store. */
+  transport?: CartTransport;
   /** Content that can read the cart through the cart hooks. */
   children?: ReactNode;
 };
@@ -61,7 +64,7 @@ type TypedCartProviderProps<TData extends CartData> = {
 type CartInitialData<TData extends CartData = CartData> =
   CreateCartStoreOptions<TData>["initialData"];
 
-export type { CartActions };
+export type { CartTransport, CartActions };
 
 /** A hook that returns the slice of cart state that your selector picks. */
 type CartStateHook<TData extends CartData> =
@@ -113,7 +116,7 @@ type TypedCartComponents<TData extends CartData> = {
    * Returns the slice of cart state that the selector picks, or `undefined` outside the provider. Use the hook in a component that also renders above the provider, such as a cart badge on an error page.
    */
   useOptionalCart: OptionalCartStateHook<TData>;
-  /** Returns the `refresh()` action. Call `refresh()` after a server-side cart change that skips cart forms. */
+  /** Returns optimistic mutation actions and `refresh()` for server-side changes that skip the store. */
   useCartActions: typeof useCartActions;
   /** Returns form props and a register function for cart forms. */
   useCartForm: typeof useCartForm;
@@ -147,9 +150,9 @@ export function createCartComponents<THandlers>(): TypedCartComponents<
 > {
   type TData = CartDataFromHandlers<THandlers>;
 
-  function TypedCartProvider({ initialData, children }: TypedCartProviderProps<TData>) {
+  function TypedCartProvider({ initialData, transport, children }: TypedCartProviderProps<TData>) {
     return (
-      <CartProvider initialData={initialData as CartInitialData | undefined}>
+      <CartProvider initialData={initialData as CartInitialData | undefined} transport={transport}>
         {children}
       </CartProvider>
     );
@@ -218,26 +221,29 @@ function useOptionalCartContext(): CartContextValue | null {
  */
 export function CartProvider({
   initialData,
+  transport,
   children,
 }: {
   initialData?: CartInitialData;
+  /** Backend used instead of Shopify Standard Actions. */
+  transport?: CartTransport;
   children?: ReactNode;
 }) {
   const context = useMemo(() => {
-    const store = createCartStore({ initialData });
+    const store = createCartStore({ initialData, ...(transport && { transport }) });
     // Plain consumers must hydrate from the state used for SSR, even if the live store settles first.
-    return { store, hydrationSnapshot: store.getState() };
+    return { store, hydrationSnapshot: store.getState(), usesTransport: !!transport };
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- provider initialData seeds one store for its lifetime
   }, []);
-  const { store } = context;
+  const { store, usesTransport } = context;
 
   useEffect(() => {
-    configureCoreCartEndpoint(cartEndpoint);
+    if (!usesTransport) configureCoreCartEndpoint(cartEndpoint);
     store.connect();
     return () => {
       store.destroy();
     };
-  }, [store]);
+  }, [store, usesTransport]);
 
   return <CartContext.Provider value={context}>{children}</CartContext.Provider>;
 }
@@ -276,15 +282,15 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
 }
 
 /**
- * Returns the cart action that reloads the cart after a cart change outside cart forms.
+ * Returns optimistic cart mutation actions and cart revalidation.
  *
  * Call `refresh()` after a server-side cart change that skips cart forms, such as a server action that creates the cart.
  *
- * @returns The `refresh()` action.
- *
+ * @returns Optimistic cart mutation actions and `refresh()`.
  * @example
- * ```tsx
- * const { refresh } = useCartActions();
+ * ```ts
+ * const {addLines, refresh} = useCartActions();
+ * await addLines([{merchandiseId: variantId, quantity: 1}]);
  *
  * async function handleServerAction() {
  *   await createCartOnServer();
@@ -296,7 +302,18 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");
 
-  return useMemo(() => ({ refresh: store.refresh }), [store]);
+  return useMemo(
+    () => ({
+      refresh: store.refresh,
+      addLines: store.addLines,
+      updateLines: store.updateLines,
+      removeLines: store.removeLines,
+      setNote: store.setNote,
+      setDiscountCodes: store.setDiscountCodes,
+      setAttributes: store.setAttributes,
+    }),
+    [store],
+  );
 }
 
 /**

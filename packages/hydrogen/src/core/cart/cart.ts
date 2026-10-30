@@ -120,7 +120,7 @@ export class CartNetworkError extends Error {
  *
  * The store shows line and discount code changes before the server responds, then updates the cart from each server response. Cart costs change only when the server responds.
  *
- * Cart changes start from cart form submissions or from Standard Actions `shopify:cart:*` events. Cart changes need the Standard Actions script, which `ShopifyScripts` adds to the page. Cart loads and changes time out after 30 seconds.
+ * Cart changes start from cart form submissions or from Standard Actions `shopify:cart:*` events. Cart changes need the Standard Actions script, which `ShopifyScripts` adds to the page, unless a custom `transport` is provided. All backend calls receive a lifecycle signal combined with a 30-second timeout. Destroying the store aborts them; superseding a cart load aborts that load.
  *
  * @example
  * ```ts
@@ -173,6 +173,32 @@ export type CartStore = {
    */
   refresh(): void;
 
+  /** Adds lines through the optimistic transaction pipeline. Connects the store and resolves to the backend result, or undefined when cancelled. Empty input is a no-op.
+   * Pass products keyed by variant id, using the same merchandise data as cart forms, to show new merchandise optimistically. Without metadata, new lines appear after the server responds.
+   * @example
+   * ```ts
+   * await store.addLines([{merchandiseId: variant.id, quantity: 1}], {products: [variant]});
+   * ```
+   */
+  addLines(
+    lines: AddLinePayload[],
+    options?: { products: Array<Record<string, unknown>> },
+  ): Promise<UpdateCartResult | undefined>;
+  /** Sets absolute line quantities; zero removes a line. Connects the store; resolves undefined when cancelled or empty. */
+  updateLines(
+    lines: Array<{ id: string; quantity: number }>,
+  ): Promise<UpdateCartResult | undefined>;
+  /** Removes the given line IDs. Connects the store; resolves undefined when cancelled or empty. */
+  removeLines(lineIds: string[]): Promise<UpdateCartResult | undefined>;
+  /** Replaces the cart note. Connects the store; resolves undefined when cancelled. */
+  setNote(note: string): Promise<UpdateCartResult | undefined>;
+  /** Replaces the cart discount codes. Connects the store; resolves undefined when cancelled. */
+  setDiscountCodes(discountCodes: string[]): Promise<UpdateCartResult | undefined>;
+  /** Updates cart attributes. Connects the store; resolves undefined when cancelled. */
+  setAttributes(
+    attributes: Array<{ key: string; value: string }>,
+  ): Promise<UpdateCartResult | undefined>;
+
   /** Clears the cart data and errors and cancels in-flight cart requests. After you connect the store, the method also loads the cart again when the store held a cart. */
   reset(): void;
 
@@ -194,8 +220,24 @@ export type CartStore = {
   handleFormSubmit(event: SubmitEvent, eventDetail?: Record<string, unknown>): Promise<void>;
 };
 
-/** The store action that reloads the cart after a cart change outside the store. */
-export type CartActions = Pick<CartStore, "refresh">;
+/** Cart mutations and revalidation actions.
+ * @example
+ * ```ts
+ * await store.addLines([{merchandiseId: variantId, quantity: 1}]);
+ * await store.updateLines([{id: lineId, quantity: 2}]);
+ * await store.removeLines([lineId]);
+ * ```
+ */
+export type CartActions = Pick<
+  CartStore,
+  | "refresh"
+  | "addLines"
+  | "updateLines"
+  | "removeLines"
+  | "setNote"
+  | "setDiscountCodes"
+  | "setAttributes"
+>;
 
 /** The cart that the server loaded for the first render. */
 type CartInitialData<TData extends CartData = CartData> = {
@@ -205,8 +247,35 @@ type CartInitialData<TData extends CartData = CartData> = {
   errors?: Array<{ message: string }>;
 };
 
+/** A backend cart read, with null when no cart exists. */
+export type GetCartResult = { cart: CartResponse | null };
+
+/** Backend operations for a cart store, without requiring Shopify Standard Actions.
+ * @publicDocs
+ * @example
+ * ```ts
+ * const store = createCartStore({ transport: {
+ *   getCart: ({signal}) => fetch('/cart', {signal}).then(r => r.json()),
+ *   updateCart: (payload, options) => myBackend.updateCart(payload, options),
+ * }});
+ * ```
+ */
+export interface CartTransport {
+  /** Read the given cart, or discover the current cart when cartId is null or omitted.
+   * Honor signal: it combines lifecycle cancellation and a 30-second timeout.
+   * Throw CartNetworkError for transport failures.
+   */
+  getCart(options: { cartId?: string | null; signal?: AbortSignal }): Promise<GetCartResult>;
+  /** Apply a mutation, honoring options.signal for lifecycle cancellation and the 30-second timeout.
+   * Throw CartNetworkError for transport failures; return userErrors and warnings for backend validation results.
+   */
+  updateCart(payload: UpdateCartPayload, options?: UpdateCartOptions): Promise<UpdateCartResult>;
+}
+
 /** Options for creating a cart store. */
 export type CreateCartStoreOptions<TData extends CartData = CartData> = {
+  /** Backend used for all cart reads and mutations. Fixed when the store is created. */
+  transport?: CartTransport;
   /**
    * The cart that the server loaded, or a promise of the cart for streamed data.
    *
@@ -324,6 +393,7 @@ type ProjectedError = {
 };
 
 type ActiveCartLoad = {
+  controller: AbortController;
   state: CartState;
   promise: Promise<void>;
   resolveReadyPromise: () => void;
@@ -385,6 +455,8 @@ type TransactionIdentity = Pick<
 type CartObservable = ReturnType<typeof createCartObservable>;
 
 type CartStoreContext = {
+  transport?: CartTransport;
+  updateCartSource: () => Promise<Pick<CartTransport, "updateCart">>;
   observable: CartObservable;
   settled: CartState;
   transactions: PendingTransaction[];
@@ -1375,9 +1447,8 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
     },
     getSignalKeys: (_state, payload) => lineKey(payload.lineId),
   },
-  // Created only from Standard Actions events, so the store never owns this transport. A newer
-  // change can supersede some of its lines; the rest still project and settle, and the overlap
-  // revalidates.
+  // Multi-line events and programmatic changes share this projection. A newer change can
+  // supersede some lines; the rest still project and settle, and the overlap revalidates.
   change_lines_quantity: {
     payload: {} as ChangeLinesQuantityPayload,
     transport: (payload, signal, updateCart) =>
@@ -1854,6 +1925,46 @@ function createTransactionEventToken(): string {
   return crypto.randomUUID();
 }
 
+const transportEventOwners = new WeakSet<Event>();
+
+function transportUpdateCart(updateCart: UpdateCartTransport): UpdateCartTransport {
+  return (payload, options) =>
+    updateCart(payload, options).then((result) => {
+      if (typeof document === "undefined" || options?.signal?.aborted) return result;
+      const emit = (name: string, fields: object) => {
+        const metadata: Pick<CartLinesUpdateEvent, "context" | "detail" | "promise"> = {
+          context: options?.event?.context ?? "standard-action",
+          detail: options?.event?.detail,
+          promise: Promise.resolve({
+            ...result,
+            cart: { ...result.cart, lines: result.cart.lines.nodes },
+          }),
+        };
+        const event = Object.assign(new Event(`shopify:cart:${name}-update`), metadata, fields);
+        transportEventOwners.add(event);
+        document.dispatchEvent(event);
+      };
+      if (payload.lines) {
+        // Mixed payloads have no single action: publish each kind independently.
+        const adds = payload.lines.filter((line) => "merchandiseId" in line);
+        const removes = payload.lines.filter(
+          (line) => !("merchandiseId" in line) && line.quantity === 0,
+        );
+        const updates = payload.lines.filter(
+          (line) => !("merchandiseId" in line) && line.quantity !== 0,
+        );
+        if (adds.length) emit("lines", { action: "add", lines: adds });
+        if (removes.length) emit("lines", { action: "remove", lines: removes });
+        if (updates.length) emit("lines", { action: "update", lines: updates });
+      }
+      if (payload.discountCodes)
+        emit("discount", { discountCodes: payload.discountCodes.map((code) => ({ code })) });
+      if (payload.note !== undefined) emit("note", { note: payload.note });
+      if (payload.attributes) emit("attributes", { attributes: payload.attributes });
+      return result;
+    });
+}
+
 function withTransactionEventToken(
   updateCart: UpdateCartTransport,
   token: string,
@@ -1898,6 +2009,14 @@ function reserveTransaction<TType extends TransactionType>(
   };
 }
 
+function transportSignal(store: CartStoreContext, signal?: AbortSignal): AbortSignal {
+  return AbortSignal.any([
+    store.lifecycleController.signal,
+    AbortSignal.timeout(STANDARD_ACTION_TIMEOUT_IN_MS),
+    ...(signal ? [signal] : []),
+  ]);
+}
+
 function createTransactionSignal(
   store: CartStoreContext,
   reservation: TransactionReservation,
@@ -1914,7 +2033,7 @@ async function dispatchTransaction<TType extends TransactionType>(
   store: CartStoreContext,
   type: TType,
   payload: TransactionPayload<TType>,
-): Promise<void> {
+): Promise<UpdateCartResult | undefined> {
   if (type === "add_to_cart" && !store.observable.state.data.id) {
     return dispatchInitialCartAdd(store, payload as AddToCartPayload);
   }
@@ -1925,9 +2044,9 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   store: CartStoreContext,
   type: TType,
   payload: TransactionPayload<TType>,
-): Promise<void> {
+): Promise<UpdateCartResult | undefined> {
   const generation = store.generation;
-  const { updateCart } = await getShopifyStandardActions();
+  const { updateCart } = await store.updateCartSource();
   if (generation !== store.generation) return;
   const reservation = reserveTransaction(store, type, payload);
   store.reservation = reservation;
@@ -1935,7 +2054,9 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   const eventToken = createTransactionEventToken();
   // Standard Events can arrive asynchronously, so the reservation keeps signal ownership alive
   // until the correlated event consumes it.
-  const correlatedUpdateCart = withTransactionEventToken(updateCart, eventToken);
+  const correlatedUpdateCart = store.transport
+    ? transportUpdateCart(updateCart)
+    : withTransactionEventToken(updateCart, eventToken);
   let promise: Promise<UpdateCartResult>;
 
   try {
@@ -1945,12 +2066,12 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   }
   if (!reservation.consumed) {
     enqueueTransaction(store, type, payload, promise, reservation);
-    store.expectedEvents.push({ token: eventToken });
+    if (!store.transport) store.expectedEvents.push({ token: eventToken });
   }
   observeMutationTransport(store, promise);
 
   try {
-    await promise;
+    return await promise;
   } catch (error) {
     if (isAbortError(error)) return;
     throw error;
@@ -1981,20 +2102,22 @@ function startQueuedInitialAdd(
     return;
   }
 
-  void getShopifyStandardActions().then(({ updateCart }) => {
+  void store.updateCartSource().then(({ updateCart }) => {
     if (queued.generation !== store.generation || queued.signal.aborted) {
       queued.deferred.reject(new DOMException("The operation was aborted.", "AbortError"));
       return;
     }
     const eventToken = createTransactionEventToken();
     const expectedEvent = { token: eventToken };
-    store.expectedEvents.push(expectedEvent);
+    if (!store.transport) store.expectedEvents.push(expectedEvent);
     let transport: Promise<UpdateCartResult>;
     try {
       transport = transportAddToCart(
         queued.payload,
         queued.signal,
-        withTransactionEventToken(updateCart, eventToken),
+        store.transport
+          ? transportUpdateCart(updateCart)
+          : withTransactionEventToken(updateCart, eventToken),
         cartId,
       );
     } catch (error) {
@@ -2034,7 +2157,7 @@ function releaseQueuedInitialAdds(store: CartStoreContext): void {
 async function dispatchInitialCartAdd(
   store: CartStoreContext,
   payload: AddToCartPayload,
-): Promise<void> {
+): Promise<UpdateCartResult | undefined> {
   const gate = store.identityTransportGate;
   const deferred = createDeferredCartMutation();
   const reservation = reserveTransaction(store, "add_to_cart", payload);
@@ -2061,7 +2184,7 @@ async function dispatchInitialCartAdd(
   );
 
   try {
-    await deferred.promise;
+    return (await deferred.promise) as UpdateCartResult;
   } catch (error) {
     if (isAbortError(error)) return;
     throw error;
@@ -2081,6 +2204,7 @@ function payloadFromAddEvent(event: CartLinesUpdateEvent): AddToCartPayload {
 }
 
 function handleLinesEvent(store: CartStoreContext, event: CartLinesUpdateEvent): void {
+  if (transportEventOwners.has(event)) return;
   const eventToken = getTransactionEventToken(event.detail);
   if (event.action === "add") {
     enqueueTransaction(
@@ -2120,6 +2244,7 @@ function handleLinesEvent(store: CartStoreContext, event: CartLinesUpdateEvent):
 }
 
 function handleDiscountEvent(store: CartStoreContext, event: CartDiscountUpdateEvent): void {
+  if (transportEventOwners.has(event)) return;
   enqueueTransaction(
     store,
     "set_discount_codes",
@@ -2131,6 +2256,7 @@ function handleDiscountEvent(store: CartStoreContext, event: CartDiscountUpdateE
 }
 
 function handleNoteEvent(store: CartStoreContext, event: CartNoteUpdateEvent): void {
+  if (transportEventOwners.has(event)) return;
   enqueueTransaction(
     store,
     "set_note",
@@ -2142,6 +2268,7 @@ function handleNoteEvent(store: CartStoreContext, event: CartNoteUpdateEvent): v
 }
 
 function handleAttributesEvent(store: CartStoreContext, event: CartAttributesUpdateEvent): void {
+  if (transportEventOwners.has(event)) return;
   enqueueTransaction(
     store,
     "set_attributes",
@@ -2159,11 +2286,14 @@ function connectCartStore(store: CartStoreContext, handlers: CartEventHandlers):
   store.cartSyncAttached = true;
   connectedCartStores.add(store);
   attachCartConsentListener();
+  if (window.Shopify?.customerPrivacy?.consentStatus === "loaded") {
+    refreshCheckoutUrl(store).catch(() => {});
+  }
   document.addEventListener("shopify:cart:lines-update", handlers.lines);
   document.addEventListener("shopify:cart:discount-update", handlers.discount);
   document.addEventListener("shopify:cart:note-update", handlers.note);
   document.addEventListener("shopify:cart:attributes-update", handlers.attributes);
-  void getShopifyStandardActions().catch(() => {});
+  if (!store.transport) void store.updateCartSource().catch(() => {});
   if (store.revalidateOnConnect) {
     store.revalidateOnConnect = false;
     refreshCartInStore(store);
@@ -2225,9 +2355,6 @@ function attachCartConsentListener(): void {
   document.addEventListener(CONSENT_TRACKING_API_LOADED_EVENT, handleConsentStateChanged);
   document.addEventListener(VISITOR_CONSENT_COLLECTED_EVENT, handleConsentStateChanged);
   cartConsentListenerAttached = true;
-  if (window.Shopify?.customerPrivacy?.consentStatus === "loaded") {
-    revalidateConnectedCartCheckoutUrls();
-  }
 }
 
 function detachCartConsentListenerIfIdle(): void {
@@ -2276,6 +2403,7 @@ function invalidateActiveCartLoad(store: CartStoreContext): void {
   const activeCartLoad = store.activeCartLoad;
   if (!activeCartLoad) return;
   store.activeCartLoad = null;
+  activeCartLoad.controller.abort();
   activeCartLoad.resolveReadyPromise();
 }
 
@@ -2344,9 +2472,13 @@ function loadCartInStore(
   const readyPromise = new Promise<void>((resolve) => {
     resolveReadyPromise = resolve;
   });
+  const controller = new AbortController();
   let request: ActiveCartLoad;
   const state = { ...store.observable.state, readyPromise };
-  const promise = Promise.resolve(cartPromise ?? fetchCartData(state.data.id))
+  const promise = Promise.resolve(
+    cartPromise ??
+      fetchCartData(state.data.id, transportSignal(store, controller.signal), store.transport),
+  )
     .then((data) => {
       if (!isCurrentCartLoad(store, request)) return;
       if (data) hydrateCartInStore(store, data);
@@ -2366,7 +2498,7 @@ function loadCartInStore(
       if (store.activeCartLoad === request) store.activeCartLoad = null;
       request.resolveReadyPromise();
     });
-  request = { state, promise, resolveReadyPromise };
+  request = { state, promise, resolveReadyPromise, controller };
   store.activeCartLoad = request;
   store.observable.setReadyState(state);
   return promise;
@@ -2413,6 +2545,9 @@ export function createCartStore<TData extends CartData = CartData>(
     if (context) invalidateActiveCartLoad(context);
   });
   const store: CartStoreContext = {
+    transport: options.transport,
+    updateCartSource: () =>
+      options.transport ? Promise.resolve(options.transport) : getShopifyStandardActions(),
     observable,
     settled,
     transactions: [],
@@ -2461,12 +2596,55 @@ export function createCartStore<TData extends CartData = CartData>(
         log.error("cart initial load failed", { error }),
       );
     },
-    destroy: () => destroyCartStore(store, handlers),
+    destroy: () => {
+      if (!syncInitialData && !asyncInitialData && store.activeCartLoad) {
+        initialCartLoadStarted = false;
+        invalidateActiveCartLoad(store);
+        store.observable.clearReadyState();
+      }
+      destroyCartStore(store, handlers);
+    },
     hydrate: (data) => hydrateCartInStore(store, data),
     getState: () => store.observable.state,
     subscribe: (listener) => store.observable.subscribe(listener),
     fetch: () => loadCartInStore(store),
     refresh: () => refreshCartInStore(store),
+    addLines: (lines, addOptions) => {
+      if (!lines.length) return Promise.resolve(undefined);
+      connectCartStore(store, handlers);
+      return dispatchTransaction(store, "add_to_cart", {
+        lines,
+        products: addOptions?.products ?? [],
+      });
+    },
+    updateLines: (lines) => {
+      if (!lines.length) return Promise.resolve(undefined);
+      connectCartStore(store, handlers);
+      const payloads = lines.map(({ id, quantity }) => ({ lineId: id, quantity }));
+      return payloads.length === 1
+        ? dispatchTransaction(store, "change_line_quantity", payloads[0])
+        : dispatchTransaction(store, "change_lines_quantity", { lines: payloads });
+    },
+    removeLines: (lineIds) => {
+      if (!lineIds.length) return Promise.resolve(undefined);
+      connectCartStore(store, handlers);
+      const lines = lineIds.map((lineId) => ({ lineId, quantity: 0 }));
+      return lines.length === 1
+        ? dispatchTransaction(store, "change_line_quantity", lines[0])
+        : dispatchTransaction(store, "change_lines_quantity", { lines });
+    },
+    setNote: (note) => {
+      connectCartStore(store, handlers);
+      return dispatchTransaction(store, "set_note", { note });
+    },
+    setDiscountCodes: (discountCodes) => {
+      connectCartStore(store, handlers);
+      return dispatchTransaction(store, "set_discount_codes", { discountCodes });
+    },
+    setAttributes: (attributes) => {
+      connectCartStore(store, handlers);
+      return dispatchTransaction(store, "set_attributes", { attributes });
+    },
     reset: () => resetCartStore(store),
     handleFormSubmit: (event, eventDetail) =>
       handleFormSubmitInStore(store, handlers, event, eventDetail),
@@ -2480,10 +2658,13 @@ function requireFormEvent(event: SubmitEvent): {
   form: HTMLFormElement;
   submitter: HTMLElement;
 } {
-  if (!(event.target instanceof HTMLFormElement)) {
+  const FormElement = (event.target as HTMLFormElement | null)?.ownerDocument?.defaultView
+    ?.HTMLFormElement;
+  if (!FormElement || !(event.target instanceof FormElement)) {
     throw new TypeError(`Expected event.target to be an HTMLFormElement, got ${event.target}`);
   }
-  if (!(event.submitter instanceof HTMLElement)) {
+  const Element = event.submitter?.ownerDocument?.defaultView?.HTMLElement;
+  if (!Element || !(event.submitter instanceof Element)) {
     throw new TypeError(`Expected event.submitter to be an HTMLElement, got ${event.submitter}`);
   }
   return { form: event.target, submitter: event.submitter };
@@ -2555,7 +2736,7 @@ function submitLineIntent(
   const lineId = formData.get("lineId") as string | null;
   if (!lineId) throw new Error('Missing "lineId" in form data');
   const payload = getLineQuantityPayload(store.observable.state, intent, lineId, formData);
-  return dispatchTransaction(store, "change_line_quantity", payload);
+  return dispatchTransaction(store, "change_line_quantity", payload).then(() => {});
 }
 
 function submitDiscountIntent(
@@ -2569,7 +2750,7 @@ function submitDiscountIntent(
     intent === "discount-apply"
       ? [...currentCodes, code]
       : currentCodes.filter((current) => current !== code);
-  return dispatchTransaction(store, "set_discount_codes", { discountCodes });
+  return dispatchTransaction(store, "set_discount_codes", { discountCodes }).then(() => {});
 }
 
 async function handleFormSubmitInStore(
@@ -2584,13 +2765,15 @@ async function handleFormSubmitInStore(
   const formData = new FormData(form);
 
   if (intent === "add" || (!intent && formData.has("merchandiseId"))) {
-    return dispatchTransaction(store, "add_to_cart", getAddPayload(formData, eventDetail));
+    return dispatchTransaction(store, "add_to_cart", getAddPayload(formData, eventDetail)).then(
+      () => {},
+    );
   }
   if (LINE_INTENTS.has(intent)) return submitLineIntent(store, intent, formData);
   if (DISCOUNT_INTENTS.has(intent)) return submitDiscountIntent(store, intent, formData);
   if (intent === "note-update") {
     const note = (formData.get("note") as string) ?? "";
-    return dispatchTransaction(store, "set_note", { note });
+    return dispatchTransaction(store, "set_note", { note }).then(() => {});
   }
   if (intent === "attributes-update") {
     const attributes = getCartAttributeFormEntries(formData)
@@ -2599,7 +2782,7 @@ async function handleFormSubmitInStore(
         key,
         value: String(value),
       }));
-    return dispatchTransaction(store, "set_attributes", { attributes });
+    return dispatchTransaction(store, "set_attributes", { attributes }).then(() => {});
   }
   throw new Error(`Unknown cart form intent: "${intent}"`);
 }
@@ -2733,16 +2916,21 @@ async function fetchCart(
   return { cart: result.cart };
 }
 
-function fetchCartData(cartId?: string | null, signal?: AbortSignal): Promise<CartData | null> {
-  return fetchCart(cartId, signal).then(({ cart }) =>
-    cart
-      ? {
-          ...cart,
-          checkoutUrl: cart.checkoutUrl ?? null,
-          note: extractNoteFromCart(cart),
-          attributes: cart.attributes ?? [],
-        }
-      : null,
+function fetchCartData(
+  cartId?: string | null,
+  signal?: AbortSignal,
+  transport?: CartTransport,
+): Promise<CartData | null> {
+  return (transport ? transport.getCart({ cartId, signal }) : fetchCart(cartId, signal)).then(
+    ({ cart }) =>
+      cart
+        ? {
+            ...cart,
+            checkoutUrl: cart.checkoutUrl ?? null,
+            note: extractNoteFromCart(cart),
+            attributes: cart.attributes ?? [],
+          }
+        : null,
   );
 }
 
@@ -2778,9 +2966,14 @@ function mergeAuthoritativeCartData(previous: CartData, authoritative: CartData)
   };
 }
 
-function fetchCartRevalidationData(cartId: string, signal: AbortSignal): Promise<CartData | null> {
-  return fetchCart(cartId, signal).then(({ cart }) =>
-    cart ? cartResponseFromStandardEvent(cart as unknown as StandardEventCart) : null,
+function fetchCartRevalidationData(
+  cartId: string,
+  signal: AbortSignal,
+  transport?: CartTransport,
+): Promise<CartData | null> {
+  return (transport ? transport.getCart({ cartId, signal }) : fetchCart(cartId, signal)).then(
+    ({ cart }) =>
+      cart ? cartResponseFromStandardEvent(cart as unknown as StandardEventCart) : null,
   );
 }
 
@@ -2874,8 +3067,8 @@ function revalidateCartWhenIdle(store: CartStoreContext): void {
   const controller = new AbortController();
   let request: ActiveCartRevalidation;
   const revalidationFetch = cartId
-    ? fetchCartRevalidationData(cartId, controller.signal)
-    : fetchCartData(null, controller.signal);
+    ? fetchCartRevalidationData(cartId, transportSignal(store, controller.signal), store.transport)
+    : fetchCartData(null, transportSignal(store, controller.signal), store.transport);
   const promise = revalidationFetch
     .then((cart) => applyCartRevalidation(store, request, cart))
     .catch((error: unknown) => {
@@ -2901,7 +3094,10 @@ function revalidateCartWhenIdle(store: CartStoreContext): void {
 }
 
 async function refreshCheckoutUrl(store: CartStoreContext): Promise<void> {
-  const { cart } = await fetchCart(store.observable.state.data.id);
+  const cartId = store.observable.state.data.id;
+  const { cart } = await (store.transport
+    ? store.transport.getCart({ cartId, signal: transportSignal(store) })
+    : fetchCart(cartId, transportSignal(store)));
   const current = store.observable.state;
   if (!cart || (current.data.id && current.data.id !== cart.id)) return;
   const checkoutUrl = cart.checkoutUrl ?? null;

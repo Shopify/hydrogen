@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
-import { act } from "@testing-library/react";
-import { createElement, Suspense, type ReactNode } from "react";
+import { act, render, waitFor } from "@testing-library/react";
+import { createElement, StrictMode, Suspense, type ReactNode } from "react";
 import { hydrateRoot, type Root } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -43,6 +43,34 @@ function createDeferred<T>(): Deferred<T> {
     },
   };
 }
+
+it("loads a persisted cart after StrictMode effect replay", async () => {
+  let completed = 0;
+  const getCart = vi.fn(async ({ signal }: { signal?: AbortSignal }) => {
+    await Promise.resolve();
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+    completed++;
+    return { cart: { ...CART, id: "gid://shopify/Cart/123" } };
+  });
+  const view = render(
+    createElement(
+      StrictMode,
+      null,
+      createElement(
+        CartProvider,
+        { transport: { getCart, updateCart: vi.fn() } },
+        createElement(CartSummary),
+      ),
+    ),
+  );
+  try {
+    await waitFor(() => expect(view.getByTestId("cart-summary").textContent).toBe("3"));
+    expect(completed).toBe(1);
+    expect(getCart).toHaveBeenCalledTimes(2);
+  } finally {
+    view.unmount();
+  }
+});
 
 function CartSummary() {
   const loading = useCart((state) => state.loading);

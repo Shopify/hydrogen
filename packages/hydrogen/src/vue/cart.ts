@@ -19,6 +19,7 @@ import {
   configureCartEndpoint as configureCoreCartEndpoint,
   createCartStore,
   type CreateCartStoreOptions,
+  type CartTransport,
   type CartActions,
   type CartStore,
 } from "../core/cart/cart";
@@ -58,10 +59,10 @@ type CartInitialData<TData extends CartData = CartData> =
   CreateCartStoreOptions<TData>["initialData"];
 
 type TypedCartProvider<TData extends CartData> = {
-  new (): { $props: { initialData?: CartInitialData<TData> } };
+  new (): { $props: { initialData?: CartInitialData<TData>; transport?: CartTransport } };
 };
 
-export type { CartActions };
+export type { CartTransport, CartActions };
 
 /** Cart provider and composables whose cart state carries the custom fields from your cart server handlers. */
 type TypedCartComponents<TData extends CartData> = {
@@ -79,15 +80,18 @@ type TypedCartComponents<TData extends CartData> = {
 
 function createTypedCartProvider<TData extends CartData>(): TypedCartProvider<TData> {
   const TypedCartProvider = defineComponent(
-    (props: { initialData?: CartInitialData<TData> }, { slots }) => {
+    (props: { initialData?: CartInitialData<TData>; transport?: CartTransport }, { slots }) => {
       return () =>
         h(
           CartProvider,
-          { initialData: props.initialData as CartInitialData | undefined },
+          {
+            initialData: props.initialData as CartInitialData | undefined,
+            transport: props.transport,
+          },
           slots.default,
         );
     },
-    { name: "CartProvider", props: ["initialData"] },
+    { name: "CartProvider", props: ["initialData", "transport"] },
   );
 
   return TypedCartProvider as unknown as TypedCartProvider<TData>;
@@ -121,17 +125,22 @@ function useOptionalCartStore(): CartStore | null {
 export const CartProvider = defineComponent({
   name: "CartProvider",
   props: {
+    /** Backend used instead of Standard Actions. Fixed when the provider creates its store. */
+    transport: { type: Object as PropType<CartTransport>, default: undefined },
     initialData: {
       type: Object as PropType<CartInitialData>,
       default: undefined,
     },
   },
   setup(props, { slots }) {
-    const store = createCartStore({ initialData: props.initialData });
+    const store = createCartStore({
+      initialData: props.initialData,
+      ...(props.transport && { transport: props.transport }),
+    });
     provide(CartStoreKey, store);
 
     onMounted(() => {
-      configureCoreCartEndpoint(cartEndpoint);
+      if (!props.transport) configureCoreCartEndpoint(cartEndpoint);
       store.connect();
     });
 
@@ -178,11 +187,11 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
 }
 
 /**
- * Returns the cart action that syncs the cart after a mutation outside cart forms.
+ * Returns optimistic cart mutation actions and cart revalidation.
  *
  * Call `refresh` after a server-side cart mutation that bypasses cart forms, such as a server action that creates the cart.
  *
- * @returns The `refresh` action.
+ * @returns Cart mutation actions and `refresh`.
  *
  * @example
  * ```vue
@@ -195,11 +204,24 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
  * }
  * </script>
  * ```
+ * @example
+ * ```ts
+ * const {addLines} = useCartActions();
+ * await addLines([{merchandiseId: variantId, quantity: 1}]);
+ * ```
  * @publicDocs
  */
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");
-  return { refresh: store.refresh };
+  return {
+    refresh: store.refresh,
+    addLines: store.addLines,
+    updateLines: store.updateLines,
+    removeLines: store.removeLines,
+    setNote: store.setNote,
+    setDiscountCodes: store.setDiscountCodes,
+    setAttributes: store.setAttributes,
+  };
 }
 
 /**

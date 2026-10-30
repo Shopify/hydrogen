@@ -126,6 +126,7 @@ function createMockStore(initialData?: MockInitialData): MockCartStore {
     }),
     fetch: vi.fn(() => Promise.resolve()),
     refresh: vi.fn(),
+    addLines: vi.fn(async () => undefined),
     reset: vi.fn(),
     handleFormSubmit: vi.fn(() => Promise.resolve()),
     setReadyPromise(readyPromise: Promise<void> | undefined) {
@@ -149,6 +150,11 @@ beforeEach(() => {
 });
 
 describe("CartProvider", () => {
+  it("passes a custom transport to the store", () => {
+    const transport = { getCart: vi.fn(), updateCart: vi.fn() };
+    render(createElement(CartProvider, { transport }, null));
+    expect(createCartStore).toHaveBeenCalledWith({ initialData: undefined, transport });
+  });
   it("creates cart store with initialData", () => {
     const data = makeCartData({ totalQuantity: 5 });
 
@@ -214,6 +220,8 @@ describe("useCartActions", () => {
     assert(actions, "Expected cart actions to be available");
 
     actions.refresh();
+    void actions.addLines([{ merchandiseId: "variant", quantity: 1 }]);
+    expect(latestStore.addLines).toHaveBeenCalledWith([{ merchandiseId: "variant", quantity: 1 }]);
 
     expect(latestStore.refresh).toHaveBeenCalledTimes(1);
   });
