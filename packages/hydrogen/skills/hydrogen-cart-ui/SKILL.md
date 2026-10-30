@@ -19,6 +19,8 @@ Import `createUcpCartTransport` from `@shopify/hydrogen/ucp` and pass its result
 
 Updates are serialized per transport instance to avoid overlapping full-replacement writes losing changes. Keep one instance for a cart session. Child operations settle independently: failed shops report shop-qualified errors while successful updates and new child IDs are retained. Expired children are dropped from the returned ID.
 
+Pass `context: {address_country: 'US', currency: 'USD'}` to `createUcpCartTransport` to send buyer localization signals on creates and updates. For per-shop preferences use `context: (shop) => buyerContext`; returning `undefined` omits it. Without context the merchant may use geo-IP defaults. Currency is only a hint: display amounts using the response currency.
+
 Discount codes apply independently to every child cart. Note and attributes return `UNSUPPORTED` errors. Mixed-currency carts have no combined cost. Use each group's `checkoutUrl`; there is no synthesized multi-shop checkout URL.
 
 ## Framework Bindings

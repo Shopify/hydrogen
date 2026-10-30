@@ -1,7 +1,7 @@
 import type { UpdateCartPayload, UpdateCartUserError } from "../../vendor/standard-actions";
 import type { CartTransport } from "../core/cart/cart";
 import { cartPayloadToUcpUpdate, ucpCartToCartData } from "./mapping";
-import type { UcpCart, UcpChildCart, UcpRequest } from "./types";
+import type { UcpCart, UcpCartContext, UcpChildCart, UcpRequest } from "./types";
 export interface UcpCartTransportOptions {
   call(
     operation: "create_cart" | "get_cart" | "update_cart",
@@ -9,6 +9,11 @@ export interface UcpCartTransportOptions {
     options: { signal?: AbortSignal },
   ): Promise<UcpCart>;
   resolveShop(merchandiseId: string): string | Promise<string>;
+  /** Buyer signals sent as cart.context on creates and updates. Omit to use merchant defaults.
+   * Supply a function for per-shop context; returning undefined omits context for that shop.
+   * Currency is a hint; always use the response's currency for displayed money.
+   */
+  context?: UcpCartContext | ((shop: string) => UcpCartContext | undefined);
   ucpVersion?: "2026-08-25";
 }
 function decode(id?: string | null): Record<string, string> {
@@ -69,6 +74,7 @@ function mapped(children: Record<string, UcpChildCart>) {
 export function createUcpCartTransport({
   call,
   resolveShop,
+  context,
   ucpVersion = "2026-08-25",
 }: UcpCartTransportOptions): CartTransport {
   if (ucpVersion !== "2026-08-25") throw new Error("Unsupported UCP version");
@@ -146,6 +152,8 @@ export function createUcpCartTransport({
       [...changes].map(async ([shop, lines]) => {
         const child = children[shop];
         const cart = cartPayloadToUcpUpdate(child, { lines, discountCodes: payload.discountCodes });
+        const buyerContext = typeof context === "function" ? context(shop) : context;
+        if (buyerContext !== undefined) cart.context = buyerContext;
         if (!child && !cart.line_items.length) return;
         const result = await call(
           child ? "update_cart" : "create_cart",
