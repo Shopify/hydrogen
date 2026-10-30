@@ -260,7 +260,7 @@ const { data } = await client.graphql(QUERY);
 const { data } = await client.graphql(QUERY, { signal });
 ```
 
-`requestContext.signal`, per-call `signal`, and the client's timeout signal are raced automatically. They are combined with `AbortSignal.any`, which the Next.js edge sandbox does not have, so an edge route or middleware that calls this client needs an `AbortSignal.any` polyfill installed before the first request. At the final response boundary, append committed session headers first, then call `requestContext.applyResponseHeaders(response.headers)`.
+`requestContext.signal`, per-call `signal`, and the client's timeout signal are raced automatically. They are combined with `AbortSignal.any`, which the Next.js edge sandbox does not have, so an edge route or middleware that calls this client needs an `AbortSignal.any` polyfill installed before the first request. At the final response boundary, append committed session headers first, then call `requestContext.applyResponseHeaders(response.headers, response.status)`. The status keeps the headers of a rate-limited `429` response; see the checklist in "Return `429` from a rate-limited React Router loader".
 
 Read `references/caching.md` to cache catalog reads across sub-requests on Oxygen-style runtimes.
 
@@ -290,7 +290,11 @@ On a non-OK response, `StorefrontApiError` exposes `status`, `requestId`, and `r
 
 ### Return `429` from a rate-limited React Router loader
 
-An uncaught `StorefrontApiError` in a React Router loader renders as HTTP `500`, even when its `status` is `429`. Wrap the loader with `withStorefrontRateLimit`, and pass the response status to `applyResponseHeaders` in the root middleware:
+An uncaught `StorefrontApiError` in a React Router loader renders as HTTP `500`, even when its `status` is `429`. Make all three changes:
+
+1. Wrap each loader or action that awaits Storefront API data with `withStorefrontRateLimit`. Without the wrapper, the response stays `500`.
+2. At the end of the root middleware, pass the final status: `applyResponseHeaders(response.headers, response.status)`. Without the status, the response is `429` but has no `Retry-After` and no `Cache-Control: no-store`.
+3. Call `applyResponseHeaders` on the request context of the Storefront API client that the loaders use, for example `storefrontClient.requestContext`. A different request context has no record of the rate limit, so the result is the same as without the status.
 
 ```ts
 import { withStorefrontRateLimit } from "@shopify/hydrogen";
@@ -311,7 +315,7 @@ return response;
 - React Router drops the headers of a thrown response. With the status, `applyResponseHeaders` restores them: for a `429` after a Storefront API rate limit on the same request context, it sets `Cache-Control: no-store`, removes `Surrogate-Control` and vendor `*-Cache-Control` headers, and adds the valid `Retry-After` value when the response has none. This covers page responses and single-fetch `.data` responses, so routes don't need a `headers` export. Responses with other statuses keep their cache headers.
 - Don't build a `429` body from `error.message`, and don't copy upstream headers. The message holds part of the upstream response body.
 - Only work that the loader awaits can change the status. Handle deferred promises locally with `<Await errorElement>`.
-- `handleShopifyRoutes` maps the same error without a wrapper. The built-in `/api/cart` and `/api/predictive-search` routes, and custom `createShopifyRouteHandler` handlers that throw it, return `429` with `{ error: { code: "rate_limited", message } }`, `Cache-Control: no-store`, and a valid `Retry-After`. A direct `cartHandlers.get()` call in a loader still throws, so wrap that loader.
+- `handleShopifyRoutes` maps the same error without a wrapper. The built-in `/api/cart` and `/api/predictive-search` routes, and custom `createShopifyRouteHandler` handlers that throw it, return `429` with `{ error: { code: "rate_limited", message } }`, `Cache-Control: no-store`, and a valid `Retry-After`. A native form submission to `/api/cart` gets the message as a plain-text `429` page instead, because the browser shows the response. Each route logs the original error once at `error` level, with scope `cart-api`, `predictive-search-api`, or `shopify-routes`. A direct `cartHandlers.get()` call in a loader still throws, so wrap that loader.
 
 ---
 

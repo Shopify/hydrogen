@@ -776,6 +776,44 @@ describe("handleShopifyRoutes", () => {
       });
     });
 
+    it("maps a Storefront API 429 that a handler throws before it returns a promise", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      const error = new StorefrontApiError("throttled", { status: 429, retryAfter: "9" });
+      const request = new Request("https://my-app.com/custom");
+      const handler = createShopifyRouteHandler("/custom", "GET", () => {
+        throw error;
+      });
+
+      const result = await handleShopifyRoutes({ request, handlers: [{ custom: handler }] });
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(429);
+      expect(result.headers.get("retry-after")).toBe("9");
+      await expect(result.json()).resolves.toMatchObject({ error: { code: "rate_limited" } });
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith("storefront api rate limited the route handler", {
+        scope: "shopify-routes",
+        error,
+      });
+    });
+
+    it("rejects the returned promise when a handler throws another error before it returns a promise", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      const error = new Error("handler setup failed");
+      const request = new Request("https://my-app.com/custom");
+      const handler = createShopifyRouteHandler("/custom", "GET", () => {
+        throw error;
+      });
+
+      const result = handleShopifyRoutes({ request, handlers: [{ custom: handler }] });
+
+      expect(result).toBeInstanceOf(Promise);
+      await expect(result).rejects.toBe(error);
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+
     it.each([401, 403, 503])("lets a Storefront API %i error throw", async (status) => {
       const logger = createTestLogger();
       configureLogging({ logger });
@@ -793,6 +831,25 @@ describe("handleShopifyRoutes", () => {
       );
       expect(logger.error).not.toHaveBeenCalled();
     });
+  });
+
+  it("sends an error result with format text as a plain-text response", async () => {
+    const request = new Request("https://my-app.com/custom", { method: "POST" });
+    const handler = createShopifyRouteHandler("/custom", "POST", async () => ({
+      type: "error",
+      error: { code: "unavailable", message: "Please try again later." },
+      status: 503,
+      headers: { "content-type": "application/json", "x-custom": "1" },
+      format: "text",
+    }));
+
+    const result = await handleShopifyRoutes({ request, handlers: [{ custom: handler }] });
+
+    assert(result, "expected a response");
+    expect(result.status).toBe(503);
+    expect(result.headers.get("content-type")).toBe("text/plain; charset=utf-8");
+    expect(result.headers.get("x-custom")).toBe("1");
+    await expect(result.text()).resolves.toBe("Please try again later.");
   });
 
   it("uses the provided private client for checkout redirects", async () => {

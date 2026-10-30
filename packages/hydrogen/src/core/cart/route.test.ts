@@ -1255,6 +1255,64 @@ describe("createCartServerHandlers", () => {
       expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/products/widget`);
     });
 
+    it("returns a plain-text 429 page, not a redirect, when the Storefront API rate limits", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      mockFetch.mockResolvedValueOnce(
+        new Response("<html>upstream rate limit page</html>", {
+          status: 429,
+          headers: { "retry-after": "5", "x-request-id": "req-429", "content-type": "text/html" },
+        }),
+      );
+
+      const result = await handleCartRequest(
+        createFormPostRequest(
+          { intent: "remove", lineId: "gid://shopify/CartLine/1" },
+          { cookies: "cart=123", referer: "https://my-app.com/cart" },
+        ),
+        defaultConfig,
+      );
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(429);
+      expect(result.headers.has("location")).toBe(false);
+      expect(result.headers.get("content-type")).toBe("text/plain; charset=utf-8");
+      expect(result.headers.get("retry-after")).toBe("5");
+      expect(result.headers.get("cache-control")).toBe("no-store");
+      expect(result.headers.get("x-request-id")).toBeNull();
+      await expect(result.text()).resolves.toBe(
+        "Cart mutation is rate limited. Please try again later.",
+      );
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith("storefront api rate limited the cart mutation", {
+        scope: "cart-api",
+        error: expect.objectContaining({ status: 429 }),
+      });
+    });
+
+    it("returns the plain-text result from a direct post() call for a form submission", async () => {
+      configureLogging({ logger: createTestLogger() });
+      mockFetch.mockResolvedValueOnce(
+        new Response("", { status: 429, headers: { "retry-after": "5" } }),
+      );
+      const request = createFormPostRequest(
+        { intent: "remove", lineId: "gid://shopify/CartLine/1" },
+        { cookies: "cart=123" },
+      );
+
+      const result = await createCartServerHandlers().post({
+        request,
+        storefrontClient: createPrivateStorefrontClient(request),
+      });
+
+      expect(result).toMatchObject({
+        type: "error",
+        format: "text",
+        status: 429,
+        error: { code: "rate_limited" },
+      });
+    });
+
     it("redirects to / when no Referer header", async () => {
       mockFetch.mockResolvedValueOnce(
         mockGqlResponse({ cartLinesRemove: { cart: MOCK_CART, userErrors: [] } }),

@@ -123,35 +123,43 @@ When the Storefront API rate limits a page loader, this template returns HTTP `4
 The response keeps a valid `Retry-After` value and disables caching. It doesn't retry the
 request or show the upstream error body.
 
-Each Storefront page loader uses the wrapper from `@shopify/hydrogen`:
+The template makes three changes. Keep all three when you change the template, and make all three
+when you copy this behavior to another app:
 
-```ts
-import { withStorefrontRateLimit } from "@shopify/hydrogen";
+1. Each Storefront page loader uses the wrapper from `@shopify/hydrogen`. Without the wrapper, the
+   loader still returns `500`.
 
-export const loader = withStorefrontRateLimit(async ({ context }: Route.LoaderArgs) => {
-  const { data } = await context.get(storefrontClientContext).graphql(QUERY);
-  return data;
-});
-```
+   ```ts
+   import { withStorefrontRateLimit } from "@shopify/hydrogen";
 
-React Router drops the headers of a thrown response. So the root middleware in `app/root.tsx`
-passes the response status as well:
+   export const loader = withStorefrontRateLimit(async ({ context }: Route.LoaderArgs) => {
+     const { data } = await context.get(storefrontClientContext).graphql(QUERY);
+     return data;
+   });
+   ```
 
-```ts
-requestContext.applyResponseHeaders(response.headers, response.status);
-```
+2. React Router drops the headers of a thrown response. So the root middleware in `app/root.tsx`
+   passes the response status as well:
+
+   ```ts
+   requestContext.applyResponseHeaders(response.headers, response.status);
+   ```
+
+3. The root middleware calls the method on the request context of the Storefront API client that
+   the loaders use: `const requestContext = storefrontClient.requestContext`.
 
 After a Storefront API rate limit, the method adds `Cache-Control: no-store` and the valid
 `Retry-After` value to the `429` page response and to client-navigation `.data` responses. Routes
-don't need a `headers` export. Keep the status argument: without it, the response stays `429` but
-loses `Retry-After` and `no-store`.
+don't need a `headers` export. Without the status argument, or with a different request context,
+the response stays `429` but loses `Retry-After` and `no-store`.
 
 React Router doesn't report thrown responses to `handleError`. So the wrapper logs the original
 error at `error` level through Hydrogen's logger. To send these entries to your error reporting,
 pass your logger to `configureLogging`.
 
 The `/api/cart` and `/api/predictive-search` routes from `handleShopifyRoutes` don't need the
-wrapper. They return `429` with a valid `Retry-After` value on their own.
+wrapper. They return `429` with a valid `Retry-After` value on their own. A cart form that the
+browser submits before hydration gets a plain-text `429` page with the message.
 
 Other HTTP errors and network failures keep their existing error handling. GraphQL `THROTTLED`
 results use the `errors` field of the result and aren't HTTP `429` errors. Only work that the

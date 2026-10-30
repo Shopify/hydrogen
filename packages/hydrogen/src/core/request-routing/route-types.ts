@@ -68,7 +68,7 @@ export type ShopifyRouteError = {
   message: string;
 };
 
-/** A route handler result that Hydrogen sends as a JSON error response. */
+/** A route handler result that Hydrogen sends as a JSON or plain-text error response. */
 export type ShopifyRouteErrorResult<TError extends ShopifyRouteError = ShopifyRouteError> = {
   /** Set to `error` for an error response. */
   type: "error";
@@ -76,8 +76,12 @@ export type ShopifyRouteErrorResult<TError extends ShopifyRouteError = ShopifyRo
   error: TError;
   /** The HTTP status for the error response. Defaults to `400`. */
   status?: number;
-  /** Extra headers for the error response. Hydrogen sets `content-type` to `application/json` and overrides any value you pass. */
+  /** Extra headers for the error response. Hydrogen sets `content-type` for the body format and overrides any value you pass. */
   headers?: HeadersInit;
+  /**
+   * The body format. `json`, the default, sends `{error: {code, message}}` as `application/json`. `text` sends only `error.message` as `text/plain`. Use `text` for a native form submission, because the browser shows the response as a page.
+   */
+  format?: "json" | "text";
 };
 
 /** The JSON, redirect, or error result that a route handler returns. */

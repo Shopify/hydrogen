@@ -43,7 +43,7 @@ const VALID_REDIRECT_STATUSES = [
  * Creates a custom endpoint in your app for one pathname and HTTP method. Collect handlers in an
  * object, and pass an array of handler objects to `handleShopifyRoutes` in its `handlers` option.
  *
- * Use paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, or error result from the handler. Hydrogen sends a JSON result with status `200`, an error result with status `400` by default, and a redirect result with status `303` by default. When a redirect result uses a status other than `301`, `302`, `303`, 307, or 308, the promise from `handleShopifyRoutes` rejects. When the handler throws a `StorefrontApiError` with status `429`, `handleShopifyRoutes` answers with a `429` error result (`code: "rate_limited"`) and a validated `Retry-After` header instead of rejecting; any other thrown error still rejects.
+ * Use paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, or error result from the handler. Hydrogen sends a JSON result with status `200`, an error result with status `400` by default, and a redirect result with status `303` by default. An error result is JSON unless it sets `format: "text"`. When a redirect result uses a status other than `301`, `302`, `303`, 307, or 308, the promise from `handleShopifyRoutes` rejects. When the handler throws a `StorefrontApiError` with status `429`, `handleShopifyRoutes` answers with a `429` error result (`code: "rate_limited"`) and a validated `Retry-After` header instead of rejecting; any other thrown error still rejects. This also applies when the handler throws before it returns a promise.
  *
  * Annotate the handler's context parameter with only the fields the handler reads, for example
  * `Omit<ShopifyRouteHandlerContext, "sessionManager">`, so apps without a session manager can
@@ -109,7 +109,7 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
     storefrontClient,
     requestContext,
   };
-  return match(context).then(
+  return invokeRouteHandler(match, context).then(
     (result) => createShopifyRouteResponse(result, request),
     (error: unknown) => {
       // Only a Storefront API `429` becomes a caller `429`. Every other failure keeps propagating
@@ -128,6 +128,15 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
     },
   );
 };
+
+// An `async` function turns a throw before the handler returns a promise into a rejection, so the
+// rate-limit mapping also covers a synchronous throw, and other synchronous throws still reject.
+async function invokeRouteHandler(
+  handler: ShopifyRouteHandler,
+  context: ShopifyRouteHandlerContext,
+): Promise<ShopifyRouteHandlerResult> {
+  return handler(context);
+}
 
 // The types already require `sessionManager` for handlers that read it; this
 // covers untyped callers, which would otherwise read `undefined` deep inside a handler.
@@ -157,11 +166,13 @@ function createShopifyRouteResponse(result: ShopifyRouteHandlerResult, request: 
 
   if (result.type === "error") {
     const headers = new Headers(result.headers);
+    const status = result.status ?? HTTP_BAD_REQUEST_STATUS;
+    if (result.format === "text") {
+      headers.set("content-type", "text/plain; charset=utf-8");
+      return new Response(result.error.message, { status, headers });
+    }
     headers.set("content-type", "application/json");
-    return new Response(JSON.stringify({ error: result.error }), {
-      status: result.status ?? HTTP_BAD_REQUEST_STATUS,
-      headers,
-    });
+    return new Response(JSON.stringify({ error: result.error }), { status, headers });
   }
 
   const headers = new Headers(result.headers);

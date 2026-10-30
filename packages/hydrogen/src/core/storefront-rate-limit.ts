@@ -22,8 +22,9 @@ const TOO_MANY_REQUESTS_BODY = "Too many requests. Please try again later.";
  * unchanged, including other HTTP statuses, network failures, timeouts, and thrown responses.
  *
  * React Router doesn't copy the headers of a thrown response to the page response. Pass the
- * response status to `requestContext.applyResponseHeaders()` in your root middleware. The method
- * then adds `Cache-Control: no-store` and the `Retry-After` value to page and data responses.
+ * response status to `requestContext.applyResponseHeaders()` in your root middleware, and call the
+ * method on the request context of the Storefront API client that the loader uses. The method then
+ * adds `Cache-Control: no-store` and the `Retry-After` value to page and data responses.
  *
  * Only work that the wrapped function awaits can change the status. A deferred promise that
  * rejects after streaming starts keeps the `200` status.
