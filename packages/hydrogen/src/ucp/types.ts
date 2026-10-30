@@ -11,7 +11,7 @@ export interface UcpLineItem {
   id: string;
   shop?: string;
   cart_id?: string;
-  item: { id: string; title: string; price: number };
+  item: { id: string; title: string; price: number; image_url?: string };
   quantity: number;
   totals: UcpTotal[];
 }

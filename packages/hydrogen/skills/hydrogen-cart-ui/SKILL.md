@@ -21,9 +21,13 @@ Updates are serialized per transport instance to avoid overlapping full-replacem
 
 Pass `context: {address_country: 'US', currency: 'USD'}` to `createUcpCartTransport` to send buyer localization signals on creates and updates. For per-shop preferences use `context: (shop) => buyerContext`; returning `undefined` omits it. Without context the merchant may use geo-IP defaults. Currency is only a hint: display amounts using the response currency.
 
+Lines map `item.image_url` to `merchandise.image` (alt text is the item title); UCP items carry no variant or option titles.
+
 Discount codes apply independently to every child cart. Note and attributes return `UNSUPPORTED` errors. Mixed-currency carts have no combined cost. Use each group's `checkoutUrl`; there is no synthesized multi-shop checkout URL.
 
 ## Framework Bindings
+
+Mount the cart provider once, above your routes (in the root layout). A provider inside a route is destroyed on navigation, which aborts its initial load and loses the cart state.
 
 Before building UI, check whether this skill has a reference file for the app's framework in `references/`. If one exists, read it and use that framework binding first; the reference owns provider setup, state selectors, and form helpers for that runtime.
 

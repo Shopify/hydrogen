@@ -47,7 +47,11 @@ export function ucpCartToCartData(cart: UcpCart, id: string = cart.id): CartData
       quantity: l.quantity,
       seller: { shop: c.shop ?? l.shop ?? "" },
       cartId: c.id,
-      merchandise: { id: l.item.id, product: { title: l.item.title } },
+      merchandise: {
+        id: l.item.id,
+        product: { title: l.item.title },
+        image: l.item.image_url ? { url: l.item.image_url, altText: l.item.title } : null,
+      },
       cost: {
         ...cost(l.totals, c.currency),
         amountPerQuantity: minorToMoney(l.item.price, c.currency),

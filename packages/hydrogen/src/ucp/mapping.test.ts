@@ -24,6 +24,37 @@ describe("UCP mapping", () => {
   ] as const)("converts minor units", (value, currency, amount) =>
     expect(minorToMoney(value, currency)).toEqual({ amount, currencyCode: currency }),
   );
+  it("maps item images", () => {
+    const child = {
+      id: "c",
+      shop: "a.example",
+      currency: "USD",
+      totals: [{ type: "total", amount: 1200 }],
+      line_items: [
+        {
+          id: "l",
+          quantity: 1,
+          totals: [{ type: "total", amount: 1200 }],
+          item: { id: "v", title: "Mug", price: 1200, image_url: "https://cdn.example/mug.png" },
+        },
+        {
+          id: "m",
+          quantity: 1,
+          totals: [{ type: "total", amount: 500 }],
+          item: { id: "w", title: "Cap", price: 500 },
+        },
+      ],
+    };
+    const cart = ucpCartToCartData({
+      id: "x",
+      line_items: [],
+      carts: [child],
+    } as unknown as UcpCart);
+    expect(cart.lines.nodes.map((l) => l.merchandise?.image)).toEqual([
+      { url: "https://cdn.example/mug.png", altText: "Mug" },
+      null,
+    ]);
+  });
   it("replaces quantities, removes and adds", () => {
     const child = read.response.carts[0];
     expect(child).toBeDefined();
