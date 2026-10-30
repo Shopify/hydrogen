@@ -173,8 +173,17 @@ export type CartStore = {
    */
   refresh(): void;
 
-  /** Adds lines through the optimistic transaction pipeline. Connects the store and resolves to the backend result, or undefined when cancelled. Empty input is a no-op. */
-  addLines(lines: AddLinePayload[]): Promise<UpdateCartResult | undefined>;
+  /** Adds lines through the optimistic transaction pipeline. Connects the store and resolves to the backend result, or undefined when cancelled. Empty input is a no-op.
+   * Pass products keyed by variant id, using the same merchandise data as cart forms, to show new merchandise optimistically. Without metadata, new lines appear after the server responds.
+   * @example
+   * ```ts
+   * await store.addLines([{merchandiseId: variant.id, quantity: 1}], {products: [variant]});
+   * ```
+   */
+  addLines(
+    lines: AddLinePayload[],
+    options?: { products: Array<Record<string, unknown>> },
+  ): Promise<UpdateCartResult | undefined>;
   /** Sets absolute line quantities; zero removes a line. Connects the store; resolves undefined when cancelled or empty. */
   updateLines(
     lines: Array<{ id: string; quantity: number }>,
@@ -2587,16 +2596,26 @@ export function createCartStore<TData extends CartData = CartData>(
         log.error("cart initial load failed", { error }),
       );
     },
-    destroy: () => destroyCartStore(store, handlers),
+    destroy: () => {
+      if (!syncInitialData && !asyncInitialData && store.activeCartLoad) {
+        initialCartLoadStarted = false;
+        invalidateActiveCartLoad(store);
+        store.observable.clearReadyState();
+      }
+      destroyCartStore(store, handlers);
+    },
     hydrate: (data) => hydrateCartInStore(store, data),
     getState: () => store.observable.state,
     subscribe: (listener) => store.observable.subscribe(listener),
     fetch: () => loadCartInStore(store),
     refresh: () => refreshCartInStore(store),
-    addLines: (lines) => {
+    addLines: (lines, addOptions) => {
       if (!lines.length) return Promise.resolve(undefined);
       connectCartStore(store, handlers);
-      return dispatchTransaction(store, "add_to_cart", { lines, products: [] });
+      return dispatchTransaction(store, "add_to_cart", {
+        lines,
+        products: addOptions?.products ?? [],
+      });
     },
     updateLines: (lines) => {
       if (!lines.length) return Promise.resolve(undefined);

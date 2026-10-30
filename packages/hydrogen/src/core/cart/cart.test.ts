@@ -609,25 +609,16 @@ describe("createCartStore", () => {
     localStore.destroy();
   });
 
-  it("starts omitted initialData fetch only once across reconnects", async () => {
+  it("restarts omitted initialData fetch after an interrupted reconnect", async () => {
     const deferred = createDeferred<{ cart: CartData }>();
     const localStore = createCartStore();
     mockGetCart.mockReturnValue(deferred.promise);
-
     localStore.connect();
     localStore.destroy();
     localStore.connect();
-
-    await vi.waitFor(() => {
-      expect(mockGetCart).toHaveBeenCalledTimes(1);
-    });
-
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(2));
     deferred.resolve({ cart: makeCartState({ totalQuantity: 3 }) });
-    await vi.waitFor(() => {
-      expect(localStore.getState().data.totalQuantity).toBe(3);
-    });
-    expect(mockGetCart).toHaveBeenCalledTimes(1);
-
+    await vi.waitFor(() => expect(localStore.getState().data.totalQuantity).toBe(3));
     localStore.destroy();
   });
 
@@ -817,7 +808,7 @@ describe("CartStore lifecycle", () => {
     expect(observedReadyPromise).toBe(readyPromise);
 
     localStore.destroy();
-    expect(localStore.getState().readyPromise).toBe(readyPromise);
+    expect(localStore.getState().readyPromise).toBeUndefined();
 
     deferred.resolve({ cart: makeCartState({ totalQuantity: 3 }) });
     await readyPromise;
@@ -880,6 +871,68 @@ describe("CartStore lifecycle", () => {
 });
 
 describe("custom cart transport mutations", () => {
+  it("restarts an aborted initial load on reconnect", async () => {
+    const requests: Array<{
+      signal?: AbortSignal;
+      deferred: Deferred<{ cart: CartData & { id: string } }>;
+    }> = [];
+    const custom = createCartStore({
+      transport: {
+        getCart: ({ signal }) => {
+          const deferred = createDeferred<{ cart: CartData & { id: string } }>();
+          requests.push({ signal, deferred });
+          return deferred.promise;
+        },
+        updateCart: vi.fn(),
+      },
+    });
+    custom.connect();
+    custom.destroy();
+    custom.connect();
+    expect(requests).toHaveLength(2);
+    expect(requests[0].signal?.aborted).toBe(true);
+    requests[0].deferred.resolve({ cart: { ...makeCartState({ totalQuantity: 99 }), id: "cart" } });
+    requests[1].deferred.resolve({ cart: { ...makeCartState({ totalQuantity: 3 }), id: "cart" } });
+    await custom.fetch();
+    expect(custom.getState().data.totalQuantity).toBe(3);
+    custom.destroy();
+    custom.connect();
+    expect(requests).toHaveLength(2);
+    custom.destroy();
+  });
+
+  it.each([false, true])(
+    "projects new merchandise only with metadata: %s",
+    async (withMetadata) => {
+      const deferred = createDeferred<UpdateCartResult>();
+      const custom = createCartStore({
+        initialData: { cart: null },
+        transport: { getCart: async () => ({ cart: null }), updateCart: () => deferred.promise },
+      });
+      const mutation = custom.addLines(
+        [{ merchandiseId: "variant", quantity: 1 }],
+        withMetadata
+          ? {
+              products: [
+                {
+                  id: "variant",
+                  title: "Blue",
+                  product: { title: "Shirt", handle: "shirt" },
+                  price: { amount: "10", currencyCode: "USD" },
+                },
+              ],
+            }
+          : undefined,
+      );
+      await nextTick();
+      expect(custom.getState().data.lines.nodes).toHaveLength(withMetadata ? 1 : 0);
+      if (withMetadata)
+        expect(custom.getState().data.lines.nodes[0].merchandise?.product?.title).toBe("Shirt");
+      deferred.resolve({ cart: makeCartState() } as unknown as UpdateCartResult);
+      await mutation;
+      custom.destroy();
+    },
+  );
   it("ignores empty programmatic line changes", async () => {
     const updateCart = vi.fn();
     const custom = createCartStore({ transport: { getCart: vi.fn(), updateCart } });
