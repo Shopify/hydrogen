@@ -125,6 +125,7 @@ function useOptionalCartStore(): CartStore | null {
 export const CartProvider = defineComponent({
   name: "CartProvider",
   props: {
+    /** Backend used instead of Standard Actions. Fixed when the provider creates its store. */
     transport: { type: Object as PropType<CartTransport>, default: undefined },
     initialData: {
       type: Object as PropType<CartInitialData>,
@@ -139,7 +140,7 @@ export const CartProvider = defineComponent({
     provide(CartStoreKey, store);
 
     onMounted(() => {
-      configureCoreCartEndpoint(cartEndpoint);
+      if (!props.transport) configureCoreCartEndpoint(cartEndpoint);
       store.connect();
     });
 

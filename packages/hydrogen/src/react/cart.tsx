@@ -231,18 +231,18 @@ export function CartProvider({
   const context = useMemo(() => {
     const store = createCartStore({ initialData, ...(transport && { transport }) });
     // Plain consumers must hydrate from the state used for SSR, even if the live store settles first.
-    return { store, hydrationSnapshot: store.getState() };
+    return { store, hydrationSnapshot: store.getState(), usesTransport: !!transport };
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- provider initialData seeds one store for its lifetime
   }, []);
-  const { store } = context;
+  const { store, usesTransport } = context;
 
   useEffect(() => {
-    configureCoreCartEndpoint(cartEndpoint);
+    if (!usesTransport) configureCoreCartEndpoint(cartEndpoint);
     store.connect();
     return () => {
       store.destroy();
     };
-  }, [store]);
+  }, [store, usesTransport]);
 
   return <CartContext.Provider value={context}>{children}</CartContext.Provider>;
 }

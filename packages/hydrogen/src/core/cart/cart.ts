@@ -120,7 +120,7 @@ export class CartNetworkError extends Error {
  *
  * The store shows line and discount code changes before the server responds, then updates the cart from each server response. Cart costs change only when the server responds.
  *
- * Cart changes start from cart form submissions or from Standard Actions `shopify:cart:*` events. Cart changes need the Standard Actions script, which `ShopifyScripts` adds to the page, unless a custom `transport` is provided. Standard Actions loads and changes time out after 30 seconds; custom transports manage their own timeouts.
+ * Cart changes start from cart form submissions or from Standard Actions `shopify:cart:*` events. Cart changes need the Standard Actions script, which `ShopifyScripts` adds to the page, unless a custom `transport` is provided. All backend calls receive a lifecycle signal combined with a 30-second timeout. Destroying the store aborts them; superseding a cart load aborts that load.
  *
  * @example
  * ```ts
@@ -205,14 +205,28 @@ type CartInitialData<TData extends CartData = CartData> = {
   errors?: Array<{ message: string }>;
 };
 
+/** A backend cart read, with null when no cart exists. */
+export type GetCartResult = { cart: CartResponse | null };
+
 /** Backend operations for a cart store, without requiring Shopify Standard Actions.
  * @publicDocs
+ * @example
+ * ```ts
+ * const store = createCartStore({ transport: {
+ *   getCart: ({signal}) => fetch('/cart', {signal}).then(r => r.json()),
+ *   updateCart: (payload, options) => myBackend.updateCart(payload, options),
+ * }});
+ * ```
  */
 export interface CartTransport {
-  getCart(options: {
-    cartId?: string | null;
-    signal?: AbortSignal;
-  }): Promise<{ cart: CartResponse | null }>;
+  /** Read the given cart, or discover the current cart when cartId is null or omitted.
+   * Honor signal: it combines lifecycle cancellation and a 30-second timeout.
+   * Throw CartNetworkError for transport failures.
+   */
+  getCart(options: { cartId?: string | null; signal?: AbortSignal }): Promise<GetCartResult>;
+  /** Apply a mutation, honoring options.signal for lifecycle cancellation and the 30-second timeout.
+   * Throw CartNetworkError for transport failures; return userErrors and warnings for backend validation results.
+   */
   updateCart(payload: UpdateCartPayload, options?: UpdateCartOptions): Promise<UpdateCartResult>;
 }
 
@@ -337,6 +351,7 @@ type ProjectedError = {
 };
 
 type ActiveCartLoad = {
+  controller: AbortController;
   state: CartState;
   promise: Promise<void>;
   resolveReadyPromise: () => void;
@@ -399,7 +414,7 @@ type CartObservable = ReturnType<typeof createCartObservable>;
 
 type CartStoreContext = {
   transport?: CartTransport;
-  resolveTransport: () => Promise<Pick<CartTransport, "updateCart">>;
+  updateCartSource: () => Promise<Pick<CartTransport, "updateCart">>;
   observable: CartObservable;
   settled: CartState;
   transactions: PendingTransaction[];
@@ -1869,6 +1884,44 @@ function createTransactionEventToken(): string {
   return crypto.randomUUID();
 }
 
+const transportEventOwners = new WeakMap<Event, CartStoreContext>();
+
+function transportUpdateCart(
+  store: CartStoreContext,
+  updateCart: UpdateCartTransport,
+): UpdateCartTransport {
+  return (payload, options) =>
+    updateCart(payload, options).then((result) => {
+      if (typeof document === "undefined" || options?.signal?.aborted) return result;
+      const emit = (name: string, fields: object) => {
+        const metadata: Pick<CartLinesUpdateEvent, "context" | "detail" | "promise"> = {
+          context: options?.event?.context ?? "standard-action",
+          detail: options?.event?.detail,
+          promise: Promise.resolve({
+            ...result,
+            cart: { ...result.cart, lines: result.cart.lines.nodes },
+          }),
+        };
+        const event = Object.assign(new Event(`shopify:cart:${name}-update`), metadata, fields);
+        transportEventOwners.set(event, store);
+        document.dispatchEvent(event);
+      };
+      if (payload.lines) {
+        const action = payload.lines.some((line) => "merchandiseId" in line)
+          ? "add"
+          : payload.lines.every((line) => line.quantity === 0)
+            ? "remove"
+            : "update";
+        emit("lines", { action, lines: payload.lines });
+      }
+      if (payload.discountCodes)
+        emit("discount", { discountCodes: payload.discountCodes.map((code) => ({ code })) });
+      if (payload.note !== undefined) emit("note", { note: payload.note });
+      if (payload.attributes) emit("attributes", { attributes: payload.attributes });
+      return result;
+    });
+}
+
 function withTransactionEventToken(
   updateCart: UpdateCartTransport,
   token: string,
@@ -1913,6 +1966,14 @@ function reserveTransaction<TType extends TransactionType>(
   };
 }
 
+function transportSignal(store: CartStoreContext, signal?: AbortSignal): AbortSignal {
+  return AbortSignal.any([
+    store.lifecycleController.signal,
+    AbortSignal.timeout(STANDARD_ACTION_TIMEOUT_IN_MS),
+    ...(signal ? [signal] : []),
+  ]);
+}
+
 function createTransactionSignal(
   store: CartStoreContext,
   reservation: TransactionReservation,
@@ -1942,7 +2003,7 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   payload: TransactionPayload<TType>,
 ): Promise<void> {
   const generation = store.generation;
-  const { updateCart } = await store.resolveTransport();
+  const { updateCart } = await store.updateCartSource();
   if (generation !== store.generation) return;
   const reservation = reserveTransaction(store, type, payload);
   store.reservation = reservation;
@@ -1950,7 +2011,9 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   const eventToken = createTransactionEventToken();
   // Standard Events can arrive asynchronously, so the reservation keeps signal ownership alive
   // until the correlated event consumes it.
-  const correlatedUpdateCart = withTransactionEventToken(updateCart, eventToken);
+  const correlatedUpdateCart = store.transport
+    ? transportUpdateCart(store, updateCart)
+    : withTransactionEventToken(updateCart, eventToken);
   let promise: Promise<UpdateCartResult>;
 
   try {
@@ -1960,7 +2023,7 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   }
   if (!reservation.consumed) {
     enqueueTransaction(store, type, payload, promise, reservation);
-    store.expectedEvents.push({ token: eventToken });
+    if (!store.transport) store.expectedEvents.push({ token: eventToken });
   }
   observeMutationTransport(store, promise);
 
@@ -1996,20 +2059,22 @@ function startQueuedInitialAdd(
     return;
   }
 
-  void store.resolveTransport().then(({ updateCart }) => {
+  void store.updateCartSource().then(({ updateCart }) => {
     if (queued.generation !== store.generation || queued.signal.aborted) {
       queued.deferred.reject(new DOMException("The operation was aborted.", "AbortError"));
       return;
     }
     const eventToken = createTransactionEventToken();
     const expectedEvent = { token: eventToken };
-    store.expectedEvents.push(expectedEvent);
+    if (!store.transport) store.expectedEvents.push(expectedEvent);
     let transport: Promise<UpdateCartResult>;
     try {
       transport = transportAddToCart(
         queued.payload,
         queued.signal,
-        withTransactionEventToken(updateCart, eventToken),
+        store.transport
+          ? transportUpdateCart(store, updateCart)
+          : withTransactionEventToken(updateCart, eventToken),
         cartId,
       );
     } catch (error) {
@@ -2096,6 +2161,7 @@ function payloadFromAddEvent(event: CartLinesUpdateEvent): AddToCartPayload {
 }
 
 function handleLinesEvent(store: CartStoreContext, event: CartLinesUpdateEvent): void {
+  if (transportEventOwners.get(event) === store) return;
   const eventToken = getTransactionEventToken(event.detail);
   if (event.action === "add") {
     enqueueTransaction(
@@ -2135,6 +2201,7 @@ function handleLinesEvent(store: CartStoreContext, event: CartLinesUpdateEvent):
 }
 
 function handleDiscountEvent(store: CartStoreContext, event: CartDiscountUpdateEvent): void {
+  if (transportEventOwners.get(event) === store) return;
   enqueueTransaction(
     store,
     "set_discount_codes",
@@ -2146,6 +2213,7 @@ function handleDiscountEvent(store: CartStoreContext, event: CartDiscountUpdateE
 }
 
 function handleNoteEvent(store: CartStoreContext, event: CartNoteUpdateEvent): void {
+  if (transportEventOwners.get(event) === store) return;
   enqueueTransaction(
     store,
     "set_note",
@@ -2157,6 +2225,7 @@ function handleNoteEvent(store: CartStoreContext, event: CartNoteUpdateEvent): v
 }
 
 function handleAttributesEvent(store: CartStoreContext, event: CartAttributesUpdateEvent): void {
+  if (transportEventOwners.get(event) === store) return;
   enqueueTransaction(
     store,
     "set_attributes",
@@ -2173,12 +2242,15 @@ function connectCartStore(store: CartStoreContext, handlers: CartEventHandlers):
   if (store.cartSyncAttached) return true;
   store.cartSyncAttached = true;
   connectedCartStores.add(store);
-  attachCartConsentListener(!store.transport);
+  attachCartConsentListener();
+  if (window.Shopify?.customerPrivacy?.consentStatus === "loaded") {
+    refreshCheckoutUrl(store).catch(() => {});
+  }
   document.addEventListener("shopify:cart:lines-update", handlers.lines);
   document.addEventListener("shopify:cart:discount-update", handlers.discount);
   document.addEventListener("shopify:cart:note-update", handlers.note);
   document.addEventListener("shopify:cart:attributes-update", handlers.attributes);
-  if (!store.transport) void store.resolveTransport().catch(() => {});
+  if (!store.transport) void store.updateCartSource().catch(() => {});
   if (store.revalidateOnConnect) {
     store.revalidateOnConnect = false;
     refreshCartInStore(store);
@@ -2235,14 +2307,11 @@ function handleConsentStateChanged(): void {
   revalidateConnectedCartCheckoutUrls();
 }
 
-function attachCartConsentListener(readPrivacyState: boolean): void {
+function attachCartConsentListener(): void {
   if (cartConsentListenerAttached) return;
   document.addEventListener(CONSENT_TRACKING_API_LOADED_EVENT, handleConsentStateChanged);
   document.addEventListener(VISITOR_CONSENT_COLLECTED_EVENT, handleConsentStateChanged);
   cartConsentListenerAttached = true;
-  if (readPrivacyState && window.Shopify?.customerPrivacy?.consentStatus === "loaded") {
-    revalidateConnectedCartCheckoutUrls();
-  }
 }
 
 function detachCartConsentListenerIfIdle(): void {
@@ -2291,6 +2360,7 @@ function invalidateActiveCartLoad(store: CartStoreContext): void {
   const activeCartLoad = store.activeCartLoad;
   if (!activeCartLoad) return;
   store.activeCartLoad = null;
+  activeCartLoad.controller.abort();
   activeCartLoad.resolveReadyPromise();
 }
 
@@ -2359,10 +2429,12 @@ function loadCartInStore(
   const readyPromise = new Promise<void>((resolve) => {
     resolveReadyPromise = resolve;
   });
+  const controller = new AbortController();
   let request: ActiveCartLoad;
   const state = { ...store.observable.state, readyPromise };
   const promise = Promise.resolve(
-    cartPromise ?? fetchCartData(state.data.id, undefined, store.transport),
+    cartPromise ??
+      fetchCartData(state.data.id, transportSignal(store, controller.signal), store.transport),
   )
     .then((data) => {
       if (!isCurrentCartLoad(store, request)) return;
@@ -2383,7 +2455,7 @@ function loadCartInStore(
       if (store.activeCartLoad === request) store.activeCartLoad = null;
       request.resolveReadyPromise();
     });
-  request = { state, promise, resolveReadyPromise };
+  request = { state, promise, resolveReadyPromise, controller };
   store.activeCartLoad = request;
   store.observable.setReadyState(state);
   return promise;
@@ -2431,7 +2503,7 @@ export function createCartStore<TData extends CartData = CartData>(
   });
   const store: CartStoreContext = {
     transport: options.transport,
-    resolveTransport: () =>
+    updateCartSource: () =>
       options.transport ? Promise.resolve(options.transport) : getShopifyStandardActions(),
     observable,
     settled,
@@ -2904,8 +2976,8 @@ function revalidateCartWhenIdle(store: CartStoreContext): void {
   const controller = new AbortController();
   let request: ActiveCartRevalidation;
   const revalidationFetch = cartId
-    ? fetchCartRevalidationData(cartId, controller.signal, store.transport)
-    : fetchCartData(null, controller.signal, store.transport);
+    ? fetchCartRevalidationData(cartId, transportSignal(store, controller.signal), store.transport)
+    : fetchCartData(null, transportSignal(store, controller.signal), store.transport);
   const promise = revalidationFetch
     .then((cart) => applyCartRevalidation(store, request, cart))
     .catch((error: unknown) => {
@@ -2933,8 +3005,8 @@ function revalidateCartWhenIdle(store: CartStoreContext): void {
 async function refreshCheckoutUrl(store: CartStoreContext): Promise<void> {
   const cartId = store.observable.state.data.id;
   const { cart } = await (store.transport
-    ? store.transport.getCart({ cartId })
-    : fetchCart(cartId));
+    ? store.transport.getCart({ cartId, signal: transportSignal(store) })
+    : fetchCart(cartId, transportSignal(store)));
   const current = store.observable.state;
   if (!cart || (current.data.id && current.data.id !== cart.id)) return;
   const checkoutUrl = cart.checkoutUrl ?? null;

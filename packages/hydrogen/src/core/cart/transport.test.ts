@@ -3,12 +3,14 @@ import { expect, it, vi } from "vitest";
 
 import { createCartStore, type CartTransport, CartNetworkError } from "./cart";
 
-it("loads through a transport without reading Shopify", async () => {
+it("loads through a transport without reading Standard Actions", async () => {
   const descriptor = Object.getOwnPropertyDescriptor(window, "Shopify");
   Object.defineProperty(window, "Shopify", {
     configurable: true,
-    get() {
-      throw new Error("Unexpected Shopify access");
+    value: {
+      get actions() {
+        throw new Error("Unexpected Standard Actions access");
+      },
     },
   });
   const transport: CartTransport = {

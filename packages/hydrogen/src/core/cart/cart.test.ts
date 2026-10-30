@@ -880,12 +880,64 @@ describe("CartStore lifecycle", () => {
 });
 
 describe("custom cart transport mutations", () => {
+  it("publishes lines results without Standard Actions metadata", async () => {
+    const listener = vi.fn();
+    document.addEventListener("shopify:cart:lines-update", listener);
+    const updateCart = vi.fn(
+      async () => ({ cart: makeCartState() }) as unknown as UpdateCartResult,
+    );
+    const localStore = createCartStore({
+      initialData: { cart: null },
+      transport: { getCart: async () => ({ cart: null }), updateCart },
+    });
+    const descriptor = Object.getOwnPropertyDescriptor(window, "Shopify");
+    Object.defineProperty(window, "Shopify", {
+      configurable: true,
+      value: {
+        get actions() {
+          throw new Error("Standard Actions accessed");
+        },
+      },
+    });
+    try {
+      await localStore.handleFormSubmit(
+        submitForm({ merchandiseId: "gid://shopify/ProductVariant/1" }, "intent", "add"),
+      );
+      expect(listener).toHaveBeenCalledOnce();
+      expect(updateCart.mock.calls[0]).toBeDefined();
+    } finally {
+      localStore.destroy();
+      document.removeEventListener("shopify:cart:lines-update", listener);
+      if (descriptor) Object.defineProperty(window, "Shopify", descriptor);
+      else Reflect.deleteProperty(window, "Shopify");
+    }
+  });
+
+  it("rejects mutation transport failures", async () => {
+    const error = new CartNetworkError(503);
+    const localStore = createCartStore({
+      initialData: { cart: null },
+      transport: {
+        getCart: async () => ({ cart: null }),
+        updateCart: async () => {
+          throw error;
+        },
+      },
+    });
+    await expect(
+      localStore.handleFormSubmit(
+        submitForm({ merchandiseId: "gid://shopify/ProductVariant/1" }, "intent", "add"),
+      ),
+    ).rejects.toBe(error);
+    localStore.destroy();
+  });
   it("routes initial adds and user errors through a transport", async () => {
     const updateCart = vi.fn(
       async () =>
         ({
           cart: makeCartState(),
           userErrors: [{ message: "Unavailable", code: "INVALID" }],
+          warnings: [{ message: "Adjusted", code: "MERCHANDISE_NOT_ENOUGH_STOCK" }],
         }) as unknown as UpdateCartResult,
     );
     const localStore = createCartStore({
@@ -896,6 +948,12 @@ describe("custom cart transport mutations", () => {
       submitForm({ merchandiseId: "gid://shopify/ProductVariant/1" }, "intent", "add"),
     );
     expect(updateCart).toHaveBeenCalledOnce();
+    expect(localStore.getState().errors.cart.userErrors).toEqual([
+      { message: "Unavailable", code: "INVALID" },
+    ]);
+    expect(localStore.getState().errors.cart.warnings).toEqual([
+      { message: "Adjusted", code: "MERCHANDISE_NOT_ENOUGH_STOCK" },
+    ]);
     localStore.destroy();
   });
   it.each(["increase", "remove"])("routes %s through the transport", async (intent) => {

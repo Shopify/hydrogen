@@ -4,7 +4,13 @@ export {
   CartNetworkError,
   STANDARD_ACTION_TIMEOUT_IN_MS,
 } from "./cart";
-export type { CartTransport, CartActions, CartStore, CreateCartStoreOptions } from "./cart";
+export type {
+  GetCartResult,
+  CartTransport,
+  CartActions,
+  CartStore,
+  CreateCartStoreOptions,
+} from "./cart";
 export { createCartFormRegister } from "./form";
 export type {
   CartFormRegister,
