@@ -7,6 +7,7 @@ export {
 export type {
   GetCartResult,
   CartTransport,
+  CartTransportUpdateResult,
   CartActions,
   CartStore,
   CreateCartStoreOptions,

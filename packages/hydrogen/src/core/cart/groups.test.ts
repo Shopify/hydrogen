@@ -41,9 +41,8 @@ it("keeps mixed-currency seller carts through transport mutations", async () => 
   };
   const groups = cart.groups;
   const transport: CartTransport = {
-    getCart: async () => ({ cart }) as Awaited<ReturnType<CartTransport["getCart"]>>,
-    updateCart: async () =>
-      ({ cart, userErrors: [], warnings: [] }) as Awaited<ReturnType<CartTransport["updateCart"]>>,
+    getCart: async () => ({ cart }),
+    updateCart: async () => ({ cart, userErrors: [], warnings: [] }),
   };
   const store = createCartStore({ transport });
   const previousShopify = window.Shopify;

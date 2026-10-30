@@ -40,11 +40,11 @@ import { syncQuantityInputs } from "./sync-quantity-inputs";
 const log = getLogger("cart");
 
 interface CartResponse extends CartData {
-  id: string;
   checkoutUrl?: string | null;
 }
 
 type CartMutationResult =
+  | CartTransportUpdateResult
   | UpdateCartResult
   | CartAttributesUpdateResult
   | CartLinesUpdateResult
@@ -66,7 +66,7 @@ type TransactionSettlementOptions = {
 type UpdateCartTransport = (
   payload: UpdateCartPayload,
   options?: UpdateCartOptions,
-) => Promise<UpdateCartResult>;
+) => Promise<CartTransportUpdateResult>;
 
 const OPTIMISTIC_LINE_ID_PREFIX = "optimistic:";
 const LINE_KEY_PREFIX = "line:";
@@ -246,7 +246,16 @@ type CartInitialData<TData extends CartData = CartData> = {
 };
 
 /** A backend cart read, with null when no cart exists. */
-export type GetCartResult = { cart: CartResponse | null };
+export type GetCartResult = { cart: CartData | null };
+
+/**
+ * A transport mutation result, including backend validation and event details.
+ * Accepts Hydrogen cart data or the smaller Standard Actions cart summary for
+ * existing transports.
+ */
+export type CartTransportUpdateResult = Omit<UpdateCartResult, "cart"> & {
+  cart: CartData | UpdateCartResult["cart"];
+};
 
 /** Backend operations for a cart store, without requiring Shopify Standard Actions.
  * @publicDocs
@@ -267,7 +276,10 @@ export interface CartTransport {
   /** Apply a mutation, honoring options.signal for lifecycle cancellation and the 30-second timeout.
    * Throw CartNetworkError for transport failures; return userErrors and warnings for backend validation results.
    */
-  updateCart(payload: UpdateCartPayload, options?: UpdateCartOptions): Promise<UpdateCartResult>;
+  updateCart(
+    payload: UpdateCartPayload,
+    options?: UpdateCartOptions,
+  ): Promise<CartTransportUpdateResult>;
 }
 
 /** Options for creating a cart store. */
@@ -326,7 +338,7 @@ type TransactionDefinition<TPayload> = {
     payload: TPayload,
     signal: AbortSignal,
     updateCart: UpdateCartTransport,
-  ): Promise<UpdateCartResult>;
+  ): Promise<CartTransportUpdateResult>;
   projectPayload(state: CartState, payload: TPayload, ownsKey: (key: string) => boolean): CartState;
   projectPromise(
     state: CartState,
@@ -1259,7 +1271,7 @@ function transportAddToCart(
   signal: AbortSignal,
   updateCart: UpdateCartTransport,
   cartId?: string,
-): Promise<UpdateCartResult> {
+): Promise<CartTransportUpdateResult> {
   return updateCart(
     { ...(cartId && { cartId }), lines: payload.lines },
     {
@@ -1933,7 +1945,7 @@ function transportUpdateCart(updateCart: UpdateCartTransport): UpdateCartTranspo
     updateCart(payload, options).then((result) => {
       if (typeof document === "undefined" || options?.signal?.aborted) return result;
       const emit = (name: string, fields: object) => {
-        const metadata: Pick<CartLinesUpdateEvent, "context" | "detail" | "promise"> = {
+        const metadata = {
           context: options?.event?.context ?? "standard-action",
           detail: options?.event?.detail,
           promise: Promise.resolve({
@@ -2058,7 +2070,7 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   const correlatedUpdateCart = store.transport
     ? transportUpdateCart(updateCart)
     : withTransactionEventToken(updateCart, eventToken);
-  let promise: Promise<UpdateCartResult>;
+  let promise: Promise<CartTransportUpdateResult>;
 
   try {
     promise = getTransactionDefinition(type).transport(payload, signal, correlatedUpdateCart);
@@ -2111,7 +2123,7 @@ function startQueuedInitialAdd(
     const eventToken = createTransactionEventToken();
     const expectedEvent = { token: eventToken };
     if (!store.transport) store.expectedEvents.push(expectedEvent);
-    let transport: Promise<UpdateCartResult>;
+    let transport: Promise<CartTransportUpdateResult>;
     try {
       transport = transportAddToCart(
         queued.payload,
