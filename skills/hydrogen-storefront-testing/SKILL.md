@@ -56,7 +56,7 @@ The suite finds a cart line by its product title inside the visible `cart-page` 
 | `product-results` | The element that holds the product results of a collection or search page |
 | `product-card` | The product link of each result |
 
-The suite reads only visible `product-card` links inside `product-results`. The collection test matches a product by the card's accessible name, and the collection filter test counts results by unique product URL path.
+The suite reads only visible `product-card` links inside `product-results`. The collection and search tests match a product by the card's accessible name, and the collection filter test counts results by unique product URL path.
 
 ### Collection filters
 
@@ -68,6 +68,15 @@ The suite reads only visible `product-card` links inside `product-results`. The 
 | `collection-filter-apply` | The control that applies the filters, if the page has one (optional) |
 
 Keep the checkbox inside its marked label. The suite clicks the label, expects the checkbox to be checked, and reads the count from the label text, such as `Red (4)`. `collection-filter-apply` is optional: it goes on the control that applies the filters, if the page has one, and the suite clicks it when it is visible. The price range test types into the visible `collection-filter-min-price`, and fails if it is not a labeled spinbutton.
+
+### Search
+
+| Test ID | Put it on |
+| --- | --- |
+| `search-input` | The search page query input |
+| `search-submit` | The search page submit control (optional) |
+
+The suite fills `search-input`, then clicks a visible `search-submit` or presses Enter. Then it looks for the searched product's card in `product-results`.
 
 ## How to adopt
 

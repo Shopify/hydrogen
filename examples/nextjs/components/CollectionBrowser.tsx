@@ -272,6 +272,7 @@ function SearchPage(props: SearchPageProps) {
         <input
           {...registerSearchField("query")}
           id="search-q"
+          data-testid="search-input"
           defaultValue={term}
           key={term}
           placeholder={content.search.placeholder}
@@ -280,6 +281,7 @@ function SearchPage(props: SearchPageProps) {
         <button
           type="submit"
           className="rounded-button button-primary inline-flex h-11 items-center justify-center px-4 text-sm font-medium"
+          data-testid="search-submit"
         >
           {content.search.submit}
         </button>
@@ -294,7 +296,7 @@ function SearchPage(props: SearchPageProps) {
       </form>
 
       {!term ? null : products.length === 0 ? (
-        <div className="py-12 text-center">
+        <div className="py-12 text-center" data-testid="product-results">
           <p className="type-body text-on-surface">
             {content.search.noResults.replace("{{ terms }}", `\u201c${term}\u201d`)}
           </p>
