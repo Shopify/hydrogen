@@ -367,7 +367,10 @@ function buildTargetOptionMap<TVariant extends ProductVariantInput>({
 
   const nextOptionMap = { ...selectedOptionMap, [optionName]: valueName };
   if (currentProductOptionValues.size === 0) return nextOptionMap;
-  return filterOptionMap(nextOptionMap, currentProductOptionValues);
+  return {
+    ...filterOptionMap(nextOptionMap, currentProductOptionValues),
+    [optionName]: valueName,
+  };
 }
 
 function filterOptionMap(
