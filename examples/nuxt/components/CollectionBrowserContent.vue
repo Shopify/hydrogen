@@ -237,6 +237,7 @@ function visibleFilters(filters: AvailableFilter[]) {
                 step="any"
                 placeholder="Min"
                 aria-label="Minimum price"
+                data-testid="collection-filter-min-price"
                 :value="priceDraft.min"
                 class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
                 @input="onPriceInput($event, 'min')"
@@ -259,9 +260,11 @@ function visibleFilters(filters: AvailableFilter[]) {
                 v-for="value in visibleValues(filter)"
                 :key="value.id"
                 class="flex cursor-pointer items-center gap-2 text-sm"
+                data-testid="collection-filter-label"
               >
                 <input
                   type="checkbox"
+                  data-testid="collection-filter-value"
                   :name="filterInputToParamEntries(value.input)[0]?.name"
                   :value="filterInputToParamEntries(value.input)[0]?.value"
                   :checked="isFilterInputActive(state.filters, value.input)"
@@ -279,6 +282,7 @@ function visibleFilters(filters: AvailableFilter[]) {
         <noscript>
           <button
             type="submit"
+            data-testid="collection-filter-apply"
             class="mt-8 w-full rounded bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/80"
           >
             Apply
@@ -339,6 +343,7 @@ function visibleFilters(filters: AvailableFilter[]) {
         <section
           class="mt-8 grid grid-cols-2 gap-x-6 gap-y-12 transition-opacity duration-200 md:grid-cols-3"
           :class="isLoading ? 'opacity-50' : 'opacity-100'"
+          data-testid="product-results"
         >
           <ProductCard v-for="product in products" :key="product.handle" :product="product" />
         </section>

@@ -161,7 +161,7 @@ function searchTermHiddenInput(term: string) {
 
 function ProductGrid({ products }: { products: readonly ProductNode[] }) {
   return (
-    <div className="px-1 contain-paint">
+    <div className="px-1 contain-paint" data-testid="product-results">
       <ul
         id="product-grid"
         data-testid="product-grid"

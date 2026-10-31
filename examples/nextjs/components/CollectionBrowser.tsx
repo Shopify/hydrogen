@@ -213,6 +213,7 @@ function CollectionPage(props: CollectionPageProps) {
             <ul
               role="list"
               className="grid grid-cols-2 gap-x-1 gap-y-10 contain-paint lg:grid-cols-3"
+              data-testid="product-results"
             >
               {products.map((product, index) => (
                 <li key={product.id} className={isLoading ? "opacity-60" : ""}>
@@ -230,7 +231,11 @@ function CollectionPage(props: CollectionPageProps) {
 
           {/* No-JS submit so the GET filter/sort form is submittable without JS (F4). */}
           <noscript>
-            <button type="submit" className="rounded-button button-primary h-11 px-4">
+            <button
+              type="submit"
+              className="rounded-button button-primary h-11 px-4"
+              data-testid="collection-filter-apply"
+            >
               {content.collection.showResults}
             </button>
           </noscript>
@@ -352,6 +357,7 @@ function SearchPage(props: SearchPageProps) {
             <ul
               role="list"
               className="grid grid-cols-2 gap-x-1 gap-y-10 contain-paint lg:grid-cols-3"
+              data-testid="product-results"
             >
               {products.map((product, index) => (
                 <li key={product.id} className={isLoading ? "opacity-60" : ""}>
@@ -377,7 +383,11 @@ function SearchPage(props: SearchPageProps) {
             ) : null}
 
             <noscript>
-              <button type="submit" className="rounded-button button-primary h-11 px-4">
+              <button
+                type="submit"
+                className="rounded-button button-primary h-11 px-4"
+                data-testid="collection-filter-apply"
+              >
                 {content.collection.showResults}
               </button>
             </noscript>

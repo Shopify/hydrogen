@@ -79,9 +79,13 @@ export function FilterValueInput({
   const isSwatch = filter.presentation === "SWATCH";
 
   return (
-    <label className="min-h-touch-target flex items-center gap-2 text-sm">
+    <label
+      className="min-h-touch-target flex items-center gap-2 text-sm"
+      data-testid="collection-filter-label"
+    >
       <input
         type="checkbox"
+        data-testid="collection-filter-value"
         name={name}
         value={paramValue}
         checked={isFilterInputActive(activeFilters, value.input)}
@@ -232,10 +236,12 @@ export function PriceRangeFilter({
             type="number"
             ref={minInput}
             name="filter.v.price.gte"
+            data-testid="collection-filter-min-price"
             min={0}
+            step="any"
             defaultValue={min}
             placeholder={content.collection.priceMin}
-            inputMode="numeric"
+            inputMode="decimal"
             autoComplete="off"
             onChange={submitAfterTyping}
             className="number-reset rounded-button border-border h-9 w-full border px-2 text-sm"
@@ -249,9 +255,10 @@ export function PriceRangeFilter({
             ref={maxInput}
             name="filter.v.price.lte"
             min={0}
+            step="any"
             defaultValue={max}
             placeholder={content.collection.priceMax}
-            inputMode="numeric"
+            inputMode="decimal"
             autoComplete="off"
             onChange={submitAfterTyping}
             className="number-reset rounded-button border-border h-9 w-full border px-2 text-sm"

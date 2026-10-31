@@ -136,7 +136,7 @@ function ProductGrid({ products }: { products: readonly ProductNode[] }) {
   if (products.length === 0) return null;
 
   return (
-    <div className="px-1 contain-paint">
+    <div className="px-1 contain-paint" data-testid="product-results">
       <ul
         id="product-grid"
         data-testid="product-grid"
