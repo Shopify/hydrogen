@@ -272,6 +272,10 @@ describe('getSeoMeta', () => {
       expect(output).toEqual([
         {
           content: 'https://example.com/image-1.jpg',
+          property: 'og:image',
+        },
+        {
+          content: 'https://example.com/image-1.jpg',
           property: 'og:image:url',
         },
         {
@@ -311,6 +315,10 @@ describe('getSeoMeta', () => {
       expect(output).toEqual([
         {
           content: 'https://example.com/image-1.jpg',
+          property: 'og:image',
+        },
+        {
+          content: 'https://example.com/image-1.jpg',
           property: 'og:image:url',
         },
         {
@@ -324,6 +332,10 @@ describe('getSeoMeta', () => {
         {
           content: 100,
           property: 'og:image:height',
+        },
+        {
+          content: 'https://example.com/image-2.jpg',
+          property: 'og:image',
         },
         {
           content: 'https://example.com/image-2.jpg',
@@ -373,6 +385,10 @@ describe('getSeoMeta', () => {
         expect.arrayContaining([
           {
             content: 'https://example.com/image-1.jpg',
+            property: 'og:image',
+          },
+          {
+            content: 'https://example.com/image-1.jpg',
             property: 'og:image:url',
           },
           {
@@ -389,6 +405,10 @@ describe('getSeoMeta', () => {
           },
           {
             content: 'https://example.com/image-1.mp3',
+            property: 'og:audio',
+          },
+          {
+            content: 'https://example.com/image-1.mp3',
             property: 'og:audio:url',
           },
           {
@@ -398,6 +418,10 @@ describe('getSeoMeta', () => {
           {
             content: 'audio/mpeg',
             property: 'og:audio:type',
+          },
+          {
+            content: 'https://example.com/image-1.swf',
+            property: 'og:video',
           },
           {
             content: 'https://example.com/image-1.swf',
