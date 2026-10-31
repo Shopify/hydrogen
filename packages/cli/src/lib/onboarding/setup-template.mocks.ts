@@ -1,21 +1,12 @@
 import {symlink, rm as rmdir} from 'node:fs/promises';
 import {vi} from 'vitest';
 import {writeFile} from '@shopify/cli-kit/node/fs';
-import {dirname, joinPath} from '@shopify/cli-kit/node/path';
+import {joinPath} from '@shopify/cli-kit/node/path';
 import {getSkeletonNodeModules, getSkeletonSourceDir} from '../build.js';
 
 const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 
 vi.mock('../template-downloader.js', async () => ({
-  downloadMonorepoTemplates: () =>
-    Promise.resolve({
-      version: '',
-      templatesDir: dirname(getSkeletonSourceDir()),
-      examplesDir: dirname(getSkeletonSourceDir()).replace(
-        'templates',
-        'examples',
-      ),
-    }),
   downloadExternalRepo: () =>
     Promise.resolve({
       templateDir: getSkeletonSourceDir(),
@@ -34,7 +25,7 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
     renderTextPrompt: vi.fn(),
     renderTasks: vi.fn(async (args) => {
       await original.renderTasks(args);
-      renderTasksHook();
+      await renderTasksHook();
     }),
   };
 });

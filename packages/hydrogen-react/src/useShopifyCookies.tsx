@@ -1,235 +1,50 @@
 import {useEffect, useRef, useState} from 'react';
-// @ts-ignore - worktop/cookie types not properly exported
-import {stringify} from 'worktop/cookie';
-import {SHOPIFY_Y, SHOPIFY_S} from './cart-constants.js';
-import {buildUUID} from './cookies-utils.js';
 import {
   getTrackingValues,
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
 } from './tracking-utils.js';
 
-const longTermLength = 60 * 60 * 24 * 360 * 1; // ~1 year expiry
-const shortTermLength = 60 * 30; // 30 mins
+// Marks the same-origin consent request so the backend can identify
+// headless consent-management traffic. A custom header on the cross-origin
+// checkout retry would fail its CORS preflight, so it is never sent there.
+// NOTE: packages/hydrogen/src/constants.ts defines the same header name
+// (STOREFRONT_CONSENT_MANAGEMENT_HEADER) for the server-side proxy
+// forwarding; keep the two in sync.
+const CONSENT_MANAGEMENT_MARKER_HEADER =
+  'Shopify-Storefront-Consent-Management';
 
-type UseShopifyCookiesOptions = CoreShopifyCookiesOptions & {
-  /**
-   * If set to `false`, Shopify cookies will be removed.
-   * If set to `true`, Shopify unique user token cookie will have cookie expiry of 1 year.
-   * Defaults to false.
-   **/
+type UseShopifyCookiesOptions = {
+  storefrontAccessToken?: string;
+  fetchTrackingValues?: boolean;
+  /** @deprecated No longer used. The Customer Privacy API manages Shopify cookies. */
   hasUserConsent?: boolean;
-  /**
-   * The domain scope of the cookie. Defaults to empty string.
-   **/
+  /** @deprecated No longer used. The Customer Privacy API manages cookie domains. */
   domain?: string;
-  /**
-   * The checkout domain of the shop. Defaults to empty string. If set, the cookie domain will check if it can be set with the checkout domain.
-   */
+  /** The checkout domain used if the same-origin consent request fails. */
   checkoutDomain?: string;
-  /**
-   * If set to `true`, it skips modifying the deprecated shopify_y and shopify_s cookies.
-   */
+  /** @deprecated No longer used. The Customer Privacy API expires deprecated cookies. */
   ignoreDeprecatedCookies?: boolean;
 };
 
 /**
- * Sets the `shopify_y` and `shopify_s` cookies in the browser based on user consent
- * for backward compatibility support.
+ * Optionally refreshes backend-managed cookies for standalone integrations.
+ * The Customer Privacy API owns tracking values and legacy cookie expiration.
  *
- * If `fetchTrackingValues` is true, it makes a request to Storefront API
- * to fetch or refresh Shopiy analytics and marketing cookies and tracking values.
- * Generally speaking, this should only be needed if you're not using Hydrogen's
- * built-in analytics components and hooks that already handle this automatically.
- * For example, set it to `true` if you are using `hydrogen-react` only with
- * a different framework and still need to make a same-domain request to
- * Storefront API to set cookies.
+ * If `fetchTrackingValues` is true, this sends a consent request through the
+ * Storefront API proxy, retrying against `checkoutDomain` if provided. Hydrogen's
+ * built-in analytics already delegates consent initialization to the Customer
+ * Privacy API and does not use this hook.
  *
- * If `ignoreDeprecatedCookies` is true, it skips setting the deprecated cookies entirely.
- * Useful when you only want to use the newer tracking values and not rely on the deprecated ones.
- *
- * @returns `true` when cookies are set and ready.
+ * @returns `true` when the consent request has settled and cookies are ready.
  * @publicDocs
  */
 export function useShopifyCookies(options?: UseShopifyCookiesOptions): boolean {
   const {
-    hasUserConsent,
-    domain = '',
-    checkoutDomain = '',
-    storefrontAccessToken,
-    fetchTrackingValues,
-    ignoreDeprecatedCookies = false,
-  } = options || {};
-
-  const coreCookiesReady = useCoreShopifyCookies({
-    storefrontAccessToken,
-    fetchTrackingValues,
     checkoutDomain,
-  });
-
-  useEffect(() => {
-    // Skip setting JS cookies until http-only cookies and server-timing
-    // are ready so that we have values synced in JS and http-only cookies.
-    if (ignoreDeprecatedCookies || !coreCookiesReady) return;
-
-    /**
-     * Setting cookie with domain
-     *
-     * If no domain is provided, the cookie will be set for the current host.
-     * For Shopify, we need to ensure this domain is set with a leading dot.
-     */
-
-    // Use override domain or current host
-    let currentDomain = domain || window.location.host;
-
-    if (checkoutDomain) {
-      const checkoutDomainParts = checkoutDomain.split('.').reverse();
-      const currentDomainParts = currentDomain.split('.').reverse();
-      const sameDomainParts: Array<string> = [];
-      checkoutDomainParts.forEach((part, index) => {
-        if (part === currentDomainParts[index]) {
-          sameDomainParts.push(part);
-        }
-      });
-
-      currentDomain = sameDomainParts.reverse().join('.');
-    }
-
-    // Reset domain if localhost
-    if (/^localhost/.test(currentDomain)) currentDomain = '';
-
-    // Shopify checkout only consumes cookies set with leading dot domain
-    const domainWithLeadingDot = currentDomain
-      ? /^\./.test(currentDomain)
-        ? currentDomain
-        : `.${currentDomain}`
-      : '';
-
-    /**
-     * Set user and session cookies and refresh the expiry time
-     */
-    if (hasUserConsent) {
-      const trackingValues = getTrackingValues();
-      if (
-        (
-          trackingValues.uniqueToken ||
-          trackingValues.visitToken ||
-          ''
-        ).startsWith('00000000-')
-      ) {
-        // Skip writing cookies when tracking values signal we don't have consent yet
-        return;
-      }
-
-      setCookie(
-        SHOPIFY_Y,
-        trackingValues.uniqueToken || buildUUID(),
-        longTermLength,
-        domainWithLeadingDot,
-      );
-      setCookie(
-        SHOPIFY_S,
-        trackingValues.visitToken || buildUUID(),
-        shortTermLength,
-        domainWithLeadingDot,
-      );
-    } else {
-      setCookie(SHOPIFY_Y, '', 0, domainWithLeadingDot);
-      setCookie(SHOPIFY_S, '', 0, domainWithLeadingDot);
-    }
-  }, [
-    coreCookiesReady,
-    hasUserConsent,
-    domain,
-    checkoutDomain,
-    ignoreDeprecatedCookies,
-  ]);
-
-  return coreCookiesReady;
-}
-
-function setCookie(
-  name: string,
-  value: string,
-  maxage: number,
-  domain: string,
-): void {
-  document.cookie = stringify(name, value, {
-    maxage,
-    domain,
-    samesite: 'Lax',
-    path: '/',
-  });
-}
-
-async function fetchTrackingValuesFromBrowser(
-  storefrontAccessToken?: string,
-  storefrontApiDomain = '',
-): Promise<void> {
-  // These values might come from server-timing or old cookies.
-  // If consent cannot be initially assumed, these tokens
-  // will be dropped in SFAPI and it will return a mock token
-  // starting with '00000000-'.
-  // However, if consent can be assumed initially, these tokens
-  // will be used to create proper cookies and continue our flow.
-  const {uniqueToken, visitToken} = getTrackingValues();
-
-  const response = await fetch(
-    // TODO: update this endpoint when it becomes stable
-    `${storefrontApiDomain.replace(/\/+$/, '')}/api/unstable/graphql.json`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(storefrontAccessToken && {
-          'X-Shopify-Storefront-Access-Token': storefrontAccessToken,
-        }),
-        ...(visitToken || uniqueToken
-          ? {
-              [SHOPIFY_VISIT_TOKEN_HEADER]: visitToken,
-              [SHOPIFY_UNIQUE_TOKEN_HEADER]: uniqueToken,
-            }
-          : undefined),
-      },
-      body: JSON.stringify({
-        query:
-          // This query ensures we get _cmp (consent) server-timing header, which is not available in other queries.
-          // This value can be passed later to consent-tracking-api and privacy-banner scripts to avoid extra requests.
-          'query ensureCookies { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
-      }),
-    },
-  );
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch consent from browser: ${response.status} ${response.statusText}`,
-    );
-  }
-
-  // Consume the body to complete the request and
-  // ensure server-timing is available in performance API
-  await response.json();
-
-  // Ensure we cache the latest tracking values from resources timing
-  getTrackingValues();
-}
-
-type CoreShopifyCookiesOptions = {
-  storefrontAccessToken?: string;
-  fetchTrackingValues?: boolean;
-  checkoutDomain?: string;
-};
-
-/**
- * Gets http-only cookies from Storefront API via same-origin fetch request.
- * Falls back to checkout domain if provided to at least obtain the tracking
- * values via server-timing headers.
- */
-function useCoreShopifyCookies({
-  checkoutDomain,
-  storefrontAccessToken,
-  fetchTrackingValues = false,
-}: CoreShopifyCookiesOptions) {
+    storefrontAccessToken,
+    fetchTrackingValues = false,
+  } = options ?? {};
   const [cookiesReady, setCookiesReady] = useState(!fetchTrackingValues);
   const hasFetchedTrackingValues = useRef(false);
 
@@ -244,18 +59,20 @@ function useCoreShopifyCookies({
     if (hasFetchedTrackingValues.current) return;
     hasFetchedTrackingValues.current = true;
 
-    // Fetch consent from browser via proxy
-    fetchTrackingValuesFromBrowser(storefrontAccessToken)
-      .catch((error) =>
-        checkoutDomain
-          ? // Retry with checkout domain if available to at least
-            // get the server-timing values for tracking.
-            fetchTrackingValuesFromBrowser(
-              storefrontAccessToken,
-              checkoutDomain,
-            )
-          : Promise.reject(error),
-      )
+    const fetchConsentValues = async () => {
+      try {
+        return await fetchTrackingValuesFromBrowser(storefrontAccessToken);
+      } catch (sameOriginError) {
+        if (!checkoutDomain) throw sameOriginError;
+        // Retry with checkout domain if the same-origin proxy failed.
+        return fetchTrackingValuesFromBrowser(
+          storefrontAccessToken,
+          checkoutDomain,
+        );
+      }
+    };
+
+    fetchConsentValues()
       .catch((error) => {
         console.warn(
           '[h2:warn:useShopifyCookies] Failed to fetch tracking values from browser: ' +
@@ -269,4 +86,50 @@ function useCoreShopifyCookies({
   }, [checkoutDomain, fetchTrackingValues, storefrontAccessToken]);
 
   return cookiesReady;
+}
+
+async function fetchTrackingValuesFromBrowser(
+  storefrontAccessToken?: string,
+  storefrontApiDomain = '',
+): Promise<void> {
+  // Forward the current CTA tokens or legacy cookies to preserve the session.
+  // CTA suppresses token generation while its async consent is loading.
+  const {uniqueToken, visitToken} = getTrackingValues();
+
+  const response = await fetch(
+    // TODO: update this endpoint when it becomes stable
+    `${storefrontApiDomain.replace(/\/+$/, '')}/api/unstable/graphql.json`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(storefrontAccessToken && {
+          'X-Shopify-Storefront-Access-Token': storefrontAccessToken,
+        }),
+        // The marker header goes on the same-origin request only, where the
+        // Hydrogen server proxy can act on it.
+        ...(storefrontApiDomain
+          ? undefined
+          : {[CONSENT_MANAGEMENT_MARKER_HEADER]: '1'}),
+        ...(visitToken || uniqueToken
+          ? {
+              [SHOPIFY_VISIT_TOKEN_HEADER]: visitToken,
+              [SHOPIFY_UNIQUE_TOKEN_HEADER]: uniqueToken,
+            }
+          : undefined),
+      },
+      body: JSON.stringify({
+        query:
+          // The empty `visitorConsent` refreshes cookies without changing
+          // the stored consent.
+          'query ensureCookies { consentManagement { cookies(visitorConsent:{}) { trackingConsentCookie cookieDomain shopifyUnique shopifyVisit } } }',
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch consent from browser: ${response.status} ${response.statusText}`,
+    );
+  }
 }

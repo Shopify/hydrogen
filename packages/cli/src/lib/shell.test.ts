@@ -42,9 +42,9 @@ describe('shell', () => {
       const command = 'command';
 
       it(`writes ${shell} alias to file`, async () => {
-        await expect(
-          shellWriteAlias(shell, alias, command),
-        ).resolves.toBeTruthy();
+        await expect(shellWriteAlias(shell, alias, command)).resolves.toBe(
+          'created',
+        );
 
         expect(execAsync).toHaveBeenLastCalledWith(
           expect.stringMatching(
@@ -81,9 +81,9 @@ describe('shell', () => {
             : Promise.reject(null),
         );
 
-        await expect(
-          shellWriteAlias(shell, alias, command),
-        ).resolves.toBeTruthy();
+        await expect(shellWriteAlias(shell, alias, command)).resolves.toBe(
+          'exists',
+        );
 
         expect(execAsync).not.toHaveBeenLastCalledWith(
           expect.stringMatching(/^printf/),
@@ -101,18 +101,21 @@ describe('shell', () => {
       const result = await createPlatformShortcut();
 
       // Then
-      expect(result).toEqual(expect.arrayContaining(['zsh', 'bash', 'fish']));
+      expect(result.shells).toEqual(
+        expect.arrayContaining(['zsh', 'bash', 'fish']),
+      );
     });
 
     it('creates aliases for Windows', async () => {
       // Given
       vi.mocked(platform).mockReturnValue('win32');
+      vi.mocked(execAsync).mockResolvedValue({stdout: 'created', stderr: ''});
 
       // When
       const result = await createPlatformShortcut();
 
       // Then
-      expect(result).toEqual(
+      expect(result.shells).toEqual(
         expect.arrayContaining(['PowerShell', 'PowerShell 7+']),
       );
     });
@@ -126,7 +129,7 @@ describe('shell', () => {
       const result = await createPlatformShortcut();
 
       // Then
-      expect(result).toEqual(expect.arrayContaining(['bash']));
+      expect(result.shells).toEqual(expect.arrayContaining(['bash']));
     });
   });
 
@@ -165,3 +168,29 @@ describe('shell', () => {
     });
   });
 });
+
+it('reports no changes when all Unix shortcuts already exist', async () => {
+  vi.mocked(platform).mockReturnValue('darwin');
+  vi.mocked(fileExists).mockResolvedValue(true);
+  vi.mocked(execAsync).mockResolvedValue({
+    stdout: 'existing alias',
+    stderr: '',
+  });
+  expect(await createPlatformShortcut()).toEqual({
+    shells: ['zsh', 'bash', 'fish'],
+    changed: false,
+  });
+  expect(execAsync).not.toHaveBeenCalledWith(expect.stringMatching(/^printf/));
+});
+
+it.each(['created', 'exists'] as const)(
+  'reports Windows profile write status: %s',
+  async (status) => {
+    vi.mocked(platform).mockReturnValue('win32');
+    vi.mocked(execAsync).mockResolvedValue({stdout: status, stderr: ''});
+    expect(await createPlatformShortcut()).toEqual({
+      shells: ['PowerShell', 'PowerShell 7+'],
+      changed: status === 'created',
+    });
+  },
+);

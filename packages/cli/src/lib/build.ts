@@ -55,7 +55,6 @@ export type AssetsDir =
   | 'bundle'
   // These are created at build time:
   | 'virtual-routes'
-  | 'internal-templates'
   | 'external-templates'
   | typeof ASSETS_STARTER_DIR;
 

@@ -1,10 +1,10 @@
+import {captureJsonOutput} from '../../tests/output.js';
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 
 import {getOxygenDeploymentData} from './get-oxygen-deployment-data.js';
 import {login} from './auth.js';
 import {getConfig} from './shopify-config.js';
-import {renderMissingStorefront} from './render-errors.js';
 import {verifyLinkedStorefront} from './verify-linked-storefront.js';
 
 import {
@@ -24,7 +24,6 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
 vi.mock('./auth.js');
 vi.mock('./admin-session.js');
 vi.mock('./shopify-config.js');
-vi.mock('./render-errors.js');
 vi.mock('../commands/hydrogen/link.js');
 vi.mock('./verify-linked-storefront.js');
 vi.mock('./graphql/admin/get-oxygen-data.js');
@@ -48,7 +47,7 @@ describe('getOxygenDeploymentData', () => {
 
   beforeEach(() => {
     vi.mocked(verifyLinkedStorefront).mockResolvedValue({
-      id: '1',
+      id: 'gid://shopify/HydrogenStorefront/1',
       title: 'Showboards',
       productionUrl: 'https://snowdevil.com',
     });
@@ -63,7 +62,7 @@ describe('getOxygenDeploymentData', () => {
         shopName: 'Snowdevil',
         email: 'merchant@shop.com',
         storefront: {
-          id: '1',
+          id: 'gid://shopify/HydrogenStorefront/1',
           title: 'Snowboards',
         },
       },
@@ -106,10 +105,10 @@ describe('getOxygenDeploymentData', () => {
       vi.mocked(getOxygenData).mockResolvedValue({storefront: null});
     });
 
-    it('calls renderMissingStorefront and returns nothing', async () => {
-      const token = await getOxygenDeploymentData({root: 'test-root'});
-      expect(renderMissingStorefront).toHaveBeenCalled();
-      expect(token).toEqual(undefined);
+    it('fails when the linked storefront no longer exists', async () => {
+      await expect(
+        getOxygenDeploymentData({root: 'test-root'}),
+      ).rejects.toThrow('Couldn’t find Hydrogen storefront.');
     });
   });
 
@@ -120,9 +119,19 @@ describe('getOxygenDeploymentData', () => {
       });
     });
 
-    it('returns nothing', async () => {
-      const data = await getOxygenDeploymentData({root: 'test-root'});
-      expect(data).toEqual(undefined);
+    it('throws instead of returning a successful JSON result without a deployment token', async () => {
+      const {stdout} = await captureJsonOutput(async () => {
+        await expect(
+          getOxygenDeploymentData({root: 'test-root'}),
+        ).rejects.toThrow('Could not retrieve a deployment token.');
+      });
+      expect(stdout).toBe('');
+    });
+
+    it('fails in text mode too', async () => {
+      await expect(
+        getOxygenDeploymentData({root: 'test-root'}),
+      ).rejects.toThrow('Could not retrieve a deployment token.');
     });
   });
 });

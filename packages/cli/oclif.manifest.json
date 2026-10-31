@@ -3,8 +3,47 @@
     "hydrogen:build": {
       "aliases": [],
       "args": {},
-      "description": "Builds a Hydrogen storefront for production.",
+      "description": "Builds a Hydrogen storefront for production. The client and app worker files are compiled to a `/dist` folder in your Hydrogen project directory. With `--json --watch`, emits JSONL lifecycle and build records to stdout and diagnostics to stderr until stopped.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenBuildOutput` schema.\n\n```json\n{\n  \"anyOf\": [\n    {\n      \"$ref\": \"#/definitions/HydrogenBuildResult\"\n    },\n    {\n      \"$ref\": \"#/definitions/HydrogenBuildWatchRecord\"\n    }\n  ],\n  \"title\": \"HydrogenBuildOutput\",\n  \"definitions\": {\n    \"HydrogenBuildResult\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"directory\": {\n          \"type\": \"string\"\n        },\n        \"clientDirectory\": {\n          \"$ref\": \"#/definitions/HydrogenBuildResult/properties/directory\"\n        },\n        \"serverDirectory\": {\n          \"$ref\": \"#/definitions/HydrogenBuildResult/properties/directory\"\n        },\n        \"serverPath\": {\n          \"$ref\": \"#/definitions/HydrogenBuildResult/properties/directory\"\n        }\n      },\n      \"required\": [\n        \"directory\",\n        \"clientDirectory\",\n        \"serverDirectory\",\n        \"serverPath\"\n      ],\n      \"additionalProperties\": false\n    },\n    \"HydrogenBuildWatchRecord\": {\n      \"anyOf\": [\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"watch-started\"\n            },\n            \"directory\": {\n              \"$ref\": \"#/definitions/HydrogenBuildResult/properties/directory\"\n            }\n          },\n          \"required\": [\n            \"type\",\n            \"directory\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"build-started\"\n            },\n            \"cycle\": {\n              \"type\": \"integer\",\n              \"exclusiveMinimum\": 0\n            }\n          },\n          \"required\": [\n            \"type\",\n            \"cycle\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"build-completed\"\n            },\n            \"cycle\": {\n              \"$ref\": \"#/definitions/HydrogenBuildWatchRecord/anyOf/1/properties/cycle\"\n            },\n            \"directory\": {\n              \"$ref\": \"#/definitions/HydrogenBuildResult/properties/directory\"\n            },\n            \"clientDirectory\": {\n              \"$ref\": \"#/definitions/HydrogenBuildResult/properties/directory\"\n            },\n            \"serverDirectory\": {\n              \"$ref\": \"#/definitions/HydrogenBuildResult/properties/directory\"\n            },\n            \"serverPath\": {\n              \"$ref\": \"#/definitions/HydrogenBuildResult/properties/directory\"\n            }\n          },\n          \"required\": [\n            \"type\",\n            \"cycle\",\n            \"directory\",\n            \"clientDirectory\",\n            \"serverDirectory\",\n            \"serverPath\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"build-failed\"\n            },\n            \"cycle\": {\n              \"$ref\": \"#/definitions/HydrogenBuildWatchRecord/anyOf/1/properties/cycle\"\n            },\n            \"error\": {\n              \"type\": \"object\",\n              \"properties\": {\n                \"message\": {\n                  \"type\": \"string\"\n                },\n                \"tryMessage\": {\n                  \"type\": \"string\"\n                }\n              },\n              \"required\": [\n                \"message\"\n              ],\n              \"additionalProperties\": false\n            }\n          },\n          \"required\": [\n            \"type\",\n            \"cycle\",\n            \"error\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"watch-stopped\"\n            }\n          },\n          \"required\": [\n            \"type\"\n          ],\n          \"additionalProperties\": false\n        }\n      ]\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -89,7 +128,7 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
-      "descriptionWithMarkdown": "Builds a Hydrogen storefront for production. The client and app worker files are compiled to a `/dist` folder in your Hydrogen project directory.",
+      "descriptionWithMarkdown": "Builds a Hydrogen storefront for production. The client and app worker files are compiled to a `/dist` folder in your Hydrogen project directory. With `--json --watch`, emits JSONL lifecycle and build records to stdout and diagnostics to stderr until stopped.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -110,8 +149,47 @@
           "required": true
         }
       },
-      "description": "Returns diagnostic information about a Hydrogen storefront.",
+      "description": "Checks whether your Hydrogen app includes a set of standard Shopify routes.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenCheckResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"valid\": {\n      \"type\": \"boolean\"\n    },\n    \"missingRoutes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"reservedRoutes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    }\n  },\n  \"required\": [\n    \"valid\",\n    \"missingRoutes\",\n    \"reservedRoutes\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenCheckResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -141,8 +219,47 @@
     "hydrogen:codegen": {
       "aliases": [],
       "args": {},
-      "description": "Generate types for the Storefront API queries found in your project.",
+      "description": "Automatically generates GraphQL types for your project’s Storefront API queries. With `--json --watch`, emits JSONL lifecycle and generation records to stdout and diagnostics to stderr until stopped.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenCodegenOutput` schema.\n\n```json\n{\n  \"anyOf\": [\n    {\n      \"$ref\": \"#/definitions/HydrogenCodegenResult\"\n    },\n    {\n      \"$ref\": \"#/definitions/HydrogenCodegenWatchRecord\"\n    }\n  ],\n  \"title\": \"HydrogenCodegenOutput\",\n  \"definitions\": {\n    \"HydrogenCodegenResult\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"files\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"path\": {\n                \"type\": \"string\"\n              },\n              \"sources\": {\n                \"type\": \"array\",\n                \"items\": {\n                  \"type\": \"string\"\n                },\n                \"description\": \"Source patterns from the GraphQL codegen configuration.\"\n              }\n            },\n            \"required\": [\n              \"path\",\n              \"sources\"\n            ],\n            \"additionalProperties\": false\n          }\n        }\n      },\n      \"required\": [\n        \"files\"\n      ],\n      \"additionalProperties\": false\n    },\n    \"HydrogenCodegenWatchRecord\": {\n      \"anyOf\": [\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"watch-started\"\n            },\n            \"directory\": {\n              \"$ref\": \"#/definitions/HydrogenCodegenResult/properties/files/items/properties/path\"\n            }\n          },\n          \"required\": [\n            \"type\",\n            \"directory\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"generation-started\"\n            },\n            \"cycle\": {\n              \"type\": \"integer\",\n              \"exclusiveMinimum\": 0\n            }\n          },\n          \"required\": [\n            \"type\",\n            \"cycle\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"generation-completed\"\n            },\n            \"cycle\": {\n              \"$ref\": \"#/definitions/HydrogenCodegenWatchRecord/anyOf/1/properties/cycle\"\n            },\n            \"files\": {\n              \"$ref\": \"#/definitions/HydrogenCodegenResult/properties/files\"\n            }\n          },\n          \"required\": [\n            \"type\",\n            \"cycle\",\n            \"files\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"generation-failed\"\n            },\n            \"cycle\": {\n              \"$ref\": \"#/definitions/HydrogenCodegenWatchRecord/anyOf/1/properties/cycle\"\n            },\n            \"error\": {\n              \"type\": \"object\",\n              \"properties\": {\n                \"message\": {\n                  \"type\": \"string\"\n                },\n                \"tryMessage\": {\n                  \"type\": \"string\"\n                }\n              },\n              \"required\": [\n                \"message\"\n              ],\n              \"additionalProperties\": false\n            }\n          },\n          \"required\": [\n            \"type\",\n            \"cycle\",\n            \"error\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"watch-stopped\"\n            }\n          },\n          \"required\": [\n            \"type\"\n          ],\n          \"additionalProperties\": false\n        }\n      ]\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -183,7 +300,7 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
-      "descriptionWithMarkdown": "Automatically generates GraphQL types for your project’s Storefront API queries.",
+      "descriptionWithMarkdown": "Automatically generates GraphQL types for your project’s Storefront API queries. With `--json --watch`, emits JSONL lifecycle and generation records to stdout and diagnostics to stderr until stopped.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -195,8 +312,47 @@
     "hydrogen:customer-account-push": {
       "aliases": [],
       "args": {},
-      "description": "Push project configuration to admin",
+      "description": "Push project configuration to admin\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenCustomerAccountPushResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"storefrontGid\": {\n      \"type\": \"string\",\n      \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefront\\\\/\\\\d+$\",\n      \"description\": \"A Shopify HydrogenStorefront GID.\"\n    },\n    \"redirectUri\": {\n      \"type\": \"string\",\n      \"format\": \"uri\"\n    },\n    \"javascriptOrigin\": {\n      \"type\": \"string\",\n      \"format\": \"uri\"\n    },\n    \"logoutUri\": {\n      \"type\": \"string\",\n      \"format\": \"uri\"\n    }\n  },\n  \"required\": [\n    \"storefrontGid\",\n    \"redirectUri\",\n    \"javascriptOrigin\",\n    \"logoutUri\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenCustomerAccountPushResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -250,6 +406,7 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
+      "descriptionWithMarkdown": "Push project configuration to admin",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -261,8 +418,47 @@
     "hydrogen:debug:cpu": {
       "aliases": [],
       "args": {},
-      "description": "Builds and profiles the server startup time the app.",
+      "description": "Builds the app and runs the resulting code to profile the server startup time, watching for changes. This command can be used to \"debug slow app startup times\" (https://shopify.dev/docs/custom-storefronts/hydrogen/debugging/cpu-startup) that cause failed deployments in Oxygen.\n\n  The profiling results are written to a `.cpuprofile` file that can be viewed with certain tools such as \"Flame Chart Visualizer for Visual Studio Code\" (https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-js-profile-flame).\n\n  With `--json`, emits JSONL lifecycle, build, and profile records to stdout and diagnostics to stderr until stopped. Failed records include `error.message` and may include `error.tryMessage` with recovery guidance; JSON consumers should read both fields. The native profile file format is unchanged.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenCpuWatchRecord` schema.\n\n```json\n{\n  \"$ref\": \"#/definitions/HydrogenCpuWatchRecord\",\n  \"title\": \"HydrogenCpuWatchRecord\",\n  \"definitions\": {\n    \"HydrogenCpuWatchRecord\": {\n      \"anyOf\": [\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"watch-started\"\n            },\n            \"directory\": {\n              \"type\": \"string\"\n            }\n          },\n          \"required\": [\n            \"type\",\n            \"directory\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"build-started\"\n            },\n            \"cycle\": {\n              \"type\": \"integer\",\n              \"exclusiveMinimum\": 0\n            }\n          },\n          \"required\": [\n            \"type\",\n            \"cycle\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"build-completed\"\n            },\n            \"cycle\": {\n              \"$ref\": \"#/definitions/HydrogenCpuWatchRecord/anyOf/1/properties/cycle\"\n            },\n            \"directory\": {\n              \"$ref\": \"#/definitions/HydrogenCpuWatchRecord/anyOf/0/properties/directory\"\n            },\n            \"clientDirectory\": {\n              \"$ref\": \"#/definitions/HydrogenCpuWatchRecord/anyOf/0/properties/directory\"\n            },\n            \"serverDirectory\": {\n              \"$ref\": \"#/definitions/HydrogenCpuWatchRecord/anyOf/0/properties/directory\"\n            },\n            \"serverPath\": {\n              \"$ref\": \"#/definitions/HydrogenCpuWatchRecord/anyOf/0/properties/directory\"\n            }\n          },\n          \"required\": [\n            \"type\",\n            \"cycle\",\n            \"directory\",\n            \"clientDirectory\",\n            \"serverDirectory\",\n            \"serverPath\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"build-failed\"\n            },\n            \"cycle\": {\n              \"$ref\": \"#/definitions/HydrogenCpuWatchRecord/anyOf/1/properties/cycle\"\n            },\n            \"error\": {\n              \"type\": \"object\",\n              \"properties\": {\n                \"message\": {\n                  \"type\": \"string\"\n                },\n                \"tryMessage\": {\n                  \"type\": \"string\"\n                }\n              },\n              \"required\": [\n                \"message\"\n              ],\n              \"additionalProperties\": false\n            }\n          },\n          \"required\": [\n            \"type\",\n            \"cycle\",\n            \"error\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"watch-stopped\"\n            }\n          },\n          \"required\": [\n            \"type\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"profile-started\"\n            },\n            \"cycle\": {\n              \"$ref\": \"#/definitions/HydrogenCpuWatchRecord/anyOf/1/properties/cycle\"\n            }\n          },\n          \"required\": [\n            \"type\",\n            \"cycle\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"profile-completed\"\n            },\n            \"cycle\": {\n              \"$ref\": \"#/definitions/HydrogenCpuWatchRecord/anyOf/1/properties/cycle\"\n            },\n            \"path\": {\n              \"$ref\": \"#/definitions/HydrogenCpuWatchRecord/anyOf/0/properties/directory\"\n            },\n            \"format\": {\n              \"type\": \"string\",\n              \"const\": \"cpuprofile\"\n            },\n            \"totalTimeMs\": {\n              \"type\": \"number\",\n              \"minimum\": 0\n            },\n            \"totalScriptTimeMs\": {\n              \"type\": \"number\",\n              \"minimum\": 0\n            }\n          },\n          \"required\": [\n            \"type\",\n            \"cycle\",\n            \"path\",\n            \"format\",\n            \"totalTimeMs\",\n            \"totalScriptTimeMs\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"type\": {\n              \"type\": \"string\",\n              \"const\": \"profile-failed\"\n            },\n            \"cycle\": {\n              \"$ref\": \"#/definitions/HydrogenCpuWatchRecord/anyOf/1/properties/cycle\"\n            },\n            \"error\": {\n              \"$ref\": \"#/definitions/HydrogenCpuWatchRecord/anyOf/3/properties/error\"\n            }\n          },\n          \"required\": [\n            \"type\",\n            \"cycle\",\n            \"error\"\n          ],\n          \"additionalProperties\": false\n        }\n      ]\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -297,7 +493,7 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
-      "descriptionWithMarkdown": "Builds the app and runs the resulting code to profile the server startup time, watching for changes. This command can be used to [debug slow app startup times](https://shopify.dev/docs/custom-storefronts/hydrogen/debugging/cpu-startup) that cause failed deployments in Oxygen.\n\n  The profiling results are written to a `.cpuprofile` file that can be viewed with certain tools such as [Flame Chart Visualizer for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-js-profile-flame).",
+      "descriptionWithMarkdown": "Builds the app and runs the resulting code to profile the server startup time, watching for changes. This command can be used to [debug slow app startup times](https://shopify.dev/docs/custom-storefronts/hydrogen/debugging/cpu-startup) that cause failed deployments in Oxygen.\n\n  The profiling results are written to a `.cpuprofile` file that can be viewed with certain tools such as [Flame Chart Visualizer for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-js-profile-flame).\n\n  With `--json`, emits JSONL lifecycle, build, and profile records to stdout and diagnostics to stderr until stopped. Failed records include `error.message` and may include `error.tryMessage` with recovery guidance; JSON consumers should read both fields. The native profile file format is unchanged.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -310,8 +506,47 @@
     "hydrogen:deploy": {
       "aliases": [],
       "args": {},
-      "description": "Builds and deploys a Hydrogen storefront to Oxygen.",
+      "description": "Builds and deploys your Hydrogen storefront to Oxygen. Requires an Oxygen deployment token to be set with the `--token` flag or an environment variable (`SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN`). If the storefront is \"linked\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) then the Oxygen deployment token for the linked storefront will be used automatically.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenDeployResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"cancelled\"\n      ]\n    },\n    \"deployment\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/definitions/Deployment\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"deployment\"\n  ],\n  \"additionalProperties\": false,\n  \"description\": \"The command result. The existing h2_deploy_log.json file retains Oxygen CompletedDeployment format, independently of this result.\",\n  \"title\": \"HydrogenDeployResult\",\n  \"definitions\": {\n    \"Deployment\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"url\": {\n          \"type\": \"string\",\n          \"format\": \"uri\"\n        },\n        \"authBypassToken\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        }\n      },\n      \"required\": [\n        \"url\",\n        \"authBypassToken\"\n      ],\n      \"additionalProperties\": false\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "entry": {
           "description": "Entry file for the worker. Defaults to `./server`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_ENTRY",
@@ -526,6 +761,36 @@
       "args": {},
       "description": "Runs Hydrogen storefront in an Oxygen worker for development.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Outputs more information about the command's execution.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_VERBOSE",
+          "name": "verbose",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -637,14 +902,6 @@
           "allowNo": false,
           "type": "boolean"
         },
-        "verbose": {
-          "description": "Outputs more information about the command's execution.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_VERBOSE",
-          "name": "verbose",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
-        },
         "host": {
           "description": "Expose the server to the local network",
           "name": "host",
@@ -680,8 +937,47 @@
     "hydrogen:env:list": {
       "aliases": [],
       "args": {},
-      "description": "List the environments on your linked Hydrogen storefront.",
+      "description": "Lists all environments available on the linked Hydrogen storefront.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenEnvListResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"cancelled\"\n      ]\n    },\n    \"storefront\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/definitions/Storefront\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    },\n    \"environments\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Environment\"\n      }\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"storefront\",\n    \"environments\"\n  ],\n  \"additionalProperties\": false,\n  \"description\": \"The complete environment list for the linked storefront.\",\n  \"title\": \"HydrogenEnvListResult\",\n  \"definitions\": {\n    \"Environment\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefrontEnvironment\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefrontEnvironment GID.\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"handle\": {\n          \"type\": \"string\"\n        },\n        \"branch\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        },\n        \"createdAt\": {\n          \"type\": \"string\",\n          \"format\": \"date-time\"\n        },\n        \"type\": {\n          \"type\": \"string\",\n          \"description\": \"Upstream environment type; known values are PREVIEW, PRODUCTION, CUSTOM.\"\n        },\n        \"url\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"format\": \"uri\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"name\",\n        \"handle\",\n        \"branch\",\n        \"createdAt\",\n        \"type\",\n        \"url\"\n      ],\n      \"additionalProperties\": false\n    },\n    \"Storefront\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefront\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefront GID.\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"productionUrl\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"format\": \"uri\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"name\",\n        \"productionUrl\"\n      ],\n      \"additionalProperties\": false\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -712,8 +1008,47 @@
     "hydrogen:env:pull": {
       "aliases": [],
       "args": {},
-      "description": "Populate your .env with variables from your Hydrogen storefront.",
+      "description": "Pulls environment variables from the linked Hydrogen storefront and writes them to an `.env` file.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenEnvPullResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"cancelled\"\n      ]\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"path\": {\n      \"type\": \"string\"\n    },\n    \"storefrontGid\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefront\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefront GID.\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ],\n      \"description\": \"A Shopify HydrogenStorefront GID.\"\n    },\n    \"storefrontName\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"environment\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/definitions/Environment\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    },\n    \"variables\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Variable\"\n      }\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"path\",\n    \"storefrontGid\",\n    \"storefrontName\",\n    \"environment\",\n    \"variables\"\n  ],\n  \"additionalProperties\": false,\n  \"description\": \"The dotenv file keeps its native format. The result reports variable metadata without values.\",\n  \"title\": \"HydrogenEnvPullResult\",\n  \"definitions\": {\n    \"Environment\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefrontEnvironment\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefrontEnvironment GID.\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"handle\": {\n          \"type\": \"string\"\n        },\n        \"branch\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        },\n        \"createdAt\": {\n          \"type\": \"string\",\n          \"format\": \"date-time\"\n        },\n        \"type\": {\n          \"type\": \"string\",\n          \"description\": \"Upstream environment type; known values are PREVIEW, PRODUCTION, CUSTOM.\"\n        },\n        \"url\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"format\": \"uri\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"name\",\n        \"handle\",\n        \"branch\",\n        \"createdAt\",\n        \"type\",\n        \"url\"\n      ],\n      \"additionalProperties\": false\n    },\n    \"Variable\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"id\": {\n          \"type\": \"string\",\n          \"pattern\": \"^\\\\d+$\",\n          \"description\": \"The decimal HydrogenStorefrontEnvironmentVariable ID, not a GID.\"\n        },\n        \"isSecret\": {\n          \"type\": \"boolean\"\n        },\n        \"readOnly\": {\n          \"type\": \"boolean\"\n        }\n      },\n      \"required\": [\n        \"name\"\n      ],\n      \"additionalProperties\": false,\n      \"description\": \"Metadata only: variable spelling is preserved and values are never included. Unknown metadata is omitted.\"\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "env": {
           "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
           "exclusive": [
@@ -783,8 +1118,47 @@
     "hydrogen:env:push": {
       "aliases": [],
       "args": {},
-      "description": "Push environment variables from the local .env file to your linked Hydrogen storefront.",
+      "description": "Push environment variables from the local .env file to your linked Hydrogen storefront.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenEnvPushResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"cancelled\"\n      ]\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"wouldChange\": {\n      \"type\": \"boolean\",\n      \"description\": \"Whether the compared local and remote variables differ, excluding protected variables.\"\n    },\n    \"dryRun\": {\n      \"type\": \"boolean\"\n    },\n    \"path\": {\n      \"type\": \"string\"\n    },\n    \"environment\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/definitions/Environment\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    },\n    \"variables\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Variable\"\n      }\n    },\n    \"skipped\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Variable\"\n      }\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"wouldChange\",\n    \"dryRun\",\n    \"path\",\n    \"environment\",\n    \"variables\",\n    \"skipped\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenEnvPushResult\",\n  \"definitions\": {\n    \"Environment\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefrontEnvironment\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefrontEnvironment GID.\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"handle\": {\n          \"type\": \"string\"\n        },\n        \"branch\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        },\n        \"createdAt\": {\n          \"type\": \"string\",\n          \"format\": \"date-time\"\n        },\n        \"type\": {\n          \"type\": \"string\",\n          \"description\": \"Upstream environment type; known values are PREVIEW, PRODUCTION, CUSTOM.\"\n        },\n        \"url\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"format\": \"uri\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"name\",\n        \"handle\",\n        \"branch\",\n        \"createdAt\",\n        \"type\",\n        \"url\"\n      ],\n      \"additionalProperties\": false\n    },\n    \"Variable\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"id\": {\n          \"type\": \"string\",\n          \"pattern\": \"^\\\\d+$\",\n          \"description\": \"The decimal HydrogenStorefrontEnvironmentVariable ID, not a GID.\"\n        },\n        \"isSecret\": {\n          \"type\": \"boolean\"\n        },\n        \"readOnly\": {\n          \"type\": \"boolean\"\n        }\n      },\n      \"required\": [\n        \"name\"\n      ],\n      \"additionalProperties\": false,\n      \"description\": \"Metadata only: variable spelling is preserved and values are never included. Unknown metadata is omitted.\"\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "env": {
           "description": "Specifies the environment to perform the operation using its handle. Fetch the handle using the `env list` command.",
           "exclusive": [
@@ -839,6 +1213,7 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
+      "descriptionWithMarkdown": "Push environment variables from the local .env file to your linked Hydrogen storefront.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -852,7 +1227,38 @@
       "aliases": [],
       "args": {},
       "description": "Shortcut for `hydrogen generate`. See `hydrogen generate --help` for more information.",
-      "flags": {},
+      "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
       "hasDynamicHelp": false,
       "hidden": true,
       "hiddenAliases": [],
@@ -893,8 +1299,47 @@
           "required": true
         }
       },
-      "description": "Generates a standard Shopify route.",
+      "description": "Generates a set of default routes from the starter template.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenGenerateRoutesResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"skipped\"\n      ]\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"routes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Route\"\n      }\n    },\n    \"routeGroups\": {\n      \"type\": \"object\",\n      \"additionalProperties\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"isTypescript\": {\n      \"type\": \"boolean\"\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"routes\",\n    \"routeGroups\",\n    \"isTypescript\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenGenerateRoutesResult\",\n  \"definitions\": {\n    \"Route\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"sourceRoute\": {\n          \"type\": \"string\"\n        },\n        \"destinationRoute\": {\n          \"type\": \"string\"\n        },\n        \"operation\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"created\",\n            \"skipped\",\n            \"replaced\"\n          ]\n        },\n        \"skipReason\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"declined\",\n            \"exists\"\n          ]\n        }\n      },\n      \"required\": [\n        \"sourceRoute\",\n        \"destinationRoute\",\n        \"operation\"\n      ],\n      \"additionalProperties\": false\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "adapter": {
           "description": "React Router adapter used in the route. The default is `react-router`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_ADAPTER",
@@ -936,6 +1381,7 @@
         }
       },
       "hasDynamicHelp": false,
+      "hidden": true,
       "hiddenAliases": [],
       "id": "hydrogen:generate:route",
       "pluginAlias": "@shopify/cli-hydrogen",
@@ -956,8 +1402,47 @@
     "hydrogen:generate:routes": {
       "aliases": [],
       "args": {},
-      "description": "Generates all supported standard shopify routes.",
+      "description": "Generates all supported standard shopify routes.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenGenerateRoutesResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"skipped\"\n      ]\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"routes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Route\"\n      }\n    },\n    \"routeGroups\": {\n      \"type\": \"object\",\n      \"additionalProperties\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"isTypescript\": {\n      \"type\": \"boolean\"\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"routes\",\n    \"routeGroups\",\n    \"isTypescript\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenGenerateRoutesResult\",\n  \"definitions\": {\n    \"Route\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"sourceRoute\": {\n          \"type\": \"string\"\n        },\n        \"destinationRoute\": {\n          \"type\": \"string\"\n        },\n        \"operation\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"created\",\n            \"skipped\",\n            \"replaced\"\n          ]\n        },\n        \"skipReason\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"declined\",\n            \"exists\"\n          ]\n        }\n      },\n      \"required\": [\n        \"sourceRoute\",\n        \"destinationRoute\",\n        \"operation\"\n      ],\n      \"additionalProperties\": false\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "adapter": {
           "description": "React Router adapter used in the route. The default is `react-router`.",
           "env": "SHOPIFY_HYDROGEN_FLAG_ADAPTER",
@@ -999,6 +1484,7 @@
         }
       },
       "hasDynamicHelp": false,
+      "hidden": true,
       "hiddenAliases": [],
       "id": "hydrogen:generate:routes",
       "pluginAlias": "@shopify/cli-hydrogen",
@@ -1006,6 +1492,7 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
+      "descriptionWithMarkdown": "Generates all supported standard shopify routes.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1018,8 +1505,47 @@
     "hydrogen:init": {
       "aliases": [],
       "args": {},
-      "description": "Creates a new Hydrogen storefront.",
+      "description": "Creates a new Hydrogen storefront.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenInitResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"partial\",\n        \"skipped\",\n        \"cancelled\"\n      ]\n    },\n    \"project\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/definitions/Project\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ],\n      \"description\": \"All projected fields are present; unavailable settings are null. Route values are relative route names.\"\n    },\n    \"failures\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\",\n        \"enum\": [\n          \"dependencies\",\n          \"markets\",\n          \"routes\"\n        ]\n      }\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"project\",\n    \"failures\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenInitResult\",\n  \"definitions\": {\n    \"Project\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"directory\": {\n          \"type\": \"string\"\n        },\n        \"storefrontName\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        },\n        \"language\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"enum\": [\n                \"js\",\n                \"ts\"\n              ]\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"packageManager\": {\n          \"type\": \"string\",\n          \"enum\": [\n            \"npm\",\n            \"pnpm\",\n            \"yarn\",\n            \"bun\",\n            \"unknown\"\n          ]\n        },\n        \"dependenciesInstalled\": {\n          \"type\": \"boolean\"\n        },\n        \"cssStrategy\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"enum\": [\n                \"none\",\n                \"tailwind\",\n                \"vanilla-extract\",\n                \"css-modules\",\n                \"postcss\"\n              ]\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"i18n\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"enum\": [\n                \"none\",\n                \"subfolders\",\n                \"domains\",\n                \"subdomains\"\n              ]\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"routes\": {\n          \"anyOf\": [\n            {\n              \"type\": \"object\",\n              \"additionalProperties\": {\n                \"anyOf\": [\n                  {\n                    \"type\": \"string\"\n                  },\n                  {\n                    \"type\": \"array\",\n                    \"items\": {\n                      \"type\": \"string\"\n                    }\n                  }\n                ]\n              }\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"name\",\n        \"directory\",\n        \"storefrontName\",\n        \"language\",\n        \"packageManager\",\n        \"dependenciesInstalled\",\n        \"cssStrategy\",\n        \"i18n\",\n        \"routes\"\n      ],\n      \"additionalProperties\": false,\n      \"description\": \"All projected fields are present; unavailable settings are null. Route values are relative route names.\"\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "force": {
           "char": "f",
           "description": "Overwrites the destination directory and files if they already exist.",
@@ -1045,7 +1571,7 @@
           "type": "option"
         },
         "template": {
-          "description": "Scaffolds project based on an existing template or example from the Hydrogen repository.",
+          "description": "Scaffolds project based on a template: `skeleton` (the default), `demo-store` or a URL to a git repository.",
           "env": "SHOPIFY_HYDROGEN_FLAG_TEMPLATE",
           "name": "template",
           "hasDynamicHelp": false,
@@ -1138,8 +1664,47 @@
     "hydrogen:link": {
       "aliases": [],
       "args": {},
-      "description": "Link a local project to one of your shop's Hydrogen storefronts.",
+      "description": "Links your local development environment to a remote Hydrogen storefront. You can link an unlimited number of development environments to a single Hydrogen storefront.\n\n  Linking to a Hydrogen storefront enables you to run \"dev\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-dev) and automatically inject your linked Hydrogen storefront's environment variables directly into the server runtime.\n\n  After you run the `link` command, you can access the \"env list\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-list), \"env pull\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-pull), and \"unlink\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-unlink) commands.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenLinkResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"partial\",\n        \"skipped\",\n        \"cancelled\"\n      ]\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"storeDomain\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\",\n          \"pattern\": \"^[a-z0-9][a-z0-9-]*\\\\.myshopify\\\\.com$\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    },\n    \"storefront\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/definitions/Storefront\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ],\n      \"description\": \"All projected fields are present; unavailable productionUrl is null.\"\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"storeDomain\",\n    \"storefront\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenLinkResult\",\n  \"definitions\": {\n    \"Storefront\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefront\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefront GID.\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"productionUrl\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"format\": \"uri\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"name\",\n        \"productionUrl\"\n      ],\n      \"additionalProperties\": false,\n      \"description\": \"All projected fields are present; unavailable productionUrl is null.\"\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "force": {
           "char": "f",
           "description": "Overwrites the destination directory and files if they already exist.",
@@ -1219,8 +1784,47 @@
     "hydrogen:list": {
       "aliases": [],
       "args": {},
-      "description": "Returns a list of Hydrogen storefronts available on a given shop.",
+      "description": "Lists all remote Hydrogen storefronts available to link to your local development environment.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenListResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"storeDomain\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\",\n          \"pattern\": \"^[a-z0-9][a-z0-9-]*\\\\.myshopify\\\\.com$\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    },\n    \"storefronts\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/Storefront\"\n      }\n    }\n  },\n  \"required\": [\n    \"storeDomain\",\n    \"storefronts\"\n  ],\n  \"additionalProperties\": false,\n  \"description\": \"The complete list of Hydrogen storefronts for the store.\",\n  \"title\": \"HydrogenListResult\",\n  \"definitions\": {\n    \"Storefront\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefront\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefront GID.\"\n        },\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"productionUrl\": {\n          \"anyOf\": [\n            {\n              \"type\": \"string\",\n              \"format\": \"uri\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        },\n        \"currentProductionDeployment\": {\n          \"anyOf\": [\n            {\n              \"$ref\": \"#/definitions/Deployment\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"name\",\n        \"productionUrl\",\n        \"currentProductionDeployment\"\n      ],\n      \"additionalProperties\": false,\n      \"description\": \"All projected fields are present; unavailable productionUrl is null.\"\n    },\n    \"Deployment\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"gid\": {\n          \"type\": \"string\",\n          \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefrontDeployment\\\\/\\\\d+$\",\n          \"description\": \"A Shopify HydrogenStorefrontDeployment GID.\"\n        },\n        \"createdAt\": {\n          \"type\": \"string\",\n          \"format\": \"date-time\"\n        },\n        \"commitMessage\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        }\n      },\n      \"required\": [\n        \"gid\",\n        \"createdAt\",\n        \"commitMessage\"\n      ],\n      \"additionalProperties\": false\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1250,8 +1854,47 @@
     "hydrogen:login": {
       "aliases": [],
       "args": {},
-      "description": "Login to your Shopify account.",
+      "description": "Logs in to the specified shop and saves the shop domain to the project.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenLoginResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"storeDomain\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\",\n          \"pattern\": \"^[a-z0-9][a-z0-9-]*\\\\.myshopify\\\\.com$\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    },\n    \"name\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"email\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\",\n          \"format\": \"email\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    }\n  },\n  \"required\": [\n    \"storeDomain\",\n    \"name\",\n    \"email\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenLoginResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1290,8 +1933,47 @@
     "hydrogen:logout": {
       "aliases": [],
       "args": {},
-      "description": "Logout of your local session.",
+      "description": "Log out from the current shop.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenLogoutResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"const\": \"success\"\n    },\n    \"loggedOut\": {\n      \"type\": \"boolean\",\n      \"const\": true\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"loggedOut\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenLogoutResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1323,6 +2005,36 @@
       "args": {},
       "description": "Runs a Hydrogen storefront in an Oxygen worker for production.",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Outputs more information about the command's execution.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_VERBOSE",
+          "name": "verbose",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1382,14 +2094,6 @@
           "description": "Enables inspector connections to the server with a debugger such as Visual Studio Code or Chrome DevTools.",
           "env": "SHOPIFY_HYDROGEN_FLAG_DEBUG",
           "name": "debug",
-          "allowNo": false,
-          "type": "boolean"
-        },
-        "verbose": {
-          "description": "Outputs more information about the command's execution.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_VERBOSE",
-          "name": "verbose",
-          "required": false,
           "allowNo": false,
           "type": "boolean"
         },
@@ -1461,8 +2165,47 @@
     "hydrogen:setup": {
       "aliases": [],
       "args": {},
-      "description": "Scaffold routes and core functionality.",
+      "description": "Scaffold routes and core functionality.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenSetupResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"const\": \"success\"\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"directory\": {\n      \"type\": \"string\"\n    },\n    \"name\": {\n      \"type\": \"string\"\n    },\n    \"i18n\": {\n      \"anyOf\": [\n        {\n          \"type\": \"string\",\n          \"enum\": [\n            \"subfolders\",\n            \"domains\",\n            \"subdomains\"\n          ]\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    },\n    \"routes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"sourceRoute\": {\n            \"type\": \"string\"\n          },\n          \"destinationRoute\": {\n            \"type\": \"string\"\n          },\n          \"operation\": {\n            \"type\": \"string\",\n            \"enum\": [\n              \"created\",\n              \"skipped\",\n              \"replaced\"\n            ]\n          },\n          \"skipReason\": {\n            \"type\": \"string\",\n            \"enum\": [\n              \"declined\",\n              \"exists\"\n            ]\n          }\n        },\n        \"required\": [\n          \"sourceRoute\",\n          \"destinationRoute\",\n          \"operation\"\n        ],\n        \"additionalProperties\": false\n      }\n    },\n    \"routeGroups\": {\n      \"type\": \"object\",\n      \"additionalProperties\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"shortcut\": {\n      \"type\": \"boolean\"\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"directory\",\n    \"name\",\n    \"i18n\",\n    \"routes\",\n    \"routeGroups\",\n    \"shortcut\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenSetupResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1510,6 +2253,7 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
+      "descriptionWithMarkdown": "Scaffold routes and core functionality.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1532,8 +2276,47 @@
           ]
         }
       },
-      "description": "Setup CSS strategies for your project.",
+      "description": "Adds support for certain CSS strategies to your project.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenSetupCssResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"success\",\n        \"cancelled\"\n      ]\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"directory\": {\n      \"$ref\": \"#/definitions/AbsolutePath\"\n    },\n    \"strategy\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"tailwind\",\n        \"vanilla-extract\",\n        \"css-modules\",\n        \"postcss\"\n      ]\n    },\n    \"filePaths\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/definitions/AbsolutePath\"\n      }\n    },\n    \"dependenciesInstalled\": {\n      \"type\": \"boolean\"\n    },\n    \"needsNpmReinstall\": {\n      \"type\": \"boolean\"\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"directory\",\n    \"strategy\",\n    \"filePaths\",\n    \"dependenciesInstalled\",\n    \"needsNpmReinstall\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenSetupCssResult\",\n  \"definitions\": {\n    \"AbsolutePath\": {\n      \"type\": \"string\"\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1589,8 +2372,47 @@
           ]
         }
       },
-      "description": "Setup support for multiple markets in your project.",
+      "description": "Adds support for multiple \"markets\" (https://shopify.dev/docs/custom-storefronts/hydrogen/markets) to your project by using the URL structure.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenSetupMarketsResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"const\": \"success\"\n    },\n    \"changed\": {\n      \"type\": \"boolean\",\n      \"const\": true\n    },\n    \"directory\": {\n      \"$ref\": \"#/definitions/AbsolutePath\"\n    },\n    \"strategy\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"subfolders\",\n        \"domains\",\n        \"subdomains\"\n      ]\n    },\n    \"serverPath\": {\n      \"anyOf\": [\n        {\n          \"$ref\": \"#/definitions/AbsolutePath\"\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"directory\",\n    \"strategy\",\n    \"serverPath\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenSetupMarketsResult\",\n  \"definitions\": {\n    \"AbsolutePath\": {\n      \"type\": \"string\"\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1621,8 +2443,47 @@
     "hydrogen:setup:vite": {
       "aliases": [],
       "args": {},
-      "description": "EXPERIMENTAL: Upgrades the project to use Vite.",
+      "description": "EXPERIMENTAL: Upgrades the project to use Vite.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenSetupViteResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"const\": \"success\"\n    },\n    \"changed\": {\n      \"type\": \"boolean\",\n      \"const\": true\n    },\n    \"directory\": {\n      \"$ref\": \"#/definitions/AbsolutePath\"\n    },\n    \"viteConfigPath\": {\n      \"$ref\": \"#/definitions/AbsolutePath\"\n    },\n    \"serverPath\": {\n      \"$ref\": \"#/definitions/AbsolutePath\"\n    },\n    \"dependenciesInstalled\": {\n      \"type\": \"boolean\",\n      \"const\": true\n    },\n    \"needsMdxSetup\": {\n      \"type\": \"boolean\"\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"directory\",\n    \"viteConfigPath\",\n    \"serverPath\",\n    \"dependenciesInstalled\",\n    \"needsMdxSetup\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenSetupViteResult\",\n  \"definitions\": {\n    \"AbsolutePath\": {\n      \"type\": \"string\"\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1640,6 +2501,7 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
+      "descriptionWithMarkdown": "EXPERIMENTAL: Upgrades the project to use Vite.",
       "isESM": true,
       "relativePath": [
         "dist",
@@ -1652,8 +2514,48 @@
     "hydrogen:shortcut": {
       "aliases": [],
       "args": {},
-      "description": "Creates a global `h2` shortcut for the Hydrogen CLI",
-      "flags": {},
+      "description": "Creates a global h2 shortcut for Shopify CLI using shell aliases.\n\n  The following shells are supported:\n\n  - Bash (using `~/.bashrc`)\n  - ZSH (using `~/.zshrc`)\n  - Fish (using `~/.config/fish/functions`)\n  - PowerShell (added to `$PROFILE`)\n\n  After the alias is created, you can call Shopify CLI from anywhere in your project using `h2 <command>`.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenShortcutResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"const\": \"success\"\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"alias\": {\n      \"type\": \"string\"\n    },\n    \"shells\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\",\n        \"enum\": [\n          \"bash\",\n          \"zsh\",\n          \"fish\",\n          \"powershell\",\n          \"powershell-7\",\n          \"cmd\"\n        ]\n      },\n      \"minItems\": 1\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"alias\",\n    \"shells\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenShortcutResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
+      "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
       "hasDynamicHelp": false,
       "hiddenAliases": [],
       "id": "hydrogen:shortcut",
@@ -1674,8 +2576,47 @@
     "hydrogen:unlink": {
       "aliases": [],
       "args": {},
-      "description": "Unlink a local project from a Hydrogen storefront.",
+      "description": "Unlinks your local development environment from a remote Hydrogen storefront.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenUnlinkResult` schema.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\",\n      \"const\": \"success\"\n    },\n    \"changed\": {\n      \"type\": \"boolean\"\n    },\n    \"storefront\": {\n      \"anyOf\": [\n        {\n          \"type\": \"object\",\n          \"properties\": {\n            \"gid\": {\n              \"type\": \"string\",\n              \"pattern\": \"^gid:\\\\/\\\\/shopify\\\\/HydrogenStorefront\\\\/\\\\d+$\",\n              \"description\": \"A Shopify HydrogenStorefront GID.\"\n            },\n            \"name\": {\n              \"type\": \"string\"\n            }\n          },\n          \"required\": [\n            \"gid\",\n            \"name\"\n          ],\n          \"additionalProperties\": false\n        },\n        {\n          \"type\": \"null\"\n        }\n      ]\n    }\n  },\n  \"required\": [\n    \"status\",\n    \"changed\",\n    \"storefront\"\n  ],\n  \"additionalProperties\": false,\n  \"title\": \"HydrogenUnlinkResult\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1705,8 +2646,47 @@
     "hydrogen:upgrade": {
       "aliases": [],
       "args": {},
-      "description": "Upgrade Remix and Hydrogen npm dependencies.",
+      "description": "Upgrade Hydrogen project dependencies, preview features, fixes and breaking changes. The command also generates an instruction file for each upgrade.\n\nUse `--json-schema` to print the result, error, and event schemas.\n\nOutput from `--json` conforms to the `HydrogenUpgradeResult` schema.\n\n```json\n{\n  \"anyOf\": [\n    {\n      \"type\": \"object\",\n      \"properties\": {\n        \"status\": {\n          \"type\": \"string\",\n          \"const\": \"success\"\n        },\n        \"directory\": {\n          \"$ref\": \"#/definitions/AbsolutePath\"\n        },\n        \"previousVersion\": {\n          \"type\": \"string\"\n        },\n        \"version\": {\n          \"type\": \"string\"\n        },\n        \"changed\": {\n          \"type\": \"boolean\",\n          \"const\": true\n        },\n        \"packages\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"removedPackages\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"instructionsPath\": {\n          \"anyOf\": [\n            {\n              \"$ref\": \"#/definitions/AbsolutePath\"\n            },\n            {\n              \"type\": \"null\"\n            }\n          ]\n        }\n      },\n      \"required\": [\n        \"status\",\n        \"directory\",\n        \"previousVersion\",\n        \"version\",\n        \"changed\",\n        \"packages\",\n        \"removedPackages\",\n        \"instructionsPath\"\n      ],\n      \"additionalProperties\": false\n    },\n    {\n      \"type\": \"object\",\n      \"properties\": {\n        \"status\": {\n          \"type\": \"string\",\n          \"const\": \"success\"\n        },\n        \"directory\": {\n          \"$ref\": \"#/definitions/AbsolutePath\"\n        },\n        \"previousVersion\": {\n          \"type\": \"string\"\n        },\n        \"version\": {\n          \"type\": \"string\"\n        },\n        \"changed\": {\n          \"type\": \"boolean\",\n          \"const\": false\n        },\n        \"packages\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          },\n          \"minItems\": 0,\n          \"maxItems\": 0\n        },\n        \"removedPackages\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          },\n          \"minItems\": 0,\n          \"maxItems\": 0\n        },\n        \"instructionsPath\": {\n          \"type\": \"null\"\n        }\n      },\n      \"required\": [\n        \"status\",\n        \"directory\",\n        \"previousVersion\",\n        \"version\",\n        \"changed\",\n        \"packages\",\n        \"removedPackages\",\n        \"instructionsPath\"\n      ],\n      \"additionalProperties\": false\n    }\n  ],\n  \"title\": \"HydrogenUpgradeResult\",\n  \"definitions\": {\n    \"AbsolutePath\": {\n      \"type\": \"string\"\n    }\n  },\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n}\n```",
       "flags": {
+        "json-schema": {
+          "description": "Print the command's JSON schemas.",
+          "env": "SHOPIFY_FLAG_JSON_SCHEMA",
+          "name": "json-schema",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-input": {
+          "description": "Disable interactive prompts and browser authentication.",
+          "env": "SHOPIFY_FLAG_NO_INPUT",
+          "name": "no-input",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-color": {
+          "description": "Disable color output.",
+          "env": "SHOPIFY_FLAG_NO_COLOR",
+          "hidden": false,
+          "name": "no-color",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "verbose": {
+          "description": "Increase the verbosity of the output. May include sensitive data.",
+          "env": "SHOPIFY_FLAG_VERBOSE",
+          "hidden": false,
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "char": "j",
+          "description": "Output the result as JSON. Automatically disables color output.",
+          "env": "SHOPIFY_FLAG_JSON",
+          "hidden": false,
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        },
         "path": {
           "description": "The path to the directory of the Hydrogen storefront. Defaults to the current directory where the command is run.",
           "env": "SHOPIFY_HYDROGEN_FLAG_PATH",
@@ -1751,5 +2731,5 @@
       ]
     }
   },
-  "version": "13.0.4"
+  "version": "13.1.0"
 }

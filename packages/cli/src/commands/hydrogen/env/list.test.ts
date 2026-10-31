@@ -5,7 +5,6 @@ import {inTemporaryDirectory} from '@shopify/cli-kit/node/fs';
 import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environments.js';
 import {dummyListEnvironments} from '../../../lib/graphql/admin/test-helper.js';
 import {type AdminSession, login} from '../../../lib/auth.js';
-import {renderMissingStorefront} from '../../../lib/render-errors.js';
 import {runEnvList} from './list.js';
 import {verifyLinkedStorefront} from '../../../lib/verify-linked-storefront.js';
 
@@ -23,7 +22,6 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
 vi.mock('../link.js');
 vi.mock('../../../lib/auth.js');
 vi.mock('../../../lib/shopify-config.js');
-vi.mock('../../../lib/render-errors.js');
 vi.mock('../../../lib/graphql/admin/list-environments.js');
 vi.mock('../../../lib/verify-linked-storefront.js');
 vi.mock('../../../lib/shell.js', () => ({getCliCommand: () => 'h2'}));
@@ -120,11 +118,11 @@ describe('listEnvironments', () => {
       vi.mocked(getStorefrontEnvironments).mockResolvedValue(null);
     });
 
-    it('calls renderMissingStorefront', async () => {
+    it('fails when the linked storefront no longer exists', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        await runEnvList({path: tmpDir});
-
-        expect(renderMissingStorefront).toHaveBeenCalledOnce();
+        await expect(runEnvList({path: tmpDir})).rejects.toThrow(
+          'Couldn’t find Hydrogen storefront.',
+        );
       });
     });
   });

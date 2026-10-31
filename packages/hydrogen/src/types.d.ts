@@ -15,6 +15,7 @@ import type {StorefrontClient, I18nBase} from './storefront';
 import type {CustomerAccount} from './customer/types';
 import type {
   CustomerPrivacy,
+  CustomEventMap,
   PrivacyBanner,
 } from './customer-privacy/ShopifyCustomerPrivacy';
 import type {
@@ -107,9 +108,9 @@ declare global {
   interface Window {
     privacyBanner: PrivacyBanner;
     Shopify: {
-      customerPrivacy?: Partial<CustomerPrivacy> & {
-        backendConsentEnabled?: boolean;
-      };
+      country?: string;
+      locale?: string;
+      customerPrivacy?: Partial<CustomerPrivacy>;
     };
   }
   interface Document {

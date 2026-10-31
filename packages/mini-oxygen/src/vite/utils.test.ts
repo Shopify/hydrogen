@@ -74,15 +74,40 @@ describe('utils', () => {
           ':scheme': 'https',
           accept: 'text/html',
         },
+        socket: {encrypted: true},
       } as unknown as IncomingMessage;
 
       const webReq = toWeb(nodeReq);
 
-      expect(webReq.url).toBe('http://localtest.me:5173/test');
+      expect(webReq.url).toBe('https://localtest.me:5173/test');
       expect(webReq.headers.get('host')).toBe('localtest.me:5173');
       expect([...webReq.headers.keys()]).not.toContainEqual(
         expect.stringMatching(/^:/),
       );
+    });
+
+    it('should use https for requests received over TLS', () => {
+      const nodeReq = {
+        url: '/account',
+        method: 'GET',
+        headers: {host: 'local.tryhydrogen.dev:5173'},
+        socket: {encrypted: true},
+      } as unknown as IncomingMessage;
+
+      expect(toWeb(nodeReq).url).toBe(
+        'https://local.tryhydrogen.dev:5173/account',
+      );
+    });
+
+    it('should use http for requests received over plain TCP', () => {
+      const nodeReq = {
+        url: '/account',
+        method: 'GET',
+        headers: {host: 'localhost:3000'},
+        socket: {},
+      } as unknown as IncomingMessage;
+
+      expect(toWeb(nodeReq).url).toBe('http://localhost:3000/account');
     });
 
     it('should throw error if host and authority headers are missing', () => {

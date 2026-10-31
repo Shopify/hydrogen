@@ -4,7 +4,7 @@ import {
   generateRoutes,
   getResolvedRoutes,
 } from './generate.js';
-import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
+import {isTTY, renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {
   readFile,
   writeFile,
@@ -25,6 +25,7 @@ const readProjectFile = (
 describe('generate/route', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.mocked(isTTY).mockReturnValue(true);
     vi.mock('@shopify/cli-kit/node/output');
     vi.mock('@shopify/cli-kit/node/ui');
     vi.mock('../../remix-config.js', async () => ({getRemixConfig: vi.fn()}));
@@ -73,6 +74,63 @@ describe('generate/route', () => {
       });
     });
 
+    it('checks every overwrite before writing routes in a non-interactive run', async () => {
+      vi.mocked(isTTY).mockReturnValue(false);
+      const {resolvedRouteFiles} = await getResolvedRoutes(['cart']);
+      await inTemporaryDirectory(async (tmpDir) => {
+        const existing = resolvedRouteFiles.at(-1)!;
+        const directories = await createHydrogenFixture(tmpDir, {
+          files: [[`app/routes/${existing}.tsx`, 'existing']],
+          templates: resolvedRouteFiles.map((name) => [
+            `routes/${name}.tsx`,
+            'export const generated = true;',
+          ]),
+        });
+        await expect(
+          generateRoutes(
+            {
+              routeName: 'cart',
+              directory: directories.rootDirectory,
+              templatesRoot: directories.templatesRoot,
+              typescript: true,
+            },
+            directories,
+          ),
+        ).rejects.toThrow('requires confirmation');
+        expect(await readProjectFile(directories, `routes/${existing}`)).toBe(
+          'existing',
+        );
+        expect(
+          await fileExists(
+            joinPath(
+              directories.appDirectory,
+              `routes/${resolvedRouteFiles[0]}.tsx`,
+            ),
+          ),
+        ).toBe(false);
+        expect(renderConfirmationPrompt).not.toHaveBeenCalled();
+      });
+    });
+
+    it('reports a preserved route as skipped when dependency overwrites are disabled', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        const route = 'routes/pages.$handle';
+        const directories = await createHydrogenFixture(tmpDir, {
+          files: [[`app/${route}.tsx`, 'existing']],
+          templates: [[`${route}.tsx`, 'export const generated = true;']],
+        });
+        expect(
+          await generateProjectFile(route, {
+            ...directories,
+            typescript: true,
+            force: true,
+            overwriteFileDeps: false,
+          }),
+        ).toMatchObject({operation: 'skipped', skipReason: 'exists'});
+        expect(await readProjectFile(directories, route)).toBe('existing');
+      });
+    });
+
     it('figures out the locale if a home route already exists', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
         const route = 'routes/pages.$handle';
@@ -104,10 +162,101 @@ describe('generate/route', () => {
           }),
         );
 
-        expect(result.routes).toHaveLength(1);
+        expect(result.routes).toHaveLength(2);
         expect(result.routes[0]).toMatchObject({
           destinationRoute: expect.stringContaining('($locale).pages.$handle'),
         });
+      });
+    });
+
+    it.each([true, false])(
+      'replaces the locale helper with force (typescript=%s)',
+      async (typescript) => {
+        await inTemporaryDirectory(async (tmpDir) => {
+          const directories = await createHydrogenFixture(tmpDir, {
+            files: [['package.json', '{}']],
+            templates: [
+              ['routes/pages.$handle.tsx', 'export const replacement = true;'],
+            ],
+          });
+          const options = {
+            routeName: 'page',
+            directory: directories.rootDirectory,
+            templatesRoot: directories.templatesRoot,
+            localePrefix: 'locale',
+            typescript,
+            force: true,
+          };
+          const first = await generateRoutes(options, directories);
+          const helperPath = joinPath(
+            directories.appDirectory,
+            `routes/($locale).${typescript ? 'tsx' : 'jsx'}`,
+          );
+          const template = await readFile(helperPath);
+          expect(first.routes.at(-1)?.operation).toBe('created');
+          await writeFile(helperPath, 'export const stale = true;');
+
+          const skipped = await generateRoutes(
+            {...options, force: false},
+            directories,
+          );
+          expect(skipped.routes.at(-1)?.operation).toBe('skipped');
+          expect(await readFile(helperPath)).toBe('export const stale = true;');
+          vi.mocked(renderConfirmationPrompt).mockClear();
+
+          const replaced = await generateRoutes(options, directories);
+          expect(replaced.routes.at(-1)).toMatchObject({
+            destinationRoute: `app/routes/($locale).${typescript ? 'tsx' : 'jsx'}`,
+            operation: 'replaced',
+          });
+          expect(await readFile(helperPath)).toBe(template);
+          expect(renderConfirmationPrompt).not.toHaveBeenCalled();
+        });
+      },
+    );
+
+    it('reports the locale helper even when the requested route is skipped', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        const directories = await createHydrogenFixture(tmpDir, {
+          files: [
+            [
+              'app/routes/($locale).pages.$handle.tsx',
+              'export const existing = true;',
+            ],
+          ],
+          templates: [
+            ['routes/pages.$handle.tsx', 'export const replacement = true;'],
+          ],
+        });
+        vi.mocked(getRemixConfig).mockResolvedValue(directories as any);
+        vi.mocked(renderConfirmationPrompt).mockResolvedValue(false);
+        const options = {
+          routeName: 'page',
+          directory: directories.rootDirectory,
+          templatesRoot: directories.templatesRoot,
+          localePrefix: 'locale',
+          typescript: true,
+        };
+        const result = await generateRoutes(options);
+        expect(result.routes).toEqual([
+          expect.objectContaining({operation: 'skipped'}),
+          expect.objectContaining({
+            destinationRoute: expect.stringContaining('($locale).tsx'),
+            operation: 'created',
+          }),
+        ]);
+        expect(
+          await readProjectFile(directories, 'routes/($locale).pages.$handle'),
+        ).toContain('existing');
+        expect(
+          await fileExists(
+            joinPath(directories.appDirectory, 'routes/($locale).tsx'),
+          ),
+        ).toBe(true);
+        const repeated = await generateRoutes(options);
+        expect(
+          repeated.routes.every(({operation}) => operation === 'skipped'),
+        ).toBe(true);
       });
     });
   });
@@ -280,13 +429,17 @@ describe('generate/route', () => {
         });
 
         // When
-        await generateProjectFile(route, {
+        const result = await generateProjectFile(route, {
           ...directories,
           force: true,
         });
 
         // Then
         expect(renderConfirmationPrompt).not.toHaveBeenCalled();
+        expect(result.operation).toBe('replaced');
+        expect(await readProjectFile(directories, route, 'jsx')).toContain(
+          'hello world',
+        );
       });
     });
 

@@ -92,9 +92,17 @@ Hydrogen uses an automated release system built on Changesets, GitHub Actions (`
 
 ### Snapshot Testing (`/snapit`)
 
-- Comment `/snapit` on any PR
-- Creates snapshot version for testing
-- Publishes specific packages for PR validation
+- Comment `/snapit` on a PR (write access required; not supported on forks)
+- Publishes `0.0.0-snapshot-{timestamp}` versions under the `snapshot` npm tag and comments them on the PR
+- Without a comment: Actions → Release → Run workflow → pick the branch (or `gh workflow run release.yml --ref <branch>`)
+
+How it works:
+
+- npm rejects Trusted Publishing (OIDC) for `issue_comment` runs, so `snapit.yml` only checks the request and dispatches `release.yml` on the PR branch with `workflow_dispatch`
+- In `release.yml`, `snapshot-build` builds and packs the branch with no publish credential; `snapshot-publish` runs no repo code, validates each tarball (layout, allowlisted name, `0.0.0-snapshot-*` version, exact `publishConfig`) and publishes it over OIDC; `snapshot-report` comments on the PR
+- The branch must be up to date enough to contain the `snapshot-publish` job; `/snapit` says so if it isn't. Old branches keep whatever snapshot jobs they were cut with
+- A newer `/snapit` on the same branch can replace an older run that is still queued (GitHub keeps one pending run per concurrency group); comment again if a result never arrives
+- If a tarball fails validation because a package gained a new `publishConfig` field, update `PUBLISH_CONFIG` in `release.yml`
 
 ### Back-fix Releases
 
@@ -146,10 +154,9 @@ Hydrogen uses an automated release system built on Changesets, GitHub Actions (`
    - GitHub releases created with changelogs
 
 4. **When `/snapit` is Commented**
-   - `snapit.yml` workflow runs
-   - Snapshot version created for PR
-   - Packages published with unique tag
-   - PR comment updated with installation instructions
+   - `snapit.yml` checks the commenter and PR, then dispatches `release.yml` on the PR branch
+   - `release.yml` snapshot jobs build, validate and publish `0.0.0-snapshot-*` versions with the `snapshot` tag
+   - PR comment posted with the published versions (or a failure link)
 
 5. **On Push to Calver Branches**
    - `backfix-release` job in `release.yml` runs

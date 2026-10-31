@@ -10,6 +10,10 @@ const jest = require('eslint-plugin-jest');
 const simpleImportSort = require('eslint-plugin-simple-import-sort');
 const tsParser = require('@typescript-eslint/parser');
 const globals = require('globals');
+const cliPlugin = require('@shopify/eslint-plugin-cli');
+const {
+  commandExceptions,
+} = require('./packages/cli/json-output-command-exceptions.cjs');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -101,6 +105,17 @@ const lintedTSPackages = [
 ];
 
 module.exports = [
+  {
+    files: ['packages/cli/src/commands/**/*.ts'],
+    ignores: ['**/*.test.ts'],
+    plugins: {'@shopify/cli': cliPlugin},
+    rules: {
+      '@shopify/cli/command-json-output': [
+        'error',
+        {exceptions: commandExceptions},
+      ],
+    },
+  },
   // Global ignores
   {
     ignores: [
