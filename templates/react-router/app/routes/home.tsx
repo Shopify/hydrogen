@@ -95,7 +95,7 @@ function NewArrivals({ products }: { products: readonly ProductCardData[] }) {
         </h2>
         <Link
           to="/collections"
-          className="min-h-touch-target text-on-surface focus-visible:outline-accent inline-flex items-center gap-1 rounded-sm text-sm font-normal no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
+          className="min-h-touch-target text-on-surface focus-visible:outline-focus-ring inline-flex items-center gap-1 rounded-sm text-sm font-normal no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
         >
           <span>Collections</span>
           <span
