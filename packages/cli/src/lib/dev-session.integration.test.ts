@@ -8,12 +8,16 @@ import {build} from 'esbuild';
 import {expect, it, vi} from 'vitest';
 
 it.skipIf(process.platform === 'win32').each([
-  ['SIGINT', false, 130],
-  ['SIGTERM', false, 143],
-  ['SIGTERM', true, 143],
+  ['SIGINT', false, 130, false, false],
+  ['SIGTERM', false, 143, false, false],
+  ['SIGTERM', true, 143, false, false],
+  ['SIGINT', false, 130, true, false],
+  ['SIGTERM', false, 143, true, false],
+  ['SIGTERM', true, 143, true, false],
+  ['SIGINT', false, 130, true, true],
 ] as const)(
-  'drains output and releases resources on %s (startup pending: %s)',
-  async (signal, pending, exitCode) => {
+  'drains output and releases resources on %s (startup pending: %s, exit: %s, JSON: %s, exit listener: %s)',
+  async (signal, pending, exitCode, json, exitListener) => {
     const sourceDirectory = fileURLToPath(new URL('.', import.meta.url));
     const fixtureDirectory = await mkdtemp(
       join(sourceDirectory, '.session-fixture-'),
@@ -39,7 +43,8 @@ it.skipIf(process.platform === 'win32').each([
           '--eval',
           `
       import {runDevSession} from ${JSON.stringify(pathToFileURL(bundle).href)};
-      await runDevSession({command: 'hydrogen dev', directory: ${JSON.stringify(projectDirectory)}, envFile: '.env'}, async (session) => {
+      ${exitListener ? `process.once('${signal}', () => process.exit(0));` : ''}
+      await runDevSession({command: 'hydrogen dev', directory: ${JSON.stringify(projectDirectory)}, envFile: '.env', json: ${json}}, async (session) => {
         const timer = setInterval(() => console.log('Worker output'), 10);
         session.cleanup(async () => {
           clearInterval(timer);
@@ -69,11 +74,14 @@ it.skipIf(process.platform === 'win32').each([
       child.kill(signal);
       expect((await exited)[0]).toBe(exitCode);
       expect(stdout).toContain('Shutdown 999');
-      expect(stderr).toContain('Worker closed');
+      if (json) expect(stdout).toContain('Worker closed');
+      else expect(stderr).toContain('Worker closed');
       const folder = join(projectDirectory, '.shopify', 'dev');
       const files = await readdir(folder);
       expect(files).toHaveLength(1);
       expect(files[0]).toMatch(/\.jsonl$/);
+      const log = await readFile(join(folder, files[0]!), 'utf8');
+      if (json) expect(stdout).toBe(log);
       const records = (await readFile(join(folder, files[0]!), 'utf8'))
         .trim()
         .split('\n')

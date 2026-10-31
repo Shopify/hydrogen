@@ -26,3 +26,6 @@ catalog:
   react: '^18.3.1'
   react-dom: '^18.3.1'
   '@shopify/prettier-config': '^1.1.2'
+
+patchedDependencies:
+  '@shopify/eslint-plugin-cli@4.0.0': patches/@shopify__eslint-plugin-cli@4.0.0.patch

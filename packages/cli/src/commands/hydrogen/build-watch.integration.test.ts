@@ -72,6 +72,25 @@ async function editUntilBuildStarts(
   return previousCycle;
 }
 
+function expectBuildCycles(records: BuildWatchRecord[], minimumCycles: number) {
+  expect(records[0]?.type).toBe('watch-started');
+  expect(records.at(-1)).toEqual({type: 'watch-stopped'});
+  const cycles = records.slice(1, -1);
+  expect(cycles.length).toBeGreaterThanOrEqual(minimumCycles * 2);
+  expect(cycles.length % 2).toBe(0);
+  // Filesystem backends can report the same edit more than once.
+  for (let index = 0; index < cycles.length; index += 2) {
+    expect(cycles[index]).toEqual({
+      type: 'build-started',
+      cycle: index / 2 + 1,
+    });
+    expect(cycles[index + 1]).toMatchObject({
+      type: expect.stringMatching(/^build-(completed|failed)$/),
+      cycle: index / 2 + 1,
+    });
+  }
+}
+
 it('completes client-only rebuilds and recovers after a server source error', async () => {
   await inTemporaryDirectory(async (directory) => {
     const {clientPath, serverPath} = await writeBuildFixture(
@@ -103,23 +122,25 @@ it('completes client-only rebuilds and recovers after a server source error', as
           () => expect(records.at(-1)?.type).toBe('build-completed'),
           {timeout: 10000},
         );
-        for (const cycle of [2, 3]) {
-          await editUntilBuildStarts(
+        for (const version of [2, 3]) {
+          const previousCycle = await editUntilBuildStarts(
             records,
             clientPath,
-            `console.log("client ${cycle}");`,
+            `console.log("client ${version}");`,
           );
           await vi.waitFor(
-            () =>
-              expect(records.at(-1)).toMatchObject({
-                type: 'build-completed',
-                cycle,
-              }),
+            async () => {
+              const record = records.at(-1);
+              expect(record).toMatchObject({type: 'build-completed'});
+              expect(
+                record && 'cycle' in record ? record.cycle : 0,
+              ).toBeGreaterThan(previousCycle);
+              expect(
+                await readFile(joinPath(directory, 'dist/client/index.js')),
+              ).toContain(`client ${version}`);
+            },
             {timeout: 10000},
           );
-          expect(
-            await readFile(joinPath(directory, 'dist/client/index.js')),
-          ).toContain(`client ${cycle}`);
         }
         const triggerPath = await readFile(
           joinPath(directory, 'trigger-path.txt'),
@@ -161,20 +182,8 @@ it('completes client-only rebuilds and recovers after a server source error', as
         .trim()
         .split('\n')
         .map((line) => JSON.parse(line).type),
-    ).toEqual([
-      'watch-started',
-      'build-started',
-      'build-completed',
-      'build-started',
-      'build-completed',
-      'build-started',
-      'build-completed',
-      'build-started',
-      'build-failed',
-      'build-started',
-      'build-completed',
-      'watch-stopped',
-    ]);
+    ).toEqual(records.map(({type}) => type));
+    expectBuildCycles(records, 5);
     expect(JSON.parse(stdout.trim().split('\n')[2]!)).toMatchObject({
       serverPath: joinPath(directory, 'dist/server/index.js'),
       clientDirectory: joinPath(directory, 'dist/client'),
@@ -262,21 +271,7 @@ it.each(['console.log("first");', 'broken syntax'])(
         }
       });
       expect(records[0]).toEqual({type: 'watch-started', directory});
-      expect(records.at(-1)).toEqual({type: 'watch-stopped'});
-      const cycles = records.slice(1, -1);
-      expect(cycles.length).toBeGreaterThanOrEqual(8);
-      expect(cycles.length % 2).toBe(0);
-      // Filesystem backends can report the same edit more than once.
-      for (let index = 0; index < cycles.length; index += 2) {
-        expect(cycles[index]).toEqual({
-          type: 'build-started',
-          cycle: index / 2 + 1,
-        });
-        expect(cycles[index + 1]).toMatchObject({
-          type: expect.stringMatching(/^build-(completed|failed)$/),
-          cycle: index / 2 + 1,
-        });
-      }
+      expectBuildCycles(records, 4);
     });
   },
   30000,
@@ -298,18 +293,23 @@ it('recovers from an initial client error and watches client-only changes', asyn
           () => expect(records.at(-1)?.type).toBe('build-failed'),
           {timeout: 10000},
         );
-        for (const cycle of [2, 3]) {
-          await editUntilBuildStarts(
+        for (const version of [2, 3]) {
+          const previousCycle = await editUntilBuildStarts(
             records,
             clientPath,
-            `console.log("recovered ${cycle}");`,
+            `console.log("recovered ${version}");`,
           );
           await vi.waitFor(
-            () =>
-              expect(records.at(-1)).toMatchObject({
-                type: 'build-completed',
-                cycle,
-              }),
+            async () => {
+              const record = records.at(-1);
+              expect(record).toMatchObject({type: 'build-completed'});
+              expect(
+                record && 'cycle' in record ? record.cycle : 0,
+              ).toBeGreaterThan(previousCycle);
+              expect(
+                await readFile(joinPath(directory, 'dist/client/index.js')),
+              ).toContain(`recovered ${version}`);
+            },
             {timeout: 10000},
           );
         }
@@ -318,15 +318,6 @@ it('recovers from an initial client error and watches client-only changes', asyn
         await running;
       }
     });
-    expect(records.map(({type}) => type)).toEqual([
-      'watch-started',
-      'build-started',
-      'build-failed',
-      'build-started',
-      'build-completed',
-      'build-started',
-      'build-completed',
-      'watch-stopped',
-    ]);
+    expectBuildCycles(records, 3);
   });
 }, 30000);

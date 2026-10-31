@@ -33,6 +33,11 @@ overrides:
   vite: ^8.0.1
   cookie: ^0.7.0
 
+patchedDependencies:
+  '@shopify/eslint-plugin-cli@4.0.0':
+    hash: 8dfec8827f7c44bc9bb5354ba74387604769ea1f62dd88c7583f3b6a7e5b9f89
+    path: patches/@shopify__eslint-plugin-cli@4.0.0.patch
+
 importers:
 
   .:
@@ -94,7 +99,7 @@ importers:
         version: 4.9.0
       '@shopify/eslint-plugin-cli':
         specifier: 4.0.0
-        version: 4.0.0(@types/eslint@9.6.1)(@typescript-eslint/utils@8.70.0(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@9.39.5(jiti@2.6.1))(prettier@3.8.1)(typescript@5.9.2)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.19.15)(esbuild@0.27.4)(happy-dom@20.8.9)(jiti@2.6.1)(msw@2.12.10(@types/node@22.19.15)(typescript@5.9.2))(yaml@2.8.3))
+        version: 4.0.0(patch_hash=8dfec8827f7c44bc9bb5354ba74387604769ea1f62dd88c7583f3b6a7e5b9f89)(@types/eslint@9.6.1)(@typescript-eslint/utils@8.70.0(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@9.39.5(jiti@2.6.1))(prettier@3.8.1)(typescript@5.9.2)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.19.15)(esbuild@0.27.4)(happy-dom@20.8.9)(jiti@2.6.1)(msw@2.12.10(@types/node@22.19.15)(typescript@5.9.2))(yaml@2.8.3))
       '@shopify/prettier-config':
         specifier: 'catalog:'
         version: 1.1.4
@@ -11587,7 +11592,7 @@ snapshots:
       esbuild: 0.27.4
       global-agent: 3.0.0
 
-  '@shopify/eslint-plugin-cli@4.0.0(@types/eslint@9.6.1)(@typescript-eslint/utils@8.70.0(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@9.39.5(jiti@2.6.1))(prettier@3.8.1)(typescript@5.9.2)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.19.15)(esbuild@0.27.4)(happy-dom@20.8.9)(jiti@2.6.1)(msw@2.12.10(@types/node@22.19.15)(typescript@5.9.2))(yaml@2.8.3))':
+  '@shopify/eslint-plugin-cli@4.0.0(patch_hash=8dfec8827f7c44bc9bb5354ba74387604769ea1f62dd88c7583f3b6a7e5b9f89)(@types/eslint@9.6.1)(@typescript-eslint/utils@8.70.0(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@9.39.5(jiti@2.6.1))(prettier@3.8.1)(typescript@5.9.2)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.19.15)(esbuild@0.27.4)(happy-dom@20.8.9)(jiti@2.6.1)(msw@2.12.10(@types/node@22.19.15)(typescript@5.9.2))(yaml@2.8.3))':
     dependencies:
       '@shopify/eslint-plugin': 50.0.0(@types/eslint@9.6.1)(@typescript-eslint/eslint-plugin@8.56.1(@typescript-eslint/parser@8.56.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.2))(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.2))(@typescript-eslint/parser@8.56.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.2))(@typescript-eslint/utils@8.70.0(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@9.39.5(jiti@2.6.1))(prettier@3.8.1)(typescript@5.9.2)
       '@typescript-eslint/eslint-plugin': 8.56.1(@typescript-eslint/parser@8.56.1(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.2))(eslint@9.39.5(jiti@2.6.1))(typescript@5.9.2)
