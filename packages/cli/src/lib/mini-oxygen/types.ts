@@ -1,5 +1,6 @@
 export type MiniOxygenOptions = {
   root: string;
+  registerCleanup?: (close: () => Promise<unknown>) => void;
   appPort?: number;
   watch?: boolean;
   autoReload?: boolean;

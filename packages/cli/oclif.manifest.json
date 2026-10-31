@@ -2132,7 +2132,7 @@
     "hydrogen:preview": {
       "aliases": [],
       "args": {},
-      "description": "Runs a Hydrogen storefront in an Oxygen worker for production.",
+      "description": "Runs a server in your local development environment that serves your Hydrogen app's production build. Run the \"build\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-build) command first, or use `--build` to build before starting the server.\n\n  Session status and JSONL logs are stored in your project's `.shopify/dev/` directory. The instance JSON includes the PID, session ID, `logFile`, and `details.urls`. Status becomes `running` when the server is ready.\n\n  Only one preview session can run for the same project, environment, environment branch, and environment file, even with a different port. Shutdown removes the instance and lock files and retains the log. The log resets on each run. Dev and preview use separate sessions. With `--build --watch`, each completed rebuild reloads the worker and adds a log message.",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -2282,7 +2282,7 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
-      "descriptionWithMarkdown": "Runs a server in your local development environment that serves your Hydrogen app's production build. Requires running the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-build) command first.",
+      "descriptionWithMarkdown": "Runs a server in your local development environment that serves your Hydrogen app's production build. Run the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-build) command first, or use `--build` to build before starting the server.\n\n  Session status and JSONL logs are stored in your project's `.shopify/dev/` directory. The instance JSON includes the PID, session ID, `logFile`, and `details.urls`. Status becomes `running` when the server is ready.\n\n  Only one preview session can run for the same project, environment, environment branch, and environment file, even with a different port. Shutdown removes the instance and lock files and retains the log. The log resets on each run. Dev and preview use separate sessions. With `--build --watch`, each completed rebuild reloads the worker and adds a log message.",
       "isESM": true,
       "relativePath": [
         "dist",

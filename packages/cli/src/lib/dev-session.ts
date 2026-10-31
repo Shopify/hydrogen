@@ -23,13 +23,14 @@ import {
 } from '@shopify/cli-kit/node/command-events';
 
 type SessionOptions = {
-  command: 'hydrogen dev';
+  command: 'hydrogen dev' | 'hydrogen preview';
   directory: string;
   env?: string;
   envBranch?: string;
   envFile: string;
   signal?: AbortSignal;
   json?: boolean;
+  watch?: boolean;
 };
 
 export type DevSession = {
@@ -74,7 +75,7 @@ export async function runDevSession(
       environmentBranch: options.envBranch ?? null,
       envFile,
       urls: [],
-      watch: true,
+      watch: options.watch ?? options.command === 'hydrogen dev',
     },
   });
   const controller = new AbortController();
