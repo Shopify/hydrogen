@@ -8,16 +8,19 @@ import {build} from 'esbuild';
 import {expect, it, vi} from 'vitest';
 
 it.skipIf(process.platform === 'win32').each([
-  ['SIGINT', false, 130, false, false],
-  ['SIGTERM', false, 143, false, false],
-  ['SIGTERM', true, 143, false, false],
-  ['SIGINT', false, 130, true, false],
-  ['SIGTERM', false, 143, true, false],
-  ['SIGTERM', true, 143, true, false],
-  ['SIGINT', false, 130, true, true],
+  ['SIGINT', false, 130, false, 'hydrogen dev', false],
+  ['SIGTERM', false, 143, false, 'hydrogen dev', false],
+  ['SIGTERM', true, 143, false, 'hydrogen dev', false],
+  ['SIGINT', false, 130, true, 'hydrogen dev', false],
+  ['SIGTERM', false, 143, true, 'hydrogen dev', false],
+  ['SIGTERM', true, 143, true, 'hydrogen dev', false],
+  ['SIGINT', false, 130, true, 'hydrogen preview', false],
+  ['SIGTERM', false, 143, true, 'hydrogen preview', false],
+  ['SIGTERM', true, 143, true, 'hydrogen preview', false],
+  ['SIGINT', false, 130, true, 'hydrogen dev', true],
 ] as const)(
-  'drains output and releases resources on %s (startup pending: %s, exit: %s, JSON: %s, exit listener: %s)',
-  async (signal, pending, exitCode, json, exitListener) => {
+  'drains output and releases resources on %s (startup pending: %s, exit: %s, JSON: %s, command: %s, exit listener: %s)',
+  async (signal, pending, exitCode, json, command, exitListener) => {
     const sourceDirectory = fileURLToPath(new URL('.', import.meta.url));
     const fixtureDirectory = await mkdtemp(
       join(sourceDirectory, '.session-fixture-'),
@@ -44,7 +47,7 @@ it.skipIf(process.platform === 'win32').each([
           `
       import {runDevSession} from ${JSON.stringify(pathToFileURL(bundle).href)};
       ${exitListener ? `process.once('${signal}', () => process.exit(0));` : ''}
-      await runDevSession({command: 'hydrogen dev', directory: ${JSON.stringify(projectDirectory)}, envFile: '.env', json: ${json}}, async (session) => {
+      await runDevSession({command: ${JSON.stringify(command)}, directory: ${JSON.stringify(projectDirectory)}, envFile: '.env', json: ${json}}, async (session) => {
         const timer = setInterval(() => console.log('Worker output'), 10);
         session.cleanup(async () => {
           clearInterval(timer);
@@ -86,6 +89,7 @@ it.skipIf(process.platform === 'win32').each([
         .trim()
         .split('\n')
         .map((line) => JSON.parse(line));
+      expect(records.every(({source}) => source === command)).toBe(true);
       expect(
         records.filter(({message}) => message.startsWith('Shutdown ')),
       ).toHaveLength(1000);

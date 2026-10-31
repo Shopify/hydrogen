@@ -7,7 +7,7 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {captureJsonOutput} from '../../../tests/output.js';
-import {runBuildWatch} from './build.js';
+import {runBuild, runBuildWatch} from './build.js';
 import {
   buildCommandOutputSchema,
   type BuildWatchRecord,
@@ -90,6 +90,46 @@ function expectBuildCycles(records: BuildWatchRecord[], minimumCycles: number) {
     });
   }
 }
+
+it.each([false, true])(
+  'keeps client-only preview edits from rebuilding the server with JSON: %s',
+  async (json) => {
+    await inTemporaryDirectory(async (directory) => {
+      const {clientPath} = await writeBuildFixture(directory);
+      const serverBuildFinished = vi.fn();
+      await captureJsonOutput(async () => {
+        const build = await runBuild({
+          directory,
+          json,
+          watch: true,
+          lockfileCheck: false,
+          bundleStats: false,
+          onServerBuildFinish: serverBuildFinished,
+        });
+        try {
+          await vi.waitFor(
+            () => expect(serverBuildFinished).toHaveBeenCalledTimes(1),
+            {timeout: 10000},
+          );
+          await writeFile(clientPath, 'console.log("client changed");');
+          await vi.waitFor(
+            async () =>
+              expect(
+                await readFile(joinPath(directory, 'dist/client/index.js')),
+              ).toContain('client changed'),
+            {timeout: 10000},
+          );
+          // The server watcher delays rebuilds by 100 ms after file changes.
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          expect(serverBuildFinished).toHaveBeenCalledTimes(1);
+        } finally {
+          await build.close();
+        }
+      });
+    });
+  },
+  30000,
+);
 
 it('completes client-only rebuilds and recovers after a server source error', async () => {
   await inTemporaryDirectory(async (directory) => {

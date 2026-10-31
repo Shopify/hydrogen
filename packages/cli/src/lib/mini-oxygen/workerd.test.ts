@@ -8,7 +8,7 @@ import {startWorkerdServer} from './workerd.js';
 vi.mock('../import-utils.js');
 afterEach(() => vi.restoreAllMocks());
 
-it('registers cleanup before runtime readiness and disposes a failed startup once', async () => {
+it('forwards the request hook and registers cleanup before a failed startup', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'hydrogen-worker-'));
   const workerPath = join(directory, 'server.js');
   await writeFile(
@@ -17,10 +17,15 @@ it('registers cleanup before runtime readiness and disposes a failed startup onc
   );
   const dispose = vi.fn(async () => {});
   const error = new Error('Worker startup failed');
+  const requestHook = vi.fn();
+  const createMiniOxygen = vi.fn(() => ({
+    ready: Promise.reject(error),
+    dispose,
+  }));
   let registeredClose: (() => Promise<unknown>) | undefined;
   vi.mocked(importLocal).mockResolvedValue({
     Response,
-    createMiniOxygen: () => ({ready: Promise.reject(error), dispose}),
+    createMiniOxygen,
   } as any);
   try {
     await expect(
@@ -29,11 +34,15 @@ it('registers cleanup before runtime readiness and disposes a failed startup onc
         buildPathClient: directory,
         buildPathWorkerFile: workerPath,
         env: {},
+        logRequestLine: requestHook,
         registerCleanup: (close) => {
           registeredClose = close;
         },
       }),
     ).rejects.toBe(error);
+    expect(createMiniOxygen).toHaveBeenCalledWith(
+      expect.objectContaining({requestHook}),
+    );
     expect(registeredClose).toBeDefined();
     await registeredClose!();
     expect(dispose).toHaveBeenCalledTimes(1);

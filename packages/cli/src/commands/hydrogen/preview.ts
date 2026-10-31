@@ -1,3 +1,5 @@
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {devSessionJsonOutputSchema} from '../../lib/dev-session/types.js';
 import {Flags} from '@oclif/core';
 import Command from '../../lib/hydrogen-command.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
@@ -21,19 +23,31 @@ import {
   REMIX_COMPILER_ERROR_MESSAGE,
 } from '../../lib/vite-config.js';
 import {runBuild} from './build.js';
-import {runDevSession, type DevSession} from '../../lib/dev-session.js';
+import {
+  createRequestLogger,
+  runDevSession,
+  type DevSession,
+} from '../../lib/dev-session.js';
 import {deferPromise} from '../../lib/defer.js';
 
 export default class Preview extends Command {
-  static descriptionWithMarkdown = `Runs a server in your local development environment that serves your Hydrogen app's production build. Run the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-build) command first, or use \`--build\` to build before starting the server.
+  static jsonOutputSchema: typeof devSessionJsonOutputSchema =
+    devSessionJsonOutputSchema;
+
+  static descriptionWithMarkdown = `Runs a server in your local development environment that serves your Hydrogen app's production build.
+
+  Run the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-build) command first, or use \`--build\` to build before starting the server.
 
   Session status and JSONL logs are stored in your project's \`.shopify/dev/\` directory. The instance JSON includes the PID, session ID, \`logFile\`, and \`details.urls\`. Status becomes \`running\` when the server is ready.
 
-  Only one preview session can run for the same project, environment, environment branch, and environment file, even with a different port. Shutdown removes the instance and lock files and retains the log. The log resets on each run. Dev and preview use separate sessions. With \`--build --watch\`, each completed rebuild reloads the worker and adds a log message.`;
+  Only one preview session can run for the same project, environment, environment branch, and environment file, even with a different port. Shutdown removes the instance and lock files and retains the log. The log resets on each run. Dev and preview use separate sessions. With \`--build --watch\`, each completed rebuild reloads the worker and adds a log message.
+
+  Use \`--json\` to stream the same JSONL records to stdout. Readiness URLs appear in the \`Ready: ...\` message and \`details.urls\`. Diagnostics use stderr. Fatal errors write the standard JSON error envelope to stdout and exit nonzero; they are excluded from the session log. There is no final success result. JSON output does not disable prompts; use \`--no-input\` to disable interactivity.`;
 
   static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
     ...commonFlags.port,
     ...commonFlags.env,
@@ -68,7 +82,6 @@ export default class Preview extends Command {
         command: 'hydrogen preview',
         directory,
         ...flagsToCamelObject(flags),
-        json: false,
       },
       (session) =>
         runPreview({
@@ -117,7 +130,7 @@ export async function runPreview({
     process.env.NODE_ENV = watch ? 'development' : 'production';
 
   if (verbose) setH2OVerbose();
-  if (!isH2Verbose()) muteDevLogs();
+  if (!session?.json && !isH2Verbose()) muteDevLogs();
 
   let {root, buildPath, buildPathWorkerFile, buildPathClient} =
     getProjectPaths(directory);
@@ -149,7 +162,9 @@ export async function runPreview({
   const buildProcess = shouldBuild
     ? await runBuild({
         ...buildOptions,
+        json: session?.json,
         watch,
+        onCodegenOutput: session?.log,
         signal: session?.signal,
         registerCleanup: session?.cleanup,
         onServerBuildStart() {
@@ -159,8 +174,8 @@ export async function runPreview({
           if (projectBuild.state === 'pending') {
             projectBuild.resolve();
           } else {
-            outputInfo('🏗️  Project rebuilt. Reloading server...');
-            session?.log('Project rebuilt. Reloading server');
+            if (session?.json) session.log('Project rebuilt. Reloading server');
+            else outputInfo('🏗️  Project rebuilt. Reloading server...');
           }
 
           session?.signal.throwIfAborted();
@@ -217,14 +232,16 @@ export async function runPreview({
     debug,
     watch,
     registerCleanup: session?.cleanup,
+    logRequestLine: createRequestLogger(session),
   });
 
   await session?.ready([miniOxygen.listeningAt]);
 
-  miniOxygen.showBanner({
-    mode: 'preview',
-    headlinePrefix: watch ? 'Watching for changes. ' : '',
-  });
+  if (!session?.json)
+    miniOxygen.showBanner({
+      mode: 'preview',
+      headlinePrefix: watch ? 'Watching for changes. ' : '',
+    });
 
   return {
     async close() {
