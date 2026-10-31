@@ -448,6 +448,46 @@ describe('storefrontRedirect', () => {
           ),
         }),
       ).resolves.toEqual(response);
+
+      await expect(
+        storefrontRedirect({
+          response,
+          storefront: storefrontMock,
+          request: new Request(
+            'https://domain.com/missing?redirect=/x/..//some-page.com',
+          ),
+        }),
+      ).resolves.toEqual(response);
+    });
+
+    it('redirects to the normalized path of a same-origin value', async () => {
+      queryMock.mockResolvedValueOnce({urlRedirects: {edges: []}});
+
+      const result = await storefrontRedirect({
+        response: new Response('Not Found', {status: 404}),
+        storefront: storefrontMock,
+        request: new Request(
+          'https://domain.com/missing?return_to=https://domain.com/x/../some-page',
+        ),
+      });
+
+      expect(result.status).toBe(301);
+      expect(result.headers.get('location')).toBe('/some-page');
+    });
+
+    it('does not redirect to values without a leading slash', async () => {
+      queryMock.mockResolvedValueOnce({urlRedirects: {edges: []}});
+      const response = new Response('Not Found', {status: 404});
+
+      await expect(
+        storefrontRedirect({
+          response,
+          storefront: storefrontMock,
+          request: new Request(
+            'https://domain.com/missing?return_to=some-page',
+          ),
+        }),
+      ).resolves.toEqual(response);
     });
   });
 });

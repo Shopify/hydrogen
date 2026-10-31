@@ -1,6 +1,6 @@
 import type {UrlRedirectConnection} from '@shopify/hydrogen-react/storefront-api-types';
 import type {I18nBase, Storefront} from '../storefront';
-import {getRedirectUrl} from '../utils/get-redirect-url';
+import {getRedirectPathFromSearchParams} from '../utils/get-redirect-url';
 
 const SINGLE_FETCH_DATA_SUFFIX = '.data';
 const SINGLE_FETCH_ROOT_SEGMENT = '_root.data';
@@ -80,7 +80,7 @@ export async function storefrontRedirect(
       );
     }
 
-    const redirectTo = getRedirectUrl(request.url);
+    const redirectTo = getRedirectPathFromSearchParams(request.url);
 
     if (redirectTo) {
       return createRedirectResponse(
