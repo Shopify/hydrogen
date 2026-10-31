@@ -1,0 +1,67 @@
+---
+name: hydrogen-storefront-testing
+description: >
+  Guide for agents preparing a custom storefront to run the portable
+  storefront-e2e suite. Explains the supported test IDs, where to add them to
+  existing storefront UI, and how the tests use them.
+---
+
+# Storefront Test IDs
+
+Use this skill when you prepare a custom storefront, in any framework, so that the portable storefront-e2e suite in this repository can test it. The canonical reference is `packages/storefront-e2e/docs/storefront-contract.md`. It also lists the routes, live store data, and other conditions that each test group needs. If this skill and the contract differ, the contract is correct.
+
+## How the test IDs work
+
+- A test ID is a locator. It goes on an element that the storefront already renders, and that element keeps its HTML, styles, interactions, and accessibility.
+- IDs can repeat, for example a main and a sticky add to cart, or a desktop and a mobile copy. The suite narrows each ID to visible elements and uses the first match, or the first match with the expected text.
+- An ID finds an element. Each test then checks a buyer journey that the contract describes, such as variant selection, cart changes, filtering, search, and checkout handoff.
+- The suite finds UI without an ID in this skill by role, label, and text, as the contract describes.
+
+## Test IDs
+
+### Product page
+
+| Test ID | Put it on |
+| --- | --- |
+| `product-variant-option` | Each option value link or button that selects another variant of the same product, including sold-out values and disabled values for combinations that do not exist |
+| `product-add-to-cart` | The add to cart button. It must have the button role, such as a native `<button>`, and a non-empty accessible name. The label can be any text; an icon-only button needs `aria-label` or visually hidden text |
+
+`product-variant-option` marks option values that select another variant of the same product, including sold-out values and disabled values for combinations that do not exist. The suite tries unselected links first, then buttons, and skips current and disabled values. It follows a link's real `href`, so any URL format works. The no-JavaScript check needs links; `STOREFRONT_SKIP_NO_JS_VARIANTS=true` skips only that check.
+
+The cart and checkout tests click the first visible `product-add-to-cart` button.
+
+The product title needs no test ID. The suite requires it to be the page's `<h1>`.
+
+## How to adopt
+
+1. Find the existing elements in the tables above in your storefront.
+2. Add the `data-testid` attributes to those elements.
+3. Make sure the buyer journeys work in the running storefront, because the suite checks them.
+4. Start your storefront. The suite tests a storefront that is already running.
+5. From a checkout of the Hydrogen repository, run the suite against it:
+
+   ```sh
+   STOREFRONT_BASE_URL=https://your-storefront.example pnpm test:e2e:storefront
+   ```
+
+   The suite lives in this repository. It is not a package that you install in your storefront.
+6. For failures and skips, read the contract and `packages/storefront-e2e/README.md`. Some test groups need specific routes or store data.
+
+## Example
+
+Add the attribute to the existing element:
+
+```html
+<button type="submit" class="add" data-testid="product-add-to-cart">Add to cart</button>
+```
+
+The suite starts with `getByTestId`, requires the button role and a non-empty accessible name, then narrows to visible elements:
+
+```ts
+await page
+  .getByTestId('product-add-to-cart')
+  .and(page.getByRole('button', {name: /\S/}))
+  .filter({visible: true})
+  .first()
+  .click();
+```

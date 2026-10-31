@@ -4,7 +4,8 @@ import { createContractError } from "../../src/contract";
 import { test, type CheckoutTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
-const ADD_TO_CART_NAME = /add to cart/i;
+// Any non-empty accessible name, so other and localized labels pass but an unlabeled icon button fails.
+const ADD_TO_CART_CONTROL_NAME = /\S/;
 const CHECKOUT_CONTROL_NAME = /check\s*out|checkout|continue to checkout/i;
 
 type CartExpectation = {
@@ -34,7 +35,7 @@ async function addProductToCart(
     routePath: cartPath,
     expectation: "At least one cart enabled product page exposes an enabled Add to cart button.",
     likelyFix:
-      "Ensure the test store has an in-stock product variant with an enabled Add to cart button.",
+      'Ensure the test store has an in-stock product variant, and that its enabled Add to cart button has data-testid="product-add-to-cart".',
     docsAnchor: "#cart-line-items",
   });
 }
@@ -51,7 +52,11 @@ async function tryAddProductToCart(
     productTitle: product.productTitle,
     variantLabel: product.variantLabel,
   };
-  const addToCart = page.getByRole("button", { name: ADD_TO_CART_NAME }).first();
+  const addToCart = page
+    .getByTestId("product-add-to-cart")
+    .and(page.getByRole("button", { name: ADD_TO_CART_CONTROL_NAME }))
+    .filter({ visible: true })
+    .first();
   const isCartEnabled =
     (await addToCart.isVisible().catch(() => false)) &&
     (await addToCart.isEnabled().catch(() => false));

@@ -4,7 +4,8 @@ import { createContractError } from "../../src/contract";
 import { test, type CartTestProduct } from "./config";
 
 const CART_SETTLE_TIMEOUT_MS = 15_000;
-const ADD_TO_CART_NAME = /add to cart/i;
+// Any non-empty accessible name, so other and localized labels pass but an unlabeled icon button fails.
+const ADD_TO_CART_CONTROL_NAME = /\S/;
 const CART_CONTROL_NAME = /^(?:open |view )?cart\b/i;
 const REMOVE_CONTROL_NAME = /remove/i;
 const INCREASE_CONTROL_NAME = /increase|^\+$/i;
@@ -55,7 +56,8 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
       capability: "product-cart",
       routePath: product.path,
       expectation: "The discovered stock-limit product exposes an enabled Add to cart button.",
-      likelyFix: "Keep the discovered in-stock variant available on its product page.",
+      likelyFix:
+        'Keep the discovered in-stock variant available on its product page, and put data-testid="product-add-to-cart" on its Add to cart button.',
       docsAnchor: "#cart-line-items",
     });
   }
@@ -68,7 +70,11 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
     await route.continue();
   });
 
-  const addToCart = page.getByRole("button", { name: ADD_TO_CART_NAME }).first();
+  const addToCart = page
+    .getByTestId("product-add-to-cart")
+    .and(page.getByRole("button", { name: ADD_TO_CART_CONTROL_NAME }))
+    .filter({ visible: true })
+    .first();
 
   try {
     await addToCart.click();
@@ -118,7 +124,7 @@ async function addProductToCart(
     routePath: cartPath,
     expectation: "At least one cart enabled product page exposes an enabled Add to cart button.",
     likelyFix:
-      "Ensure the test store has an in-stock product variant with an enabled Add to cart button.",
+      'Ensure the test store has an in-stock product variant, and that its enabled Add to cart button has data-testid="product-add-to-cart".',
     docsAnchor: "#cart-line-items",
   });
 }
@@ -135,7 +141,11 @@ async function tryAddProductToCart(
     productTitle: product.productTitle,
     variantLabel: product.variantLabel,
   };
-  const addToCart = page.getByRole("button", { name: ADD_TO_CART_NAME }).first();
+  const addToCart = page
+    .getByTestId("product-add-to-cart")
+    .and(page.getByRole("button", { name: ADD_TO_CART_CONTROL_NAME }))
+    .filter({ visible: true })
+    .first();
   const isCartVisible = await addToCart
     .waitFor({ state: "visible", timeout: CART_SETTLE_TIMEOUT_MS })
     .then(() => true)

@@ -24,10 +24,6 @@ const PRODUCT_VARIANTS_QUERY = gql(`
           nodes {
             availableForSale
             title
-            selectedOptions {
-              name
-              value
-            }
           }
         }
       }
@@ -41,7 +37,6 @@ const MINIMUM_VARIANT_COUNT = 2;
 
 export type ProductVariantProduct = {
   readonly handle: string;
-  readonly optionNames: readonly string[];
   readonly title: string;
 };
 
@@ -67,15 +62,7 @@ export const test = createTest({
       );
       if (availableVariants.length < MINIMUM_VARIANT_COUNT) return [];
 
-      const optionNames = [
-        ...new Set(
-          availableVariants.flatMap((variant) =>
-            variant.selectedOptions.map((option) => option.name),
-          ),
-        ),
-      ];
-
-      return [{ handle: product.handle, optionNames, title: product.title }];
+      return [{ handle: product.handle, title: product.title }];
     });
     const firstProduct = products[0];
 
