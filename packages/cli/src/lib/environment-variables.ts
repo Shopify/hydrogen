@@ -10,6 +10,7 @@ import {getStorefrontEnvVariables} from './graphql/admin/pull-variables.js';
 import {getStorefrontEnvironments} from './graphql/admin/list-environments.js';
 import {findEnvironmentByBranchOrThrow} from './common.js';
 import {login} from './auth.js';
+import {abandonOnAbort} from './abort.js';
 
 type EnvMap = Record<string, string>;
 
@@ -20,6 +21,7 @@ interface Arguments {
   fetchRemote?: boolean;
   envFile: string;
   localVariables?: EnvMap;
+  signal?: AbortSignal;
 }
 
 const createEmptyRemoteVars = () => ({
@@ -34,30 +36,43 @@ export async function getAllEnvironmentVariables({
   envFile,
   fetchRemote = true,
   localVariables: inlineLocalVariables,
+  signal,
 }: Arguments) {
-  const [{remoteVariables, remoteSecrets}, {variables: localVariables}] =
-    await Promise.all([
-      // Get remote vars
-      fetchRemote
-        ? getRemoteVariables(root, envHandle, envBranch).catch(
-            (error: AbortError) => {
-              renderWarning({
-                headline:
-                  'Failed to load environment variables from Shopify. The development server will still start, but the following error occurred:',
-                body: [error.message, error.tryMessage, error.nextSteps]
-                  .filter(Boolean)
-                  .join('\n\n'),
-              });
+  signal?.throwIfAborted();
+  const controller = new AbortController();
+  const loadingSignal = signal
+    ? AbortSignal.any([signal, controller.signal])
+    : controller.signal;
+  const tasks = [
+    // Get remote vars
+    fetchRemote
+      ? getRemoteVariables(root, envHandle, envBranch, loadingSignal).catch(
+          (error: AbortError) => {
+            loadingSignal.throwIfAborted();
+            renderWarning({
+              headline:
+                'Failed to load environment variables from Shopify. The development server will still start, but the following error occurred:',
+              body: [error.message, error.tryMessage, error.nextSteps]
+                .filter(Boolean)
+                .join('\n\n'),
+            });
 
-              return createEmptyRemoteVars();
-            },
-          )
-        : createEmptyRemoteVars(),
-      // Get local vars
-      inlineLocalVariables
-        ? {variables: inlineLocalVariables}
-        : getLocalVariables(root, envFile),
-    ]);
+            return createEmptyRemoteVars();
+          },
+        )
+      : createEmptyRemoteVars(),
+    // Get local vars
+    inlineLocalVariables
+      ? {variables: inlineLocalVariables}
+      : getLocalVariables(root, envFile),
+  ] as const;
+  const [{remoteVariables, remoteSecrets}, {variables: localVariables}] =
+    await Promise.all(tasks).catch(async (error: unknown) => {
+      controller.abort();
+      await Promise.allSettled(tasks);
+      throw error;
+    });
+  loadingSignal.throwIfAborted();
 
   const remoteSecretKeys = Object.keys(remoteSecrets);
   const remotePublicKeys = Object.keys(remoteVariables);
@@ -105,20 +120,30 @@ async function getRemoteVariables(
   root: string,
   envHandle?: string,
   envBranch?: string,
+  signal?: AbortSignal,
 ) {
-  const {session, config} = await login(root);
+  const {session, config} = await login(root, undefined, signal);
 
   if (envBranch) {
     const environments =
-      (await getStorefrontEnvironments(session, config.storefront!.id))
-        ?.environments || [];
+      (
+        await abandonOnAbort(
+          () => getStorefrontEnvironments(session, config.storefront!.id),
+          signal,
+        )
+      )?.environments || [];
 
     envHandle = findEnvironmentByBranchOrThrow(environments, envBranch).handle;
   }
 
   const envVariables =
-    (await getStorefrontEnvVariables(session, config.storefront!.id, envHandle))
-      ?.environmentVariables || [];
+    (
+      await abandonOnAbort(
+        () =>
+          getStorefrontEnvVariables(session, config.storefront!.id, envHandle),
+        signal,
+      )
+    )?.environmentVariables || [];
 
   const remoteVariables: EnvMap = {};
   const remoteSecrets: EnvMap = {};

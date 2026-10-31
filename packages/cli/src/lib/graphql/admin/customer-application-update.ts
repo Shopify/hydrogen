@@ -46,6 +46,7 @@ export async function replaceCustomerApplicationUrls(
   adminSession: AdminSession,
   storefrontId: string,
   urlsReplaceInput: UrlsReplaceInput,
+  signal?: AbortSignal,
 ) {
   const {
     hydrogenStorefrontCustomerApplicationUrlsReplace: {success, userErrors},
@@ -53,6 +54,7 @@ export async function replaceCustomerApplicationUrls(
     CUSTOMER_APPLICATION_URLS_REPLACE,
     adminSession,
     {storefrontId, urlsReplaceInput},
+    signal,
   );
 
   return {success, userErrors};

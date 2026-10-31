@@ -2,12 +2,13 @@ import type {ViteDevServer} from 'vite';
 import {Flags, Config} from '@oclif/core';
 import Command from '../../lib/hydrogen-command.js';
 import colors from '@shopify/cli-kit/node/colors';
-import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
+import {joinPath, normalizePath, resolvePath} from '@shopify/cli-kit/node/path';
 import {collectLog} from '@shopify/cli-kit/node/output';
 import {
   type AlertCustomSection,
   renderSuccess,
   renderInfo,
+  renderFatalError,
 } from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {removeFile} from '@shopify/cli-kit/node/fs';
@@ -50,16 +51,20 @@ import {
 import {importVite} from '../../lib/import-utils.js';
 import {createEntryPointErrorHandler} from '../../lib/deps-optimizer.js';
 import {getCodeFormatOptions} from '../../lib/format-code.js';
-import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
+import {runDevSession, type DevSession} from '../../lib/dev-session.js';
 import {hydrogenPackagesPath} from '../../lib/build.js';
 
 export default class Dev extends Command {
   static descriptionWithMarkdown = `Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.
 
-  If your project is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) to a Hydrogen storefront, then its environment variables will be loaded with the runtime.`;
+  If your project is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) to a Hydrogen storefront, then its environment variables will be loaded with the runtime.
 
-  static description =
-    'Runs Hydrogen storefront in an Oxygen worker for development.';
+  Session status and JSONL logs are stored in your project's \`.shopify/dev/\` directory. The instance JSON includes the PID, session ID, \`logFile\`, and \`details.urls\`. Status becomes \`running\` when the server is ready.
+
+  Only one dev session can run for the same project, environment, environment branch, and environment file, even with a different port. Shutdown removes the instance and lock files and retains the log. The log resets on each run.`;
+
+  static description = this.descriptionForHelp();
+
   static flags = {
     ...commonFlags.path,
     ...commonFlags.entry,
@@ -114,15 +119,15 @@ export default class Dev extends Command {
       throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
     }
 
-    const {close} = await runDev(devParams);
-
-    setupResourceCleanup(async () => {
-      await close();
-    });
+    await runDevSession(
+      {command: 'hydrogen dev', directory, ...flagsToCamelObject(flags)},
+      (session) => runDev({...devParams, session}),
+    );
   }
 }
 
 type DevOptions = {
+  session?: DevSession;
   entry?: string;
   port?: number;
   path?: string;
@@ -144,6 +149,7 @@ type DevOptions = {
 };
 
 export async function runDev({
+  session,
   entry: ssrEntry,
   port: appPort,
   path: appPath,
@@ -176,11 +182,16 @@ export async function runDev({
 
   const root = appPath ?? process.cwd();
 
+  const startupController = new AbortController();
+  const startupSignal = session
+    ? AbortSignal.any([session.signal, startupController.signal])
+    : startupController.signal;
   const cliCommandPromise = getCliCommand(root);
   const backgroundPromise = getDevConfigInBackground(
     root,
     customerAccountPushFlag,
     envFile,
+    startupSignal,
   );
 
   const envPromise = backgroundPromise.then(({fetchRemote, localVariables}) =>
@@ -191,8 +202,20 @@ export async function runDev({
       fetchRemote,
       localVariables,
       envFile,
+      signal: startupSignal,
     }),
   );
+  const runtimeEnvPromise = envPromise.then(({allVariables}) => allVariables);
+  // Startup can be cancelled before Vite consumes these background results.
+  runtimeEnvPromise.catch(() => {});
+  session?.cleanup(async () => {
+    startupController.abort();
+    await Promise.allSettled([
+      backgroundPromise,
+      cliCommandPromise,
+      envPromise,
+    ]);
+  });
 
   if (debug && !inspectorPort) {
     // The Vite plugin can find and return a port for the inspector
@@ -245,11 +268,15 @@ export async function runDev({
           findOxygenPlugin(config)?.api?.registerPluginOptions({
             debug,
             entry: ssrEntry,
-            envPromise: envPromise.then(({allVariables}) => allVariables),
+            envPromise: runtimeEnvPromise,
             inspectorPort,
             logRequestLine,
             entryPointErrorHandler: createEntryPointErrorHandler({
               disableDepsOptimizer,
+              onError: (error) => {
+                session?.log(error.stack ?? error.message, 'error');
+                renderFatalError(error);
+              },
               configFile: config.configFile,
               formatOptionsPromise,
               showSuccessBanner: () =>
@@ -284,9 +311,19 @@ export async function runDev({
     ],
   });
 
+  session?.cleanup(() => viteServer.close());
+  session?.signal.throwIfAborted();
+  viteServer.watcher.on('change', (file) => {
+    // Session writes must not trigger another log entry.
+    if (!normalizePath(file).includes('/.shopify/dev/')) {
+      session?.log(`File changed: ${file}`);
+    }
+  });
+  viteServer.ws.on('error', (error) => session?.log(error.message, 'error'));
+
   const h2Plugin = findHydrogenPlugin(viteServer.config);
   if (!h2Plugin) {
-    await viteServer.close();
+    if (!session) await viteServer.close();
     throw new AbortError(
       'Hydrogen plugin not found.',
       'Add `hydrogen()` plugin to your Vite config.',
@@ -307,6 +344,10 @@ export async function runDev({
       }
     : undefined;
 
+  session?.cleanup(() => {
+    codegenProcess?.removeAllListeners('close');
+    codegenProcess?.kill('SIGINT');
+  });
   setupCodegen?.();
 
   if (hydrogenPackagesPath) {
@@ -317,15 +358,33 @@ export async function runDev({
   const publicPort =
     appPort ?? viteServer.config.server.port ?? DEFAULT_APP_PORT;
 
-  const [tunnel, cliCommand] = await Promise.all([
-    backgroundPromise.then(({customerAccountPush, storefrontId}) =>
-      customerAccountPush
-        ? startTunnelAndPushConfig(root, cliConfig, publicPort, storefrontId)
-        : undefined,
-    ),
+  const startupTasks = [
+    backgroundPromise.then(async ({customerAccountPush, storefrontId}) => {
+      startupSignal.throwIfAborted();
+      if (!customerAccountPush) return;
+      const tunnel = await startTunnelAndPushConfig(
+        root,
+        cliConfig,
+        publicPort,
+        storefrontId,
+        startupSignal,
+      );
+      session?.cleanup(() => tunnel.cleanup?.());
+      return tunnel;
+    }),
     cliCommandPromise,
     viteServer.listen(publicPort),
-  ]);
+    envPromise,
+  ] as const;
+  const [tunnel, cliCommand] = await Promise.all(startupTasks).catch(
+    async (error: unknown) => {
+      startupController.abort();
+      await Promise.allSettled(startupTasks);
+      throw error;
+    },
+  );
+
+  session?.signal.throwIfAborted();
 
   const publicUrl = new URL(
     viteServer.resolvedUrls!.local[0] ?? viteServer.resolvedUrls!.network[0]!,
@@ -341,6 +400,14 @@ export async function runDev({
   });
 
   const {logInjectedVariables, allVariables} = await envPromise;
+
+  await session?.ready([
+    ...new Set([
+      finalHost,
+      ...(viteServer.resolvedUrls?.local ?? []),
+      ...(viteServer.resolvedUrls?.network ?? []),
+    ]),
+  ]);
 
   logInjectedVariables();
   console.log('');
