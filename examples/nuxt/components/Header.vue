@@ -96,6 +96,7 @@ onMounted(() => {
           aria-haspopup="dialog"
           command="show-modal"
           :commandfor="CART_DRAWER_ID"
+          data-testid="cart-trigger"
           class="relative grid h-11 w-11 place-items-center rounded-full hover:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
           @click="!supportsDialogCommands() && openCartDrawer()"
         >

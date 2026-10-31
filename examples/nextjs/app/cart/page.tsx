@@ -31,7 +31,7 @@ export const metadata: Metadata = {
  */
 export default function CartPage() {
   return (
-    <div className="max-w-page px-margin mx-auto w-full py-8">
+    <div className="max-w-page px-margin mx-auto w-full py-8" data-testid="cart-page">
       <h1 className="type-display mb-8">{content.cart.title}</h1>
 
       <div className="mx-auto max-w-2xl">

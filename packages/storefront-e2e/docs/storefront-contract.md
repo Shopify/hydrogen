@@ -23,14 +23,7 @@ Required groups fail on route HTTP failures; optional groups skip.
 
 ## Test IDs
 
-The suite finds the elements in this table with `data-testid` attributes and Playwright `getByTestId`. Put each ID on the existing element that has this meaning; its markup, styles, behavior, and accessibility stay as they are. The sections below describe what each test checks.
-
-| Test ID | Put it on |
-| --- | --- |
-| `product-variant-option` | Each option value link or button that selects another variant of the same product, including sold-out values and disabled values for combinations that do not exist |
-| `product-add-to-cart` | The add to cart button. It must have the button role, such as a native `<button>`, and a non-empty accessible name. The label can be any text; an icon-only button needs `aria-label` or visually hidden text |
-
-IDs can repeat, for example a main and a sticky add to cart. The suite narrows each ID to visible elements, and to the expected text or accessible name when it needs a specific one. The storefront can have other test IDs for its own tests. The suite does not read them.
+The suite finds some elements with `data-testid` attributes and Playwright `getByTestId`. The IDs, and the element each one goes on, are listed only in `skills/hydrogen-storefront-testing/SKILL.md`. The sections below describe what each test checks.
 
 ## Product Results
 
@@ -77,11 +70,11 @@ Set STOREFRONT_SKIP_NO_JS_VARIANTS=true to skip the no-JavaScript check for a st
 
 ## Cart Line Items
 
-Cart lines must be visible list items containing the product title.
+Cart lines must be visible `cart-line` elements containing the product title. The suite finds them inside the visible `cart-page` on the cart page and inside the visible `cart-drawer` in the drawer.
 
 The cart and checkout tests click the first visible `product-add-to-cart` button (see Test IDs).
 
-After Add to cart, the suite must be able to inspect the added line in a cart drawer dialog before navigating to the cart page. Either open the drawer immediately with the optimistic line, or expose a visible page-level button or link whose accessible name begins with Cart, Open cart, or View cart so the suite can open the drawer while the update is pending.
+After Add to cart, the suite must be able to inspect the added line in the visible `cart-drawer` before navigating to the cart page. Either open the drawer immediately with the optimistic line, or expose a visible `cart-trigger` control so the suite can open the drawer while the update is pending.
 
 Render the cart on the server. If the cart loads in the browser, an Add to cart that starts before the load finishes builds on an empty cart, and the stock-limit rollback test fails.
 
@@ -90,10 +83,12 @@ A document that contains a server-rendered cart holds buyer-specific state. Give
 Each line must expose:
 
 - Variant text when the product has a non-default variant
-- A quantity input
-- A visible increase control named Increase or +
-- A visible decrease control named Decrease or -
-- A visible remove control named Remove
+- A text or number quantity input with `cart-line-quantity`
+- A visible increase button with `cart-line-increase`
+- A visible decrease button with `cart-line-decrease`
+- A visible remove button with `cart-line-remove`
+
+The increase, decrease, and remove controls must have the button role, such as a native `<button>`.
 
 Cart totals must expose a `role="status"` region that says `Updating cart totals` while cart totals are stale, then `Cart totals updated` after mutation settlement. Do not announce `Cart totals updated` on initial idle render before a mutation cycle. The region may be visually hidden if it remains available to assistive technology.
 
@@ -129,4 +124,4 @@ Operational expectations:
 
 When the storefront contract changes, update the relevant spec matcher, shared helper, and this document together.
 
-The suite reads test IDs only from Test IDs. It finds all other UI by semantic roles and label strings.
+The suite reads only the test IDs listed in `skills/hydrogen-storefront-testing/SKILL.md`. It finds all other UI by semantic roles and label strings. When the suite starts reading a new test ID, or stops reading one, update that skill too.

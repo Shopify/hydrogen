@@ -8,7 +8,7 @@ description: >
 
 # Storefront Test IDs
 
-Use this skill when you prepare a custom storefront, in any framework, so that the portable storefront-e2e suite in this repository can test it. The canonical reference is `packages/storefront-e2e/docs/storefront-contract.md`. It also lists the routes, live store data, and other conditions that each test group needs. If this skill and the contract differ, the contract is correct.
+Use this skill when you prepare a custom storefront, in any framework, so that the portable storefront-e2e suite in this repository can test it. This skill is the only list of the test IDs that the suite reads. `packages/storefront-e2e/docs/storefront-contract.md` describes the routes, live store data, buyer journeys, and other conditions that each test group needs.
 
 ## How the test IDs work
 
@@ -16,6 +16,7 @@ Use this skill when you prepare a custom storefront, in any framework, so that t
 - IDs can repeat, for example a main and a sticky add to cart, or a desktop and a mobile copy. The suite narrows each ID to visible elements and uses the first match, or the first match with the expected text.
 - An ID finds an element. Each test then checks a buyer journey that the contract describes, such as variant selection, cart changes, filtering, search, and checkout handoff.
 - The suite finds UI without an ID in this skill by role, label, and text, as the contract describes.
+- The storefront can have other test IDs for its own tests. The suite does not read them.
 
 ## Test IDs
 
@@ -31,6 +32,21 @@ Use this skill when you prepare a custom storefront, in any framework, so that t
 The cart and checkout tests click the first visible `product-add-to-cart` button.
 
 The product title needs no test ID. The suite requires it to be the page's `<h1>`.
+
+### Cart
+
+| Test ID | Put it on |
+| --- | --- |
+| `cart-page` | The element that holds the cart page content |
+| `cart-drawer` | The cart drawer |
+| `cart-trigger` | The control that opens the cart drawer |
+| `cart-line` | The element that holds one cart line |
+| `cart-line-quantity` | The quantity input of a cart line. It must be a text or number input |
+| `cart-line-increase` | The increase quantity button of a cart line |
+| `cart-line-decrease` | The decrease quantity button of a cart line |
+| `cart-line-remove` | The remove button of a cart line |
+
+The suite finds a cart line by its product title inside the visible `cart-page` or the visible `cart-drawer`. After Add to cart, it clicks `cart-trigger` only when it needs the drawer and the added line is not visible. It finds the quantity input and the line buttons inside that line, and fails if the buttons do not have the button role, such as a native `<button>`.
 
 ## How to adopt
 

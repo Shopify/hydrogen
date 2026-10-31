@@ -45,6 +45,7 @@ export function CartLineItem({
   return (
     <div
       className="grid grid-cols-[var(--spacing-cart-line-thumbnail-width)_1fr_auto] items-stretch gap-3 py-4"
+      data-testid="cart-line"
       {...(isPending ? { "aria-busy": "true" } : {})}
     >
       <div className="bg-surface-secondary h-full w-full overflow-hidden">
@@ -93,6 +94,7 @@ export function CartLineItem({
               type="submit"
               {...register("decrease")}
               disabled={line.quantity <= 1}
+              data-testid="cart-line-decrease"
               className="button-icon h-8 w-9 rounded-s disabled:opacity-40"
               aria-label={`Decrease quantity: ${productTitle}`}
             >
@@ -100,12 +102,14 @@ export function CartLineItem({
             </button>
             <input
               {...register("quantity", { value: line.quantity, interactive: true })}
+              data-testid="cart-line-quantity"
               className="number-reset h-8 w-12 text-center text-sm"
               aria-label={`Quantity: ${productTitle}`}
             />
             <button
               type="submit"
               {...register("increase")}
+              data-testid="cart-line-increase"
               className="button-icon h-8 w-9 rounded-e"
               aria-label={`Increase quantity: ${productTitle}`}
             >
@@ -121,6 +125,7 @@ export function CartLineItem({
           type="submit"
           {...register("remove")}
           onClick={onRemoveIntent}
+          data-testid="cart-line-remove"
           className="button-icon self-start rounded"
           aria-label={`Remove: ${productTitle}`}
         >
