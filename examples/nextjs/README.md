@@ -80,14 +80,6 @@ Run these from `examples/nextjs`, or from the repository root with `pnpm --filte
 | `pnpm typecheck` | Run TypeScript and Hydrogen GraphQL checks. |
 | `pnpm test` | Run unit tests. |
 
-## Content Security Policy
-
-The [proxy](proxy.ts) creates a nonce-free CSP after handling Shopify routes and applies it to the response with `csp.applyResponseHeaders()`. It strips incoming CSP and report-only CSP request headers so Next cannot extract a client-supplied nonce. The policy keeps the prerendered static shell (`cacheComponents: true`) and the app's existing cache behavior. It explicitly allows `'unsafe-inline'` for Next.js and Shopify inline scripts: inline script injection is therefore not blocked, although unapproved external script origins are. The proxy extends default directives to allow the example's Unsplash hero image and adds `'unsafe-eval'` only for Next.js development diagnostics. Hydrogen's development build already allows common local HTTP and WebSocket connections. Review and extend the source lists for your own integrations.
-
-For nonce-based CSP, switch to dynamic document rendering and use the creator's default nonce mode in the proxy. Set the forwarded `Content-Security-Policy` request header to `csp.header`. In the dynamic layout, extract the nonce from that header returned by `await headers()` and pass it to `ShopifyScripts`. Next.js reads the same header for its framework scripts. Keep the proxy active on every document route so it overwrites client-supplied CSP. `csp.applyResponseHeaders()` prevents caching of nonce-bearing documents. See the [CSP integration guide](../../packages/hydrogen/skills/hydrogen-request-handlers/references/content-security-policy.md) for the dynamic-rendering setup, inline nonce extraction, and customization.
-
-CSP policy generation, header application, and caching rules have unit/type coverage in the Hydrogen package. Browser behavior is not part of the automated CSP test suite.
-
 ## Pages
 
 - `/`: home with hero, featured products, and featured collections.
