@@ -5077,7 +5077,7 @@ async function predictiveSearch({
 
 ~~~
 
-### Step 8: package.json
+### Step 3: package.json
 
 Use published versions of the Hydrogen, React and tooling packages in `package.json` instead of the monorepo's workspace references.
 

@@ -446,7 +446,7 @@ steps:
     ingredients:
       - path: templates/skeleton/app/routes/($locale).search.tsx
   - type: PATCH
-    step: "8"
+    step: "3"
     name: package.json
     description: Use published versions of the Hydrogen, React and tooling packages
       in `package.json` instead of the monorepo's workspace references.
