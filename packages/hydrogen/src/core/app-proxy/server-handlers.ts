@@ -19,6 +19,13 @@ export type CreateAppProxyServerHandlersOptions = {
    * installed apps use so unrelated paths keep reaching the framework router.
    */
   prefixes?: readonly AppProxyPrefix[];
+  /**
+   * Marks every proxied response private and uncacheable, whatever
+   * `Cache-Control` the app sends. Defaults to `false`, which keeps the app's
+   * caching. Turn it on when an app renders customer-specific pages, since the
+   * visitor's cookies are forwarded upstream.
+   */
+  personalized?: boolean;
 };
 
 // The proxy never reads the session, so apps without a session manager can register it.
@@ -44,6 +51,9 @@ export type AppProxyServerHandlers = Record<string, AppProxyHandler>;
  */
 const FORWARD_DOMAIN_PARAM = "_fd";
 
+// Traceability reason recorded when `personalized` marks a proxied response.
+const PERSONALIZATION_REASON = "app proxy";
+
 const proxyAppRequest = createProxyInterceptor({
   // Handlers own the route match; the interceptor's own guard always passes.
   match: /^\//,
@@ -64,7 +74,9 @@ const proxyAppRequest = createProxyInterceptor({
 
 async function handleAppProxyRequest(
   context: AppProxyHandlerContext,
+  personalized: boolean,
 ): Promise<ShopifyRouteResponseResult> {
+  if (personalized) context.requestContext.markResponseAsPersonalized(PERSONALIZATION_REASON);
   const response = await proxyAppRequest(new URL(context.request.url), context);
   if (!response) throw new Error("app proxy: request did not match the proxy interceptor.");
   return { type: "response", response };
@@ -81,7 +93,8 @@ async function handleAppProxyRequest(
  * body, `content-type`, `content-disposition`, and redirects. Hydrogen sends
  * `_fd=0` upstream so Shopify does not redirect back to the primary domain,
  * and rewrites store-origin redirects onto the storefront origin. Handlers
- * registered at a literal pathname under a proxied prefix still win.
+ * registered at a literal pathname under a proxied prefix still win. The
+ * app's `Cache-Control` is kept unless `personalized` is set.
  *
  * @example
  * ```ts
@@ -94,6 +107,7 @@ export function createAppProxyServerHandlers(
   options: CreateAppProxyServerHandlersOptions = {},
 ): AppProxyServerHandlers {
   const prefixes = options.prefixes ?? APP_PROXY_PREFIXES;
+  const personalized = options.personalized ?? false;
   for (const prefix of prefixes) {
     if (!APP_PROXY_PREFIXES.includes(prefix)) {
       throw new Error(
@@ -107,7 +121,7 @@ export function createAppProxyServerHandlers(
     prefixes.map((prefix) => [
       prefix,
       createCallableRouteHandler(`/${prefix}/*`, ANY_METHOD, (context: AppProxyHandlerContext) =>
-        handleAppProxyRequest(context),
+        handleAppProxyRequest(context, personalized),
       ),
     ]),
   );

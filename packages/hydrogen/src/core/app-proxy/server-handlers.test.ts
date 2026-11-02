@@ -234,6 +234,42 @@ describe("createAppProxyServerHandlers", () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
+  it("keeps the app's cache headers by default", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response("guide", { headers: { "cache-control": "public, max-age=300" } }),
+    );
+
+    const result = await handle(new Request(`${APP_ORIGIN}/a/downloads`), [
+      createAppProxyServerHandlers(),
+    ]);
+
+    assert(result, "expected a response");
+    expect(result.headers.get("cache-control")).toBe("public, max-age=300");
+  });
+
+  it("makes proxied responses private and uncacheable when personalized", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response("<p>Your rewards</p>", {
+        headers: {
+          "content-type": "text/html",
+          "cache-control": "public, s-maxage=600",
+          "cdn-cache-control": "public, s-maxage=600",
+        },
+      }),
+    );
+
+    const result = await handle(new Request(`${APP_ORIGIN}/apps/loyalty`), [
+      createAppProxyServerHandlers({ personalized: true }),
+    ]);
+
+    assert(result, "expected a response");
+    expect(result.headers.get("cache-control")).toBe(
+      "private, no-store, max-age=0, must-revalidate",
+    );
+    expect(result.headers.has("cdn-cache-control")).toBe(false);
+    await expect(result.text()).resolves.toBe("<p>Your rewards</p>");
+  });
+
   it("returns an uncached 502 when the store is unreachable", async () => {
     mockFetch.mockRejectedValueOnce(new Error("upstream down"));
 
