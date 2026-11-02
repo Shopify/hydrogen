@@ -11,7 +11,7 @@ import {
   setupOxygenMiddleware,
   type MiniOxygenViteOptions,
 } from './server-middleware.js';
-import {getHydrogenCompatibilityDate} from './compat-date.js';
+import {getOxygenCompatibilityDate} from '../common/compat.js';
 import {
   setupOxygenPreviewServer,
   type OxygenPreviewOptions,
@@ -82,8 +82,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
       requestHook: runtimeOptions.requestHook,
       entryPointErrorHandler: runtimeOptions.entryPointErrorHandler,
       compatibilityDate:
-        runtimeOptions.compatibilityDate ??
-        getHydrogenCompatibilityDate(viteDevServer.config.root),
+        runtimeOptions.compatibilityDate ?? getOxygenCompatibilityDate(),
       logRequestLine:
         // Give priority to the plugin option over the CLI option here,
         // since the CLI one is just a default, not a user-provided flag.
@@ -185,31 +184,27 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         },
       },
       generateBundle() {
-        const {consumer, root} = this.environment.config;
+        const {consumer} = this.environment.config;
         if (consumer !== 'server') return;
 
         const compatibilityDate =
-          apiOptions.compatibilityDate ?? getHydrogenCompatibilityDate(root);
+          apiOptions.compatibilityDate ?? getOxygenCompatibilityDate();
 
-        if (compatibilityDate) {
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(compatibilityDate)) {
-            throw new Error(
-              `Invalid compatibility date "${compatibilityDate}"`,
-            );
-          }
-
-          const oxygenJsonFile = 'oxygen.json';
-          const oxygenJsonContent = {
-            version: 1,
-            compatibility_date: compatibilityDate,
-          };
-
-          this.emitFile({
-            type: 'asset',
-            fileName: oxygenJsonFile,
-            source: JSON.stringify(oxygenJsonContent, null, 2),
-          });
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(compatibilityDate)) {
+          throw new Error(`Invalid compatibility date "${compatibilityDate}"`);
         }
+
+        const oxygenJsonFile = 'oxygen.json';
+        const oxygenJsonContent = {
+          version: 1,
+          compatibility_date: compatibilityDate,
+        };
+
+        this.emitFile({
+          type: 'asset',
+          fileName: oxygenJsonFile,
+          source: JSON.stringify(oxygenJsonContent, null, 2),
+        });
       },
     } satisfies Plugin<{
       registerPluginOptions(newOptions: OxygenApiOptions): void;

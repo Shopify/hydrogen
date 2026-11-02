@@ -56,6 +56,24 @@ function getRuntimeCompatibilityDate() {
   return runtimeCompatibilityDate;
 }
 
+/**
+ * The compatibility date for Oxygen deployments and local development: the
+ * newest date the bundled Workers runtime supports, so both run the same
+ * behaviour. Upgrading Miniflare changes this date in production too.
+ */
+export function getOxygenCompatibilityDate() {
+  const runtimeDate = getRuntimeCompatibilityDate();
+
+  if (!runtimeDate) {
+    throw new Error(
+      "MiniOxygen couldn't read the compatibility date of its Workers runtime. " +
+        'Reinstall your dependencies, or set a compatibility date explicitly.',
+    );
+  }
+
+  return runtimeDate;
+}
+
 const warnedCompatibilityDates = new Set<string>();
 
 /**
