@@ -7,6 +7,7 @@ import {
 } from "../../customer-account";
 import { handleShopifyRoutes as handleShopifyRoutesDev } from "../development";
 import {
+  createAppProxyServerHandlers,
   createCartServerHandlers,
   createPredictiveSearchServerHandlers,
   createShopifyRequestContext,
@@ -59,6 +60,7 @@ describe("handleShopifyRoutes sessionManager requirement", () => {
       handlers: [
         createCartServerHandlers(),
         createPredictiveSearchServerHandlers(),
+        createAppProxyServerHandlers(),
         { get: customHandler },
       ],
     });
