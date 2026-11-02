@@ -12,12 +12,11 @@ const appProxyHandlers = createAppProxyServerHandlers({ prefixes: ["a"] }); // o
 handleShopifyRoutes({
   request,
   requestContext,
-  sessionManager,
   storefrontClient,
   handlers: [cartHandlers, appProxyHandlers],
 });
 ```
 
-Matching requests, for every HTTP method, are proxied to the configured store with the app's response passed through as-is: status, body, `content-type`, `content-disposition`, and redirects. Hydrogen sends `_fd=0` upstream so Shopify does not redirect the request back to the primary domain, and rewrites redirects that target the store origin onto the storefront origin. Handlers registered at a literal pathname still win. Nothing is proxied unless the group is registered.
+Matching requests, for every HTTP method, are proxied to the configured store with the app's response passed through as-is: status, body, `content-type`, `content-disposition`, and redirects. Hydrogen sends `_fd=0` upstream so Shopify does not redirect the request back to the primary domain, and rewrites redirects that target the store origin onto the storefront origin. Handlers registered at a literal pathname still win. Nothing is proxied unless the group is registered, and the group does not require `sessionManager`. Like Hydrogen's other proxies, the group rejects requests with a `callback` query parameter (JSONP) and doesn't pass app `Set-Cookie` headers through on `GET` requests or HTML pages.
 
 To support it, registered route handlers gain two declarative options and one result kind: a pathname ending in `/*` matches as a prefix (literal pathnames win), a `method` of `"*"` matches every HTTP method, and handlers may return `{ type: "response", response }` to pass a `Response` through unchanged.

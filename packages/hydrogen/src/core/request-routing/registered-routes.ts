@@ -55,7 +55,7 @@ const VALID_REDIRECT_STATUSES = [
  *
  * @param pathname The URL pathname that the handler matches. A pathname that ends with `/*`, such as `/a/*`, matches that path and every path under it; exact pathnames win over these. Hydrogen doesn't match path parameters.
  * @param method The HTTP method that the handler matches, in uppercase, such as `POST`, or `*` to match every method.
- * @param handler The function that receives the request, its context, the session manager, and the Storefront API client, and returns a JSON, redirect, or error result.
+ * @param handler The function that receives the request, its context, the session manager, and the Storefront API client, and returns a JSON, redirect, error, or response result.
  * @returns The handler to add to a handler object.
  * @publicDocs
  */
