@@ -991,9 +991,7 @@ function hasKnownLineIdentity(line: CartLine): boolean {
 }
 
 function hasAdditionIdentityDetails(addition: AddLineIdentity): boolean {
-  return (
-    addition.sellingPlanId !== undefined || normalizeAttributes(addition.attributes).length > 0
-  );
+  return addition.sellingPlanId !== undefined || addition.attributes !== undefined;
 }
 
 function lineMatchesAddition(line: CartLine, addition: AddLineIdentity): boolean {
@@ -1016,30 +1014,97 @@ function findAvailableLineForAddition(
   return lines.find((line) => !usedLineIds.has(line.id) && lineMatchesAddition(line, addition));
 }
 
-function findResponseLineForAddition(
+function findExactResponseLineForAddition(
   serverLines: CartLine[],
   currentLines: CartLine[],
   addition: AddLineIdentity,
   usedLineIds: Set<string>,
-  canInferSingleLine: boolean,
-  remainingAdditions: number,
 ): CartLine | undefined {
   const exact = findAvailableLineForAddition(serverLines, addition, usedLineIds);
   if (exact) return exact;
 
   const currentLine = findLineForAddition(currentLines, addition);
-  const matchingCurrentLine = serverLines.find(
-    (line) => !usedLineIds.has(line.id) && line.id === currentLine?.id,
-  );
-  if (matchingCurrentLine) return matchingCurrentLine;
+  return serverLines.find((line) => !usedLineIds.has(line.id) && line.id === currentLine?.id);
+}
 
+function findUniqueNewResponseLineForAddition(
+  currentLineIds: Set<string>,
+  serverLines: CartLine[],
+  additions: AddLineIdentity[],
+  matches: Array<CartLine | undefined>,
+  index: number,
+  addition: AddLineIdentity,
+  usedLineIds: Set<string>,
+): CartLine | undefined {
+  if (hasAdditionIdentityDetails(addition)) return undefined;
+
+  const candidates = serverLines.filter(
+    (line) =>
+      !usedLineIds.has(line.id) &&
+      !currentLineIds.has(line.id) &&
+      line.merchandise?.id === addition.merchandiseId,
+  );
+  const sameMerchandiseAdditions = additions.filter(
+    (candidate, candidateIndex) =>
+      matches[candidateIndex] === undefined && candidate.merchandiseId === addition.merchandiseId,
+  );
+  return candidates.length === 1 && sameMerchandiseAdditions.length === 1
+    ? candidates[0]
+    : undefined;
+}
+
+function matchResponseLinesForAdditions(
+  currentLines: CartLine[],
+  serverLines: CartLine[],
+  additions: AddLineIdentity[],
+): Array<CartLine | undefined> {
+  const matches = Array<CartLine | undefined>(additions.length).fill(undefined);
+  const usedLineIds = new Set<string>();
   const currentLineIds = new Set(currentLines.map((line) => line.id));
+
+  // Resolve complete identities first so an incomplete event cannot steal a line
+  // that a later addition can match exactly.
+  for (const [index, addition] of additions.entries()) {
+    const line = findExactResponseLineForAddition(serverLines, currentLines, addition, usedLineIds);
+    if (!line) continue;
+    matches[index] = line;
+    usedLineIds.add(line.id);
+  }
+
+  // Standard Actions currently omits attributes and sellingPlanId from add
+  // events. When that leaves an addition with no identity details, a unique
+  // new line for its merchandise is still an unambiguous match.
+  for (const [index, addition] of additions.entries()) {
+    if (matches[index]) continue;
+    const line = findUniqueNewResponseLineForAddition(
+      currentLineIds,
+      serverLines,
+      additions,
+      matches,
+      index,
+      addition,
+      usedLineIds,
+    );
+    if (!line) continue;
+    matches[index] = line;
+    usedLineIds.add(line.id);
+  }
+
+  const unmatched = matches.flatMap((line, index) => (line ? [] : [index]));
   const newLines = serverLines.filter(
     (line) => !usedLineIds.has(line.id) && !currentLineIds.has(line.id),
   );
-  if (remainingAdditions === newLines.length && newLines.length === 1) return newLines[0];
+  if (unmatched.length === 1 && newLines.length === 1) {
+    matches[unmatched[0]] = newLines[0];
+  } else if (
+    additions.length === 1 &&
+    serverLines.length === 1 &&
+    !usedLineIds.has(serverLines[0].id)
+  ) {
+    matches[0] = serverLines[0];
+  }
 
-  return canInferSingleLine ? serverLines.find((line) => !usedLineIds.has(line.id)) : undefined;
+  return matches;
 }
 
 function withAdditionMerchandise(
@@ -1071,25 +1136,14 @@ function replaceOrPrependLine(
 
 function mergeAddResponseLines(
   currentLines: CartLine[],
-  serverLines: CartLine[],
   payload: AddToCartPayload,
+  matchedServerLines: Array<CartLine | undefined>,
 ): CartLine[] {
   let lines = currentLines;
-  const usedLineIds = new Set<string>();
-  const canInferSingleLine = payload.lines.length === 1 && serverLines.length === 1;
 
-  for (const addition of payload.lines) {
-    const remainingAdditions = payload.lines.length - usedLineIds.size;
-    const serverLine = findResponseLineForAddition(
-      serverLines,
-      lines,
-      addition,
-      usedLineIds,
-      canInferSingleLine,
-      remainingAdditions,
-    );
+  for (const [index, addition] of payload.lines.entries()) {
+    const serverLine = matchedServerLines[index];
     if (!serverLine) continue;
-    usedLineIds.add(serverLine.id);
 
     const previous =
       findLineForAddition(lines, addition) ?? lines.find((line) => line.id === serverLine.id);
@@ -1102,25 +1156,12 @@ function mergeAddResponseLines(
 
 function resolveAddLineIds(
   currentLines: CartLine[],
-  serverLines: CartLine[],
-  payload: AddToCartPayload,
+  additions: AddLineIdentity[],
+  matchedServerLines: Array<CartLine | undefined>,
 ): string[] {
-  const usedLineIds = new Set<string>();
-  const canInferSingleLine = payload.lines.length === 1 && serverLines.length === 1;
-  return payload.lines.map((addition) => {
-    const remainingAdditions = payload.lines.length - usedLineIds.size;
-    const serverLine = findResponseLineForAddition(
-      serverLines,
-      currentLines,
-      addition,
-      usedLineIds,
-      canInferSingleLine,
-      remainingAdditions,
-    );
-    if (serverLine) {
-      usedLineIds.add(serverLine.id);
-      return serverLine.id;
-    }
+  return additions.map((addition, index) => {
+    const serverLine = matchedServerLines[index];
+    if (serverLine) return serverLine.id;
     return findLineForAddition(currentLines, addition)?.id ?? "";
   });
 }
@@ -1289,11 +1330,16 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       );
       return { ...state, data };
     },
-    projectPromise: (state, result, payload, addError) => {
+    projectPromise: (state, result, payload, addError, { requestRevalidation }) => {
       const currentLines = getLines(state.data);
       const cart = result.cart ? cartResponseFromStandardEvent(result.cart) : undefined;
       const serverLines = cart ? getLines(cart) : [];
-      const lineIds = resolveAddLineIds(currentLines, serverLines, payload);
+      const matchedServerLines = matchResponseLinesForAdditions(
+        currentLines,
+        serverLines,
+        payload.lines,
+      );
+      const lineIds = resolveAddLineIds(currentLines, payload.lines, matchedServerLines);
       if (hasProjectedErrors(result)) {
         addError(
           (current, timestampMs) => projectLineErrors(current, result, lineIds, timestampMs),
@@ -1302,7 +1348,8 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       }
       if (!cart) return state;
 
-      const lines = mergeAddResponseLines(currentLines, serverLines, payload);
+      if (matchedServerLines.some((line) => !line)) requestRevalidation();
+      const lines = mergeAddResponseLines(currentLines, payload, matchedServerLines);
       return { ...state, data: reconcileCartLines(state.data, lines) };
     },
     getPendingKeys: (state, payload) => {

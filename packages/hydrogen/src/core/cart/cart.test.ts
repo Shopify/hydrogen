@@ -217,7 +217,7 @@ function createStandardActionsMock({ dispatchEvents = true } = {}) {
         {
           action,
           context: "standard-action" as const,
-          lines: payload.lines,
+          lines: (options as any)?.event?.lines ?? payload.lines,
           promise: eventDeferred.promise,
           detail: (options as any)?.event?.detail,
         },
@@ -4174,6 +4174,112 @@ describe("add-to-cart optimistic updates", () => {
       "line-456",
       "line-123",
       "line-existing",
+    ]);
+  });
+
+  it("keeps attributed additions when the standard action event omits their identity details", async () => {
+    const attributes = [{ key: "Notice", value: "Non-refundable" }];
+    const line123 = {
+      ...lineWithMerchandise("line-123?cart=123", 1, VARIANT_123),
+      attributes,
+      sellingPlanAllocation: null,
+    };
+    const line456 = {
+      ...lineWithMerchandise("line-456?cart=123", 2, VARIANT_456),
+      attributes: [],
+      sellingPlanAllocation: null,
+    };
+    store.hydrate(
+      makeCartState({
+        lines: [makeLine({ id: "line-existing", quantity: 1 })],
+        totalQuantity: 1,
+      }),
+    );
+
+    const externalPromise = mockUpdateCart(
+      {
+        lines: [
+          { merchandiseId: VARIANT_123, quantity: 1, attributes },
+          { merchandiseId: VARIANT_456, quantity: 2 },
+        ],
+      },
+      {
+        event: {
+          lines: [
+            { merchandiseId: VARIANT_123, quantity: 1 },
+            { merchandiseId: VARIANT_456, quantity: 2 },
+          ],
+        },
+      },
+    );
+
+    resolveUpdate(
+      0,
+      serverResult({
+        totalQuantity: 4,
+        lines: [line123, line456, makeLine({ id: "line-existing", quantity: 1 })],
+      }),
+    );
+    await externalPromise;
+
+    const lines = getCartLines(store.getState().data);
+    expect(lines.map((line) => line.id).toSorted()).toEqual(
+      ["line-123?cart=123", "line-456?cart=123", "line-existing"].toSorted(),
+    );
+    expect(lines.find((line) => line.id === "line-123?cart=123")?.attributes).toEqual(attributes);
+    expect(mockGetCart).not.toHaveBeenCalled();
+  });
+
+  it("revalidates when omitted identity details leave same-merchandise additions ambiguous", async () => {
+    const firstAttributes = [{ key: "Notice", value: "Non-refundable" }];
+    const secondAttributes = [{ key: "Gift wrap", value: "Yes" }];
+    const line123 = {
+      ...lineWithMerchandise("line-123?cart=123", 1, VARIANT_123),
+      attributes: firstAttributes,
+      sellingPlanAllocation: null,
+    };
+    const line123Again = {
+      ...lineWithMerchandise("line-123-gift?cart=123", 1, VARIANT_123),
+      attributes: secondAttributes,
+      sellingPlanAllocation: null,
+    };
+    const authoritativeCart = makeCartState({
+      totalQuantity: 2,
+      lines: [line123, line123Again],
+    });
+    mockGetCart.mockResolvedValue({ cart: authoritativeCart });
+    store.hydrate(makeCartState({ lines: [], totalQuantity: 0 }));
+
+    const externalPromise = mockUpdateCart(
+      {
+        lines: [
+          { merchandiseId: VARIANT_123, quantity: 1, attributes: firstAttributes },
+          { merchandiseId: VARIANT_123, quantity: 1, attributes: secondAttributes },
+        ],
+      },
+      {
+        event: {
+          lines: [
+            { merchandiseId: VARIANT_123, quantity: 1 },
+            { merchandiseId: VARIANT_123, quantity: 1 },
+          ],
+        },
+      },
+    );
+    resolveUpdate(0, serverResult({ totalQuantity: 2, lines: [line123, line123Again] }));
+    await externalPromise;
+
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() =>
+      expect(
+        getCartLines(store.getState().data)
+          .map((line) => line.id)
+          .toSorted(),
+      ).toEqual(["line-123?cart=123", "line-123-gift?cart=123"].toSorted()),
+    );
+    expect(getCartLines(store.getState().data).map((line) => line.attributes)).toEqual([
+      firstAttributes,
+      secondAttributes,
     ]);
   });
 
