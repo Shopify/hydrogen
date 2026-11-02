@@ -47,7 +47,7 @@ The local HTTPS plugin provisions the certificate, links an unlinked Hydrogen st
 
 ## Content Security Policy
 
-`src/middleware.ts` registers a nonce-free Hydrogen policy, which `applyResponseHeaders` applies. Astro can't pass a nonce to its inline scripts, so the policy allows inline scripts with `'unsafe-inline'` while still blocking scripts from origins that aren't allowed. Extend `directives` for additional integrations.
+`src/middleware.ts` creates a nonce-free Hydrogen policy and applies it with `csp.applyResponseHeaders`, separately from Shopify request-context headers. Astro can't pass a nonce to its inline scripts, so the policy allows inline scripts with `'unsafe-inline'` while still blocking scripts from origins that aren't allowed. Extend `directives` for additional integrations.
 
 ## Run
 

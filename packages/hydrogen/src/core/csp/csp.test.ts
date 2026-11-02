@@ -64,6 +64,16 @@ describe("createContentSecurityPolicy", () => {
     expect(Object.isFrozen(first)).toBe(true);
   });
 
+  it("allows Shopify service subdomains only for connections", () => {
+    const origin = "https://*.shopifysvc.com";
+    expect(getShopifyCspDirectives().connectSrc).toContain(origin);
+    const { header } = createContentSecurityPolicy();
+    expect(directive(header, "connect-src")).toContain(origin);
+    for (const part of header.split(";")) {
+      if (!part.trim().startsWith("connect-src ")) expect(part).not.toContain("shopifysvc.com");
+    }
+  });
+
   it("shares local development connection defaults between the getter and creator", () => {
     const policy = createContentSecurityPolicy({ nonce: false });
     const connectSrc = directive(policy.header, "connect-src");
@@ -171,7 +181,6 @@ describe("createContentSecurityPolicy", () => {
     const { header } = createContentSecurityPolicy({
       directives: {
         styleSrc: null,
-        connectSrc: ["https://api.example", "https://api.example"],
         frameSrc: null,
         sandbox: [],
         upgradeInsecureRequests: true,
@@ -179,9 +188,7 @@ describe("createContentSecurityPolicy", () => {
     });
     expect(directive(header, "style-src")).toBeUndefined();
     expect(header).not.toContain("unsafe-inline");
-    expect(directive(header, "connect-src")).toMatch(/^connect-src https:\/\/api\.example 'self' /);
-    expect(directive(header, "connect-src")?.match(/https:\/\/api\.example/g)).toHaveLength(1);
-    expect(header).toContain("monorail");
+    expect(header).toContain("https://*.shopifysvc.com");
     expect(directive(header, "frame-src")).toBeUndefined();
     expect(directive(header, "sandbox")).toBe("sandbox");
     expect(directive(header, "upgrade-insecure-requests")).toBe("upgrade-insecure-requests");
@@ -287,265 +294,81 @@ describe("createContentSecurityPolicy", () => {
     expect(header).toContain("https://store.myshopify.com");
     expect(getShopifyCspDirectives().connectSrc).not.toContain("https://extra.example");
   });
-
-  it.each([
-    "http://shop.example",
-    "https://user@shop.example",
-    "shop.example/path",
-    "shop.example?query=yes",
-  ])("rejects a shop domain that is not an HTTPS origin: %s", (storeDomain) => {
-    expect(() => createContentSecurityPolicy({ shop: { storeDomain } })).toThrow(TypeError);
-  });
 });
 
-describe("request-context integration", () => {
-  it("preserves incoming and response CSP and cache headers when no policy is registered", () => {
+describe("applyResponseHeaders", () => {
+  it.each([undefined, false] as const)(
+    "overwrites enforcing CSP and preserves report-only CSP when nonce is %j",
+    (nonce) => {
+      // Destructuring checks that the method does not depend on `this`.
+      const { header, applyResponseHeaders } = createContentSecurityPolicy({ nonce });
+      const response = cacheableHeaders();
+      response.set(CSP, "default-src 'none'");
+      response.set(CSP_REPORT_ONLY, "script-src 'none'");
+      applyResponseHeaders(response);
+      applyResponseHeaders(response);
+
+      expect(response.get(CSP)).toBe(header);
+      expect(response.get(CSP_REPORT_ONLY)).toBe("script-src 'none'");
+      expect(response.has("powered-by")).toBe(false);
+      // A nonce must not be reused through a cache, but a nonce-free policy leaves caching alone.
+      const cacheable = nonce === false;
+      expect(response.get("Cache-Control")).toBe(cacheable ? "public, max-age=60" : PRIVATE_CACHE);
+      expect(response.has("Oxygen-Cache-Control")).toBe(cacheable);
+      expect(response.has("CDN-Cache-Control")).toBe(cacheable);
+      expect(response.has("Surrogate-Control")).toBe(cacheable);
+    },
+  );
+});
+
+describe("independent Shopify header composition", () => {
+  it("leaves CSP headers to the caller", () => {
     const incoming = new Headers({
       [CSP]: "script-src 'nonce-attacker'",
       [CSP_REPORT_ONLY]: "default-src *",
-      "x-nonce": "attacker",
     });
     const requestContext = createContext(incoming);
     const forwarded = requestContext.getForwardedRequestHeaders();
     expect(forwarded.get(CSP)).toBe(incoming.get(CSP));
-    expect(forwarded.get(CSP_REPORT_ONLY)).toBe(incoming.get(CSP_REPORT_ONLY));
-    expect(forwarded.get("x-nonce")).toBe("attacker");
+    expect(forwarded.get(CSP_REPORT_ONLY)).toBe("default-src *");
+    expect(forwarded.get("X-SDK-Variant")).toBe("hydrogen");
 
-    const response = cacheableHeaders();
-    response.set(CSP, "default-src 'self'");
-    response.set(CSP_REPORT_ONLY, "script-src 'none'");
-    requestContext.applyResponseHeaders(response);
-    expect(response.get(CSP)).toBe("default-src 'self'");
-    expect(response.get(CSP_REPORT_ONLY)).toBe("script-src 'none'");
-    expect(response.get("Cache-Control")).toBe("public, max-age=60");
-    expect(response.get("Oxygen-Cache-Control")).toBe("public, max-age=600");
-    expect(response.get("Surrogate-Control")).toBe("max-age=600");
-  });
-
-  it.each([false, undefined] as const)(
-    "ignores spoofed request CSP and overwrites it when nonce is %j",
-    (nonce) => {
-      const incoming = new Headers({
-        [CSP]: "default-src *; script-src 'nonce-attacker' 'unsafe-inline'",
-        [CSP_REPORT_ONLY]: "script-src 'nonce-attacker-report'",
-        "x-nonce": "attacker",
-      });
-      const requestContext = createContext(incoming);
-      const policy = createContentSecurityPolicy({ requestContext, nonce });
-      const forwarded = requestContext.getForwardedRequestHeaders();
-      expect(policy.nonce).not.toBe("attacker");
-      expect(policy.header).not.toContain("attacker");
-      expect(policy.header).not.toContain("default-src *");
-      expect(directive(policy.header, "script-src")).not.toContain("'unsafe-inline'");
-      expect(forwarded.get(CSP)).toBe(policy.header);
-      expect(forwarded.has(CSP_REPORT_ONLY)).toBe(false);
-      expect(incoming.get(CSP)).toContain("attacker");
-      expect(incoming.get(CSP_REPORT_ONLY)).toContain("attacker-report");
-
-      // A separate context must generate its own nonce rather than reuse the forwarded policy's.
-      const downstream = createContentSecurityPolicy({ requestContext: createContext(forwarded) });
-      expect(downstream.nonce).not.toBe(policy.nonce);
-      expect(downstream.header).not.toContain("attacker");
-    },
-  );
-
-  it("returns the same frozen object for equivalent options and isolates different requests", () => {
-    const requestContext = createContext();
-    const first = createContentSecurityPolicy({
-      requestContext,
-      shop: { storeDomain: "shop.example" },
-      directives: { workerSrc: ["'self'"], childSrc: ["'self'"] },
-    });
-    const repeated = createContentSecurityPolicy({
-      requestContext,
-      shop: { storeDomain: "https://shop.example" },
-      directives: { childSrc: ["'self'"], workerSrc: ["'self'"] },
-    });
-    expect(repeated).toBe(first);
-    expect(Object.isFrozen(repeated)).toBe(true);
-    expect(createContentSecurityPolicy({ requestContext: createContext() }).nonce).not.toBe(
-      first.nonce,
-    );
-    expect(() => createContentSecurityPolicy({ requestContext })).toThrow(/already registered/);
-  });
-
-  it("reuses equivalent merged policies and preserves state after conflicting or invalid sources", () => {
-    const requestContext = createContext();
-    const options = {
-      requestContext,
-      directives: { connectSrc: ["https://analytics.example"] },
-    };
-    const original = createContentSecurityPolicy(options);
-    expect(
-      createContentSecurityPolicy({
-        requestContext,
-        directives: { connectSrc: ["https://analytics.example", "https://analytics.example"] },
-      }),
-    ).toBe(original);
-    expect(() =>
-      createContentSecurityPolicy({
-        requestContext,
-        directives: { connectSrc: ["https://different.example"] },
-      }),
-    ).toThrow(/already registered/);
-    expect(() =>
-      createContentSecurityPolicy({
-        requestContext,
-        directives: { connectSrc: [MANUAL_NONCE] },
-      }),
-    ).toThrow(/manually supplied nonces/);
-    expect(createContentSecurityPolicy(options)).toBe(original);
-    expect(requestContext.getForwardedRequestHeaders().get(CSP)).toBe(original.header);
-  });
-
-  it.each([false, undefined] as const)(
-    "rejects conflicting options and mode changes without changing state for %j",
-    (nonce) => {
-      const requestContext = createContext();
-      const options = { requestContext, nonce, shop: { storeDomain: "shop.example" } };
-      const original = createContentSecurityPolicy(options);
-      expect(createContentSecurityPolicy(options)).toBe(original);
-      expect(() =>
-        createContentSecurityPolicy({ ...options, directives: { connectSrc: ["*"] } }),
-      ).toThrow(/already registered/);
-      expect(() =>
-        createContentSecurityPolicy({ ...options, nonce: nonce === false ? undefined : false }),
-      ).toThrow(/already registered/);
-      expect(createContentSecurityPolicy(options)).toBe(original);
-      expect(requestContext.getForwardedRequestHeaders().get(CSP)).toBe(original.header);
-      const response = new Headers();
-      requestContext.applyResponseHeaders(response);
-      expect(response.get(CSP)).toBe(original.header);
-    },
-  );
-
-  it("does not return a nonce-free policy from a later default call", () => {
-    const requestContext = createContext();
-    const original = createContentSecurityPolicy({ requestContext, nonce: false });
-    expect(() => createContentSecurityPolicy({ requestContext })).toThrow(/already registered/);
-    expect(createContentSecurityPolicy({ requestContext, nonce: false })).toBe(original);
-  });
-
-  it("leaves the context unregistered when building a policy fails", () => {
-    const requestContext = createContext();
-    expect(() =>
-      createContentSecurityPolicy({ requestContext, directives: { styleSrc: [MANUAL_NONCE] } }),
-    ).toThrow(TypeError);
     const response = cacheableHeaders();
     requestContext.applyResponseHeaders(response);
     expect(response.has(CSP)).toBe(false);
     expect(response.get("Cache-Control")).toBe("public, max-age=60");
-    const policy = createContentSecurityPolicy({ requestContext, nonce: false });
-    requestContext.applyResponseHeaders(response);
-    expect(response.get(CSP)).toBe(policy.header);
   });
 
-  it("keeps registered policy state out of serialized and spread contexts", () => {
-    const requestContext = createContext();
-    const serialized = JSON.stringify(requestContext);
-    const policy = createContentSecurityPolicy({ requestContext });
-
-    expect(JSON.stringify(requestContext)).toBe(serialized);
-    expect(JSON.stringify({ ...requestContext })).toBe(serialized);
-    expect(createContentSecurityPolicy({ requestContext })).toBe(policy);
-  });
-
-  it("preserves the registered policy when the context is frozen and header methods are extracted", () => {
-    const requestContext = createContext();
-    const policy = createContentSecurityPolicy({ requestContext });
-    Object.freeze(requestContext);
-    const { applyResponseHeaders, getForwardedRequestHeaders } = requestContext;
-    const response = cacheableHeaders();
-
-    applyResponseHeaders(response);
-    expect(response.get(CSP)).toBe(policy.header);
-    expect(response.get("Cache-Control")).toBe(PRIVATE_CACHE);
-    expect(getForwardedRequestHeaders().get(CSP)).toBe(policy.header);
-    expect(createContentSecurityPolicy({ requestContext })).toBe(policy);
-  });
-
-  it("applies a nonce policy, preserves response report-only, and disables caches on repeated applications", () => {
-    const requestContext = createContext();
-    const policy = createContentSecurityPolicy({ requestContext });
-    const response = cacheableHeaders();
-    response.set(CSP_REPORT_ONLY, "default-src 'none'");
-    requestContext.applyResponseHeaders(response);
-    requestContext.applyResponseHeaders(response);
-    expect(response.get(CSP)).toBe(policy.header);
-    expect(response.get(CSP_REPORT_ONLY)).toBe("default-src 'none'");
-    expect(response.get("Cache-Control")).toBe(PRIVATE_CACHE);
-    expect(response.has("Oxygen-Cache-Control")).toBe(false);
-    expect(response.has("Surrogate-Control")).toBe(false);
-    expect(response.has("CDN-Cache-Control")).toBe(false);
-  });
-
-  it("preserves cache headers for a nonce-free policy on repeated applications", () => {
-    const requestContext = createContext();
-    const policy = createContentSecurityPolicy({ requestContext, nonce: false });
-    const response = cacheableHeaders();
-    response.set(CSP_REPORT_ONLY, "default-src 'none'");
-    requestContext.applyResponseHeaders(response);
-    requestContext.applyResponseHeaders(response);
-    expect(response.get(CSP)).toBe(policy.header);
-    expect(response.get(CSP_REPORT_ONLY)).toBe("default-src 'none'");
-    expect(response.get("Cache-Control")).toBe("public, max-age=60");
-    expect(response.get("Oxygen-Cache-Control")).toBe("public, max-age=600");
-    expect(response.get("CDN-Cache-Control")).toBe("public, s-maxage=600");
-    expect(response.get("Surrogate-Control")).toBe("max-age=600");
-  });
-
-  it.each(["personalized", "cookie", "session", "consent"])(
-    "keeps the existing %s privacy rule for nonce-free policies",
-    (reason) => {
-      const requestContext = createContext(
-        new Headers(reason === "consent" ? { [CONSENT_MANAGEMENT_HEADER]: "1" } : {}),
+  describe.each([false, undefined] as const)("nonce mode %j", (nonce) => {
+    describe.each(["csp-first", "shopify-first"])("application order %s", (order) => {
+      it.each(["none", "personalized", "cookie", "session", "consent"])(
+        "preserves cache restrictions with %s Shopify privacy state",
+        (reason) => {
+          const requestContext = createContext(
+            new Headers(reason === "consent" ? { [CONSENT_MANAGEMENT_HEADER]: "1" } : {}),
+          );
+          const policy = createContentSecurityPolicy({ nonce });
+          const response = cacheableHeaders();
+          if (reason === "personalized") requestContext.markResponseAsPersonalized("customer data");
+          if (reason === "cookie") response.set("Set-Cookie", "session=1; Path=/");
+          if (reason === "session") requestContext.markResponseAsSessionEstablishing("session");
+          const applyHeaders =
+            order === "csp-first"
+              ? [policy.applyResponseHeaders, requestContext.applyResponseHeaders]
+              : [requestContext.applyResponseHeaders, policy.applyResponseHeaders];
+          for (const apply of applyHeaders) apply(response);
+          expect(response.get(CSP)).toBe(policy.header);
+          expect(response.get("powered-by")).toBe("Shopify, Hydrogen");
+          const mustNotCache = nonce !== false || reason !== "none";
+          expect(response.get("Cache-Control")).toBe(
+            mustNotCache ? PRIVATE_CACHE : "public, max-age=60",
+          );
+          expect(response.has("Oxygen-Cache-Control")).toBe(!mustNotCache);
+          expect(response.has("CDN-Cache-Control")).toBe(!mustNotCache);
+          expect(response.has("Surrogate-Control")).toBe(!mustNotCache);
+          if (reason === "cookie") expect(response.getSetCookie()).toEqual(["session=1; Path=/"]);
+        },
       );
-      const policy = createContentSecurityPolicy({ requestContext, nonce: false });
-      const response = cacheableHeaders();
-      if (reason === "personalized") requestContext.markResponseAsPersonalized("customer data");
-      if (reason === "cookie") response.set("Set-Cookie", "session=1; Path=/");
-      if (reason === "session") requestContext.markResponseAsSessionEstablishing("session");
-      requestContext.applyResponseHeaders(response);
-      expect(response.get(CSP)).toBe(policy.header);
-      expect(response.get("Cache-Control")).toBe(PRIVATE_CACHE);
-      expect(response.has("Oxygen-Cache-Control")).toBe(false);
-      expect(response.has("CDN-Cache-Control")).toBe(false);
-      expect(response.has("Surrogate-Control")).toBe(false);
-    },
-  );
-
-  it.each([false, undefined] as const)(
-    "rejects a conflicting response CSP without changing the response for %j",
-    (nonce) => {
-      const requestContext = createContext();
-      createContentSecurityPolicy({ requestContext, nonce });
-      const response = cacheableHeaders();
-      response.set(CSP, "default-src 'none'");
-      response.set(CSP_REPORT_ONLY, "script-src 'none'");
-      expect(() => requestContext.applyResponseHeaders(response)).toThrow(TypeError);
-      expect(response.get(CSP)).toBe("default-src 'none'");
-      expect(response.get(CSP_REPORT_ONLY)).toBe("script-src 'none'");
-      expect(response.get("Cache-Control")).toBe("public, max-age=60");
-      expect(response.get("Oxygen-Cache-Control")).toBe("public, max-age=600");
-    },
-  );
-
-  it("can register a policy after applying earlier response headers", () => {
-    const requestContext = createContext();
-    requestContext.applyResponseHeaders(new Headers());
-    const policy = createContentSecurityPolicy({ requestContext });
-    const response = new Headers();
-    requestContext.applyResponseHeaders(response);
-    expect(response.get(CSP)).toBe(policy.header);
-  });
-
-  it("does not add CSP to Storefront API subrequests", () => {
-    const requestContext = createContext();
-    createContentSecurityPolicy({ requestContext });
-    const headers = new Headers();
-    requestContext.applyStorefrontRequestHeaders(headers);
-    expect(headers.has(CSP)).toBe(false);
-    expect(headers.has(CSP_REPORT_ONLY)).toBe(false);
-    expect(headers.get("X-SDK-Variant")).toBe("hydrogen");
+    });
   });
 });

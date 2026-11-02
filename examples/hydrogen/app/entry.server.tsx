@@ -13,8 +13,7 @@ export default async function handleRequest(
   reactRouterContext: EntryContext,
   context: RouterContextProvider,
 ) {
-  const { nonce } = createContentSecurityPolicy({
-    requestContext: context.shopifyRequestContext,
+  const csp = createContentSecurityPolicy({
     shop: {
       checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN || undefined,
       storeDomain: context.env.PUBLIC_STORE_DOMAIN,
@@ -22,11 +21,11 @@ export default async function handleRequest(
   });
 
   const body = await renderToReadableStream(
-    <NonceProvider value={nonce}>
-      <ServerRouter context={reactRouterContext} url={request.url} nonce={nonce} />
+    <NonceProvider value={csp.nonce}>
+      <ServerRouter context={reactRouterContext} url={request.url} nonce={csp.nonce} />
     </NonceProvider>,
     {
-      nonce,
+      nonce: csp.nonce,
       signal: request.signal,
       onError(error) {
         console.error(error);
@@ -40,7 +39,7 @@ export default async function handleRequest(
   }
 
   responseHeaders.set("Content-Type", "text/html");
-  // The server's finalizer applies the registered policy with applyResponseHeaders().
+  csp.applyResponseHeaders(responseHeaders);
 
   return new Response(body, {
     headers: responseHeaders,

@@ -1,5 +1,3 @@
-import type { ShopifyRequestContext } from "../request-context";
-
 type Sources = readonly string[] | null;
 
 /**
@@ -41,8 +39,6 @@ export type ContentSecurityPolicyShop = {
 
 /** Options for a per-document policy. */
 export type CreateContentSecurityPolicyOptions = {
-  /** Registers the policy for both response headers and forwarded request headers. */
-  requestContext?: ShopifyRequestContext;
   shop?: ContentSecurityPolicyShop;
   /** Extends individual defaults. In nonce mode, the nonce is added to `script-src` and any supplied `script-src-elem`. Browsers use `script-src-elem` over `script-src` for script elements. */
   directives?: ContentSecurityPolicyDirectives;
@@ -50,8 +46,10 @@ export type CreateContentSecurityPolicyOptions = {
   nonce?: false;
 };
 
-/** A policy header and its nonce, if enabled. */
+/** A document policy with its nonce, serialized header, and response header application. */
 export type ContentSecurityPolicy<Nonce extends string | undefined = string | undefined> = {
   readonly nonce: Nonce;
   readonly header: string;
+  /** Overwrites the response's enforcing CSP and prevents caching when it contains a nonce. Preserves response report-only policies. */
+  applyResponseHeaders(headers: Headers): void;
 };

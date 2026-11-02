@@ -3,7 +3,6 @@ import {
   createStorefrontClient,
   type PublicStorefrontClient,
   type RequestScopedPrivateStorefrontClient,
-  type ShopifyRequestContext,
   type ShopifyRequestContextWithBuyerIp,
 } from "@shopify/hydrogen";
 import { createContext } from "react-router";
@@ -52,4 +51,3 @@ export function createRequestStorefrontClient(
 }
 
 export const storefrontClientContext = createContext<RequestStorefrontClient>();
-export const storefrontRequestContext = createContext<ShopifyRequestContext | null>(null);

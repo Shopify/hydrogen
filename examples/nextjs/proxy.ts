@@ -84,8 +84,7 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
   // Keep the prerendered shell: Next's inline scripts need an explicit allowance
   // when the policy has no per-request nonce. React's development diagnostics
   // also use eval, which is not needed in production.
-  createContentSecurityPolicy({
-    requestContext,
+  const csp = createContentSecurityPolicy({
     shop: { storeDomain: storefrontConfig.storeDomain },
     nonce: false,
     directives: {
@@ -100,8 +99,12 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
   // Forward the original URL (via `x-storefront-url`) + request context headers
   // to Server Components, then merge SFAPI response headers onto the response.
   const requestHeaders = requestContext.getForwardedRequestHeaders();
+  // This static shell has no nonce; do not let incoming CSP supply one to Next.
+  requestHeaders.delete("Content-Security-Policy");
+  requestHeaders.delete("Content-Security-Policy-Report-Only");
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   requestContext.applyResponseHeaders(response.headers);
+  csp.applyResponseHeaders(response.headers);
   return response;
 }
 

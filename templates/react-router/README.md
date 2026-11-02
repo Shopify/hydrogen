@@ -139,8 +139,9 @@ No specific metafield format is required.
 ## Content Security Policy
 
 `app/entry.server.tsx` creates a Content Security Policy for each HTML response and
-registers it with the Shopify request context. `requestContext.applyResponseHeaders`
-applies the policy and prevents shared caching of HTML containing a fresh nonce.
+applies it with `csp.applyResponseHeaders`. This prevents caching of HTML containing
+a fresh nonce, including error documents when root middleware fails. Shopify request
+context headers are finalized separately in the middleware.
 Storefront API data caching is unaffected.
 
 The app-owned `NonceProvider` passes that nonce to React Router, React's streaming

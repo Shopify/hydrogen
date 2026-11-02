@@ -12,7 +12,7 @@ const router = useRouter();
 const storefrontConfig = useState<StorefrontModeConfig>("storefront-config");
 const shopIdentity = resolveShopIdentity(storefrontConfig.value);
 const nonce = import.meta.server
-  ? useRequestEvent()?.context.cspNonce
+  ? useRequestEvent()?.context.csp?.nonce
   : document.querySelector<HTMLScriptElement>("script[nonce]")?.nonce;
 // Server-render the cart so the client starts with it instead of fetching it after mount.
 const cartData = await useServerRenderedCart();

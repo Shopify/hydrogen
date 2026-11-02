@@ -32,11 +32,7 @@ import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
 import { analyticsConsent, getBuyerIp, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
-import {
-  createRequestStorefrontClient,
-  storefrontClientContext,
-  storefrontRequestContext,
-} from "~/lib/storefront";
+import { createRequestStorefrontClient, storefrontClientContext } from "~/lib/storefront";
 
 import type { Route } from "./+types/root";
 
@@ -56,7 +52,6 @@ export const middleware: Route.MiddlewareFunction[] = [
       i18n: storefrontConfig.i18n,
       buyerIp: getBuyerIp(request.headers),
     });
-    context.set(storefrontRequestContext, requestContext);
 
     const storefrontClient = createRequestStorefrontClient(
       requestContext,
@@ -64,10 +59,8 @@ export const middleware: Route.MiddlewareFunction[] = [
       context.cache,
       context.waitUntil,
     );
-    context.set(storefrontClientContext, storefrontClient);
 
     const customerAccount = await createRequestCustomerAccount(request, env, requestContext);
-    context.set(customerAccountContext, customerAccount?.customerAccount ?? null);
 
     const sessionManager =
       customerAccount?.customerAccount.sessionManager ?? createEphemeralSessionManager(request);
@@ -84,6 +77,9 @@ export const middleware: Route.MiddlewareFunction[] = [
     });
 
     if (shopifyRoute) return shopifyRoute;
+
+    context.set(storefrontClientContext, storefrontClient);
+    context.set(customerAccountContext, customerAccount?.customerAccount ?? null);
 
     const response = await next();
     const sessionHeaders = new Headers((await sessionManager.commit?.()) ?? undefined);

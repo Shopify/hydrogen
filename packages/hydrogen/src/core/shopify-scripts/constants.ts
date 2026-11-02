@@ -1,5 +1,8 @@
+export const SHOPIFY_ORIGIN = "https://shopify.com";
 export const SHOPIFY_CDN_ORIGIN = "https://cdn.shopify.com";
 export const SHOPIFY_SHOP_APP_ORIGIN = "https://shop.app";
+// Shop is moving from shop.app to shop.com, so allow both until the move completes.
+export const SHOPIFY_SHOP_COM_ORIGIN = "https://shop.com";
 export const SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/storefront/standard-actions.js`;
 export const SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/storefront/standard-events.js`;
 export const SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT = `${SHOPIFY_CDN_ORIGIN}/storefront/standard-events-inspector.js`;

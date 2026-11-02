@@ -15,7 +15,6 @@ import {
   createStorefrontClient,
   createShopifyRequestContext,
   type ShopifyRequestContextWithBuyerIp,
-  type ShopifyRequestContext,
 } from "@shopify/hydrogen";
 import type { Handle } from "@sveltejs/kit";
 import { LRUCache } from "lru-cache";
@@ -47,8 +46,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   // SvelteKit's hydration script and Shopify's bootstrap scripts are inline, and SvelteKit
   // cannot share a nonce with components, so this policy allows inline scripts explicitly.
-  createContentSecurityPolicy({
-    requestContext,
+  const csp = createContentSecurityPolicy({
     shop: { storeDomain: storefrontConfig.storeDomain },
     nonce: false,
     directives: {
@@ -73,23 +71,11 @@ export const handle: Handle = async ({ event, resolve }) => {
     if (redirect) return redirect;
   }
 
-  return applyStorefrontResponseHeaders(requestContext, response);
+  const finalResponse = new Response(response.body, response);
+  requestContext.applyResponseHeaders(finalResponse.headers);
+  csp.applyResponseHeaders(finalResponse.headers);
+  return finalResponse;
 };
-
-function applyStorefrontResponseHeaders(
-  requestContext: Pick<ShopifyRequestContext, "applyResponseHeaders">,
-  response: Response,
-): Response {
-  try {
-    requestContext.applyResponseHeaders(response.headers);
-    return response;
-  } catch (error) {
-    if (!(error instanceof TypeError)) throw error;
-    const mutableResponse = new Response(response.body, response);
-    requestContext.applyResponseHeaders(mutableResponse.headers);
-    return mutableResponse;
-  }
-}
 
 function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
   return createStorefrontClient({

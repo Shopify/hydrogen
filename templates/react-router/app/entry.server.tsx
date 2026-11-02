@@ -1,12 +1,11 @@
-import { createContentSecurityPolicy, createShopifyRequestContext } from "@shopify/hydrogen";
+import { createContentSecurityPolicy } from "@shopify/hydrogen";
 import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
 import { ServerRouter, type EntryContext, type RouterContextProvider } from "react-router";
 
 import { NonceProvider } from "~/lib/csp";
 import { envContext } from "~/lib/env";
-import { getMockShopDomain, getStoreDomain, shouldUseMockShop, storefrontConfig } from "~/lib/shop";
-import { storefrontRequestContext } from "~/lib/storefront";
+import { getMockShopDomain, getStoreDomain, shouldUseMockShop } from "~/lib/shop";
 
 export default async function handleRequest(
   request: Request,
@@ -17,11 +16,7 @@ export default async function handleRequest(
 ) {
   const env = context.get(envContext);
 
-  const requestContext =
-    context.get(storefrontRequestContext) ??
-    createShopifyRequestContext({ request, i18n: storefrontConfig.i18n });
-  const { nonce } = createContentSecurityPolicy({
-    requestContext,
+  const csp = createContentSecurityPolicy({
     shop: {
       storeDomain: shouldUseMockShop(env) ? getMockShopDomain(env) : getStoreDomain(env),
       checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN || undefined,
@@ -29,11 +24,11 @@ export default async function handleRequest(
   });
 
   const body = await renderToReadableStream(
-    <NonceProvider value={nonce}>
-      <ServerRouter context={reactRouterContext} url={request.url} nonce={nonce} />
+    <NonceProvider value={csp.nonce}>
+      <ServerRouter context={reactRouterContext} url={request.url} nonce={csp.nonce} />
     </NonceProvider>,
     {
-      nonce,
+      nonce: csp.nonce,
       signal: request.signal,
       onError(error) {
         console.error(error);
@@ -47,7 +42,7 @@ export default async function handleRequest(
   }
 
   responseHeaders.set("Content-Type", "text/html");
-  requestContext.applyResponseHeaders(responseHeaders);
+  csp.applyResponseHeaders(responseHeaders);
 
   return new Response(body, {
     headers: responseHeaders,

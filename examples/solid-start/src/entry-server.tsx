@@ -6,7 +6,7 @@ import { For } from "solid-js";
 
 export default createHandler(
   (event) => {
-    const nonce = event.locals.cspNonce;
+    const nonce = event.locals.csp?.nonce;
     if (!nonce) throw new Error("CSP nonce was not created for this document.");
     const shopifyScriptTags = getShopifyScriptTags({
       consent: analyticsConsent,
@@ -50,18 +50,14 @@ export default createHandler(
     );
   },
   (event) => {
-    const requestContext = event.locals.shopifyRequestContext;
-    if (!requestContext)
-      throw new Error("Shopify request context was not created for this document.");
-    const { nonce } = createContentSecurityPolicy({
-      requestContext,
+    const csp = createContentSecurityPolicy({
       shop: { storeDomain: storefrontConfig.storeDomain },
       directives: {
         styleSrc: ["https://fonts.googleapis.com"],
         fontSrc: ["https://fonts.gstatic.com"],
       },
     });
-    event.locals.cspNonce = nonce;
-    return { nonce };
+    event.locals.csp = csp;
+    return { nonce: csp.nonce };
   },
 );
