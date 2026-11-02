@@ -47,6 +47,10 @@ pnpm --filter @shopify/hydrogen-example-sveltekit dev:https
 
 The local HTTPS plugin provisions the certificate, links an unlinked Hydrogen storefront, and pushes the Customer Account callback, JavaScript origin, and logout URLs. If automatic setup is unavailable, it prints the values for manual configuration.
 
+## Content Security Policy
+
+`src/hooks.server.ts` registers a nonce-free Hydrogen policy, which the response finalizer applies. SvelteKit can't pass a nonce to components, so the policy allows inline scripts with `'unsafe-inline'` while still blocking scripts from origins that aren't allowed. Extend `directives` for additional integrations.
+
 ## Run
 
 ```sh

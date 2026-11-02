@@ -10,6 +10,9 @@ Port of the canonical `examples/core` design to [Nuxt 3](https://nuxt.com/) with
 - Nitro server middleware (`server/middleware/shopify.ts`) as the request entry point — it creates the request-scoped Storefront client and handles Hydrogen routes.
 - `useFetch` in `pages/` as the data path — pages read from Nitro routes under `server/api/`.
 - Tailwind v4 via `@tailwindcss/vite` — the design's `@theme` tokens live in `assets/css/main.css`.
+- A per-document Content Security Policy from `plugins/content-security-policy.server.ts`. The plugin gives Nuxt's head-managed scripts the same nonce as Shopify's scripts, and the Nitro response finalizer applies the policy and prevents caching of nonce-bearing HTML. API responses keep their existing cache rules. The browser reads the nonce from an existing server-rendered script's `nonce` property; it isn't added to the Nuxt payload. Nuxt Fonts downloads Inter from Google and serves the font files from the same origin.
+
+Nuxt DevTools is disabled because its timing script bypasses Unhead's nonce hook.
 
 ## Storefront mode
 

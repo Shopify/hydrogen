@@ -7,6 +7,7 @@ import {
 } from "@shared/storefront-cache";
 import {
   createCartServerHandlers,
+  createContentSecurityPolicy,
   createStorefrontClient,
   createShopifyRequestContext,
   handleShopifyRedirects,
@@ -44,6 +45,19 @@ export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
     handlers: [cartHandlers, customerSessionHandlers],
   });
   if (shopifyRoute) return shopifyRoute;
+
+  // Astro's island scripts and Shopify's bootstrap scripts are inline, and Astro cannot share a
+  // nonce with them, so this policy allows inline scripts explicitly.
+  createContentSecurityPolicy({
+    requestContext,
+    shop: { storeDomain: storefrontConfig.storeDomain },
+    nonce: false,
+    directives: {
+      scriptSrc: ["'unsafe-inline'"],
+      styleSrc: ["https://fonts.googleapis.com"],
+      fontSrc: ["https://fonts.gstatic.com"],
+    },
+  });
 
   locals.shopifyRequestContext = requestContext;
   locals.storefrontClient = storefrontClient;

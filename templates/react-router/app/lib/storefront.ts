@@ -1,20 +1,18 @@
 import {
   type CacheInstance,
-  createShopifyRequestContext,
   createStorefrontClient,
   type PublicStorefrontClient,
   type RequestScopedPrivateStorefrontClient,
   type ShopifyRequestContext,
+  type ShopifyRequestContextWithBuyerIp,
 } from "@shopify/hydrogen";
 import { createContext } from "react-router";
 
 import type { Env } from "~/lib/env";
 import {
-  getBuyerIp,
   getMockShopDomain,
   getPrivateStorefrontToken,
   getStoreDomain,
-  storefrontConfig,
   shouldUseMockShop,
 } from "~/lib/shop";
 
@@ -23,17 +21,15 @@ import {
 export type RequestStorefrontClient = RequestScopedPrivateStorefrontClient | PublicStorefrontClient;
 
 export function createRequestStorefrontClient(
-  request: Request,
+  requestContext: ShopifyRequestContextWithBuyerIp,
   env: Env,
   cache: CacheInstance,
   waitUntil: ExecutionContext["waitUntil"],
 ): RequestStorefrontClient {
-  const { i18n } = storefrontConfig;
-
   if (shouldUseMockShop(env)) {
     return createStorefrontClient({
       type: "public",
-      requestContext: createShopifyRequestContext({ request, i18n }),
+      requestContext,
       config: {
         storeDomain: getMockShopDomain(env),
         cache,
@@ -44,11 +40,7 @@ export function createRequestStorefrontClient(
 
   return createStorefrontClient({
     type: "private",
-    requestContext: createShopifyRequestContext({
-      request,
-      i18n,
-      buyerIp: getBuyerIp(request.headers),
-    }),
+    requestContext,
     config: {
       storeDomain: getStoreDomain(env),
       privateStorefrontToken: getPrivateStorefrontToken(env),
@@ -60,4 +52,4 @@ export function createRequestStorefrontClient(
 }
 
 export const storefrontClientContext = createContext<RequestStorefrontClient>();
-export const storefrontRequestContext = createContext<ShopifyRequestContext>();
+export const storefrontRequestContext = createContext<ShopifyRequestContext | null>(null);

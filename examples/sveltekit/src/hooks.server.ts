@@ -11,6 +11,7 @@ import {
 import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
 import {
   createCartServerHandlers,
+  createContentSecurityPolicy,
   createStorefrontClient,
   createShopifyRequestContext,
   type ShopifyRequestContextWithBuyerIp,
@@ -43,6 +44,19 @@ export const handle: Handle = async ({ event, resolve }) => {
     handlers: [cartHandlers, customerSessionHandlers],
   });
   if (shopifyRoute) return shopifyRoute;
+
+  // SvelteKit's hydration script and Shopify's bootstrap scripts are inline, and SvelteKit
+  // cannot share a nonce with components, so this policy allows inline scripts explicitly.
+  createContentSecurityPolicy({
+    requestContext,
+    shop: { storeDomain: storefrontConfig.storeDomain },
+    nonce: false,
+    directives: {
+      scriptSrc: ["'unsafe-inline'"],
+      styleSrc: ["https://fonts.googleapis.com"],
+      fontSrc: ["https://fonts.gstatic.com"],
+    },
+  });
 
   event.locals.shopifyRequestContext = requestContext;
   event.locals.storefrontClient = storefrontClient;

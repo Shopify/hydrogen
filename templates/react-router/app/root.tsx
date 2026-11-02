@@ -1,4 +1,8 @@
-import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
+import {
+  createShopifyRequestContext,
+  handleShopifyRedirects,
+  handleShopifyRoutes,
+} from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
 import type { ReactNode } from "react";
 import {
@@ -20,13 +24,14 @@ import { Header } from "~/components/Header";
 import { SearchDrawer } from "~/components/SearchDrawer";
 import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
+import { useNonce } from "~/lib/csp";
 import { createRequestCustomerAccount, customerAccountContext } from "~/lib/customer-account";
 import { envContext } from "~/lib/env";
 import { predictiveSearchHandlers } from "~/lib/predictive-search-handlers";
 import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
-import { analyticsConsent, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
+import { analyticsConsent, getBuyerIp, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
 import {
   createRequestStorefrontClient,
   storefrontClientContext,
@@ -45,14 +50,25 @@ export const links: Route.LinksFunction = () => [
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ context, request }, next) => {
     const env = context.get(envContext);
-    const storefrontClient = createRequestStorefrontClient(
+
+    const requestContext = createShopifyRequestContext({
       request,
+      i18n: storefrontConfig.i18n,
+      buyerIp: getBuyerIp(request.headers),
+    });
+    context.set(storefrontRequestContext, requestContext);
+
+    const storefrontClient = createRequestStorefrontClient(
+      requestContext,
       env,
       context.cache,
       context.waitUntil,
     );
-    const requestContext = storefrontClient.requestContext;
+    context.set(storefrontClientContext, storefrontClient);
+
     const customerAccount = await createRequestCustomerAccount(request, env, requestContext);
+    context.set(customerAccountContext, customerAccount?.customerAccount ?? null);
+
     const sessionManager =
       customerAccount?.customerAccount.sessionManager ?? createEphemeralSessionManager(request);
 
@@ -68,10 +84,6 @@ export const middleware: Route.MiddlewareFunction[] = [
     });
 
     if (shopifyRoute) return shopifyRoute;
-
-    context.set(storefrontClientContext, storefrontClient);
-    context.set(storefrontRequestContext, requestContext);
-    context.set(customerAccountContext, customerAccount?.customerAccount ?? null);
 
     const response = await next();
     const sessionHeaders = new Headers((await sessionManager.commit?.()) ?? undefined);
@@ -108,6 +120,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function Layout({ children }: { children: ReactNode }) {
+  const nonce = useNonce();
   const navigate = useNavigate();
   // Absent when the root loader failed (error page only).
   const rootData = useRouteLoaderData<typeof loader>("root");
@@ -119,6 +132,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {rootData ? (
           <ShopifyScripts
+            nonce={nonce}
             i18n={{ ...storefrontConfig.i18n, currency: rootData.currency }}
             shop={rootData.shopIdentity.scriptShop}
             analytics={{ channel: rootData.shopIdentity.analyticsShop.channel }}
@@ -139,8 +153,8 @@ export function Layout({ children }: { children: ReactNode }) {
           Skip to content
         </a>
         {children}
-        <ScrollRestoration />
-        <Scripts />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );

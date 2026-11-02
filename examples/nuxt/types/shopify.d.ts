@@ -15,6 +15,7 @@ declare module "h3" {
     storefrontClient: PublicStorefrontClient | RequestScopedPrivateStorefrontClient;
     storefrontConfig: StorefrontModeConfig;
     shopifyRequestContext?: ShopifyRequestContext;
+    cspNonce?: string;
     customerAccountClient?: CustomerAccountClient;
     customerSessionManager?: WritableCustomerSessionManager;
   }

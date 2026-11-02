@@ -136,6 +136,22 @@ No specific metafield format is required.
 - The design is yours to change — `app/tokens.css` holds the design tokens; the
   components use them via semantic classes.
 
+## Content Security Policy
+
+`app/entry.server.tsx` creates a Content Security Policy for each HTML response and
+registers it with the Shopify request context. `requestContext.applyResponseHeaders`
+applies the policy and prevents shared caching of HTML containing a fresh nonce.
+Storefront API data caching is unaffected.
+
+The app-owned `NonceProvider` passes that nonce to React Router, React's streaming
+renderer, and `ShopifyScripts` without putting it in loader data. Client hydration
+reads the document's existing nonce and keeps it for subsequent navigation. Use
+`useNonce()` from `app/lib/csp.ts` for additional inline scripts.
+
+To allow another service, extend the `directives` option in
+`createContentSecurityPolicy`. Shopify sources and local development connections
+are included by default.
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).

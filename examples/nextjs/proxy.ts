@@ -1,4 +1,8 @@
-import { type CacheInstance, handleShopifyRoutes } from "@shopify/hydrogen";
+import {
+  type CacheInstance,
+  createContentSecurityPolicy,
+  handleShopifyRoutes,
+} from "@shopify/hydrogen";
 import { getCache } from "@vercel/functions";
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 
@@ -40,8 +44,9 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
 
   // Resolves the buyer IP only for a real store (private client); mock.shop
   // needs neither a token nor a buyer IP.
+  const storefrontConfig = resolveStorefrontConfig();
   const storefrontClient = createRequestStorefrontClient({
-    config: resolveStorefrontConfig(),
+    config: storefrontConfig,
     request,
     i18n: defaultI18n,
     cache,
@@ -75,6 +80,22 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
     // short-circuited response internally, so no `applyResponseHeaders` here.
     return shopifyRoute;
   }
+
+  // Keep the prerendered shell: Next's inline scripts need an explicit allowance
+  // when the policy has no per-request nonce. React's development diagnostics
+  // also use eval, which is not needed in production.
+  createContentSecurityPolicy({
+    requestContext,
+    shop: { storeDomain: storefrontConfig.storeDomain },
+    nonce: false,
+    directives: {
+      imgSrc: ["https://images.unsplash.com"],
+      scriptSrc: [
+        "'unsafe-inline'",
+        ...(process.env.NODE_ENV === "development" ? ["'unsafe-eval'"] : []),
+      ],
+    },
+  });
 
   // Forward the original URL (via `x-storefront-url`) + request context headers
   // to Server Components, then merge SFAPI response headers onto the response.

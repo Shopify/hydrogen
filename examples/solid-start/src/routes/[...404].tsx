@@ -1,5 +1,5 @@
 import { handleShopifyRedirects } from "@shopify/hydrogen";
-import { query, redirect, type RouteDefinition } from "@solidjs/router";
+import { createAsync, query, redirect, type RouteDefinition } from "@solidjs/router";
 import { HttpStatusCode } from "@solidjs/start";
 import { getRequestEvent } from "solid-js/web";
 
@@ -34,8 +34,12 @@ export const route = {
 } satisfies RouteDefinition;
 
 export default function NotFound() {
+  // Wait for a possible redirect before the streaming shell commits response headers.
+  const redirectResult = createAsync(() => lookupRedirect(), { deferStream: true });
+
   return (
     <>
+      {redirectResult()}
       <HttpStatusCode code={404} />
       <main
         id="main-content"

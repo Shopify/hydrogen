@@ -14,6 +14,7 @@ Port of the canonical `examples/core` design to [SolidStart](https://start.solid
 - **File-based routing via `FileRoutes`.** `src/routes/` is the source of truth — folder layout maps directly to URL paths, including `[handle].tsx` dynamic params.
 - **Shared chrome (`Header`, `Footer`) at the root.** Mounted in `src/app.tsx`'s `Router` root, not duplicated per-route.
 - **Tailwind v4 via `@tailwindcss/vite`.** The design's `@theme` tokens live in `src/app.css`.
+- **Content Security Policy.** `src/entry-server.tsx` registers a per-document policy and passes its nonce to SolidStart's streaming renderer and Shopify's script tags. The existing response finalizer applies the policy and makes nonce-bearing HTML private and uncacheable. The policy allows the Google Fonts stylesheet and font hosts used by the document. `app.config.ts` uses JSON server-function serialization so client navigations don't require `unsafe-eval`. The catch-all route waits for Shopify's redirect lookup before streaming so it can return an HTTP redirect.
 
 ## Pages
 

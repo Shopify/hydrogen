@@ -13,7 +13,9 @@ registerHooks({
 });
 
 // Dynamic import: static imports are linked before this module body registers the hook.
+const { createShopifyRequestContext } = await import("@shopify/hydrogen");
 const { createRequestStorefrontClient } = await import("../app/lib/storefront.ts");
+const { getBuyerIp, storefrontConfig } = await import("../app/lib/shop.ts");
 
 const PRIVATE_TOKEN_HEADER = "Shopify-Storefront-Private-Token";
 const PUBLIC_TOKEN_HEADER = "X-Shopify-Storefront-Access-Token";
@@ -30,6 +32,8 @@ function createRequest(headers: HeadersInit = {}): Request {
   return new Request("https://storefront.example/", { headers });
 }
 
+type StorefrontEnv = Parameters<typeof createRequestStorefrontClient>[1];
+
 function stubFetch(): { calls: Request[] } {
   const calls: Request[] = [];
   mock.method(globalThis, "fetch", async (input: string | URL | Request, init?: RequestInit) => {
@@ -41,12 +45,18 @@ function stubFetch(): { calls: Request[] } {
   return { calls };
 }
 
-async function captureShopQuery(
-  env: Parameters<typeof createRequestStorefrontClient>[1],
-  request = createRequest(),
-): Promise<Request> {
+async function captureShopQuery(env: StorefrontEnv, request = createRequest()): Promise<Request> {
   const { calls } = stubFetch();
-  const client = createRequestStorefrontClient(request, env, cache, waitUntil);
+  const client = createRequestStorefrontClient(
+    createShopifyRequestContext({
+      request,
+      i18n: storefrontConfig.i18n,
+      buyerIp: getBuyerIp(request.headers),
+    }),
+    env,
+    cache,
+    waitUntil,
+  );
   const result = await client.graphql("query { shop { name } }");
 
   assert.equal(result.errors, undefined);
@@ -105,15 +115,4 @@ test("real store forwards the private token, storefront id and buyer ip", async 
   assert.equal(sent.headers.get("Shopify-Storefront-Id"), "1000");
   assert.equal(sent.headers.get(BUYER_IP_HEADER), "203.0.113.7");
   assert.equal(sent.headers.has(PUBLIC_TOKEN_HEADER), false);
-});
-
-test("mock mode does not depend on a buyer ip header in production", () => {
-  const originalNodeEnv = process.env.NODE_ENV;
-  process.env.NODE_ENV = "production";
-  try {
-    const client = createRequestStorefrontClient(createRequest(), {}, cache, waitUntil);
-    assert.equal(client.type, "public");
-  } finally {
-    process.env.NODE_ENV = originalNodeEnv;
-  }
 });
