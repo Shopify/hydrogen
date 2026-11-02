@@ -7,6 +7,8 @@ import type {
   LanguageCode as StorefrontLanguageCode,
 } from "../graphql/generated/storefront-api-types";
 import { STOREFRONT_API_VERSION } from "./constants";
+import { applyContentSecurityPolicy, forwardContentSecurityPolicy } from "./csp/headers";
+import type { ContentSecurityPolicy } from "./csp/types";
 import {
   applyPrivateResponseCacheHeaders,
   CONSENT_MANAGEMENT_HEADER,
@@ -127,11 +129,22 @@ type ShopifyRequestContextBase = {
    * @internal
    */
   markResponseAsSessionEstablishing(reason: string): void;
+  /**
+   * Returns the document policy registered by `createContentSecurityPolicy`.
+   * @internal
+   */
+  getContentSecurityPolicy(): ContentSecurityPolicy | undefined;
+  /**
+   * Registers the document policy that `applyResponseHeaders()` and `getForwardedRequestHeaders()`
+   * use. `createContentSecurityPolicy` calls the method for you.
+   * @internal
+   */
+  setContentSecurityPolicy(policy: ContentSecurityPolicy): void;
 
   // -- Public fields --
   /** The request's language, country, and path prefix. The path prefix starts with `/` and has no trailing slash, or is an empty string when you don't set one. */
   i18n: NormalizedI18nConfig;
-  /** Returns the incoming request's headers with Shopify's request headers added. Pass the headers when you forward the request to a proxy or another origin. */
+  /** Returns the incoming request's headers with Shopify's request headers added. A registered CSP replaces the incoming enforcing CSP and removes the incoming report-only CSP. */
   getForwardedRequestHeaders(): Headers;
   /**
    * Marks the final response as private and uncacheable because the response holds customer data, such as a server-rendered cart. `applyResponseHeaders()` then sets `Cache-Control: private, no-store, max-age=0, must-revalidate` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. Call the method before `applyResponseHeaders()`, and only on requests whose response holds customer data, so other responses stay cacheable. Pass a short `reason` that names the customer data. The Customer Account API client and the customer session call the method for you.
@@ -141,6 +154,7 @@ type ShopifyRequestContextBase = {
    * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.
    *
    * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses marked with `markResponseAsPersonalized()` private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.
+   * A registered Content Security Policy is applied here. A policy with a nonce makes the response uncacheable so the nonce is not reused across document responses.
    */
   applyResponseHeaders(headers: Headers): void;
 };
@@ -237,6 +251,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
   let capturedCookies: string[] | undefined;
   let personalizedResponseReason: string | undefined;
   let sessionEstablishingReason: string | undefined;
+  let contentSecurityPolicy: ContentSecurityPolicy | undefined;
 
   const captureSubrequestHeaders = (headers: Headers): void => {
     // Capture the first fresh response cookies to increase the
@@ -253,6 +268,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
       const headers = new Headers(request.headers);
       applyStorefrontRequestHeaders(context, headers);
       if (context.url) headers.set(STOREFRONT_URL_HEADER, context.url);
+      forwardContentSecurityPolicy(headers, contentSecurityPolicy);
       return headers;
     },
     applyStorefrontRequestHeaders(headers) {
@@ -269,7 +285,14 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     markResponseAsSessionEstablishing(reason) {
       sessionEstablishingReason ??= reason;
     },
+    getContentSecurityPolicy() {
+      return contentSecurityPolicy;
+    },
+    setContentSecurityPolicy(policy) {
+      contentSecurityPolicy = policy;
+    },
     applyResponseHeaders(headers) {
+      applyContentSecurityPolicy(headers, contentSecurityPolicy);
       headers.set("powered-by", "Shopify, Hydrogen");
 
       // Documents may be shared or streamed, so they must not carry buyer-specific state.

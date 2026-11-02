@@ -2,6 +2,8 @@
 
 Next splits Hydrogen routing across `proxy.ts` and `app/not-found.tsx`.
 
+For CSP, see [Content Security Policy](./content-security-policy.md). Register the policy before calling `getForwardedRequestHeaders()`; it forwards the policy for Next's renderer. Use `nonce: false` with explicit inline-script authorization to preserve a prerendered shell. Nonce mode requires dynamic document rendering and an app-owned parser to pass the forwarded nonce to Shopify's scripts.
+
 ## `proxy.ts`
 
 `proxy.ts` can short-circuit before routing, so put `handleShopifyRoutes` there. In Next 16+, the file is `proxy.ts` and the exported function is named `proxy`; older Next projects may use `middleware.ts` with an exported `middleware` function. It cannot inspect the routed response, so forward the original URL to not-found UI.

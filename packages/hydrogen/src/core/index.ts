@@ -18,6 +18,13 @@ export type {
 } from "./request-routing/registered-routes";
 export { createStorefrontClient } from "../client/client";
 export { createShopifyRequestContext } from "./request-context";
+export { createContentSecurityPolicy, getShopifyCspDirectives } from "./csp";
+export type {
+  ContentSecurityPolicy,
+  ContentSecurityPolicyDirectives,
+  ContentSecurityPolicyShop,
+  CreateContentSecurityPolicyOptions,
+} from "./csp";
 export { Cache, createFetchWithCache, createRunWithCache } from "./cache";
 export type { CacheInstance, CacheOptions, CachingStrategy } from "./cache";
 export { StorefrontApiError, StorefrontTimeoutError } from "../client/errors";
