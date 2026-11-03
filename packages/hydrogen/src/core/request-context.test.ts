@@ -337,6 +337,23 @@ describe("createShopifyRequestContext", () => {
     expect(responseHeaders.get("set-cookie")).toBe(cookie);
   });
 
+  it("forwards multiple cookies separately when getSetCookie is unavailable", () => {
+    const cookies = ["first=1; Expires=Wed, 21 Oct 2037 07:28:00 GMT; Path=/", "second=2; Path=/"];
+    const context = createTestRequestContext(
+      new Request("https://example.com/api/data", {
+        method: "POST",
+        headers: { cookie: "_shopify_essential=established" },
+      }),
+    );
+    const subrequestHeaders = withoutGetSetCookie(new Headers());
+    for (const cookie of cookies) subrequestHeaders.append("set-cookie", cookie);
+    context.captureSubrequestHeaders(subrequestHeaders);
+    const responseHeaders = new Headers();
+    context.applyResponseHeaders(responseHeaders);
+
+    expect(responseHeaders.getSetCookie()).toEqual(cookies);
+  });
+
   it("applies captured storefront cookies when getSetCookie is unavailable", () => {
     const cookie = "session=1; Path=/; Secure";
     const context = createTestRequestContext(
