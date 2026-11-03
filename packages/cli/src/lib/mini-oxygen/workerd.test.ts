@@ -35,6 +35,7 @@ it('registers cleanup before runtime readiness and disposes a failed startup onc
       }),
     ).rejects.toBe(error);
     expect(registeredClose).toBeDefined();
+    expect(dispose).toHaveBeenCalledTimes(1);
     await registeredClose!();
     expect(dispose).toHaveBeenCalledTimes(1);
   } finally {

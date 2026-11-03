@@ -1,5 +1,7 @@
 import {Console} from 'node:console';
-import {mkdtemp, readdir, readFile, rm} from 'node:fs/promises';
+import {mkdtemp, readdir, readFile, rm, writeFile} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+import ShopifyCommand from '@shopify/cli-kit/node/base-command';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {afterEach, expect, it, vi} from 'vitest';
@@ -13,7 +15,7 @@ import {findPort} from '../../lib/find-port.js';
 import {startMiniOxygen} from '../../lib/mini-oxygen/index.js';
 import {runBuild} from './build.js';
 import type {BuildResult} from '../../lib/build-tooling/types.js';
-import {runPreview} from './preview.js';
+import Preview, {runPreview} from './preview.js';
 import {deferPromise} from '../../lib/defer.js';
 import {abandonOnAbort} from '../../lib/abort.js';
 import {listDevInstances} from '@shopify/cli-kit/node/dev-instance';
@@ -25,6 +27,10 @@ vi.mock('../../lib/environment-variables.js');
 vi.mock('../../lib/find-port.js');
 vi.mock('../../lib/mini-oxygen/index.js');
 vi.mock('./build.js');
+vi.mock('../../lib/dev-session.js', async (original) => {
+  const actual = await original<typeof import('../../lib/dev-session.js')>();
+  return {...actual, runDevSession: vi.fn(actual.runDevSession)};
+});
 vi.mock('../../lib/log.js', () => ({
   isH2Verbose: () => true,
   muteDevLogs: vi.fn(),
@@ -289,6 +295,110 @@ it('stops preview while the initial watched build has not completed', async () =
         await Promise.resolve()
           .then(() => buildOptions.onServerBuildFinish?.(1, buildResult))
           .catch(() => {});
+        await running;
+      }
+    },
+  );
+});
+
+it.each([false, true])(
+  'records preview watch mode through the command (watch: %s)',
+  async (watch) => {
+    await withPreviewFixture(
+      async ({directory, controller, runtime, buildResult}) => {
+        await writeFile(
+          join(directory, 'package.json'),
+          JSON.stringify({dependencies: {'@shopify/hydrogen': '*'}}),
+        );
+        vi.spyOn(
+          ShopifyCommand.prototype as unknown as {init(): Promise<unknown>},
+          'init',
+        ).mockResolvedValue(undefined);
+        const {runDevSession: startSession} = await vi.importActual<
+          typeof import('../../lib/dev-session.js')
+        >('../../lib/dev-session.js');
+        vi.mocked(runDevSession).mockImplementationOnce((options, start) =>
+          startSession({...options, signal: controller.signal}, start),
+        );
+        vi.mocked(runBuild).mockImplementationOnce(async (options) => {
+          await options.onServerBuildFinish?.(1, buildResult);
+          return {close: vi.fn(), result: buildResult};
+        });
+        runtime.showBanner.mockImplementation(() => controller.abort());
+        vi.mocked(startMiniOxygen).mockImplementationOnce(async (options) => {
+          const [instance] = await listDevInstances(directory);
+          expect(instance).toMatchObject({
+            command: 'hydrogen preview',
+            details: {watch},
+          });
+          options.registerCleanup?.(runtime.close);
+          return runtime as any;
+        });
+        try {
+          await Preview.run(
+            ['--path', directory, ...(watch ? ['--build', '--watch'] : [])],
+            {
+              root: fileURLToPath(new URL('../../..', import.meta.url)),
+            },
+          );
+          expect(startMiniOxygen).toHaveBeenCalledOnce();
+          expect(runtime.close).toHaveBeenCalledOnce();
+          expect(await listDevInstances(directory)).toHaveLength(0);
+        } finally {
+          controller.abort();
+        }
+      },
+    );
+  },
+);
+
+it('drains a cancelled non-watch build without throwing in the completion hook or starting the runtime', async () => {
+  await withPreviewFixture(
+    async ({directory, controller, runtime, buildResult}) => {
+      const started = deferPromise();
+      const finishBuild = deferPromise();
+      const completed = vi.fn();
+      const buildHookFinished = vi.fn();
+      vi.mocked(runBuild).mockImplementationOnce(async (options) => {
+        started.resolve();
+        await finishBuild.promise;
+        await options.onServerBuildFinish?.(1, buildResult);
+        buildHookFinished();
+        options.signal?.throwIfAborted();
+        return {close: vi.fn(), result: buildResult};
+      });
+      const running = runDevSession(
+        {
+          command: 'hydrogen preview',
+          directory,
+          envFile: '.env',
+          signal: controller.signal,
+        },
+        (session) =>
+          runPreview({
+            directory,
+            envFile: '.env',
+            debug: false,
+            build: true,
+            session,
+          }),
+      ).then(completed);
+      try {
+        await started.promise;
+        controller.abort();
+        expect(completed).not.toHaveBeenCalled();
+        expect(await listDevInstances(directory)).toHaveLength(1);
+        finishBuild.resolve();
+        await running;
+        expect(completed).toHaveBeenCalledOnce();
+        expect(buildHookFinished).toHaveBeenCalledOnce();
+        expect(getAllEnvironmentVariables).not.toHaveBeenCalled();
+        expect(startMiniOxygen).not.toHaveBeenCalled();
+        expect(runtime.reload).not.toHaveBeenCalled();
+        expect(await listDevInstances(directory)).toHaveLength(0);
+      } finally {
+        finishBuild.resolve();
+        controller.abort();
         await running;
       }
     },

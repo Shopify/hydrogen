@@ -25,11 +25,13 @@ import {runDevSession, type DevSession} from '../../lib/dev-session.js';
 import {deferPromise} from '../../lib/defer.js';
 
 export default class Preview extends Command {
-  static descriptionWithMarkdown = `Runs a server in your local development environment that serves your Hydrogen app's production build. Run the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-build) command first, or use \`--build\` to build before starting the server.
+  static descriptionWithMarkdown = `Runs a server in your local development environment that serves your Hydrogen app's production build.
+
+  Run the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-build) command first, or use \`--build\` to build before starting the server.
 
   Session status and JSONL logs are stored in your project's \`.shopify/dev/\` directory. The instance JSON includes the PID, session ID, \`logFile\`, and \`details.urls\`. Status becomes \`running\` when the server is ready.
 
-  Only one preview session can run for the same project, environment, environment branch, and environment file, even with a different port. Shutdown removes the instance and lock files and retains the log. The log resets on each run. Dev and preview use separate sessions. With \`--build --watch\`, each completed rebuild reloads the worker and adds a log message.`;
+  Only one preview session can run for the same project, environment, environment branch, and environment file, even with a different port. Shutdown removes the instance and lock files and retains the log. The log resets on each run. Dev and preview use separate sessions. With \`--build --watch\`, each completed rebuild reloads the worker and adds log messages. Preview has no \`--json\` mode.`;
 
   static description = this.descriptionForHelp();
 
@@ -146,29 +148,31 @@ export async function runPreview({
     codegenConfigPath,
   };
 
-  const buildProcess = shouldBuild
-    ? await runBuild({
-        ...buildOptions,
-        watch,
-        signal: session?.signal,
-        registerCleanup: session?.cleanup,
-        onServerBuildStart() {
-          session?.log('Building preview');
-        },
-        async onServerBuildFinish() {
-          if (projectBuild.state === 'pending') {
-            projectBuild.resolve();
-          } else {
-            outputInfo('🏗️  Project rebuilt. Reloading server...');
-            session?.log('Project rebuilt. Reloading server');
-          }
+  if (shouldBuild) {
+    await runBuild({
+      ...buildOptions,
+      watch,
+      signal: session?.signal,
+      registerCleanup: session?.cleanup,
+      onServerBuildStart() {
+        session?.log('Building preview');
+      },
+      async onServerBuildFinish() {
+        if (session?.signal.aborted) return;
+        if (projectBuild.state === 'pending') {
+          projectBuild.resolve();
+        } else {
+          outputInfo('🏗️  Project rebuilt. Reloading server...');
+          session?.log('Project rebuilt. Reloading server');
+        }
 
-          session?.signal.throwIfAborted();
-          await miniOxygen?.reload();
-          if (miniOxygen) session?.log('Runtime reloaded');
-        },
-      })
-    : projectBuild.resolve();
+        await miniOxygen?.reload();
+        if (miniOxygen) session?.log('Runtime reloaded');
+      },
+    });
+  } else {
+    projectBuild.resolve();
+  }
 
   session?.signal.throwIfAborted();
 
@@ -225,10 +229,4 @@ export async function runPreview({
     mode: 'preview',
     headlinePrefix: watch ? 'Watching for changes. ' : '',
   });
-
-  return {
-    async close() {
-      await Promise.allSettled([miniOxygen.close(), buildProcess?.close()]);
-    },
-  };
 }

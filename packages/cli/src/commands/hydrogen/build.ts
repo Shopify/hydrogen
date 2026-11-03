@@ -310,6 +310,8 @@ export async function runBuild({
   let codegenProcess: ReturnType<typeof spawnCodegenProcess> | undefined;
   const buildWatchers = new Set<{close: () => Promise<void>}>();
   let pendingCleanup = Promise.resolve();
+  // Register close after each acquisition: shutdown can start between resources,
+  // and a late registration must close any newly acquired watcher or codegen process.
   const close = () => {
     closing = true;
     codegenProcess?.removeAllListeners('close');
@@ -343,6 +345,8 @@ export async function runBuild({
     return pendingCleanup;
   };
 
+  // Vite exposes no cancellation handle for a non-watch build. Let it settle
+  // before checking the signal; session shutdown still has a five-second deadline.
   // Client build first
   const clientBuild = await vite
     .build({
@@ -557,6 +561,7 @@ export async function runBuild({
     : undefined;
 
   if (codegenProcess) registerCleanup?.(close);
+  signal?.throwIfAborted();
   if (!watch && process.env.NODE_ENV !== 'development') {
     if (bundleStats) {
       const bundleAnalysisPath =
