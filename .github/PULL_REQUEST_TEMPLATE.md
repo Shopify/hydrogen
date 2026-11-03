@@ -1,56 +1,202 @@
 <!--
   How to write a good PR title:
+
+  - A conventional-commit prefix is preferable for all PRs, for example:
+    fix(hydrogen): apply script attributes before DOM insertion
   - Start with a verb, for example: Add, Delete, Improve, Fix…
   - Give as much context as necessary and as little as possible
+
+  How to write a good PR description:
+
+  Write functional PR descriptions that help reviewers quickly understand the
+  change, intent, and impact.
+
+  Style:
+
+  - Use short paragraphs, clear headlines, and bullets.
+  - Write in understandable, simple language. Avoid complex jargon and explain
+    in the simplest possible way.
+  - Use bold only for important emphasis.
+  - Be specific and concise.
+  - Do not be punchy, sassy, commercial, or launch-y.
+  - Do not include the whole diff.
+  - Highlight only what this PR touches.
+  - The first section is the Why of the PR and does not need a title.
+  - Mention any issues closed by the PR at the beginning.
+
+  Before writing, identify the intent behind the pull request via:
+
+  - Conversation context: the user request, issue, spec, linked PRs, review
+    thread, or task notes that explain why the work exists.
+  - Diff between the branch this PR is merging into and this PR.
+  - Why: the problem, drift, missing source of truth, or developer pain. For
+    large or complex changes, briefly explain why this approach was chosen and
+    mention any meaningful alternatives considered.
+  - Developer impact: public APIs, exports, examples, skills, docs, generated
+    types, or migration work.
+  - UX impact: routes, buttons, UI states, forms, navigation, copy, loading
+    states, or accessibility behavior.
+  - Before/after: the smallest useful old/new code or behavior comparison.
+  - Versioning: whether a changeset is needed and why.
+  - Manual testing: the exact human workflow that proves the behavior works.
+  - Boundaries and risk: what was intentionally left out, known tradeoffs, or
+    follow-up work deferred to later PRs.
+
+  Rules:
+
+  - Never assume the reader will have full context of the situation.
+  - Prefer source-of-truth framing when the PR aligns server handlers,
+    examples, generated types, or agent skills.
+  - Use conversation context to recover intent; the diff usually shows what
+    changed, not why it changed.
+  - If the why is not clear from the diff, issue, spec, linked PRs, review
+    thread, or current conversation, ask the user before drafting.
+  - Use before/after snippets for API and example migrations.
+  - Keep snippets short and focused on the changed contract.
+  - Separate developer-facing impact from implementation details.
+  - Include UX impact for any visible route, UI, navigation, or interaction
+    change.
+  - Call out direct public entrypoint changes separately from internal
+    refactors.
+  - Explain changeset level when the diff touches packages/hydrogen/src/**,
+    package exports, packages/hydrogen/skills/**, or examples that teach
+    supported patterns. See the Developer impact section below.
+  - Do not use linting, unit tests, integration tests, typechecks, or CI as
+    How to Test.
+  - If there is no meaningful manual behavior to test, omit How to Test.
+  - Out of scope names what this PR does not try to solve. It is not a
+    roadmap.
+  - Risk names what could go wrong, what we are knowingly accepting, or what
+    deserves extra reviewer attention.
+
+  Anti-patterns:
+
+  - Do not write only a diff summary.
+  - Do not include headings that do not apply.
+  - Do not hide developer or UX impact in implementation bullets.
+  - Do not describe unrelated future work in What this changes. Use Out of
+    scope only for boundaries of this PR.
+  - Do not use pnpm lint, pnpm typecheck, unit tests, or CI as manual testing
+    instructions.
+  - Do not over-explain code that TypeScript or the diff already makes
+    obvious.
+
+  Use only the sections below that apply. Do not include categories that do
+  not apply: delete their headings.
 -->
 
-### WHY are these changes introduced?
+Closes #[number] <!-- link to issue if one exists -->
 
-Fixes #0000 <!-- link to issue if one exists -->
+TL;DR: <!-- Short explanation of the problem and intent. -->
+
+## Before
+
+<!-- Short code snippet or behavior summary showing the previous state. -->
+
+## After
+
+<!-- Short code snippet or behavior summary showing the new state. -->
+
+## What this changes
 
 <!--
-  Context about the problem that this PR is addressing. If this is a relatively large or complex change, kick off the discussion by explaining why you chose the solution you did and what alternatives you considered.
+- Concrete change
+- Concrete change
 -->
 
-### WHAT is this pull request doing?
+## Developer impact
 
 <!--
-  Summary of the changes committed.
+Only if library users, examples, public exports, package skills, types, or
+migration paths change.
 
-  Before / after screenshots are appreciated for UI changes. Make sure to include alt text that describes the screenshot.
+Versioning: when the diff touches library code, exports, packaged skills, or
+teaching examples, say whether a changeset is included and why that bump
+level fits. Put this in Developer impact unless versioning is the whole point
+of the PR.
 
-  If you include an animated gif showing your change, wrapping it in a details tag is recommended. Gifs usually autoplay, which can cause accessibility issues for people reviewing your PR:
+Use these levels for @shopify/hydrogen:
 
-    <details>
-      <summary>Summary of your gif(s)</summary>
-      <img src="..." alt="Description of what the gif shows">
-    </details>
+- patch: bug fixes, internal refactors, or skill/example hardening with no
+  new public API
+- minor: new exports, helpers, or supported patterns that are additive for
+  consumers
+- major: breaking changes to public exports or taught patterns
+
+Hydrogen is versioned YYYY.Q.P (CalVer), so these levels don't map straight
+onto the version number. At release time, scripts/calver.ts turns minor and
+patch into the next P (2026.10.0 -> 2026.10.1) and major into the next quarter
+(2026.10.3 -> 2027.1.0). While Hydrogen is on a prerelease, CI rejects major
+changesets.
+
+These are examples of the level of detail expected. Do not force every PR into
+this exact wording.
+
+    ## Developer impact
+
+    Includes a **patch** changeset for `@shopify/hydrogen`. Tightens cart
+    drawer skill guidance and the Next.js example wiring. No new exports and no
+    runtime contract changes.
+
+    ## Developer impact
+
+    Includes a **minor** changeset for `@shopify/hydrogen`. Adds predictive
+    search helpers, server handlers, and framework bindings. Consumers can
+    adopt the new API without breaking existing search routes.
+
+If no changeset is needed, say why. Example-only or repo-local skill changes
+that do not ship in @shopify/hydrogen do not need a package bump.
 -->
 
-<!-- ℹ️ Delete the following for small / trivial changes -->
-
-### HOW to test your changes?
+## UX impact
 
 <!--
-  Give as much information for the reviewer to test your changes locally. A thorough step-by-step guide will go along-way.
+Only if UI, routes, forms, buttons, navigation, loading states, copy, or
+accessibility behavior changes.
 -->
 
-#### Post-merge steps
+## Out of scope
 
 <!--
-  If changes require post-merge steps, for example merging and publishing [documentation](https://shopify.dev) changes,
-  specify it in this section and add the label "includes-post-merge-steps".
-  If it doesn't, feel free to remove this section.
+Only if there are intentional boundaries, known tradeoffs, or risks reviewers
+should know about.
+
+- What this PR deliberately does not address
 -->
 
-#### Checklist
-
-- [ ] I've read the [Contributing Guidelines](https://github.com/Shopify/hydrogen/blob/main/CONTRIBUTING.md)
-- [ ] I've considered possible cross-platform impacts (Mac, Linux, Windows)
-- [ ] I've added a [changeset](https://github.com/Shopify/hydrogen/blob/main/CONTRIBUTING.md#changesets) if this PR contains user-facing or functional changes. Test changes or internal-only config changes do not require a changeset. 
-- [ ] I've added [tests](https://github.com/Shopify/hydrogen/blob/main/CONTRIBUTING.md#testing) to cover my changes
-- [ ] I've added or updated the documentation
+## Risk
 
 <!--
- THANK YOU for your pull request! Members from the Hydrogen team will review these changes and provide feedback as soon as they are available.
+- What could break, what we are accepting as a tradeoff, or what needs extra
+  scrutiny
+-->
+
+## How to Test
+
+<!--
+Human-facing manual steps. Include setup, folder changes, dev server commands,
+environment assumptions, and behavior to verify.
+
+How to Test is for local manual verification by a human. Assume a MacBook
+unless told otherwise. Include every step needed to exercise the behavior.
+
+This is an example of the level of detail expected. Do not force every PR into
+this exact flow.
+
+    ## How to Test
+
+    1. Run `pnpm install && pnpm build:pkgs` to rebuild the packages.
+    2. Run `pnpm dev:next` to start the Next.js example app.
+    3. Open `http://localhost:3000/collections/frontpage`.
+    4. Select a filter.
+    5. Confirm the URL updates and the product grid shows the filtered products.
+    6. Reload the page.
+    7. Confirm the same filter remains selected and the same products render.
+-->
+
+<!--
+## Post-merge steps
+
+Only if this PR requires an action after merge. Uncomment this section and
+include each required step and why it is needed.
 -->

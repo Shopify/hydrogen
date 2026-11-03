@@ -208,6 +208,69 @@ describe("createCustomerAccountClient", () => {
     });
   });
 
+  it("auto-fills a non-null LanguageCode language variable when omitted", async () => {
+    const fetchMock = createMockFetch();
+    const client = createClient({
+      fetch: fetchMock,
+      requestContext: createRequestContext("https://example.com/account", {
+        country: "CA",
+        language: LANGUAGE_CODE,
+      }),
+    });
+
+    await client.graphql(
+      gql(
+        `query CustomerName($language: LanguageCode!) @inContext(language: $language) { customer { firstName } }`,
+      ),
+      graphqlOptions(),
+    );
+
+    const { init } = getFetchRequest(fetchMock);
+    expect(JSON.parse(String(init.body)).variables).toEqual({ language: LANGUAGE_CODE });
+  });
+
+  it("does not auto-fill an omitted language variable of another type", async () => {
+    const fetchMock = createMockFetch();
+    const client = createClient({
+      fetch: fetchMock,
+      requestContext: createRequestContext("https://example.com/account", {
+        country: "CA",
+        language: LANGUAGE_CODE,
+      }),
+    });
+
+    await client.graphql(
+      gql(
+        `query CustomerMetafield($language: String = "custom") { customer { metafield(namespace: $language, key: "promo") { value } } }`,
+      ),
+      graphqlOptions(),
+    );
+
+    const { init } = getFetchRequest(fetchMock);
+    expect(JSON.parse(String(init.body)).variables).toEqual({});
+  });
+
+  it("sends the caller's value for a language variable of another type", async () => {
+    const fetchMock = createMockFetch();
+    const client = createClient({
+      fetch: fetchMock,
+      requestContext: createRequestContext("https://example.com/account", {
+        country: "CA",
+        language: LANGUAGE_CODE,
+      }),
+    });
+
+    await client.graphql(
+      gql(
+        `query CustomerMetafield($language: String!) { customer { metafield(namespace: "custom", key: $language) { value } } }`,
+      ),
+      { accessToken: CUSTOMER_ACCOUNT_TOKEN, variables: { language: "promo-key" } },
+    );
+
+    const { init } = getFetchRequest(fetchMock);
+    expect(JSON.parse(String(init.body)).variables).toEqual({ language: "promo-key" });
+  });
+
   it("uses an https origin when the incoming local request is http", async () => {
     const fetchMock = createMockFetch();
     const client = createClient({
