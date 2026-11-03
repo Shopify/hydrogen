@@ -25,19 +25,34 @@ const CLOSING = new Set([")", "]", "}"]);
  * This is the same rule the `graphql()` variables type applies.
  */
 export function getI18nVariableNames(source: string): I18nVariableName[] {
-  const names: I18nVariableName[] = [];
+  return getVariableNamesDeclaredAs(source, I18N_VARIABLE_TYPES);
+}
+
+/**
+ * Returns the names in `types` that the document's first operation declares
+ * with the mapped named type, nullable or non-null. List types never match.
+ * The runtime counterpart of `InferVariableNamesDeclaredAs`.
+ */
+export function getVariableNamesDeclaredAs<Types extends Readonly<Record<string, string>>>(
+  source: string,
+  types: Types,
+): Array<keyof Types & string> {
+  const names: Array<keyof Types & string> = [];
   for (const [name, colon, ...rest] of readFirstOperationVariables(tokenize(source))) {
-    if (colon !== ":" || !isI18nVariableName(name)) continue;
+    if (colon !== ":" || !isKeyOf(types, name)) continue;
     const typeEnd = rest.findIndex((token) => token === "=" || token === "@");
     const type = rest.slice(0, typeEnd === -1 ? undefined : typeEnd).join("");
-    const expected = I18N_VARIABLE_TYPES[name];
+    const expected = types[name];
     if (type === expected || type === `${expected}!`) names.push(name);
   }
   return names;
 }
 
-function isI18nVariableName(name: string | undefined): name is I18nVariableName {
-  return name !== undefined && Object.hasOwn(I18N_VARIABLE_TYPES, name);
+function isKeyOf<Types extends object>(
+  types: Types,
+  name: string | undefined,
+): name is keyof Types & string {
+  return name !== undefined && Object.hasOwn(types, name);
 }
 
 function* tokenize(source: string): Generator<string> {

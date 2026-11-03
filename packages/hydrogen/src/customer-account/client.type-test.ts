@@ -96,6 +96,83 @@ describe("Customer Account API type boundary", () => {
     expectTypeOf(call).toBeFunction();
   });
 
+  it("keeps caller values optional for LanguageCode language variables", () => {
+    const REQUIRED_LANGUAGE_QUERY = customerAccountGql(
+      `query CustomerDetails($language: LanguageCode!, $orderId: ID!) @inContext(language: $language) { order(id: $orderId) { id } }`,
+    );
+    const call = () => {
+      customerAccount.graphql(REQUIRED_LANGUAGE_QUERY, {
+        accessToken: customerAccountAccessToken,
+        variables: { orderId: "gid://shopify/Order/1" },
+      });
+      customerAccount.graphql(REQUIRED_LANGUAGE_QUERY, {
+        accessToken: customerAccountAccessToken,
+        variables: { orderId: "gid://shopify/Order/1", language: "DE" },
+      });
+      customerAccount.graphql(REQUIRED_LANGUAGE_QUERY, {
+        accessToken: customerAccountAccessToken,
+        // @ts-expect-error language is a LanguageCode
+        variables: { orderId: "gid://shopify/Order/1", language: "not-a-language" },
+      });
+    };
+    expectTypeOf(call).toBeFunction();
+  });
+
+  it("keeps language variables of other types caller-owned and required", () => {
+    const STRING_LANGUAGE_QUERY = customerAccountGql(
+      `query CustomerMetafield($language: String!) { customer { metafield(namespace: "custom", key: $language) { value } } }`,
+    );
+    const LIST_LANGUAGE_QUERY = customerAccountGql(
+      `query CustomerDetails($language: [LanguageCode!]!) { customer { id } }`,
+    );
+    const call = () => {
+      customerAccount.graphql(STRING_LANGUAGE_QUERY, {
+        accessToken: customerAccountAccessToken,
+        variables: { language: "promo-key" },
+      });
+      // @ts-expect-error language is a caller-owned String here
+      customerAccount.graphql(STRING_LANGUAGE_QUERY, { accessToken: customerAccountAccessToken });
+      customerAccount.graphql(STRING_LANGUAGE_QUERY, {
+        accessToken: customerAccountAccessToken,
+        // @ts-expect-error language is a String here
+        variables: { language: 5 },
+      });
+
+      customerAccount.graphql(LIST_LANGUAGE_QUERY, {
+        accessToken: customerAccountAccessToken,
+        variables: { language: ["EN"] },
+      });
+      // @ts-expect-error a LanguageCode list is caller-owned
+      customerAccount.graphql(LIST_LANGUAGE_QUERY, { accessToken: customerAccountAccessToken });
+    };
+    expectTypeOf(call).toBeFunction();
+  });
+
+  it("matches the exact LanguageCode enum for documents without a source literal", () => {
+    type Language =
+      import("../graphql/generated/customer-account-graphql-env").introspection["types"]["LanguageCode"]["enumValues"];
+    const LANGUAGE_DOC = null as unknown as CustomerAccountDocument<
+      { customer: { id: string } },
+      { language: Language },
+      string
+    >;
+    const STRING_DOC = null as unknown as CustomerAccountDocument<
+      { customer: { id: string } },
+      { language: string },
+      string
+    >;
+    const call = () => {
+      customerAccount.graphql(LANGUAGE_DOC, { accessToken: customerAccountAccessToken });
+      customerAccount.graphql(STRING_DOC, {
+        accessToken: customerAccountAccessToken,
+        variables: { language: "promo-key" },
+      });
+      // @ts-expect-error language is a caller-owned String here
+      customerAccount.graphql(STRING_DOC, { accessToken: customerAccountAccessToken });
+    };
+    expectTypeOf(call).toBeFunction();
+  });
+
   it("requires requestContext from the Shopify request context factory", () => {
     const call = () => {
       const options = {

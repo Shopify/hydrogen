@@ -62,7 +62,7 @@ export const handleShopifyRoutes: HydrogenRouteHandler = (options) => {
  *
  * When a route matches, the function returns a promise for the response. Return that response as is, because the response already carries the request context's headers. When no route matches, the function returns `null` synchronously, and your framework's router handles the request. The function throws when `requestContext` differs from the Storefront API client's request context. When a route handler throws, the returned promise rejects. Inside a `try` block, use `return await` on the result.
  *
- * The function checks these routes in order and returns the first match: the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.
+ * The function checks these routes in order and returns the first match: the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, the UCP business profile at `/.well-known/ucp`, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.
  *
  * Some routes answer unsupported methods with a `405` response. A registered handler path returns `405` for any method that no handler on that path registers. Checkout and cart permalinks accept only `GET` and `HEAD`. Buy permalinks accept only `GET`, and the UCP MCP proxy accepts only `POST`.
  *
@@ -72,7 +72,7 @@ export const handleShopifyRoutes: HydrogenRouteHandler = (options) => {
  */
 export type HandleShopifyRoutesForDocs =
   /**
-   * @param options - The request, its context and session, the Storefront API client, your route templates, and your handler groups.
+   * @param options - The request, its context, the Storefront API client, your route templates, your handler groups, and the session manager when a registered handler needs one.
    * @returns A promise for the matched route's response, or `null` when no route matches.
    */
   (options: HydrogenRoutesOptions) => null | Promise<Response>;

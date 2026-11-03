@@ -23,7 +23,7 @@ export type ShopifyRouteSessionManager = {
 export type ShopifyRouteHandlerContext = {
   /** The incoming request that matched the handler's pathname and method. */
   request: Request;
-  /** Your app's session storage for the current request. */
+  /** Your app's session storage for the current request. `handleShopifyRoutes` requires it only when a registered handler's context includes this field. */
   sessionManager: ShopifyRouteSessionManager;
   /** The Storefront API client for the current request. */
   storefrontClient: StorefrontClient;
@@ -101,7 +101,8 @@ export type CallableRouteHandler<
 export type ShopifyRouteHandler<
   TPathname extends string = string,
   TMethod extends string = string,
-> = CallableRouteHandler<ShopifyRouteHandlerContext, ShopifyRouteHandlerResult, TPathname, TMethod>;
+  TContext extends Partial<ShopifyRouteHandlerContext> = ShopifyRouteHandlerContext,
+> = CallableRouteHandler<TContext, ShopifyRouteHandlerResult, TPathname, TMethod>;
 
 /**
  * An object of route handlers keyed by name. Pass an array of groups to `handleShopifyRoutes` as `handlers`.

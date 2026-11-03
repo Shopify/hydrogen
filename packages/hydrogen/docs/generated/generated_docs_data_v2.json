@@ -1371,7 +1371,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@19600",
+          "name": "__@toStringTag@19344",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         }
@@ -1452,7 +1452,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@19600",
+          "name": "__@toStringTag@19344",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         }
@@ -3648,7 +3648,7 @@
     "src/core/request-routing/registered-routes.ts": {
       "filePath": "src/core/request-routing/registered-routes.ts",
       "name": "CreateShopifyRouteHandlerGeneratedType",
-      "description": "Creates a custom endpoint in your app for one pathname and HTTP method. Collect handlers in an object, and pass an array of handler objects to `handleShopifyRoutes` in its `handlers` option.\n\nUse paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, or error result from the handler. Hydrogen sends a JSON result with status `200`, an error result with status `400` by default, and a redirect result with status `303` by default. When a redirect result uses a status other than `301`, `302`, `303`, 307, or 308, the promise from `handleShopifyRoutes` rejects.",
+      "description": "Creates a custom endpoint in your app for one pathname and HTTP method. Collect handlers in an object, and pass an array of handler objects to `handleShopifyRoutes` in its `handlers` option.\n\nUse paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, or error result from the handler. Hydrogen sends a JSON result with status `200`, an error result with status `400` by default, and a redirect result with status `303` by default. When a redirect result uses a status other than `301`, `302`, `303`, 307, or 308, the promise from `handleShopifyRoutes` rejects.\n\nAnnotate the handler's context parameter with only the fields the handler reads, for example `Omit<ShopifyRouteHandlerContext, \"sessionManager\">`, so apps without a session manager can register it. Hydrogen infers the context only from an annotated parameter. A handler with no parameter, or with an unannotated destructured parameter, gets the full context, so `handleShopifyRoutes` still requires `sessionManager` for it.\n\nMarking `sessionManager` optional in the annotation doesn't make it optional at runtime. It still makes `sessionManager` required, and when an untyped caller omits it, Hydrogen passes a stand-in that throws when the handler uses it. A check such as `if (sessionManager)` is always true, so don't use it as a fallback.",
       "isPublicDocs": true,
       "params": [
         {
@@ -3665,18 +3665,18 @@
         },
         {
           "name": "handler",
-          "description": "The function that receives the request, its context, the session, and the Storefront API client, and returns a JSON, redirect, or error result.",
-          "value": "(context: ShopifyRouteHandlerContext) => Promise<ShopifyRouteHandlerResult>",
+          "description": "The function that receives the request, its context, the session manager, and the Storefront API client, and returns a JSON, redirect, or error result.",
+          "value": "(context: TContext) => Promise<ShopifyRouteHandlerResult>",
           "filePath": "src/core/request-routing/registered-routes.ts"
         }
       ],
       "returns": {
         "filePath": "src/core/request-routing/registered-routes.ts",
         "description": "The handler to add to a handler object.",
-        "name": "ShopifyRouteHandler<const TPathname extends string, const TMethod extends string>",
-        "value": "ShopifyRouteHandler<const TPathname extends string, const TMethod extends string>"
+        "name": "ShopifyRouteHandler<const TPathname extends string, const TMethod extends string, TContext extends Partial<ShopifyRouteHandlerContext> = ShopifyRouteHandlerContext>",
+        "value": "ShopifyRouteHandler<const TPathname extends string, const TMethod extends string, TContext extends Partial<ShopifyRouteHandlerContext> = ShopifyRouteHandlerContext>"
       },
-      "value": "export function createShopifyRouteHandler<\n  const TPathname extends string,\n  const TMethod extends string,\n>(\n  pathname: TPathname,\n  method: TMethod,\n  handler: (context: ShopifyRouteHandlerContext) => Promise<ShopifyRouteHandlerResult>,\n): ShopifyRouteHandler<TPathname, TMethod> {\n  return createCallableRouteHandler(pathname, method, handler);\n}"
+      "value": "export function createShopifyRouteHandler<\n  const TPathname extends string,\n  const TMethod extends string,\n  TContext extends Partial<ShopifyRouteHandlerContext> = ShopifyRouteHandlerContext,\n>(\n  pathname: TPathname,\n  method: TMethod,\n  handler: (context: TContext) => Promise<ShopifyRouteHandlerResult>,\n): ShopifyRouteHandler<TPathname, TMethod, TContext> {\n  return createCallableRouteHandler(pathname, method, handler);\n}"
     }
   },
   "ShopifyRouteHandlerContext": {
@@ -3684,7 +3684,7 @@
       "filePath": "src/core/request-routing/route-types.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyRouteHandlerContext",
-      "value": "{\n  /** The incoming request that matched the handler's pathname and method. */\n  request: Request;\n  /** Your app's session storage for the current request. */\n  sessionManager: ShopifyRouteSessionManager;\n  /** The Storefront API client for the current request. */\n  storefrontClient: StorefrontClient;\n  /** The current request's context, the same one the Storefront API client uses. */\n  requestContext: ShopifyRequestContext;\n}",
+      "value": "{\n  /** The incoming request that matched the handler's pathname and method. */\n  request: Request;\n  /** Your app's session storage for the current request. `handleShopifyRoutes` requires it only when a registered handler's context includes this field. */\n  sessionManager: ShopifyRouteSessionManager;\n  /** The Storefront API client for the current request. */\n  storefrontClient: StorefrontClient;\n  /** The current request's context, the same one the Storefront API client uses. */\n  requestContext: ShopifyRequestContext;\n}",
       "description": "The values that Hydrogen passes to each registered route handler.",
       "members": [
         {
@@ -3706,7 +3706,7 @@
           "syntaxKind": "PropertySignature",
           "name": "sessionManager",
           "value": "ShopifyRouteSessionManager",
-          "description": "Your app's session storage for the current request."
+          "description": "Your app's session storage for the current request. `handleShopifyRoutes` requires it only when a registered handler's context includes this field."
         },
         {
           "filePath": "src/core/request-routing/route-types.ts",
@@ -3913,19 +3913,19 @@
       "name": "ShopifyRouteHandler",
       "value": "ShopifyRouteHandler",
       "members": [],
-      "override": "A route handler that createShopifyRouteHandler returns for one pathname and HTTP method. Call the handler with the route context to get a JSON, redirect, or error result, and read its `pathname` and `method` to see what it matches."
+      "override": "A route handler that createShopifyRouteHandler returns for one pathname and HTTP method. Call the handler with the route context to get a JSON, redirect, or error result, and read its `pathname` and `method` to see what it matches. The handler's context type comes from the annotated context parameter and defaults to `ShopifyRouteHandlerContext`."
     }
   },
   "HandleShopifyRoutesForDocs": {
     "src/core/request-routing/handle-shopify-routes.ts": {
       "filePath": "src/core/request-routing/handle-shopify-routes.ts",
       "name": "HandleShopifyRoutesForDocs",
-      "description": "Serves Shopify's storefront endpoints and your custom route handlers from your app. Call the function at the start of request handling, before your framework's router.\n\nWhen a route matches, the function returns a promise for the response. Return that response as is, because the response already carries the request context's headers. When no route matches, the function returns `null` synchronously, and your framework's router handles the request. The function throws when `requestContext` differs from the Storefront API client's request context. When a route handler throws, the returned promise rejects. Inside a `try` block, use `return await` on the result.\n\nThe function checks these routes in order and returns the first match: the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.\n\nSome routes answer unsupported methods with a `405` response. A registered handler path returns `405` for any method that no handler on that path registers. Checkout and cart permalinks accept only `GET` and `HEAD`. Buy permalinks accept only `GET`, and the UCP MCP proxy accepts only `POST`.\n\nWhen your bundler resolves the package's `development` export condition, the function also serves the GraphiQL explorer at `/graphiql` for GET requests that match no other route, and accepts a `graphiql` option. Set `graphiql.customerAccount` to an object with `apiUrl`, `accessToken`, and `schemaUrl` to add a Customer Account API tab. The explorer skips the tab when it can't fetch the schema.",
+      "description": "Serves Shopify's storefront endpoints and your custom route handlers from your app. Call the function at the start of request handling, before your framework's router.\n\nWhen a route matches, the function returns a promise for the response. Return that response as is, because the response already carries the request context's headers. When no route matches, the function returns `null` synchronously, and your framework's router handles the request. The function throws when `requestContext` differs from the Storefront API client's request context. When a route handler throws, the returned promise rejects. Inside a `try` block, use `return await` on the result.\n\nThe function checks these routes in order and returns the first match: the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, the UCP business profile at `/.well-known/ucp`, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.\n\nSome routes answer unsupported methods with a `405` response. A registered handler path returns `405` for any method that no handler on that path registers. Checkout and cart permalinks accept only `GET` and `HEAD`. Buy permalinks accept only `GET`, and the UCP MCP proxy accepts only `POST`.\n\nWhen your bundler resolves the package's `development` export condition, the function also serves the GraphiQL explorer at `/graphiql` for GET requests that match no other route, and accepts a `graphiql` option. Set `graphiql.customerAccount` to an object with `apiUrl`, `accessToken`, and `schemaUrl` to add a Customer Account API tab. The explorer skips the tab when it can't fetch the schema.",
       "isPublicDocs": true,
       "params": [
         {
           "name": "options",
-          "description": "The request, its context and session, the Storefront API client, your route templates, and your handler groups.",
+          "description": "The request, its context, the Storefront API client, your route templates, your handler groups, and the session manager when a registered handler needs one.",
           "value": "HydrogenRoutesOptions",
           "filePath": "src/core/request-routing/handle-shopify-routes.ts"
         }
@@ -3940,57 +3940,12 @@
     }
   },
   "HydrogenRoutesOptions": {
-    "src/core/request-routing/route-types.ts": {
-      "filePath": "src/core/request-routing/route-types.ts",
+    "unknown": {
+      "description": "",
       "name": "HydrogenRoutesOptions",
-      "description": "The request, its context and session, the Storefront API client, your route templates, and your handler groups.",
-      "members": [
-        {
-          "filePath": "src/core/request-routing/route-types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "handlers",
-          "value": "readonly ShopifyRouteHandlerGroup[]",
-          "description": "The handler groups for your app's custom endpoints.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/request-routing/route-types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "request",
-          "value": "Request",
-          "description": "The incoming request that matched the handler's pathname and method."
-        },
-        {
-          "filePath": "src/core/request-routing/route-types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "requestContext",
-          "value": "ShopifyRequestContext",
-          "description": "The current request's context, the same one the Storefront API client uses."
-        },
-        {
-          "filePath": "src/core/request-routing/route-types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "routeTemplates",
-          "value": "ShopifyRouteTemplates",
-          "description": "Your app's route templates. Hydrogen redirects Liquid-style `?variant=` URLs on your product paths and on Shopify's default product paths.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/request-routing/route-types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "sessionManager",
-          "value": "ShopifyRouteSessionManager",
-          "description": "Your app's session storage for the current request."
-        },
-        {
-          "filePath": "src/core/request-routing/route-types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "storefrontClient",
-          "value": "StorefrontClient",
-          "description": "The Storefront API client for the current request."
-        }
-      ],
-      "value": "export interface HydrogenRoutesOptions extends ShopifyRouteHandlerContext {\n  /**\n   * Your app's route templates. Hydrogen redirects Liquid-style `?variant=` URLs on your product paths and on Shopify's default product paths.\n   */\n  routeTemplates?: ShopifyRouteTemplates;\n  /** The handler groups for your app's custom endpoints. */\n  handlers?: readonly ShopifyRouteHandlerGroup[];\n}"
+      "value": "HydrogenRoutesOptions",
+      "members": [],
+      "override": "The options for handleShopifyRoutes: the `request`, the `requestContext`, the `storefrontClient` created with that request context, optional `routeTemplates`, and optional `handlers`, an array of handler groups. Pass `sessionManager` when a registered handler's context includes it, such as Customer Account handlers or cart handlers created with `customerSession`. Otherwise `sessionManager` is optional when the handler types are inferred from `handlers`."
     }
   },
   "ShopifyScriptsOptions": {
@@ -6957,7 +6912,7 @@
         {
           "filePath": "src/core/cart/buyer-identity-sync.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@22178",
+          "name": "__@cartBuyerIdentitySync@21922",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to `createCustomerAccountServerHandlers` through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         }
@@ -7366,7 +7321,7 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@23708",
+          "name": "__@cartServerHandlersCartQuery@23509",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -7416,14 +7371,14 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@22178",
+          "name": "__@cartBuyerIdentitySync@21922",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to `createCustomerAccountServerHandlers` through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         },
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@23708",
+          "name": "__@cartServerHandlersCartQuery@23509",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -10079,7 +10034,7 @@
         {
           "filePath": "src/core/predictive-search/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@predictiveSearchServerHandlersQuery@26634",
+          "name": "__@predictiveSearchServerHandlersQuery@26435",
           "value": "PredictiveSearchQueryForOptions<TOptions>",
           "description": "Query that the handlers run, with any custom fragments."
         },
