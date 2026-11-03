@@ -20,6 +20,7 @@ import {
   createCartStore,
   type CreateCartStoreOptions,
   type CartActions,
+  type CartTransport,
   type CartStore,
 } from "../core/cart/cart";
 import { createCartFormRegister, type CartFormRegister } from "../core/cart/form";
@@ -54,6 +55,8 @@ type TypedCartProviderProps<TData extends CartData> = {
    * The `data` property of the cart GET handler's result, or a promise of that data. Without initial data, the store loads the cart from `/api/cart` after the provider mounts, and the server-rendered page shows an empty cart. The provider creates its store from the first value and ignores later changes.
    */
   initialData?: CartInitialData<TData>;
+  /** Loads and changes the cart through your own service instead of Shopify Standard Actions. The provider reads the transport once. */
+  transport?: CartTransport<TData>;
   /** Content that can read the cart through the cart hooks. */
   children?: ReactNode;
 };
@@ -61,7 +64,7 @@ type TypedCartProviderProps<TData extends CartData> = {
 type CartInitialData<TData extends CartData = CartData> =
   CreateCartStoreOptions<TData>["initialData"];
 
-export type { CartActions };
+export type { CartActions, CartTransport };
 
 /** A hook that returns the slice of cart state that your selector picks. */
 type CartStateHook<TData extends CartData> =
@@ -113,7 +116,7 @@ type TypedCartComponents<TData extends CartData> = {
    * Returns the slice of cart state that the selector picks, or `undefined` outside the provider. Use the hook in a component that also renders above the provider, such as a cart badge on an error page.
    */
   useOptionalCart: OptionalCartStateHook<TData>;
-  /** Returns the `refresh()` action. Call `refresh()` after a server-side cart change that skips cart forms. */
+  /** Returns the cart change actions, and `refresh()` for a server-side cart change that skips the store. */
   useCartActions: typeof useCartActions;
   /** Returns form props and a register function for cart forms. */
   useCartForm: typeof useCartForm;
@@ -147,9 +150,12 @@ export function createCartComponents<THandlers>(): TypedCartComponents<
 > {
   type TData = CartDataFromHandlers<THandlers>;
 
-  function TypedCartProvider({ initialData, children }: TypedCartProviderProps<TData>) {
+  function TypedCartProvider({ initialData, transport, children }: TypedCartProviderProps<TData>) {
     return (
-      <CartProvider initialData={initialData as CartInitialData | undefined}>
+      <CartProvider
+        initialData={initialData as CartInitialData | undefined}
+        transport={transport as CartTransport | undefined}
+      >
         {children}
       </CartProvider>
     );
@@ -203,7 +209,7 @@ function useOptionalCartContext(): CartContextValue | null {
 /**
  * Creates a cart store and shares the store with the cart hooks inside the provider.
  *
- * Render every cart hook inside the provider. On mount, the provider sends cart requests to `/api/cart` and connects the store. On unmount, the provider destroys the store. The provider creates its store from the first initial data and ignores later changes.
+ * Render every cart hook inside the provider. On mount, the provider sends cart requests to `/api/cart`, or to the `transport` when you pass one, and connects the store. On unmount, the provider destroys the store. The provider creates its store from the first initial data and transport and ignores later changes.
  *
  * @example
  * ```tsx
@@ -212,19 +218,21 @@ function useOptionalCartContext(): CartContextValue | null {
  *   <App />
  * </CartProvider>
  * ```
- * @param props - The initial cart data and the content that uses the cart hooks.
+ * @param props - The initial cart data, an optional cart transport, and the content that uses the cart hooks.
  * @returns A context provider that shares the cart store with its children.
  * @publicDocs
  */
 export function CartProvider({
   initialData,
+  transport,
   children,
 }: {
   initialData?: CartInitialData;
+  transport?: CartTransport;
   children?: ReactNode;
 }) {
   const context = useMemo(() => {
-    const store = createCartStore({ initialData });
+    const store = createCartStore({ initialData, transport });
     // Plain consumers must hydrate from the state used for SSR, even if the live store settles first.
     return { store, hydrationSnapshot: store.getState() };
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- provider initialData seeds one store for its lifetime
@@ -276,15 +284,17 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
 }
 
 /**
- * Returns the cart action that reloads the cart after a cart change outside cart forms.
+ * Returns the cart actions that change the cart from code, and the action that reloads the cart after a cart change outside the store.
  *
- * Call `refresh()` after a server-side cart change that skips cart forms, such as a server action that creates the cart.
+ * The change actions behave like cart form submissions: the change shows before the server responds, the changed line or field is pending until it settles, and failures appear in the cart state's `errors`. Call `refresh()` after a server-side cart change that skips the store, such as a server action that creates the cart.
  *
- * @returns The `refresh()` action.
+ * @returns The cart actions.
  *
  * @example
  * ```tsx
- * const { refresh } = useCartActions();
+ * const { updateLines, refresh } = useCartActions();
+ *
+ * <button onClick={() => updateLines([{ id: line.id, quantity: line.quantity + 1 }])}>+</button>;
  *
  * async function handleServerAction() {
  *   await createCartOnServer();
@@ -296,7 +306,26 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");
 
-  return useMemo(() => ({ refresh: store.refresh }), [store]);
+  return useMemo(() => {
+    const {
+      refresh,
+      addLines,
+      updateLines,
+      removeLines,
+      setDiscountCodes,
+      setNote,
+      setAttributes,
+    } = store;
+    return {
+      refresh,
+      addLines,
+      updateLines,
+      removeLines,
+      setDiscountCodes,
+      setNote,
+      setAttributes,
+    };
+  }, [store]);
 }
 
 /**

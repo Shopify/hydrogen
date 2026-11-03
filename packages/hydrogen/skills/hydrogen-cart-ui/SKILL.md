@@ -31,7 +31,7 @@ When creating a full cart page, use the app's existing route convention when pre
 
 ## Prerequisites
 
-The store sends cart changes through Shopify's Standard Actions runtime (`window.Shopify.actions`) and listens for its events. Render `ShopifyScripts` once in the document head. When the app deliberately skips Shopify's other scripts, include only `<script type="module" src="https://cdn.shopify.com/storefront/standard-actions.js"></script>`. Without the runtime, cart actions reject with "Standard Actions not available".
+The store sends cart changes through Shopify's Standard Actions runtime (`window.Shopify.actions`) and listens for its events. Render `ShopifyScripts` once in the document head. When the app deliberately skips Shopify's other scripts, include only `<script type="module" src="https://cdn.shopify.com/storefront/standard-actions.js"></script>`. Without the runtime, cart actions reject with "Standard Actions not available". A store with a custom transport (see below) needs no Standard Actions runtime.
 
 ## How the store works
 
@@ -54,7 +54,9 @@ The cart store combines its lifecycle, timeout, and caller signals with `AbortSi
 
 ## Code-driven cart changes
 
-Some changes have no form: a free gift added when the cart crosses a threshold, removing a line that became unavailable, an attribute written by a script. Send them with `window.Shopify.actions.updateCart(payload, options)`. The store observes the events it dispatches, so these changes get the same optimistic projection, pending state and rollback as form submissions. Do not hand-roll `fetch` calls to the cart route.
+Some changes have no form: a free gift added when the cart crosses a threshold, removing a line that became unavailable, an attribute written by a script. In app code, call the store's change methods, which the framework bindings return from `useCartActions()`: `addLines(lines, { products })`, `updateLines([{ id, quantity }])`, `removeLines(lineIds)`, `setDiscountCodes(codes)`, `setNote(note)` and `setAttributes(attributes)`. They get the same optimistic projection, pending state and rollback as form submissions, queue a first add behind the cart's creation, and work with or without a custom transport. Pass `products` (`[{ id: merchandiseId, price, ...merchandise }]`) so a new line shows before the server responds. Failures land in `state.errors`; the promise also rejects when the request fails. Do not hand-roll `fetch` calls to the cart route.
+
+Scripts outside the app, such as theme scripts, can send changes with `window.Shopify.actions.updateCart(payload, options)`. A store without a custom transport observes the events it dispatches. The rest of this section covers that path.
 
 - **Wait for the store.** Call `updateCart` only after all of these hold:
   - `window.Shopify.actions.updateCart.isDefault()` returns `false`, which happens once a connected cart store has configured it. Before that, Shopify's default handler runs instead of the app's cart route. The framework cart providers also configure the cart endpoint; a store from `createCartStore()` keeps using Shopify's default handler until the app calls `configureCartEndpoint(path)`.
@@ -66,6 +68,24 @@ Some changes have no form: a free gift added when the cart crosses a threshold, 
 - **Rules that react to the cart.** Evaluate them on settled state only (`loading` false, no pending entries, `revalidating` false), and do not start another change while your own is in flight. Otherwise the rule reacts to its own projection and can loop.
 - **Several attribute writers.** `attributes` replaces the whole list. Build each write from the latest list you sent, falling back to `state.data.attributes` when nothing is in flight, so writers in the same tick keep each other's keys.
 - **Analytics.** `trackCartAnalytics` reports every confirmed change, including code-driven ones. Storefronts that keep system changes out of analytics must track shopper changes themselves.
+
+## Custom cart transport
+
+To run a cart store against a service other than Shopify Standard Actions (a cart spanning several merchants, a test double, a non-Shopify host), pass a `CartTransport` as `createCartStore({ transport })` or `<CartProvider transport={transport}>`:
+
+```ts
+const transport: CartTransport = {
+  getCart: (cartId, { signal }) => api.getCart(cartId, { signal }), // → { cart: CartData | null }
+  updateCart: (update, { signal }) => api.updateCart(update, { signal }), // → { cart, userErrors?, warnings? }
+};
+```
+
+- **The store owns the cart ID.** Every call carries it: `getCart(cartId)` and `update.cartId`. A `null` ID means no cart exists yet; the first `updateCart` creates one. The transport can keep no state, so a new transport instance after a page reload works with a saved ID. To restore a saved cart, pass `initialData` from your own `getCart(savedId)` call, or read the saved ID in `getCart` when `cartId` is `null`.
+- **One change at a time.** The store sends the next change only after the previous one settles, with the cart ID that result returned. A transport whose writes return a new ID, or that replaces the whole cart on each write, never receives a stale ID or overlapping writes. A newer change to the same line skips queued older ones.
+- **One kind of change per call.** `update` sets exactly one of `lines`, `discountCodes`, `note` or `attributes`. Lines with an `id` set a quantity (`0` removes); lines without one add merchandise. IDs pass through unchanged.
+- **Results.** Return the whole cart in Hydrogen's `CartData` shape; extra fields reach state unchanged. Report validation failures in `userErrors` with `field` paths such as `["lines", "0", "quantity"]` so they show next to the line. Return `cart: null` when nothing applied, so the store rolls the change back. A thrown error becomes `errors.network`.
+- **Isolation.** A store with a transport ignores `shopify:cart:*` events and dispatches none, so a Standard Actions cart and a custom cart can share a page. `configureCartEndpoint` does not route its requests, but quantity inputs of forms that post to the endpoint still sync.
+- **Signals.** Honor `signal`. It aborts on the 30-second timeout, on destroy or reset, and when a newer change supersedes the call. A superseded call still holds the next change until it settles, so writes never overlap. A call that never settles holds later changes for at most 30 seconds, then fails with a `TimeoutError`.
 
 ## Stable selectors
 

@@ -391,6 +391,12 @@ function createMockCartStore(initialState?: CartStateOverrides): CartStore & {
     refresh: vi.fn(),
     reset: vi.fn(),
     handleFormSubmit: vi.fn(() => Promise.resolve()),
+    addLines: vi.fn(() => Promise.resolve()),
+    updateLines: vi.fn(() => Promise.resolve()),
+    removeLines: vi.fn(() => Promise.resolve()),
+    setDiscountCodes: vi.fn(() => Promise.resolve()),
+    setNote: vi.fn(() => Promise.resolve()),
+    setAttributes: vi.fn(() => Promise.resolve()),
     _setState: (next) => observable.setState(next),
   };
 }

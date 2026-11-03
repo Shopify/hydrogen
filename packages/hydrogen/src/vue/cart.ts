@@ -20,6 +20,7 @@ import {
   createCartStore,
   type CreateCartStoreOptions,
   type CartActions,
+  type CartTransport,
   type CartStore,
 } from "../core/cart/cart";
 import { createCartFormRegister, type CartFormRegister } from "../core/cart/form";
@@ -58,10 +59,10 @@ type CartInitialData<TData extends CartData = CartData> =
   CreateCartStoreOptions<TData>["initialData"];
 
 type TypedCartProvider<TData extends CartData> = {
-  new (): { $props: { initialData?: CartInitialData<TData> } };
+  new (): { $props: { initialData?: CartInitialData<TData>; transport?: CartTransport<TData> } };
 };
 
-export type { CartActions };
+export type { CartActions, CartTransport };
 
 /** Cart provider and composables whose cart state carries the custom fields from your cart server handlers. */
 type TypedCartComponents<TData extends CartData> = {
@@ -71,7 +72,7 @@ type TypedCartComponents<TData extends CartData> = {
   useCart: TypedUseCart<TData>;
   /** Returns the slice of cart state that the selector picks as a read-only shallow ref. Outside the provider, the ref holds `undefined`. */
   useOptionalCart: TypedUseOptionalCart<TData>;
-  /** Returns the `refresh` action. Call `refresh` after a server-side cart mutation that bypasses cart forms. */
+  /** Returns the cart change actions, and `refresh` for a server-side cart mutation that bypasses the store. */
   useCartActions: typeof useCartActions;
   /** Returns form props, a register function, and pending state for cart forms. */
   useCartForm: typeof useCartForm;
@@ -79,15 +80,21 @@ type TypedCartComponents<TData extends CartData> = {
 
 function createTypedCartProvider<TData extends CartData>(): TypedCartProvider<TData> {
   const TypedCartProvider = defineComponent(
-    (props: { initialData?: CartInitialData<TData> }, { slots }) => {
+    (
+      props: { initialData?: CartInitialData<TData>; transport?: CartTransport<TData> },
+      { slots },
+    ) => {
       return () =>
         h(
           CartProvider,
-          { initialData: props.initialData as CartInitialData | undefined },
+          {
+            initialData: props.initialData as CartInitialData | undefined,
+            transport: props.transport as CartTransport | undefined,
+          },
           slots.default,
         );
     },
-    { name: "CartProvider", props: ["initialData"] },
+    { name: "CartProvider", props: ["initialData", "transport"] },
   );
 
   return TypedCartProvider as unknown as TypedCartProvider<TData>;
@@ -108,7 +115,7 @@ function useOptionalCartStore(): CartStore | null {
 /**
  * Creates a cart store and shares the store with the cart composables below the provider.
  *
- * The provider connects the store on mount and destroys the store on unmount. Render every cart composable inside the provider. The provider creates its store once from the first initial data and ignores later changes.
+ * The provider connects the store on mount and destroys the store on unmount. Render every cart composable inside the provider. The provider creates its store once from the first initial data and `transport`, and ignores later changes. Pass a `transport` to load and change the cart through your own service instead of Shopify Standard Actions.
  *
  * @example
  * ```vue
@@ -125,9 +132,13 @@ export const CartProvider = defineComponent({
       type: Object as PropType<CartInitialData>,
       default: undefined,
     },
+    transport: {
+      type: Object as PropType<CartTransport>,
+      default: undefined,
+    },
   },
   setup(props, { slots }) {
-    const store = createCartStore({ initialData: props.initialData });
+    const store = createCartStore({ initialData: props.initialData, transport: props.transport });
     provide(CartStoreKey, store);
 
     onMounted(() => {
@@ -178,28 +189,34 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
 }
 
 /**
- * Returns the cart action that syncs the cart after a mutation outside cart forms.
+ * Returns the cart actions that change the cart from code, and the action that syncs the cart after a mutation outside the store.
  *
- * Call `refresh` after a server-side cart mutation that bypasses cart forms, such as a server action that creates the cart.
+ * The change actions behave like cart form submissions: the change shows before the server responds, the changed line or field is pending until it settles, and failures appear in the cart state's `errors`. Call `refresh` after a server-side cart mutation that bypasses the store, such as a server action that creates the cart.
  *
- * @returns The `refresh` action.
+ * @returns The cart actions.
  *
  * @example
  * ```vue
  * <script setup>
- * const { refresh } = useCartActions();
+ * const { updateLines, refresh } = useCartActions();
  *
  * async function handleServerAction() {
  *   await createCartOnServer();
  *   refresh();
  * }
  * </script>
+ *
+ * <template>
+ *   <button @click="updateLines([{ id: line.id, quantity: line.quantity + 1 }])">+</button>
+ * </template>
  * ```
  * @publicDocs
  */
 export function useCartActions(): CartActions {
   const store = useCartStore("useCartActions");
-  return { refresh: store.refresh };
+  const { refresh, addLines, updateLines, removeLines, setDiscountCodes, setNote, setAttributes } =
+    store;
+  return { refresh, addLines, updateLines, removeLines, setDiscountCodes, setNote, setAttributes };
 }
 
 /**
