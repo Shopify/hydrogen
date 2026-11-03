@@ -46,6 +46,10 @@
       "import": {
         "development": "./dist/development/customer-account/index.mjs",
         "default": "./dist/customer-account/index.mjs"
+      },
+      "default": {
+        "development": "./dist/development/customer-account/index.mjs",
+        "default": "./dist/customer-account/index.mjs"
       }
     },
     "./customer-account-api-types": "./dist/customer-account-api-types.d.ts",

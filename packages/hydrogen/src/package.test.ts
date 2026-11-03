@@ -1,8 +1,16 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+} from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
@@ -16,6 +24,7 @@ const EXPORTS_WITHOUT_DEVELOPMENT_BUILD = new Set(["./vite", "./ts-plugin"]);
 // pack + tar + spawn on a cold CI runner can exceed vitest's 5s default.
 const TS_PLUGIN_PACK_TIMEOUT_MS = 30_000;
 const STANDARD_EVENTS_SCRIPT_URL = "https://cdn.shopify.com/storefront/standard-events.js";
+const URL_IMPORT = /\bimport\((?:\s|\/\*.*?\*\/|\/\/[^\n]*)*["'`]https?:[^)]*\)/gs;
 const STANDARD_EVENTS_INSPECTOR_ID = "shopify-standard-events-inspector";
 const COPY_GENERATED_GRAPHQL_ASSETS_SCRIPT_PATH = resolve(
   PACKAGE_ROOT,
@@ -101,6 +110,18 @@ describe("package metadata", () => {
       expect(importTargets.map((target) => resolve(PACKAGE_ROOT, target))).toContain(
         require.resolve(`@shopify/hydrogen${exportPath.slice(1)}`),
       );
+    }
+  });
+
+  it("resolves development ESM entry points for require-based resolvers", () => {
+    for (const entry of ["", "/customer-account", "/react", "/vue"]) {
+      const resolved = execFileSync(
+        process.execPath,
+        ["--conditions=development", "-p", `require.resolve("@shopify/hydrogen${entry}")`],
+        { cwd: PACKAGE_ROOT, encoding: "utf8" },
+      ).trim();
+
+      expect(resolved).toContain(resolve(PACKAGE_ROOT, "dist/development") + sep);
     }
   });
 
@@ -330,12 +351,19 @@ createCustomerAccountServerHandlers({ customerSession, cartServerHandlers });`,
     );
   });
 
-  it("preserves the standard events URL as a literal dynamic import", () => {
-    const pageViewScript = readFileSync(
-      resolve(PACKAGE_ROOT, "dist/core/shopify-scripts/page-view.mjs"),
-      "utf8",
-    );
+  it("tells consumer bundlers to leave URL imports to the browser", () => {
+    const distDirectory = resolve(PACKAGE_ROOT, "dist");
+    const urlImports = readdirSync(distDirectory, { encoding: "utf8", recursive: true })
+      .filter((file) => file.endsWith(".mjs"))
+      .flatMap(
+        (file) => readFileSync(resolve(distDirectory, file), "utf8").match(URL_IMPORT) ?? [],
+      );
 
-    expect(pageViewScript).toContain(`import("${STANDARD_EVENTS_SCRIPT_URL}")`);
+    expect(urlImports).toEqual(
+      expect.arrayContaining([expect.stringContaining(STANDARD_EVENTS_SCRIPT_URL)]),
+    );
+    for (const urlImport of urlImports) {
+      expect(urlImport).toContain("/* webpackIgnore: true */");
+    }
   });
 });
