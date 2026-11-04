@@ -1019,7 +1019,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@17650",
+          "name": "__@toStringTag",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         }
@@ -1107,7 +1107,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@17650",
+          "name": "__@toStringTag",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         }
@@ -5094,7 +5094,7 @@
       "filePath": "src/globals.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyGlobal",
-      "value": "{\n  actions: ShopifyStandardActions;\n  analytics?: StorefrontAnalytics;\n  /** The store settings that Shopify's storefront web components read. */\n  components: {\n    config: {\n      storeDomain: string;\n      publicAccessToken?: string;\n      apiVersion?: string;\n      country?: string;\n      language?: string;\n    };\n  };\n  /** The customer's country code. Defaults to `US`. */\n  country: I18nConfig[\"country\"] | string;\n  /** The active currency code, in uppercase. */\n  currency?: {\n    active: string;\n  };\n  /** Shopify's Customer Privacy API, which reads and updates the customer's consent. */\n  customerPrivacy: {\n    config?: {\n      isHeadless?: boolean;\n      asyncConsent?: boolean;\n      asyncVisitorState?: boolean;\n      consentDomain?: string;\n    };\n    consentStatus?: \"loading\" | \"loaded\";\n    currentVisitorConsent: () => Record<string, unknown>;\n    preferencesProcessingAllowed: () => boolean;\n    saleOfDataAllowed: () => boolean;\n    marketingAllowed: () => boolean;\n    analyticsProcessingAllowed: () => boolean;\n    /** Synchronizes consent with Shopify. Await completion before using the updated consent. */\n    setTrackingConsent: (consent: Record<string, unknown>) => Promise<unknown>;\n    shouldShowBanner: () => boolean;\n    shouldShowGDPRBanner: () => boolean;\n  };\n  /** The customer's language code, in lowercase. Defaults to `en`. */\n  locale: Lowercase<I18nConfig[\"language\"]> | string;\n  /**\n   * Navigates to a storefront URL.\n   * @deprecated Use `Shopify.routes.navigate` instead.\n   */\n  navigate?: (url: string) => void | Promise<void>;\n  /** The storefront's route settings and navigation helper. */\n  routes: {\n    /** The locale path prefix with a trailing slash, or `\"/\"` when the storefront has no prefix. */\n    root: string;\n    /** @private */\n    apiProxyPrefix?: string;\n    /** @private */\n    match?: (url: string) => ShopifyStandardRouteMatch | null;\n    /** @private */\n    resolve?: (url: string) => string;\n    /** Navigates to a storefront URL after resolving it to your app's route. */\n    navigate?: (url: string) => void | Promise<void>;\n    [key: string]: unknown;\n  };\n  /** The shop's permanent `*.myshopify.com` domain. */\n  shop: string;\n  [key: string]: unknown;\n}",
+      "value": "{\n  actions: ShopifyStandardActions;\n  analytics?: StorefrontAnalytics;\n  /** The application that rendered the page. */\n  application: {\n    name: \"hydrogen\";\n    /** The `@shopify/hydrogen` release in use. */\n    version: string;\n  };\n  /** The store settings that Shopify's storefront web components read. */\n  components: {\n    config: {\n      storeDomain: string;\n      publicAccessToken?: string;\n      apiVersion?: string;\n      country?: string;\n      language?: string;\n    };\n  };\n  /** The customer's country code. Defaults to `US`. */\n  country: I18nConfig[\"country\"] | string;\n  /** The active currency code, in uppercase. */\n  currency?: {\n    active: string;\n  };\n  /** Shopify's Customer Privacy API, which reads and updates the customer's consent. */\n  customerPrivacy: {\n    config?: {\n      isHeadless?: boolean;\n      asyncConsent?: boolean;\n      asyncVisitorState?: boolean;\n      consentDomain?: string;\n    };\n    consentStatus?: \"loading\" | \"loaded\";\n    currentVisitorConsent: () => Record<string, unknown>;\n    preferencesProcessingAllowed: () => boolean;\n    saleOfDataAllowed: () => boolean;\n    marketingAllowed: () => boolean;\n    analyticsProcessingAllowed: () => boolean;\n    /** Synchronizes consent with Shopify. Await completion before using the updated consent. */\n    setTrackingConsent: (consent: Record<string, unknown>) => Promise<unknown>;\n    shouldShowBanner: () => boolean;\n    shouldShowGDPRBanner: () => boolean;\n  };\n  /** The customer's language code, in lowercase. Defaults to `en`. */\n  locale: Lowercase<I18nConfig[\"language\"]> | string;\n  /**\n   * Navigates to a storefront URL.\n   * @deprecated Use `Shopify.routes.navigate` instead.\n   */\n  navigate?: (url: string) => void | Promise<void>;\n  /** The storefront's route settings and navigation helper. */\n  routes: {\n    /** The locale path prefix with a trailing slash, or `\"/\"` when the storefront has no prefix. */\n    root: string;\n    /** @private */\n    apiProxyPrefix?: string;\n    /** @private */\n    match?: (url: string) => ShopifyStandardRouteMatch | null;\n    /** @private */\n    resolve?: (url: string) => string;\n    /** Navigates to a storefront URL after resolving it to your app's route. */\n    navigate?: (url: string) => void | Promise<void>;\n    [key: string]: unknown;\n  };\n  /** The shop's permanent `*.myshopify.com` domain. */\n  shop: string;\n  [key: string]: unknown;\n}",
       "description": "The `window.Shopify` object that Shopify's scripts and Hydrogen share in the browser.",
       "isPublicDocs": true,
       "members": [
@@ -5112,6 +5112,13 @@
           "value": "StorefrontAnalytics",
           "description": "The analytics event bus that the Shopify script tags create at `window.Shopify.analytics`.\n\nStorefronts publish events such as page views, product views, and cart changes. Tracking integrations register as destinations and receive events once consent allows tracking.",
           "isOptional": true
+        },
+        {
+          "filePath": "src/globals.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "application",
+          "value": "{ name: \"hydrogen\"; version: string; }",
+          "description": "The application that rendered the page."
         },
         {
           "filePath": "src/globals.ts",
@@ -6997,7 +7004,7 @@
         {
           "filePath": "src/core/cart/buyer-identity-sync.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@22710",
+          "name": "__@cartBuyerIdentitySync",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to `createCustomerAccountServerHandlers` through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         }
@@ -7422,7 +7429,7 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@24242",
+          "name": "__@cartServerHandlersCartQuery",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -7472,14 +7479,14 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@22710",
+          "name": "__@cartBuyerIdentitySync",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to `createCustomerAccountServerHandlers` through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         },
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@24242",
+          "name": "__@cartServerHandlersCartQuery",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },

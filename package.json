@@ -59,6 +59,9 @@
     },
     "onlyBuiltDependencies": [
       "lefthook"
-    ]
+    ],
+    "patchedDependencies": {
+      "@shopify/generate-docs@1.2.2": "patches/@shopify__generate-docs@1.2.2.patch"
+    }
   }
 }
