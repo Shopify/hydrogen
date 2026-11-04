@@ -34,7 +34,7 @@ Source arrays extend defaults in both versions, but the creator is not a drop-in
 | Area | Classic | Current API |
 | --- | --- | --- |
 | Options | Directives are top-level properties alongside `shop`. | Move directive properties under `directives`; keep `shop` alongside `nonce`. |
-| Directive values | Accepts arrays, strings, and booleans. | Source directives accept arrays or `null`; use `null` to omit, `[]` for an empty directive without defaults, and booleans only for `upgradeInsecureRequests`. |
+| Directive values | Accepts arrays, strings, and booleans. | Source directives accept arrays or `null`; use `null` to omit. `[]` adds nothing to existing defaults, and gives an empty directive only where there is no default or the default is only `'none'`. Booleans are only for `upgradeInsecureRequests`. |
 | Default policy | Relies on `defaultSrc` for scripts, images, fonts, media, and frames. | Uses `defaultSrc: ["'self'"]` and defines these directives separately, adds `objectSrc: ["'none'"]` and `scriptSrcAttr: ["'none'"]`, allows `data:` images, and adds Shopify connection/frame origins. A `defaultSrc` customization no longer authorizes these separately configured resource types. |
 | Nonce placement | Adds the nonce to `scriptSrc` when an array is supplied, otherwise to `defaultSrc`. | Always adds it to `scriptSrc`, and also to a configured `scriptSrcElem`. Incoming headers never determine the nonce; manually supplied nonce sources are rejected. |
 | React helpers | Returns a bound `NonceProvider`; exports `useNonce` and `Script`. | Exposes `nonce` and `header`; React context stays in the app. Pass the nonce explicitly to framework scripts and `ShopifyScripts`. |
