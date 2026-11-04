@@ -2,7 +2,7 @@
 
 Next splits Hydrogen routing across `proxy.ts` and `app/not-found.tsx`.
 
-For CSP, see [Content Security Policy](./content-security-policy.md). Call `csp.applyResponseHeaders()` on the response. In nonce mode, also set `Content-Security-Policy` to `csp.header` on the headers returned by `getForwardedRequestHeaders()` so Next's renderer can nonce its own scripts. Nonce mode requires dynamic document rendering and an app-owned parser to pass the forwarded nonce to Shopify's scripts. Use `nonce: false` with explicit inline-script authorization to preserve a prerendered shell; in that mode, remove incoming CSP and report-only CSP request headers instead of forwarding a policy.
+For CSP, see [Content Security Policy](./content-security-policy.md). Call `csp.applyResponseHeaders()` on the response. In nonce mode, also set `Content-Security-Policy` to `csp.header` on the headers returned by `getForwardedRequestHeaders()` so Next's renderer can nonce its own scripts. Nonce mode requires dynamic document rendering. Forward `csp.nonce` in an app-owned request header such as `x-nonce`, overwriting any incoming value, and read it in the layout for Shopify's scripts. Use `nonce: false` with explicit inline-script authorization to preserve a prerendered shell; in that mode, remove incoming CSP and report-only CSP request headers instead of forwarding a policy.
 
 ## `proxy.ts`
 
