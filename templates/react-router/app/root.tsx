@@ -1,8 +1,4 @@
-import {
-  createShopifyRequestContext,
-  handleShopifyRedirects,
-  handleShopifyRoutes,
-} from "@shopify/hydrogen";
+import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
 import type { ReactNode } from "react";
 import {
@@ -31,7 +27,7 @@ import { predictiveSearchHandlers } from "~/lib/predictive-search-handlers";
 import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
-import { analyticsConsent, getBuyerIp, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
+import { analyticsConsent, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
 import { createRequestStorefrontClient, storefrontClientContext } from "~/lib/storefront";
 
 import type { Route } from "./+types/root";
@@ -46,22 +42,14 @@ export const links: Route.LinksFunction = () => [
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ context, request }, next) => {
     const env = context.get(envContext);
-
-    const requestContext = createShopifyRequestContext({
-      request,
-      i18n: storefrontConfig.i18n,
-      buyerIp: getBuyerIp(request.headers),
-    });
-
     const storefrontClient = createRequestStorefrontClient(
-      requestContext,
+      request,
       env,
       context.cache,
       context.waitUntil,
     );
-
+    const requestContext = storefrontClient.requestContext;
     const customerAccount = await createRequestCustomerAccount(request, env, requestContext);
-
     const sessionManager =
       customerAccount?.customerAccount.sessionManager ?? createEphemeralSessionManager(request);
 
