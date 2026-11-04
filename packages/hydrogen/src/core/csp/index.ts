@@ -49,7 +49,7 @@ export function createContentSecurityPolicy(
   options: CreateContentSecurityPolicyOptions = {},
 ): ContentSecurityPolicy {
   const nonce = options.nonce === false ? undefined : generateNonce();
-  const directives = getShopifyCspDirectives(options.shop);
+  const directives: ContentSecurityPolicyDirectives = getShopifyCspDirectives(options.shop);
   mergeDirectives(directives, options.directives);
   if (nonce !== undefined) {
     directives.scriptSrc = withNonce(directives.scriptSrc, nonce);
@@ -102,9 +102,7 @@ function mergeSources(value: unknown, defaults: unknown): unknown {
  * configure their authorization explicitly.
  * @publicDocs
  */
-export function getShopifyCspDirectives(
-  shop: ContentSecurityPolicyShop = {},
-): ContentSecurityPolicyDirectives {
+export function getShopifyCspDirectives(shop: ContentSecurityPolicyShop = {}) {
   const shopOrigins = [shop.storeDomain, shop.checkoutDomain]
     .filter((domain) => domain !== undefined)
     .map(normalizeStoreDomain);
@@ -150,7 +148,7 @@ export function getShopifyCspDirectives(
           ]
         : []),
     ],
-  };
+  } satisfies ContentSecurityPolicyDirectives;
 }
 
 function generateNonce(): string {

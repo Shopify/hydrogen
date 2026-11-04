@@ -16,7 +16,7 @@ it("accepts immutable source arrays and exposes response header application", ()
   expectTypeOf(policy.applyResponseHeaders).toEqualTypeOf<(headers: Headers) => void>();
   expectTypeOf(policy).not.toHaveProperty("applyRequestHeaders");
   expectTypeOf(policy).not.toHaveProperty("NonceProvider");
-  expectTypeOf(getShopifyCspDirectives().scriptSrc).toEqualTypeOf<readonly string[] | null | undefined>();
+  expectTypeOf(getShopifyCspDirectives().scriptSrc).toEqualTypeOf<string[]>();
 });
 
 it("infers nonce mode for default, disabled, and broad options", () => {
