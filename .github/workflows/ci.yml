@@ -43,6 +43,15 @@ jobs:
       - name: Lint
         run: pnpm run lint:ci
 
+      - name: Generated docs check
+        run: |
+          pnpm --filter @shopify/hydrogen build-docs
+          if ! git diff --stat --exit-code -- packages/hydrogen/docs/generated; then
+            git --no-pager diff -- packages/hydrogen/docs/generated | head -n 200 || true
+            echo "::error file=packages/hydrogen/docs/generated/generated_docs_data_v2.json::Generated docs are out of date. Run 'pnpm --filter @shopify/hydrogen build-docs' and commit the result."
+            exit 1
+          fi
+
       - name: Build packages
         run: pnpm run build
 
