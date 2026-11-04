@@ -308,7 +308,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       if (!response.ok) {
         const retryAfter = responseHeaders.get("retry-after") ?? undefined;
         // `applyResponseHeaders()` adds the value when the app answers this error with a `429`.
-        if (status === RATE_LIMITED_STATUS) requestContext.captureStorefrontRateLimit(retryAfter);
+        if (status === RATE_LIMITED_STATUS) requestContext.captureStorefrontRateLimit?.(retryAfter);
         const bodyHint = await response.text().catch(() => "");
         throw new StorefrontApiError(
           `SFAPI responded with ${status}${bodyHint ? `: ${bodyHint.slice(0, 200)}` : ""}`,

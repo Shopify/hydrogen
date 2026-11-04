@@ -740,7 +740,39 @@ describe("handleShopifyRoutes", () => {
       configureLogging({});
     });
 
-    it("returns a 429 rate_limited response and logs the error once", async () => {
+    it("preserves default rejected Storefront API 429 errors", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      const error = new StorefrontApiError("throttled", { status: 429, retryAfter: "9" });
+      const request = new Request("https://my-app.com/custom");
+      const handler = createShopifyRouteHandler("/custom", "GET", async () => {
+        throw error;
+      });
+
+      const result = handleShopifyRoutes({ request, handlers: [{ custom: handler }] });
+      expect(result).toBeInstanceOf(Promise);
+      await expect(result).rejects.toBe(error);
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      new StorefrontApiError("throttled", { status: 429 }),
+      new Error("handler setup failed"),
+    ])("preserves default synchronous throws: %s", (error) => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      const request = new Request("https://my-app.com/custom");
+      const handler = createShopifyRouteHandler("/custom", "GET", () => {
+        throw error;
+      });
+
+      expect(() => handleShopifyRoutes({ request, handlers: [{ custom: handler }] })).toThrow(
+        error,
+      );
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it("returns a 429 rate_limited response and logs the error once when enabled", async () => {
       const logger = createTestLogger();
       configureLogging({ logger });
       const error = new StorefrontApiError("SFAPI responded with 429: <html>upstream page</html>", {
@@ -753,7 +785,11 @@ describe("handleShopifyRoutes", () => {
         throw error;
       });
 
-      const result = await handleShopifyRoutes({ request, handlers: [{ custom: handler }] });
+      const result = await handleShopifyRoutes({
+        request,
+        handlers: [{ custom: handler }],
+        rateLimitHandling: "response",
+      });
 
       assert(result, "expected a response");
       expect(result.status).toBe(429);
@@ -785,7 +821,11 @@ describe("handleShopifyRoutes", () => {
         throw error;
       });
 
-      const result = await handleShopifyRoutes({ request, handlers: [{ custom: handler }] });
+      const result = await handleShopifyRoutes({
+        request,
+        handlers: [{ custom: handler }],
+        rateLimitHandling: "response",
+      });
 
       assert(result, "expected a response");
       expect(result.status).toBe(429);
@@ -798,39 +838,56 @@ describe("handleShopifyRoutes", () => {
       });
     });
 
-    it("rejects the returned promise when a handler throws another error before it returns a promise", async () => {
+    it.each([
+      new Error("handler setup failed"),
+      new StorefrontApiError("SFAPI responded with 503", { status: 503 }),
+      Object.assign(new Error("application rate limit"), { status: 429, retryAfter: "9" }),
+    ])("rejects non-matching synchronous errors when enabled: %s", async (error) => {
       const logger = createTestLogger();
       configureLogging({ logger });
-      const error = new Error("handler setup failed");
       const request = new Request("https://my-app.com/custom");
       const handler = createShopifyRouteHandler("/custom", "GET", () => {
         throw error;
       });
 
-      const result = handleShopifyRoutes({ request, handlers: [{ custom: handler }] });
+      const result = handleShopifyRoutes({
+        request,
+        handlers: [{ custom: handler }],
+        rateLimitHandling: "response",
+      });
 
       expect(result).toBeInstanceOf(Promise);
       await expect(result).rejects.toBe(error);
       expect(logger.error).not.toHaveBeenCalled();
     });
 
-    it.each([401, 403, 503])("lets a Storefront API %i error throw", async (status) => {
-      const logger = createTestLogger();
-      configureLogging({ logger });
-      const error = new StorefrontApiError(`SFAPI responded with ${status}`, {
-        status,
-        retryAfter: "9",
-      });
-      const request = new Request("https://my-app.com/custom");
-      const handler = createShopifyRouteHandler("/custom", "GET", async () => {
-        throw error;
-      });
+    it.each([
+      [undefined, 401],
+      [undefined, 403],
+      [undefined, 503],
+      ["response", 401],
+      ["response", 403],
+      ["response", 503],
+    ] as const)(
+      "lets rateLimitHandling=%s Storefront API %i errors reject",
+      async (rateLimitHandling, status) => {
+        const logger = createTestLogger();
+        configureLogging({ logger });
+        const error = new StorefrontApiError(`SFAPI responded with ${status}`, {
+          status,
+          retryAfter: "9",
+        });
+        const request = new Request("https://my-app.com/custom");
+        const handler = createShopifyRouteHandler("/custom", "GET", async () => {
+          throw error;
+        });
 
-      await expect(handleShopifyRoutes({ request, handlers: [{ custom: handler }] })).rejects.toBe(
-        error,
-      );
-      expect(logger.error).not.toHaveBeenCalled();
-    });
+        await expect(
+          handleShopifyRoutes({ request, handlers: [{ custom: handler }], rateLimitHandling }),
+        ).rejects.toBe(error);
+        expect(logger.error).not.toHaveBeenCalled();
+      },
+    );
   });
 
   it("sends an error result with format text as a plain-text response", async () => {

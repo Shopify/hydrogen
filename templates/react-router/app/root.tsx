@@ -66,6 +66,7 @@ export const middleware: Route.MiddlewareFunction[] = [
       sessionManager,
       storefrontClient,
       routeTemplates,
+      rateLimitHandling: "response",
       handlers: customerAccount
         ? [cartHandlers, predictiveSearchHandlers, customerAccount.handlers]
         : [cartHandlers, predictiveSearchHandlers],

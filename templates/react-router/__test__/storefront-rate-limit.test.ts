@@ -286,6 +286,30 @@ for (const child of [false, true]) {
   }
 }
 
+for (const [recovered, critical] of [
+  ["1", "60"],
+  ["60", "1"],
+]) {
+  for (const path of ["/", "/_root.data"]) {
+    test(`recovered ${recovered}s and critical ${critical}s use conservative retry advice for ${path}`, async () => {
+      let calls = 0;
+      const client = createClient(() => upstream(429, calls++ === 0 ? recovered : critical));
+      const response = await handler(
+        async () => {
+          await client.graphql(QUERY).catch(() => undefined);
+          return client.graphql(QUERY);
+        },
+        client.requestContext,
+        { map: true },
+      )(new Request(`https://storefront.example${path}`));
+      assert.equal(response.status, 429);
+      assert.equal(response.headers.get("retry-after"), "60");
+      assert.equal(response.headers.get("cache-control"), "no-store");
+      assert.doesNotMatch(await response.text(), new RegExp(UPSTREAM_SECRET));
+    });
+  }
+}
+
 test("an application 429 Response gets no Retry-After when no Storefront request was rate limited", async () => {
   const response = await handler(() => {
     throw new Response("Too many requests", { status: 429, headers: { "Retry-After": "30" } });
@@ -310,13 +334,16 @@ test("a loader that recovers from a rate limit keeps 200 without rate-limit head
 });
 
 for (const retryAfter of ["0", "00030", "Thu, 29 Oct 2026 19:00:00 GMT"]) {
-  test(`valid Retry-After advice is preserved: ${retryAfter}`, async () => {
+  test(`valid Retry-After advice is restored as remaining delay: ${retryAfter}`, async () => {
     const client = createClient(() => upstream(429, retryAfter));
     const response = await handler(() => client.graphql(QUERY), client.requestContext, {
       map: true,
     })(new Request("https://storefront.example/"));
     assert.equal(response.status, 429);
-    assert.equal(response.headers.get("retry-after"), retryAfter);
+    const remaining = /^\d+$/.test(retryAfter)
+      ? BigInt(retryAfter)
+      : BigInt(Math.max(0, Math.ceil((Date.parse(retryAfter) - Date.now()) / 1000)));
+    assert.equal(response.headers.get("retry-after"), String(remaining));
     await response.text();
   });
 }
@@ -387,6 +414,10 @@ test("the template wraps each Storefront page loader and passes the status to ap
   ]) {
     const source = await readFile(new URL(`../app/${path}.tsx`, import.meta.url), "utf8");
     assert.match(source, /export const loader = withStorefrontRateLimit\(/, path);
+  }
+  for (const path of ["root.tsx", "lib/cart-handlers.ts", "lib/predictive-search-handlers.ts"]) {
+    const source = await readFile(new URL(`../app/${path}`, import.meta.url), "utf8");
+    assert.match(source, /rateLimitHandling: "response"/, path);
   }
   const root = await readFile(new URL("../app/root.tsx", import.meta.url), "utf8");
   assert.match(

@@ -124,11 +124,12 @@ type ShopifyRequestContextBase = {
    */
   consumeStorefrontResponseHeaders(headers: Headers): void;
   /**
-   * Saves the `Retry-After` value of a Storefront API `429` response. The Storefront API client
-   * calls the method for you, and `applyResponseHeaders()` adds the value to a `429` response.
+   * Tracks Storefront API `429` responses and the latest valid retry deadline, independent of
+   * completion order. Delay-seconds start at capture time; HTTP dates specify absolute deadlines.
+   * Invalid values do not replace valid advice. The Storefront API client calls the method for you.
    * @internal
    */
-  captureStorefrontRateLimit(retryAfter: string | undefined): void;
+  captureStorefrontRateLimit?(retryAfter: string | undefined): void;
   /**
    * Lets the final response set Shopify cookies before the customer has a Shopify session, and
    * marks the response as private and uncacheable. The UCP MCP proxy calls the method for you.
@@ -150,7 +151,7 @@ type ShopifyRequestContextBase = {
    *
    * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses marked with `markResponseAsPersonalized()` private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.
    *
-   * Pass the response's `status` as well. When the status is `429` and the Storefront API rate limited a request that used this context, the method sets `Cache-Control: no-store` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. It also adds the Storefront API's `Retry-After` value when the value is delay-seconds or an IMF-fixdate and the response has no `Retry-After` header. React Router doesn't copy the headers of a thrown response, so this keeps the headers of a `429` from `withStorefrontRateLimit`. Responses with other statuses keep their cache headers.
+   * Pass the response's `status` as well. When the status is `429` and the Storefront API rate limited a request that used this context, the method sets `Cache-Control: no-store` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. It keeps a valid response `Retry-After` header. Otherwise, it restores the latest valid retry deadline from all Storefront API `429` responses on this context, including recovered errors. Delay-seconds and IMF-fixdates are accepted. The restored value is the remaining delay-seconds, rounded up and never negative. React Router doesn't copy the headers of a thrown response, so this keeps the headers of a `429` from `withStorefrontRateLimit`. Responses with other statuses keep their cache headers.
    */
   applyResponseHeaders(headers: Headers, status?: number): void;
 };
@@ -248,7 +249,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
   let personalizedResponseReason: string | undefined;
   let sessionEstablishingReason: string | undefined;
   let storefrontRateLimited = false;
-  let storefrontRetryAfter: string | undefined;
+  let storefrontRetryDeadline: bigint | undefined;
 
   const captureSubrequestHeaders = (headers: Headers): void => {
     // Capture the first fresh response cookies to increase the
@@ -277,7 +278,16 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     },
     captureStorefrontRateLimit(retryAfter) {
       storefrontRateLimited = true;
-      storefrontRetryAfter ??= getSafeRetryAfterValue(retryAfter);
+      const value = getSafeRetryAfterValue(retryAfter);
+      if (value === undefined) return;
+
+      // BigInt preserves valid delays without rounding or overflow, including very large values.
+      const deadline = value.endsWith("GMT")
+        ? BigInt(Date.parse(value))
+        : BigInt(Date.now()) + BigInt(value) * 1000n;
+      if (storefrontRetryDeadline === undefined || deadline > storefrontRetryDeadline) {
+        storefrontRetryDeadline = deadline;
+      }
     },
     markResponseAsPersonalized(reason) {
       personalizedResponseReason ??= reason;
@@ -293,8 +303,13 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
       // headers.
       if (status === RATE_LIMITED_STATUS && storefrontRateLimited) {
         applyNoStoreResponseCacheHeaders(headers);
-        if (storefrontRetryAfter && !headers.has("retry-after")) {
-          headers.set("Retry-After", storefrontRetryAfter);
+        if (
+          storefrontRetryDeadline !== undefined &&
+          getSafeRetryAfterValue(headers.get("retry-after")) === undefined
+        ) {
+          const remaining = storefrontRetryDeadline - BigInt(Date.now());
+          const seconds = remaining > 0n ? (remaining + 999n) / 1000n : 0n;
+          headers.set("Retry-After", seconds.toString());
         }
       }
 

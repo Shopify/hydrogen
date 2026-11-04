@@ -1,5 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
+import { createStorefrontClient } from "../client/client";
+import { StorefrontApiError } from "../client/errors";
+import { gql } from "../graphql";
 import {
   CONSENT_MANAGEMENT_HEADER,
   HYDROGEN_VERSION_HEADER,
@@ -14,6 +17,7 @@ import {
   SHOPIFY_VISIT_TOKEN_HEADER,
 } from "./headers";
 import { createShopifyRequestContext, type I18nConfig } from "./request-context";
+import { assert } from "./test-utils";
 
 const DEFAULT_I18N = { country: "US", language: "EN" } as I18nConfig;
 
@@ -655,8 +659,19 @@ describe("createShopifyRequestContext", () => {
 });
 
 describe("applyResponseHeaders after a Storefront API rate limit", () => {
+  const now = Date.parse("Thu, 29 Oct 2026 18:00:00 GMT");
+
+  beforeEach(() => {
+    vi.spyOn(Date, "now").mockReturnValue(now);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   function rateLimitedContext(...retryAfterValues: (string | undefined)[]) {
     const context = createTestRequestContext(new Request("https://example.com/products"));
+    assert(context.captureStorefrontRateLimit, "the context must capture Storefront rate limits");
     for (const retryAfter of retryAfterValues) context.captureStorefrontRateLimit(retryAfter);
     return context;
   }
@@ -697,14 +712,183 @@ describe("applyResponseHeaders after a Storefront API rate limit", () => {
     expect(headers.get("retry-after")).toBe("120");
   });
 
-  it("uses the first valid Retry-After value", () => {
-    const context = rateLimitedContext("soon", undefined, "Thu, 29 Oct 2026 19:00:00 GMT", "60");
+  it.each([
+    ["1", "60"],
+    ["60", "1"],
+  ])("restores the latest deadline for delays %s then %s", (first, second) => {
+    const context = rateLimitedContext(first, second);
     const headers = new Headers();
 
     context.applyResponseHeaders(headers, 429);
 
-    expect(headers.get("retry-after")).toBe("Thu, 29 Oct 2026 19:00:00 GMT");
+    expect(headers.get("retry-after")).toBe("60");
   });
+
+  it.each([
+    ["60", "Thu, 29 Oct 2026 18:02:00 GMT", "120"],
+    ["Thu, 29 Oct 2026 18:02:00 GMT", "60", "120"],
+    ["180", "Thu, 29 Oct 2026 18:02:00 GMT", "180"],
+    ["Thu, 29 Oct 2026 18:02:00 GMT", "180", "180"],
+  ])("compares delay and date deadlines: %s then %s", (first, second, expected) => {
+    const context = rateLimitedContext(first, second);
+    const headers = new Headers();
+
+    context.applyResponseHeaders(headers, 429);
+
+    expect(headers.get("retry-after")).toBe(expected);
+  });
+
+  it.each([
+    ["00030", "30"],
+    ["Thu, 29 Oct 2026 18:02:00 GMT", "120"],
+    ["Thu, 29 Oct 2026 17:59:59 GMT", "0"],
+    ["0", "0"],
+  ])("normalizes a valid Retry-After value to remaining seconds: %s", (retryAfter, expected) => {
+    const context = rateLimitedContext(retryAfter);
+    const headers = new Headers();
+
+    context.applyResponseHeaders(headers, 429);
+
+    expect(headers.get("retry-after")).toBe(expected);
+  });
+
+  it.each([
+    ["00030", "30"],
+    ["30", "00030"],
+  ])("selects the same representation for equal deadlines: %s then %s", (first, second) => {
+    const context = rateLimitedContext(first, second);
+    const headers = new Headers();
+
+    context.applyResponseHeaders(headers, 429);
+
+    expect(headers.get("retry-after")).toBe("30");
+  });
+
+  it.each([undefined, "soon", "-1", "1.5", "30\r\nSet-Cookie: injected=1"])(
+    "ignores invalid advice before and after a valid delay: %j",
+    (invalid) => {
+      const context = rateLimitedContext(invalid, "60", invalid, "1");
+      const headers = new Headers();
+
+      context.applyResponseHeaders(headers, 429);
+
+      expect(headers.get("retry-after")).toBe("60");
+    },
+  );
+
+  it("compares large valid delays without rounding or overflow", () => {
+    const context = rateLimitedContext("9".repeat(400), "1" + "0".repeat(400));
+    const headers = new Headers();
+
+    context.applyResponseHeaders(headers, 429);
+
+    expect(headers.get("retry-after")).toBe("1" + "0".repeat(400));
+  });
+
+  it.each([
+    [1500, "59"],
+    [61000, "0"],
+  ])("subtracts elapsed time and rounds up after %s ms", (elapsed, expected) => {
+    const context = rateLimitedContext("60");
+    vi.mocked(Date.now).mockReturnValue(now + elapsed);
+    const headers = new Headers();
+
+    context.applyResponseHeaders(headers, 429);
+
+    expect(headers.get("retry-after")).toBe(expected);
+  });
+
+  it("compares delays from their capture times, not their numeric values", () => {
+    const context = rateLimitedContext("60");
+    vi.mocked(Date.now).mockReturnValue(now + 59000);
+    assert(context.captureStorefrontRateLimit, "the context must capture Storefront rate limits");
+    context.captureStorefrontRateLimit("2");
+    const headers = new Headers();
+
+    context.applyResponseHeaders(headers, 429);
+
+    expect(headers.get("retry-after")).toBe("2");
+  });
+
+  it("keeps a valid response header even when captured advice has a later deadline", () => {
+    const context = rateLimitedContext("60");
+    const headers = new Headers({ "retry-after": "1" });
+
+    context.applyResponseHeaders(headers, 429);
+
+    expect(headers.get("retry-after")).toBe("1");
+  });
+
+  it("replaces an invalid response header with valid captured advice", () => {
+    const context = rateLimitedContext("60");
+    const headers = new Headers({ "retry-after": "soon" });
+
+    context.applyResponseHeaders(headers, 429);
+
+    expect(headers.get("retry-after")).toBe("60");
+  });
+
+  it("restores critical advice after an optional query recovered from a shorter rate limit", async () => {
+    const context = createTestRequestContext(new Request("https://example.com/products"));
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response("optional query", { status: 429, headers: { "retry-after": "1" } }),
+      )
+      .mockResolvedValueOnce(
+        new Response("critical query", { status: 429, headers: { "retry-after": "60" } }),
+      );
+    const client = createStorefrontClient({
+      type: "public",
+      requestContext: context,
+      config: { storeDomain: "test.myshopify.com", publicStorefrontToken: "token", fetch },
+    });
+    const query = gql(`query { shop { name } }`);
+
+    await expect(client.graphql(query).catch(() => null)).resolves.toBeNull();
+    await expect(client.graphql(query)).rejects.toBeInstanceOf(StorefrontApiError);
+    // React Router builds new headers after it drops the thrown response headers.
+    const headers = new Headers();
+    context.applyResponseHeaders(headers, 429);
+
+    expect(headers.get("cache-control")).toBe("no-store");
+    expect(headers.get("retry-after")).toBe("60");
+  });
+
+  it.each([true, false])(
+    "restores the maximum after parallel completion (short first: %s)",
+    async (shortFirst) => {
+      const context = createTestRequestContext(new Request("https://example.com/products"));
+      const short = Promise.withResolvers<Response>();
+      const long = Promise.withResolvers<Response>();
+      const fetch = vi.fn().mockReturnValueOnce(short.promise).mockReturnValueOnce(long.promise);
+      const client = createStorefrontClient({
+        type: "public",
+        requestContext: context,
+        config: { storeDomain: "test.myshopify.com", publicStorefrontToken: "token", fetch },
+      });
+      const query = gql(`query { shop { name } }`);
+      const shortQuery = client.graphql(query).catch((error: unknown) => error);
+      const longQuery = client.graphql(query).catch((error: unknown) => error);
+      const completions = [
+        [short, "1", shortQuery],
+        [long, "60", longQuery],
+      ] as const;
+
+      for (const [pending, retryAfter, queryResult] of shortFirst
+        ? completions
+        : [...completions].reverse()) {
+        pending.resolve(
+          new Response("rate limited", { status: 429, headers: { "retry-after": retryAfter } }),
+        );
+        expect(await queryResult).toBeInstanceOf(StorefrontApiError);
+      }
+      const headers = new Headers();
+      context.applyResponseHeaders(headers, 429);
+
+      expect(headers.get("retry-after")).toBe("60");
+    },
+  );
 
   it.each([undefined, "-1", "1.5", "tomorrow", "30\r\nSet-Cookie: injected=1"])(
     "sets no-store but omits a missing or invalid Retry-After value: %j",

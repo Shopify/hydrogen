@@ -62,14 +62,14 @@ function createPrivateStorefrontClient(request: Request) {
   });
 }
 
-function handlePredictiveSearchRequest(request: Request) {
+function handlePredictiveSearchRequest(request: Request, rateLimitHandling?: "response") {
   const storefrontClient = createPrivateStorefrontClient(request);
   return handleShopifyRoutesImpl({
     request,
     requestContext: storefrontClient.requestContext,
     sessionManager: createTestSessionManager(request),
     storefrontClient,
-    handlers: [createPredictiveSearchServerHandlers()],
+    handlers: [createPredictiveSearchServerHandlers({ rateLimitHandling })],
   });
 }
 
@@ -382,7 +382,46 @@ describe("createPredictiveSearchServerHandlers", () => {
       });
     });
 
-    it("returns 429 with Retry-After and a constant message when the Storefront API rate limits", async () => {
+    it("keeps default Storefront API rate limits at 400 for direct and registered calls", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      const rateLimitedResponse = new Response("upstream private diagnostic", {
+        status: 429,
+        headers: { "retry-after": "7" },
+      });
+      mockFetch.mockResolvedValueOnce(rateLimitedResponse.clone());
+      const request = createPredictiveSearchRequest();
+      const directResult = await createPredictiveSearchServerHandlers().get({
+        request,
+        storefrontClient: createPrivateStorefrontClient(request),
+      });
+      expect(directResult).toEqual({
+        type: "error",
+        error: {
+          code: "invalid_predictive_search_request",
+          message: "Predictive search request failed",
+        },
+      });
+
+      mockFetch.mockResolvedValueOnce(rateLimitedResponse.clone());
+      const result = await handlePredictiveSearchRequest(createPredictiveSearchRequest());
+      assert(result, "expected a response");
+      expect(result.status).toBe(400);
+      expect(result.headers.has("retry-after")).toBe(false);
+      await expect(result.json()).resolves.toEqual({
+        error: {
+          code: "invalid_predictive_search_request",
+          message: "Predictive search request failed",
+        },
+      });
+      expect(logger.error).toHaveBeenCalledTimes(2);
+      expect(logger.error).toHaveBeenLastCalledWith("predictive search request failed", {
+        scope: "predictive-search-api",
+        error: expect.objectContaining({ name: "StorefrontApiError", status: 429 }),
+      });
+    });
+
+    it("returns 429 with Retry-After and a constant message when enabled", async () => {
       const logger = createTestLogger();
       configureLogging({ logger });
       mockFetch.mockResolvedValueOnce(
@@ -392,7 +431,10 @@ describe("createPredictiveSearchServerHandlers", () => {
         }),
       );
 
-      const result = await handlePredictiveSearchRequest(createPredictiveSearchRequest());
+      const result = await handlePredictiveSearchRequest(
+        createPredictiveSearchRequest(),
+        "response",
+      );
 
       assert(result, "expected a response");
       expect(result.status).toBe(429);
@@ -402,7 +444,7 @@ describe("createPredictiveSearchServerHandlers", () => {
       const body = await result.json();
       expect(body).toEqual({
         error: {
-          code: "rate_limited",
+          code: "invalid_predictive_search_request",
           message: "Predictive search is rate limited. Please try again later.",
         },
       });
@@ -428,7 +470,10 @@ describe("createPredictiveSearchServerHandlers", () => {
         new Response("", { status: 429, headers: { "retry-after": "7" } }),
       );
 
-      const result = await handlePredictiveSearchRequest(createPredictiveSearchRequest());
+      const result = await handlePredictiveSearchRequest(
+        createPredictiveSearchRequest(),
+        "response",
+      );
 
       assert(result, "expected a response");
       expect(logger.error).toHaveBeenCalledTimes(1);
@@ -455,36 +500,45 @@ describe("createPredictiveSearchServerHandlers", () => {
         new Response("", { status: 429, headers: { "retry-after": "soon; internal=1" } }),
       );
 
-      const result = await handlePredictiveSearchRequest(createPredictiveSearchRequest());
+      const result = await handlePredictiveSearchRequest(
+        createPredictiveSearchRequest(),
+        "response",
+      );
 
       assert(result, "expected a response");
       expect(result.status).toBe(429);
       expect(result.headers.has("retry-after")).toBe(false);
     });
 
-    it("keeps other Storefront API HTTP failures at 400 without the upstream body", async () => {
-      const logger = createTestLogger();
-      configureLogging({ logger });
-      mockFetch.mockResolvedValueOnce(
-        new Response("<html>upstream 503 page</html>", {
-          status: 503,
-          headers: { "retry-after": "30" },
-        }),
-      );
+    it.each([undefined, "response"] as const)(
+      "keeps other Storefront API HTTP failures at 400 with rateLimitHandling=%s",
+      async (rateLimitHandling) => {
+        const logger = createTestLogger();
+        configureLogging({ logger });
+        mockFetch.mockResolvedValueOnce(
+          new Response("<html>upstream 503 page</html>", {
+            status: 503,
+            headers: { "retry-after": "30" },
+          }),
+        );
 
-      const result = await handlePredictiveSearchRequest(createPredictiveSearchRequest());
+        const result = await handlePredictiveSearchRequest(
+          createPredictiveSearchRequest(),
+          rateLimitHandling,
+        );
 
-      assert(result, "expected a response");
-      expect(result.status).toBe(400);
-      expect(result.headers.has("retry-after")).toBe(false);
-      const body = await result.json();
-      expect(body.error.code).toBe("invalid_predictive_search_request");
-      expect(JSON.stringify(body)).not.toContain("upstream");
-      expect(logger.error).toHaveBeenCalledTimes(1);
-      expect(logger.error).toHaveBeenCalledWith("predictive search request failed", {
-        scope: "predictive-search-api",
-        error: expect.objectContaining({ name: "StorefrontApiError", status: 503 }),
-      });
-    });
+        assert(result, "expected a response");
+        expect(result.status).toBe(400);
+        expect(result.headers.has("retry-after")).toBe(false);
+        const body = await result.json();
+        expect(body.error.code).toBe("invalid_predictive_search_request");
+        expect(JSON.stringify(body)).not.toContain("upstream");
+        expect(logger.error).toHaveBeenCalledTimes(1);
+        expect(logger.error).toHaveBeenCalledWith("predictive search request failed", {
+          scope: "predictive-search-api",
+          error: expect.objectContaining({ name: "StorefrontApiError", status: 503 }),
+        });
+      },
+    );
   });
 });

@@ -146,6 +146,8 @@ type HydrogenRoutesBaseOptions = Omit<ShopifyRouteHandlerContext, "sessionManage
    * Your app's route templates. Hydrogen redirects Liquid-style `?variant=` URLs on your product paths and on Shopify's default product paths.
    */
   routeTemplates?: ShopifyRouteTemplates;
+  /** Map thrown Storefront API `429` errors from registered handlers to JSON responses. Omit to preserve handler throws and rejections. */
+  rateLimitHandling?: "response";
 };
 
 /** The request, its context, the Storefront API client, your route templates, your handler groups, and the session when a handler needs it. */

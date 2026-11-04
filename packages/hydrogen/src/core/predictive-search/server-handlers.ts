@@ -71,7 +71,7 @@ type PredictiveSearchGetResult<TData = PredictiveSearchDataForOptions<{}>> =
   | ShopifyRouteJsonResult<PredictiveSearchGetData<TData>>
   | ShopifyRouteErrorResult<PredictiveSearchError>;
 
-type PredictiveSearchErrorCode = "invalid_predictive_search_request" | "rate_limited";
+type PredictiveSearchErrorCode = "invalid_predictive_search_request";
 
 const log = getLogger("predictive-search-api");
 const RATE_LIMITED_MESSAGE = "Predictive search is rate limited. Please try again later.";
@@ -133,6 +133,8 @@ export type PredictiveSearchDataFromHandlers<
 export interface CreatePredictiveSearchServerHandlersOptions extends CreatePredictiveSearchQueriesOptions {
   /** Route path that the GET handler serves. Defaults to `/api/predictive-search`. */
   path?: string;
+  /** Return Storefront API rate limits with status `429` and safe `Retry-After` headers. Omit to keep the default `400` error response. */
+  rateLimitHandling?: "response";
   /** Default maximum number of results, from 1 to 10. Applies when a request has no numeric `limit` parameter. Predictive search clamps other values to that range. Defaults to `5`. */
   limit?: number;
   /** Default limit scope. Defaults to `EACH`. */
@@ -153,7 +155,7 @@ export interface CreatePredictiveSearchServerHandlersOptions extends CreatePredi
  * The route reads the search term from the `q` URL parameter. A URL parameter with the same name as a search setting overrides the setting's default.
  *
  * An invalid setting value or a failed Storefront API query returns HTTP status `400` with a JSON body of `{error: {code, message}}`. The `code` value is `invalid_predictive_search_request`.
- * When the Storefront API rate limits the query with HTTP `429`, the route returns status `429` with the `code` value `rate_limited` and forwards a valid `Retry-After` header. The body never includes the upstream response.
+ * With `rateLimitHandling: "response"`, Storefront API rate limits return status `429` with the same error code, `Cache-Control: no-store`, and a valid `Retry-After` header. The body never includes the upstream response.
  * The route logs the original error of a failed Storefront API query once, at `error` level through Hydrogen's logger. An invalid setting value isn't logged.
  * A successful response forwards the Storefront API response headers except the content encoding, content length, and server timing headers.
  *
@@ -164,7 +166,7 @@ export function createPredictiveSearchServerHandlers<
   const TOptions extends CreatePredictiveSearchServerHandlersOptions,
 >(options: TOptions): PredictiveSearchServerHandlers<TOptions>;
 /**
- * @param options Route path, custom fragments, and default search settings for the route.
+ * @param options Route path, custom fragments, default search settings, and opt-in rate-limit handling.
  * @returns Route handlers to pass to `handleShopifyRoutes`.
  */
 export function createPredictiveSearchServerHandlers(
@@ -207,11 +209,11 @@ async function handleGet(
   } catch (error) {
     // The route returns these failures as results, so the `handleShopifyRoutes` rejection log and
     // the framework's error reporting never see them. Log the original error here, once.
-    if (isStorefrontRateLimitError(error)) {
+    if (options.rateLimitHandling === "response" && isStorefrontRateLimitError(error)) {
       log.error("storefront api rate limited the predictive search", { error });
       return {
         type: "error",
-        error: { code: "rate_limited", message: RATE_LIMITED_MESSAGE },
+        error: { code: "invalid_predictive_search_request", message: RATE_LIMITED_MESSAGE },
         status: RATE_LIMITED_STATUS,
         headers: createRateLimitResponseHeaders(error),
       };
