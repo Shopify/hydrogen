@@ -1,6 +1,6 @@
 import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -32,6 +32,7 @@ import {
   storefrontClientContext,
   storefrontRequestContext,
 } from "~/lib/storefront";
+import type { StorefrontShopBrandColor } from "~/lib/storefront-shop";
 
 import type { Route } from "./+types/root";
 
@@ -107,13 +108,27 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   };
 }
 
+// Recolors the storefront from the shop's brand palette (Settings > Brand in the
+// Shopify admin). Without one, tokens.css keeps its near-black default.
+function brandColorStyle(
+  primaryColor: StorefrontShopBrandColor | null | undefined,
+): CSSProperties | undefined {
+  if (!primaryColor) return undefined;
+
+  const style: CSSProperties & Record<`--${string}`, string> = {
+    "--color-primary": primaryColor.background,
+  };
+  if (primaryColor.foreground) style["--color-primary-foreground"] = primaryColor.foreground;
+  return style;
+}
+
 export function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   // Absent when the root loader failed (error page only).
   const rootData = useRouteLoaderData<typeof loader>("root");
 
   return (
-    <html lang="en">
+    <html lang="en" style={brandColorStyle(rootData?.shopInfo.primaryColor)}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

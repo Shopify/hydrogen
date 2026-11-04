@@ -94,7 +94,7 @@ function SearchDialog() {
             type="button"
             commandfor={SEARCH_DRAWER_ID}
             command="close"
-            className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
+            className="button-icon focus-visible:outline-focus-ring inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
             aria-label="Close"
             onClick={() => closeSearchDrawer()}
           >
@@ -120,7 +120,7 @@ function SearchSuggestions() {
       {term.length > 0 ? (
         <Link
           to={getSearchResultUrl({ baseUrl: SEARCH_PAGE_PATH, term })}
-          className="text-on-surface focus-visible:outline-accent mt-4 inline-flex min-h-11 items-center text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="text-on-surface focus-visible:outline-focus-ring mt-4 inline-flex min-h-11 items-center text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
           onClick={() => closeSearchDrawer()}
         >
           View all results for “{term}”
@@ -180,7 +180,7 @@ function SuggestionLink({ product, term }: { product: PredictiveSearchProductIte
   return (
     <Link
       to={getPredictiveSearchItemUrl(product, { routes: routeTemplates, term })}
-      className="hover:bg-surface-secondary focus-visible:outline-accent flex items-center gap-3 rounded p-2 no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors"
+      className="hover:bg-surface-secondary focus-visible:outline-focus-ring flex items-center gap-3 rounded p-2 no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors"
       onClick={() => closeSearchDrawer()}
     >
       {image !== null ? (
