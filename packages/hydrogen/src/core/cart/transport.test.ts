@@ -523,6 +523,49 @@ describe("cart transport", () => {
     expect(quantityOf(store, "l1")).toBe(4);
     expect(quantityOf(store, "l2")).toBe(3);
   });
+  it("waits for the initial load before a change names the cart", async () => {
+    const carts: Record<string, TransportCart> = {
+      "cart-1": makeCart("cart-1", [makeLine("l1", 1)]),
+    };
+    const updates: CartTransportUpdate[] = [];
+    const transport: CartTransport = {
+      getCart: async (cartId) => ({ cart: (cartId && carts[cartId]) || null }),
+      updateCart: async (update) => {
+        updates.push(update);
+        const id = update.cartId ?? "cart-new";
+        carts[id] = makeCart(id, [...(carts[id]?.lines.nodes ?? []), makeLine("l2", 1, "v2")]);
+        return { cart: carts[id] };
+      },
+    };
+    const load = Promise.withResolvers<{ cart: TransportCart }>();
+    const store = connectedStore({ transport, initialData: load.promise });
+
+    const add = store.addLines([{ merchandiseId: "v2", quantity: 1 }]);
+    await flush();
+    expect(updates).toHaveLength(0);
+    load.resolve({ cart: carts["cart-1"] });
+    await add;
+    await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+
+    expect(updates.map((update) => update.cartId)).toEqual(["cart-1"]);
+    expect(lineIds(store)).toEqual(["l1", "l2"]);
+    expect(store.getState().errors.network).toEqual([]);
+  });
+
+  it("reloads the same cart after reset", async () => {
+    const cart = makeCart("cart-1", [makeLine("l1", 1)]);
+    const getCart = vi.fn(async (cartId: string | null) => ({
+      cart: cartId === "cart-1" ? cart : null,
+    }));
+    const transport: CartTransport = { getCart, updateCart: async () => ({ cart: null }) };
+    const store = connectedStore({ transport, initialData: { cart } });
+
+    store.reset();
+    await vi.waitFor(() => expect(store.getState().loading).toBe(false));
+
+    expect(getCart).toHaveBeenCalledWith("cart-1", { signal: expect.any(AbortSignal) });
+    expect(lineIds(store)).toEqual(["l1"]);
+  });
 });
 
 describe("cart change methods with Standard Actions", () => {
