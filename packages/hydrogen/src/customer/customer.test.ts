@@ -1564,6 +1564,38 @@ describe('customer', () => {
         );
       });
 
+      it('Redirects to the default path when the saved redirectPath is not same-origin', async () => {
+        session.get = vi.fn(() => ({
+          ...mockCustomerAccountSession,
+          redirectPath: 'https://other.example/',
+        })) as HydrogenSession['get'];
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request('https://localhost?state=state&code=code'),
+          waitUntil: vi.fn(),
+        });
+
+        fetch.mockResolvedValue(
+          createFetchResponse(
+            {
+              access_token: 'shcat_access_token',
+              expires_in: '',
+              id_token: `${btoa('{}')}.${btoa('{"nonce": "nonce"}')}.signature`,
+              refresh_token: 'shcrt_refresh_token',
+            },
+            {ok: true},
+          ),
+        );
+
+        const response = await customer.authorize();
+
+        expect(response.status).toBe(302);
+        expect(response.headers.get('location')).toBe('/account');
+      });
+
       it('Warns with useCustomAuthDomain when calling authorize in development', async () => {
         const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         process.env.NODE_ENV = 'development';
