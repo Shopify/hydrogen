@@ -991,7 +991,9 @@ function hasKnownLineIdentity(line: CartLine): boolean {
 }
 
 function hasAdditionIdentityDetails(addition: AddLineIdentity): boolean {
-  return addition.sellingPlanId !== undefined || addition.attributes !== undefined;
+  return (
+    addition.sellingPlanId !== undefined || normalizeAttributes(addition.attributes).length > 0
+  );
 }
 
 function lineMatchesAddition(line: CartLine, addition: AddLineIdentity): boolean {
@@ -1032,11 +1034,10 @@ function findUniqueNewResponseLineForAddition(
   serverLines: CartLine[],
   additions: AddLineIdentity[],
   matches: Array<CartLine | undefined>,
-  index: number,
   addition: AddLineIdentity,
   usedLineIds: Set<string>,
 ): CartLine | undefined {
-  if (hasAdditionIdentityDetails(addition)) return undefined;
+  if (addition.sellingPlanId !== undefined || addition.attributes !== undefined) return undefined;
 
   const candidates = serverLines.filter(
     (line) =>
@@ -1051,6 +1052,10 @@ function findUniqueNewResponseLineForAddition(
   return candidates.length === 1 && sameMerchandiseAdditions.length === 1
     ? candidates[0]
     : undefined;
+}
+
+function canInferResponseLineForAddition(line: CartLine, addition: AddLineIdentity): boolean {
+  return !line.merchandise?.id || line.merchandise.id === addition.merchandiseId;
 }
 
 function matchResponseLinesForAdditions(
@@ -1081,7 +1086,6 @@ function matchResponseLinesForAdditions(
       serverLines,
       additions,
       matches,
-      index,
       addition,
       usedLineIds,
     );
@@ -1094,12 +1098,16 @@ function matchResponseLinesForAdditions(
   const newLines = serverLines.filter(
     (line) => !usedLineIds.has(line.id) && !currentLineIds.has(line.id),
   );
-  if (unmatched.length === 1 && newLines.length === 1) {
+  if (
+    unmatched.length === 1 &&
+    newLines.length === 1 &&
+    canInferResponseLineForAddition(newLines[0], additions[unmatched[0]])
+  ) {
     matches[unmatched[0]] = newLines[0];
   } else if (
     additions.length === 1 &&
     serverLines.length === 1 &&
-    !usedLineIds.has(serverLines[0].id)
+    canInferResponseLineForAddition(serverLines[0], additions[0])
   ) {
     matches[0] = serverLines[0];
   }
@@ -1348,7 +1356,13 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       }
       if (!cart) return state;
 
-      if (matchedServerLines.some((line) => !line)) requestRevalidation();
+      const currentLineIds = new Set(currentLines.map((line) => line.id));
+      const matchedLineIds = new Set(matchedServerLines.map((line) => line?.id));
+      if (
+        serverLines.some((line) => !currentLineIds.has(line.id) && !matchedLineIds.has(line.id))
+      ) {
+        requestRevalidation();
+      }
       const lines = mergeAddResponseLines(currentLines, payload, matchedServerLines);
       return { ...state, data: reconcileCartLines(state.data, lines) };
     },

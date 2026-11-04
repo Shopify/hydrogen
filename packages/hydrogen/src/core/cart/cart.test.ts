@@ -4283,6 +4283,230 @@ describe("add-to-cart optimistic updates", () => {
     ]);
   });
 
+  it("matches two attributed additions with distinct merchandise and omitted event identities", async () => {
+    const attributes = [{ key: "Gift", value: "Yes" }];
+    const first = {
+      ...lineWithMerchandise("first", 1, VARIANT_123),
+      attributes,
+      sellingPlanAllocation: null,
+    };
+    const second = {
+      ...lineWithMerchandise("second", 2, VARIANT_456),
+      attributes,
+      sellingPlanAllocation: null,
+    };
+    const existing = makeLine({ id: "existing", quantity: 1 });
+    store.hydrate(makeCartState({ lines: [existing], totalQuantity: 1 }));
+    const promise = mockUpdateCart(
+      {
+        lines: [
+          { merchandiseId: VARIANT_123, quantity: 1, attributes },
+          { merchandiseId: VARIANT_456, quantity: 2, attributes },
+        ],
+      },
+      {
+        event: {
+          lines: [
+            { merchandiseId: VARIANT_123, quantity: 1 },
+            { merchandiseId: VARIANT_456, quantity: 2 },
+          ],
+        },
+      },
+    );
+    resolveUpdate(0, serverResult({ lines: [first, second, existing], totalQuantity: 4 }));
+    await promise;
+    expect(getCartLines(store.getState().data)).toEqual([second, first, existing]);
+    expect(mockGetCart).not.toHaveBeenCalled();
+  });
+
+  it("does not infer attributed identities from explicitly empty event attributes", async () => {
+    const attributes = [{ key: "Gift", value: "Yes" }];
+    const first = {
+      ...lineWithMerchandise("first", 1, VARIANT_123),
+      attributes,
+      sellingPlanAllocation: null,
+    };
+    const second = {
+      ...lineWithMerchandise("second", 2, VARIANT_456),
+      attributes,
+      sellingPlanAllocation: null,
+    };
+    const authoritativeCart = makeCartState({ lines: [first, second], totalQuantity: 3 });
+    mockGetCart.mockResolvedValue({ cart: authoritativeCart });
+    store.hydrate(makeCartState({ lines: [], totalQuantity: 0 }));
+    const promise = mockUpdateCart({
+      lines: [
+        { merchandiseId: VARIANT_123, quantity: 1, attributes: [] },
+        { merchandiseId: VARIANT_456, quantity: 2, attributes: [] },
+      ],
+    });
+    resolveUpdate(0, { cart: authoritativeCart });
+    await promise;
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(getCartLines(store.getState().data)).toEqual([first, second]));
+  });
+
+  it.each(["success", "partial rejection", "warning"])(
+    "revalidates an unclaimed attributed line beside an existing plain line after %s",
+    async (outcome) => {
+      const attributes = [{ key: "Gift", value: "Yes" }];
+      const existing = {
+        ...lineWithMerchandise("existing", 3, VARIANT_123),
+        attributes: [],
+        sellingPlanAllocation: null,
+      };
+      const attributed = {
+        ...lineWithMerchandise("attributed", 1, VARIANT_123),
+        attributes,
+        sellingPlanAllocation: null,
+      };
+      const second = {
+        ...lineWithMerchandise("second", 1, VARIANT_456),
+        attributes: [],
+        sellingPlanAllocation: null,
+      };
+      const responseLines =
+        outcome === "partial rejection" ? [existing, attributed] : [existing, attributed, second];
+      const authoritativeCart = makeCartState({
+        lines: responseLines,
+        totalQuantity: outcome === "partial rejection" ? 4 : 5,
+      });
+      mockGetCart.mockResolvedValue({ cart: authoritativeCart });
+      store.hydrate(makeCartState({ lines: [existing], totalQuantity: 3 }));
+      const promise = mockUpdateCart(
+        {
+          lines: [
+            { merchandiseId: VARIANT_123, quantity: 1, attributes },
+            { merchandiseId: VARIANT_456, quantity: 1 },
+          ],
+        },
+        {
+          event: {
+            lines: [
+              { merchandiseId: VARIANT_123, quantity: 1 },
+              { merchandiseId: VARIANT_456, quantity: 1 },
+            ],
+          },
+        },
+      );
+      resolveUpdate(0, {
+        cart: authoritativeCart,
+        ...(outcome === "partial rejection"
+          ? { userErrors: [{ code: "INVALID", message: "Unavailable", field: ["lines", "1"] }] }
+          : {}),
+        ...(outcome === "warning"
+          ? {
+              warnings: [
+                {
+                  code: "MERCHANDISE_NOT_ENOUGH_STOCK",
+                  message: "Limited stock",
+                  target: "attributed",
+                },
+              ],
+            }
+          : {}),
+      });
+      await promise;
+      await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+      await vi.waitFor(() => expect(getCartLines(store.getState().data)).toEqual(responseLines));
+      if (outcome === "partial rejection") {
+        expect(store.getState().errors.cart.userErrors).toEqual([
+          { code: "INVALID", message: "Unavailable", field: ["lines", "1"] },
+        ]);
+        expect(store.getState().errors.lines.has("attributed")).toBe(false);
+      }
+      if (outcome === "warning") {
+        expect(store.getState().errors.cart.warnings).toEqual([
+          { code: "MERCHANDISE_NOT_ENOUGH_STOCK", message: "Limited stock" },
+        ]);
+      }
+      expect(
+        getCartLines(store.getState().data).find((line) => line.id === "existing")?.quantity,
+      ).toBe(3);
+    },
+  );
+
+  it("keeps empty attributes equivalent to omitted attributes for optimistic additions", async () => {
+    const existing = lineWithMerchandise("existing", 3, VARIANT_123);
+    const other = lineWithMerchandise("other", 1, VARIANT_456);
+    store.hydrate(makeCartState({ lines: [existing, other], totalQuantity: 4 }));
+    const promise = mockUpdateCart({
+      lines: [{ merchandiseId: VARIANT_123, quantity: 2, attributes: [] }],
+    });
+    expect(getCartLines(store.getState().data)[0].quantity).toBe(5);
+    expect(store.getState().data.totalQuantity).toBe(6);
+    expect(store.getState().pending.lines).toContain("existing");
+    resolveUpdate(
+      0,
+      serverResult({ lines: [{ ...existing, quantity: 5 }, other], totalQuantity: 6 }),
+    );
+    await promise;
+    expect(getCartLines(store.getState().data)[0].quantity).toBe(5);
+    expect(mockGetCart).not.toHaveBeenCalled();
+  });
+
+  it("does not revalidate a rejected addition when the response has no new lines", async () => {
+    const lines = [
+      lineWithMerchandise("existing", 1, VARIANT_456),
+      makeLine({ id: "other", quantity: 1 }),
+    ];
+    store.hydrate(makeCartState({ lines, totalQuantity: 2 }));
+    const promise = mockUpdateCart({
+      lines: [
+        { merchandiseId: VARIANT_123, quantity: 1, attributes: [{ key: "Gift", value: "Yes" }] },
+      ],
+    });
+    resolveUpdate(0, {
+      ...serverResult({ lines, totalQuantity: 2 }),
+      userErrors: [{ code: "INVALID", message: "Unavailable", field: ["lines", "0"] }],
+    });
+    await promise;
+    await nextTick();
+    expect(getCartLines(store.getState().data)).toEqual(lines);
+    expect(store.getState().data.totalQuantity).toBe(2);
+    expect(mockGetCart).not.toHaveBeenCalled();
+  });
+
+  it.each(["existing", "new"])(
+    "still infers a single response line without merchandise under an %s ID",
+    async (responseId) => {
+      store.hydrate(
+        makeCartState({ lines: [makeLine({ id: "existing", quantity: 3 })], totalQuantity: 3 }),
+      );
+      const promise = mockUpdateCart({
+        lines: [
+          { merchandiseId: VARIANT_123, quantity: 2, attributes: [{ key: "Gift", value: "Yes" }] },
+        ],
+      });
+      resolveUpdate(
+        0,
+        serverResult({ lines: [makeLine({ id: responseId, quantity: 5 })], totalQuantity: 5 }),
+      );
+      await promise;
+      expect(
+        getCartLines(store.getState().data).find((line) => line.id === responseId)?.quantity,
+      ).toBe(5);
+      expect(mockGetCart).not.toHaveBeenCalled();
+    },
+  );
+
+  it("does not assign a rejected addition to a single response line with different merchandise", async () => {
+    const existing = lineWithMerchandise("existing", 3, VARIANT_456);
+    store.hydrate(makeCartState({ lines: [existing], totalQuantity: 3 }));
+    const promise = mockUpdateCart({ lines: [{ merchandiseId: VARIANT_123, quantity: 1 }] });
+    resolveUpdate(0, {
+      ...serverResult({ lines: [existing], totalQuantity: 3 }),
+      userErrors: [{ code: "INVALID", message: "Unavailable", field: ["lines", "0"] }],
+    });
+    await promise;
+    expect(getCartLines(store.getState().data)).toEqual([existing]);
+    expect(store.getState().errors.lines.has("existing")).toBe(false);
+    expect(store.getState().errors.cart.userErrors).toEqual([
+      { code: "INVALID", message: "Unavailable", field: ["lines", "0"] },
+    ]);
+    expect(mockGetCart).not.toHaveBeenCalled();
+  });
+
   it("matching merchandiseId: optimistically increments quantity and marks pending", async () => {
     store.hydrate(
       makeCartState({
