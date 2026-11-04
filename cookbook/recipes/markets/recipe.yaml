@@ -445,14 +445,6 @@ steps:
       predictive search.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).search.tsx
-  - type: PATCH
-    step: "3"
-    name: package.json
-    description: Use published versions of the Hydrogen, React and tooling packages
-      in `package.json` instead of the monorepo's workspace references.
-    diffs:
-      - file: package.json
-        patchFile: package.json.8e0ff5.patch
 nextSteps: |
   - Test your implementation by going to your store and selecting a different
   market from the country selector.
