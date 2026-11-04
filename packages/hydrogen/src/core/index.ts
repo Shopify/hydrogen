@@ -145,6 +145,7 @@ export {
   getShopifyScriptTags,
   initializeShopifyScripts,
   renderShopifyScriptTags,
+  shopifyScriptHashes,
 } from "./shopify-scripts/index";
 export type {
   ShopifyRoutesOptions,

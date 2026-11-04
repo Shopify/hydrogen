@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
+import { assert } from "../test-utils";
 import { CONSENT_TRACKING_API_LOADED_EVENT, SHOPIFY_CONSENT_SCRIPT_ID } from "./constants";
 import {
-  getShopifyGlobalBootstrapScript,
   getShopifyScriptTags,
   renderShopifyScriptTags,
   SHOPIFY_CONSENT_API_SCRIPT,
@@ -21,7 +21,7 @@ describe("consent script tags", () => {
   it("renders the standalone consent API as an async script when consent is omitted", () => {
     const { scripts } = getShopifyScriptTags({ shop: SHOP });
 
-    expect(scripts[0].innerHTML).toContain(
+    expect(scripts[0].attributes?.["data-config"]).toContain(
       '"config":{"isHeadless":true,"asyncConsent":true,"asyncVisitorState":true,"debug":{"hydrogen":{"generation":3,"serverTiming":false}}}',
     );
     expect(scripts[0].innerHTML).toContain("consentDomain=window.location.host");
@@ -87,7 +87,9 @@ describe("consent script tags", () => {
       (script) => script.attributes?.id === SHOPIFY_CONSENT_SCRIPT_ID,
     );
 
-    expect(scripts[0].innerHTML).toContain('"asyncConsent":true,"asyncVisitorState":true');
+    expect(scripts[0].attributes?.["data-config"]).toContain(
+      '"asyncConsent":true,"asyncVisitorState":true',
+    );
     expect(scripts[0].innerHTML).toContain("consentDomain=window.location.host");
     expect(analyticsBusIndex).toBeGreaterThan(0);
     expect(scripts[analyticsBusIndex].innerHTML).toContain(CONSENT_TRACKING_API_LOADED_EVENT);
@@ -95,10 +97,19 @@ describe("consent script tags", () => {
   });
 
   it("sets consentDomain to the current host", () => {
-    const script = getShopifyGlobalBootstrapScript({ shop: SHOP });
-
-    // oxlint-disable-next-line no-eval -- Executes the serialized bootstrap script in happy-dom.
-    eval(script);
+    const parsed = new DOMParser().parseFromString(
+      renderShopifyScriptTags({ shop: SHOP }).join(""),
+      "text/html",
+    );
+    const script = parsed.querySelector<HTMLScriptElement>("#shopify-global-bootstrap");
+    assert(script, "Expected the rendered global bootstrap element");
+    const currentScript = vi.spyOn(document, "currentScript", "get").mockReturnValue(script);
+    try {
+      // oxlint-disable-next-line no-eval -- Execute the serialized bootstrap with its rendered attributes.
+      (0, eval)(script.textContent);
+    } finally {
+      currentScript.mockRestore();
+    }
 
     expect(window.Shopify?.customerPrivacy?.config).toEqual({
       isHeadless: true,

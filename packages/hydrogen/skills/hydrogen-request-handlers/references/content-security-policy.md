@@ -62,6 +62,20 @@ csp.applyResponseHeaders(response.headers);
 
 This allows injected inline JavaScript as well as the app's scripts. Hash-based CSP is a stricter alternative, but the framework must authorize every emitted inline script, including Shopify's bootstraps. If `scriptSrcElem` is configured, it controls script elements instead of `scriptSrc`. Adding nonce/hash sources or `'strict-dynamic'` can make browsers ignore `'unsafe-inline'`; do not mix these without accounting for all inline scripts.
 
+## Shopify bootstrap hashes
+
+`ShopifyScripts` and the core tag helpers render static inline JavaScript with dynamic configuration in escaped `data-config` attributes. To authorize those bootstraps without nonces, add the exported `shopifyScriptHashes` to `scriptSrc`:
+
+```ts
+const csp = createContentSecurityPolicy({
+  shop,
+  nonce: false,
+  directives: { scriptSrc: shopifyScriptHashes },
+});
+```
+
+These hashes are generated from the packaged script contents and include CSP quotes. Framework-native configurations may need them unquoted. They authorize only Hydrogen's inline bootstraps; the framework must also authorize its own scripts. Hashes are opt-in because adding them causes browsers to ignore `'unsafe-inline'` in the same directive. Read the export from the installed package instead of copying literal hashes, and preserve the script text when rendering.
+
 ## Next.js App Router
 
 For a prerendered shell, use the nonce-free configuration above in `proxy.ts`, after handling Hydrogen-owned routes. Delete `Content-Security-Policy` and `Content-Security-Policy-Report-Only` from the headers returned by `getForwardedRequestHeaders()` so a client-supplied policy cannot supply Next's nonce. Render `ShopifyScripts` without a nonce and avoid reading request headers solely for CSP in the layout. This preserves the shell's rendering model. See [Next's CSP guide](https://nextjs.org/docs/app/guides/content-security-policy).
