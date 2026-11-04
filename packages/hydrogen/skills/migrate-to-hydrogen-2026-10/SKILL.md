@@ -262,7 +262,7 @@ export const middleware: Route.MiddlewareFunction[] = [
       const redirect = await handleShopifyRedirects({request, storefrontClient, routeTemplates});
       if (redirect) return redirect;                           // headers already applied by the library
     }
-    requestContext.applyResponseHeaders(response.headers);     // MUST run or Shopify response headers vanish
+    requestContext.applyResponseHeaders(response.headers, response.status);  // MUST run or Shopify response headers vanish; the status keeps rate-limit headers on a 429
     return response;
   },
 ];
@@ -291,7 +291,7 @@ export function createEphemeralSessionManager(request: Request): WritableCustome
 
 Supporting files: `app/lib/cart-handlers.ts` → `export const cartHandlers = createCartServerHandlers()` (options: `fragment` to extend the cart query, `customerSession` to sync buyer identity — see `references/cart.md`); `app/lib/cart.ts` → `createCartComponents<typeof cartHandlers>()` yields `CartProvider`/`useCart`/`useCartForm`; when the store has customer accounts, add the `createCustomerAccountServerHandlers({customerSession, …})` group next to `cartHandlers` in the middleware's `handlers` array and pass the cookie-backed session manager as `sessionManager` (see `references/customer-account.md`); `react-router.config.ts` → `{buildDirectory: 'dist'}` plus middleware enabled for your version of React Router (step 4).
 
-Two lines in that middleware are easy to omit and fail **silently**: `applyResponseHeaders` on the normal response path (Shopify response headers disappear) and `routeTemplates` into both handler calls (handler-owned URLs and redirect targets come out wrong). A third, `buyerIp` into `createShopifyRequestContext`, fails **loudly** for the private client (`TypeError: requestContext.buyerIp is required for private Storefront API clients`) — keep the `getBuyerIp` helper rather than deleting the option to silence it. For the customer-account session wiring, follow the `hydrogen-customer-account` packaged skill rather than extending the in-memory stand-in by hand.
+Two lines in that middleware are easy to omit and fail **silently**: `applyResponseHeaders` on the normal response path (Shopify response headers disappear) and `routeTemplates` into both handler calls (handler-owned URLs and redirect targets come out wrong). A third, `buyerIp` into `createShopifyRequestContext`, fails **loudly** for the private client (`TypeError: requestContext.buyerIp is required for private Storefront API clients`) — keep the `getBuyerIp` helper rather than deleting the option to silence it. The `response.status` argument also fails silently when omitted: a loader wrapped in `withStorefrontRateLimit` still returns `429`, but without `Retry-After` and `Cache-Control: no-store`. To return `429` instead of `500` from rate-limited loaders, follow the three-step checklist in the `hydrogen-storefront-client` packaged skill (wrapper, status argument, same request context). For the customer-account session wiring, follow the `hydrogen-customer-account` packaged skill rather than extending the in-memory stand-in by hand.
 
 ## Optional subsystems
 

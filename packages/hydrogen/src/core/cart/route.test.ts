@@ -137,6 +137,7 @@ function handleCartRequest(
   fixture: TestStorefrontConfig = defaultConfig,
   cartHandlers: ShopifyRouteHandlerGroup = createCartServerHandlers(),
   sessionManager = createTestSessionManager(request),
+  rateLimitHandling?: "response",
 ) {
   const storefrontClient = createPrivateStorefrontClient(request, fixture);
   return handleShopifyRoutesImpl({
@@ -145,6 +146,7 @@ function handleCartRequest(
     sessionManager,
     storefrontClient,
     handlers: [cartHandlers],
+    rateLimitHandling,
   });
 }
 
@@ -418,6 +420,80 @@ describe("createCartServerHandlers", () => {
       );
     });
 
+    it("returns 429 with Retry-After from the route when the Storefront API rate limits", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      mockFetch.mockResolvedValueOnce(
+        new Response("<html>upstream rate limit page</html>", {
+          status: 429,
+          headers: { "retry-after": "3", "x-request-id": "req-429" },
+        }),
+      );
+
+      const request = createGetRequest("cart=123");
+      const result = await handleCartRequest(
+        request,
+        defaultConfig,
+        createCartServerHandlers(),
+        createTestSessionManager(request),
+        "response",
+      );
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(429);
+      expect(result.headers.get("retry-after")).toBe("3");
+      expect(result.headers.get("cache-control")).toBe("no-store");
+      expect(result.headers.get("x-request-id")).toBeNull();
+      const body = await result.json();
+      expect(body).toEqual({
+        error: {
+          code: "rate_limited",
+          message: "The request was rate limited. Please try again later.",
+        },
+      });
+      expect(JSON.stringify(body)).not.toContain("upstream");
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith("storefront api rate limited the route handler", {
+        scope: "shopify-routes",
+        error: expect.objectContaining({ status: 429 }),
+      });
+    });
+
+    it("keeps rejecting from the route by default when the Storefront API rate limits", async () => {
+      configureLogging({ logger: createTestLogger() });
+      mockFetch.mockResolvedValueOnce(new Response("", { status: 429 }));
+
+      await expect(handleCartRequest(createGetRequest("cart=123"))).rejects.toMatchObject({
+        name: "StorefrontApiError",
+        status: 429,
+      });
+    });
+
+    it.each([undefined, "response"] as const)(
+      "still throws from a direct get() call with rateLimitHandling=%s",
+      async (rateLimitHandling) => {
+        mockFetch.mockResolvedValueOnce(
+          new Response("", { status: 429, headers: { "retry-after": "3" } }),
+        );
+        const request = createGetRequest("cart=123");
+        const cartHandlers = createCartServerHandlers({ rateLimitHandling });
+
+        await expect(
+          cartHandlers.get({ request, storefrontClient: createPrivateStorefrontClient(request) }),
+        ).rejects.toMatchObject({ name: "StorefrontApiError", status: 429, retryAfter: "3" });
+      },
+    );
+
+    it("keeps throwing from the route for other Storefront API HTTP failures", async () => {
+      mockFetch.mockResolvedValueOnce(
+        new Response("", { status: 503, headers: { "retry-after": "3" } }),
+      );
+
+      await expect(handleCartRequest(createGetRequest("cart=123"), defaultConfig)).rejects.toThrow(
+        "SFAPI responded with 503",
+      );
+    });
+
     it("returns null cart with GraphQL errors", async () => {
       const logger = createTestLogger();
       configureLogging({ logger });
@@ -508,33 +584,262 @@ describe("createCartServerHandlers", () => {
       ]);
     });
 
-    it("commits refreshed customer session headers when new cart creation fails", async () => {
-      mockFetch.mockRejectedValueOnce(new Error("ECONNREFUSED"));
-      const customerSession = createCartCustomerSession(undefined, true, CUSTOMER_ACCESS_TOKEN);
-      const cartHandlers = createCartServerHandlers({ customerSession });
+    it.each([undefined, "response"] as const)(
+      "commits refreshed customer session headers on non-429 failures with rateLimitHandling=%s",
+      async (rateLimitHandling) => {
+        mockFetch.mockRejectedValueOnce(new Error("ECONNREFUSED"));
+        const customerSession = createCartCustomerSession(undefined, true, CUSTOMER_ACCESS_TOKEN);
+        const cartHandlers = createCartServerHandlers({ customerSession, rateLimitHandling });
+        const logger = createTestLogger();
+        configureLogging({ logger });
+        const request = createJsonPostRequest({
+          lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+        });
+        const sessionManager = createTestSessionManager(request);
+
+        const result = await handleCartRequest(
+          request,
+          defaultConfig,
+          cartHandlers,
+          sessionManager,
+        );
+
+        assert(result, "expected a response");
+        expect(result.status).toBe(500);
+        expect(result.headers.getSetCookie()).toEqual(["session=1"]);
+        await expect(result.json()).resolves.toEqual({
+          error: {
+            code: "cart_mutation_failed",
+            message: "Cart mutation failed. Please try again.",
+          },
+        });
+        expect(logger.error).toHaveBeenCalledWith("cart mutation failed", {
+          scope: "cart-api",
+          error: expect.anything(),
+        });
+      },
+    );
+
+    it.each(["json", "form"] as const)(
+      "keeps default %s mutation failures as rejections for direct and registered calls",
+      async (format) => {
+        configureLogging({ logger: createTestLogger() });
+        const createRequest = () =>
+          format === "json"
+            ? createJsonPostRequest({
+                lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+              })
+            : createFormPostRequest({
+                intent: "add",
+                merchandiseId: "gid://shopify/ProductVariant/1",
+              });
+        mockFetch.mockResolvedValueOnce(new Response("", { status: 429 }));
+        const request = createRequest();
+        await expect(
+          createCartServerHandlers().post({
+            request,
+            storefrontClient: createPrivateStorefrontClient(request),
+          }),
+        ).rejects.toMatchObject({ name: "StorefrontApiError", status: 429 });
+
+        mockFetch.mockResolvedValueOnce(new Response("", { status: 429 }));
+        await expect(handleCartRequest(createRequest())).rejects.toMatchObject({
+          name: "StorefrontApiError",
+          status: 429,
+        });
+      },
+    );
+
+    it.each(["json", "form"] as const)(
+      "keeps default rate-limited %s mutations at 500 after a session refresh",
+      async (format) => {
+        const logger = createTestLogger();
+        configureLogging({ logger });
+        mockFetch.mockResolvedValueOnce(
+          new Response("", { status: 429, headers: { "retry-after": "5" } }),
+        );
+        const customerSession = createCartCustomerSession(undefined, true, CUSTOMER_ACCESS_TOKEN);
+        const cartHandlers = createCartServerHandlers({ customerSession });
+        const request =
+          format === "json"
+            ? createJsonPostRequest({
+                lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+              })
+            : createFormPostRequest({
+                intent: "add",
+                merchandiseId: "gid://shopify/ProductVariant/1",
+              });
+        const sessionManager = createTestSessionManager(request);
+
+        const result = await handleCartRequest(
+          request,
+          defaultConfig,
+          cartHandlers,
+          sessionManager,
+        );
+
+        assert(result, "expected a response");
+        expect(result.status).toBe(500);
+        expect(result.headers.get("content-type")).toBe("application/json");
+        expect(result.headers.has("retry-after")).toBe(false);
+        expect(result.headers.getSetCookie()).toEqual(["session=1"]);
+        expect(sessionManager.commit).toHaveBeenCalledOnce();
+        await expect(result.json()).resolves.toEqual({
+          error: {
+            code: "cart_mutation_failed",
+            message: "Cart mutation failed. Please try again.",
+          },
+        });
+        expect(logger.error).toHaveBeenCalledOnce();
+        expect(logger.error).toHaveBeenCalledWith("cart mutation failed", {
+          scope: "cart-api",
+          error: expect.objectContaining({ status: 429 }),
+        });
+      },
+    );
+
+    it("returns 429 with Retry-After when the Storefront API rate limits an anonymous mutation", async () => {
       const logger = createTestLogger();
       configureLogging({ logger });
+      mockFetch.mockResolvedValueOnce(
+        new Response("<html>upstream rate limit page</html>", {
+          status: 429,
+          headers: { "retry-after": "5", "x-request-id": "req-429", "content-type": "text/html" },
+        }),
+      );
       const request = createJsonPostRequest({
         lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
       });
-      const sessionManager = createTestSessionManager(request);
 
-      const result = await handleCartRequest(request, defaultConfig, cartHandlers, sessionManager);
+      const result = await handleCartRequest(
+        request,
+        defaultConfig,
+        createCartServerHandlers({ rateLimitHandling: "response" }),
+      );
 
       assert(result, "expected a response");
-      expect(result.status).toBe(500);
-      expect(result.headers.getSetCookie()).toEqual(["session=1"]);
-      await expect(result.json()).resolves.toEqual({
+      expect(result.status).toBe(429);
+      expect(result.headers.get("retry-after")).toBe("5");
+      expect(result.headers.get("x-request-id")).toBeNull();
+      expect(result.headers.get("cache-control")).toBe("no-store");
+      expect(result.headers.getSetCookie()).toEqual([]);
+      const body = await result.json();
+      expect(body).toEqual({
         error: {
           code: "cart_mutation_failed",
-          message: "Cart mutation failed. Please try again.",
+          message: "Cart mutation is rate limited. Please try again later.",
         },
       });
-      expect(logger.error).toHaveBeenCalledWith("cart mutation failed", {
+      expect(JSON.stringify(body)).not.toContain("upstream");
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith("storefront api rate limited the cart mutation", {
         scope: "cart-api",
-        error: expect.anything(),
+        error: expect.objectContaining({ status: 429 }),
       });
     });
+
+    it("omits an invalid Retry-After header from an enabled direct mutation result", async () => {
+      configureLogging({ logger: createTestLogger() });
+      mockFetch.mockResolvedValueOnce(
+        new Response("", {
+          status: 429,
+          headers: { "retry-after": "soon; internal=1" },
+        }),
+      );
+      const request = createJsonPostRequest({
+        lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+      });
+
+      const result = await createCartServerHandlers({ rateLimitHandling: "response" }).post({
+        request,
+        storefrontClient: createPrivateStorefrontClient(request),
+      });
+
+      expect(result).toMatchObject({
+        type: "error",
+        status: 429,
+        error: { code: "cart_mutation_failed" },
+      });
+      assert(result.type === "error", "expected an error result");
+      const headers = new Headers(result.headers);
+      expect(headers.has("retry-after")).toBe(false);
+      expect(headers.get("cache-control")).toBe("no-store");
+    });
+
+    it.each(["json", "form"] as const)(
+      "returns 429 and preserves all refreshed session cookies for %s requests when enabled",
+      async (format) => {
+        const logger = createTestLogger();
+        configureLogging({ logger });
+        mockFetch.mockResolvedValueOnce(
+          new Response("", { status: 429, headers: { "retry-after": "5" } }),
+        );
+        const customerSession = createCartCustomerSession(undefined, true, CUSTOMER_ACCESS_TOKEN);
+        const cartHandlers = createCartServerHandlers({
+          customerSession,
+          rateLimitHandling: "response",
+        });
+        const request =
+          format === "json"
+            ? createJsonPostRequest({
+                lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+              })
+            : createFormPostRequest({
+                intent: "add",
+                merchandiseId: "gid://shopify/ProductVariant/1",
+              });
+        const sessionManager = createTestSessionManager(request);
+        const sessionHeaders = new Headers();
+        sessionHeaders.append("set-cookie", "session=1");
+        sessionHeaders.append("set-cookie", "refresh=2");
+        sessionManager.commit.mockResolvedValue(sessionHeaders);
+
+        const result = await handleCartRequest(
+          request,
+          defaultConfig,
+          cartHandlers,
+          sessionManager,
+        );
+
+        assert(result, "expected a response");
+        expect(result.status).toBe(429);
+        expect(result.headers.get("retry-after")).toBe("5");
+        expect(result.headers.getSetCookie()).toEqual(["session=1", "refresh=2"]);
+        expect(sessionManager.commit).toHaveBeenCalledOnce();
+        expect(result.headers.get("cache-control")).toBe(
+          "private, no-store, max-age=0, must-revalidate",
+        );
+        if (format === "json") {
+          await expect(result.json()).resolves.toMatchObject({
+            error: { code: "cart_mutation_failed" },
+          });
+        } else {
+          expect(result.headers.get("content-type")).toBe("text/plain; charset=utf-8");
+          expect(result.headers.has("location")).toBe(false);
+          await expect(result.text()).resolves.toBe(
+            "Cart mutation is rate limited. Please try again later.",
+          );
+        }
+      },
+    );
+
+    it.each([undefined, "response"] as const)(
+      "keeps throwing for other Storefront API HTTP failures with rateLimitHandling=%s",
+      async (rateLimitHandling) => {
+        mockFetch.mockResolvedValueOnce(new Response("", { status: 503 }));
+        const request = createJsonPostRequest({
+          lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+        });
+
+        await expect(
+          handleCartRequest(
+            request,
+            defaultConfig,
+            createCartServerHandlers({ rateLimitHandling }),
+          ),
+        ).rejects.toThrow("SFAPI responded with 503");
+      },
+    );
 
     it("does not add buyer identity or commit the customer session when anonymous", async () => {
       mockFetch.mockResolvedValueOnce(
@@ -1130,6 +1435,65 @@ describe("createCartServerHandlers", () => {
       assert(result, "expected a response");
       expect(result.status).toBe(303);
       expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/products/widget`);
+    });
+
+    it("returns a plain-text 429 page, not a redirect, when the Storefront API rate limits", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      mockFetch.mockResolvedValueOnce(
+        new Response("<html>upstream rate limit page</html>", {
+          status: 429,
+          headers: { "retry-after": "5", "x-request-id": "req-429", "content-type": "text/html" },
+        }),
+      );
+
+      const result = await handleCartRequest(
+        createFormPostRequest(
+          { intent: "remove", lineId: "gid://shopify/CartLine/1" },
+          { cookies: "cart=123", referer: "https://my-app.com/cart" },
+        ),
+        defaultConfig,
+        createCartServerHandlers({ rateLimitHandling: "response" }),
+      );
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(429);
+      expect(result.headers.has("location")).toBe(false);
+      expect(result.headers.get("content-type")).toBe("text/plain; charset=utf-8");
+      expect(result.headers.get("retry-after")).toBe("5");
+      expect(result.headers.get("cache-control")).toBe("no-store");
+      expect(result.headers.get("x-request-id")).toBeNull();
+      await expect(result.text()).resolves.toBe(
+        "Cart mutation is rate limited. Please try again later.",
+      );
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith("storefront api rate limited the cart mutation", {
+        scope: "cart-api",
+        error: expect.objectContaining({ status: 429 }),
+      });
+    });
+
+    it("returns the plain-text result from a direct post() call for a form submission", async () => {
+      configureLogging({ logger: createTestLogger() });
+      mockFetch.mockResolvedValueOnce(
+        new Response("", { status: 429, headers: { "retry-after": "5" } }),
+      );
+      const request = createFormPostRequest(
+        { intent: "remove", lineId: "gid://shopify/CartLine/1" },
+        { cookies: "cart=123" },
+      );
+
+      const result = await createCartServerHandlers({ rateLimitHandling: "response" }).post({
+        request,
+        storefrontClient: createPrivateStorefrontClient(request),
+      });
+
+      expect(result).toMatchObject({
+        type: "error",
+        format: "text",
+        status: 429,
+        error: { code: "cart_mutation_failed" },
+      });
     });
 
     it("redirects to / when no Referer header", async () => {

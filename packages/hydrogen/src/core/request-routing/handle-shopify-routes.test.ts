@@ -1,14 +1,16 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
+import { StorefrontApiError } from "../../client/errors";
 import { createCartServerHandlers } from "../cart/server-handlers";
 import {
   CONSENT_MANAGEMENT_HEADER,
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
 } from "../headers";
+import { configureLogging } from "../logging";
 import { createShopifyRequestContext } from "../request-context";
-import { assert } from "../test-utils";
+import { assert, createTestLogger } from "../test-utils";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "./handle-shopify-routes";
 import { createShopifyRouteHandler } from "./registered-routes";
 import type { ShopifyRouteHandlerContext } from "./route-types";
@@ -731,6 +733,181 @@ describe("handleShopifyRoutes", () => {
     await expect(handleShopifyRoutes({ request, handlers: [{ custom: handler }] })).rejects.toThrow(
       "Custom transport failure",
     );
+  });
+
+  describe("Storefront API rate limits in registered handlers", () => {
+    afterEach(() => {
+      configureLogging({});
+    });
+
+    it("preserves default rejected Storefront API 429 errors", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      const error = new StorefrontApiError("throttled", { status: 429, retryAfter: "9" });
+      const request = new Request("https://my-app.com/custom");
+      const handler = createShopifyRouteHandler("/custom", "GET", async () => {
+        throw error;
+      });
+
+      const result = handleShopifyRoutes({ request, handlers: [{ custom: handler }] });
+      expect(result).toBeInstanceOf(Promise);
+      await expect(result).rejects.toBe(error);
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      new StorefrontApiError("throttled", { status: 429 }),
+      new Error("handler setup failed"),
+    ])("rejects default synchronous throws without mapping them: %s", async (error) => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      const request = new Request("https://my-app.com/custom");
+      const handler = createShopifyRouteHandler("/custom", "GET", () => {
+        throw error;
+      });
+
+      const result = handleShopifyRoutes({ request, handlers: [{ custom: handler }] });
+
+      expect(result).toBeInstanceOf(Promise);
+      await expect(result).rejects.toBe(error);
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it("returns a 429 rate_limited response and logs the error once when enabled", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      const error = new StorefrontApiError("SFAPI responded with 429: <html>upstream page</html>", {
+        status: 429,
+        retryAfter: "9",
+        requestId: "req-429",
+      });
+      const request = new Request("https://my-app.com/custom");
+      const handler = createShopifyRouteHandler("/custom", "GET", async () => {
+        throw error;
+      });
+
+      const result = await handleShopifyRoutes({
+        request,
+        handlers: [{ custom: handler }],
+        rateLimitHandling: "response",
+      });
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(429);
+      expect(result.headers.get("cache-control")).toBe("no-store");
+      expect(result.headers.get("content-type")).toBe("application/json");
+      expect(result.headers.get("retry-after")).toBe("9");
+      expect(result.headers.get("x-request-id")).toBeNull();
+      const body = await result.text();
+      expect(JSON.parse(body)).toEqual({
+        error: {
+          code: "rate_limited",
+          message: "The request was rate limited. Please try again later.",
+        },
+      });
+      expect(body).not.toContain("upstream");
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith("storefront api rate limited the route handler", {
+        scope: "shopify-routes",
+        error,
+      });
+    });
+
+    it("maps a Storefront API 429 that a handler throws before it returns a promise", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      const error = new StorefrontApiError("throttled", { status: 429, retryAfter: "9" });
+      const request = new Request("https://my-app.com/custom");
+      const handler = createShopifyRouteHandler("/custom", "GET", () => {
+        throw error;
+      });
+
+      const result = await handleShopifyRoutes({
+        request,
+        handlers: [{ custom: handler }],
+        rateLimitHandling: "response",
+      });
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(429);
+      expect(result.headers.get("retry-after")).toBe("9");
+      await expect(result.json()).resolves.toMatchObject({ error: { code: "rate_limited" } });
+      expect(logger.error).toHaveBeenCalledTimes(1);
+      expect(logger.error).toHaveBeenCalledWith("storefront api rate limited the route handler", {
+        scope: "shopify-routes",
+        error,
+      });
+    });
+
+    it.each([
+      new Error("handler setup failed"),
+      new StorefrontApiError("SFAPI responded with 503", { status: 503 }),
+      Object.assign(new Error("application rate limit"), { status: 429, retryAfter: "9" }),
+    ])("rejects non-matching synchronous errors when enabled: %s", async (error) => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      const request = new Request("https://my-app.com/custom");
+      const handler = createShopifyRouteHandler("/custom", "GET", () => {
+        throw error;
+      });
+
+      const result = handleShopifyRoutes({
+        request,
+        handlers: [{ custom: handler }],
+        rateLimitHandling: "response",
+      });
+
+      expect(result).toBeInstanceOf(Promise);
+      await expect(result).rejects.toBe(error);
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      [undefined, 401],
+      [undefined, 403],
+      [undefined, 503],
+      ["response", 401],
+      ["response", 403],
+      ["response", 503],
+    ] as const)(
+      "lets rateLimitHandling=%s Storefront API %i errors reject",
+      async (rateLimitHandling, status) => {
+        const logger = createTestLogger();
+        configureLogging({ logger });
+        const error = new StorefrontApiError(`SFAPI responded with ${status}`, {
+          status,
+          retryAfter: "9",
+        });
+        const request = new Request("https://my-app.com/custom");
+        const handler = createShopifyRouteHandler("/custom", "GET", async () => {
+          throw error;
+        });
+
+        await expect(
+          handleShopifyRoutes({ request, handlers: [{ custom: handler }], rateLimitHandling }),
+        ).rejects.toBe(error);
+        expect(logger.error).not.toHaveBeenCalled();
+      },
+    );
+  });
+
+  it("sends an error result with format text as a plain-text response", async () => {
+    const request = new Request("https://my-app.com/custom", { method: "POST" });
+    const handler = createShopifyRouteHandler("/custom", "POST", async () => ({
+      type: "error",
+      error: { code: "unavailable", message: "Please try again later." },
+      status: 503,
+      headers: { "content-type": "application/json", "x-custom": "1" },
+      format: "text",
+    }));
+
+    const result = await handleShopifyRoutes({ request, handlers: [{ custom: handler }] });
+
+    assert(result, "expected a response");
+    expect(result.status).toBe(503);
+    expect(result.headers.get("content-type")).toBe("text/plain; charset=utf-8");
+    expect(result.headers.get("x-custom")).toBe("1");
+    await expect(result.text()).resolves.toBe("Please try again later.");
   });
 
   it("uses the provided private client for checkout redirects", async () => {
