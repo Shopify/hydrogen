@@ -176,7 +176,7 @@ export type CartStore = {
    */
   refresh(): void;
 
-  /** Clears the cart data and errors and cancels in-flight cart requests. After you connect the store, the method also loads the cart again when the store held a cart. */
+  /** Clears the cart data and errors and cancels in-flight cart requests. After you connect the store, the method also loads the cart again when the store held a cart. A store with a `transport` reloads the cart it held. */
   reset(): void;
 
   /**
@@ -245,7 +245,7 @@ type CartInitialData<TData extends CartData = CartData> = {
 /**
  * The cart service that a cart store loads and changes its cart through, in place of Shopify Standard Actions. Pass it as the `transport` option of `createCartStore` or the `transport` prop of `CartProvider`.
  *
- * The store owns the cart ID and sends it with every call, so the transport can keep no state of its own. The store sends one change at a time, and each change carries the cart ID from the previous result. Hydrogen passes IDs through unchanged. A call that never settles holds later changes for at most 30 seconds.
+ * The store owns the cart ID and sends it with every call, so the transport can keep no state of its own. A change that starts during the initial load waits for the load, so the first write names the loaded cart. The store sends one change at a time, and each change carries the cart ID from the previous result. Hydrogen passes IDs through unchanged. A call that ignores its `signal` holds later changes for at most 30 seconds. After that the store abandons the call and sends the next change, so a transport that lets the call finish anyway must drop its late result.
  *
  * @example
  * ```ts
@@ -432,6 +432,8 @@ type ActiveCartLoad = {
   state: CartState;
   promise: Promise<void>;
   resolveReadyPromise: () => void;
+  // The ID the load found, kept even when a publish superseded the load before it could hydrate.
+  cartId: string | null;
 };
 
 type ActiveCartRevalidation = {
@@ -2044,12 +2046,15 @@ async function dispatchTransportTransaction<TType extends TransactionType>(
   payload: TransactionPayload<TType>,
 ): Promise<void> {
   const generation = store.generation;
+  // Publishing the change below discards an in-flight load, so the load is captured first.
+  const activeLoad = store.activeCartLoad;
   const reservation = reserveTransaction(store, type, payload);
   const signal = createTransactionSignal(store, reservation);
   const promise = getTransactionDefinition(type).transport(payload, signal, (change) => {
     const call = store.transportQueue.then(async () => {
       signal.throwIfAborted();
-      const update = { ...change, cartId: store.settled.data.id } as CartTransportUpdate;
+      const cartId = await transportCartId(store, activeLoad, signal);
+      const update = { ...change, cartId } as CartTransportUpdate;
       const result = await settleWithin(
         transport.updateCart(update, { signal }),
         AbortSignal.any([
@@ -2075,6 +2080,21 @@ async function dispatchTransportTransaction<TType extends TransactionType>(
     if (isAbortError(error)) return;
     throw error;
   }
+}
+
+// Publishing a change over an in-flight initial load discards the load, and a pending change also
+// blocks hydration, so the loaded cart's ID never reaches settled state on its own. A null ID asks
+// the transport to create a cart, so a change that starts during the load waits for it and names
+// the cart the load found.
+async function transportCartId(
+  store: CartStoreContext,
+  load: ActiveCartLoad | null,
+  signal: AbortSignal,
+): Promise<string | null> {
+  if (store.settled.data.id || !load) return store.settled.data.id;
+  await load.promise.catch(NOOP);
+  signal.throwIfAborted();
+  return store.settled.data.id ?? load.cartId;
 }
 
 // A consumer's transport might ignore its signal, and a call that never settles would hold every
@@ -2481,6 +2501,9 @@ function resetCartStore(store: CartStoreContext): void {
     store.cartSyncAttached &&
     !hadActiveRevalidation &&
     (hadActiveCartLoad || hasLocalCartData(store.observable.state));
+  // A transport store owns its cart ID, so the reload asks for the cart the store held. Without a
+  // transport, the server resolves the cart from its cookie and a retained ID would pin a stale one.
+  const reloadCartId = store.transport ? store.settled.data.id : null;
 
   clearPendingTransactions(store);
   store.activeMutationTransports.clear();
@@ -2491,7 +2514,7 @@ function resetCartStore(store: CartStoreContext): void {
   publishVisibleState(store);
 
   if (shouldReloadAfterReset) {
-    loadCartInStore(store).catch((error: unknown) =>
+    loadCartInStore(store, fetchCartData(store.transport, reloadCartId)).catch((error: unknown) =>
       log.error("cart reset load failed", { error }),
     );
   }
@@ -2518,6 +2541,7 @@ function loadCartInStore(
   const state = { ...store.observable.state, readyPromise };
   const promise = Promise.resolve(cartPromise ?? fetchCartData(store.transport, state.data.id))
     .then((data) => {
+      request.cartId = data?.id ?? null;
       if (!isCurrentCartLoad(store, request)) return;
       if (data) hydrateCartInStore(store, data);
       if (!data) {
@@ -2536,7 +2560,7 @@ function loadCartInStore(
       if (store.activeCartLoad === request) store.activeCartLoad = null;
       request.resolveReadyPromise();
     });
-  request = { state, promise, resolveReadyPromise };
+  request = { state, promise, resolveReadyPromise, cartId: null };
   store.activeCartLoad = request;
   store.observable.setReadyState(state);
   return promise;
