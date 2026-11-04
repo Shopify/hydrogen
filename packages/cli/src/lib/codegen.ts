@@ -71,9 +71,13 @@ export function spawnCodegenProcess({
   rootDirectory,
   appDirectory,
   configFilePath,
+  onOutput,
 }: CodegenOptions) {
   let command: string;
   let args: string[];
+  const resolvedConfigFilePath = configFilePath
+    ? resolvePath(configFilePath)
+    : undefined;
 
   const hydrogenArgvIndex = process.argv.findIndex((a) => a === 'hydrogen');
 
@@ -88,8 +92,8 @@ export function spawnCodegenProcess({
       rootDirectory,
     ];
 
-    if (configFilePath) {
-      args.push('--codegen-config-path', configFilePath);
+    if (resolvedConfigFilePath) {
+      args.push('--codegen-config-path', resolvedConfigFilePath);
     }
   } else {
     // Legacy: in case this command wasn't run using our CLI
@@ -100,13 +104,21 @@ export function spawnCodegenProcess({
       fileURLToPath(import.meta.url),
       rootDirectory,
       appDirectory ?? resolvePath('app'),
-      configFilePath ?? '',
+      resolvedConfigFilePath ?? '',
     ];
   }
 
-  const child = spawn(command, args, {stdio: ['inherit', 'ignore', 'pipe']});
+  const child = spawn(command, args, {
+    cwd: rootDirectory,
+    stdio: ['inherit', onOutput ? 'pipe' : 'ignore', 'pipe'],
+    // The parent wraps watch output in JSONL; codegen --watch uses text output.
+    env: {...process.env, SHOPIFY_FLAG_JSON: 'false'},
+  });
+  child.stdout?.setEncoding('utf8');
+  child.stderr?.setEncoding('utf8');
+  child.stdout?.on('data', (message: string) => onOutput?.(message, 'info'));
 
-  child.stderr.on('data', (data) => {
+  child.stderr!.on('data', (data) => {
     const dataString: string =
       typeof data === 'string' ? data : (data?.toString?.('utf8') ?? '');
 
@@ -121,12 +133,22 @@ export function spawnCodegenProcess({
     // Skip banners output by ourselves:
     if (/─ (warning|info|success) ───/.test(message)) return;
 
+    onOutput?.([message, details].filter(Boolean).join('\n'), 'warning');
+    if (onOutput && isJsonOutput()) return;
+
     renderInfo({body: ''});
     renderWarning({headline: message, body: details});
   });
 
+  child.on('error', (error) => {
+    onOutput?.(error.message, 'error');
+    if (!onOutput || !isJsonOutput()) renderWarning({headline: error.message});
+  });
+
   child.on('close', (code) => {
     if (code && code > 0) {
+      onOutput?.('Codegen process exited with code ' + code, 'warning');
+      if (onOutput && isJsonOutput()) return;
       renderWarning({
         headline: 'Codegen process exited with code ' + code,
         body: 'There should be more logs above.',
@@ -143,6 +165,7 @@ type ProjectDirs = {
 };
 
 type CodegenOptions = ProjectDirs & {
+  onOutput?: (message: string, level: 'info' | 'warning' | 'error') => void;
   watch?: boolean;
   configFilePath?: string;
   forceSfapiVersion?: string;

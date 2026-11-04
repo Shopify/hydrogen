@@ -1,15 +1,24 @@
-import {format} from 'node:util';
+import {Console} from 'node:console';
+import {Writable} from 'node:stream';
 import {realpath} from 'node:fs/promises';
+import {isJsonOutput} from './json-output.js';
 import {setupResourceCleanup} from './resource-cleanup.js';
 import {basename, dirname, resolvePath} from '@shopify/cli-kit/node/path';
 import {hashString} from '@shopify/cli-kit/node/crypto';
-import {unstyled} from '@shopify/cli-kit/node/output';
+import {
+  outputInfo,
+  stringifyMessage,
+  unstyled,
+} from '@shopify/cli-kit/node/output';
+import {logRequestLine} from './mini-oxygen/common.js';
+import type {RequestHook} from '~/mini-oxygen/worker/index.js';
 import {
   acquireDevInstance,
   type DevInstanceLogEntry,
 } from '@shopify/cli-kit/node/dev-instance';
 import {
   renderCommandEvent,
+  renderCommandEventAsJson,
   runWithCommandEvents,
 } from '@shopify/cli-kit/node/command-events';
 
@@ -20,14 +29,28 @@ type SessionOptions = {
   envBranch?: string;
   envFile: string;
   signal?: AbortSignal;
+  json?: boolean;
 };
 
 export type DevSession = {
+  json: boolean;
   signal: AbortSignal;
   cleanup: (close: () => void | Promise<unknown>) => void;
   log: (message: string, level?: DevInstanceLogEntry['level']) => void;
   ready: (urls: string[]) => Promise<void>;
 };
+
+export function createRequestLogger(session?: DevSession): RequestHook {
+  return (info) =>
+    logRequestLine(
+      info,
+      (message) => {
+        if (session?.json) session.log(stringifyMessage(message));
+        else outputInfo(message);
+      },
+      {preserveQuery: session?.json},
+    );
+}
 
 /** Own the runtime and its output until shutdown has drained the session log. */
 export async function runDevSession(
@@ -38,8 +61,10 @@ export async function runDevSession(
     resolvePath(options.directory, options.envFile),
   );
   const directory = await realpath(options.directory);
+  const json = options.json ?? isJsonOutput();
   const instance = await acquireDevInstance({
     command: options.command,
+    logOutput: json ? process.stdout : undefined,
     directory,
     key: hashString(
       JSON.stringify([options.env ?? null, options.envBranch ?? null, envFile]),
@@ -108,6 +133,7 @@ export async function runDevSession(
   );
   if (options.signal?.aborted) stop();
   const session: DevSession = {
+    json,
     signal: controller.signal,
     cleanup(close) {
       if (closing) {
@@ -127,19 +153,75 @@ export async function runDevSession(
     },
   };
 
-  for (const method of ['log', 'info', 'debug', 'warn', 'error'] as const) {
+  let consoleLevel: DevInstanceLogEntry['level'];
+  const consoleOutput = new Writable({
+    write(chunk, _encoding, callback) {
+      log(String(chunk), consoleLevel);
+      callback();
+    },
+  });
+  const runtimeConsole = new Console({
+    stdout: consoleOutput,
+    stderr: consoleOutput,
+    colorMode: false,
+  });
+  let renderingText = false;
+  for (const method of [
+    'log',
+    'info',
+    'debug',
+    'warn',
+    'error',
+    'dir',
+    'dirxml',
+    'table',
+    'trace',
+    'assert',
+    'count',
+    'countReset',
+    'time',
+    'timeEnd',
+    'timeLog',
+    'group',
+    'groupCollapsed',
+    'groupEnd',
+    'clear',
+  ] as const) {
     console[method] = (...args: unknown[]) => {
-      log(format(...args), method === 'error' ? 'error' : undefined);
-      originalConsole[method](...args);
+      if (renderingText)
+        return Reflect.apply(originalConsole[method], console, args);
+      consoleLevel =
+        method === 'error' || method === 'trace' || method === 'assert'
+          ? 'error'
+          : undefined;
+      Reflect.apply(runtimeConsole[method], runtimeConsole, args);
+      if (!json) {
+        renderingText = true;
+        try {
+          Reflect.apply(originalConsole[method], console, args);
+        } finally {
+          renderingText = false;
+        }
+      }
     };
   }
   try {
     await runWithCommandEvents(
       {
-        outputMode: 'text',
+        outputMode: json ? 'json' : 'text',
         sink(event, eventOptions) {
-          if (event.type === 'progress' && event.message) log(event.message);
-          if (!eventOptions?.alreadyRendered) renderCommandEvent(event);
+          if (!json && event.type === 'progress' && event.message)
+            log(event.message);
+          if (json) {
+            // The shared renderer uses console.warn; keep diagnostics out of the runtime log.
+            const capturedWarn = console.warn;
+            console.warn = originalConsole.warn;
+            try {
+              renderCommandEventAsJson(event);
+            } finally {
+              console.warn = capturedWarn;
+            }
+          } else if (!eventOptions?.alreadyRendered) renderCommandEvent(event);
         },
       },
       async () => {

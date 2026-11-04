@@ -20,11 +20,11 @@ export function handleMiniOxygenImportFail(): never {
   );
 }
 
-export function logRequestLine({
-  request,
-  response,
-  meta,
-}: RequestHookInfo): void | Promise<void> {
+export function logRequestLine(
+  {request, response, meta}: RequestHookInfo,
+  write: typeof outputInfo = outputInfo,
+  {preserveQuery = false}: {preserveQuery?: boolean} = {},
+): void | Promise<void> {
   try {
     const url = new URL(request.url);
     // Calculate durationMs if not provided
@@ -41,7 +41,7 @@ export function logRequestLine({
     if (isDataRequest) {
       type = request.method === 'GET' ? 'loader' : 'action';
       const dataParam = url.searchParams.get('_data')?.replace('routes/', '');
-      route = url.pathname;
+      if (!preserveQuery) route = url.pathname;
       info = `[${dataParam}]`;
     }
 
@@ -52,7 +52,7 @@ export function logRequestLine({
           ? outputToken.cyan
           : outputToken.errorText;
 
-    outputInfo(
+    write(
       outputContent`${request.method.padStart(6)}  ${colorizeStatus(
         String(response.status),
       )}  ${outputToken.italic(type.padEnd(7, ' '))} ${route} ${
@@ -67,7 +67,7 @@ export function logRequestLine({
     );
   } catch {
     if (request && response?.status) {
-      outputInfo(`${request.method} ${response.status} ${request.url}`);
+      write(`${request.method} ${response.status} ${request.url}`);
     }
   }
 }
