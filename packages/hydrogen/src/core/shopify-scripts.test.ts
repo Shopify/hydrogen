@@ -348,6 +348,7 @@ describe("shopify scripts", () => {
     expect(window.Shopify?.currency).toEqual({ active: "CAD" });
     expect(window.Shopify?.locale).toBe("fr");
     expect(window.Shopify?.shop).toBe(TEST_MYSHOPIFY_DOMAIN);
+    expect(window.Shopify?.application).toEqual({ name: "hydrogen", version: "0.0.0-test" });
     expect(window.Shopify?.components.config).toEqual({
       storeDomain: window.location.origin,
       country: "CA",
