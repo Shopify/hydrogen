@@ -45,12 +45,12 @@ export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
   });
   if (shopifyRoute) return shopifyRoute;
 
-  // Astro's island scripts and Shopify's bootstrap scripts are inline, and Astro cannot share a
-  // nonce with them, so this policy allows inline scripts explicitly.
   const csp = createContentSecurityPolicy({
     shop: { storeDomain: storefrontConfig.storeDomain },
     nonce: false,
     directives: {
+      // Astro's native CSP hashes its generated scripts; Shopify's inline bootstraps would
+      // need hashes too. This example uses an explicit inline-script allowance instead.
       scriptSrc: ["'unsafe-inline'"],
       styleSrc: ["https://fonts.googleapis.com"],
       fontSrc: ["https://fonts.gstatic.com"],
