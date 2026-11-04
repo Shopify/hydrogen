@@ -83,7 +83,12 @@ export {
 } from "./cart";
 export type { CartActions, CartStore, CreateCartStoreOptions } from "./cart";
 export { createCartFormRegister } from "./cart";
-export type { CartFormRegister, QuantityInputAttributes, SetButtonAttributes } from "./cart";
+export type {
+  CartFormRegister,
+  QuantityInputAttributes,
+  RemoveButtonAttributes,
+  SetButtonAttributes,
+} from "./cart";
 export { attachQuantityInput } from "./cart";
 export { parseCartRequest } from "./cart";
 export type { CartAction, CartAttributeInput, CartLineAddInput, CartLineUpdateInput } from "./cart";

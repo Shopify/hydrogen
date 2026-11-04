@@ -1371,7 +1371,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@18840",
+          "name": "__@toStringTag",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         }
@@ -1452,7 +1452,7 @@
         {
           "filePath": "src/client/errors.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@18840",
+          "name": "__@toStringTag",
           "value": "string",
           "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
         }
@@ -3648,7 +3648,7 @@
     "src/core/request-routing/registered-routes.ts": {
       "filePath": "src/core/request-routing/registered-routes.ts",
       "name": "CreateShopifyRouteHandlerGeneratedType",
-      "description": "Creates a custom endpoint in your app for one pathname and HTTP method. Collect handlers in an object, and pass an array of handler objects to `handleShopifyRoutes` in its `handlers` option.\n\nUse paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, or error result from the handler. Hydrogen sends a JSON result with status `200`, an error result with status `400` by default, and a redirect result with status `303` by default. When a redirect result uses a status other than `301`, `302`, `303`, 307, or 308, the promise from `handleShopifyRoutes` rejects.\n\nAnnotate the handler's context parameter with only the fields the handler reads, for example `Omit<ShopifyRouteHandlerContext, \"sessionManager\">`, so apps without a session manager can register it.",
+      "description": "Creates a custom endpoint in your app for one pathname and HTTP method. Collect handlers in an object, and pass an array of handler objects to `handleShopifyRoutes` in its `handlers` option.\n\nUse paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, or error result from the handler. Hydrogen sends a JSON result with status `200`, an error result with status `400` by default, and a redirect result with status `303` by default. When a redirect result uses a status other than `301`, `302`, `303`, 307, or 308, the promise from `handleShopifyRoutes` rejects.\n\nAnnotate the handler's context parameter with only the fields the handler reads, for example `Omit<ShopifyRouteHandlerContext, \"sessionManager\">`, so apps without a session manager can register it. Hydrogen infers the context only from an annotated parameter. A handler with no parameter, or with an unannotated destructured parameter, gets the full context, so `handleShopifyRoutes` still requires `sessionManager` for it.\n\nMarking `sessionManager` optional in the annotation doesn't make it optional at runtime. It still makes `sessionManager` required, and when an untyped caller omits it, Hydrogen passes a stand-in that throws when the handler uses it. A check such as `if (sessionManager)` is always true, so don't use it as a fallback.",
       "isPublicDocs": true,
       "params": [
         {
@@ -3665,7 +3665,7 @@
         },
         {
           "name": "handler",
-          "description": "The function that receives the request, its context, the session, and the Storefront API client, and returns a JSON, redirect, or error result.",
+          "description": "The function that receives the request, its context, the session manager, and the Storefront API client, and returns a JSON, redirect, or error result.",
           "value": "(context: TContext) => Promise<ShopifyRouteHandlerResult>",
           "filePath": "src/core/request-routing/registered-routes.ts"
         }
@@ -3673,10 +3673,10 @@
       "returns": {
         "filePath": "src/core/request-routing/registered-routes.ts",
         "description": "The handler to add to a handler object.",
-        "name": "CallableRouteHandler<TContext extends Partial<ShopifyRouteHandlerContext> = ShopifyRouteHandlerContext, {\n  /** Set to `redirect` for a redirect response. */\n  type: \"redirect\";\n  /** The redirect target. Hydrogen resolves a relative path against the request's origin. */\n  location: string;\n  /** The HTTP redirect status. Defaults to `303`. */\n  status?: ShopifyRedirectStatus;\n  /** Extra headers for the redirect response. */\n  headers?: HeadersInit;\n} | {\n  /** Set to `json` for a JSON response. */\n  type: \"json\";\n  /** The value that Hydrogen serializes as the response body. */\n  data: TData;\n  /** Extra headers for the response. Hydrogen sets `content-type` to `application/json` and overrides any value you pass. */\n  headers?: HeadersInit;\n} | {\n  /** Set to `error` for an error response. */\n  type: \"error\";\n  /** The error that Hydrogen serializes as the response body's `error` field. */\n  error: TError;\n  /** The HTTP status for the error response. Defaults to `400`. */\n  status?: number;\n  /** Extra headers for the error response. Hydrogen sets `content-type` to `application/json` and overrides any value you pass. */\n  headers?: HeadersInit;\n}, const TPathname extends string, const TMethod extends string>",
-        "value": "CallableRouteHandler<TContext extends Partial<ShopifyRouteHandlerContext> = ShopifyRouteHandlerContext, {\n  /** Set to `redirect` for a redirect response. */\n  type: \"redirect\";\n  /** The redirect target. Hydrogen resolves a relative path against the request's origin. */\n  location: string;\n  /** The HTTP redirect status. Defaults to `303`. */\n  status?: ShopifyRedirectStatus;\n  /** Extra headers for the redirect response. */\n  headers?: HeadersInit;\n} | {\n  /** Set to `json` for a JSON response. */\n  type: \"json\";\n  /** The value that Hydrogen serializes as the response body. */\n  data: TData;\n  /** Extra headers for the response. Hydrogen sets `content-type` to `application/json` and overrides any value you pass. */\n  headers?: HeadersInit;\n} | {\n  /** Set to `error` for an error response. */\n  type: \"error\";\n  /** The error that Hydrogen serializes as the response body's `error` field. */\n  error: TError;\n  /** The HTTP status for the error response. Defaults to `400`. */\n  status?: number;\n  /** Extra headers for the error response. Hydrogen sets `content-type` to `application/json` and overrides any value you pass. */\n  headers?: HeadersInit;\n}, const TPathname extends string, const TMethod extends string>"
+        "name": "ShopifyRouteHandler<const TPathname extends string, const TMethod extends string, TContext extends Partial<ShopifyRouteHandlerContext> = ShopifyRouteHandlerContext>",
+        "value": "ShopifyRouteHandler<const TPathname extends string, const TMethod extends string, TContext extends Partial<ShopifyRouteHandlerContext> = ShopifyRouteHandlerContext>"
       },
-      "value": "export function createShopifyRouteHandler<\n  const TPathname extends string,\n  const TMethod extends string,\n  TContext extends Partial<ShopifyRouteHandlerContext> = ShopifyRouteHandlerContext,\n>(\n  pathname: TPathname,\n  method: TMethod,\n  handler: (context: TContext) => Promise<ShopifyRouteHandlerResult>,\n): CallableRouteHandler<TContext, ShopifyRouteHandlerResult, TPathname, TMethod> {\n  return createCallableRouteHandler(pathname, method, handler);\n}"
+      "value": "export function createShopifyRouteHandler<\n  const TPathname extends string,\n  const TMethod extends string,\n  TContext extends Partial<ShopifyRouteHandlerContext> = ShopifyRouteHandlerContext,\n>(\n  pathname: TPathname,\n  method: TMethod,\n  handler: (context: TContext) => Promise<ShopifyRouteHandlerResult>,\n): ShopifyRouteHandler<TPathname, TMethod, TContext> {\n  return createCallableRouteHandler(pathname, method, handler);\n}"
     }
   },
   "ShopifyRouteHandlerResult": {
@@ -3812,13 +3812,13 @@
       ]
     }
   },
-  "CallableRouteHandler": {
-    "src/core/request-routing/route-types.ts": {
-      "filePath": "src/core/request-routing/route-types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "CallableRouteHandler",
-      "value": "((context: TContext) => Promise<TResult>) & {\n  readonly pathname: TPathname;\n  readonly method: TMethod;\n}",
-      "description": "A route handler function that also carries the pathname and HTTP method it matches."
+  "ShopifyRouteHandler": {
+    "unknown": {
+      "description": "",
+      "name": "ShopifyRouteHandler",
+      "value": "ShopifyRouteHandler",
+      "members": [],
+      "override": "A route handler that createShopifyRouteHandler returns for one pathname and HTTP method. Call the handler with the route context to get a JSON, redirect, or error result, and read its `pathname` and `method` to see what it matches. The handler's context type comes from the annotated context parameter and defaults to `ShopifyRouteHandlerContext`."
     }
   },
   "ShopifyRouteHandlerContext": {
@@ -3826,7 +3826,7 @@
       "filePath": "src/core/request-routing/route-types.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyRouteHandlerContext",
-      "value": "{\n  /** The incoming request that matched the handler's pathname and method. */\n  request: Request;\n  /** Your app's session storage for the current request. */\n  sessionManager: ShopifyRouteSessionManager;\n  /** The Storefront API client for the current request. */\n  storefrontClient: StorefrontClient;\n  /** The current request's context, the same one the Storefront API client uses. */\n  requestContext: ShopifyRequestContext;\n}",
+      "value": "{\n  /** The incoming request that matched the handler's pathname and method. */\n  request: Request;\n  /** Your app's session storage for the current request. `handleShopifyRoutes` requires it only when a registered handler's context includes this field. */\n  sessionManager: ShopifyRouteSessionManager;\n  /** The Storefront API client for the current request. */\n  storefrontClient: StorefrontClient;\n  /** The current request's context, the same one the Storefront API client uses. */\n  requestContext: ShopifyRequestContext;\n}",
       "description": "The values that Hydrogen passes to each registered route handler.",
       "members": [
         {
@@ -3848,7 +3848,7 @@
           "syntaxKind": "PropertySignature",
           "name": "sessionManager",
           "value": "ShopifyRouteSessionManager",
-          "description": "Your app's session storage for the current request."
+          "description": "Your app's session storage for the current request. `handleShopifyRoutes` requires it only when a registered handler's context includes this field."
         },
         {
           "filePath": "src/core/request-routing/route-types.ts",
@@ -3920,12 +3920,12 @@
     "src/core/request-routing/handle-shopify-routes.ts": {
       "filePath": "src/core/request-routing/handle-shopify-routes.ts",
       "name": "HandleShopifyRoutesForDocs",
-      "description": "Serves Shopify's storefront endpoints and your custom route handlers from your app. Call the function at the start of request handling, before your framework's router.\n\nWhen a route matches, the function returns a promise for the response. Return that response as is, because the response already carries the request context's headers. When no route matches, the function returns `null` synchronously, and your framework's router handles the request. The function throws when `requestContext` differs from the Storefront API client's request context. When a route handler throws, the returned promise rejects. Inside a `try` block, use `return await` on the result.\n\nThe function checks these routes in order and returns the first match: the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.\n\nSome routes answer unsupported methods with a `405` response. A registered handler path returns `405` for any method that no handler on that path registers. Checkout and cart permalinks accept only `GET` and `HEAD`. Buy permalinks accept only `GET`, and the UCP MCP proxy accepts only `POST`.\n\nWhen your bundler resolves the package's `development` export condition, the function also serves the GraphiQL explorer at `/graphiql` for GET requests that match no other route, and accepts a `graphiql` option. Set `graphiql.customerAccount` to an object with `apiUrl`, `accessToken`, and `schemaUrl` to add a Customer Account API tab. The explorer skips the tab when it can't fetch the schema.",
+      "description": "Serves Shopify's storefront endpoints and your custom route handlers from your app. Call the function at the start of request handling, before your framework's router.\n\nWhen a route matches, the function returns a promise for the response. Return that response as is, because the response already carries the request context's headers. When no route matches, the function returns `null` synchronously, and your framework's router handles the request. The function throws when `requestContext` differs from the Storefront API client's request context. When a route handler throws, the returned promise rejects. Inside a `try` block, use `return await` on the result.\n\nThe function checks these routes in order and returns the first match: the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, the UCP business profile at `/.well-known/ucp`, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.\n\nSome routes answer unsupported methods with a `405` response. A registered handler path returns `405` for any method that no handler on that path registers. Checkout and cart permalinks accept only `GET` and `HEAD`. Buy permalinks accept only `GET`, and the UCP MCP proxy accepts only `POST`.\n\nWhen your bundler resolves the package's `development` export condition, the function also serves the GraphiQL explorer at `/graphiql` for GET requests that match no other route, and accepts a `graphiql` option. Set `graphiql.customerAccount` to an object with `apiUrl`, `accessToken`, and `schemaUrl` to add a Customer Account API tab. The explorer skips the tab when it can't fetch the schema.",
       "isPublicDocs": true,
       "params": [
         {
           "name": "options",
-          "description": "The request, its context and session, the Storefront API client, your route templates, and your handler groups.",
+          "description": "The request, its context, the Storefront API client, your route templates, your handler groups, and the session manager when a registered handler needs one.",
           "value": "HydrogenRoutesOptions",
           "filePath": "src/core/request-routing/handle-shopify-routes.ts"
         }
@@ -3940,57 +3940,12 @@
     }
   },
   "HydrogenRoutesOptions": {
-    "src/core/request-routing/route-types.ts": {
-      "filePath": "src/core/request-routing/route-types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
+    "unknown": {
+      "description": "",
       "name": "HydrogenRoutesOptions",
-      "value": "HydrogenRoutesBaseOptions & {\n  /** The handler groups for your app's custom endpoints. */\n  handlers?: THandlers;\n} & SessionManagerOption<THandlers>",
-      "description": "The request, its context, the Storefront API client, your route templates, your handler groups, and the session when a handler needs it."
-    }
-  },
-  "HydrogenRoutesBaseOptions": {
-    "src/core/request-routing/route-types.ts": {
-      "filePath": "src/core/request-routing/route-types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "HydrogenRoutesBaseOptions",
-      "value": "Omit<ShopifyRouteHandlerContext, \"sessionManager\"> & {\n  /**\n   * Your app's route templates. Hydrogen redirects Liquid-style `?variant=` URLs on your product paths and on Shopify's default product paths.\n   */\n  routeTemplates?: ShopifyRouteTemplates;\n}",
-      "description": ""
-    }
-  },
-  "SessionManagerOption": {
-    "src/core/request-routing/route-types.ts": {
-      "filePath": "src/core/request-routing/route-types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "SessionManagerOption",
-      "value": "true extends RequiresSessionManager<RouteHandlerContext<NonNullable<THandlers>[number]>>\n    ? { sessionManager: ShopifyRouteSessionManager }\n    : { sessionManager?: ShopifyRouteSessionManager }",
-      "description": ""
-    }
-  },
-  "RequiresSessionManager": {
-    "src/core/request-routing/route-types.ts": {
-      "filePath": "src/core/request-routing/route-types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "RequiresSessionManager",
-      "value": "TContext extends unknown\n  ? \"sessionManager\" extends keyof TContext\n    ? true\n    : false\n  : never",
-      "description": ""
-    }
-  },
-  "RouteHandlerContext": {
-    "src/core/request-routing/route-types.ts": {
-      "filePath": "src/core/request-routing/route-types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "RouteHandlerContext",
-      "value": "TGroup extends unknown\n  ? HandlerContext<TGroup[Extract<keyof TGroup, string | number>]>\n  : never",
-      "description": ""
-    }
-  },
-  "HandlerContext": {
-    "src/core/request-routing/route-types.ts": {
-      "filePath": "src/core/request-routing/route-types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "HandlerContext",
-      "value": "THandler extends (context: infer TContext) => unknown\n  ? TContext\n  : never",
-      "description": ""
+      "value": "HydrogenRoutesOptions",
+      "members": [],
+      "override": "The options for handleShopifyRoutes: the `request`, the `requestContext`, the `storefrontClient` created with that request context, optional `routeTemplates`, and optional `handlers`, an array of handler groups. Pass `sessionManager` when a registered handler's context includes it, such as Customer Account handlers or cart handlers created with `customerSession`. Otherwise `sessionManager` is optional when the handler types are inferred from `handlers`."
     }
   },
   "ShopifyScriptsOptions": {
@@ -5531,6 +5486,38 @@
       "value": "export interface SetButtonAttributes {\n  /** The form field that names the cart change. */\n  name: \"intent\";\n  /** Sets the line to the quantity in the form's quantity input. */\n  value: \"set\";\n  /** Makes the button the one that submits the form when the quantity changes. */\n  type: \"submit\";\n  /** Hides the button from view. */\n  hidden: true;\n}"
     }
   },
+  "RemoveButtonAttributes": {
+    "src/core/cart/form.ts": {
+      "filePath": "src/core/cart/form.ts",
+      "name": "RemoveButtonAttributes",
+      "description": "HTML attributes for the submit button that removes a line from the cart.\n\n`register(\"remove\")` returns the attributes. Removing a line reads only the line ID, so the button skips form validation. Invalid text in the line's quantity input doesn't block the removal.",
+      "isPublicDocs": true,
+      "members": [
+        {
+          "filePath": "src/core/cart/form.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "formNoValidate",
+          "value": "true",
+          "description": "Submits the form without checking its fields, such as the quantity input's digits-only pattern."
+        },
+        {
+          "filePath": "src/core/cart/form.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "name",
+          "value": "'intent'",
+          "description": "The form field that names the cart change."
+        },
+        {
+          "filePath": "src/core/cart/form.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "value",
+          "value": "'remove'",
+          "description": "Removes the line."
+        }
+      ],
+      "value": "export interface RemoveButtonAttributes {\n  /** The form field that names the cart change. */\n  name: \"intent\";\n  /** Removes the line. */\n  value: \"remove\";\n  /** Submits the form without checking its fields, such as the quantity input's digits-only pattern. */\n  formNoValidate: true;\n}"
+    }
+  },
   "QuantityInputAttributes": {
     "src/core/cart/form.ts": {
       "filePath": "src/core/cart/form.ts",
@@ -5604,7 +5591,7 @@
         "name": "CartFormRegister",
         "value": "CartFormRegister"
       },
-      "value": "export function createCartFormRegister(): CartFormRegister {\n  return ((nameOrAction: string, opts?: RegisterOptions) => {\n    if (nameOrAction === \"attributeValue\") {\n      return createAttributeValueAttributes(opts);\n    }\n\n    if (FIELD_REGISTERS.has(nameOrAction)) {\n      return createFieldAttributes(nameOrAction, opts);\n    }\n\n    if (nameOrAction === \"set\") {\n      return {\n        name: \"intent\",\n        value: \"set\",\n        type: \"submit\",\n        hidden: true,\n      } satisfies SetButtonAttributes;\n    }\n\n    return { name: \"intent\", value: nameOrAction };\n  }) as CartFormRegister;\n}",
+      "value": "export function createCartFormRegister(): CartFormRegister {\n  return ((nameOrAction: string, opts?: RegisterOptions) => {\n    if (nameOrAction === \"attributeValue\") {\n      return createAttributeValueAttributes(opts);\n    }\n\n    if (FIELD_REGISTERS.has(nameOrAction)) {\n      return createFieldAttributes(nameOrAction, opts);\n    }\n\n    if (nameOrAction === \"set\") {\n      return {\n        name: \"intent\",\n        value: \"set\",\n        type: \"submit\",\n        hidden: true,\n      } satisfies SetButtonAttributes;\n    }\n\n    if (nameOrAction === \"remove\") {\n      return {\n        name: \"intent\",\n        value: \"remove\",\n        formNoValidate: true,\n      } satisfies RemoveButtonAttributes;\n    }\n\n    return { name: \"intent\", value: nameOrAction };\n  }) as CartFormRegister;\n}",
       "examples": [
         {
           "title": "Example",
@@ -6964,7 +6951,7 @@
         {
           "filePath": "src/core/cart/buyer-identity-sync.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@21686",
+          "name": "__@cartBuyerIdentitySync",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to `createCustomerAccountServerHandlers` through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         }
@@ -7058,6 +7045,15 @@
           "description": "Refreshes the access token at `/account/refresh` and redirects the customer to the same-origin `return_to` path, which defaults to `/account`. Accepts `GET`."
         }
       ]
+    }
+  },
+  "CallableRouteHandler": {
+    "src/core/request-routing/route-types.ts": {
+      "filePath": "src/core/request-routing/route-types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "CallableRouteHandler",
+      "value": "((context: TContext) => Promise<TResult>) & {\n  readonly pathname: TPathname;\n  readonly method: TMethod;\n}",
+      "description": "A route handler function that also carries the pathname and HTTP method it matches."
     }
   },
   "CustomerAccountRouteResult": {
@@ -7364,7 +7360,7 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@23210",
+          "name": "__@cartServerHandlersCartQuery",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -7414,14 +7410,14 @@
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartBuyerIdentitySync@21686",
+          "name": "__@cartBuyerIdentitySync",
           "value": "CartBuyerIdentitySync",
           "description": "Connects the cart to the customer when the customer logs in, and disconnects the cart when the customer logs out.\n\nCreate the cart server handlers with `customerSession`, then pass the handlers to `createCustomerAccountServerHandlers` through the `cartServerHandlers` option. The customer account handlers then update the cart for you."
         },
         {
           "filePath": "src/core/cart/server-handlers.ts",
           "syntaxKind": "PropertySignature",
-          "name": "__@cartServerHandlersCartQuery@23210",
+          "name": "__@cartServerHandlersCartQuery",
           "value": "TCartQuery | undefined",
           "description": "The cart query document that the handlers run."
         },
@@ -10846,7 +10842,7 @@
       "filePath": "src/customer-account/client.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CreateCustomerAccountClientOptions",
-      "value": "{\n  /** Numeric Shopify shop ID as a string of digits, such as `12345`. */\n  shopId: string;\n  /**\n   * Customer Account API version in `YYYY-MM` format. Defaults to `2026-10`.\n   */\n  customerApiVersion?: string;\n  /**\n   * The context for the current request, from `createShopifyRequestContext`.\n   *\n   * The context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.\n   *\n   * The client fills `$language` from the context's language and stops requests when the context's signal aborts.\n   */\n  requestContext: ShopifyRequestContext;\n  /** Custom fetch implementation. Defaults to the global fetch. */\n  fetch?: typeof globalThis.fetch;\n  /**\n   * Timeout for each request in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to `30000`.\n   */\n  defaultTimeoutInMs?: number;\n}",
+      "value": "{\n  /** Numeric Shopify shop ID as a string of digits, such as `12345`. */\n  shopId: string;\n  /**\n   * Customer Account API version in `YYYY-MM` format. Defaults to `2026-10`.\n   */\n  customerApiVersion?: string;\n  /**\n   * The context for the current request, from `createShopifyRequestContext`.\n   *\n   * The context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.\n   *\n   * The client fills `$language: LanguageCode` from the context's language and stops requests when the context's signal aborts.\n   */\n  requestContext: ShopifyRequestContext;\n  /** Custom fetch implementation. Defaults to the global fetch. */\n  fetch?: typeof globalThis.fetch;\n  /**\n   * Timeout for each request in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to `30000`.\n   */\n  defaultTimeoutInMs?: number;\n}",
       "description": "Options for creating a Customer Account API client.",
       "members": [
         {
@@ -10878,7 +10874,7 @@
           "syntaxKind": "PropertySignature",
           "name": "requestContext",
           "value": "ShopifyRequestContext",
-          "description": "The context for the current request, from `createShopifyRequestContext`.\n\nThe context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.\n\nThe client fills `$language` from the context's language and stops requests when the context's signal aborts."
+          "description": "The context for the current request, from `createShopifyRequestContext`.\n\nThe context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.\n\nThe client fills `$language: LanguageCode` from the context's language and stops requests when the context's signal aborts."
         },
         {
           "filePath": "src/customer-account/client.ts",
@@ -10895,7 +10891,7 @@
       "filePath": "src/customer-account/client.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CustomerAccountClient",
-      "value": "{\n  /** The GraphQL endpoint, `https://shopify.com/{shopId}/account/customer/api/{version}/graphql`. */\n  readonly apiUrl: string;\n  /**\n   * Sends a Customer Account API query or mutation with the customer's access token, and returns the data, any GraphQL errors, and the response headers. Pass a document from the Customer Account `gql` function.\n   *\n   * The request makes the final response private and uncacheable when you call `applyResponseHeaders()`. When the document declares `$language` and you omit it, the client fills the variable from the request context's language.\n   *\n   * The method throws a `TypeError` for a document from any other `gql` function, including the Storefront API `gql` function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. A missing or malformed access token throws `CustomerAccountAuthenticationError`, a timeout throws `CustomerAccountTimeoutError`, and other request failures throw `CustomerAccountApiError`.\n   *\n   * @throws {TypeError} When another gql function created the document, or when the variables aren't an object.\n   * @throws {CustomerAccountAuthenticationError} When the options object is missing or the access token fails validation.\n   * @throws {CustomerAccountTimeoutError} When the request exceeds the client's timeout.\n   * @throws {CustomerAccountApiError} On a non-OK HTTP status, unparseable JSON, a response without data, or a network failure.\n   *\n   * @example\n   * ```ts\n   * const result = await client.graphql(\n   *   gql(`query { customer { firstName lastName } }`),\n   *   { accessToken },\n   * );\n   *\n   * if (result.errors) {\n   *   console.error(result.errors);\n   * } else {\n   *   console.log(result.data.customer.firstName);\n   * }\n   * ```\n   */\n  graphql: <const Doc extends AnyCustomerAccountDocument>(\n    document: Doc,\n    ...options: CustomerAccountGqlRestParam<Doc>\n  ) => Promise<CustomerAccountGraphqlResult<ResultOfDoc<Doc>>>;\n}",
+      "value": "{\n  /** The GraphQL endpoint, `https://shopify.com/{shopId}/account/customer/api/{version}/graphql`. */\n  readonly apiUrl: string;\n  /**\n   * Sends a Customer Account API query or mutation with the customer's access token, and returns the data, any GraphQL errors, and the response headers. Pass a document from the Customer Account `gql` function.\n   *\n   * The request makes the final response private and uncacheable when you call `applyResponseHeaders()`. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.\n   *\n   * The method throws a `TypeError` for a document from any other `gql` function, including the Storefront API `gql` function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. A missing or malformed access token throws `CustomerAccountAuthenticationError`, a timeout throws `CustomerAccountTimeoutError`, and other request failures throw `CustomerAccountApiError`.\n   *\n   * @throws {TypeError} When another gql function created the document, or when the variables aren't an object.\n   * @throws {CustomerAccountAuthenticationError} When the options object is missing or the access token fails validation.\n   * @throws {CustomerAccountTimeoutError} When the request exceeds the client's timeout.\n   * @throws {CustomerAccountApiError} On a non-OK HTTP status, unparseable JSON, a response without data, or a network failure.\n   *\n   * @example\n   * ```ts\n   * const result = await client.graphql(\n   *   gql(`query { customer { firstName lastName } }`),\n   *   { accessToken },\n   * );\n   *\n   * if (result.errors) {\n   *   console.error(result.errors);\n   * } else {\n   *   console.log(result.data.customer.firstName);\n   * }\n   * ```\n   */\n  graphql: <const Doc extends AnyCustomerAccountDocument>(\n    document: Doc,\n    ...options: CustomerAccountGqlRestParam<Doc>\n  ) => Promise<CustomerAccountGraphqlResult<ResultOfDoc<Doc>>>;\n}",
       "description": "A client that sends Customer Account API requests from your server for the current request.",
       "members": [
         {
@@ -10910,7 +10906,7 @@
           "syntaxKind": "PropertySignature",
           "name": "graphql",
           "value": "<const Doc extends AnyCustomerAccountDocument>(document: Doc, ...options: CustomerAccountGqlRestParam<Doc>) => Promise<CustomerAccountGraphqlResult<ResultOfDoc<Doc>>>",
-          "description": "Sends a Customer Account API query or mutation with the customer's access token, and returns the data, any GraphQL errors, and the response headers. Pass a document from the Customer Account `gql` function.\n\nThe request makes the final response private and uncacheable when you call `applyResponseHeaders()`. When the document declares `$language` and you omit it, the client fills the variable from the request context's language.\n\nThe method throws a `TypeError` for a document from any other `gql` function, including the Storefront API `gql` function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. A missing or malformed access token throws `CustomerAccountAuthenticationError`, a timeout throws `CustomerAccountTimeoutError`, and other request failures throw `CustomerAccountApiError`.",
+          "description": "Sends a Customer Account API query or mutation with the customer's access token, and returns the data, any GraphQL errors, and the response headers. Pass a document from the Customer Account `gql` function.\n\nThe request makes the final response private and uncacheable when you call `applyResponseHeaders()`. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.\n\nThe method throws a `TypeError` for a document from any other `gql` function, including the Storefront API `gql` function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. A missing or malformed access token throws `CustomerAccountAuthenticationError`, a timeout throws `CustomerAccountTimeoutError`, and other request failures throw `CustomerAccountApiError`.",
           "examples": [
             {
               "title": "Example",
@@ -10933,7 +10929,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CustomerAccountGqlRestParam",
       "value": "HasNoRequiredKeys<UserVariables<Doc>> extends true\n    ? [options: CustomerAccountGraphqlOptions<UserVariables<Doc>>]\n    : [\n        options: CustomerAccountGraphqlOptions<UserVariables<Doc>> & {\n          variables: UserVariables<Doc>;\n        },\n      ]",
-      "description": "The options argument for a Customer Account API request.\n\nPass `variables` when the document declares a required variable other than `language`. TypeScript reports an error when a required variable is missing."
+      "description": "The options argument for a Customer Account API request.\n\nPass `variables` when the document declares a required variable other than `$language: LanguageCode`. TypeScript reports an error when a required variable is missing."
     }
   },
   "VariablesOfDoc": {
@@ -10945,13 +10941,76 @@
       "description": "The variables that a Customer Account document declares."
     }
   },
-  "OptionalAutoVariables": {
+  "I18nVariableNamesOfDoc": {
     "src/customer-account/client.ts": {
       "filePath": "src/customer-account/client.ts",
       "syntaxKind": "TypeAliasDeclaration",
-      "name": "OptionalAutoVariables",
-      "value": "\"language\" extends keyof Variables\n  ? { language?: Variables[\"language\"] }\n  : {}",
-      "description": "An optional `language` variable for a document that declares `$language`. The client fills a missing value from the request context."
+      "name": "I18nVariableNamesOfDoc",
+      "value": "string extends SourceOf<Doc>\n    ? I18nVariableNamesByValue<VariablesOfDoc<Doc>>\n    : InferVariableNamesDeclaredAs<SourceOf<Doc>, I18nVariableTypes>",
+      "description": "The variables the client fills when omitted: those declared with the expected type, such as `$language: LanguageCode`."
+    }
+  },
+  "SourceOf": {
+    "src/customer-account/graphql.ts": {
+      "filePath": "src/customer-account/graphql.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "SourceOf",
+      "value": "Doc extends { readonly source: infer Source extends string }\n  ? Source\n  : never",
+      "description": "Extracts the source string literal type from a Customer Account document."
+    }
+  },
+  "I18nVariableNamesByValue": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "I18nVariableNamesByValue",
+      "value": "I18nVariableNamesByValue<Variables>",
+      "description": ""
+    }
+  },
+  "InferVariableNamesDeclaredAs": {
+    "src/graphql/type-resolver.ts": {
+      "filePath": "src/graphql/type-resolver.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "InferVariableNamesDeclaredAs",
+      "value": "parseDocument<T> extends infer Doc\n    ? Doc extends { kind: \"Document\"; definitions: infer Defs extends readonly unknown[] }\n      ? FirstOperation<Defs> extends { variableDefinitions: infer Vars extends readonly unknown[] }\n        ? DeclaredNameOfType<Vars[number], Types>\n        : never\n      : never\n    : never",
+      "description": "Names of the first operation's variables that are declared with the named type `Types` maps them to, nullable or non-null. List types never match."
+    }
+  },
+  "FirstOperation": {
+    "src/graphql/type-resolver.ts": {
+      "filePath": "src/graphql/type-resolver.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "FirstOperation",
+      "value": "Defs extends readonly [infer Def, ...infer Rest]\n  ? Def extends { kind: \"OperationDefinition\" }\n    ? Def\n    : FirstOperation<Rest>\n  : never",
+      "description": ""
+    }
+  },
+  "DeclaredNameOfType": {
+    "src/graphql/type-resolver.ts": {
+      "filePath": "src/graphql/type-resolver.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "DeclaredNameOfType",
+      "value": "Definition extends {\n  variable: { name: { value: infer Name extends keyof Types } };\n  type: infer Type;\n}\n  ? (Type extends { kind: \"NonNullType\"; type: infer Inner } ? Inner : Type) extends {\n      kind: \"NamedType\";\n      name: { value: Types[Name] };\n    }\n    ? Name\n    : never\n  : never",
+      "description": ""
+    }
+  },
+  "I18nVariableTypes": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "I18nVariableTypes",
+      "value": "typeof CUSTOMER_ACCOUNT_I18N_VARIABLE_TYPES",
+      "description": ""
+    }
+  },
+  "OptionalI18nVariables": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "OptionalI18nVariables",
+      "value": "{\n  [K in keyof Variables & Names]?: Variables[K];\n}",
+      "description": "Optional versions of the variables that the client fills from the request context when you omit them."
     }
   },
   "CustomerAccountGraphqlOptions": {
@@ -10959,7 +11018,7 @@
       "filePath": "src/customer-account/client.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CustomerAccountGraphqlOptions",
-      "value": "{\n  /** The customer's access token, such as one from the customer session's `getOrRefreshAccessToken()` method. */\n  accessToken: string;\n  /**\n   * The document's variables. When the document declares `$language` and you omit it, the client fills the variable from the request context's language.\n   */\n  variables?: Variables;\n  /**\n   * Stops this request when the signal aborts. The request also stops when the request context's signal aborts or the timeout passes.\n   */\n  signal?: AbortSignal;\n}",
+      "value": "{\n  /** The customer's access token, such as one from the customer session's `getOrRefreshAccessToken()` method. */\n  accessToken: string;\n  /**\n   * The document's variables. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.\n   */\n  variables?: Variables;\n  /**\n   * Stops this request when the signal aborts. The request also stops when the request context's signal aborts or the timeout passes.\n   */\n  signal?: AbortSignal;\n}",
       "description": "Options for a single Customer Account API request.",
       "members": [
         {
@@ -10982,7 +11041,7 @@
           "syntaxKind": "PropertySignature",
           "name": "variables",
           "value": "Variables",
-          "description": "The document's variables. When the document declares `$language` and you omit it, the client fills the variable from the request context's language.",
+          "description": "The document's variables. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.",
           "isOptional": true
         }
       ]

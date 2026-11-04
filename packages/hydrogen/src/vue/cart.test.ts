@@ -521,7 +521,7 @@ describe("useCartForm", () => {
       name: "intent",
       value: "increase",
     });
-    expect(registerFn("remove")).toEqual({ name: "intent", value: "remove" });
+    expect(registerFn("remove")).toEqual({ name: "intent", value: "remove", formNoValidate: true });
   });
 
   it("isPending.initial is true while loading", () => {

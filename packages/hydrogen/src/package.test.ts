@@ -1,5 +1,13 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+} from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -15,6 +23,7 @@ const TS_PLUGIN_EXPORT_PATH = "./ts-plugin";
 // pack + tar + spawn on a cold CI runner can exceed vitest's 5s default.
 const TS_PLUGIN_PACK_TIMEOUT_MS = 30_000;
 const STANDARD_EVENTS_SCRIPT_URL = "https://cdn.shopify.com/storefront/standard-events.js";
+const URL_IMPORT = /\bimport\((?:\s|\/\*.*?\*\/|\/\/[^\n]*)*["'`]https?:[^)]*\)/gs;
 const STANDARD_EVENTS_INSPECTOR_ID = "shopify-standard-events-inspector";
 const COPY_GENERATED_GRAPHQL_ASSETS_SCRIPT_PATH = resolve(
   PACKAGE_ROOT,
@@ -52,6 +61,27 @@ describe("package metadata", () => {
 
   it("exports package metadata", () => {
     expect(packageJson.exports["./package.json"]).toBe("./package.json");
+  });
+
+  it("resolves every ESM entry point for require-based resolvers", () => {
+    const esmEntries = Object.entries(packageJson.exports).flatMap(([exportPath, target]) =>
+      typeof target === "object" && "import" in target
+        ? [
+            {
+              exportPath,
+              importTargets:
+                typeof target.import === "string" ? [target.import] : Object.values(target.import),
+            },
+          ]
+        : [],
+    );
+    expect(esmEntries.map(({ exportPath }) => exportPath)).toContain("./react");
+
+    for (const { exportPath, importTargets } of esmEntries) {
+      expect(importTargets.map((target) => resolve(PACKAGE_ROOT, target))).toContain(
+        require.resolve(`@shopify/hydrogen${exportPath.slice(1)}`),
+      );
+    }
   });
 
   it("exports copied generated GraphQL assets from dist", () => {
@@ -262,12 +292,19 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     expect(developmentShopifyScripts).toContain(STANDARD_EVENTS_INSPECTOR_ID);
   });
 
-  it("preserves the standard events URL as a literal dynamic import", () => {
-    const pageViewScript = readFileSync(
-      resolve(PACKAGE_ROOT, "dist/core/shopify-scripts/page-view.mjs"),
-      "utf8",
-    );
+  it("tells consumer bundlers to leave URL imports to the browser", () => {
+    const distDirectory = resolve(PACKAGE_ROOT, "dist");
+    const urlImports = readdirSync(distDirectory, { encoding: "utf8", recursive: true })
+      .filter((file) => file.endsWith(".mjs"))
+      .flatMap(
+        (file) => readFileSync(resolve(distDirectory, file), "utf8").match(URL_IMPORT) ?? [],
+      );
 
-    expect(pageViewScript).toContain(`import("${STANDARD_EVENTS_SCRIPT_URL}")`);
+    expect(urlImports).toEqual(
+      expect.arrayContaining([expect.stringContaining(STANDARD_EVENTS_SCRIPT_URL)]),
+    );
+    for (const urlImport of urlImports) {
+      expect(urlImport).toContain("/* webpackIgnore: true */");
+    }
   });
 });

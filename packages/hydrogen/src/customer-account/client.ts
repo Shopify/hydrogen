@@ -2,6 +2,11 @@ import type { GraphQLFormattedError } from "../client/types";
 import { CUSTOMER_ACCOUNT_API_VERSION, DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
 import type { ShopifyRequestContext } from "../core/request-context";
 import { isObjectRecord } from "../core/utils/record";
+import type { introspection } from "../graphql/generated/customer-account-graphql-env";
+import type {
+  InferVariableNamesByEnumValue,
+  InferVariableNamesDeclaredAs,
+} from "../graphql/type-resolver";
 import {
   CustomerAccountApiError,
   CustomerAccountAuthenticationError,
@@ -10,7 +15,9 @@ import {
 import {
   assertCustomerAccountDocument,
   type AnyCustomerAccountDocument,
+  type CUSTOMER_ACCOUNT_I18N_VARIABLE_TYPES,
   type CustomerAccountDocument,
+  type SourceOf,
 } from "./graphql";
 
 const SHOP_ID_RE = /^\d+$/;
@@ -51,7 +58,7 @@ export type CreateCustomerAccountClientOptions = {
    *
    * The context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.
    *
-   * The client fills `$language` from the context's language and stops requests when the context's signal aborts.
+   * The client fills `$language: LanguageCode` from the context's language and stops requests when the context's signal aborts.
    */
   requestContext: ShopifyRequestContext;
   /** Custom fetch implementation. Defaults to the global fetch. */
@@ -69,7 +76,7 @@ export type CustomerAccountGraphqlOptions<Variables = Record<string, unknown>> =
   /** The customer's access token, such as one from the customer session's `getOrRefreshAccessToken()` method. */
   accessToken: string;
   /**
-   * The document's variables. When the document declares `$language` and you omit it, the client fills the variable from the request context's language.
+   * The document's variables. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.
    */
   variables?: Variables;
   /**
@@ -83,12 +90,23 @@ type ResultOfDoc<Doc> =
 /** The variables that a Customer Account document declares. */
 type VariablesOfDoc<Doc> =
   Doc extends CustomerAccountDocument<unknown, infer Variables, string> ? Variables : never;
-/** An optional `language` variable for a document that declares `$language`. The client fills a missing value from the request context. */
-type OptionalAutoVariables<Variables> = "language" extends keyof Variables
-  ? { language?: Variables["language"] }
-  : {};
-type UserVariables<Doc> = Omit<VariablesOfDoc<Doc>, "language"> &
-  OptionalAutoVariables<VariablesOfDoc<Doc>>;
+type I18nVariableTypes = typeof CUSTOMER_ACCOUNT_I18N_VARIABLE_TYPES;
+type I18nVariableNamesByValue<Variables> = InferVariableNamesByEnumValue<
+  Variables,
+  I18nVariableTypes,
+  introspection
+>;
+/** The variables the client fills when omitted: those declared with the expected type, such as `$language: LanguageCode`. */
+type I18nVariableNamesOfDoc<Doc> =
+  string extends SourceOf<Doc>
+    ? I18nVariableNamesByValue<VariablesOfDoc<Doc>>
+    : InferVariableNamesDeclaredAs<SourceOf<Doc>, I18nVariableTypes>;
+/** Optional versions of the variables that the client fills from the request context when you omit them. */
+type OptionalI18nVariables<Variables, Names> = {
+  [K in keyof Variables & Names]?: Variables[K];
+};
+type UserVariables<Doc> = Omit<VariablesOfDoc<Doc>, I18nVariableNamesOfDoc<Doc>> &
+  OptionalI18nVariables<VariablesOfDoc<Doc>, I18nVariableNamesOfDoc<Doc>>;
 type HasNoRequiredKeys<T> = Record<string, never> extends T ? true : false;
 
 /**
@@ -103,7 +121,7 @@ export type CustomerAccountGraphqlResult<Result = unknown> =
 /**
  * The options argument for a Customer Account API request.
  *
- * Pass `variables` when the document declares a required variable other than `language`. TypeScript reports an error when a required variable is missing.
+ * Pass `variables` when the document declares a required variable other than `$language: LanguageCode`. TypeScript reports an error when a required variable is missing.
  */
 export type CustomerAccountGqlRestParam<Doc extends AnyCustomerAccountDocument> =
   HasNoRequiredKeys<UserVariables<Doc>> extends true
@@ -123,7 +141,7 @@ export type CustomerAccountClient = {
   /**
    * Sends a Customer Account API query or mutation with the customer's access token, and returns the data, any GraphQL errors, and the response headers. Pass a document from the Customer Account `gql` function.
    *
-   * The request makes the final response private and uncacheable when you call `applyResponseHeaders()`. When the document declares `$language` and you omit it, the client fills the variable from the request context's language.
+   * The request makes the final response private and uncacheable when you call `applyResponseHeaders()`. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.
    *
    * The method throws a `TypeError` for a document from any other `gql` function, including the Storefront API `gql` function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. A missing or malformed access token throws `CustomerAccountAuthenticationError`, a timeout throws `CustomerAccountTimeoutError`, and other request failures throw `CustomerAccountApiError`.
    *
@@ -398,11 +416,11 @@ function withAbort<T>(promise: T | Promise<T>, signal: AbortSignal | undefined):
 }
 
 function getVariables(
-  document: { variableNames: ReadonlySet<string> },
+  document: { i18nVariableNames: ReadonlySet<keyof I18nVariableTypes> },
   variables: Record<string, unknown>,
   language: ShopifyRequestContext["i18n"]["language"],
 ): Record<string, unknown> {
-  if (!document.variableNames.has("language")) return variables;
+  if (!document.i18nVariableNames.has("language")) return variables;
   if ("language" in variables) return variables;
   return { ...variables, language };
 }

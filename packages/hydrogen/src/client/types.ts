@@ -12,7 +12,11 @@ import type {
 import type { AnyStorefrontQueryString, SourceOf, StorefrontQueryString } from "../graphql";
 import type { InferResult, InferVariables } from "../graphql";
 import type { introspection } from "../graphql/generated/graphql-env";
-import type { InferOperationKind, InferVariableNamesDeclaredAs } from "../graphql/type-resolver";
+import type {
+  InferOperationKind,
+  InferVariableNamesByEnumValue,
+  InferVariableNamesDeclaredAs,
+} from "../graphql/type-resolver";
 import type { I18N_VARIABLE_TYPES } from "./i18n-variables";
 
 export type { I18nConfig } from "../core/request-context";
@@ -196,19 +200,11 @@ export type CreateStorefrontClientArgs<
       config: PrivateNoBuyerContextClientOptions<AnyFetch | undefined> & { cache?: CacheConfig };
     };
 type I18nVariableTypes = typeof I18N_VARIABLE_TYPES;
-type I18nEnum<K extends keyof I18nVariableTypes> =
-  introspection["types"][I18nVariableTypes[K]]["enumValues"];
-type IsExactly<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
-// Documents without source text only expose resolved variable types, so an
-// exact enum match stands in for the declared type.
-type I18nVariableNamesByValue<Variables> = {
-  [K in keyof Variables & keyof I18nVariableTypes]-?: IsExactly<
-    NonNullable<Variables[K]>,
-    I18nEnum<K>
-  > extends true
-    ? K
-    : never;
-}[keyof Variables & keyof I18nVariableTypes];
+type I18nVariableNamesByValue<Variables> = InferVariableNamesByEnumValue<
+  Variables,
+  I18nVariableTypes,
+  introspection
+>;
 type I18nVariableNamesOfDoc<Doc> = [SourceText<Doc>] extends [never]
   ? I18nVariableNamesByValue<VariablesOfDoc<Doc>>
   : string extends SourceText<Doc>
