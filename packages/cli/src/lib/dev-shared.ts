@@ -41,33 +41,35 @@ export function notifyIssueWithTunnelAndMockShop(cliCommand: string) {
   });
 }
 
-export function getDevConfigInBackground(
+export async function getDevConfigInBackground(
   root: string,
   customerAccountPushFlag: boolean,
   envFile: string,
+  signal?: AbortSignal,
 ) {
-  return getLocalVariables(root, envFile).then(
-    async ({variables: localVariables}) => {
-      const customerAccountPush =
-        customerAccountPushFlag && !isMockShop(localVariables);
+  signal?.throwIfAborted();
+  const {variables: localVariables} = await getLocalVariables(root, envFile);
+  signal?.throwIfAborted();
+  const customerAccountPush =
+    customerAccountPushFlag && !isMockShop(localVariables);
 
-      // ensure this occur before `getConfig` since it can run link and changed env vars
-      if (customerAccountPush) {
-        await getStorefrontId(root);
-      }
+  // Linking can update the project config, so finish it before reading that config.
+  if (customerAccountPush) {
+    await getStorefrontId(root, undefined, signal);
+  }
 
-      const {shop, storefront} = await getConfig(root);
-      const storefrontId = storefront?.id;
+  signal?.throwIfAborted();
+  const {shop, storefront} = await getConfig(root);
+  signal?.throwIfAborted();
+  const storefrontId = storefront?.id;
 
-      return {
-        storefrontId,
-        customerAccountPush,
-        fetchRemote: !!shop && !!storefrontId,
-        localVariables,
-        storefrontTitle: storefront?.title,
-      };
-    },
-  );
+  return {
+    storefrontId,
+    customerAccountPush,
+    fetchRemote: !!shop && !!storefrontId,
+    localVariables,
+    storefrontTitle: storefront?.title,
+  };
 }
 
 export const TUNNEL_DOMAIN = Object.freeze({
@@ -80,30 +82,46 @@ export async function startTunnelAndPushConfig(
   cliConfig: Config,
   port: number,
   storefrontId?: string,
+  signal?: AbortSignal,
 ) {
+  signal?.throwIfAborted();
   outputInfo('\nStarting tunnel...\n');
 
   const tunnel = await startTunnelPlugin(cliConfig, port, 'cloudflare');
-  const host = await pollTunnelURL(tunnel).then((host) =>
-    // Replace branded tunnel domain:
-    host.replace(TUNNEL_DOMAIN.ORIGINAL, TUNNEL_DOMAIN.REBRANDED),
-  );
+  try {
+    const host = await pollTunnelURL(tunnel, signal).then((host) =>
+      // Replace branded tunnel domain:
+      host.replace(TUNNEL_DOMAIN.ORIGINAL, TUNNEL_DOMAIN.REBRANDED),
+    );
+    signal?.throwIfAborted();
 
-  const cleanup = await runCustomerAccountPush({
-    path: root,
-    devOrigin: host,
-    storefrontId,
-  }).catch((error) => {
-    if (error instanceof AbortError) {
-      renderInfo({
-        headline: 'Customer Account Application setup update fail.',
-        body: error.tryMessage || undefined,
-        nextSteps: error.nextSteps,
-      });
-    }
-  });
+    const cleanup = await runCustomerAccountPush({
+      path: root,
+      devOrigin: host,
+      storefrontId,
+      signal,
+    }).catch((error) => {
+      signal?.throwIfAborted();
+      if (error instanceof AbortError) {
+        renderInfo({
+          headline: 'Customer Account Application setup update fail.',
+          body: error.tryMessage || undefined,
+          nextSteps: error.nextSteps,
+        });
+      }
+    });
 
-  return {host, cleanup};
+    return {
+      host,
+      cleanup: async () => {
+        tunnel.stopTunnel();
+        await cleanup?.();
+      },
+    };
+  } catch (error) {
+    tunnel.stopTunnel();
+    throw error;
+  }
 }
 
 export function getDebugBannerLine(publicInspectorPort: number) {

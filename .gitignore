@@ -17,6 +17,9 @@ e2e/.auth/
 # E2E test fixtures
 /.tmp/
 
+# Bundled dev session process fixtures
+/packages/cli/src/lib/.session-fixture-*/
+
 # Logs
 logs
 *.log

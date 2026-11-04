@@ -27,7 +27,7 @@ catalogs:
 
 overrides:
   '@oclif/core': 4.8.3
-  '@shopify/cli-kit': 4.9.0
+  '@shopify/cli-kit': 5.0.0
   form-data: '>=4.0.4'
   '@types/node': 22.19.15
   vite: ^8.0.1
@@ -306,14 +306,14 @@ importers:
         specifier: 4.8.3
         version: 4.8.3
       '@shopify/cli-kit':
-        specifier: 4.9.0
-        version: 4.9.0(@types/react@18.3.28)
+        specifier: 5.0.0
+        version: 5.0.0(@types/react@18.3.28)
       '@shopify/hydrogen-codegen':
         specifier: workspace:*
         version: link:../hydrogen-codegen
       '@shopify/oxygen-cli':
         specifier: 4.6.18
-        version: 4.6.18(@oclif/core@4.8.3)(@shopify/cli-kit@4.9.0(@types/react@18.3.28))(graphql@16.14.2)
+        version: 4.6.18(@oclif/core@4.8.3)(@shopify/cli-kit@5.0.0(@types/react@18.3.28))(graphql@16.14.2)
       ansi-escapes:
         specifier: ^6.2.0
         version: 6.2.1
@@ -419,8 +419,8 @@ importers:
         version: 0.34.1
     devDependencies:
       '@shopify/cli-kit':
-        specifier: 4.9.0
-        version: 4.9.0(@types/react@18.3.28)
+        specifier: 5.0.0
+        version: 5.0.0(@types/react@18.3.28)
       '@types/node':
         specifier: 22.19.15
         version: 22.19.15
@@ -2855,8 +2855,8 @@ packages:
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
-  '@shopify/cli-kit@4.9.0':
-    resolution: {integrity: sha512-LiLXxi5EJI9FyF7wed2nNalpkZJGVQbkYHjIylZLM17qyy15/6OwVig9MtFhxZUEK5tMe2J0OG7kdPAoNvrF7g==, tarball: https://registry.npmjs.org/@shopify/cli-kit/-/cli-kit-4.9.0.tgz}
+  '@shopify/cli-kit@5.0.0':
+    resolution: {integrity: sha512-vog0OvZ2h20qxJNNIuv3VU3mW5Ybgc1cjuFul2gxJLAgHOtoXSpaavH/IE5AYcj7fe15hB1XvYjk17oIbjTM4A==, tarball: https://registry.npmjs.org/@shopify/cli-kit/-/cli-kit-5.0.0.tgz}
     engines: {node: '>=22.12.0'}
     os: [darwin, linux, win32]
 
@@ -2902,7 +2902,7 @@ packages:
     hasBin: true
     peerDependencies:
       '@oclif/core': 4.8.3
-      '@shopify/cli-kit': 4.9.0
+      '@shopify/cli-kit': 5.0.0
 
   '@shopify/oxygen-workers-types@4.2.0':
     resolution: {integrity: sha512-iBc+pK5CfLSrF+Wl6WBYsPdJubSii78EWI/YVzGpr9/gKYVRHMsW2t+kOvY9Vg6BOytF0dB5B4hYkCLH3cAY/g==}
@@ -3302,9 +3302,6 @@ packages:
 
   '@types/through@0.0.33':
     resolution: {integrity: sha512-HsJ+z3QuETzP3cswwtzt2vEIiHBk/dCcHGhbmG5X3ecnwFD/lPrMpliGXxSCg03L9AhrdwA4Oz/qfspkDW+xGQ==}
-
-  '@types/tinycolor2@1.4.6':
-    resolution: {integrity: sha512-iEN8J0BoMnsWBqjVbWH/c0G0Hh7O21lpR2/+PrvAVgWdzL7eexIFm4JN/Wn10PTcmNdtS6U67r499mlWMXOxNw==, tarball: https://registry.npmjs.org/@types/tinycolor2/-/tinycolor2-1.4.6.tgz}
 
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
@@ -5663,10 +5660,6 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==, tarball: https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz}
 
-  gradient-string@2.0.2:
-    resolution: {integrity: sha512-rEDCuqUQ4tbD78TpzsMtt5OIf0cBCSDWSJtUDaF6JsAh+k0v9r++NzxNEG87oDZx9ZwGhD8DaezR2L/yrw0Jdw==, tarball: https://registry.npmjs.org/gradient-string/-/gradient-string-2.0.2.tgz}
-    engines: {node: '>=10'}
-
   graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
 
@@ -7598,6 +7591,9 @@ packages:
   prop-types@15.8.1:
     resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}
 
+  proper-lockfile@4.1.2:
+    resolution: {integrity: sha512-TjNPblN4BwAWMXU8s9AEz4JmQxnD1NNL7bNOY/AKUzyamc379FWASUhc/K1pL2noVb+XmZKLL68cjzLsiOAMaA==}
+
   property-information@5.6.0:
     resolution: {integrity: sha512-YUHSPk+A30YPv+0Qf8i9Mbfe/C0hdPXk1s1jPVToV8pk8BQtpw10ct89Eo7OWkutrwqvT0eicAxlOg3dOAu8JA==}
 
@@ -7909,6 +7905,10 @@ packages:
   restore-cursor@4.0.0:
     resolution: {integrity: sha512-I9fPXU9geO9bHOt9pHHOhOkYerIMsmVaWB0rA2AI9ERh/+x/i7MV5HKBNrg+ljO5eoPVgCcnFuRjJ9uH6I/3eg==, tarball: https://registry.npmjs.org/restore-cursor/-/restore-cursor-4.0.0.tgz}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+
+  retry@0.12.0:
+    resolution: {integrity: sha512-9LkiTwjUh6rT555DtE9rTX+BKByPfrMzEAtnlEtdEwr3Nkffwiihqe2bWADg+OQRjt9gl6ICdmB/ZFDCGAtSow==}
+    engines: {node: '>= 4'}
 
   rettime@0.10.1:
     resolution: {integrity: sha512-uyDrIlUEH37cinabq0AX4QbgV4HbFZ/gqoiunWQ1UqBtRvTTytwhNYjE++pO/MjPTZL5KQCf2bEoJ/BJNVQ5Kw==}
@@ -8475,18 +8475,12 @@ packages:
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
 
-  tinycolor2@1.6.0:
-    resolution: {integrity: sha512-XPaBkWQJdsf3pLKJV9p4qN/S+fm2Oj8AIPo1BTUhg5oxkvm9+SVEGFdhyOz7tTdUTfvxMiAs4sp6/eZO2Ew+pw==, tarball: https://registry.npmjs.org/tinycolor2/-/tinycolor2-1.6.0.tgz}
-
   tinyexec@0.3.2:
     resolution: {integrity: sha512-KQQR9yN7R5+OSwaK0XQoj22pwHoTlgYqmUscPYoknOoWCWfj/5/ABTMRi69FrKU5ffPVh5QcFikpWJI/P1ocHA==}
 
   tinyglobby@0.2.15:
     resolution: {integrity: sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ==}
     engines: {node: '>=12.0.0'}
-
-  tinygradient@1.1.5:
-    resolution: {integrity: sha512-8nIfc2vgQ4TeLnk2lFj4tRLvvJwEfQuabdsmvDdQPT0xlk9TaNtpGd6nNRxXoK6vQhN6RSzj+Cnp5tTQmpxmbw==, tarball: https://registry.npmjs.org/tinygradient/-/tinygradient-1.1.5.tgz}
 
   tinypool@1.1.1:
     resolution: {integrity: sha512-Zba82s87IFq9A9XmjiX5uZA/ARWDrB03OHlq+Vw1fSdt0I+4/Kutwy8BP4Y/y/aORMo61FQ0vIb5j44vSo5Pkg==}
@@ -11517,7 +11511,7 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
-  '@shopify/cli-kit@4.9.0(@types/react@18.3.28)':
+  '@shopify/cli-kit@5.0.0(@types/react@18.3.28)':
     dependencies:
       '@apidevtools/json-schema-ref-parser': 11.9.3
       '@bugsnag/js': 8.9.0
@@ -11549,7 +11543,6 @@ snapshots:
       find-up: 6.3.0
       form-data: 4.0.5
       fs-extra: 11.1.0
-      gradient-string: 2.0.2
       graphql: 16.14.2
       graphql-request: 6.1.0(graphql@16.14.2)
       h3: 1.15.11
@@ -11564,6 +11557,7 @@ snapshots:
       node-fetch: 3.3.2
       open: 8.4.2
       pathe: 1.1.2
+      proper-lockfile: 4.1.2
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       semver: 7.8.4
@@ -11678,13 +11672,13 @@ snapshots:
       - encoding
       - graphql-sock
 
-  '@shopify/oxygen-cli@4.6.18(@oclif/core@4.8.3)(@shopify/cli-kit@4.9.0(@types/react@18.3.28))(graphql@16.14.2)':
+  '@shopify/oxygen-cli@4.6.18(@oclif/core@4.8.3)(@shopify/cli-kit@5.0.0(@types/react@18.3.28))(graphql@16.14.2)':
     dependencies:
       '@bugsnag/core': 8.8.0
       '@bugsnag/js': 8.8.1
       '@bugsnag/node': 8.8.0
       '@oclif/core': 4.8.3
-      '@shopify/cli-kit': 4.9.0(@types/react@18.3.28)
+      '@shopify/cli-kit': 5.0.0(@types/react@18.3.28)
       async: 3.2.6
       graphql-request: 7.4.0(graphql@16.14.2)
     transitivePeerDependencies:
@@ -12059,8 +12053,6 @@ snapshots:
   '@types/through@0.0.33':
     dependencies:
       '@types/node': 22.19.15
-
-  '@types/tinycolor2@1.4.6': {}
 
   '@types/trusted-types@2.0.7': {}
 
@@ -15260,11 +15252,6 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
-  gradient-string@2.0.2:
-    dependencies:
-      chalk: 4.1.2
-      tinygradient: 1.1.5
-
   graphemer@1.4.0: {}
 
   graphql-config@5.1.5(@types/node@22.19.15)(crossws@0.3.5)(graphql@16.14.2)(typescript@5.9.2):
@@ -17520,6 +17507,12 @@ snapshots:
       object-assign: 4.1.1
       react-is: 16.13.1
 
+  proper-lockfile@4.1.2:
+    dependencies:
+      graceful-fs: 4.2.11
+      retry: 0.12.0
+      signal-exit: 3.0.7
+
   property-information@5.6.0:
     dependencies:
       xtend: 4.0.2
@@ -17926,6 +17919,8 @@ snapshots:
     dependencies:
       onetime: 5.1.2
       signal-exit: 3.0.7
+
+  retry@0.12.0: {}
 
   rettime@0.10.1: {}
 
@@ -18581,19 +18576,12 @@ snapshots:
 
   tinybench@2.9.0: {}
 
-  tinycolor2@1.6.0: {}
-
   tinyexec@0.3.2: {}
 
   tinyglobby@0.2.15:
     dependencies:
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-
-  tinygradient@1.1.5:
-    dependencies:
-      '@types/tinycolor2': 1.4.6
-      tinycolor2: 1.6.0
 
   tinypool@1.1.1: {}
 

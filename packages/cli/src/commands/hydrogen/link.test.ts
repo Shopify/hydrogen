@@ -162,7 +162,11 @@ describe('link', () => {
     it('handles the successful creation of the storefront on Admin', async () => {
       await runLink({});
 
-      expect(waitForJob).toHaveBeenCalledWith(ADMIN_SESSION, expectedJobId);
+      expect(waitForJob).toHaveBeenCalledWith(
+        ADMIN_SESSION,
+        expectedJobId,
+        undefined,
+      );
 
       expect(outputMock.info()).toContain(
         `${expectedStorefrontName} is now linked`,

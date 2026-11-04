@@ -15,6 +15,7 @@ import {
 } from './shopify-config.js';
 import {getUserAccount} from './graphql/business-platform/user-account.js';
 import {enhanceAuthLogs} from './log.js';
+import {abandonOnAbort} from './abort.js';
 
 export type {AdminSession};
 
@@ -33,19 +34,26 @@ export async function logout(root: string) {
  * @param shop Shop string to use for authentication or `true` to read
  * from the local Shopify config. If not provided, the user will be
  * prompted to enter a shop domain.
+ * @param signal Cancels authentication waits and prompts before saving project config.
  */
-export async function login(root?: string, shop?: string | true) {
+export async function login(
+  root?: string,
+  shop?: string | true,
+  signal?: AbortSignal,
+) {
+  signal?.throwIfAborted();
   enhanceAuthLogs(false);
 
   const forcePrompt = shop === true;
   const existingConfig = root ? await getConfig(root) : {};
+  signal?.throwIfAborted();
   let {email, shopName} = existingConfig;
 
   if (typeof shop !== 'string') {
     shop = existingConfig.shop;
   }
 
-  if (shop) shop = await normalizeStoreFqdn(shop);
+  if (shop) shop = normalizeStoreFqdn(shop);
 
   if (
     !shop ||
@@ -54,13 +62,20 @@ export async function login(root?: string, shop?: string | true) {
     forcePrompt ||
     shop !== existingConfig.shop
   ) {
-    const token = await ensureAuthenticatedBusinessPlatform().catch(() => {
-      throw new AbortError(
-        'Unable to authenticate with Shopify. Please report this issue.',
-      );
-    });
+    const token = await abandonOnAbort(
+      () =>
+        ensureAuthenticatedBusinessPlatform().catch(() => {
+          throw new AbortError(
+            'Unable to authenticate with Shopify. Please report this issue.',
+          );
+        }),
+      signal,
+    );
 
-    const userAccount = await getUserAccount(token);
+    const userAccount = await abandonOnAbort(
+      () => getUserAccount(token),
+      signal,
+    );
 
     const preselected =
       !forcePrompt &&
@@ -75,22 +90,31 @@ export async function login(root?: string, shop?: string | true) {
           label: `${name} (${fqdn})`,
           value: {name, fqdn},
         })),
+        ...(signal ? {abortSignal: signal} : {}),
       }));
+    signal?.throwIfAborted();
 
     shop = selected.fqdn;
     shopName = selected.name;
     email = userAccount.email;
   }
 
-  const session = await ensureAuthenticatedAdmin(shop).catch(() => {
-    throw new AbortError('Unable to authenticate with Shopify', undefined, [
-      `Ensure the shop that you specified is correct (you are trying to use: ${shop})`,
-    ]);
-  });
+  const selectedShop = shop;
+  const session = await abandonOnAbort(
+    () =>
+      ensureAuthenticatedAdmin(selectedShop).catch(() => {
+        throw new AbortError('Unable to authenticate with Shopify', undefined, [
+          `Ensure the shop that you specified is correct (you are trying to use: ${shop})`,
+        ]);
+      }),
+    signal,
+  );
 
+  signal?.throwIfAborted();
   const config = root
     ? await setUserAccount(root, {shop, shopName, email})
     : {shop, shopName, email};
+  signal?.throwIfAborted();
 
   return {session, config};
 }

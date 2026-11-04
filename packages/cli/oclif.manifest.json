@@ -759,7 +759,7 @@
     "hydrogen:dev": {
       "aliases": [],
       "args": {},
-      "description": "Runs Hydrogen storefront in an Oxygen worker for development.",
+      "description": "Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.\n\n  If your project is \"linked\" (https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) to a Hydrogen storefront, then its environment variables will be loaded with the runtime.\n\n  Session status and JSONL logs are stored in your project's `.shopify/dev/` directory. The instance JSON includes the PID, session ID, `logFile`, and `details.urls`. Status becomes `running` when the server is ready.\n\n  Only one dev session can run for the same project, environment, environment branch, and environment file, even with a different port. Shutdown removes the instance and lock files and retains the log. The log resets on each run.",
       "flags": {
         "json-schema": {
           "description": "Print the command's JSON schemas.",
@@ -925,7 +925,7 @@
       "pluginType": "core",
       "strict": true,
       "enableJsonFlag": false,
-      "descriptionWithMarkdown": "Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.\n\n  If your project is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) to a Hydrogen storefront, then its environment variables will be loaded with the runtime.",
+      "descriptionWithMarkdown": "Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.\n\n  If your project is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) to a Hydrogen storefront, then its environment variables will be loaded with the runtime.\n\n  Session status and JSONL logs are stored in your project's `.shopify/dev/` directory. The instance JSON includes the PID, session ID, `logFile`, and `details.urls`. Status becomes `running` when the server is ready.\n\n  Only one dev session can run for the same project, environment, environment branch, and environment file, even with a different port. Shutdown removes the instance and lock files and retains the log. The log resets on each run.",
       "isESM": true,
       "relativePath": [
         "dist",
