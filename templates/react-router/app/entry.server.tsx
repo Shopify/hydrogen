@@ -19,7 +19,7 @@ export default async function handleRequest(
   const csp = createContentSecurityPolicy({
     shop: {
       storeDomain: shouldUseMockShop(env) ? getMockShopDomain(env) : getStoreDomain(env),
-      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN || undefined,
+      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
     },
   });
 

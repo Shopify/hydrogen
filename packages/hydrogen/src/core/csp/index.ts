@@ -103,7 +103,7 @@ function mergeSources(value: unknown, defaults: unknown): unknown {
  * @publicDocs
  */
 export function getShopifyCspDirectives(shop: ContentSecurityPolicyShop = {}) {
-  const shopOrigins = [shop.storeDomain, shop.checkoutDomain]
+  const shopOrigins = [shop.storeDomain, shop.checkoutDomain || undefined]
     .filter((domain) => domain !== undefined)
     .map(normalizeStoreDomain);
 

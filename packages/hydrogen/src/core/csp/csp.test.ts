@@ -279,6 +279,16 @@ describe("createContentSecurityPolicy", () => {
     expect(directive(header, "connect-src")?.match(/https:\/\/shop.example/g)).toHaveLength(1);
   });
 
+  it("treats an empty checkout domain as absent", () => {
+    const shop = { storeDomain: "store.myshopify.com" };
+    expect(getShopifyCspDirectives({ ...shop, checkoutDomain: "" })).toEqual(
+      getShopifyCspDirectives(shop),
+    );
+    expect(
+      createContentSecurityPolicy({ shop: { ...shop, checkoutDomain: "" }, nonce: false }).header,
+    ).toBe(createContentSecurityPolicy({ shop, nonce: false }).header);
+  });
+
   it("returns independent defaults for a framework's own CSP", () => {
     const defaults = getShopifyCspDirectives({
       storeDomain: "store.myshopify.com",
