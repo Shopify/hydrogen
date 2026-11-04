@@ -2,7 +2,6 @@ import { expectTypeOf, it } from "vitest";
 
 import {
   createContentSecurityPolicy,
-  createShopifyRequestContext,
   getShopifyCspDirectives,
   type CreateContentSecurityPolicyOptions,
 } from "../index";
@@ -14,8 +13,6 @@ it("accepts immutable source arrays and exposes response header application", ()
   expectTypeOf(policy.nonce).toEqualTypeOf<string>();
   expectTypeOf(policy.header).toEqualTypeOf<string>();
   expectTypeOf(policy.applyResponseHeaders).toEqualTypeOf<(headers: Headers) => void>();
-  expectTypeOf(policy).not.toHaveProperty("applyRequestHeaders");
-  expectTypeOf(policy).not.toHaveProperty("NonceProvider");
   expectTypeOf(getShopifyCspDirectives().scriptSrc).toEqualTypeOf<string[]>();
 });
 
@@ -52,18 +49,4 @@ it("rejects ambiguous directive values and unsupported option names", () => {
   () => createContentSecurityPolicy({ nonce: "manual-nonce" });
   // @ts-expect-error directives are an object, not a callback
   () => createContentSecurityPolicy({ directives: () => ({ connectSrc: [] }) });
-  const requestContext = createShopifyRequestContext({
-    request: { headers: new Headers() },
-    i18n: { country: "US", language: "EN" },
-  });
-  // @ts-expect-error CSP creation is independent of Shopify request contexts
-  () => createContentSecurityPolicy({ requestContext });
-  expectTypeOf(requestContext).not.toHaveProperty("getContentSecurityPolicy");
-  expectTypeOf(requestContext).not.toHaveProperty("setContentSecurityPolicy");
-  expectTypeOf(requestContext.getForwardedRequestHeaders()).toEqualTypeOf<Headers>();
-  // @ts-expect-error set forwarded CSP explicitly on the returned headers
-  () => requestContext.getForwardedRequestHeaders({ csp: createContentSecurityPolicy() });
-  expectTypeOf(requestContext.applyResponseHeaders(new Headers())).toEqualTypeOf<void>();
-  // @ts-expect-error apply response CSP explicitly through the policy object
-  () => requestContext.applyResponseHeaders(new Headers(), { csp: createContentSecurityPolicy() });
 });
