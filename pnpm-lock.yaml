@@ -13,6 +13,11 @@ catalogs:
 overrides:
   '@shopify/hydrogen': workspace:*
 
+patchedDependencies:
+  '@shopify/generate-docs@1.2.2':
+    hash: e22276cf5ba16a26b591942298755c6455a0cedfdf9adc5bf53748b8482c1770
+    path: patches/@shopify__generate-docs@1.2.2.patch
+
 importers:
 
   .:
@@ -335,7 +340,7 @@ importers:
         version: 6.0.0(graphql@16.13.2)
       '@shopify/generate-docs':
         specifier: 1.2.2
-        version: 1.2.2
+        version: 1.2.2(patch_hash=e22276cf5ba16a26b591942298755c6455a0cedfdf9adc5bf53748b8482c1770)
       '@testing-library/react':
         specifier: ^16.3.2
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -13789,7 +13794,7 @@ snapshots:
       esbuild: 0.28.1
       global-agent: 3.0.0
 
-  '@shopify/generate-docs@1.2.2':
+  '@shopify/generate-docs@1.2.2(patch_hash=e22276cf5ba16a26b591942298755c6455a0cedfdf9adc5bf53748b8482c1770)':
     dependencies:
       '@types/react': 18.3.31
       globby: 11.1.0
