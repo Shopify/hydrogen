@@ -91,7 +91,7 @@ function runConfigHook(
 
 function runGenerateBundle(
   plugin: Plugin,
-  environment?: {consumer: 'client' | 'server'; root: string},
+  environment: {consumer: 'client' | 'server'; root: string},
 ) {
   if (typeof plugin.generateBundle !== 'function') {
     throw new Error('Expected oxygen plugin to expose a generateBundle hook.');
@@ -99,7 +99,7 @@ function runGenerateBundle(
 
   const emitFile = vi.fn();
   plugin.generateBundle.call(
-    {emitFile, environment: environment && {config: environment}} as any,
+    {emitFile, environment: {config: environment}} as any,
     {} as any,
     {} as any,
     false,
@@ -110,33 +110,8 @@ function runGenerateBundle(
 
 function runSsrBuildHooks(plugin: Plugin, root: string) {
   runConfigHook(plugin, {}, {isSsrBuild: true});
-  runConfigResolvedHook(plugin, root, {build: {ssr: true}});
 
-  return runGenerateBundle(plugin);
-}
-
-function runConfigResolvedHook(
-  plugin: Plugin,
-  root: string,
-  resolvedConfig: Record<string, any> = {},
-) {
-  const hook =
-    typeof plugin.configResolved === 'function'
-      ? plugin.configResolved
-      : plugin.configResolved?.handler;
-
-  if (!hook) {
-    throw new Error('Expected oxygen plugin to expose a configResolved hook.');
-  }
-
-  (hook as any)({
-    root,
-    ...resolvedConfig,
-    build: {
-      ssr: false,
-      ...resolvedConfig.build,
-    },
-  });
+  return runGenerateBundle(plugin, {consumer: 'server', root});
 }
 
 function runConfigEnvironmentHook(plugin: Plugin, name: string) {
@@ -279,8 +254,7 @@ describe('oxygen Vite plugin', () => {
     const root = createRootWithHydrogenVersion('2026.4.4');
 
     runConfigHook(plugin, {}, {isSsrBuild: false});
-    runConfigResolvedHook(plugin, root);
-    const emitFile = runGenerateBundle(plugin);
+    const emitFile = runGenerateBundle(plugin, {consumer: 'client', root});
 
     expect(emitFile).not.toHaveBeenCalled();
   });
@@ -302,31 +276,11 @@ describe('oxygen Vite plugin', () => {
     });
   });
 
-  it('emits oxygen.json when the resolved config is an SSR build', () => {
-    const plugin = getOxygenPlugin();
-    const root = createRootWithHydrogenVersion('2026.4.4');
-
-    runConfigHook(plugin, {}, {isSsrBuild: false});
-    runConfigResolvedHook(plugin, root, {build: {ssr: true}});
-    const emitFile = runGenerateBundle(plugin);
-
-    expect(emitFile).toHaveBeenCalledWith({
-      type: 'asset',
-      fileName: 'oxygen.json',
-      source: JSON.stringify(
-        {version: 1, compatibility_date: '2026-04-01'},
-        null,
-        2,
-      ),
-    });
-  });
-
   it('emits oxygen.json from server environments when every environment shares one build config', () => {
     const plugin = getOxygenPlugin();
     const root = createRootWithHydrogenVersion('2026.4.4');
 
     runConfigHook(plugin, {}, {isSsrBuild: false});
-    runConfigResolvedHook(plugin, root);
     const emitFile = runGenerateBundle(plugin, {consumer: 'server', root});
 
     expect(emitFile).toHaveBeenCalledWith({
@@ -345,9 +299,8 @@ describe('oxygen Vite plugin', () => {
     const root = createRootWithHydrogenVersion('2026.4.4');
 
     runConfigHook(plugin, {}, {isSsrBuild: true});
-    runConfigResolvedHook(plugin, root, {build: {ssr: true}});
     plugin.api?.registerPluginOptions({compatibilityDate: '2025-04-01'});
-    const emitFile = runGenerateBundle(plugin);
+    const emitFile = runGenerateBundle(plugin, {consumer: 'server', root});
 
     expect(emitFile).toHaveBeenCalledWith({
       type: 'asset',
