@@ -44,12 +44,12 @@ export const handle: Handle = async ({ event, resolve }) => {
   });
   if (shopifyRoute) return shopifyRoute;
 
-  // SvelteKit's hydration script and Shopify's bootstrap scripts are inline, and SvelteKit
-  // cannot share a nonce with components, so this policy allows inline scripts explicitly.
   const csp = createContentSecurityPolicy({
     shop: { storeDomain: storefrontConfig.storeDomain },
     nonce: false,
     directives: {
+      // SvelteKit exposes its nonce in app.html, but not to the layout rendering Shopify's
+      // bootstraps. This example allows inline scripts; a stricter setup needs hashes or shared nonces.
       scriptSrc: ["'unsafe-inline'"],
       styleSrc: ["https://fonts.googleapis.com"],
       fontSrc: ["https://fonts.gstatic.com"],
