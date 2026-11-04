@@ -146,7 +146,11 @@ type HydrogenRoutesBaseOptions = Omit<ShopifyRouteHandlerContext, "sessionManage
    * Your app's route templates. Hydrogen redirects Liquid-style `?variant=` URLs on your product paths and on Shopify's default product paths.
    */
   routeTemplates?: ShopifyRouteTemplates;
-  /** Map thrown Storefront API `429` errors from registered handlers to JSON responses. Omit to preserve handler throws and rejections. */
+  /**
+   * Map thrown Storefront API `429` errors from registered handlers to JSON responses with the code `rate_limited`. Omit to let the rejection propagate.
+   *
+   * The option is independent of the same option on the cart and predictive search handlers, which return their own `429` results before the router sees an error. For a cart mutation that throws, the router response is always JSON, also for a native form submission.
+   */
   rateLimitHandling?: "response";
 };
 

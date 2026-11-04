@@ -382,6 +382,26 @@ describe("createPredictiveSearchServerHandlers", () => {
       });
     });
 
+    it("does not log a request that the caller aborted", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      const controller = new AbortController();
+      const request = new Request("https://my-app.com/api/predictive-search?q=snow", {
+        method: "GET",
+        signal: controller.signal,
+      });
+      mockFetch.mockImplementationOnce(() => {
+        controller.abort();
+        return Promise.reject(controller.signal.reason);
+      });
+
+      const result = await handlePredictiveSearchRequest(request);
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(400);
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+
     it("keeps default Storefront API rate limits at 400 for direct and registered calls", async () => {
       const logger = createTestLogger();
       configureLogging({ logger });

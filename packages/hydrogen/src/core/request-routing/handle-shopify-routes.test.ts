@@ -758,7 +758,7 @@ describe("handleShopifyRoutes", () => {
     it.each([
       new StorefrontApiError("throttled", { status: 429 }),
       new Error("handler setup failed"),
-    ])("preserves default synchronous throws: %s", (error) => {
+    ])("rejects default synchronous throws without mapping them: %s", async (error) => {
       const logger = createTestLogger();
       configureLogging({ logger });
       const request = new Request("https://my-app.com/custom");
@@ -766,9 +766,10 @@ describe("handleShopifyRoutes", () => {
         throw error;
       });
 
-      expect(() => handleShopifyRoutes({ request, handlers: [{ custom: handler }] })).toThrow(
-        error,
-      );
+      const result = handleShopifyRoutes({ request, handlers: [{ custom: handler }] });
+
+      expect(result).toBeInstanceOf(Promise);
+      await expect(result).rejects.toBe(error);
       expect(logger.error).not.toHaveBeenCalled();
     });
 

@@ -246,7 +246,11 @@ interface CartServerHandlersBaseOptions<
    * `createCartServerHandlers` throws for any other fragment name or type.
    */
   readonly fragment?: TCartFragment;
-  /** Return Storefront API rate limits as `429` errors with safe `Retry-After` headers. Omit to keep throwing, except for failures after a customer session refresh. */
+  /**
+   * Return Storefront API rate limits on cart mutations as `429` errors with safe `Retry-After` headers. Omit to keep throwing, except for failures after a customer session refresh.
+   *
+   * The option covers mutations only. Cart reads (`get`) still throw. When you set only `rateLimitHandling` on `handleShopifyRoutes`, the router maps a thrown rate limit to a JSON error with the code `rate_limited`, also for a native form submission, which then shows a raw JSON page. Set this option as well to keep `cart_mutation_failed` and the plain-text form response.
+   */
   readonly rateLimitHandling?: "response";
 }
 

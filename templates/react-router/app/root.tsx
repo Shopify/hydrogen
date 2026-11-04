@@ -166,19 +166,20 @@ export default function App({ loaderData }: Route.ComponentProps) {
   );
 }
 
+const STATUS_COPY: Partial<Record<number, { message: string; details: string }>> = {
+  404: { message: "404", details: "The requested page could not be found." },
+  429: { message: "Too many requests", details: "Please try again later." },
+};
+
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 429 ? "Too many requests" : error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 429
-        ? "Please try again later."
-        : error.status === 404
-          ? "The requested page could not be found."
-          : error.statusText || details;
+    const copy = STATUS_COPY[error.status];
+    message = copy?.message ?? "Error";
+    details = copy?.details ?? (error.statusText || details);
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;

@@ -207,8 +207,8 @@ async function handleGet(
       headers: createProxyResponseHeaders(result.headers),
     };
   } catch (error) {
-    // The route returns these failures as results, so the `handleShopifyRoutes` rejection log and
-    // the framework's error reporting never see them. Log the original error here, once.
+    // The route returns these failures as results, so the framework's error reporting never sees
+    // them. Log the original error here, once.
     if (options.rateLimitHandling === "response" && isStorefrontRateLimitError(error)) {
       log.error("storefront api rate limited the predictive search", { error });
       return {
@@ -218,7 +218,8 @@ async function handleGet(
         headers: createRateLimitResponseHeaders(error),
       };
     }
-    log.error("predictive search request failed", { error });
+    // The search store aborts the previous request on every keystroke; that is not a failure.
+    if (!request.signal.aborted) log.error("predictive search request failed", { error });
     // A `StorefrontApiError` message can carry up to 200 characters of the upstream body; keep it out of the caller response.
     if (error instanceof StorefrontApiError) return errorResult(STOREFRONT_REQUEST_FAILED_MESSAGE);
     return errorResult(getErrorMessage(error, STOREFRONT_REQUEST_FAILED_MESSAGE));

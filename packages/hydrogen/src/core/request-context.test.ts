@@ -16,8 +16,9 @@ import {
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
 } from "./headers";
+import { configureLogging } from "./logging";
 import { createShopifyRequestContext, type I18nConfig } from "./request-context";
-import { assert } from "./test-utils";
+import { assert, createTestLogger } from "./test-utils";
 
 const DEFAULT_I18N = { country: "US", language: "EN" } as I18nConfig;
 
@@ -703,7 +704,7 @@ describe("applyResponseHeaders after a Storefront API rate limit", () => {
     expect(headers.get("surrogate-control")).toBeNull();
   });
 
-  it("keeps a Retry-After value that the response already has", () => {
+  it("keeps a response Retry-After value that is later than the captured deadline", () => {
     const context = rateLimitedContext("30");
     const headers = new Headers({ "retry-after": "120" });
 
@@ -810,13 +811,30 @@ describe("applyResponseHeaders after a Storefront API rate limit", () => {
     expect(headers.get("retry-after")).toBe("2");
   });
 
-  it("keeps a valid response header even when captured advice has a later deadline", () => {
-    const context = rateLimitedContext("60");
-    const headers = new Headers({ "retry-after": "1" });
+  it.each([
+    ["1", "60"],
+    ["Thu, 29 Oct 2026 18:00:01 GMT", "60"],
+    ["Thu, 29 Oct 2026 18:02:00 GMT", "120"],
+    ["180", "180"],
+  ])(
+    "emits the later of the response header %s and the captured deadline of 60 seconds",
+    (existing, expected) => {
+      const context = rateLimitedContext("60");
+      const headers = new Headers({ "retry-after": existing });
+
+      context.applyResponseHeaders(headers, 429);
+
+      expect(headers.get("retry-after")).toBe(expected);
+    },
+  );
+
+  it("keeps a valid response header when no captured deadline exists", () => {
+    const context = rateLimitedContext(undefined);
+    const headers = new Headers({ "retry-after": "5" });
 
     context.applyResponseHeaders(headers, 429);
 
-    expect(headers.get("retry-after")).toBe("1");
+    expect(headers.get("retry-after")).toBe("5");
   });
 
   it("replaces an invalid response header with valid captured advice", () => {
@@ -911,6 +929,35 @@ describe("applyResponseHeaders after a Storefront API rate limit", () => {
 
     expect(headers.get("cache-control")).toBe("public, max-age=300");
     expect(headers.get("retry-after")).toBeNull();
+  });
+
+  it("warns once when the status is missing after a rate limit", () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const context = rateLimitedContext("30");
+
+    context.applyResponseHeaders(new Headers());
+    context.applyResponseHeaders(new Headers());
+
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining("pass response.status to applyResponseHeaders"),
+      expect.objectContaining({ scope: "rate-limit" }),
+    );
+    configureLogging({});
+  });
+
+  it("does not warn when the status is present or no rate limit happened", () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+
+    rateLimitedContext("30").applyResponseHeaders(new Headers(), 200);
+    createTestRequestContext(new Request("https://example.com/products")).applyResponseHeaders(
+      new Headers(),
+    );
+
+    expect(logger.warn).not.toHaveBeenCalled();
+    configureLogging({});
   });
 
   it("keeps the cache headers of a 429 when no Storefront API request was rate limited", () => {

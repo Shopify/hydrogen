@@ -20,10 +20,13 @@ import {
   SHOPIFY_STOREFRONT_ORIGIN_HEADER,
   STOREFRONT_URL_HEADER,
 } from "./headers";
+import { getLogger } from "./logging";
 import { getSafeRetryAfterValue, RATE_LIMITED_STATUS } from "./request-routing/rate-limit";
 import { normalizePathPrefix } from "./standard-routes/path";
 
 const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
+
+const log = getLogger("rate-limit");
 
 /** The incoming request's headers, plus its method, abort signal, and URL when the framework provides them. */
 type StorefrontRequest = Pick<Request, "headers"> &
@@ -151,7 +154,9 @@ type ShopifyRequestContextBase = {
    *
    * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses marked with `markResponseAsPersonalized()` private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.
    *
-   * Pass the response's `status` as well. When the status is `429` and the Storefront API rate limited a request that used this context, the method sets `Cache-Control: no-store` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. It keeps a valid response `Retry-After` header. Otherwise, it restores the latest valid retry deadline from all Storefront API `429` responses on this context, including recovered errors. Delay-seconds and IMF-fixdates are accepted. The restored value is the remaining delay-seconds, rounded up and never negative. React Router doesn't copy the headers of a thrown response, so this keeps the headers of a `429` from `withStorefrontRateLimit`. Responses with other statuses keep their cache headers.
+   * Pass the response's `status` as well. When the status is `429` and the Storefront API rate limited a request that used this context, the method sets `Cache-Control: no-store` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. It also sets `Retry-After` to the later of the response's own valid `Retry-After` value and the latest valid retry deadline from all Storefront API `429` responses on this context, including recovered errors. Delay-seconds and IMF-fixdates are accepted. The value is the remaining delay-seconds, rounded up and never negative. React Router doesn't copy the headers of a thrown response, so this keeps the headers of a `429` from `withStorefrontRateLimit`. Responses with other statuses keep their cache headers.
+   *
+   * When you omit `status` after a Storefront API rate limit, the method logs one warning and adds no rate-limit headers.  The `429` response can then lose `Retry-After` and `Cache-Control: no-store`.
    */
   applyResponseHeaders(headers: Headers, status?: number): void;
 };
@@ -250,6 +255,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
   let sessionEstablishingReason: string | undefined;
   let storefrontRateLimited = false;
   let storefrontRetryDeadline: bigint | undefined;
+  let warnedMissingStatus = false;
 
   const captureSubrequestHeaders = (headers: Headers): void => {
     // Capture the first fresh response cookies to increase the
@@ -281,10 +287,7 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
       const value = getSafeRetryAfterValue(retryAfter);
       if (value === undefined) return;
 
-      // BigInt preserves valid delays without rounding or overflow, including very large values.
-      const deadline = value.endsWith("GMT")
-        ? BigInt(Date.parse(value))
-        : BigInt(Date.now()) + BigInt(value) * 1000n;
+      const deadline = getRetryDeadline(value);
       if (storefrontRetryDeadline === undefined || deadline > storefrontRetryDeadline) {
         storefrontRetryDeadline = deadline;
       }
@@ -298,16 +301,30 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
     applyResponseHeaders(headers, status) {
       headers.set("powered-by", "Shopify, Hydrogen");
 
+      // Without the status, the method cannot tell a `429` from a recovered page, and a framework
+      // can drop the rate-limit headers silently. Warn once so the omission is visible.
+      if (status === undefined && storefrontRateLimited && !warnedMissingStatus) {
+        warnedMissingStatus = true;
+        log.warn(
+          "storefront api rate limited this request; pass response.status to applyResponseHeaders to keep rate-limit headers on a 429",
+        );
+      }
+
       // A framework can drop the headers of a thrown `429` response, as React Router does, so add
       // them here. Only a `429` changes: a page that recovered from the rate limit keeps its cache
       // headers.
       if (status === RATE_LIMITED_STATUS && storefrontRateLimited) {
         applyNoStoreResponseCacheHeaders(headers);
-        if (
-          storefrontRetryDeadline !== undefined &&
-          getSafeRetryAfterValue(headers.get("retry-after")) === undefined
-        ) {
-          const remaining = storefrontRetryDeadline - BigInt(Date.now());
+        // The retry advice is the later of the response's own valid header and the latest captured
+        // deadline, so one rule applies whichever path produced the `429`.
+        const existing = getSafeRetryAfterValue(headers.get("retry-after"));
+        let deadline = storefrontRetryDeadline;
+        if (existing !== undefined) {
+          const existingDeadline = getRetryDeadline(existing);
+          if (deadline === undefined || existingDeadline > deadline) deadline = existingDeadline;
+        }
+        if (deadline !== undefined) {
+          const remaining = deadline - BigInt(Date.now());
           const seconds = remaining > 0n ? (remaining + 999n) / 1000n : 0n;
           headers.set("Retry-After", seconds.toString());
         }
@@ -349,6 +366,14 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
       }
     },
   } as ShopifyRequestContext<I18n>;
+}
+
+// BigInt preserves valid delays without rounding or overflow, including very large values.
+// `value` must come from `getSafeRetryAfterValue`.
+function getRetryDeadline(value: string): bigint {
+  return value.endsWith("GMT")
+    ? BigInt(Date.parse(value))
+    : BigInt(Date.now()) + BigInt(value) * 1000n;
 }
 
 function normalizeI18n<I18n extends I18nConfig>(i18n: I18n): NormalizedI18nConfig<I18n> {

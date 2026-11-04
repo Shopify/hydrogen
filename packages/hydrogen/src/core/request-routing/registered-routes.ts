@@ -109,16 +109,13 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
     storefrontClient,
     requestContext,
   };
-  if (rateLimitHandling !== "response") {
-    return match(context).then((result) => createShopifyRouteResponse(result, request));
-  }
-
   return invokeRouteHandler(match, context).then(
     (result) => createShopifyRouteResponse(result, request),
     (error: unknown) => {
-      // Only a Storefront API `429` becomes a caller `429`. Every other failure keeps propagating
-      // so the application boundary decides; a direct handler call (`cartHandlers.get()`) still throws.
-      if (!isStorefrontRateLimitError(error)) throw error;
+      // Only a Storefront API `429` becomes a caller `429`, and only with the opt-in. Every other
+      // failure keeps propagating so the application boundary decides; a direct handler call
+      // (`cartHandlers.get()`) still throws.
+      if (rateLimitHandling !== "response" || !isStorefrontRateLimitError(error)) throw error;
       log.error("storefront api rate limited the route handler", { error });
       return createShopifyRouteResponse(
         {
@@ -133,8 +130,8 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
   );
 };
 
-// An `async` function turns a throw before the handler returns a promise into a rejection, so the
-// opt-in rate-limit mapping covers synchronous throws. The default path calls the handler directly.
+// An `async` function turns a throw before the handler returns a promise into a rejection, as the
+// route handler contract documents.
 async function invokeRouteHandler(
   handler: ShopifyRouteHandler,
   context: ShopifyRouteHandlerContext,

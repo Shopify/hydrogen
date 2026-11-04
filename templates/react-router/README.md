@@ -148,12 +148,11 @@ when you copy this behavior to another app:
 3. The root middleware calls the method on the request context of the Storefront API client that
    the loaders use: `const requestContext = storefrontClient.requestContext`.
 
-After a Storefront API rate limit, the method adds `Cache-Control: no-store` and the valid
-`Retry-After` value to the `429` page response and to client-navigation `.data` responses. Routes
-don't need a `headers` export. Without the status argument, or with a different request context,
-the response stays `429` but loses `Retry-After` and `no-store`. When several calls are rate
-limited, restoration uses the latest retry deadline and emits remaining delay-seconds. Recovered
-calls can extend the delay. A valid existing response header takes precedence.
+After a Storefront API rate limit, the method adds `Cache-Control: no-store` and `Retry-After` to the
+`429` page response and to client-navigation `.data` responses. Routes don't need a `headers`
+export. Without the status argument, or with a different request context, the response stays `429`
+but loses these headers. The `applyResponseHeaders` documentation describes how `Retry-After` is
+chosen.
 
 React Router doesn't report thrown responses to `handleError`. So the wrapper logs the original
 error at `error` level through Hydrogen's logger. To send these entries to your error reporting,
@@ -163,9 +162,9 @@ The template also opts its server handlers into `429` responses. Set `rateLimitH
 on `createCartServerHandlers`, `createPredictiveSearchServerHandlers`, and `handleShopifyRoutes`.
 Without the option, each API keeps its previous error handling. The cart error code stays
 `cart_mutation_failed`; the predictive search code stays `invalid_predictive_search_request`.
-The router option maps thrown errors from registered handlers, including cart reads, using the
-generic code `rate_limited`. A direct `cartHandlers.get()` call still throws.
-A rate-limited native cart form gets a plain-text `429` page with the message.
+The cart option covers mutations only, and a rate-limited native cart form gets a plain-text `429`
+page with the message. The router option maps thrown errors from registered handlers, including
+cart reads, using the generic code `rate_limited`. A direct `cartHandlers.get()` call still throws.
 
 Other HTTP errors and network failures keep their existing error handling. GraphQL `THROTTLED`
 results use the `errors` field of the result and aren't HTTP `429` errors. Only work that the

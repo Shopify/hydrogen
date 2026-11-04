@@ -333,17 +333,34 @@ test("a loader that recovers from a rate limit keeps 200 without rate-limit head
   assert.match(await response.text(), /Success/);
 });
 
-for (const retryAfter of ["0", "00030", "Thu, 29 Oct 2026 19:00:00 GMT"]) {
+for (const [retryAfter, expected] of [
+  ["0", "0"],
+  ["00030", "30"],
+] as const) {
   test(`valid Retry-After advice is restored as remaining delay: ${retryAfter}`, async () => {
     const client = createClient(() => upstream(429, retryAfter));
     const response = await handler(() => client.graphql(QUERY), client.requestContext, {
       map: true,
     })(new Request("https://storefront.example/"));
     assert.equal(response.status, 429);
-    const remaining = /^\d+$/.test(retryAfter)
-      ? BigInt(retryAfter)
-      : BigInt(Math.max(0, Math.ceil((Date.parse(retryAfter) - Date.now()) / 1000)));
-    assert.equal(response.headers.get("retry-after"), String(remaining));
+    assert.equal(response.headers.get("retry-after"), expected);
+    await response.text();
+  });
+}
+
+// The clock is frozen, so the expected delay does not depend on when the test runs.
+for (const [retryAfter, expected] of [
+  ["Thu, 29 Oct 2026 19:00:00 GMT", "120"],
+  ["Thu, 29 Oct 2026 18:57:59 GMT", "0"],
+] as const) {
+  test(`an HTTP-date Retry-After is restored as remaining delay: ${retryAfter}`, async (t) => {
+    t.mock.timers.enable({ apis: ["Date"], now: Date.parse("Thu, 29 Oct 2026 18:58:00 GMT") });
+    const client = createClient(() => upstream(429, retryAfter));
+    const response = await handler(() => client.graphql(QUERY), client.requestContext, {
+      map: true,
+    })(new Request("https://storefront.example/"));
+    assert.equal(response.status, 429);
+    assert.equal(response.headers.get("retry-after"), expected);
     await response.text();
   });
 }
