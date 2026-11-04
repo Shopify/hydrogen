@@ -131,7 +131,7 @@ type ShopifyRequestContextBase = {
   // -- Public fields --
   /** The request's language, country, and path prefix. The path prefix starts with `/` and has no trailing slash, or is an empty string when you don't set one. */
   i18n: NormalizedI18nConfig;
-  /** Returns the incoming request's headers with Shopify's request headers added. */
+  /** Returns the incoming request's headers with Shopify's request headers added. Pass the headers when you forward the request to a proxy or another origin. */
   getForwardedRequestHeaders(): Headers;
   /**
    * Marks the final response as private and uncacheable because the response holds customer data, such as a server-rendered cart. `applyResponseHeaders()` then sets `Cache-Control: private, no-store, max-age=0, must-revalidate` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. Call the method before `applyResponseHeaders()`, and only on requests whose response holds customer data, so other responses stay cacheable. Pass a short `reason` that names the customer data. The Customer Account API client and the customer session call the method for you.
