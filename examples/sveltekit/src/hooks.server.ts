@@ -11,7 +11,6 @@ import {
 import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
 import {
   createCartServerHandlers,
-  createContentSecurityPolicy,
   createStorefrontClient,
   createShopifyRequestContext,
   type ShopifyRequestContextWithBuyerIp,
@@ -44,18 +43,6 @@ export const handle: Handle = async ({ event, resolve }) => {
   });
   if (shopifyRoute) return shopifyRoute;
 
-  const csp = createContentSecurityPolicy({
-    shop: { storeDomain: storefrontConfig.storeDomain },
-    nonce: false,
-    directives: {
-      // SvelteKit exposes its nonce in app.html, but not to the layout rendering Shopify's
-      // bootstraps. This example allows inline scripts; a stricter setup needs hashes or shared nonces.
-      scriptSrc: ["'unsafe-inline'"],
-      styleSrc: ["https://fonts.googleapis.com"],
-      fontSrc: ["https://fonts.gstatic.com"],
-    },
-  });
-
   event.locals.shopifyRequestContext = requestContext;
   event.locals.storefrontClient = storefrontClient;
 
@@ -73,7 +60,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   const finalResponse = new Response(response.body, response);
   requestContext.applyResponseHeaders(finalResponse.headers);
-  csp.applyResponseHeaders(finalResponse.headers);
   return finalResponse;
 };
 
