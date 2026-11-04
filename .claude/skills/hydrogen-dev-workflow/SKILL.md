@@ -11,7 +11,7 @@ description: >
 
 # Hydrogen Development Workflow
 
-Development practices and workflow guide for engineers working on Shopify's headless storefront ecosystem. The Hydrogen framework repo is [`Shopify/hydrogen`](https://github.com/Shopify/hydrogen). For domain context, see the `headless-storefronts-context` skill. For repo locations, see the `shopify-repos` skill.
+Development practices and workflow guide for engineers working on Shopify's headless storefront ecosystem. The Hydrogen framework repo is [`Shopify/hydrogen`](https://github.com/Shopify/hydrogen).
 
 ## Testing Customer Accounts Locally
 
@@ -129,7 +129,7 @@ Do NOT add consent gating to `publish()` — it causes events to be dropped (not
 
 ## Hydrogen CLI
 
-The Hydrogen CLI source code lives at `packages/cli-hydrogen` in the Hydrogen repo. It is released to npm as its own package.
+The Hydrogen CLI source code lives at `packages/cli` in the Hydrogen repo. It is released to npm as its own package, `@shopify/cli-hydrogen` (the npm package name differs from the directory name).
 
 **Bundling in Shopify CLI**: Merchants typically do not use the Hydrogen CLI directly. Instead, it is bundled inside the Shopify CLI (in the `Shopify/cli` repo). After releasing a new version of the Hydrogen CLI to npm, you must also bump its version in the Shopify CLI.
 
