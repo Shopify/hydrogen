@@ -11,7 +11,10 @@
     "test:unit": "vitest run src/runtime-config.test.ts"
   },
   "dependencies": {
-    "@shopify/hydrogen": "workspace:*"
+    "@browserbasehq/stagehand": "3.7.3",
+    "@shopify/hydrogen": "workspace:*",
+    "playwright-core": "1.59.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
