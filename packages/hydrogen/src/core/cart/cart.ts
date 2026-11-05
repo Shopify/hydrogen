@@ -1212,23 +1212,44 @@ function projectLineQuantity(state: CartState, payload: ChangeLineQuantityPayloa
 }
 
 // A response can return a line under another ID (Standard Actions may add a `?cart=` suffix), so a
-// missing line only means removal for a removal. Otherwise keep it and revalidate.
+// missing line only means removal for a removal. Otherwise revalidate to pick up its new ID. Until
+// then, a line the server accepted keeps its requested quantity, since the response's totals already
+// include it. A line the response reports a problem for keeps its previous quantity, because the
+// server may have rejected or adjusted the change.
 function settleLineQuantity(
   state: CartState,
   serverLines: CartLine[],
   payload: ChangeLineQuantityPayload,
   requestRevalidation: () => void,
+  accepted: boolean,
 ): CartState {
   const previous = getLines(state.data);
   const matching = serverLines.find((line) => line.id === payload.lineId);
   if (!matching && payload.quantity > 0) {
     requestRevalidation();
-    return state;
+    return accepted ? projectLineQuantity(state, payload) : state;
   }
   const lines = matching
     ? previous.map((line) => (line.id === payload.lineId ? mergeServerLine(line, matching) : line))
     : previous.filter((line) => line.id !== payload.lineId);
   return { ...state, data: reconcileCartLines(state.data, lines) };
+}
+
+// Whether a batch's response confirms that the server applied a line's requested quantity. An
+// error or warning for the line, or one the store can't tie to a requested line (cart-level, or
+// targeting a renamed line), means the server may have rejected or adjusted it.
+function getAcceptedLineCheck(
+  result: CartActionFailure,
+  lineIds: string[],
+): (lineId: string) => boolean {
+  if (!hasProjectedErrors(result)) return () => true;
+  const grouped = groupLineErrors(result, lineIds);
+  const hasUnscopedProblem =
+    grouped.cart.userErrors.length > 0 ||
+    grouped.cart.warnings.length > 0 ||
+    [...grouped.lines.keys()].some((lineId) => !lineIds.includes(lineId));
+  if (hasUnscopedProblem) return () => false;
+  return (lineId) => !grouped.lines.has(lineId);
 }
 
 export const CART_TRANSACTION_TYPES = defineTransactionTypes({
@@ -1332,18 +1353,7 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
     payload: {} as ChangeLineQuantityPayload,
     transport: (payload, signal, updateCart) =>
       updateCart({ lines: [{ id: payload.lineId, quantity: payload.quantity }] }, { signal }),
-    projectPayload: (state, payload) => {
-      const previous = getLines(state.data);
-      const existing = previous.find((line) => line.id === payload.lineId);
-      if (!existing) return state;
-      const lines =
-        payload.quantity === 0
-          ? previous.filter((line) => line.id !== payload.lineId)
-          : previous.map((line) =>
-              line.id === payload.lineId ? { ...line, quantity: payload.quantity } : line,
-            );
-      return { ...state, data: reconcileCartLines(state.data, lines) };
-    },
+    projectPayload: (state, payload) => projectLineQuantity(state, payload),
     projectPromise: (state, result, payload, addError, options) => {
       if (hasProjectedErrors(result)) {
         addError((current, timestampMs) =>
@@ -1402,8 +1412,19 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       if (!result.cart) return state;
 
       const serverLines = getLines(cartResponseFromStandardEvent(result.cart));
+      const isAccepted = getAcceptedLineCheck(
+        result,
+        payload.lines.map(({ lineId }) => lineId),
+      );
       return owned.reduce(
-        (current, line) => settleLineQuantity(current, serverLines, line, requestRevalidation),
+        (current, line) =>
+          settleLineQuantity(
+            current,
+            serverLines,
+            line,
+            requestRevalidation,
+            isAccepted(line.lineId),
+          ),
         state,
       );
     },
@@ -1843,10 +1864,18 @@ function observeMutationTransport(
 ): void {
   if (store.activeMutationTransports.has(promise)) return;
   store.activeMutationTransports.add(promise);
+  let released = false;
+  // Teardown keeps observing requests the store doesn't own, so revalidation waits for them after a
+  // reconnect. A request that never settles would block it forever, so stop waiting once it has
+  // outlived the timeout the store gives its own requests.
   const releaseTransport = () => {
+    if (released) return;
+    released = true;
+    clearTimeout(timeout);
     store.activeMutationTransports.delete(promise);
     revalidateCartWhenIdle(store);
   };
+  const timeout = setTimeout(releaseTransport, STANDARD_ACTION_TIMEOUT_IN_MS);
   promise.then(releaseTransport, releaseTransport);
 }
 

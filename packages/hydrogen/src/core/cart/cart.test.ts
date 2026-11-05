@@ -5291,6 +5291,9 @@ describe("pending state of a superseded single change", () => {
   );
 });
 
+// A line ID as Standard Actions may return it after canonicalizing it.
+const renamed = (id: string) => `${id}?cart=123`;
+
 describe("multi-line update and remove events", () => {
   const lineA = () => makeLine({ id: "line-a", quantity: 2 });
   const lineB = () => makeLine({ id: "line-b", quantity: 1 });
@@ -5382,29 +5385,197 @@ describe("multi-line update and remove events", () => {
     expect(getCartLines(store.getState().data).find((l) => l.id === "line-b")?.quantity).toBe(1);
   });
 
-  it("keeps the lines and revalidates when the response returns canonical line IDs", async () => {
+  describe("when the response returns canonical line IDs", () => {
     const canonical = [
       { id: "line-a?cart=123", quantity: 4 },
       { id: "line-b?cart=123", quantity: 4 },
       { id: "line-c?cart=123", quantity: 1 },
     ];
-    const refresh = createDeferred();
-    mockGetCart.mockReturnValue(refresh.promise);
-    const update = mockUpdateCart({
-      lines: [
-        { id: "line-a", quantity: 4 },
-        { id: "line-b", quantity: 4 },
-      ],
+    const requested = [
+      { id: "line-a", quantity: 4 },
+      { id: "line-b", quantity: 4 },
+      { id: "line-c", quantity: 1 },
+    ];
+    const updateBoth = async () => {
+      const update = mockUpdateCart({
+        lines: [
+          { id: "line-a", quantity: 4 },
+          { id: "line-b", quantity: 4 },
+        ],
+      });
+      resolveUpdate(0, serverCart(9, canonical));
+      await update;
+      await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+    };
+    const expectRequestedCart = () => {
+      expect(lines()).toEqual(requested);
+      expect(store.getState().data.totalQuantity).toBe(9);
+      expect(store.getState().data.cost.totalAmount.amount).toBe("90");
+      expect(store.getState().pending.lines.size).toBe(0);
+    };
+
+    it("keeps the requested quantities while the refresh is pending, then adopts the refresh", async () => {
+      const refresh = createDeferred();
+      mockGetCart.mockReturnValue(refresh.promise);
+
+      await updateBoth();
+      expectRequestedCart();
+      expect(store.getState().revalidating).toBe(true);
+
+      refresh.resolve(serverCart(9, canonical));
+      await vi.waitFor(() => expect(lines()).toEqual(canonical));
+      expect(store.getState().revalidating).toBeFalsy();
     });
 
-    resolveUpdate(0, serverCart(9, canonical));
-    await update;
-    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
-    expect(lines().map(({ id }) => id)).toEqual(["line-a", "line-b", "line-c"]);
-    expect(store.getState().revalidating).toBe(true);
+    it("keeps the successful update when the refresh fails", async () => {
+      mockGetCart.mockRejectedValue(new Error("Refresh failed"));
 
-    refresh.resolve(serverCart(9, canonical));
-    await vi.waitFor(() => expect(lines()).toEqual(canonical));
+      await updateBoth();
+      await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+
+      expectRequestedCart();
+      expect(store.getState().errors.network).toHaveLength(1);
+    });
+
+    it.each([
+      ["is pending", (refresh: ReturnType<typeof createDeferred>) => refresh],
+      [
+        "fails",
+        (refresh: ReturnType<typeof createDeferred>) => {
+          refresh.reject(new Error("Refresh failed"));
+          return refresh;
+        },
+      ],
+    ])(
+      "keeps the server quantity for a line the response rejects while the refresh %s",
+      async (outcome, settleRefresh) => {
+        const refresh = createDeferred();
+        refresh.promise.catch(() => {});
+        mockGetCart.mockReturnValue(refresh.promise);
+        const update = mockUpdateCart({
+          lines: [
+            { id: "line-a", quantity: 999 },
+            { id: "line-b", quantity: 3 },
+          ],
+        });
+
+        resolveUpdate(0, {
+          ...serverCart(6, [
+            { id: "line-a?cart=123", quantity: 2 },
+            { id: "line-b?cart=123", quantity: 3 },
+            { id: "line-c?cart=123", quantity: 1 },
+          ]),
+          userErrors: [maximumExceeded(0)],
+        });
+        await update;
+        await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+        settleRefresh(refresh);
+        if (outcome === "fails") {
+          await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+          expect(store.getState().errors.network).toHaveLength(1);
+        } else {
+          expect(store.getState().revalidating).toBe(true);
+        }
+
+        expect(lines()).toEqual([
+          { id: "line-a", quantity: 2 },
+          { id: "line-b", quantity: 3 },
+          { id: "line-c", quantity: 1 },
+        ]);
+        expect(store.getState().data.totalQuantity).toBe(6);
+        expect(store.getState().data.cost.totalAmount.amount).toBe("60");
+        expect(store.getState().errors.lines.get("line-a")?.userErrors).toEqual([
+          maximumExceeded(0),
+        ]);
+      },
+    );
+
+    it("keeps the server quantity for a line the response warns about when the refresh fails", async () => {
+      // Warnings scope to a line by its `gid://shopify/CartLine/` target, so this cart uses real IDs.
+      const warned = "gid://shopify/CartLine/a";
+      const accepted = "gid://shopify/CartLine/b";
+      const untouched = "gid://shopify/CartLine/c";
+      const notEnoughStock = {
+        code: "MERCHANDISE_NOT_ENOUGH_STOCK",
+        message: "Only 2 available",
+        target: warned,
+      };
+      store.destroy();
+      store = createCartStore({ initialData: { cart: null } });
+      store.connect();
+      store.hydrate(
+        makeCartState({
+          lines: [
+            makeLine({ id: warned, quantity: 2 }),
+            makeLine({ id: accepted, quantity: 1 }),
+            makeLine({ id: untouched, quantity: 1 }),
+          ],
+          totalQuantity: 4,
+        }),
+      );
+      mockGetCart.mockRejectedValue(new Error("Refresh failed"));
+      const update = mockUpdateCart({
+        lines: [
+          { id: warned, quantity: 5 },
+          { id: accepted, quantity: 4 },
+        ],
+      });
+
+      resolveUpdate(0, {
+        ...serverCart(7, [
+          { id: renamed(warned), quantity: 2 },
+          { id: renamed(accepted), quantity: 4 },
+          { id: renamed(untouched), quantity: 1 },
+        ]),
+        warnings: [notEnoughStock],
+      });
+      await update;
+      await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+      await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+
+      expect(lines()).toEqual([
+        { id: warned, quantity: 2 },
+        { id: accepted, quantity: 4 },
+        { id: untouched, quantity: 1 },
+      ]);
+      expect(store.getState().data.totalQuantity).toBe(7);
+      expect(store.getState().data.cost.totalAmount.amount).toBe("70");
+      expect(store.getState().pending.lines.size).toBe(0);
+      expect(store.getState().errors.lines.get(warned)?.warnings).toEqual([
+        { code: notEnoughStock.code, message: notEnoughStock.message },
+      ]);
+      expect(store.getState().errors.lines.has(accepted)).toBe(false);
+      expect(store.getState().errors.network).toHaveLength(1);
+    });
+
+    it("keeps every line's previous quantity when the response has a cart-level userError", async () => {
+      mockGetCart.mockRejectedValue(new Error("Refresh failed"));
+      const update = mockUpdateCart({
+        lines: [
+          { id: "line-a", quantity: 4 },
+          { id: "line-b", quantity: 4 },
+        ],
+      });
+
+      resolveUpdate(0, {
+        ...serverCart(4, [
+          { id: "line-a?cart=123", quantity: 2 },
+          { id: "line-b?cart=123", quantity: 1 },
+          { id: "line-c?cart=123", quantity: 1 },
+        ]),
+        userErrors: [{ code: "INVALID", field: ["input"], message: "Cart could not be updated" }],
+      });
+      await update;
+      await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+      await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+
+      expect(lines()).toEqual([
+        { id: "line-a", quantity: 2 },
+        { id: "line-b", quantity: 1 },
+        { id: "line-c", quantity: 1 },
+      ]);
+      expect(store.getState().data.totalQuantity).toBe(4);
+    });
   });
 
   describe("when a newer change supersedes one line", () => {
@@ -5477,6 +5648,127 @@ describe("multi-line update and remove events", () => {
         expect(lines()).toEqual(superseded);
       },
     );
+
+    describe("and the batch response renames its lines", () => {
+      const canonicalBatchResponse = () =>
+        serverCart(11, [
+          { id: renamed("line-a"), quantity: 5 },
+          { id: renamed("line-b"), quantity: 5 },
+          { id: renamed("line-c"), quantity: 1 },
+        ]);
+      const lineCost = (id: string) =>
+        getCartLines(store.getState().data).find((line) => line.id === id)?.cost.totalAmount.amount;
+      const settleRefresh = async (
+        refresh: ReturnType<typeof createDeferred>,
+        outcome: "succeeds" | "fails",
+        refreshed: Array<{ id: string; quantity: number }>,
+      ) => {
+        const total = refreshed.reduce((sum, line) => sum + line.quantity, 0);
+        if (outcome === "succeeds") refresh.resolve(serverCart(total, refreshed));
+        else refresh.reject(new Error("Refresh failed"));
+        await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+      };
+
+      it.each([
+        ["the batch settles first", "succeeds", [0, 1], ["line-b"]],
+        ["the batch settles first", "fails", [0, 1], ["line-b"]],
+        ["the newer change settles first", "succeeds", [1, 0], ["line-a"]],
+        ["the newer change settles first", "fails", [1, 0], ["line-a"]],
+      ] as const)(
+        "keeps the batch's requested quantity when %s and the refresh %s",
+        async (_order, outcome, [first, second], pendingBetween) => {
+          const refresh = createDeferred();
+          refresh.promise.catch(() => {});
+          mockGetCart.mockReturnValue(refresh.promise);
+          const { batch, newer } = startBatch(5);
+
+          const responses = [canonicalBatchResponse(), newerResponse()];
+          resolveUpdate(first, responses[first]);
+          await nextTick();
+          expect(lines()).toEqual(superseded);
+          expect([...store.getState().pending.lines]).toEqual(pendingBetween);
+          expect(store.getState().revalidating).toBe(true);
+
+          resolveUpdate(second, responses[second]);
+          await Promise.all([batch, newer]);
+          await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+          expect(lines()).toEqual(superseded);
+          expect(store.getState().pending.lines.size).toBe(0);
+          expect(store.getState().revalidating).toBe(true);
+          // Disclosed: the renamed batch line keeps its old per-line cost until the refresh lands.
+          expect(lineCost("line-a")).toBe("10");
+          expect(lineCost("line-b")).toBe("30");
+
+          const refreshed = superseded.map((line) => ({ ...line, id: renamed(line.id) }));
+          await settleRefresh(refresh, outcome, refreshed);
+          if (outcome === "succeeds") {
+            expect(lines()).toEqual(refreshed);
+            expect(store.getState().data.totalQuantity).toBe(9);
+            expect(store.getState().data.cost.totalAmount.amount).toBe("90");
+            expect(lineCost(renamed("line-a"))).toBe("50");
+            expect(store.getState().errors.network).toHaveLength(0);
+          } else {
+            expect(lines()).toEqual(superseded);
+            expect(lineCost("line-a")).toBe("10");
+            expect(store.getState().errors.network).toHaveLength(1);
+          }
+          expect(store.getState().pending.lines.size).toBe(0);
+          expect(mockGetCart).toHaveBeenCalledTimes(1);
+        },
+      );
+
+      it.each([
+        ["the batch settles first", "succeeds", [0, 1]],
+        ["the batch settles first", "fails", [0, 1]],
+        ["the newer change is rejected first", "succeeds", [1, 0]],
+        ["the newer change is rejected first", "fails", [1, 0]],
+      ] as const)(
+        "keeps the batch's line when the newer change is rejected, %s, and the refresh %s",
+        async (_order, outcome, order) => {
+          const refresh = createDeferred();
+          refresh.promise.catch(() => {});
+          mockGetCart.mockReturnValue(refresh.promise);
+          const { batch, newer } = startBatch(5);
+          newer.catch(() => {});
+
+          for (const index of order) {
+            if (index === 0) resolveUpdate(0, canonicalBatchResponse());
+            else rejectUpdate(1, new Error("Network down"));
+            await nextTick();
+          }
+          await Promise.allSettled([batch, newer]);
+          await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+
+          // The batch still owns line A, so A keeps its requested quantity. Line B was superseded,
+          // so the rejected newer change returns it to its previous quantity until the refresh.
+          const settledLines = [
+            { id: "line-a", quantity: 5 },
+            { id: "line-b", quantity: 1 },
+            { id: "line-c", quantity: 1 },
+          ];
+          expect(lines()).toEqual(settledLines);
+          expect(store.getState().pending.lines.size).toBe(0);
+          expect(store.getState().revalidating).toBe(true);
+          expect(store.getState().errors.network).toContainEqual({ message: "Network down" });
+          expect(lineCost("line-a")).toBe("10");
+
+          const refreshed = [
+            { id: renamed("line-a"), quantity: 5 },
+            { id: renamed("line-b"), quantity: 5 },
+            { id: renamed("line-c"), quantity: 1 },
+          ];
+          await settleRefresh(refresh, outcome, refreshed);
+          if (outcome === "succeeds") {
+            expect(lines()).toEqual(refreshed);
+            expect(store.getState().data.totalQuantity).toBe(11);
+            expect(store.getState().data.cost.totalAmount.amount).toBe("110");
+          } else {
+            expect(lines()).toEqual(settledLines);
+          }
+          expect(store.getState().pending.lines.size).toBe(0);
+        },
+      );
+    });
 
     it.each([
       [
@@ -5688,6 +5980,33 @@ describe("changes during the first cart load", () => {
         expect(store.getState().loading).toBe(false);
       },
     );
+
+    it("stops waiting for a change that never settles once the Standard Actions timeout passes", async () => {
+      const firstLoad = await connectWithPendingLoad();
+      mockGetCart.mockResolvedValue({ cart: loadedCart() });
+      vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+
+      try {
+        const mutation = codeAdd();
+        mutation.catch(() => {});
+        store.destroy();
+        store.connect();
+        firstLoad.resolve({ cart: loadedCart() });
+        await nextTick();
+        await nextTick();
+        expect(mockGetCart).toHaveBeenCalledTimes(1);
+        expect(store.getState().revalidating).toBe(true);
+
+        await vi.advanceTimersByTimeAsync(STANDARD_ACTION_TIMEOUT_IN_MS);
+      } finally {
+        vi.useRealTimers();
+      }
+
+      await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+      expect(mockGetCart).toHaveBeenCalledTimes(2);
+      expect(sortedLineIds()).toEqual(["line-existing"]);
+      expect(store.getState().loading).toBe(false);
+    });
 
     it("recovers the cart when the store reconnects while the replacement refresh is pending", async () => {
       const firstLoad = await connectWithPendingLoad();
