@@ -5,7 +5,11 @@ import { createFetchWithCache } from "../core/cache/fetch-with-cache";
 import type { FetchCacheOptions, FetchCacheResponseContext } from "../core/cache/fetch-with-cache";
 import type { CacheInstance } from "../core/cache/run-with-cache";
 import type { CachingStrategy } from "../core/cache/strategies";
-import { DEFAULT_TIMEOUT_IN_MS, STOREFRONT_API_VERSION } from "../core/constants";
+import {
+  DEFAULT_TIMEOUT_IN_MS,
+  HYDROGEN_USER_AGENT,
+  STOREFRONT_API_VERSION,
+} from "../core/constants";
 import {
   HYDROGEN_VERSION_HEADER,
   REQUEST_GROUP_ID_HEADER,
@@ -161,6 +165,10 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
   const staticHeaders: Record<string, string> = {
     "content-type": "application/json",
   };
+  // Browsers drop a script-set User-Agent or send a CORS preflight for it.
+  if (typeof document === "undefined") {
+    staticHeaders["user-agent"] = HYDROGEN_USER_AGENT;
+  }
   if (config.storefrontId) {
     staticHeaders[STOREFRONT_ID_HEADER] = config.storefrontId;
   }

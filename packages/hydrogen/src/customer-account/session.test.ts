@@ -336,7 +336,7 @@ describe("createCustomerSession", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(String(fetchMock.mock.calls[0][0])).toBe(`${AUTH_BASE_URL}/oauth/token`);
     expect(getFetchHeaders(fetchMock).get("Origin")).toBe(ORIGIN);
-    expect(getFetchHeaders(fetchMock).get("User-Agent")).toBeTruthy();
+    expect(getFetchHeaders(fetchMock).get("User-Agent")).toBe("Hydrogen 0.0.0-test");
     expect(Object.fromEntries(getFetchBody(fetchMock))).toEqual({
       grant_type: "refresh_token",
       client_id: CUSTOMER_ACCOUNT_API_CLIENT_ID,

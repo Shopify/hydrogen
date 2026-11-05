@@ -144,7 +144,7 @@ describe("createCustomerAccountClient", () => {
     expect(headers.get("Authorization")).toBe(CUSTOMER_ACCOUNT_TOKEN);
     expect(headers.get("Content-Type")).toBe("application/json");
     expect(headers.get("Origin")).toBe("https://example.com");
-    expect(headers.get("User-Agent")).toBeTruthy();
+    expect(headers.get("User-Agent")).toBe("Hydrogen 0.0.0-test");
     expect(headers.get("Cookie")).toBeNull();
     expect(headers.get("Shopify-Storefront-Y")).toBeNull();
     expect(JSON.parse(String(init.body))).toEqual({
