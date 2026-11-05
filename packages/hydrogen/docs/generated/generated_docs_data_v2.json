@@ -946,6 +946,50 @@
       "members": []
     }
   },
+  "GetHtmlLangGeneratedType": {
+    "src/core/i18n/locale.ts": {
+      "filePath": "src/core/i18n/locale.ts",
+      "name": "GetHtmlLangGeneratedType",
+      "description": "Converts a Shopify language code into the BCP 47 tag for the `<html lang>` attribute: `EN` → `en`, `PT_BR` → `pt-BR`, `ZH_TW` → `zh-Hant`.\n\nThe attribute names the language the page is written in, so it takes the language code only, not the market country: Portuguese content sold in Canada is still `pt-BR`. Use the market country for `hreflang` instead, where the region names the targeted audience.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "language",
+          "description": "",
+          "value": "ShopifyLanguageCode",
+          "filePath": "src/core/i18n/locale.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/i18n/locale.ts",
+        "description": "",
+        "name": "string",
+        "value": "string"
+      },
+      "value": "export function getHtmlLang(language: ShopifyLanguageCode): string {\n  return (\n    HTML_LANG_SCRIPT_TAGS[language] ??\n    language.toLowerCase().replace(/_(\\w+)$/, (_, region: string) => `-${region.toUpperCase()}`)\n  );\n}",
+      "examples": [
+        {
+          "title": "Example",
+          "description": "",
+          "tabs": [
+            {
+              "code": "<html lang={getHtmlLang(requestContext.locale.language)}>",
+              "title": "Example"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "ShopifyLanguageCode": {
+    "src/core/i18n/types.ts": {
+      "filePath": "src/core/i18n/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyLanguageCode",
+      "value": "",
+      "description": ""
+    }
+  },
   "CreateShopifyRequestContextGeneratedType": {
     "src/core/request-context.ts": {
       "filePath": "src/core/request-context.ts",
@@ -1032,15 +1076,6 @@
       "filePath": "src/core/i18n/types.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyCountryCode",
-      "value": "",
-      "description": ""
-    }
-  },
-  "ShopifyLanguageCode": {
-    "src/core/i18n/types.ts": {
-      "filePath": "src/core/i18n/types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "ShopifyLanguageCode",
       "value": "",
       "description": ""
     }
