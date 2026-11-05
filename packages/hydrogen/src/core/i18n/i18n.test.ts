@@ -122,6 +122,15 @@ describe("defineShopifyI18n", () => {
         }),
       ).toThrowError(/both resolve to the path segment "fr-ca"/);
     });
+
+    it("rejects a custom segment that reuses the default locale's segment", () => {
+      expect(() =>
+        defineShopifyI18n({
+          defaultLocale: EN_US,
+          routing: { type: "pathname", locales: [{ ...FR_CA, pathSegment: "en-us" }] },
+        }),
+      ).toThrowError(/FR-CA and EN-US both resolve to the path segment "en-us"/);
+    });
   });
 
   describe("domain routing", () => {

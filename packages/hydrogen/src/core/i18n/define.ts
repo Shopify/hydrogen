@@ -112,7 +112,11 @@ function validatePathnameLocales(
   defaultLocale: ShopifyLocale,
   locales: readonly ShopifyPathnameLocale[],
 ): void {
-  const seenSegments = new Map<string, ShopifyPathnameLocale>();
+  // The default locale is served unprefixed but keeps a segment for `[locale]` route params, so
+  // no routed locale may reuse it.
+  const seenSegments = new Map<string, ShopifyLocale>([
+    [getLocalePathSegment(defaultLocale), defaultLocale],
+  ]);
   const seenLocales: ShopifyLocale[] = [];
 
   for (const locale of locales) {
