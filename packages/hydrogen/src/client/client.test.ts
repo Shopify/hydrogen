@@ -208,6 +208,33 @@ describe("createStorefrontClient", () => {
       expect(headers.get("X-Hydrogen-Version")).toBeTruthy();
     });
 
+    it.each([
+      ["public", createPublicClient],
+      ["private", createPrivateClient],
+      ["private_no_buyer_context", createPrivateNoBuyerContextClient],
+    ])("sends a Hydrogen User-Agent, not the buyer's, from a %s client", async (_, create) => {
+      const requestContext = createBuyerTestRequestContext({
+        headers: new Headers({ "user-agent": "BuyerBrowser/1.0" }),
+      });
+      const client = create({ fetch: mockFetch, requestContext });
+      await client.graphql(SHOP_QUERY);
+
+      expect(getHeaders(mockFetch).get("user-agent")).toBe("Hydrogen 0.0.0-test");
+    });
+
+    it("leaves the User-Agent to the browser", async () => {
+      vi.stubGlobal("document", {});
+
+      try {
+        const client = createPublicClient({ fetch: mockFetch });
+        await client.graphql(SHOP_QUERY);
+
+        expect(getHeaders(mockFetch).has("user-agent")).toBe(false);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+
     it("sends public access token header", async () => {
       const client = createPublicClient({
         publicStorefrontToken: "pub-token-123",

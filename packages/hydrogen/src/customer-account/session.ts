@@ -4,7 +4,7 @@ import {
   type CartBuyerIdentitySync,
   type CartBuyerIdentitySyncSource,
 } from "../core/cart/buyer-identity-sync";
-import { DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
+import { DEFAULT_TIMEOUT_IN_MS, HYDROGEN_USER_AGENT } from "../core/constants";
 import { getLogger } from "../core/logging";
 import type { ShopifyRequestContext } from "../core/request-context";
 import {
@@ -58,7 +58,6 @@ const AUTHORIZATION_CODE_GRANT_TYPE = "authorization_code";
 const REFRESH_TOKEN_GRANT_TYPE = "refresh_token";
 const CUSTOMER_ACCOUNT_SCOPE = "openid email customer-account-api:full";
 const CODE_CHALLENGE_METHOD = "S256";
-const USER_AGENT = `Hydrogen ${__HYDROGEN_VERSION__}`;
 const EXPIRY_BUFFER_IN_SECONDS = 120;
 const PENDING_LOGIN_TTL_IN_MINUTES = 10;
 const SECONDS_PER_MINUTE = 60;
@@ -1232,7 +1231,7 @@ async function postTokenRequest({
       method: "POST",
       headers: new Headers({
         "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": USER_AGENT,
+        "User-Agent": HYDROGEN_USER_AGENT,
         Origin: origin,
       }),
       body,
