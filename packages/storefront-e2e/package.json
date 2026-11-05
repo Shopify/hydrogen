@@ -8,6 +8,7 @@
     "test": "pnpm run test:unit",
     "typecheck": "tsc --noEmit",
     "cli": "node src/cli.ts",
+    "report": "node src/report/report-cli.ts",
     "test:e2e": "playwright test",
     "test:unit": "vitest run --dir src --exclude \"**/*.integration.test.ts\"",
     "test:integration": "vitest run --dir src .integration.test.ts"

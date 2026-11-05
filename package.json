@@ -37,7 +37,8 @@
     "test:benchmark-harness": "tsc -p scripts/storefront-benchmark-harness/tsconfig.json && node --test scripts/storefront-benchmark-harness/*.test.ts",
     "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test",
     "test:e2e:storefront": "turbo run test:e2e --filter @shopify/storefront-e2e",
-    "storefront-e2e": "pnpm --filter @shopify/storefront-e2e run cli"
+    "storefront-e2e": "pnpm --filter @shopify/storefront-e2e run cli",
+    "storefront-e2e:report": "pnpm --filter @shopify/storefront-e2e run report"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.3",
