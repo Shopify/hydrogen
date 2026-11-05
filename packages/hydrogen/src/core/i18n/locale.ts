@@ -1,5 +1,6 @@
 import type {
   ShopifyDomainLocale,
+  ShopifyLanguageCode,
   ShopifyLocale,
   ShopifyMatchedLocale,
   ShopifyPathnameLocale,
@@ -11,6 +12,24 @@ export function isSameLocale(a: ShopifyLocale, b: ShopifyLocale): boolean {
 
 export function formatLocale(locale: ShopifyLocale): string {
   return `${locale.language}-${locale.country}`;
+}
+
+const SCRIPT_LANGUAGE_TAGS: Partial<Record<ShopifyLanguageCode, string>> = {
+  ZH_CN: "zh-Hans",
+  ZH_TW: "zh-Hant",
+};
+
+/**
+ * The BCP 47 tag for content written in `language`, e.g. for `<html lang>`: `EN` → `en`, `PT_BR` →
+ * `pt-BR`. Chinese differs by script, so `ZH_CN` → `zh-Hans` and `ZH_TW` → `zh-Hant`. Takes no
+ * country because the market does not change the content language.
+ * @publicDocs
+ */
+export function getLanguageTag(language: ShopifyLanguageCode): string {
+  return (
+    SCRIPT_LANGUAGE_TAGS[language] ??
+    language.toLowerCase().replace(/_(\w+)$/, (_, region: string) => `-${region.toUpperCase()}`)
+  );
 }
 
 /**

@@ -1,4 +1,4 @@
-import { Cache, type ConsentConfig } from "@shopify/hydrogen";
+import { Cache, type ConsentConfig, getLanguageTag } from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
 import { useState } from "react";
 import {
@@ -20,7 +20,6 @@ import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
 import { useNonce } from "~/lib/csp";
 import { FOOTER_QUERY, HEADER_QUERY, type HeaderQuery } from "~/lib/fragments";
-import { toHtmlLang } from "~/lib/i18n";
 import { routeTemplates } from "~/lib/route-templates";
 
 import type { Route } from "./+types/root";
@@ -166,7 +165,7 @@ export function Layout({ children }: { children?: React.ReactNode }) {
   const usesCustomBanner = consentMode === "custom-banner";
 
   return (
-    <html lang={data ? toHtmlLang(data.i18n.language) : "en"}>
+    <html lang={data ? getLanguageTag(data.i18n.language) : "en"}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />

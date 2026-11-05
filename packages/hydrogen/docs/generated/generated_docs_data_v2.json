@@ -946,6 +946,38 @@
       "members": []
     }
   },
+  "GetLanguageTagGeneratedType": {
+    "src/core/i18n/locale.ts": {
+      "filePath": "src/core/i18n/locale.ts",
+      "name": "GetLanguageTagGeneratedType",
+      "description": "The BCP 47 tag for content written in `language`, e.g. for `<html lang>`: `EN` → `en`, `PT_BR` → `pt-BR`. Chinese differs by script, so `ZH_CN` → `zh-Hans` and `ZH_TW` → `zh-Hant`. Takes no country because the market does not change the content language.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "language",
+          "description": "",
+          "value": "ShopifyLanguageCode",
+          "filePath": "src/core/i18n/locale.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/i18n/locale.ts",
+        "description": "",
+        "name": "string",
+        "value": "string"
+      },
+      "value": "export function getLanguageTag(language: ShopifyLanguageCode): string {\n  return (\n    SCRIPT_LANGUAGE_TAGS[language] ??\n    language.toLowerCase().replace(/_(\\w+)$/, (_, region: string) => `-${region.toUpperCase()}`)\n  );\n}"
+    }
+  },
+  "ShopifyLanguageCode": {
+    "src/core/i18n/types.ts": {
+      "filePath": "src/core/i18n/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyLanguageCode",
+      "value": "",
+      "description": ""
+    }
+  },
   "CreateShopifyRequestContextGeneratedType": {
     "src/core/request-context.ts": {
       "filePath": "src/core/request-context.ts",
@@ -1032,15 +1064,6 @@
       "filePath": "src/core/i18n/types.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyCountryCode",
-      "value": "",
-      "description": ""
-    }
-  },
-  "ShopifyLanguageCode": {
-    "src/core/i18n/types.ts": {
-      "filePath": "src/core/i18n/types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "ShopifyLanguageCode",
       "value": "",
       "description": ""
     }
