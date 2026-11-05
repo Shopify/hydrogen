@@ -21,15 +21,19 @@ import {
   REMIX_COMPILER_ERROR_MESSAGE,
 } from '../../lib/vite-config.js';
 import {runBuild} from './build.js';
-import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
+import {runDevSession, type DevSession} from '../../lib/dev-session.js';
 import {deferPromise} from '../../lib/defer.js';
 
 export default class Preview extends Command {
-  static descriptionWithMarkdown =
-    "Runs a server in your local development environment that serves your Hydrogen app's production build. Requires running the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-build) command first.";
+  static descriptionWithMarkdown = `Runs a server in your local development environment that serves your Hydrogen app's production build.
 
-  static description =
-    'Runs a Hydrogen storefront in an Oxygen worker for production.';
+  Run the [build](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-build) command first, or use \`--build\` to build before starting the server.
+
+  Session status and JSONL logs are stored in your project's \`.shopify/dev/\` directory. The instance JSON includes the PID, session ID, \`logFile\`, and \`details.urls\`. Status becomes \`running\` when the server is ready.
+
+  Only one preview session can run for the same project, environment, environment branch, and environment file, even with a different port. Shutdown removes the instance and lock files and retains the log. The log resets on each run. Dev and preview use separate sessions. With \`--build --watch\`, each completed rebuild reloads the worker and adds log messages. Preview has no \`--json\` mode.`;
+
+  static description = this.descriptionForHelp();
 
   static flags = {
     ...commonFlags.path,
@@ -61,18 +65,25 @@ export default class Preview extends Command {
     const {flags} = await this.parse(Preview);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
-    const {close} = await runPreview({
-      ...flagsToCamelObject(flags),
-      directory,
-    });
-
-    setupResourceCleanup(async () => {
-      await close();
-    });
+    await runDevSession(
+      {
+        command: 'hydrogen preview',
+        directory,
+        ...flagsToCamelObject(flags),
+        json: false,
+      },
+      (session) =>
+        runPreview({
+          ...flagsToCamelObject(flags),
+          directory,
+          session,
+        }),
+    );
   }
 }
 
 type PreviewOptions = {
+  session?: DevSession;
   port?: number;
   directory?: string;
   env?: string;
@@ -89,6 +100,7 @@ type PreviewOptions = {
 };
 
 export async function runPreview({
+  session,
   port: appPort,
   directory,
   env: envHandle,
@@ -120,6 +132,10 @@ export async function runPreview({
 
   let miniOxygen: MiniOxygen;
   const projectBuild = deferPromise();
+  session?.cleanup(async () => {
+    // A cancelled initial build might never reach its completion hook.
+    projectBuild.resolve();
+  });
 
   const buildOptions = {
     directory: root,
@@ -132,21 +148,33 @@ export async function runPreview({
     codegenConfigPath,
   };
 
-  const buildProcess = shouldBuild
-    ? await runBuild({
-        ...buildOptions,
-        watch,
-        async onServerBuildFinish() {
-          if (projectBuild.state === 'pending') {
-            projectBuild.resolve();
-          } else {
-            outputInfo('🏗️  Project rebuilt. Reloading server...');
-          }
+  if (shouldBuild) {
+    await runBuild({
+      ...buildOptions,
+      watch,
+      signal: session?.signal,
+      registerCleanup: session?.cleanup,
+      onServerBuildStart() {
+        session?.log('Building preview');
+      },
+      async onServerBuildFinish() {
+        if (session?.signal.aborted) return;
+        if (projectBuild.state === 'pending') {
+          projectBuild.resolve();
+        } else {
+          outputInfo('🏗️  Project rebuilt. Reloading server...');
+          session?.log('Project rebuilt. Reloading server');
+        }
 
-          await miniOxygen?.reload();
-        },
-      })
-    : projectBuild.resolve();
+        await miniOxygen?.reload();
+        if (miniOxygen) session?.log('Runtime reloaded');
+      },
+    });
+  } else {
+    projectBuild.resolve();
+  }
+
+  session?.signal.throwIfAborted();
 
   if (!useClassicCompiler) {
     const maybeResult = await getViteConfig(root).catch(() => null);
@@ -163,6 +191,7 @@ export async function runPreview({
       envBranch,
       envHandle,
       envFile,
+      signal: session?.signal,
     },
   );
 
@@ -177,6 +206,7 @@ export async function runPreview({
   // still need to be started to serve redirections from the worker runtime.
 
   await projectBuild.promise;
+  session?.signal.throwIfAborted();
 
   logInjectedVariables();
 
@@ -190,16 +220,13 @@ export async function runPreview({
     inspectorPort,
     debug,
     watch,
+    registerCleanup: session?.cleanup,
   });
+
+  await session?.ready([miniOxygen.listeningAt]);
 
   miniOxygen.showBanner({
     mode: 'preview',
     headlinePrefix: watch ? 'Watching for changes. ' : '',
   });
-
-  return {
-    async close() {
-      await Promise.allSettled([miniOxygen.close(), buildProcess?.close()]);
-    },
-  };
 }
