@@ -53,8 +53,8 @@ export type ShopifyLinkTagAttributes = Partial<{
   crossorigin: ShopifyCrossOrigin;
   /** The URL of the origin to preconnect to, or the script to prefetch. */
   href: string;
-  /** Whether the link preconnects to an origin or prefetches a script. */
-  rel: "preconnect" | "prefetch";
+  /** Whether the link preconnects to an origin, prefetches a script, or points at the UCP profile. */
+  rel: "preconnect" | "prefetch" | "ucp";
 }>;
 
 /** A script tag to render in the document head. */

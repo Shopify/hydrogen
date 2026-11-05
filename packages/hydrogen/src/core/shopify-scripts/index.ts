@@ -11,6 +11,7 @@ import {
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,
+  UCP_PROFILE_PATH,
 } from "./constants";
 import { getShopifyGlobalBootstrapScript } from "./global";
 import { getPerfKitScript } from "./perfkit";
@@ -53,6 +54,9 @@ export type {
 
 /**
  * Returns Shopify's storefront script and link tags as descriptors.
+ *
+ * The links include `<link rel="ucp" href="/.well-known/ucp">`, which tells agents that the
+ * storefront supports the Universal Commerce Protocol and where to find its profile.
  *
  * Render the descriptors in the document head during server rendering, then call
  * `initializeShopifyScripts` in the browser. Keep the tags in the returned order. The inline
@@ -99,6 +103,16 @@ export function getShopifyScriptTags({
         as: "script",
         href: SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,
         crossorigin: "anonymous",
+      },
+    },
+    // Rendered on every host, including Oxygen preview hosts where the profile 404s: descriptors are
+    // often built without a request, and a missing profile only means agents find no UCP there.
+    // The `Link` response header deliberately skips preview hosts, since it has the request URL.
+    {
+      tagName: "link",
+      attributes: {
+        rel: "ucp",
+        href: UCP_PROFILE_PATH,
       },
     },
   ];

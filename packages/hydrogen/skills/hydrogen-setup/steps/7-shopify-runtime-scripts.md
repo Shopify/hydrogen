@@ -6,6 +6,7 @@ Render Shopify runtime scripts once in the root document.
 
 - Use the `ShopifyScripts` component from your framework binding if it exports one. Frameworks without a binding should render `getShopifyScriptTags()` / `renderShopifyScriptTags()` during SSR and call `initializeShopifyScripts()` during browser hydration.
 - Invoke the `hydrogen-routing` skill for the required script routing options; reuse the shared route template manifest from the scaffold step.
+- Render the tags inside `<head>`. Besides scripts, they include resource hints and `<link rel="ucp" href="/.well-known/ucp">`, which tells agents where to find the store's Universal Commerce Protocol profile. The Online Store serves the profile on Oxygen; other hosts need `handleShopifyRoutes` to forward `/.well-known/ucp`, and Oxygen `*.myshopify.dev` preview hosts do not serve it. Framework head APIs that split links from scripts must render both `links` and `scripts` from `getShopifyScriptTags()`.
 
 ### The `shop` and `i18n` props
 
@@ -47,6 +48,7 @@ initializeShopifyScripts({ routes: routeTemplates });
 ### Continue when
 
 - [ ] The Shopify script tags appear exactly once in the server-rendered document (check view-source, not just the hydrated DOM)
+- [ ] The server-rendered `<head>` contains `<link rel="ucp" href="/.well-known/ucp">` exactly once
 - [ ] `window.Shopify.actions` is defined in the browser console after page load
 - [ ] `shop` values (`shopId`, `storefrontId`, `myshopifyDomain`) are resolved server-side and serialized; no client module reads `process.env`, `import.meta.env`, or framework env modules
 
