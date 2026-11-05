@@ -20,6 +20,7 @@ import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
 import { useNonce } from "~/lib/csp";
 import { FOOTER_QUERY, HEADER_QUERY, type HeaderQuery } from "~/lib/fragments";
+import { toHtmlLang } from "~/lib/i18n";
 import { routeTemplates } from "~/lib/route-templates";
 
 import type { Route } from "./+types/root";
@@ -165,7 +166,7 @@ export function Layout({ children }: { children?: React.ReactNode }) {
   const usesCustomBanner = consentMode === "custom-banner";
 
   return (
-    <html lang={toHtmlLang(data?.i18n)}>
+    <html lang={data ? toHtmlLang(data.i18n.language) : "en"}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -197,13 +198,6 @@ export function Layout({ children }: { children?: React.ReactNode }) {
       </body>
     </html>
   );
-}
-
-function toHtmlLang(i18n: { country?: string; language?: string } | null | undefined) {
-  if (!i18n?.language) return "en";
-  const language = i18n.language.toLowerCase();
-  const country = i18n.country ? `-${i18n.country.toUpperCase()}` : "";
-  return `${language}${country}`;
 }
 
 export default function App() {
