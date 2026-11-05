@@ -1,0 +1,298 @@
+import assert from "node:assert/strict";
+import path from "node:path";
+
+import { afterEach, describe, it, vi } from "vitest";
+
+import {
+  DEFAULT_OUTPUT_ROOT,
+  disableStagehandLogs,
+  loadStagehandDriver,
+  main,
+  parseCliArgs,
+  STAGEHAND_LOG_ENV,
+  USAGE,
+} from "./cli.ts";
+
+// Module fakes for the driver wiring tests. They record the order of browser, Stagehand, and
+// buyer steps. No browser starts and no model is called.
+const fakes = vi.hoisted(() => {
+  const events: string[] = [];
+  const browser = {
+    page: {
+      goto: async (url: string) => {
+        events.push(`goto:${url}`);
+        return null;
+      },
+    },
+    close: async () => {
+      events.push("browser:close");
+    },
+  };
+  return { events, browser, prepareError: undefined as Error | undefined };
+});
+
+vi.mock("./browser/session.ts", () => ({
+  createBrowserSession: async () => {
+    fakes.events.push("browser:create");
+    return fakes.browser;
+  },
+}));
+
+vi.mock("./browser/locale.ts", () => ({
+  readStorefrontLocale: async (browser: unknown) => {
+    fakes.events.push(browser === fakes.browser ? "locale:browser" : "locale:other");
+    return { country: "US", language: "EN" };
+  },
+}));
+
+vi.mock("./browser/cart-reference.ts", () => ({
+  readCartReference: async (page: unknown) => {
+    fakes.events.push(page === fakes.browser.page ? "cart:page" : "cart:other");
+    return { status: "unavailable" };
+  },
+}));
+
+vi.mock("./agent/stagehand-session.ts", () => ({
+  prepareStagehandSession: async (browser: unknown) => {
+    fakes.events.push(browser === fakes.browser ? "stagehand:prepare" : "stagehand:other");
+    if (fakes.prepareError !== undefined) {
+      throw fakes.prepareError;
+    }
+    return { browser, observer: {}, detach: async () => {}, close: async () => {} };
+  },
+}));
+
+vi.mock("./agent/stagehand-buyer.ts", () => ({
+  createStagehandBuyer: async (options: { session: unknown; model: { modelName: string } }) => {
+    fakes.events.push(`buyer:create:${options.model.modelName}`);
+    return {
+      act: async () => ({ completed: true, reason: "completed", summary: "" }),
+      close: async () => {},
+    };
+  },
+}));
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  fakes.events.length = 0;
+  fakes.prepareError = undefined;
+});
+
+const CWD = "/work/repo";
+
+function parse(argv: string[], env: NodeJS.ProcessEnv = {}) {
+  return parseCliArgs(argv, env, CWD);
+}
+
+describe("parseCliArgs", () => {
+  it("defaults to the add-to-cart scenario and storefront origin", () => {
+    const parsed = parse(["https://shop.example.com/en-ca"]);
+    assert.equal(parsed.kind, "run");
+    if (parsed.kind !== "run") return;
+    assert.equal(parsed.options.scenarioId, "add-to-cart");
+    assert.equal(parsed.options.apiOrigin, "https://shop.example.com");
+    assert.equal(parsed.options.storefrontUrl.href, "https://shop.example.com/en-ca");
+    assert.equal(parsed.options.timeoutMs, 300_000);
+    assert.equal(parsed.options.outputRoot, DEFAULT_OUTPUT_ROOT);
+  });
+
+  it("accepts a leading pnpm separator and explicit options", () => {
+    const parsed = parse(
+      [
+        "--",
+        "https://shop.example.com",
+        "--test",
+        "add-to-cart",
+        "--max-steps",
+        "12",
+        "--country",
+        "ca",
+        "--language",
+        "pt_br",
+        "--output",
+        "out",
+      ],
+      { STOREFRONT_E2E_MODEL: "openai/gpt-test" },
+    );
+    assert.equal(parsed.kind, "run");
+    if (parsed.kind !== "run") return;
+    assert.equal(parsed.options.maxSteps, 12);
+    assert.deepEqual(parsed.options.locale, { country: "CA", language: "PT_BR" });
+    assert.equal(parsed.options.outputRoot, path.resolve(CWD, "out"));
+    assert.equal(parsed.options.model, "openai/gpt-test");
+  });
+
+  it("rejects invalid numeric limits", () => {
+    for (const args of [
+      ["--max-steps", "0"],
+      ["--max-steps", "1e2"],
+      ["--max-steps", "-5"],
+      ["--timeout", "5"],
+      ["--catalog-pages", "999"],
+      ["--catalog-pages", "2.5"],
+    ]) {
+      const parsed = parse(["https://shop.example.com", ...args]);
+      assert.equal(parsed.kind, "error", args.join(" "));
+    }
+  });
+
+  it("rejects unknown tests, bad URLs, API origins with paths, and unsafe output", () => {
+    const cases: Array<[string[], RegExp]> = [
+      [["https://shop.example.com", "--test", "checkout"], /Unknown test/],
+      [["ftp://shop.example.com"], /http or https/],
+      [["https://u:p@shop.example.com"], /credentials/],
+      [
+        ["https://shop.example.com", "--api-origin", "https://api.example.com/graphql"],
+        /origin only/,
+      ],
+      [["https://shop.example.com", "--output", "/"], /filesystem root/],
+      [["https://shop.example.com", "--output", " "], /non-empty/],
+      [[], /exactly one storefront URL/],
+      [["https://shop.example.com", "--unknown"], /Unknown option/],
+    ];
+    for (const [argv, message] of cases) {
+      const parsed = parse(argv);
+      assert.equal(parsed.kind, "error", argv.join(" "));
+      assert.match(parsed.kind === "error" ? parsed.message : "", message);
+    }
+  });
+
+  it("returns help", () => {
+    assert.equal(parse(["--help"]).kind, "help");
+  });
+
+  it("passes any model name through; the model config is resolved at driver load", () => {
+    // Model config errors become an indeterminate setup result, not a usage error.
+    for (const model of ["anthropic/claude-haiku-5-5", "mockprovider/x", "not a model"]) {
+      const parsed = parse(["https://shop.example.com", "--model", model]);
+      assert.equal(parsed.kind, "run");
+      assert.equal(parsed.kind === "run" ? parsed.options.model : undefined, model);
+    }
+    const unset = parse(["https://shop.example.com"]);
+    assert.equal(unset.kind === "run" ? unset.options.model : "set", undefined);
+  });
+});
+
+describe("USAGE", () => {
+  it("documents the default model and every credential variable", () => {
+    assert.match(USAGE, /then anthropic\/claude-haiku-5-5/);
+    for (const name of [
+      "STOREFRONT_E2E_API_KEY",
+      "STOREFRONT_E2E_BASE_URL",
+      "ANTHROPIC_API_KEY",
+      "ANTHROPIC_BASE_URL",
+      "OPENAI_API_KEY",
+      "OPENAI_BASE_URL",
+      "SHOPIFY_PROXY_KEY",
+      "Shopify-Usage-Tag: storefront-e2e",
+    ]) {
+      assert.ok(USAGE.includes(name), name);
+    }
+  });
+
+  it("documents locale flags as constraints that do not set the market", () => {
+    assert.match(USAGE, /--country <CC>\s+Expected storefront country/);
+    assert.match(USAGE, /It does not set the market/);
+    assert.match(USAGE, /Without these flags, both values come from the storefront page/);
+    assert.match(USAGE, /Credentials are read only when the buyer starts/);
+  });
+});
+
+describe("main", () => {
+  it("redacts every model credential variable before it prints", async () => {
+    const env = {
+      STOREFRONT_E2E_API_KEY: "generic-dummy-key-000000",
+      ANTHROPIC_API_KEY: "anthropic-dummy-key-000000",
+      OPENAI_API_KEY: "openai-dummy-key-000000",
+      SHOPIFY_PROXY_KEY: "proxy-dummy-key-000000",
+    };
+    let stderr = "";
+    vi.spyOn(process.stderr, "write").mockImplementation((chunk) => {
+      stderr += String(chunk);
+      return true;
+    });
+    for (const secret of Object.values(env)) {
+      // The unknown test ID is echoed in the usage error.
+      assert.equal(await main(["https://shop.example.com", "--test", secret], env), 64);
+    }
+    assert.match(stderr, /Unknown test "\[REDACTED\]"/);
+    for (const secret of Object.values(env)) {
+      assert.equal(stderr.includes(secret), false, secret);
+    }
+  });
+});
+
+describe("disableStagehandLogs", () => {
+  it("removes Stagehand log variables and reports names only", () => {
+    const env: NodeJS.ProcessEnv = {
+      BROWSERBASE_CONFIG_DIR: "/tmp/secret-session-logs",
+      BROWSERBASE_FLOW_LOGS: "1",
+      OPENAI_API_KEY: "sk-keep-this-for-the-buyer",
+      PATH: "/usr/bin",
+    };
+    const removed = disableStagehandLogs(env);
+    assert.deepEqual(removed, [...STAGEHAND_LOG_ENV]);
+    assert.equal(env.BROWSERBASE_CONFIG_DIR, undefined);
+    assert.equal(env.BROWSERBASE_FLOW_LOGS, undefined);
+    assert.equal(env.PATH, "/usr/bin");
+    assert.equal(env.OPENAI_API_KEY, "sk-keep-this-for-the-buyer");
+    assert.doesNotMatch(removed.join(" "), /secret-session-logs|sk-keep/);
+    assert.deepEqual(disableStagehandLogs(env), []);
+  });
+});
+
+describe("loadStagehandDriver", () => {
+  const sessionOptions = {
+    baseUrl: "https://shop.example.com/",
+    onEvidence: () => {},
+    artifactDirectory: "/tmp/run",
+  };
+  const signal = new AbortController().signal;
+
+  it("attaches Stagehand to the new browser before the session is returned, with no model key", async () => {
+    const driver = await loadStagehandDriver({}, {});
+    const session = await driver.createSession(sessionOptions);
+    // Stagehand is attached before the runner can open any page.
+    assert.deepEqual(fakes.events, ["browser:create", "stagehand:prepare"]);
+
+    await driver.navigate(session, new URL("https://shop.example.com/"), signal);
+    assert.deepEqual(await driver.readLocale(session), { country: "US", language: "EN" });
+    assert.deepEqual(fakes.events.slice(2), ["goto:https://shop.example.com/", "locale:browser"]);
+    assert.equal(driver.buyer.model, "anthropic/claude-haiku-5-5");
+    assert.match(driver.buyer.promptSha256, /^[0-9a-f]{64}$/);
+  });
+
+  it("reads the page cart reference from the session page", async () => {
+    const driver = await loadStagehandDriver({}, {});
+    const session = await driver.createSession(sessionOptions);
+    assert.deepEqual(await driver.readCartReference?.(session, signal), { status: "unavailable" });
+    assert.deepEqual(fakes.events.slice(2), ["cart:page"]);
+  });
+
+  it("closes the browser when Stagehand cannot be attached", async () => {
+    fakes.prepareError = new Error("attach failed");
+    const driver = await loadStagehandDriver({}, {});
+    await assert.rejects(driver.createSession(sessionOptions), /attach failed/);
+    assert.deepEqual(fakes.events, ["browser:create", "stagehand:prepare", "browser:close"]);
+  });
+
+  it("resolves the model config only when the buyer starts", async () => {
+    const driver = await loadStagehandDriver({ model: "openai/gpt-4.1-mini" }, {});
+    const session = await driver.createSession(sessionOptions);
+    await assert.rejects(
+      driver.createBuyer(session, () => {}),
+      /No API key/,
+    );
+    assert.equal(
+      fakes.events.some((event) => event.startsWith("buyer:create")),
+      false,
+    );
+
+    const withKey = await loadStagehandDriver(
+      { model: "openai/gpt-4.1-mini" },
+      { OPENAI_API_KEY: "sk-fixture-not-a-real-key-000000" },
+    );
+    await withKey.createBuyer(session, () => {});
+    assert.equal(fakes.events.at(-1), "buyer:create:openai/gpt-4.1-mini");
+  });
+});
