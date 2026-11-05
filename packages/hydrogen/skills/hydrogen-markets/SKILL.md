@@ -4,7 +4,8 @@ description: >
   Guide for implementing Shopify Markets with Hydrogen. Use when adding
   market routing, country/language localization, Shopify Markets, subdomains,
   per-market domains, path-prefixed markets, defineShopifyI18n, locale switchers,
-  hreflang links, Next.js App Router market routing, or Storefront API @inContext wiring.
+  hreflang links, the <html lang> attribute, Next.js App Router market routing, or
+  Storefront API @inContext wiring.
 ---
 
 # Markets
@@ -216,6 +217,7 @@ Read the relevant reference before applying the generic `Request` examples in fr
 - **Use market-contextualized queries.** The Storefront client injects `country` and `language` variable values when the document declares `$country` and `$language`; it does not rewrite query text. Market-sensitive queries still need `@inContext(country: $country, language: $language)` or equivalent Storefront API context in the document.
 - **Do not calculate currency locally.** Render `amount` and `currencyCode` returned by Shopify and format them with the local `hydrogen-money` skill's `formatMoney()` guidance.
 - **Keep ShopifyScripts in the same locale.** Pass `requestContext.locale` (plus optional `currency`) as the `ShopifyScripts` `i18n` prop so Shopify globals match Storefront API context.
+- **Set `<html lang>` with `getHtmlLang(locale.language)`.** It converts Shopify language codes to BCP 47 (`PT_BR` → `pt-BR`, `ZH_TW` → `zh-Hant`). Do not lowercase the enum or append the market country: `<html lang>` names the content language, while `hreflang` names the targeted region.
 - **Keep route templates prefix-free.** Hydrogen applies `requestContext.locale.pathPrefix`; do not bake prefixes such as `/en-ca` into template values.
 - **Keep translations separate.** Shopify Markets context localizes Shopify data. Application UI strings still need the app's translation system.
 - **Treat geolocation as a hint, not truth.** Buyers travel, use VPNs, and intentionally choose markets. Redirect to a canonical locale URL when the app supports switching.
