@@ -115,12 +115,12 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
 
           <link
             rel="stylesheet"
-            href="https://esm.sh/graphiql/dist/style.css"
+            href="https://esm.sh/graphiql@5.4.0/dist/style.css"
           />
 
           <link
             rel="stylesheet"
-            href="https://esm.sh/@graphiql/plugin-explorer/dist/style.css"
+            href="https://esm.sh/@graphiql/plugin-explorer@5.1.5/dist/style.css"
           />
           <script type="importmap">
             {
@@ -132,10 +132,10 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
 
                 "graphql": "https://esm.sh/graphql@16.11.0",
 
-                "graphiql": "https://esm.sh/graphiql?standalone&external=react,react-dom,@graphiql/react,graphql",
-                "@graphiql/plugin-explorer": "https://esm.sh/@graphiql/plugin-explorer?standalone&external=react,@graphiql/react,graphql",
-                "@graphiql/react": "https://esm.sh/@graphiql/react?standalone&external=react,react-dom,graphql",
-                "@graphiql/toolkit": "https://esm.sh/@graphiql/toolkit?standalone&external=graphql"
+                "graphiql": "https://esm.sh/graphiql@5.4.0?standalone&external=react,react-dom,@graphiql/react,graphql",
+                "@graphiql/plugin-explorer": "https://esm.sh/@graphiql/plugin-explorer@5.1.5?standalone&external=react,@graphiql/react,graphql",
+                "@graphiql/react": "https://esm.sh/@graphiql/react@0.39.1?standalone&external=react,react-dom,graphql",
+                "@graphiql/toolkit": "https://esm.sh/@graphiql/toolkit@0.12.1?standalone&external=graphql"
               }
             }
           </script>
@@ -150,9 +150,9 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
             import {explorerPlugin} from '@graphiql/plugin-explorer';
             import {ToolbarButton} from '@graphiql/react';
 
-            import createJSONWorker from 'https://esm.sh/monaco-editor/esm/vs/language/json/json.worker.js?worker';
-            import createGraphQLWorker from 'https://esm.sh/monaco-graphql/esm/graphql.worker.js?worker';
-            import createEditorWorker from 'https://esm.sh/monaco-editor/esm/vs/editor/editor.worker.js?worker';
+            import createJSONWorker from 'https://esm.sh/monaco-editor@0.52.2/esm/vs/language/json/json.worker.js?worker';
+            import createGraphQLWorker from 'https://esm.sh/monaco-graphql@1.9.0/esm/graphql.worker.js?worker';
+            import createEditorWorker from 'https://esm.sh/monaco-editor@0.52.2/esm/vs/editor/editor.worker.js?worker';
             import {parse, print} from 'graphql';
 
             globalThis.MonacoEnvironment = {

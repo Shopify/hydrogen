@@ -94,15 +94,19 @@ export async function shellWriteAlias(
   content: string,
 ) {
   if (!(await supportsShell(shell))) return false;
-  if (await hasAliasDefinition(aliasName, shell)) return true;
+  if (await hasAliasDefinition(aliasName, shell)) return 'exists' as const;
 
-  return await shellWriteFile(shell, content, shell !== 'fish');
+  return (await shellWriteFile(shell, content, shell !== 'fish'))
+    ? ('created' as const)
+    : false;
 }
 
 export async function shellRunScript(script: string, shellBin: string) {
   try {
-    await execAsync(script, {shell: shellBin});
-    return true;
+    const {stdout} = await execAsync(script, {shell: shellBin});
+    return stdout.trim() === 'created'
+      ? ('created' as const)
+      : ('exists' as const);
   } catch (error) {
     outputDebug(
       `Could not run shell script for ${shellBin}:\n` + (error as Error).stack,
@@ -155,20 +159,17 @@ end
 
 async function createShortcutsForUnix() {
   const shells: UnixShell[] = [];
-
-  if (await shellWriteAlias('zsh', ALIAS_NAME, BASH_ZSH_COMMAND)) {
-    shells.push('zsh');
+  let changed = false;
+  for (const shell of ['zsh', 'bash', 'fish'] as const) {
+    const result = await shellWriteAlias(
+      shell,
+      ALIAS_NAME,
+      shell === 'fish' ? FISH_FUNCTION : BASH_ZSH_COMMAND,
+    );
+    if (result) shells.push(shell);
+    if (result === 'created') changed = true;
   }
-
-  if (await shellWriteAlias('bash', ALIAS_NAME, BASH_ZSH_COMMAND)) {
-    shells.push('bash');
-  }
-
-  if (await shellWriteAlias('fish', ALIAS_NAME, FISH_FUNCTION)) {
-    shells.push('fish');
-  }
-
-  return shells;
+  return {shells, changed};
 }
 
 // Create a PowerShell function and an alias to call it.
@@ -176,33 +177,32 @@ const PS_FUNCTION = `function Invoke-Local-H2 {$npmPrefix = npm prefix -s; Invok
 
 // Add the previous function and alias to the user's profile if they don't already exist.
 const PS_APPEND_PROFILE_COMMAND = `
+$ErrorActionPreference = 'Stop'
 if (!(Test-Path -Path $PROFILE)) {
-  New-Item -ItemType File -Path $PROFILE -Force
+  New-Item -ItemType File -Path $PROFILE -Force | Out-Null
 }
 
-$profileContent = Get-Content -Path $PROFILE
+$profileContent = Get-Content -Raw -Path $PROFILE
 if (!$profileContent -or $profileContent -NotLike '*Invoke-Local-H2*') {
   Add-Content -Path $PROFILE -Value '${PS_FUNCTION}'
+  Write-Output 'created'
+} else {
+  Write-Output 'exists'
 }
 `;
 
 async function createShortcutsForWindows() {
   const shells: WindowsShell[] = [];
-
-  // Legacy PowerShell
-  if (await shellRunScript(PS_APPEND_PROFILE_COMMAND, 'powershell.exe')) {
-    shells.push('PowerShell');
+  let changed = false;
+  for (const [shell, executable] of [
+    ['PowerShell', 'powershell.exe'],
+    ['PowerShell 7+', 'pwsh.exe'],
+  ] as const) {
+    const result = await shellRunScript(PS_APPEND_PROFILE_COMMAND, executable);
+    if (result) shells.push(shell);
+    if (result === 'created') changed = true;
   }
-
-  // PowerShell 7+ has a different executable name and installation path:
-  // https://learn.microsoft.com/en-us/powershell/scripting/whats-new/migrating-from-windows-powershell-51-to-powershell-7?view=powershell-7.3#separate-installation-path-and-executable-name
-  if (await shellRunScript(PS_APPEND_PROFILE_COMMAND, 'pwsh.exe')) {
-    shells.push('PowerShell 7+');
-  }
-
-  // TODO: support CMD?
-
-  return shells;
+  return {shells, changed};
 }
 
 export async function getCliCommand(

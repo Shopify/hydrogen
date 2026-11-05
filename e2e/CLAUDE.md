@@ -348,3 +348,15 @@ Without `CUSTOMER_ACCOUNT_URL`, the test starts a local dev server with `--custo
 The main E2E job excludes customer account tests via `--grep-invert "@customer-account"`. A dedicated `test_e2e_customer_account` job deploys the skeleton to Oxygen and runs only these tests against the deployment URL. A health check step polls the deployment (with the bypass header) until it returns HTTP 200 before Playwright runs.
 
 **Tag coupling**: The `@customer-account` tag in `customerAccount.spec.ts` is coupled to the `--grep-invert` in `.github/workflows/ci.yml`. If you rename the tag, update both places.
+
+## Consent and Analytics Tests
+
+The `new-cookies` project loads the Customer Privacy API and privacy banner from Shopify's CDN. To test unreleased versions, point these variables at locally built bundles; the storefront fixture serves them in place of the CDN scripts:
+
+```bash
+E2E_CONSENT_API_BUNDLE_PATH=/path/to/consent-tracking-api.js \
+E2E_PRIVACY_BANNER_BUNDLE_PATH=/path/to/storefront-banner.js \
+  pnpm e2e:new-cookies
+```
+
+`long-session.spec.ts` moves the browser clock past the 30-minute visit timeout, so it runs in parallel with the rest of the suite. Its real-time variant waits more than 30 minutes and only runs with `E2E_REAL_TIME_SESSION=1`.

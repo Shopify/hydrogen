@@ -11,8 +11,8 @@ packages:
   - templates/skeleton
 
 overrides:
-  '@oclif/core': '3.26.5'
-  '@shopify/cli-kit': '3.80.4'
+  '@oclif/core': '4.8.3'
+  '@shopify/cli-kit': '5.0.0'
   form-data: '>=4.0.4'
   '@types/node': 'catalog:'
   vite: '^8.0.1'
@@ -26,3 +26,6 @@ catalog:
   react: '^18.3.1'
   react-dom: '^18.3.1'
   '@shopify/prettier-config': '^1.1.2'
+
+patchedDependencies:
+  '@shopify/eslint-plugin-cli@4.0.0': patches/@shopify__eslint-plugin-cli@4.0.0.patch

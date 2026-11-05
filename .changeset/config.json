@@ -5,7 +5,7 @@
   "fixed": [],
   "linked": [],
   "access": "public",
-  "baseBranch": "main",
+  "baseBranch": "2026-04",
   "updateInternalDependencies": "patch",
   "ignore": ["cookbook"],
   "privatePackages": {"version": true, "tag": true}

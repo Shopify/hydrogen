@@ -1,5 +1,12 @@
+import {toStoreDomain} from '../../lib/json-contract.js';
+import {writeJsonResult} from '../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {
+  linkJsonOutputSchema,
+  toStorefront,
+} from '../../lib/storefronts/types.js';
 import {Flags} from '@oclif/core';
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../lib/hydrogen-command.js';
 import {basename} from '@shopify/cli-kit/node/path';
 
 import {
@@ -7,7 +14,6 @@ import {
   renderSuccess,
   renderTasks,
   renderTextPrompt,
-  renderWarning,
 } from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 
@@ -19,6 +25,7 @@ import {waitForJob} from '../../lib/graphql/admin/fetch-job.js';
 import {titleize} from '../../lib/string.js';
 import {getCliCommand} from '../../lib/shell.js';
 import {login} from '../../lib/auth.js';
+import {abandonOnAbort} from '../../lib/abort.js';
 import type {AdminSession} from '../../lib/auth.js';
 import {
   type HydrogenStorefront,
@@ -28,16 +35,20 @@ import {
 } from '../../lib/onboarding/common.js';
 
 export default class Link extends Command {
+  static get jsonOutputSchema(): typeof linkJsonOutputSchema {
+    return linkJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown = `Links your local development environment to a remote Hydrogen storefront. You can link an unlimited number of development environments to a single Hydrogen storefront.
 
   Linking to a Hydrogen storefront enables you to run [dev](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-dev) and automatically inject your linked Hydrogen storefront's environment variables directly into the server runtime.
 
   After you run the \`link\` command, you can access the [env list](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-list), [env pull](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-env-pull), and [unlink](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-unlink) commands.`;
 
-  static description =
-    "Link a local project to one of your shop's Hydrogen storefronts.";
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.force,
     ...commonFlags.path,
     ...commonFlags.shop,
@@ -60,7 +71,7 @@ export default class Link extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Link);
-    await runLink(flagsToCamelObject(flags));
+    await runLink(flagsToCamelObject(flags), flags.json);
   }
 }
 
@@ -73,14 +84,17 @@ export interface LinkStorefrontArguments {
   name?: string;
 }
 
-export async function runLink({
-  createStorefront: flagCreateStorefront,
-  force,
-  path: root = process.cwd(),
-  shop,
-  storefront: flagStorefront,
-  name,
-}: LinkStorefrontArguments) {
+export async function runLink(
+  {
+    createStorefront: flagCreateStorefront,
+    force,
+    path: root = process.cwd(),
+    shop,
+    storefront: flagStorefront,
+    name,
+  }: LinkStorefrontArguments,
+  json?: boolean,
+) {
   const [{session, config}, cliCommand] = await Promise.all([
     login(root, shop),
     getCliCommand(),
@@ -94,7 +108,14 @@ export async function runLink({
     cliCommand,
   });
 
-  if (!linkedStore) return;
+  const result = {
+    status: linkedStore ? ('success' as const) : ('cancelled' as const),
+    changed: Boolean(linkedStore),
+    storeDomain: toStoreDomain(session.storeFqdn),
+    storefront: linkedStore ? toStorefront(linkedStore) : null,
+  };
+  if (writeJsonResult(linkJsonOutputSchema, result, json) || !linkedStore)
+    return result;
 
   renderSuccess({
     body: [{userInput: linkedStore.title}, 'is now linked'],
@@ -106,6 +127,7 @@ export async function runLink({
       ],
     ],
   });
+  return result;
 }
 
 export async function linkStorefront(
@@ -119,6 +141,7 @@ export async function linkStorefront(
     storefrontName,
     cliCommand,
     storefronts,
+    signal,
   }: {
     force?: boolean;
     flagCreateStorefront?: boolean;
@@ -126,8 +149,10 @@ export async function linkStorefront(
     storefrontName?: string;
     cliCommand: string;
     storefronts?: ParsedHydrogenStorefront[];
+    signal?: AbortSignal;
   },
 ) {
+  signal?.throwIfAborted();
   storefrontName = storefrontName?.trim() || undefined;
 
   if (flagStorefront && (flagCreateStorefront || storefrontName)) {
@@ -143,8 +168,10 @@ export async function linkStorefront(
 
   if (config.storefront?.id && !force) {
     const overwriteLink = await renderConfirmationPrompt({
-      message: `Your project is currently linked to ${config.storefront.title}. Do you want to link to a different Hydrogen storefront on Shopify?`,
+      message: `Your project is currently linked to ${config.storefront!.title}. Do you want to link to a different Hydrogen storefront on Shopify?`,
+      ...(signal ? {abortSignal: signal} : {}),
     });
+    signal?.throwIfAborted();
 
     if (!overwriteLink) {
       return;
@@ -152,8 +179,9 @@ export async function linkStorefront(
   }
 
   if (!storefronts) {
-    storefronts = await getStorefronts(session);
+    storefronts = await abandonOnAbort(() => getStorefronts(session), signal);
   }
+  signal?.throwIfAborted();
 
   let selectedStorefront: HydrogenStorefront | undefined;
 
@@ -163,42 +191,31 @@ export async function linkStorefront(
     );
 
     if (!selectedStorefront) {
-      renderWarning({
-        headline: `Couldn't find ${flagStorefront}`,
-        body: [
-          "There's no storefront matching",
-          {userInput: flagStorefront},
-          'on your',
-          {userInput: config.shop},
-          'shop. To see all available Hydrogen storefronts, run',
-          {
-            command: `${cliCommand} list`,
-          },
-        ],
-      });
-
-      return;
+      throw new AbortError(
+        `Couldn't find ${flagStorefront}`,
+        `No storefront with that name exists on ${config.shop}. Run ${cliCommand} list to see available storefronts.`,
+      );
     }
   } else if (flagCreateStorefront || storefrontName) {
-    selectedStorefront = await createNewStorefront(
+    return createNewStorefront(
       root,
       session,
       storefronts,
       storefrontName,
+      signal,
     );
   } else {
-    selectedStorefront = await handleStorefrontSelection(storefronts);
+    selectedStorefront = await handleStorefrontSelection(storefronts, signal);
+    signal?.throwIfAborted();
 
     if (!selectedStorefront) {
-      selectedStorefront = await createNewStorefront(
-        root,
-        session,
-        storefronts,
-      );
+      return createNewStorefront(root, session, storefronts, undefined, signal);
     }
   }
 
+  signal?.throwIfAborted();
   await setStorefront(root, selectedStorefront);
+  signal?.throwIfAborted();
 
   return selectedStorefront;
 }
@@ -208,7 +225,9 @@ async function createNewStorefront(
   session: AdminSession,
   storefronts: ParsedHydrogenStorefront[],
   storefrontName?: string,
+  signal?: AbortSignal,
 ) {
+  signal?.throwIfAborted();
   const projectDirectory = basename(root);
   let defaultProjectName = titleize(projectDirectory);
   const nameAlreadyUsed = storefronts.some(
@@ -223,38 +242,49 @@ async function createNewStorefront(
     (await renderTextPrompt({
       message: 'New storefront name',
       defaultValue: defaultProjectName,
+      ...(signal ? {abortSignal: signal} : {}),
     }));
+  signal?.throwIfAborted();
 
   let storefront: HydrogenStorefront | undefined;
   let jobId: string | undefined;
 
-  await renderTasks([
-    {
-      title: 'Creating storefront',
-      task: async () => {
-        const result = await createStorefront(session, projectName);
-        storefront = result.storefront;
-        jobId = result.jobId;
+  try {
+    await renderTasks([
+      {
+        title: 'Creating storefront',
+        task: async () => {
+          signal?.throwIfAborted();
+          const result = await createStorefront(session, projectName);
+          storefront = result.storefront;
+          jobId = result.jobId;
+          signal?.throwIfAborted();
+        },
       },
-    },
-    {
-      title: 'Creating API tokens',
-      task: async () => {
-        try {
-          await waitForJob(session, jobId!);
-        } catch (_err) {
-          storefront = undefined;
-        }
+      {
+        title: 'Creating API tokens',
+        task: async () => {
+          await waitForJob(session, jobId!, signal);
+        },
+        skip: () => !jobId,
       },
-      skip: () => !jobId,
-    },
-  ]);
+    ]);
+    signal?.throwIfAborted();
+  } catch (error) {
+    // Cancellation can stop polling after creation has committed remotely.
+    if (signal?.aborted && error === signal.reason && storefront) {
+      await setStorefront(root, storefront);
+    }
+    throw error;
+  }
 
   if (!storefront) {
     throw new AbortError(
-      'Unknown error ocurred. Please try again or contact support if the error persists.',
+      'Unknown error occurred. Please try again or contact support if the error persists.',
     );
   }
 
+  await setStorefront(root, storefront);
+  signal?.throwIfAborted();
   return storefront;
 }

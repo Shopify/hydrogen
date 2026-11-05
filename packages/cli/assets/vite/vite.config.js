@@ -1,13 +1,13 @@
 import {defineConfig} from 'vite';
+import {realpathSync} from 'node:fs';
 import {hydrogen} from '@shopify/hydrogen/vite';
 import {oxygen} from '@shopify/mini-oxygen/vite';
 import {vitePlugin as remix} from '@remix-run/dev';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  resolve: {
-    tsconfigPaths: true,
-  },
   plugins: [
+    tsconfigPaths({root: realpathSync(new URL('.', import.meta.url))}),
     hydrogen(),
     oxygen(),
     remix({

@@ -1,4 +1,7 @@
-import Command from '@shopify/cli-kit/node/base-command';
+import {writeJsonResult} from '../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {customerAccountPushJsonOutputSchema} from '../../lib/customer-account/types.js';
+import Command from '../../lib/hydrogen-command.js';
 import {Flags} from '@oclif/core';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputDebug} from '@shopify/cli-kit/node/output';
@@ -13,10 +16,21 @@ import {
 } from '../../lib/shopify-config.js';
 import {replaceCustomerApplicationUrls} from '../../lib/graphql/admin/customer-application-update.js';
 
+type CustomerAccountConfig = NonNullable<
+  NonNullable<ShopifyConfig['storefront']>['customerAccountConfig']
+>;
+
 export default class CustomerAccountPush extends Command {
-  static description = 'Push project configuration to admin';
+  static get jsonOutputSchema(): typeof customerAccountPushJsonOutputSchema {
+    return customerAccountPushJsonOutputSchema;
+  }
+
+  static descriptionWithMarkdown = 'Push project configuration to admin';
+
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
     'storefront-id': Flags.string({
       description:
@@ -42,17 +56,34 @@ export default class CustomerAccountPush extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(CustomerAccountPush);
-    await runCustomerAccountPush({...flagsToCamelObject(flags)});
+    const outcome = await pushCustomerAccountConfig({
+      ...flagsToCamelObject(flags),
+      redirectUriRelativeUrl: flags['relative-redirect-uri'],
+      logoutUriRelativeUrl: flags['relative-logout-uri'],
+    });
+    writeJsonResult(
+      customerAccountPushJsonOutputSchema,
+      outcome.result,
+      flags.json,
+    );
   }
 }
 
-export async function runCustomerAccountPush({
+/** Compatibility entry point used by the dev server to remove temporary URLs. */
+export async function runCustomerAccountPush(
+  options: Parameters<typeof pushCustomerAccountConfig>[0],
+) {
+  return (await pushCustomerAccountConfig(options)).cleanup;
+}
+
+export async function pushCustomerAccountConfig({
   path: root = process.cwd(),
   storefrontId: storefrontIdFromFlag,
   devOrigin,
   javascriptOrigin: javascriptOriginFromArg,
   redirectUriRelativeUrl = '/account/authorize',
   logoutUriRelativeUrl,
+  signal,
 }: {
   path?: string;
   storefrontId?: string;
@@ -61,8 +92,13 @@ export async function runCustomerAccountPush({
   redirectUriRelativeUrl?: string;
   logoutUriRelativeUrl?: string;
   removeRegex?: string;
+  signal?: AbortSignal;
 }) {
-  const storefrontId = await getStorefrontId(root, storefrontIdFromFlag);
+  const storefrontId = await getStorefrontId(
+    root,
+    storefrontIdFromFlag,
+    signal,
+  );
 
   try {
     if (!storefrontId) {
@@ -78,27 +114,35 @@ export async function runCustomerAccountPush({
     const logoutUri = logoutUriRelativeUrl
       ? new URL(logoutUriRelativeUrl, devOrigin).toString()
       : devOrigin;
+    const result = customerAccountPushJsonOutputSchema.validate({
+      storefrontGid: storefrontId,
+      redirectUri,
+      javascriptOrigin,
+      logoutUri,
+    });
 
-    if (!redirectUri && !javascriptOrigin && !logoutUri) {
-      return;
-    }
-
-    const {session, config} = await login(root);
-    const customerAccountConfig = config?.storefront?.customerAccountConfig;
+    const {session, config} = await login(root, undefined, signal);
+    const customerAccountConfig =
+      config?.storefront?.id === storefrontId
+        ? config.storefront.customerAccountConfig
+        : undefined;
+    const urls = {redirectUri, javascriptOrigin, logoutUri};
+    signal?.throwIfAborted();
+    // Finish side effects before cancellation so their rollback has a known result.
     const {success, userErrors} = await replaceCustomerApplicationUrls(
       session,
       storefrontId,
       {
         redirectUri: {
-          add: redirectUri ? [redirectUri] : undefined,
+          add: [redirectUri],
           removeRegex: customerAccountConfig?.redirectUri,
         },
         javascriptOrigin: {
-          add: javascriptOrigin ? [javascriptOrigin] : undefined,
+          add: [javascriptOrigin],
           removeRegex: customerAccountConfig?.javascriptOrigin,
         },
         logoutUris: {
-          add: logoutUri ? [logoutUri] : undefined,
+          add: [logoutUri],
           removeRegex: customerAccountConfig?.logoutUri,
         },
       },
@@ -112,19 +156,38 @@ export async function runCustomerAccountPush({
       throw error;
     }
 
-    await setCustomerAccountConfig(root, {
-      redirectUri,
-      javascriptOrigin,
-      logoutUri,
-    });
+    if (signal?.aborted) {
+      await cleanupCustomerApplicationUrls(
+        session,
+        storefrontId,
+        urls,
+        customerAccountConfig,
+      );
+      signal.throwIfAborted();
+    }
+    try {
+      await setCustomerAccountConfig(root, urls);
+    } catch (error) {
+      await cleanupCustomerApplicationUrls(
+        session,
+        storefrontId,
+        urls,
+        customerAccountConfig,
+      );
+      throw error;
+    }
 
-    return () =>
-      cleanupCustomerApplicationUrls(session, storefrontId, {
-        redirectUri,
-        javascriptOrigin,
-        logoutUri,
-      });
+    return {
+      result,
+      cleanup: () =>
+        cleanupCustomerApplicationUrls(session, storefrontId, {
+          redirectUri,
+          javascriptOrigin,
+          logoutUri,
+        }),
+    };
   } catch (error: any) {
+    signal?.throwIfAborted();
     let confidentialAccessFound = false;
 
     const errors: string[] = error?.userErrors?.length
@@ -182,14 +245,13 @@ export async function runCustomerAccountPush({
 }
 
 /**
- * Removes existing Customer Application URLs from the storefront.
+ * Removes Customer Application URLs, optionally restoring the previous config.
  */
 async function cleanupCustomerApplicationUrls(
   session: AdminSession,
   storefrontId: string,
-  customerAccountConfig: NonNullable<
-    NonNullable<ShopifyConfig['storefront']>['customerAccountConfig']
-  > = {},
+  customerAccountConfig: CustomerAccountConfig = {},
+  previousConfig?: CustomerAccountConfig,
 ) {
   if (!Object.values(customerAccountConfig).some(Boolean)) return;
 
@@ -198,9 +260,22 @@ async function cleanupCustomerApplicationUrls(
   );
 
   await replaceCustomerApplicationUrls(session, storefrontId, {
-    redirectUri: {removeRegex: customerAccountConfig?.redirectUri},
-    javascriptOrigin: {removeRegex: customerAccountConfig?.javascriptOrigin},
-    logoutUris: {removeRegex: customerAccountConfig?.logoutUri},
+    redirectUri: {
+      removeRegex: customerAccountConfig.redirectUri,
+      ...(previousConfig?.redirectUri
+        ? {add: [previousConfig.redirectUri]}
+        : {}),
+    },
+    javascriptOrigin: {
+      removeRegex: customerAccountConfig.javascriptOrigin,
+      ...(previousConfig?.javascriptOrigin
+        ? {add: [previousConfig.javascriptOrigin]}
+        : {}),
+    },
+    logoutUris: {
+      removeRegex: customerAccountConfig.logoutUri,
+      ...(previousConfig?.logoutUri ? {add: [previousConfig.logoutUri]} : {}),
+    },
   }).catch((error) => {
     outputDebug(
       `Failed to clean up Customer Application url "${customerAccountConfig.redirectUri}":\n${error?.message}`,
@@ -211,17 +286,22 @@ async function cleanupCustomerApplicationUrls(
 export async function getStorefrontId(
   root: string,
   storefrontIdFromFlag?: string,
+  signal?: AbortSignal,
 ) {
+  signal?.throwIfAborted();
   if (storefrontIdFromFlag) return storefrontIdFromFlag;
 
-  const {session, config} = await login(root);
+  const {session, config} = await login(root, undefined, signal);
 
   if (config.storefront?.id) return config.storefront.id;
 
   const cliCommand = await getCliCommand();
+  signal?.throwIfAborted();
 
+  // Keep the session owned until storefront creation and config writes settle.
   const linkedStore = await linkStorefront(root, session, config, {
     cliCommand,
+    signal,
   });
 
   if (!linkedStore) {

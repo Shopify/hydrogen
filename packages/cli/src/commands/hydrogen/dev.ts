@@ -1,13 +1,16 @@
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {devSessionJsonOutputSchema} from '../../lib/dev-session/types.js';
 import type {ViteDevServer} from 'vite';
 import {Flags, Config} from '@oclif/core';
-import Command from '@shopify/cli-kit/node/base-command';
+import Command from '../../lib/hydrogen-command.js';
 import colors from '@shopify/cli-kit/node/colors';
-import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
+import {joinPath, normalizePath, resolvePath} from '@shopify/cli-kit/node/path';
 import {collectLog} from '@shopify/cli-kit/node/output';
 import {
   type AlertCustomSection,
   renderSuccess,
   renderInfo,
+  renderFatalError,
 } from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {removeFile} from '@shopify/cli-kit/node/fs';
@@ -39,7 +42,6 @@ import {
 } from '../../lib/dev-shared.js';
 import {getCliCommand} from '../../lib/shell.js';
 import {findPort} from '../../lib/find-port.js';
-import {logRequestLine} from '../../lib/mini-oxygen/common.js';
 import {
   findHydrogenPlugin,
   findOxygenPlugin,
@@ -50,17 +52,31 @@ import {
 import {importVite} from '../../lib/import-utils.js';
 import {createEntryPointErrorHandler} from '../../lib/deps-optimizer.js';
 import {getCodeFormatOptions} from '../../lib/format-code.js';
-import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
+import {
+  createRequestLogger,
+  runDevSession,
+  type DevSession,
+} from '../../lib/dev-session.js';
 import {hydrogenPackagesPath} from '../../lib/build.js';
 
 export default class Dev extends Command {
+  static jsonOutputSchema: typeof devSessionJsonOutputSchema =
+    devSessionJsonOutputSchema;
+
   static descriptionWithMarkdown = `Runs a Hydrogen storefront in a local runtime that emulates an Oxygen worker for development.
 
-  If your project is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) to a Hydrogen storefront, then its environment variables will be loaded with the runtime.`;
+  If your project is [linked](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-link) to a Hydrogen storefront, then its environment variables will be loaded with the runtime.
 
-  static description =
-    'Runs Hydrogen storefront in an Oxygen worker for development.';
+  Session status and JSONL logs are stored in your project's \`.shopify/dev/\` directory. The instance JSON includes the PID, session ID, \`logFile\`, and \`details.urls\`. Status becomes \`running\` when the server is ready.
+
+  Only one dev session can run for the same project, environment, environment branch, and environment file, even with a different port. Shutdown removes the instance and lock files and retains the log. The log resets on each run.
+
+  Use \`--json\` to stream the same JSONL records to stdout. Readiness URLs appear in the \`Ready: ...\` message and \`details.urls\`. Diagnostics use stderr. Fatal errors write the standard JSON error envelope to stdout and exit nonzero; they are excluded from the session log. There is no final success result. JSON output does not disable prompts; use \`--no-input\` to disable interactivity.`;
+
+  static description = this.descriptionForHelp();
+
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
     ...commonFlags.entry,
     ...overrideFlag(commonFlags.port, {
@@ -114,15 +130,15 @@ export default class Dev extends Command {
       throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
     }
 
-    const {close} = await runDev(devParams);
-
-    setupResourceCleanup(async () => {
-      await close();
-    });
+    await runDevSession(
+      {command: 'hydrogen dev', directory, ...flagsToCamelObject(flags)},
+      (session) => runDev({...devParams, session}),
+    );
   }
 }
 
 type DevOptions = {
+  session?: DevSession;
   entry?: string;
   port?: number;
   path?: string;
@@ -144,6 +160,7 @@ type DevOptions = {
 };
 
 export async function runDev({
+  session,
   entry: ssrEntry,
   port: appPort,
   path: appPath,
@@ -165,7 +182,7 @@ export async function runDev({
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   if (verbose) setH2OVerbose();
-  if (!isH2Verbose()) muteDevLogs();
+  if (!isH2Verbose()) muteDevLogs({debounce: !session?.json});
 
   // Port 0 (OS-assigned) breaks tunnel-based dev: cloudflared and Vite
   // receive the same 0, but Vite resolves it internally to a concrete port
@@ -176,11 +193,16 @@ export async function runDev({
 
   const root = appPath ?? process.cwd();
 
+  const startupController = new AbortController();
+  const startupSignal = session
+    ? AbortSignal.any([session.signal, startupController.signal])
+    : startupController.signal;
   const cliCommandPromise = getCliCommand(root);
   const backgroundPromise = getDevConfigInBackground(
     root,
     customerAccountPushFlag,
     envFile,
+    startupSignal,
   );
 
   const envPromise = backgroundPromise.then(({fetchRemote, localVariables}) =>
@@ -191,8 +213,20 @@ export async function runDev({
       fetchRemote,
       localVariables,
       envFile,
+      signal: startupSignal,
     }),
   );
+  const runtimeEnvPromise = envPromise.then(({allVariables}) => allVariables);
+  // Startup can be cancelled before Vite consumes these background results.
+  runtimeEnvPromise.catch(() => {});
+  session?.cleanup(async () => {
+    startupController.abort();
+    await Promise.allSettled([
+      backgroundPromise,
+      cliCommandPromise,
+      envPromise,
+    ]);
+  });
 
   if (debug && !inspectorPort) {
     // The Vite plugin can find and return a port for the inspector
@@ -245,21 +279,28 @@ export async function runDev({
           findOxygenPlugin(config)?.api?.registerPluginOptions({
             debug,
             entry: ssrEntry,
-            envPromise: envPromise.then(({allVariables}) => allVariables),
+            envPromise: runtimeEnvPromise,
             inspectorPort,
-            logRequestLine,
+            logRequestLine: createRequestLogger(session),
             entryPointErrorHandler: createEntryPointErrorHandler({
               disableDepsOptimizer,
+              onError: (error) => {
+                session?.log(error.stack ?? error.message, 'error');
+                if (!session?.json) renderFatalError(error);
+              },
               configFile: config.configFile,
               formatOptionsPromise,
               showSuccessBanner: () =>
-                showSuccessBanner({
-                  disableVirtualRoutes,
-                  debug,
-                  inspectorPort,
-                  finalHost,
-                  storefrontTitle,
-                }),
+                session?.json
+                  ? session.log('Runtime recovered')
+                  : showSuccessBanner({
+                      disableVirtualRoutes,
+                      debug,
+                      inspectorPort,
+                      finalHost,
+                      localHost: tunnel?.host ? publicUrl.origin : undefined,
+                      storefrontTitle,
+                    }),
             }),
           });
         },
@@ -283,9 +324,19 @@ export async function runDev({
     ],
   });
 
+  session?.cleanup(() => viteServer.close());
+  session?.signal.throwIfAborted();
+  viteServer.watcher.on('change', (file) => {
+    // Session writes must not trigger another log entry.
+    if (!normalizePath(file).includes('/.shopify/dev/')) {
+      session?.log(`File changed: ${file}`);
+    }
+  });
+  viteServer.ws.on('error', (error) => session?.log(error.message, 'error'));
+
   const h2Plugin = findHydrogenPlugin(viteServer.config);
   if (!h2Plugin) {
-    await viteServer.close();
+    if (!session) await viteServer.close();
     throw new AbortError(
       'Hydrogen plugin not found.',
       'Add `hydrogen()` plugin to your Vite config.',
@@ -302,10 +353,15 @@ export async function runDev({
           rootDirectory: root,
           configFilePath: codegenConfigPath,
           appDirectory: remixConfig?.appDirectory,
+          onOutput: session?.json ? session.log : undefined,
         });
       }
     : undefined;
 
+  session?.cleanup(() => {
+    codegenProcess?.removeAllListeners('close');
+    codegenProcess?.kill('SIGINT');
+  });
   setupCodegen?.();
 
   if (hydrogenPackagesPath) {
@@ -316,15 +372,33 @@ export async function runDev({
   const publicPort =
     appPort ?? viteServer.config.server.port ?? DEFAULT_APP_PORT;
 
-  const [tunnel, cliCommand] = await Promise.all([
-    backgroundPromise.then(({customerAccountPush, storefrontId}) =>
-      customerAccountPush
-        ? startTunnelAndPushConfig(root, cliConfig, publicPort, storefrontId)
-        : undefined,
-    ),
+  const startupTasks = [
+    backgroundPromise.then(async ({customerAccountPush, storefrontId}) => {
+      startupSignal.throwIfAborted();
+      if (!customerAccountPush) return;
+      const tunnel = await startTunnelAndPushConfig(
+        root,
+        cliConfig,
+        publicPort,
+        storefrontId,
+        startupSignal,
+      );
+      session?.cleanup(() => tunnel.cleanup?.());
+      return tunnel;
+    }),
     cliCommandPromise,
     viteServer.listen(publicPort),
-  ]);
+    envPromise,
+  ] as const;
+  const [tunnel, cliCommand] = await Promise.all(startupTasks).catch(
+    async (error: unknown) => {
+      startupController.abort();
+      await Promise.allSettled(startupTasks);
+      throw error;
+    },
+  );
+
+  session?.signal.throwIfAborted();
 
   const publicUrl = new URL(
     viteServer.resolvedUrls!.local[0] ?? viteServer.resolvedUrls!.network[0]!,
@@ -333,29 +407,42 @@ export async function runDev({
   const finalHost = tunnel?.host || publicUrl.toString() || publicUrl.origin;
 
   // Start the public facing server with the port passed by the user.
-  enhanceH2Logs({
-    rootDirectory: root,
-    host: finalHost,
-    cliCommand,
-  });
+  if (!session?.json)
+    enhanceH2Logs({
+      rootDirectory: root,
+      host: finalHost,
+      cliCommand,
+    });
 
   const {logInjectedVariables, allVariables} = await envPromise;
 
+  await session?.ready([
+    ...new Set([
+      finalHost,
+      ...(viteServer.resolvedUrls?.local ?? []),
+      ...(viteServer.resolvedUrls?.network ?? []),
+    ]),
+  ]);
+
   logInjectedVariables();
   console.log('');
-  viteServer.printUrls();
-  viteServer.bindCLIShortcuts({print: true});
+  if (!session?.json) {
+    viteServer.printUrls();
+    viteServer.bindCLIShortcuts({print: true});
+  }
   console.log('\n');
 
   const storefrontTitle = (await backgroundPromise).storefrontTitle;
 
-  showSuccessBanner({
-    disableVirtualRoutes,
-    debug,
-    inspectorPort,
-    finalHost,
-    storefrontTitle,
-  });
+  if (!session?.json)
+    showSuccessBanner({
+      disableVirtualRoutes,
+      debug,
+      inspectorPort,
+      finalHost,
+      localHost: tunnel?.host ? publicUrl.origin : undefined,
+      storefrontTitle,
+    });
 
   if (!disableVersionCheck) {
     displayDevUpgradeNotice({targetPath: root});
@@ -381,15 +468,17 @@ function showSuccessBanner({
   debug,
   inspectorPort,
   finalHost,
+  localHost,
   storefrontTitle,
 }: Pick<DevOptions, 'disableVirtualRoutes' | 'debug' | 'inspectorPort'> & {
   finalHost: string;
+  localHost?: string;
   storefrontTitle?: string;
 }) {
   const customSections: AlertCustomSection[] = [];
 
   if (!disableVirtualRoutes) {
-    customSections.push({body: getUtilityBannerlines(finalHost)});
+    customSections.push({body: getUtilityBannerlines(finalHost, localHost)});
   }
 
   if (debug && inspectorPort) {

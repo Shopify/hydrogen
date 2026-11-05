@@ -3,7 +3,10 @@ on:
   pull_request:
   push:
     branches:
-      - main
+      - 2026-04
+  merge_group:
+    branches:
+      - 2026-04
 
 jobs:
   check-node-version:
@@ -218,8 +221,29 @@ jobs:
       - name: 📦 Build packages and templates
         run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run build:all
 
-      - name: 🎭 Install Playwright Chromium
-        run: pnpm exec playwright install chromium --with-deps
+      # Chrome before 156.0.8078.73 has known security vulnerabilities. Runner images
+      # can lag behind Chrome releases, so upgrade Chrome when the image's copy is older.
+      # Chrome is deliberately unpinned so CI keeps getting security fixes: the upgrade
+      # installs the latest stable from dl.google.com, the runner image's own source.
+      - name: 🎭 Ensure Chrome is patched
+        env:
+          MIN_CHROME_VERSION: 156.0.8078.73
+        run: |
+          chrome_version() { google-chrome --version | grep -oE '[0-9]+(\.[0-9]+){3}'; }
+          is_patched() { [ "$(printf '%s\n' "$MIN_CHROME_VERSION" "$1" | sort -V | head -n1)" = "$MIN_CHROME_VERSION" ]; }
+
+          version="$(chrome_version || true)"
+          if ! is_patched "$version"; then
+            echo "Google Chrome $version is older than $MIN_CHROME_VERSION, upgrading"
+            pnpm exec playwright install --force chrome
+            version="$(chrome_version)"
+          fi
+
+          if ! is_patched "$version"; then
+            echo "::error::Google Chrome $version is older than $MIN_CHROME_VERSION"
+            exit 1
+          fi
+          echo "Google Chrome $version"
 
       - name: 🔐 Install ejson
         run: |
@@ -251,7 +275,10 @@ jobs:
     # Skip on Changesets release PRs. They bump workspace packages to versions
     # that are not published to npm until the PR merges, so the scaffolded app's
     # install pins an unpublished exact version and always fails here.
-    if: ${{ !startsWith(github.head_ref, 'changeset-release/') }}
+    # Merge queue runs have no head_ref, so they match the release PR by its
+    # squash commit, which starts with the `[ci] ` prefix release.yml gives
+    # every release PR's commit and title.
+    if: ${{ !startsWith(github.head_ref, 'changeset-release/') && !startsWith(github.event.merge_group.head_commit.message, '[ci] ') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     concurrency:
@@ -436,8 +463,29 @@ jobs:
           echo "::error::Deployment did not become healthy within $((MAX_ATTEMPTS * POLL_INTERVAL_IN_SECONDS))s (last status: $STATUS)"
           exit 1
 
-      - name: 🎭 Install Playwright Chromium
-        run: pnpm exec playwright install chromium --with-deps
+      # Chrome before 156.0.8078.73 has known security vulnerabilities. Runner images
+      # can lag behind Chrome releases, so upgrade Chrome when the image's copy is older.
+      # Chrome is deliberately unpinned so CI keeps getting security fixes: the upgrade
+      # installs the latest stable from dl.google.com, the runner image's own source.
+      - name: 🎭 Ensure Chrome is patched
+        env:
+          MIN_CHROME_VERSION: 156.0.8078.73
+        run: |
+          chrome_version() { google-chrome --version | grep -oE '[0-9]+(\.[0-9]+){3}'; }
+          is_patched() { [ "$(printf '%s\n' "$MIN_CHROME_VERSION" "$1" | sort -V | head -n1)" = "$MIN_CHROME_VERSION" ]; }
+
+          version="$(chrome_version || true)"
+          if ! is_patched "$version"; then
+            echo "Google Chrome $version is older than $MIN_CHROME_VERSION, upgrading"
+            pnpm exec playwright install --force chrome
+            version="$(chrome_version)"
+          fi
+
+          if ! is_patched "$version"; then
+            echo "::error::Google Chrome $version is older than $MIN_CHROME_VERSION"
+            exit 1
+          fi
+          echo "Google Chrome $version"
 
       - name: 🔐 Install ejson
         run: |

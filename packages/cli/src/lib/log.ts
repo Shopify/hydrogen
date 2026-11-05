@@ -1,3 +1,4 @@
+import {isJsonOutput} from './json-output.js';
 import {
   renderInfo,
   renderWarning,
@@ -75,6 +76,8 @@ function injectLogReplacer(
 ) {
   if (!methodsReplaced.has(method)) {
     methodsReplaced.add(method);
+    // Preserve output routing installed by the command (including JSON mode).
+    const original = console[method];
     console[method] = (...args: unknown[]) => {
       if (debouncer !== false && debounceMessage(args, debouncer?.(args))) {
         return;
@@ -85,14 +88,14 @@ function injectLogReplacer(
         return acc;
       }, [] as Replacer[]);
 
-      if (replacers.length === 0) return originalConsole[method](...args);
+      if (replacers.length === 0) return original(...args);
 
       const result = replacers.reduce(
         (resultArgs, replacer) => resultArgs && replacer(resultArgs),
         args as void | string[],
       );
 
-      if (result) return originalConsole[method](...result);
+      if (result) return original(...result);
     };
   }
 }
@@ -100,10 +103,13 @@ function injectLogReplacer(
 /**
  * Mute logs from Miniflare / Workerd
  */
-export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
-  injectLogReplacer('log');
-  injectLogReplacer('error');
-  injectLogReplacer('warn', warningDebouncer);
+export function muteDevLogs({
+  workerReload,
+  debounce = true,
+}: {workerReload?: boolean; debounce?: boolean} = {}) {
+  injectLogReplacer('log', debounce ? undefined : false);
+  injectLogReplacer('error', debounce ? undefined : false);
+  injectLogReplacer('warn', debounce ? warningDebouncer : false);
   injectLogReplacer('debug', false);
 
   let isFirstWorkerReload = true;
@@ -228,6 +234,7 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
           );
 
           if (
+            !isJsonOutput() &&
             !isLastLineBlank &&
             ((isRequestLog && !isLastLineRequestLog) ||
               (!isRequestLog && isLastLineRequestLog))
@@ -267,6 +274,7 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
 }
 
 export function enhanceAuthLogs(hideInitialLog = false) {
+  if (isJsonOutput()) return;
   injectLogReplacer('log', warningDebouncer);
 
   addMessageReplacers(

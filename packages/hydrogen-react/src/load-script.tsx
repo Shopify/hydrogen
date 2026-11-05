@@ -26,6 +26,13 @@ export function loadScript(
     } else {
       script.type = 'text/javascript';
     }
+    const attributes = options?.attributes;
+    if (attributes) {
+      Object.keys(attributes).forEach((key) => {
+        script.setAttribute(key, attributes[key]);
+      });
+    }
+
     script.src = src;
     script.onload = (): void => {
       resolve(true);
@@ -37,13 +44,6 @@ export function loadScript(
       document.head.appendChild(script);
     } else {
       document.body.appendChild(script);
-    }
-
-    const attributes = options?.attributes;
-    if (attributes) {
-      Object.keys(attributes).forEach((key) => {
-        script.setAttribute(key, attributes[key]);
-      });
     }
   });
 

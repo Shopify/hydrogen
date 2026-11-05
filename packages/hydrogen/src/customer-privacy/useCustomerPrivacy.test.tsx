@@ -1,257 +1,435 @@
+import {StrictMode} from 'react';
 import {vi, describe, it, beforeEach, afterEach, expect} from 'vitest';
-import {renderHook, act} from '@testing-library/react';
+import {renderHook, act, cleanup, waitFor} from '@testing-library/react';
 import {
   useCustomerPrivacy,
   getCustomerPrivacy,
   CONSENT_API,
   CONSENT_API_WITH_BANNER,
+  type CustomerPrivacyApiProps,
 } from './ShopifyCustomerPrivacy.js';
 
-const revalidateMock = vi.fn<() => Promise<void>>(() => Promise.resolve());
+const {loadScriptMock, revalidateMock} = vi.hoisted(() => ({
+  loadScriptMock: vi.fn(),
+  revalidateMock: vi.fn(() => Promise.resolve()),
+}));
 
-vi.mock('react-router', async (importOriginal) => {
-  const actual = (await importOriginal()) as typeof import('react-router');
+vi.mock('react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-router')>()),
+  useRevalidator: () => ({revalidate: revalidateMock, state: 'idle'}),
+}));
 
+vi.mock('@shopify/hydrogen-react/load-script', async () => {
+  const {useEffect} = await import('react');
   return {
-    ...actual,
-    useRevalidator: () => ({
-      revalidate: revalidateMock,
-      state: 'idle',
-    }),
+    loadScript: loadScriptMock,
+    useLoadScript: (url: string, options: unknown) => {
+      useEffect(() => {
+        void loadScriptMock(url, options);
+      }, [url]);
+      return 'done';
+    },
   };
 });
 
-let html: HTMLHtmlElement;
-let head: HTMLHeadElement;
-let body: HTMLBodyElement;
-
-const CUSTOMER_PRIVACY_PROPS = {
+const PROPS: CustomerPrivacyApiProps = {
   checkoutDomain: 'checkout.shopify.com',
   storefrontAccessToken: '3b580e70970c4528da70c98e097c2fa0',
-  withPrivacyBanner: true,
 };
 
-describe(`useCustomerPrivacy`, () => {
+const legacyReadyEvent = vi.fn();
+
+type TestCustomerPrivacy = {
+  config?: Record<string, any>;
+  consentStatus?: 'loading' | 'loaded';
+  setTrackingConsent?: ReturnType<typeof vi.fn>;
+  [key: string]: any;
+};
+
+function consentGlobal(): TestCustomerPrivacy {
+  return window.Shopify.customerPrivacy as unknown as TestCustomerPrivacy;
+}
+
+function installConsentApi(consentStatus: 'loading' | 'loaded' = 'loading') {
+  const api = {
+    ...consentGlobal(),
+    consentStatus,
+    setTrackingConsent: vi.fn(),
+    shouldShowBanner: vi.fn(() => false),
+    currentVisitorConsent: vi.fn(() => ({})),
+    analyticsProcessingAllowed: vi.fn(() => true),
+  };
+  // Keep references to the original mocks; Hydrogen wraps methods in place.
+  window.Shopify.customerPrivacy = {...api} as any;
+  return api;
+}
+
+function installBanner() {
+  const api = {loadBanner: vi.fn(), showPreferences: vi.fn()};
+  window.privacyBanner = {...api};
+  return api;
+}
+
+async function consentLoaded() {
+  await act(async () => {
+    consentGlobal().consentStatus = 'loaded';
+    document.dispatchEvent(new CustomEvent('consentTrackingApiLoaded'));
+  });
+}
+
+describe('useCustomerPrivacy async initialization', () => {
   beforeEach(() => {
     revalidateMock.mockClear();
-
-    html = document.createElement('html');
-    head = document.createElement('head');
-    body = document.createElement('body');
-
-    vi.spyOn(document.head, 'appendChild').mockImplementation((node: Node) => {
-      head.appendChild(node);
-      return node;
+    legacyReadyEvent.mockClear();
+    document.addEventListener(
+      'shopifyCustomerPrivacyApiLoaded',
+      legacyReadyEvent,
+    );
+    loadScriptMock.mockReset();
+    // Model the shared loader's deduplication, while letting each test observe
+    // the global configuration at the moment the CDN script is inserted.
+    loadScriptMock.mockImplementation((src, options) => {
+      if (!Array.from(document.scripts).some((script) => script.src === src)) {
+        const script = document.createElement('script');
+        script.src = src;
+        // Keep the tag inert; each test explicitly simulates the CDN boot.
+        script.type = 'application/json';
+        for (const [name, value] of Object.entries(options?.attributes ?? {})) {
+          script.setAttribute(name, String(value));
+        }
+        document.body.appendChild(script);
+      }
+      return Promise.resolve(true);
     });
-
-    vi.spyOn(document.body, 'appendChild').mockImplementation((node: Node) => {
-      body.appendChild(node);
-      return node;
-    });
-
-    html.appendChild(head);
-    html.appendChild(body);
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
-    head.innerHTML = '';
-    body.innerHTML = '';
-    document.querySelectorAll('script').forEach((node) => node.remove());
-    delete (global.window as any).Shopify;
-  });
-
-  it('By default, loads just the customerPrivacy script', () => {
-    renderHook(() =>
-      useCustomerPrivacy({
-        checkoutDomain: 'checkout.shopify.com',
-        storefrontAccessToken: '3b580e70970c4528da70c98e097c2fa0',
-      }),
+    cleanup();
+    document.removeEventListener(
+      'shopifyCustomerPrivacyApiLoaded',
+      legacyReadyEvent,
     );
-    const script = html.querySelector('body script');
-    expect(script).toContainHTML(`src="${CONSENT_API}"`);
-    expect(script).toContainHTML('type="text/javascript"');
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    document.querySelectorAll('script').forEach((node) => node.remove());
+    delete (window as any).Shopify;
+    delete (window as any).privacyBanner;
   });
 
-  it('loads the customerPrivacy with privacyBanner script', () => {
-    renderHook(() => useCustomerPrivacy(CUSTOMER_PRIVACY_PROPS));
-    const script = html.querySelector('body script');
-    expect(script).toContainHTML(`src="${CONSENT_API_WITH_BANNER}"`);
-    expect(script).toContainHTML('type="text/javascript"');
-  });
-
-  it('returns just customerPrivacy initiallly as null', () => {
-    let cp;
-    renderHook(() => {
-      cp = useCustomerPrivacy({
-        ...CUSTOMER_PRIVACY_PROPS,
-        withPrivacyBanner: false,
+  it.each([
+    [false, CONSENT_API],
+    [true, CONSENT_API_WITH_BANNER],
+  ])(
+    'configures async consent before inserting the script (banner: %s)',
+    async (withPrivacyBanner, src) => {
+      const originalAppend = document.body.appendChild.bind(document.body);
+      const appendScript = vi.spyOn(document.body, 'appendChild');
+      let configAtInsertion: unknown;
+      appendScript.mockImplementation((node) => {
+        if (node instanceof HTMLScriptElement) {
+          configAtInsertion = {...consentGlobal().config};
+        }
+        return originalAppend(node);
       });
-    });
-    expect(cp).toEqual({customerPrivacy: null});
+
+      renderHook(() =>
+        useCustomerPrivacy({
+          ...PROPS,
+          withPrivacyBanner,
+          sameDomainForStorefrontApi: true,
+        }),
+      );
+      await waitFor(() => expect(document.scripts).toHaveLength(1));
+
+      expect(document.scripts[0].src).toBe(src);
+      expect(configAtInsertion).toMatchObject({
+        isHeadless: true,
+        asyncConsent: true,
+        asyncVisitorState: true,
+        consentDomain: window.location.host,
+        storefrontAccessToken: PROPS.storefrontAccessToken,
+        debug: {hydrogen: {generation: 2, serverTiming: false}},
+      });
+    },
+  );
+
+  // The jsdom document has no Server-Timing proxy marker, so these also cover
+  // documents where the marker is missing or stripped.
+  it.each([undefined, true, false])(
+    'sends consent to the same origin (sameDomainForStorefrontApi: %s)',
+    async (sameDomainForStorefrontApi) => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const {result} = renderHook(() =>
+        useCustomerPrivacy({...PROPS, sameDomainForStorefrontApi}),
+      );
+      await act(async () => {});
+      expect(consentGlobal().config?.consentDomain).toBe(window.location.host);
+
+      let api: ReturnType<typeof installConsentApi>;
+      await act(async () => {
+        api = installConsentApi('loaded');
+        document.dispatchEvent(new CustomEvent('consentTrackingApiLoaded'));
+      });
+      const callback = vi.fn();
+      result.current.customerPrivacy!.setTrackingConsent(
+        {analytics: true},
+        callback,
+      );
+      expect(api!.setTrackingConsent).toHaveBeenCalledWith(
+        expect.objectContaining({checkoutRootDomain: window.location.host}),
+        callback,
+      );
+    },
+  );
+
+  it.each([undefined, true])(
+    'does not warn when sameDomainForStorefrontApi is %s',
+    async (sameDomainForStorefrontApi) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      renderHook(() =>
+        useCustomerPrivacy({...PROPS, sameDomainForStorefrontApi}),
+      );
+      await act(async () => {});
+      expect(warn).not.toHaveBeenCalled();
+    },
+  );
+
+  it('warns that sameDomainForStorefrontApi: false is ignored', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    renderHook(() =>
+      useCustomerPrivacy({...PROPS, sameDomainForStorefrontApi: false}),
+    );
+    await act(async () => {});
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('`sameDomainForStorefrontApi: false` is ignored'),
+    );
   });
 
-  it('returns both customerPrivacy and privacyBanner initially as null', async () => {
-    let cp;
-    renderHook(() => {
-      cp = useCustomerPrivacy(CUSTOMER_PRIVACY_PROPS);
-    });
+  it('preserves unrelated Shopify and consent configuration and supplies banner localization', async () => {
+    (window as any).Shopify = {
+      currency: {active: 'EUR'},
+      locale: 'fr',
+      country: 'FR',
+      customerPrivacy: {
+        config: {merchantOption: 'kept', debug: {customDebug: true}},
+      },
+    };
 
-    // Wait until idle
+    renderHook(() =>
+      useCustomerPrivacy({...PROPS, locale: 'DE', country: 'AT'}),
+    );
     await act(async () => {});
 
-    expect(cp).toEqual({customerPrivacy: null, privacyBanner: null});
-  });
-
-  it('returns only customerPrivacy', async () => {
-    let cp;
-
-    const initialProps = {
-      ...CUSTOMER_PRIVACY_PROPS,
-      withPrivacyBanner: false,
-    };
-
-    const {rerender} = renderHook(
-      (props) => {
-        cp = useCustomerPrivacy(props);
+    expect((window as any).Shopify).toMatchObject({
+      currency: {active: 'EUR'},
+      locale: 'de',
+      country: 'AT',
+    });
+    expect(consentGlobal().config).toMatchObject({
+      merchantOption: 'kept',
+      asyncConsent: true,
+      debug: {
+        customDebug: true,
+        hydrogen: {generation: 2, serverTiming: false},
       },
-      {initialProps},
-    );
-
-    rerender(initialProps);
-
-    // mock the original customerPrivacy script injected APIs. It first defines the global object
-    // @ts-ignore
-    global.window.Shopify = {};
-    global.window.Shopify.customerPrivacy = {
-      setTrackingConsent: () => {},
-    };
-
-    // mock the original privacyBanner script injected APIs
-    rerender(initialProps);
-
-    expect(cp).toEqual({
-      customerPrivacy: expect.objectContaining({
-        setTrackingConsent: expect.any(Function),
-      }),
     });
   });
 
-  it('returns both customerPrivacy and privaceBanner', async () => {
-    let cp;
-
-    const {rerender} = renderHook(
-      (props) => {
-        cp = useCustomerPrivacy(props);
-      },
-      {initialProps: CUSTOMER_PRIVACY_PROPS},
-    );
-
-    rerender(CUSTOMER_PRIVACY_PROPS);
-
-    // mock the original customerPrivacy script injected APIs. It first defines the global object
-    // @ts-ignore
-    global.window.Shopify = {};
-    global.window.Shopify.customerPrivacy = {
-      setTrackingConsent: () => {},
-    };
-
-    // mock the original privacyBanner script injected APIs
-    rerender(CUSTOMER_PRIVACY_PROPS);
-
-    // mock the original privacyBanner script injected APIs
-    global.window.privacyBanner = {
-      loadBanner: () => {},
-      showPreferences: () => {},
-    };
-
-    // mock the original privacyBanner script injected APIs
-    rerender(CUSTOMER_PRIVACY_PROPS);
-
-    expect(cp).toEqual({
-      customerPrivacy: expect.objectContaining({
-        setTrackingConsent: expect.any(Function),
-      }),
-      privacyBanner: expect.objectContaining({
-        loadBanner: expect.any(Function),
-        showPreferences: expect.any(Function),
-      }),
-    });
+  it('preserves existing localization when none is supplied', async () => {
+    (window as any).Shopify = {locale: 'fr', country: 'FR'};
+    renderHook(() => useCustomerPrivacy(PROPS));
+    await act(async () => {});
+    expect((window as any).Shopify.locale).toBe('fr');
+    expect((window as any).Shopify.country).toBe('FR');
   });
 
-  it('installs backendConsentEnabled stub when CDN resets window.Shopify', () => {
-    renderHook(() =>
-      useCustomerPrivacy({
-        checkoutDomain: 'checkout.shopify.com',
-        storefrontAccessToken: '3b580e70970c4528da70c98e097c2fa0',
-      }),
-    );
-
-    // Simulate the CDN's conditional assignment: window.Shopify = window.Shopify ? window.Shopify : {}
-    // With no pre-populated window.Shopify, CDN assigns an empty object through the outer setter.
-    global.window.Shopify = {};
-
-    // The outer setter should have installed the stub with backendConsentEnabled = true so
-    // the CDN reads the flag before it assigns the full API.
-    expect(window.Shopify).toBeDefined();
-    expect(window.Shopify.customerPrivacy).toBeDefined();
-    expect((window.Shopify.customerPrivacy as any).backendConsentEnabled).toBe(
-      true,
-    );
-  });
-
-  it('getCustomerPrivacy returns null when only the backendConsent stub is present', () => {
-    renderHook(() =>
-      useCustomerPrivacy({
-        checkoutDomain: 'checkout.shopify.com',
-        storefrontAccessToken: '3b580e70970c4528da70c98e097c2fa0',
-      }),
-    );
-
-    // CDN resets Shopify — stub is installed, full API not yet assigned
-    global.window.Shopify = {};
-
-    // Stub is present but is not the usable CustomerPrivacy API
-    expect(window.Shopify.customerPrivacy).toBeDefined();
-    expect((window.Shopify.customerPrivacy as any).backendConsentEnabled).toBe(
-      true,
-    );
-    // The stub must NOT be exposed to callers as a usable CustomerPrivacy —
-    // it lacks all API methods and would crash callers that call e.g. setTrackingConsent()
-    expect(getCustomerPrivacy()).toBeNull();
-  });
-
-  it('triggers the onReady callback when both APIs are ready', async () => {
+  it('waits for consent even after the script and API methods are available', async () => {
     const onReady = vi.fn();
+    const {result} = renderHook(() => useCustomerPrivacy({...PROPS, onReady}));
+    expect(result.current.customerPrivacy).toBeNull();
 
-    let cp;
-    const {rerender} = renderHook(
-      (props) => {
-        cp = useCustomerPrivacy(props);
-      },
-      {initialProps: {...CUSTOMER_PRIVACY_PROPS, onReady}},
+    await act(async () => {
+      installConsentApi();
+      document.dispatchEvent(new CustomEvent('consentTrackingApiLoaded'));
+    });
+    expect(onReady).not.toHaveBeenCalled();
+    expect(legacyReadyEvent).not.toHaveBeenCalled();
+
+    await consentLoaded();
+    expect(onReady).toHaveBeenCalledTimes(1);
+    expect(legacyReadyEvent).toHaveBeenCalledTimes(1);
+    expect(result.current.customerPrivacy?.setTrackingConsent).toBeTypeOf(
+      'function',
     );
+  });
 
-    rerender({...CUSTOMER_PRIVACY_PROPS, onReady});
+  it('waits for the PB API as well as consent, without calling loadBanner again', async () => {
+    let resolveScript!: (value: boolean) => void;
+    loadScriptMock.mockReturnValue(
+      new Promise<boolean>((resolve) => {
+        resolveScript = resolve;
+      }),
+    );
+    const onReady = vi.fn();
+    const {result} = renderHook(() =>
+      useCustomerPrivacy({...PROPS, withPrivacyBanner: true, onReady}),
+    );
+    expect(result.current.privacyBanner).toBeNull();
 
-    // mock the original customerPrivacy script injected APIs. It first defines the global object
-    // @ts-ignore
-    global.window.Shopify = {};
-    global.window.Shopify.customerPrivacy = {
-      setTrackingConsent: () => {},
-    };
+    await act(async () => {
+      installConsentApi('loaded');
+      document.dispatchEvent(new CustomEvent('consentTrackingApiLoaded'));
+    });
+    expect(onReady).not.toHaveBeenCalled();
 
-    // mock the original privacyBanner script injected APIs
-    rerender({...CUSTOMER_PRIVACY_PROPS, onReady});
+    let banner: ReturnType<typeof installBanner>;
+    await act(async () => {
+      banner = installBanner();
+      resolveScript(true);
+    });
+    expect(onReady).toHaveBeenCalledTimes(1);
+    expect(banner!.loadBanner).not.toHaveBeenCalled();
+    expect(result.current.privacyBanner?.showPreferences).toBeTypeOf(
+      'function',
+    );
+  });
 
-    // mock the original privacyBanner script injected APIs
-    global.window.privacyBanner = {
-      loadBanner: () => {},
-      showPreferences: () => {},
-    };
+  it('recognizes an already initialized API when mounting after the loaded event', async () => {
+    (window as any).Shopify = {customerPrivacy: {config: {asyncConsent: true}}};
+    const api = installConsentApi('loaded');
+    const onReady = vi.fn();
+    const {result} = renderHook(() => useCustomerPrivacy({...PROPS, onReady}));
+    await act(async () => {});
 
-    rerender({...CUSTOMER_PRIVACY_PROPS, onReady});
+    expect(onReady).toHaveBeenCalledTimes(1);
+    expect(result.current.customerPrivacy).not.toBeNull();
+    expect(api.setTrackingConsent).not.toHaveBeenCalled();
+  });
 
-    expect(onReady).toHaveBeenCalled();
+  it('can become ready after a failed initialization is recovered by a consent update', async () => {
+    const onReady = vi.fn();
+    renderHook(() => useCustomerPrivacy({...PROPS, onReady}));
+    await act(async () => {
+      installConsentApi();
+      delete consentGlobal().consentStatus;
+    });
+    expect(onReady).not.toHaveBeenCalled();
+
+    await act(async () => {
+      consentGlobal().consentStatus = 'loaded';
+      document.dispatchEvent(
+        new CustomEvent('visitorConsentCollected', {
+          detail: {analyticsAllowed: false},
+        }),
+      );
+    });
+    expect(onReady).toHaveBeenCalledTimes(1);
+  });
+
+  it('stays stable when loadScript rejects', async () => {
+    const scriptError = new Error('net::ERR_BLOCKED_BY_CLIENT');
+    loadScriptMock.mockRejectedValue(scriptError);
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const onReady = vi.fn();
+    const {result} = renderHook(() => useCustomerPrivacy({...PROPS, onReady}));
+    await act(async () => {});
+
+    expect(result.current.customerPrivacy).toBeNull();
+    expect(onReady).not.toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[h2:error:useCustomerPrivacy] Unable to load the Customer Privacy API.',
+    );
+  });
+
+  it('does not publish readiness again on repeated consent events or rerenders', async () => {
+    const onReady = vi.fn();
+    const {rerender} = renderHook(() =>
+      useCustomerPrivacy({...PROPS, onReady}),
+    );
+    await act(async () => {
+      installConsentApi();
+    });
+    await consentLoaded();
+    await consentLoaded();
+    await act(async () => {
+      document.dispatchEvent(
+        new CustomEvent('visitorConsentCollected', {
+          detail: {analyticsAllowed: true},
+        }),
+      );
+    });
+    rerender();
+    expect(onReady).toHaveBeenCalledTimes(1);
+  });
+
+  it('survives StrictMode effect replay and remount with the initialized globals', async () => {
+    const onReady = vi.fn();
+    const first = renderHook(() => useCustomerPrivacy({...PROPS, onReady}), {
+      wrapper: StrictMode,
+    });
+    await act(async () => {
+      installConsentApi();
+    });
+    await consentLoaded();
+    expect(onReady).toHaveBeenCalledTimes(1);
+    first.unmount();
+
+    const onRemountReady = vi.fn();
+    renderHook(() => useCustomerPrivacy({...PROPS, onReady: onRemountReady}), {
+      wrapper: StrictMode,
+    });
+    await act(async () => {});
+    expect(onRemountReady).toHaveBeenCalledTimes(1);
+    expect(document.scripts).toHaveLength(1);
+    expect(legacyReadyEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves configured setTrackingConsent and showPreferences calls', async () => {
+    const {result} = renderHook(() =>
+      useCustomerPrivacy({
+        ...PROPS,
+        withPrivacyBanner: true,
+        locale: 'DE',
+        country: 'AT',
+      }),
+    );
+    let api: ReturnType<typeof installConsentApi>;
+    let banner: ReturnType<typeof installBanner>;
+    await act(async () => {
+      api = installConsentApi('loaded');
+      banner = installBanner();
+      document.dispatchEvent(new CustomEvent('consentTrackingApiLoaded'));
+    });
+
+    const callback = vi.fn();
+    result.current.customerPrivacy!.setTrackingConsent(
+      {
+        analytics: true,
+        marketing: false,
+        preferences: true,
+        sale_of_data: false,
+      },
+      callback,
+    );
+    expect(api!.setTrackingConsent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        analytics: true,
+        marketing: false,
+        headlessStorefront: true,
+        checkoutRootDomain: window.location.host,
+        storefrontAccessToken: PROPS.storefrontAccessToken,
+      }),
+      callback,
+    );
+    result.current.privacyBanner!.showPreferences({locale: 'FR'});
+    expect(banner!.showPreferences).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locale: 'FR',
+        country: 'AT',
+        storefrontAccessToken: PROPS.storefrontAccessToken,
+      }),
+    );
   });
 });

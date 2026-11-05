@@ -1,5 +1,59 @@
 # @shopify/cli-hydrogen
 
+## 13.1.0
+
+### Minor Changes
+
+- Add `--json` output to `shopify hydrogen build`, `shopify hydrogen check routes`, and `shopify hydrogen codegen` so scripts can read structured command results. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Add `--json` output to `shopify hydrogen customer-account-push` ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Add `--json` output to `shopify hydrogen deploy`. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  Exit with an error when a linked storefront is missing in `deploy`, `env list`, or `env pull`, or when a deployment token cannot be retrieved. Treat a failure to write the deployment log as a warning after a successful deployment.
+
+- Add `--json` output to `shopify hydrogen env list`, `shopify hydrogen env pull`, and `shopify hydrogen env push`. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Add `--json` output to `shopify hydrogen shortcut` and `shopify hydrogen upgrade`. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  `shopify hydrogen shortcut` now exits with code 1 when it cannot configure any supported shell, in both text and JSON modes.
+
+- Add typed JSON project and account results with explicit initialization outcomes. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  Partial setup failures now exit with code 1 in both `shopify hydrogen init` and `npm create @shopify/hydrogen`, including text mode. Linking with an unknown `--storefront` name also exits with an error.
+
+- Add `--json` output to `shopify hydrogen generate route` and `shopify hydrogen generate routes`. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Add typed JSON setup results with absolute file paths and explicit no-op outcomes. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Add --no-input to disable prompts and browser authentication independently of JSON output. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+### Patch Changes
+
+- The `hydrogen dev` developer tooling routes (GraphiQL, the Subrequest Profiler, and the endpoints behind them) now respond only to requests from the machine running the dev server. Requests from other devices, for example when running with `--host`, receive a 404. Storefront routes are unaffected. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Resolve symlinked project paths consistently during client and server builds. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Report Hydrogen project and disabled-command failures through the standard CLI error handler. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Keep environment variable values out of non-interactive confirmation errors. Preserve multiline values containing quotes and comment characters when pulling environment variables, and reject unsafe or unsupported quoting before changing the local file. Report no-change dry runs without rendering a diff, and consistently mark protected variables as skipped when pushing. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Emit structured progress when scaffolding with `create-hydrogen --json`. Preserve storefront provisioning errors and propagate failed job requests. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  Finish copying remote templates before dependency setup writes project files, preventing intermittent initialization failures.
+
+- Use compatible dependencies when migrating classic Remix projects to Vite. Check Hydrogen Vite support before changing project files and support symlinked project paths. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Add shared output plumbing for upcoming JSON command results. Route dependency console logs to stderr in JSON mode while preserving persistent dev-server log filters. Restore CPU startup profiling with support for Node builtins, isolated Worker-like globals on each run, and reliable inspector cleanup. ([#4225](https://github.com/Shopify/hydrogen/pull/4225)) by [@kdaviduik](https://github.com/kdaviduik)
+
+## 13.0.6
+
+### Patch Changes
+
+- Fix `h2 env pull` corrupting environment variable values that contain backslashes, double quotes or tabs. Values are now single-quoted where possible so they are read back exactly by dotenv, and `$` and backticks are no longer expanded if the `.env` file is sourced by a shell. ([#4115](https://github.com/Shopify/hydrogen/pull/4115)) by [@stephanie-shopify](https://github.com/stephanie-shopify)
+
+- `h2 init --template skeleton` and `npm create @shopify/hydrogen -- --template skeleton` now do the same as leaving the flag out, instead of downloading GitHub's latest release. The new project's dependencies install, its `.env` and name are set up, and every other flag is honoured. Scripted or non-interactive runs that use `--template skeleton` should now pass the same prompt-skipping flags as the default init flow, such as `--mock-shop`, `--markets`, `--styling`, and `--shortcut`/`--no-shortcut`, or use `--quickstart` with any needed overrides. Any other template name that isn't `demo-store` or a Git URL fails with an error listing the available templates. ([#4119](https://github.com/Shopify/hydrogen/pull/4119)) by [@fredericoo](https://github.com/fredericoo)
+
 ## 13.0.5
 
 ### Patch Changes

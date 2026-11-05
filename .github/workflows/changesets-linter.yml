@@ -1,5 +1,6 @@
 on:
   pull_request:
+  merge_group:
 
 name: Changelog Linter
 jobs:

@@ -119,10 +119,8 @@ export function makeReadmeBlocks(
                 hash: recipe.commit,
                 raw: false,
               });
-              return mdLinkString(
-                `${linkPrefix}/templates/skeleton/${file}`,
-                file,
-              );
+              // `deletedFiles` paths already start with `templates/skeleton/`.
+              return mdLinkString(`${linkPrefix}/${file}`, file);
             }),
           ),
         ]

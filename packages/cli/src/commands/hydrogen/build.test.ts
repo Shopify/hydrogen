@@ -12,7 +12,7 @@ import {runBuild} from './build.js';
 import {setupTemplate} from '../../lib/onboarding/index.js';
 import {BUNDLE_ANALYZER_HTML_FILE} from '../../lib/bundle/analyzer.js';
 import path from 'node:path';
-import {mkdirSync} from 'node:fs';
+import {mkdirSync, realpathSync, symlinkSync, unlinkSync} from 'node:fs';
 
 describe('build', () => {
   const outputMock = mockAndCaptureOutput();
@@ -28,13 +28,15 @@ describe('build', () => {
       `test-project-build-${Date.now()}-${Math.random().toString(36).substring(7)}`,
     );
     mkdirSync(tmpDir);
+    symlinkSync(tmpDir, tmpDir + '-link', 'junction');
   });
 
   afterAll(async () => {
+    unlinkSync(tmpDir + '-link');
     await removeFile(tmpDir);
   });
 
-  it('builds a Vite project', async () => {
+  it('builds a Vite project through a symlink', async () => {
     await setupTemplate({
       path: tmpDir,
       git: true,
@@ -47,13 +49,14 @@ describe('build', () => {
     vi.stubEnv('NODE_ENV', 'production');
 
     const runBuildResultPromise = runBuild({
-      directory: tmpDir,
+      directory: tmpDir + '-link',
       bundleStats: true,
     });
 
     await expect(runBuildResultPromise).resolves.not.toThrow();
 
     const runBuildResult = await runBuildResultPromise;
+    expect(runBuildResult.result.directory).toBe(realpathSync(tmpDir));
 
     const expectedBundlePath = 'dist/server/index.js';
 
@@ -62,7 +65,7 @@ describe('build', () => {
     expect(output).toMatch('building client environment for production');
     expect(output).toMatch('dist/client/assets/root-');
     expect(output).toMatch('building ssr environment for production');
-    expect(
+    await expect(
       fileExists(joinPath(tmpDir, expectedBundlePath)),
     ).resolves.toBeTruthy();
 

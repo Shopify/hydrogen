@@ -1,6 +1,8 @@
 import type {AdminSession} from '@shopify/cli-kit/node/session';
 
-export function newHydrogenStorefrontUrl(session: AdminSession) {
+export function newHydrogenStorefrontUrl(
+  session: Pick<AdminSession, 'storeFqdn'>,
+) {
   const {storeFqdn} = session;
   return `https://${storeFqdn}/admin/custom_storefronts/new`;
 }

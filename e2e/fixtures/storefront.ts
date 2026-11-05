@@ -1,5 +1,14 @@
-import type {Page, BrowserContext, Locator, Route} from '@playwright/test';
+import type {
+  Page,
+  BrowserContext,
+  Locator,
+  Route,
+  Response,
+} from '@playwright/test';
 import {expect} from '@playwright/test';
+import assert from './assertions';
+import {getLoadtestHeaders} from './test-secrets';
+import {checkoutAnalyticsAllowed} from './checkout-consent';
 
 // Privacy Banner element IDs
 export const PRIVACY_BANNER_DIALOG_ID = 'shopify-pc__banner';
@@ -30,9 +39,206 @@ export const GRAPHQL_URL = 'graphql.json';
 // Mock value pattern for declined consent (all zeros with a 5)
 export const MOCK_VALUE_PATTERN = /^00000000\-0000\-0000\-5000\-000000000000$/;
 
-export interface ServerTimingValues {
-  _y?: string;
-  _s?: string;
+export const CONSENT_MANAGEMENT_MARKER_HEADER =
+  'shopify-storefront-consent-management';
+
+export const ACCEPT_ALL_CONSENT = {
+  analytics: true,
+  marketing: true,
+  preferences: true,
+  sale_of_data: true,
+};
+export const DECLINE_ALL_CONSENT = {
+  analytics: false,
+  marketing: false,
+  preferences: false,
+  sale_of_data: false,
+};
+export type ConsentChoice = typeof ACCEPT_ALL_CONSENT;
+
+const LEGACY_COOKIE_NAMES = ['_tracking_consent', '_shopify_y', '_shopify_s'];
+// Playwright reports session cookies with this expiry.
+const SESSION_COOKIE_EXPIRY = -1;
+const CHECKOUT_PAGE_VIEW_PUBLISH_SCHEMA = 'web_pixels_manager_event_publish/';
+const CHECKOUT_ANALYTICS_TIMEOUT_IN_MS = 30000;
+
+const CONSENT_API_URL_PATTERN =
+  '**/shopifycloud/consent-tracking-api/v0.2/consent-tracking-api.js';
+const PRIVACY_BANNER_URL_PATTERN =
+  '**/shopifycloud/privacy-banner/storefront-banner.js';
+
+/**
+ * Serves locally built consent bundles instead of the CDN when
+ * `E2E_CONSENT_API_BUNDLE_PATH` / `E2E_PRIVACY_BANNER_BUNDLE_PATH` are set, so
+ * Hydrogen can be tested against Customer Privacy API and privacy banner
+ * changes before they are released. Unset variables keep the CDN scripts.
+ */
+export async function routeLocalConsentBundles(context: BrowserContext) {
+  const localBundles: Array<[string, string | undefined]> = [
+    [CONSENT_API_URL_PATTERN, process.env.E2E_CONSENT_API_BUNDLE_PATH],
+    [PRIVACY_BANNER_URL_PATTERN, process.env.E2E_PRIVACY_BANNER_BUNDLE_PATH],
+  ];
+  for (const [urlPattern, bundlePath] of localBundles) {
+    if (!bundlePath) continue;
+    await context.route(urlPattern, (route) =>
+      route.fulfill({path: bundlePath, contentType: 'application/javascript'}),
+    );
+  }
+}
+
+/** The consent query that initializes consent and returns tracking tokens. */
+function isConsentTokenQuery(postData: string | null) {
+  const query = postData ?? '';
+  return (
+    /\bconsentManagement\b/.test(query) &&
+    /\bshopifyUnique\b/.test(query) &&
+    /\bshopifyVisit\b/.test(query)
+  );
+}
+
+export interface ConsentRequestRecord {
+  sameOrigin: boolean;
+  hasMarkerHeader: boolean;
+  hasCookieHeader: boolean;
+}
+
+/** Tracking values and consent flag reported by one analytics event. */
+export interface AnalyticsEventTokens {
+  schema: string;
+  phase?: 'initial' | 'interaction' | 'reload';
+  eventName?: string;
+  surface?: string;
+  pageUrl?: string;
+  userCanBeTracked?: boolean;
+  uniqueToken?: string;
+  visitToken?: string;
+  analyticsAllowed?: boolean;
+}
+
+// Storefront and checkout schemas name the same values differently.
+function eventTokens(
+  schema: string,
+  payload: Record<string, any> = {},
+): AnalyticsEventTokens {
+  return {
+    schema,
+    eventName: payload.event_name,
+    surface: payload.surface,
+    pageUrl: payload.page_url ?? payload.event_source_url ?? payload.url,
+    userCanBeTracked:
+      payload.user_can_be_tracked === 'true'
+        ? true
+        : payload.user_can_be_tracked === 'false'
+          ? false
+          : undefined,
+    uniqueToken:
+      payload.unique_token || payload.uniqToken || payload.tracking_unique,
+    visitToken:
+      payload.deprecated_visit_token ||
+      payload.visitToken ||
+      payload.tracking_visit,
+    analyticsAllowed:
+      payload.analytics_allowed ?? payload.buyer_consent_analytics_allowed,
+  };
+}
+
+export function parseAnalyticsEvents(
+  postData: string | null,
+): AnalyticsEventTokens[] {
+  try {
+    type Event = {schema_id?: string; payload?: Record<string, unknown>};
+    const body = JSON.parse(postData ?? '{}') as Event & {events?: Event[]};
+    const events = body.events ?? [body];
+    return events.map((event) =>
+      eventTokens(event.schema_id ?? 'unknown', event.payload),
+    );
+  } catch {
+    return [];
+  }
+}
+
+function isCheckoutPageView(event: AnalyticsEventTokens) {
+  if (
+    !event.schema.startsWith(CHECKOUT_PAGE_VIEW_PUBLISH_SCHEMA) ||
+    event.eventName !== 'page_viewed' ||
+    event.surface !== 'checkout-one' ||
+    !event.pageUrl
+  )
+    return false;
+  try {
+    return /\/checkouts\//.test(new URL(event.pageUrl).pathname);
+  } catch {
+    return false;
+  }
+}
+
+/** Later checkout documents cannot supply evidence missing from the initial handoff. */
+function expectCheckoutPhaseEvidence(
+  events: AnalyticsEventTokens[],
+  allowed: boolean,
+) {
+  const phases = events.some((event) => event.phase)
+    ? ['initial', 'reload']
+    : [undefined];
+  for (const phase of phases) {
+    const current = events.filter((event) => event.phase === phase);
+    expect(
+      current.some(isCheckoutPageView),
+      'Each checkout document must publish its page view',
+    ).toBe(true);
+    expect(
+      current.some((event) => event.analyticsAllowed === allowed),
+      'Each checkout document must explicitly report analytics consent',
+    ).toBe(true);
+    expect(
+      current
+        .filter((event) => event.analyticsAllowed !== undefined)
+        .every((event) => event.analyticsAllowed === allowed),
+      'Checkout consent evidence must not conflict',
+    ).toBe(true);
+    if (!allowed) {
+      expect(
+        current.some((event) => event.uniqueToken || event.visitToken),
+        'Denied checkout must not report tracking tokens',
+      ).toBe(false);
+      continue;
+    }
+    expect(
+      current.some((event) => Boolean(event.uniqueToken)),
+      'Each checkout document must report Y',
+    ).toBe(true);
+    expect(
+      current.some((event) => Boolean(event.visitToken)),
+      'Each checkout document must report S',
+    ).toBe(true);
+  }
+}
+
+async function recordCheckoutConsent(
+  page: Page,
+  events: AnalyticsEventTokens[],
+  phase: AnalyticsEventTokens['phase'],
+) {
+  await page.waitForFunction(
+    () =>
+      typeof (window as any).Shopify?.customerPrivacy?.injectedConsent ===
+      'string',
+  );
+  const analyticsAllowed = checkoutAnalyticsAllowed(
+    await page.evaluate(
+      () => (window as any).Shopify.customerPrivacy.injectedConsent,
+    ),
+  );
+  expect(
+    typeof analyticsAllowed,
+    'Checkout must expose a recognized consent value before its lifecycle is evaluated',
+  ).toBe('boolean');
+  events.push({schema: 'checkout_consent_state', phase, analyticsAllowed});
+}
+
+export interface TrackingTokens {
+  uniqueToken: string | null;
+  visitToken: string | null;
 }
 
 export interface MonorailPayload {
@@ -148,54 +354,129 @@ export class StorefrontPage {
   }
 
   /**
-   * Get server-timing values (_y and _s) from the Performance API
-   * @param preferLatestResource - If true, prefer the latest resource entry over navigation timing
+   * Capture the consent token query response before a full navigation or
+   * reload. The body is read immediately: Chromium discards it once another
+   * navigation replaces the response.
+   *
+   * A pending consent query from the current document may be caught just as
+   * the navigation replaces it — Chromium then discards its body. In that
+   * case the next matching response is tried: the Customer Privacy API fires
+   * one consent query on every full load.
    */
-  async getServerTimingValues(
-    preferLatestResource = false,
-  ): Promise<ServerTimingValues> {
-    return this.page.evaluate((preferLatest) => {
-      const result: {_y?: string; _s?: string} = {};
+  async withConsentResponse(action: () => Promise<unknown>): Promise<Response> {
+    const MAX_RESPONSE_ATTEMPTS = 3;
 
-      // Get values from resource timing entries (latest entries first)
-      const resourceEntries = performance.getEntriesByType(
-        'resource',
-      ) as PerformanceResourceTiming[];
-
-      // Reverse to get latest entries first
-      for (const entry of [...resourceEntries].reverse()) {
-        if (entry.serverTiming) {
-          for (const {name, description} of entry.serverTiming) {
-            if (name === '_y' && description && !result._y) {
-              result._y = description;
-            } else if (name === '_s' && description && !result._s) {
-              result._s = description;
-            }
-          }
-        }
-        if (result._y && result._s) break;
-      }
-
-      // Fall back to navigation timing if resource entries don't have values
-      // or if we explicitly don't prefer latest
-      if (!preferLatest || (!result._y && !result._s)) {
-        const navigationEntry = performance.getEntriesByType(
-          'navigation',
-        )[0] as PerformanceNavigationTiming;
-
-        if (navigationEntry?.serverTiming) {
-          for (const {name, description} of navigationEntry.serverTiming) {
-            if (name === '_y' && description && !result._y) {
-              result._y = description;
-            } else if (name === '_s' && description && !result._s) {
-              result._s = description;
-            }
-          }
+    const captureReadableResponse = async (): Promise<Response> => {
+      for (let attempt = 1; attempt <= MAX_RESPONSE_ATTEMPTS; attempt++) {
+        const consentResponse = await this.waitForConsentResponse();
+        try {
+          await consentResponse.body();
+          return consentResponse;
+        } catch {
+          // The body belonged to a replaced document; try the next response.
         }
       }
+      throw new Error(
+        'Could not read a consent response body: every attempt was discarded by a navigation',
+      );
+    };
 
-      return result;
-    }, preferLatestResource);
+    const [response] = await Promise.all([captureReadableResponse(), action()]);
+    return response;
+  }
+
+  /**
+   * Read the same global token API analytics uses, without generating
+   * fallback values, so reading never changes the session under test.
+   */
+  async getTrackingTokens(): Promise<TrackingTokens> {
+    // The privacy banner and the standalone consent script expose the token
+    // getters differently (only the banner reports a loaded consent status),
+    // so wait on the getter API itself, which both install.
+    await this.page.waitForFunction(
+      () => (window as any).Shopify?.customerPrivacy?.__internal !== undefined,
+    );
+    return this.page.evaluate(() => {
+      const privacy = (window as any).Shopify.customerPrivacy;
+      return {
+        uniqueToken: privacy.__internal.uniqueToken() ?? null,
+        visitToken: privacy.__internal.visitToken() ?? null,
+      };
+    });
+  }
+
+  private async getConsentTokens(response: Response): Promise<TrackingTokens> {
+    expect(response.ok(), 'Consent request should succeed').toBe(true);
+    const body = await response.json();
+    expect(
+      body.errors,
+      'Consent query should have no GraphQL errors',
+    ).toBeUndefined();
+    const cookies = body.data?.consentManagement?.cookies;
+    assert(cookies, 'Consent response should contain cookies');
+    expect(cookies).toHaveProperty('shopifyUnique');
+    expect(cookies).toHaveProperty('shopifyVisit');
+    return {
+      uniqueToken: cookies.shopifyUnique,
+      visitToken: cookies.shopifyVisit,
+    };
+  }
+
+  /**
+   * Assert an allowed-consent response: real UUID tokens in the body,
+   * matching values through the global Customer Privacy API getters,
+   * and analytics consent allowed.
+   */
+  async expectAllowedConsent(response: Response) {
+    const {uniqueToken, visitToken} = await this.getConsentTokens(response);
+    assert(uniqueToken, 'Consent response should contain a unique token');
+    assert(visitToken, 'Consent response should contain a visit token');
+    const uuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    for (const token of [uniqueToken, visitToken]) {
+      expect(token).toMatch(uuid);
+      expect(token).not.toMatch(MOCK_VALUE_PATTERN);
+    }
+    const tokens = {uniqueToken, visitToken};
+    await expect
+      .poll(() => this.getTrackingTokens(), {
+        message: 'Global getters should match consent response',
+        timeout: 15000,
+      })
+      .toEqual(tokens);
+    await this.expectAnalyticsAllowed(true);
+    return tokens;
+  }
+
+  /**
+   * Assert a declined-consent response: no tokens in the body, no tokens
+   * through the global getters, and analytics consent denied.
+   */
+  async expectDeclinedConsent(response: Response) {
+    const tokens = {uniqueToken: null, visitToken: null};
+    expect(
+      await this.getConsentTokens(response),
+      'Declined consent should return no tokens',
+    ).toEqual(tokens);
+    await expect
+      .poll(() => this.getTrackingTokens(), {
+        message: 'Global getters should expose no tokens',
+        timeout: 15000,
+      })
+      .toEqual(tokens);
+    await this.expectAnalyticsAllowed(false);
+  }
+
+  private async expectAnalyticsAllowed(allowed: boolean) {
+    await expect
+      .poll(
+        () =>
+          this.page.evaluate(() =>
+            window.Shopify?.customerPrivacy?.analyticsProcessingAllowed?.(),
+          ),
+        {timeout: 15000},
+      )
+      .toBe(allowed);
   }
 
   /**
@@ -217,34 +498,61 @@ export class StorefrontPage {
    * Assert that no analytics cookies are present
    */
   async expectNoAnalyticsCookies() {
-    const cookies = await this.getCookies();
-    for (const cookieName of ANALYTICS_COOKIES) {
-      const cookie = cookies.find((c) => c.name.startsWith(cookieName));
-      expect(
-        cookie,
-        `Cookie ${cookieName} should not be present`,
-      ).toBeUndefined();
-    }
+    await expect
+      .poll(
+        async () => {
+          const cookies = await this.getCookies();
+          return ANALYTICS_COOKIES.filter((cookieName) =>
+            cookies.some((c) => c.name.startsWith(cookieName)),
+          );
+        },
+        {
+          message: 'Analytics cookies should not be present',
+          timeout: 15000,
+        },
+      )
+      .toEqual([]);
   }
 
   /**
-   * Assert that analytics cookies are present and return them
+   * Assert that the deprecated JS-visible analytics cookies are never created.
    */
-  async expectAnalyticsCookiesPresent() {
-    const cookies = await this.getCookies();
-    const shopifyY = cookies.find((c) => c.name === '_shopify_y');
-    const shopifyS = cookies.find((c) => c.name === '_shopify_s');
-    const shopifyAnalytics = cookies.find(
-      (c) => c.name === '_shopify_analytics',
-    );
-    const shopifyMarketing = cookies.find(
-      (c) => c.name === '_shopify_marketing',
-    );
+  async expectNoLegacyAnalyticsCookies() {
+    await expect
+      .poll(
+        async () => {
+          const cookies = await this.getCookies();
+          return ['_shopify_y', '_shopify_s'].filter((cookieName) =>
+            cookies.some((c) => c.name === cookieName),
+          );
+        },
+        {
+          message: '_shopify_y and _shopify_s cookies should not be present',
+          timeout: 15000,
+        },
+      )
+      .toEqual([]);
+  }
 
-    expect(shopifyY, '_shopify_y cookie should be present').toBeDefined();
-    expect(shopifyS, '_shopify_s cookie should be present').toBeDefined();
-
-    return {shopifyY, shopifyS, shopifyAnalytics, shopifyMarketing};
+  /**
+   * Assert the modern http-only analytics cookies are present.
+   */
+  async expectHttpOnlyAnalyticsCookiesPresent() {
+    await expect
+      .poll(
+        async () => {
+          const cookies = await this.getCookies();
+          return ['_shopify_analytics', '_shopify_marketing'].every((name) =>
+            cookies.some((cookie) => cookie.name === name && cookie.httpOnly),
+          );
+        },
+        {
+          message:
+            'HTTP-only analytics and marketing cookies should be present',
+          timeout: 15000,
+        },
+      )
+      .toBe(true);
   }
 
   /**
@@ -290,19 +598,450 @@ export class StorefrontPage {
   }
 
   /**
-   * Wait for consent management GraphQL response
+   * Wait for the consent management GraphQL response that returns tracking
+   * tokens. Banner configuration requests also use consentManagement, so the
+   * query text must identify the token query specifically.
    */
   waitForConsentResponse() {
-    return this.page.waitForResponse(async (response) => {
-      const url = response.url();
-      if (url.includes(GRAPHQL_URL)) {
-        const postData = response.request().postData();
-        if (postData && postData.includes('consentManagement')) {
-          return true;
-        }
-      }
-      return false;
+    return this.page.waitForResponse((response) => {
+      const request = response.request();
+      if (!response.url().includes(GRAPHQL_URL) || request.method() !== 'POST')
+        return false;
+      return isConsentTokenQuery(request.postData());
     });
+  }
+
+  /**
+   * Record every consent token query from now on, with the properties the
+   * same-origin proxy flow depends on.
+   */
+  trackConsentRequests(): ConsentRequestRecord[] {
+    const records: ConsentRequestRecord[] = [];
+    this.page.on('request', (request) => {
+      if (request.method() !== 'POST') return;
+      if (!isConsentTokenQuery(request.postData())) return;
+      const headers = request.headers();
+      records.push({
+        sameOrigin:
+          new URL(request.url()).origin === new URL(this.page.url()).origin,
+        hasMarkerHeader: CONSENT_MANAGEMENT_MARKER_HEADER in headers,
+        hasCookieHeader: 'cookie' in headers,
+      });
+    });
+    return records;
+  }
+
+  /** Wait until the Customer Privacy API has initialized consent. */
+  async waitForConsentLoaded() {
+    await this.page.waitForFunction(
+      () => window.Shopify?.customerPrivacy?.consentStatus === 'loaded',
+    );
+  }
+
+  /**
+   * Set consent through the public Customer Privacy API, as a custom consent
+   * UI would, and return the values of the resulting consent response.
+   */
+  async setTrackingConsent(consent: ConsentChoice) {
+    const responsePromise = this.waitForConsentResponse();
+    const result = await this.page.evaluate(
+      (choice) =>
+        new Promise<unknown>((resolve) =>
+          (window as any).Shopify.customerPrivacy.setTrackingConsent(
+            choice,
+            resolve,
+          ),
+        ),
+      consent,
+    );
+    // The callback receives an error object only when the update fails.
+    expect(result ?? null, 'Consent update should succeed').toBeNull();
+    const body = await (await responsePromise).json();
+    const cookies = body.data?.consentManagement?.cookies;
+    assert(cookies, 'Consent response should contain cookies');
+    return {
+      trackingConsent: cookies.trackingConsentCookie as string,
+      uniqueToken: (cookies.shopifyUnique as string | null) ?? null,
+      visitToken: (cookies.shopifyVisit as string | null) ?? null,
+    };
+  }
+
+  /**
+   * Replace every cookie with the JavaScript-visible cookies an older
+   * storefront version left behind: the `_tracking_consent` consent mirror
+   * and, when tracking was allowed, `_shopify_y`/`_shopify_s`. No http-only
+   * cookies remain, as for a visitor who never used the proxy flow.
+   */
+  async seedLegacyVisitor(legacy: {
+    trackingConsent: string;
+    uniqueToken: string | null;
+    visitToken: string | null;
+  }) {
+    await this.context.clearCookies();
+    const url = new URL(this.page.url()).origin;
+    const cookies = [
+      {name: '_tracking_consent', value: legacy.trackingConsent, url},
+    ];
+    if (legacy.uniqueToken) {
+      cookies.push({name: '_shopify_y', value: legacy.uniqueToken, url});
+    }
+    if (legacy.visitToken) {
+      cookies.push({name: '_shopify_s', value: legacy.visitToken, url});
+    }
+    await this.context.addCookies(cookies);
+  }
+
+  /** Assert that no legacy JavaScript-visible consent or tracking cookie remains. */
+  async expectNoLegacyCookies() {
+    await expect
+      .poll(
+        async () =>
+          (await this.getCookies())
+            .map((cookie) => cookie.name)
+            .filter((name) => LEGACY_COOKIE_NAMES.includes(name)),
+        {message: 'Legacy consent and tracking cookies should be expired'},
+      )
+      .toEqual([]);
+  }
+
+  /**
+   * Open the storefront in a new browser session: a fresh context that keeps
+   * only persistent cookies, like reopening the browser. The caller closes it.
+   */
+  async openNewBrowserSession(options: {
+    withPrivacyBanner: boolean;
+    /**
+     * Keep only persistent cookies, dropping localStorage too, to prove that
+     * consent and identity do not depend on any client-side storage.
+     */
+    cookiesOnly?: boolean;
+  }) {
+    const browser = this.context.browser();
+    assert(browser, 'A browser is required to open a new session');
+    const state = await this.context.storageState();
+    const context = await browser.newContext({
+      baseURL: new URL(this.page.url()).origin,
+      extraHTTPHeaders: getLoadtestHeaders(),
+      storageState: {
+        origins: options.cookiesOnly ? [] : state.origins,
+        cookies: state.cookies.filter(
+          (cookie) => cookie.expires !== SESSION_COOKIE_EXPIRY,
+        ),
+      },
+    });
+    await routeLocalConsentBundles(context);
+    const session = new StorefrontPage(await context.newPage());
+    await session.setWithPrivacyBanner(options.withPrivacyBanner);
+    return session;
+  }
+
+  /**
+   * Open the storefront in another tab of the same browser session. It shares
+   * cookies and localStorage, but has its own page state and sessionStorage.
+   */
+  async openTab(options: {withPrivacyBanner: boolean}) {
+    const tab = new StorefrontPage(await this.context.newPage());
+    await tab.setWithPrivacyBanner(options.withPrivacyBanner);
+    return tab;
+  }
+
+  /** The consent and token state the Customer Privacy API currently reports. */
+  async getConsentState() {
+    return this.page.evaluate(() => {
+      const privacy = (window as any).Shopify?.customerPrivacy;
+      return {
+        consentStatus: (privacy?.consentStatus ?? null) as string | null,
+        analyticsAllowed: Boolean(privacy?.analyticsProcessingAllowed?.()),
+        uniqueToken: (privacy?.__internal?.uniqueToken?.() ?? null) as
+          | string
+          | null,
+        visitToken: (privacy?.__internal?.visitToken?.() ?? null) as
+          | string
+          | null,
+      };
+    });
+  }
+
+  /**
+   * Follow a visible in-app link: a client-side navigation that never re-runs
+   * consent initialization. The header renders a hidden mobile-menu copy of
+   * each link, so only the visible one is clicked.
+   */
+  async navigateClientSide(path: string) {
+    const link = this.page
+      .getByRole('link')
+      .filter({visible: true})
+      .and(this.page.locator(`a[href="${path}"]`))
+      .first();
+    const documentBefore = await this.page.evaluateHandle(() => document);
+    try {
+      await link.click();
+      await expect(this.page).toHaveURL((url) => url.pathname === path);
+      expect(
+        await documentBefore.evaluate((previous) => previous === document),
+        'Client-side navigation must preserve the document',
+      ).toBe(true);
+    } finally {
+      await documentBefore.dispose();
+    }
+  }
+
+  /** Require a new destination page view, not a retained event from an earlier load. */
+  async waitForPageViewAfter(requestBaseline: number, pathname: string) {
+    await expect
+      .poll(
+        () =>
+          this.monorailRequests
+            .slice(requestBaseline)
+            .flatMap((request) =>
+              parseAnalyticsEvents(request.postData ?? null),
+            )
+            .some(
+              (event) =>
+                event.eventName === 'page_rendered' &&
+                event.pageUrl &&
+                new URL(event.pageUrl).pathname === pathname,
+            ),
+        {message: 'The destination must emit a new page view'},
+      )
+      .toBe(true);
+  }
+
+  /**
+   * Observe checkout in its own tab through ready UI, interaction, and a reload.
+   * The reload exercises checkout's lifecycle and flushes outgoing telemetry;
+   * one early publish message is not sufficient evidence of a loaded checkout.
+   */
+  async collectCheckoutAnalytics(
+    checkoutUrl: string,
+    options: {expectTokens: boolean},
+  ) {
+    const checkoutPage = await this.context.newPage();
+    try {
+      return await this.collectCheckoutAnalyticsOnPage(
+        checkoutPage,
+        () => checkoutPage.goto(new URL(checkoutUrl, this.page.url()).href),
+        options,
+      );
+    } finally {
+      await checkoutPage.close();
+    }
+  }
+
+  /** Exercise the cart link's click handling instead of bypassing it with goto. */
+  async collectCheckoutAnalyticsFromCart(options: {expectTokens: boolean}) {
+    return this.collectCheckoutAnalyticsOnPage(
+      this.page,
+      async () => {
+        const checkoutResponse = this.page.waitForResponse(
+          (response) =>
+            response.request().isNavigationRequest() &&
+            response.request().frame() === this.page.mainFrame() &&
+            /\/checkouts\//.test(new URL(response.url()).pathname) &&
+            response.ok(),
+        );
+        await this.getCheckoutButton().click();
+        return checkoutResponse;
+      },
+      options,
+    );
+  }
+
+  private async collectCheckoutAnalyticsOnPage(
+    checkoutPage: Page,
+    navigate: () => Promise<Response | null>,
+    options: {expectTokens: boolean},
+  ) {
+    const events: AnalyticsEventTokens[] = [];
+    let phase: AnalyticsEventTokens['phase'] = 'initial';
+    const record = (request: import('@playwright/test').Request) => {
+      if (!request.url().includes(MONORAIL_BATCH_URL)) return;
+      // An actual link click can publish storefront events before navigating.
+      // Only requests dispatched from the committed checkout document count.
+      if (!/\/checkouts\//.test(new URL(checkoutPage.url()).pathname)) return;
+      events.push(
+        ...parseAnalyticsEvents(request.postData()).map((event) => ({
+          ...event,
+          phase,
+        })),
+      );
+    };
+    checkoutPage.on('request', record);
+    try {
+      const response = await navigate();
+      expect(response?.ok(), 'Checkout document should load successfully').toBe(
+        true,
+      );
+      await recordCheckoutConsent(checkoutPage, events, phase);
+      await this.waitForCheckoutReady(
+        checkoutPage,
+        events,
+        0,
+        options.expectTokens,
+      );
+      expectCheckoutPhaseEvidence(
+        events.map((event) => ({...event, phase: undefined})),
+        options.expectTokens,
+      );
+      phase = 'interaction';
+      const contact = checkoutPage
+        .getByRole('textbox', {name: /email/i})
+        .first();
+      await contact.focus();
+      await expect(contact).toBeFocused();
+      await contact.press('Tab');
+      await expect(contact).not.toBeFocused();
+
+      expectCheckoutPhaseEvidence(
+        events.map((event) => ({...event, phase: undefined})),
+        options.expectTokens,
+      );
+      phase = 'reload';
+      const reloadBaseline = events.length;
+      const reloadResponse = await checkoutPage.reload();
+      expect(reloadResponse?.ok(), 'Checkout reload should succeed').toBe(true);
+      await recordCheckoutConsent(checkoutPage, events, phase);
+      await this.waitForCheckoutReady(
+        checkoutPage,
+        events,
+        reloadBaseline,
+        options.expectTokens,
+      );
+      return events;
+    } finally {
+      checkoutPage.off('request', record);
+    }
+  }
+
+  private async waitForCheckoutReady(
+    page: Page,
+    events: AnalyticsEventTokens[],
+    baseline: number,
+    expectTokens: boolean,
+  ) {
+    expect(
+      /\/checkouts\//.test(new URL(page.url()).pathname),
+      'The destination must be checkout, not a storefront or error page',
+    ).toBe(true);
+    await expect(
+      page.getByRole('textbox', {name: /email/i}).first(),
+    ).toBeEditable();
+    await expect
+      .poll(
+        () => {
+          const current = events.slice(baseline);
+          const pageView = current.some(
+            (event) =>
+              isCheckoutPageView(event) &&
+              new URL(event.pageUrl!).origin === new URL(page.url()).origin,
+          );
+          const started = current.some(
+            (event) =>
+              event.eventName === 'checkout_started' &&
+              event.surface === 'checkout-one',
+          );
+          const tokens =
+            current.some((event) => event.uniqueToken) &&
+            current.some((event) => event.visitToken);
+          const consent = current.some(
+            (event) => event.analyticsAllowed === expectTokens,
+          );
+          return pageView && started && consent && (!expectTokens || tokens);
+        },
+        {
+          message: 'Checkout must publish its page view and checkout lifecycle',
+          timeout: CHECKOUT_ANALYTICS_TIMEOUT_IN_MS,
+        },
+      )
+      .toBe(true);
+  }
+
+  /**
+   * Assert that checkout continued the storefront session: every checkout
+   * event that reports a tracking value reports the storefront's, and
+   * checkout reports analytics consent as allowed.
+   */
+  expectCheckoutContinuesSession(
+    events: AnalyticsEventTokens[],
+    expected: {uniqueToken: string; visitToken: string},
+  ) {
+    expect(
+      events.some(isCheckoutPageView),
+      'Checkout must report its own page view',
+    ).toBe(true);
+    expectCheckoutPhaseEvidence(events, true);
+    const tokenEvents = events.filter((e) => e.uniqueToken || e.visitToken);
+    expect(
+      tokenEvents.some((event) => Boolean(event.uniqueToken)),
+      'Checkout should report the unique token',
+    ).toBe(true);
+    expect(
+      tokenEvents.some((event) => Boolean(event.visitToken)),
+      'Checkout should report the visit token',
+    ).toBe(true);
+    const mismatches = tokenEvents.flatMap((event) => [
+      ...(event.uniqueToken && event.uniqueToken !== expected.uniqueToken
+        ? [`${event.schema} unique token`]
+        : []),
+      ...(event.visitToken && event.visitToken !== expected.visitToken
+        ? [`${event.schema} visit token`]
+        : []),
+    ]);
+    expect(
+      mismatches,
+      'Checkout should report the storefront session tokens',
+    ).toEqual([]);
+    const consentFlags = events
+      .map((event) => event.analyticsAllowed)
+      .filter((allowed) => allowed !== undefined);
+    expect(
+      consentFlags.length,
+      'Checkout should report analytics consent',
+    ).toBeGreaterThan(0);
+    expect([...new Set(consentFlags)], 'Checkout analytics consent').toEqual([
+      true,
+    ]);
+  }
+
+  /** Require explicit denied consent, not merely an absence of telemetry. */
+  expectCheckoutWithoutTracking(events: AnalyticsEventTokens[]) {
+    expectCheckoutPhaseEvidence(events, false);
+    expect(
+      events.some(isCheckoutPageView),
+      'Checkout must report its own page view',
+    ).toBe(true);
+    expect(
+      events.some((event) => event.analyticsAllowed === false),
+      'Checkout must explicitly report analytics consent as denied',
+    ).toBe(true);
+    const tokenEvents = events.filter((e) => e.uniqueToken || e.visitToken);
+    expect(
+      tokenEvents.map((event) => event.schema),
+      'Checkout should not report tracking values without consent',
+    ).toEqual([]);
+    expect(
+      events.some((event) => event.analyticsAllowed === true),
+      'Checkout should not report analytics consent',
+    ).toBe(false);
+  }
+
+  /** The `_y`/`_s` session parameters of the cart drawer's checkout link. */
+  async getCheckoutUrlTrackingParams() {
+    const [checkoutUrl] = await this.getCheckoutUrls();
+    assert(checkoutUrl, 'The cart should have a checkout URL');
+    const params = new URL(checkoutUrl, this.page.url()).searchParams;
+    return {
+      checkoutUrl,
+      uniqueToken: params.get('_y'),
+      visitToken: params.get('_s'),
+    };
+  }
+
+  /** Tracking values reported by the storefront analytics events seen so far. */
+  getMonorailTokens(): AnalyticsEventTokens[] {
+    return this.monorailRequests
+      .flatMap((request) => parseAnalyticsEvents(request.postData ?? null))
+      .filter((event) => event.uniqueToken || event.visitToken);
   }
 
   /**
@@ -320,7 +1059,7 @@ export class StorefrontPage {
     const response = await responsePromise;
     expect(response.ok(), 'Consent request should succeed').toBe(true);
 
-    await this.page.waitForLoadState('networkidle');
+    await response.finished();
     return response;
   }
 
@@ -339,7 +1078,7 @@ export class StorefrontPage {
     const response = await responsePromise;
     expect(response.ok(), 'Consent request should succeed').toBe(true);
 
-    await this.page.waitForLoadState('networkidle');
+    await response.finished();
     return response;
   }
 
@@ -397,7 +1136,7 @@ export class StorefrontPage {
     const response = await responsePromise;
     expect(response.ok(), 'Consent request should succeed').toBe(true);
 
-    await this.page.waitForLoadState('networkidle');
+    await response.finished();
     return response;
   }
 
@@ -416,7 +1155,7 @@ export class StorefrontPage {
     const response = await responsePromise;
     expect(response.ok(), 'Consent request should succeed').toBe(true);
 
-    await this.page.waitForLoadState('networkidle');
+    await response.finished();
     return response;
   }
 
@@ -460,11 +1199,40 @@ export class StorefrontPage {
   }
 
   /**
+   * Assert that no perf-kit produce requests have been made
+   */
+  expectNoPerfKitProduceRequests() {
+    const perfKitRequests = this.perfKitProduceRequests.filter((req) =>
+      req.initiator?.includes('perf-kit'),
+    );
+
+    expect(
+      perfKitRequests,
+      'No perf-kit produce requests should be made',
+    ).toHaveLength(0);
+  }
+
+  /**
    * Navigate to an in-stock product by trying product links sequentially.
    * Skips sold-out products (no "Add to cart" button) so that tests only
    * fail when every product on the page is unavailable.
+   *
+   * With `waitForConsent: true`, each navigation also captures and returns
+   * the consent token query response fired during the page load.
    */
-  async navigateToInStockProduct() {
+  navigateToInStockProduct(options: {waitForConsent: true}): Promise<Response>;
+  navigateToInStockProduct(): Promise<void>;
+  async navigateToInStockProduct(options?: {
+    waitForConsent: true;
+  }): Promise<Response | void> {
+    // The consent request fires once per full page load; in-app link clicks
+    // are client-side navigations that never re-run it. When a test needs
+    // the consent response, navigate with a full page load instead.
+    const openPath = (path: string) =>
+      options?.waitForConsent
+        ? this.withConsentResponse(() => this.page.goto(path))
+        : this.page.goto(path).then(() => undefined);
+
     const listingUrl = this.page.url();
     const productLinks = this.page.locator('a[href*="/products/"]');
     const linkCount = await productLinks.count();
@@ -489,7 +1257,11 @@ export class StorefrontPage {
       // that aren't actionable (e.g., hidden by CSS or not yet in the DOM).
       if (!(await link.isVisible())) continue;
 
-      await link.click();
+      const productPath = new URL(
+        (await link.getAttribute('href'))!,
+        this.page.url(),
+      ).pathname;
+      const response = await openPath(productPath);
       triedUrls.push(this.page.url());
 
       const isInStock = await this.getAddToCartButton()
@@ -497,10 +1269,10 @@ export class StorefrontPage {
         .then(() => true)
         .catch(() => false);
 
-      if (isInStock) return;
+      if (isInStock) return response;
 
       // Product is sold out — return to listing and try the next one
-      await this.page.goto(listingUrl);
+      await openPath(listingUrl);
       await expect(productLinks.first()).toBeVisible();
     }
 
@@ -666,24 +1438,14 @@ export class StorefrontPage {
   }
 
   /**
-   * Assert that no perf-kit produce requests have been made
-   */
-  expectNoPerfKitProduceRequests() {
-    expect(
-      this.perfKitProduceRequests,
-      'No perf-kit produce requests should be made',
-    ).toHaveLength(0);
-  }
-
-  /**
    * Wait for Monorail analytics requests to be made
    */
-  async waitForMonorailRequests(minCount = 1) {
+  async waitForMonorailRequests(minCount = 1, timeoutInMilliseconds = 5000) {
     await expect
-      .poll(
-        () => this.monorailRequests.length,
-        'Monorail analytics requests should be made',
-      )
+      .poll(() => this.monorailRequests.length, {
+        message: 'Monorail analytics requests should be made',
+        timeout: timeoutInMilliseconds,
+      })
       .toBeGreaterThanOrEqual(minCount);
   }
 
@@ -731,6 +1493,32 @@ export class StorefrontPage {
         ).toBe(expectedS);
       }
     }
+  }
+
+  /**
+   * Navigate to checkout through the cart drawer's checkout link. The
+   * storefront session's tracking values ride the checkout URL params
+   * (see `verifyCheckoutUrlTrackingParams`), so the checkout page starts
+   * from the same session.
+   *
+   * Requires the cart drawer to be open (see `addToCart`). Navigates away
+   * from the storefront: use it as the last step of a test.
+   */
+  async gotoCheckoutFromCartDrawer() {
+    const checkoutLink = this.page.locator(
+      '.overlay.expanded a[href*="checkout"], .overlay.expanded a[href*="/cart/c/"]',
+    );
+    await expect(checkoutLink).toBeVisible({timeout: 10000});
+    await checkoutLink.click();
+
+    // The checkout link redirects to the shop's checkout domain:
+    await this.page.waitForURL(
+      (url) =>
+        /\/checkouts\//.test(url.pathname) || /\/cart\/c\//.test(url.pathname),
+      {timeout: 30000},
+    );
+    // Checkout keeps sending requests; networkidle is not guaranteed.
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   /**
@@ -786,39 +1574,6 @@ export class StorefrontPage {
     ).toBe(true);
 
     return foundPerfKitPayload;
-  }
-
-  /**
-   * Assert that server-timing values are mock values (for declined consent)
-   */
-  expectMockServerTimingValues(values: ServerTimingValues) {
-    if (values._y) {
-      expect(
-        MOCK_VALUE_PATTERN.test(values._y),
-        `Server-timing _y should be a mock value, got: ${values._y}`,
-      ).toBe(true);
-    }
-    if (values._s) {
-      expect(
-        MOCK_VALUE_PATTERN.test(values._s),
-        `Server-timing _s should be a mock value, got: ${values._s}`,
-      ).toBe(true);
-    }
-  }
-
-  /**
-   * Assert that server-timing values are real UUIDs (not mock values)
-   */
-  expectRealServerTimingValues(values: ServerTimingValues) {
-    expect(values._y, 'Y value should be present').toBeTruthy();
-    expect(values._s, 'S value should be present').toBeTruthy();
-    // Mock values match MOCK_VALUE_PATTERN: /^0+[-0]*5/ (zeros followed by 5)
-    expect(values._y, 'Y value should not be a mock value').not.toMatch(
-      MOCK_VALUE_PATTERN,
-    );
-    expect(values._s, 'S value should not be a mock value').not.toMatch(
-      MOCK_VALUE_PATTERN,
-    );
   }
 
   /**

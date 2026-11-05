@@ -19,7 +19,7 @@ export async function setupTailwind(
     'tailwind.css': joinPath(relativeAppDirectory, tailwindCssPath),
   } as const;
 
-  if (!(await canWriteFiles(assetMap, appDirectory, force))) {
+  if (!(await canWriteFiles(assetMap, rootDirectory, force))) {
     outputInfo(
       `Skipping CSS setup as some files already exist. You may use \`--force\` or \`-f\` to override it.`,
     );

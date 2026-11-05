@@ -1,4 +1,7 @@
-import Command from '@shopify/cli-kit/node/base-command';
+import {writeJsonResult} from '../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {setupJsonOutputSchema} from '../../lib/setups/types.js';
+import Command from '../../lib/hydrogen-command.js';
 import {AbortController} from '@shopify/cli-kit/node/abort';
 import {renderTasks} from '@shopify/cli-kit/node/ui';
 import {basename, joinPath, resolvePath} from '@shopify/cli-kit/node/path';
@@ -22,11 +25,19 @@ import {
 } from '../../lib/onboarding/common.js';
 import {ALIAS_NAME, getCliCommand} from '../../lib/shell.js';
 import {getTemplateAppFile} from '../../lib/build.js';
+import type {GeneratedRoute} from '../../lib/setups/routes/types.js';
 
 export default class Setup extends Command {
-  static description = 'Scaffold routes and core functionality.';
+  static get jsonOutputSchema(): typeof setupJsonOutputSchema {
+    return setupJsonOutputSchema;
+  }
+
+  static descriptionWithMarkdown = 'Scaffold routes and core functionality.';
+
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
     ...commonFlags.force,
     ...commonFlags.markets,
@@ -40,10 +51,13 @@ export default class Setup extends Command {
     const {flags} = await this.parse(Setup);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
-    await runSetup({
-      ...flagsToCamelObject(flags),
-      directory,
-    });
+    await runSetup(
+      {
+        ...flagsToCamelObject(flags),
+        directory,
+      },
+      flags.json,
+    );
   }
 }
 
@@ -54,7 +68,7 @@ type RunSetupOptions = {
   shortcut?: boolean;
 };
 
-export async function runSetup(options: RunSetupOptions) {
+export async function executeSetup(options: RunSetupOptions) {
   const controller = new AbortController();
   const {rootDirectory, appDirectory} = await getRemixConfig(options.directory);
 
@@ -84,7 +98,8 @@ export async function runSetup(options: RunSetupOptions) {
 
   const {setupRoutes} = handleRouteGeneration(controller);
 
-  let routes: Record<string, string[]> | undefined;
+  let routes: Record<string, string[]> = {};
+  let generatedRoutes: GeneratedRoute[] = [];
 
   const templateRoot = await getTemplateAppFile('..');
   const [typescript, dtsFiles] = await Promise.all([
@@ -110,13 +125,19 @@ export async function runSetup(options: RunSetupOptions) {
       ]),
     )
     .then(async () => {
-      routes = await setupRoutes(rootDirectory, typescript ? 'ts' : 'js', {
-        i18nStrategy: i18n,
-        // User might have added files before running this command.
-        // We should overwrite them to ensure the routes are set up correctly.
-        // Relies on Git to restore the files if needed.
-        overwriteFileDeps: true,
-      });
+      const result = await setupRoutes(
+        rootDirectory,
+        typescript ? 'ts' : 'js',
+        {
+          i18nStrategy: i18n,
+          // User might have added files before running this command.
+          // We should overwrite them to ensure the routes are set up correctly.
+          // Relies on Git to restore the files if needed.
+          overwriteFileDeps: true,
+        },
+      );
+      routes = result.routeGroups;
+      generatedRoutes = result.routes;
     });
 
   if (i18n) {
@@ -135,11 +156,26 @@ export async function runSetup(options: RunSetupOptions) {
     options.shortcut,
   );
 
-  if (!i18n && !createShortcut) return;
+  if (!i18n && !createShortcut) {
+    await backgroundWorkPromise;
+    return {
+      directory: rootDirectory,
+      name: location,
+      location,
+      i18n,
+      routes,
+      generatedRoutes,
+      shortcut: false,
+      cliCommand,
+      showSummary: false,
+    };
+  }
+  let shortcut = false;
 
   if (createShortcut) {
     backgroundWorkPromise = backgroundWorkPromise.then(async () => {
       if (await createShortcut()) {
+        shortcut = true;
         cliCommand = ALIAS_NAME;
       }
     });
@@ -149,18 +185,52 @@ export async function runSetup(options: RunSetupOptions) {
 
   await renderTasks(tasks);
 
-  await renderProjectReady(
-    {
-      location,
-      name: location,
-      directory: rootDirectory,
-    },
-    {
-      cliCommand,
+  return {
+    directory: rootDirectory,
+    name: location,
+    location,
+    i18n,
+    routes,
+    generatedRoutes,
+    shortcut,
+    cliCommand,
+    showSummary: true,
+  };
+}
+
+export async function runSetup(options: RunSetupOptions, json?: boolean) {
+  const result = await executeSetup(options);
+  if (
+    !writeJsonResult(
+      setupJsonOutputSchema,
+      {
+        status: 'success',
+        changed: true,
+        directory: resolvePath(result.directory),
+        name: result.name,
+        i18n: result.i18n ?? null,
+        routes: result.generatedRoutes.map(
+          ({sourceRoute, destinationRoute, operation, skipReason}) => ({
+            sourceRoute,
+            destinationRoute,
+            operation,
+            ...(skipReason ? {skipReason} : {}),
+          }),
+        ),
+        routeGroups: result.routes,
+        shortcut: result.shortcut,
+      },
+      json,
+    ) &&
+    result.showSummary
+  ) {
+    await renderProjectReady(result, {
+      cliCommand: result.cliCommand,
       depsInstalled: true,
       packageManager: 'npm',
-      i18n,
-      routes,
-    },
-  );
+      i18n: result.i18n,
+      routes: result.routes,
+    });
+  }
+  return result;
 }

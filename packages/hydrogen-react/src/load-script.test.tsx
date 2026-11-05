@@ -74,6 +74,33 @@ describe(`useLoadScript`, () => {
     expect(script).toContainHTML('test3=""');
   });
 
+  it('sets attributes before inserting the script into the DOM', () => {
+    let capturedIntegrity: string | null = null;
+    let capturedCrossorigin: string | null = null;
+
+    vi.spyOn(document.body, 'appendChild').mockImplementation((node: Node) => {
+      const el = node as HTMLScriptElement;
+      if (el.src?.includes('test-integrity.js')) {
+        capturedIntegrity = el.getAttribute('integrity');
+        capturedCrossorigin = el.getAttribute('crossorigin');
+      }
+      body.appendChild(node);
+      return node;
+    });
+
+    renderHook(() =>
+      useLoadScript('test-integrity.js', {
+        attributes: {
+          integrity: 'sha384-abc123',
+          crossorigin: 'anonymous',
+        },
+      }),
+    );
+
+    expect(capturedIntegrity).toBe('sha384-abc123');
+    expect(capturedCrossorigin).toBe('anonymous');
+  });
+
   it('does not double create scripts', () => {
     renderHook(() => useLoadScript('test4.js'));
     renderHook(() => useLoadScript('test5.js'));

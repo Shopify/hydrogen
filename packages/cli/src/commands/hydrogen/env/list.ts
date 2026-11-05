@@ -1,4 +1,10 @@
-import Command from '@shopify/cli-kit/node/base-command';
+import {writeJsonResult} from '../../../lib/json-output.js';
+import {jsonFlag} from '@shopify/cli-kit/node/cli';
+import {
+  envListJsonOutputSchema,
+  toEnvironment,
+} from '../../../lib/environments/types.js';
+import Command from '../../../lib/hydrogen-command.js';
 import {pluralize} from '@shopify/cli-kit/common/string';
 import {
   outputContent,
@@ -14,19 +20,23 @@ import {getCliCommand} from '../../../lib/shell.js';
 import {verifyLinkedStorefront} from '../../../lib/verify-linked-storefront.js';
 
 export default class EnvList extends Command {
+  static get jsonOutputSchema(): typeof envListJsonOutputSchema {
+    return envListJsonOutputSchema;
+  }
+
   static descriptionWithMarkdown =
     'Lists all environments available on the linked Hydrogen storefront.';
 
-  static description =
-    'List the environments on your linked Hydrogen storefront.';
+  static description = this.descriptionForHelp();
 
   static flags = {
+    ...jsonFlag,
     ...commonFlags.path,
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(EnvList);
-    await runEnvList(flags);
+    await runEnvList(flags, flags.json);
   }
 }
 
@@ -34,7 +44,21 @@ interface EnvListOptions {
   path?: string;
 }
 
-export async function runEnvList({path: root = process.cwd()}: EnvListOptions) {
+export async function runEnvList(options: EnvListOptions, json?: boolean) {
+  const result = await listEnvironments(options);
+  if (
+    !writeJsonResult(envListJsonOutputSchema, result, json) &&
+    result.storefront
+  )
+    renderEnvironments(result);
+  return result;
+}
+
+export async function listEnvironments({
+  path: root = process.cwd(),
+}: EnvListOptions): Promise<
+  import('../../../lib/environments/types.js').EnvListResult
+> {
   const [{session, config}, cliCommand] = await Promise.all([
     login(root),
     getCliCommand(),
@@ -47,7 +71,8 @@ export async function runEnvList({path: root = process.cwd()}: EnvListOptions) {
     cliCommand,
   });
 
-  if (!linkedStorefront) return;
+  if (!linkedStorefront)
+    return {status: 'cancelled', storefront: null, environments: []};
 
   config.storefront = linkedStorefront;
 
@@ -62,25 +87,34 @@ export async function runEnvList({path: root = process.cwd()}: EnvListOptions) {
       storefront: config.storefront,
       cliCommand,
     });
-
-    return;
   }
 
   // Make sure we always show the preview environment last because it doesn't
   // have a branch or a URL.
-  const previewEnvironmentIndex = storefront.environments.findIndex(
-    (env) => env.type === 'PREVIEW',
-  );
-  const previewEnvironment = storefront.environments.splice(
-    previewEnvironmentIndex,
-    1,
-  );
-  storefront.environments.push(previewEnvironment[0]!);
+  const environments = [
+    ...storefront.environments.filter((env) => env.type !== 'PREVIEW'),
+    ...storefront.environments.filter((env) => env.type === 'PREVIEW'),
+  ];
+  return {
+    status: 'success',
+    storefront: {
+      gid: storefront.id,
+      name: config.storefront.title,
+      productionUrl: storefront.productionUrl || null,
+    },
+    environments: environments.map(toEnvironment),
+  };
+}
 
+function renderEnvironments(
+  storefront: NonNullable<
+    import('../../../lib/environments/types.js').EnvListResult
+  >,
+) {
   outputInfo(
     pluralizedEnvironments({
       environments: storefront.environments,
-      storefrontTitle: config.storefront.title,
+      storefrontTitle: storefront.storefront!.name,
     }).toString(),
   );
 
@@ -90,7 +124,7 @@ export async function runEnvList({path: root = process.cwd()}: EnvListOptions) {
     // If a custom domain is set it will be available on the storefront itself
     // so we want to use that value instead.
     const environmentUrl =
-      type === 'PRODUCTION' ? storefront.productionUrl : url;
+      type === 'PRODUCTION' ? storefront.storefront!.productionUrl : url;
 
     outputInfo(
       outputContent`${createEnvironmentCliChoiceLabel(name, handle, branch)}`

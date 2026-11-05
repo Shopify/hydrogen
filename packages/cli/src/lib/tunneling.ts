@@ -1,6 +1,7 @@
 import {fanoutHooks} from '@shopify/cli-kit/node/plugins';
 import {outputDebug} from '@shopify/cli-kit/node/output';
 import {AbortError, BugError} from '@shopify/cli-kit/node/error';
+import {setTimeout} from 'node:timers/promises';
 
 import type {Config} from '@oclif/core';
 import type {TunnelClient} from '@shopify/cli-kit/node/plugins/tunnel';
@@ -10,6 +11,8 @@ export async function startTunnelPlugin(
   port: number,
   provider: string,
 ): Promise<TunnelClient> {
+  // Shopify CLI 4.9 bundles the Cloudflare tunnel_start hook in its root plugin.
+  // Registering plugin-cloudflare again in Hydrogen would start duplicate tunnels.
   const hooks = await fanoutHooks(config, 'tunnel_start', {port, provider});
   const results = Object.values(hooks).filter(
     (tunnelResponse) =>
@@ -27,31 +30,23 @@ export async function startTunnelPlugin(
 }
 
 /**
- * Poll the tunnel provider every 0.5 until an URL or error is returned.
+ * Poll the tunnel provider every 0.5 seconds until a URL or error is returned.
  */
 export async function pollTunnelURL(
   tunnelClient: TunnelClient,
+  signal?: AbortSignal,
 ): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
-    let retries = 0;
-    const pollTunnelStatus = async () => {
-      const result = tunnelClient.getTunnelStatus();
-      outputDebug(
-        `Polling tunnel status for ${tunnelClient.provider} (attempt ${retries}): ${result.status}`,
-      );
-      if (result.status === 'error')
-        return reject(new AbortError(result.message, result.tryMessage));
-      if (result.status === 'connected') {
-        resolve(result.url);
-      } else {
-        retries += 1;
-        startPolling();
-      }
-    };
-    const startPolling = () => {
-      setTimeout(pollTunnelStatus, 500);
-    };
-
-    pollTunnelStatus();
-  });
+  let retries = 0;
+  while (true) {
+    signal?.throwIfAborted();
+    const result = tunnelClient.getTunnelStatus();
+    outputDebug(
+      `Polling tunnel status for ${tunnelClient.provider} (attempt ${retries}): ${result.status}`,
+    );
+    if (result.status === 'error')
+      throw new AbortError(result.message, result.tryMessage);
+    if (result.status === 'connected') return result.url;
+    retries += 1;
+    await setTimeout(500, undefined, {signal});
+  }
 }

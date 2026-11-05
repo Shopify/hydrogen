@@ -978,7 +978,9 @@ describe('customer', () => {
           warnSpy.mockRestore();
         });
       });
+    });
 
+    describe('login redirectPath', () => {
       it('Saved redirectPath to session by default if `return_to` param was found', async () => {
         const redirectPath = '/account/orders';
         const request = new Request(
@@ -1165,6 +1167,54 @@ describe('customer', () => {
             redirectPath: '/account',
           }),
         );
+      });
+
+      describe('normalizes a referer redirectPath', () => {
+        async function getSavedRedirectPath({
+          requestUrl = 'https://localhost/account/login',
+          referer,
+        }: {
+          requestUrl?: string;
+          referer: string;
+        }) {
+          const request = new Request(requestUrl);
+          request.headers.set('Referer', referer);
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request,
+            waitUntil: vi.fn(),
+          });
+          await customer.login();
+
+          const [, savedSession] = vi.mocked(session.set).mock.calls[0];
+          return (savedSession as {redirectPath?: string}).redirectPath;
+        }
+
+        it('Saves a same-origin referer as a path', async () => {
+          expect(
+            await getSavedRedirectPath({
+              referer: 'https://localhost/products/snowboard?variant=1',
+            }),
+          ).toBe('/products/snowboard?variant=1');
+        });
+
+        it('Matches an https referer when the request URL is http', async () => {
+          expect(
+            await getSavedRedirectPath({
+              requestUrl: 'http://localhost/account/login',
+              referer: 'https://localhost/products/snowboard',
+            }),
+          ).toBe('/products/snowboard');
+        });
+
+        it('Uses the default path for a referer from another origin', async () => {
+          expect(
+            await getSavedRedirectPath({referer: 'https://other.example/'}),
+          ).toBe('/account');
+        });
       });
     });
   });

@@ -24,7 +24,7 @@ function getExistingReleasePRBranch() {
   try {
     // Use GitHub CLI to check for open PRs from changeset-release branch
     const result = execSync(
-      `gh pr list --state open --head changeset-release/main --json title --limit 1`,
+      `gh pr list --state open --head changeset-release/2026-04 --json title --limit 1`,
       { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] }
     ).trim();
     

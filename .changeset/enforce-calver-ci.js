@@ -68,7 +68,7 @@ function readPackageVersions() {
   let hydrogenBaselineVersion;
   try {
     const gitVersion = execSync(
-      'git show HEAD~1:packages/hydrogen/package.json 2>/dev/null || git show origin/main:packages/hydrogen/package.json',
+      'git show HEAD~1:packages/hydrogen/package.json 2>/dev/null || git show origin/2026-04:packages/hydrogen/package.json',
       {
         encoding: 'utf-8',
         stdio: ['pipe', 'pipe', 'ignore'],
@@ -100,7 +100,7 @@ function readPackageVersions() {
     try {
       const gitPath = pkgPath.replace(process.cwd() + '/', '');
       const gitVersion = execSync(
-        `git show HEAD~1:${gitPath} 2>/dev/null || git show origin/main:${gitPath}`,
+        `git show HEAD~1:${gitPath} 2>/dev/null || git show origin/2026-04:${gitPath}`,
         {
           encoding: 'utf-8',
           stdio: ['pipe', 'pipe', 'ignore'],
