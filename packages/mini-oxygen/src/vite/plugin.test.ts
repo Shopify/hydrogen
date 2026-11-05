@@ -1,4 +1,11 @@
-import {mkdtempSync, mkdirSync, rmSync, writeFileSync} from 'node:fs';
+import {
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {afterEach, describe, expect, it, vi} from 'vitest';
@@ -20,7 +27,7 @@ vi.mock('../common/find-port.js', () => ({
   findPort: vi.fn(async () => 9100),
 }));
 
-import type {Plugin} from 'vite';
+import {build, createBuilder, type Plugin} from 'vite';
 import {createMiniOxygen} from '../worker/index.js';
 import {oxygen, type OxygenPluginOptions} from './plugin.js';
 
@@ -62,6 +69,24 @@ function createRootWithHydrogenVersion(version: string) {
       exports: {'./package.json': './package.json'},
     }),
   );
+}
+
+function createRootWithBuildEntries(hydrogenVersion: string) {
+  const root = createRootWithHydrogenVersion(hydrogenVersion);
+  writeFileSync(join(root, 'client.js'), 'console.log(1);');
+  writeFileSync(
+    join(root, 'server.js'),
+    'export default {fetch: () => new Response()};',
+  );
+
+  return root;
+}
+
+function expectOxygenJsonInServerOutputOnly(root: string) {
+  expect(
+    JSON.parse(readFileSync(join(root, 'dist/server/oxygen.json'), 'utf8')),
+  ).toEqual({version: 1, compatibility_date: '2026-04-01'});
+  expect(existsSync(join(root, 'dist/client/oxygen.json'))).toBe(false);
 }
 
 function createRoot() {
@@ -276,22 +301,57 @@ describe('oxygen Vite plugin', () => {
     });
   });
 
-  it('emits oxygen.json from server environments when every environment shares one build config', () => {
-    const plugin = getOxygenPlugin();
-    const root = createRootWithHydrogenVersion('2026.4.4');
+  it('writes oxygen.json to the server output when every environment shares one build config', async () => {
+    const root = createRootWithBuildEntries('2026.4.4');
 
-    runConfigHook(plugin, {}, {isSsrBuild: false});
-    const emitFile = runGenerateBundle(plugin, {consumer: 'server', root});
-
-    expect(emitFile).toHaveBeenCalledWith({
-      type: 'asset',
-      fileName: 'oxygen.json',
-      source: JSON.stringify(
-        {version: 1, compatibility_date: '2026-04-01'},
-        null,
-        2,
-      ),
+    const builder = await createBuilder({
+      root,
+      configFile: false,
+      logLevel: 'silent',
+      plugins: [oxygen()],
+      builder: {sharedConfigBuild: true, sharedPlugins: true},
+      environments: {
+        client: {
+          build: {
+            outDir: 'dist/client',
+            rollupOptions: {input: join(root, 'client.js')},
+          },
+        },
+        ssr: {
+          build: {
+            outDir: 'dist/server',
+            rollupOptions: {input: join(root, 'server.js')},
+          },
+        },
+      },
     });
+    await builder.buildApp();
+
+    expectOxygenJsonInServerOutputOnly(root);
+  });
+
+  it('writes oxygen.json to the server output in two-pass builds', async () => {
+    const root = createRootWithBuildEntries('2026.4.4');
+    const sharedConfig = {
+      root,
+      configFile: false as const,
+      logLevel: 'silent' as const,
+      plugins: [oxygen()],
+    };
+
+    await build({
+      ...sharedConfig,
+      build: {
+        outDir: 'dist/client',
+        rollupOptions: {input: join(root, 'client.js')},
+      },
+    });
+    await build({
+      ...sharedConfig,
+      build: {outDir: 'dist/server', ssr: join(root, 'server.js')},
+    });
+
+    expectOxygenJsonInServerOutputOnly(root);
   });
 
   it('uses explicit compatibility dates before inferred dates', () => {
