@@ -156,20 +156,13 @@ describe("handleUcpMcpProxy", () => {
     expect(headers.get("x-merchant-auth")).toBe("custom-credential");
   });
 
-  it("preserves cookies and other caller-provided headers", async () => {
+  it("preserves cookies and browser headers", async () => {
     await handleUcpMcpProxy(
       createRequest("/api/ucp/mcp", {
         headers: {
           cookie: "session=private",
-          forwarded: "for=1.2.3.4",
           origin: "https://my-app.com",
-          "oxygen-buyer-ip": "1.2.3.4",
           referer: "https://my-app.com/products/snowboard",
-          "shopify-storefront-buyer-ip": "1.2.3.4",
-          "x-forwarded-for": "1.2.3.4",
-          "x-forwarded-host": "my-app.com",
-          "x-forwarded-proto": "https",
-          "x-real-ip": "1.2.3.4",
         },
       }),
     );
@@ -178,15 +171,36 @@ describe("handleUcpMcpProxy", () => {
     assert(call, "expected fetch to be called");
     const headers = new Headers(call[1].headers);
     expect(headers.get("cookie")).toBe("session=private");
-    expect(headers.get("forwarded")).toBe("for=1.2.3.4");
     expect(headers.get("origin")).toBe("https://my-app.com");
-    expect(headers.get("oxygen-buyer-ip")).toBe("1.2.3.4");
     expect(headers.get("referer")).toBe("https://my-app.com/products/snowboard");
-    expect(headers.get("shopify-storefront-buyer-ip")).toBe("1.2.3.4");
-    expect(headers.get("x-forwarded-for")).toBe("1.2.3.4");
-    expect(headers.get("x-forwarded-host")).toBe("my-app.com");
-    expect(headers.get("x-forwarded-proto")).toBe("https");
-    expect(headers.get("x-real-ip")).toBe("1.2.3.4");
+  });
+
+  it.each([
+    "forwarded",
+    "oxygen-buyer-ip",
+    "shopify-storefront-buyer-ip",
+    "true-client-ip",
+    "x-client-ip",
+    "x-forwarded-for",
+    "x-forwarded-host",
+    "x-forwarded-port",
+    "x-forwarded-proto",
+    "x-forwarded-scheme",
+    "x-forwarded-ssl",
+    "x-real-ip",
+    "x-shopify-client-ip",
+  ])("does not forward the caller-set %s header", async (header) => {
+    await handleUcpMcpProxy(
+      createRequest("/api/ucp/mcp", {
+        headers: { authorization: "Bearer caller-token", [header]: "1.2.3.4" },
+      }),
+    );
+
+    const call = mockFetch.mock.calls[0];
+    assert(call, "expected fetch to be called");
+    const headers = new Headers(call[1].headers);
+    expect(headers.get(header)).toBeNull();
+    expect(headers.get("authorization")).toBe("Bearer caller-token");
   });
 
   it("captures upstream Shopify cookies for gated replay", async () => {
