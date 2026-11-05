@@ -179,7 +179,10 @@ describe("handleShopifyApiProxy", () => {
     "x-client-ip",
     "x-forwarded-for",
     "x-forwarded-host",
+    "x-forwarded-port",
     "x-forwarded-proto",
+    "x-forwarded-scheme",
+    "x-forwarded-ssl",
     "x-real-ip",
     "x-shopify-client-ip",
   ])("does not forward the problematic %s header", async (header) => {

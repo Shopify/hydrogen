@@ -49,7 +49,10 @@ export type StandardHeaderName =
   | "x-client-ip"
   | "x-forwarded-for"
   | "x-forwarded-host"
+  | "x-forwarded-port"
   | "x-forwarded-proto"
+  | "x-forwarded-scheme"
+  | "x-forwarded-ssl"
   | "x-real-ip"
   | "x-requested-with"
   | "x-shopify-client-ip";
@@ -159,7 +162,10 @@ export const PROXY_REQUEST_HEADER_DENYLIST = defineHeaderList(
   "x-client-ip",
   "x-forwarded-for",
   "x-forwarded-host",
+  "x-forwarded-port",
   "x-forwarded-proto",
+  "x-forwarded-scheme",
+  "x-forwarded-ssl",
   "x-real-ip",
   "x-shopify-client-ip",
 );
