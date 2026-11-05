@@ -144,6 +144,24 @@ describe("handleUrlRedirects", () => {
     expect(body.variables?.query).toBe("path:/old-page");
   });
 
+  it("handles paths with long runs of slashes in linear time", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response(JSON.stringify({ data: { urlRedirects: { edges: [] } } })),
+    );
+    const path = `/old-page${"/".repeat(65_536)}x`;
+    const start = performance.now();
+
+    await handleUrlRedirects(new Request(`https://my-app.com${path}`), defaultConfig);
+
+    // The quadratic regex took over a second here; the loop takes well under a millisecond.
+    expect(performance.now() - start).toBeLessThan(100);
+    const call = mockFetch.mock.calls[0];
+    assert(call, "expected fetch to be called");
+    const [, init] = call;
+    const body = JSON.parse(init.body) as { variables?: { query?: string } };
+    expect(body.variables?.query).toBe(`path:${path}`);
+  });
+
   it("lowercases the query path", async () => {
     mockFetch.mockResolvedValueOnce(
       new Response(JSON.stringify({ data: { urlRedirects: { edges: [] } } })),

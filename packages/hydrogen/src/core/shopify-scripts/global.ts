@@ -5,6 +5,7 @@ import {
   resolveStandardRouteUrl,
   type ShopifyRouteTemplates,
 } from "../standard-routes/index";
+import { normalizePathPrefix, trimTrailingSlashes } from "../standard-routes/path";
 import { SHOPIFY_API_PROXY_PREFIX, isHydrogenServerHandoffPath } from "../url";
 import initializeShopifyGlobal from "./global-script" with { type: "script" };
 import type { ShopifyScriptsI18n } from "./types";
@@ -117,16 +118,13 @@ function shouldHandoff(url: string): boolean {
 }
 
 function getShopifyRoutesRoot(pathPrefix: I18nConfig["pathPrefix"]): string {
-  const normalizedPathPrefix = pathPrefix?.trim().replace(/^\/+/, "").replace(/\/+$/, "") ?? "";
+  const normalizedPathPrefix = normalizePathPrefix(pathPrefix);
 
-  return normalizedPathPrefix ? `/${normalizedPathPrefix}/` : DEFAULT_ROUTES_ROOT;
+  return normalizedPathPrefix ? `${normalizedPathPrefix}/` : DEFAULT_ROUTES_ROOT;
 }
 
 function normalizeMyshopifyDomain(domain: string): string {
-  return domain
-    .trim()
-    .replace(/^https?:\/\//i, "")
-    .replace(/\/+$/, "");
+  return trimTrailingSlashes(domain.trim().replace(/^https?:\/\//i, ""));
 }
 
 /**
