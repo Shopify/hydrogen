@@ -9,15 +9,20 @@ import type {
   ShopifyPathnameLocale,
 } from "./types";
 
-/** Anything the locale can be matched from: a `Request`, a `URL`, or a URL string. */
+const RELATIVE_URL_BASE = "https://shopify.local";
+
+/** Anything the locale can be matched from: a `Request`, a `URL`, or a URL or pathname string. */
 export type LocaleMatchSource = Pick<Request, "url"> | URL | string;
 
 /**
  * Resolves the locale of a request URL according to the definition's routing.
  *
  * Pure and synchronous: the URL is the only input, so the same URL always resolves to the same
- * locale. Unknown prefixes or hostnames, and unparsable or missing URLs, resolve to
- * `defaultLocale`.
+ * locale. Unknown prefixes or hostnames, and a missing URL, resolve to `defaultLocale`. Pathnames
+ * such as `/fr-ca/products/x` are matched under pathname routing; domain routing needs an
+ * absolute URL to read the hostname from.
+ *
+ * @throws when the source is a string that is neither a URL nor a pathname.
  *
  * Only the first path segment (pathname routing) or the hostname (domain routing) is read. The
  * URL is matched as-is: framework-specific rewrites of that segment must be normalized by the
@@ -137,8 +142,8 @@ function toUrl(source: LocaleMatchSource | undefined): URL | null {
 
   const url = typeof source === "string" ? source : source.url;
   try {
-    return new URL(url);
+    return new URL(url, RELATIVE_URL_BASE);
   } catch {
-    return null;
+    throw new Error(`matchLocale: ${JSON.stringify(url)} is not a URL or pathname.`);
   }
 }

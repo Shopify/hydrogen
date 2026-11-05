@@ -283,9 +283,21 @@ describe("matchLocale", () => {
     });
   });
 
-  it("falls back to the default for unparsable or missing URLs", () => {
-    expect(matchLocale("not a url", pathnameI18n)).toEqual({ ...EN_US, pathPrefix: "" });
+  it("matches a pathname without an origin", () => {
+    expect(matchLocale("/fr-ca/products/x", pathnameI18n)).toEqual({
+      ...FR_CA,
+      pathPrefix: "/fr-ca",
+    });
+  });
+
+  it("falls back to the default for a missing URL", () => {
     expect(matchLocale(undefined, pathnameI18n)).toEqual({ ...EN_US, pathPrefix: "" });
+  });
+
+  it("throws for a string that is neither a URL nor a pathname", () => {
+    expect(() => matchLocale("http://[", pathnameI18n)).toThrow(
+      'matchLocale: "http://[" is not a URL or pathname.',
+    );
   });
 
   it("accepts a URL instance", () => {
