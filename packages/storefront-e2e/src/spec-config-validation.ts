@@ -1,8 +1,8 @@
+import type { GraphQLFormattedError } from "@shopify/hydrogen";
+
 import { AbortSuiteError, type SkipTestGroupError } from "./matcher-fixture";
 
-type GraphQLError = {
-  readonly message: string;
-};
+type GraphQLError = Pick<GraphQLFormattedError, "message">;
 
 type SuiteError = typeof AbortSuiteError | typeof SkipTestGroupError;
 
