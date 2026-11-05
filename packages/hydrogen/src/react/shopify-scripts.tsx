@@ -1,6 +1,6 @@
 "use client";
 
-import { createElement, Fragment, useEffect } from "react";
+import { createElement, Fragment, useEffect, useRef } from "react";
 import type * as React from "react";
 
 import {
@@ -9,6 +9,9 @@ import {
   type ShopifyRoutesOptions,
   type ShopifyScriptTagsOptions,
 } from "../core/shopify-scripts";
+import { findShopifyAccountWidgetDataScript } from "../core/shopify-scripts/account-widget";
+import { getShopifyScriptTagKey } from "../core/shopify-scripts/render";
+import { restartAccountWidgets } from "./account-widget";
 
 /**
  * Props for the `ShopifyScripts` component in React and Vue. The component renders Shopify's script
@@ -53,18 +56,31 @@ export function ShopifyScripts(options: ShopifyScriptsProps) {
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- ShopifyScripts browser startup is initialized once from initial props.
   }, []);
 
+  const { scripts, tags } = getShopifyScriptTags({ ...scriptOptions, consent });
+  useRestartAccountWidgetsOnChange(findShopifyAccountWidgetDataScript(scripts)?.innerHTML);
+
   return createElement(
     Fragment,
     null,
-    getShopifyScriptTags({ ...scriptOptions, consent }).tags.map(
-      ({ tagName, attributes, innerHTML }, index) =>
-        createElement(tagName, {
-          key: index,
-          ...getReactAttributes(attributes),
-          ...(innerHTML ? { dangerouslySetInnerHTML: { __html: innerHTML } } : {}),
-        }),
+    tags.map(({ tagName, attributes, innerHTML }) =>
+      createElement(tagName, {
+        key: getShopifyScriptTagKey(attributes),
+        ...getReactAttributes(attributes),
+        ...(innerHTML ? { dangerouslySetInnerHTML: { __html: innerHTML } } : {}),
+      }),
     ),
   );
+}
+
+// Runs after the commit that updates the JSON script tag, so remounted widgets read the new data.
+function useRestartAccountWidgetsOnChange(serialized: string | undefined) {
+  const previous = useRef(serialized);
+
+  useEffect(() => {
+    if (previous.current === serialized) return;
+    previous.current = serialized;
+    restartAccountWidgets();
+  }, [serialized]);
 }
 
 function getReactAttributes(attributes: Record<string, string | boolean> = {}) {

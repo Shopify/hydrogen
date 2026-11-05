@@ -1,7 +1,7 @@
 import { describe, expectTypeOf, it } from "vitest";
 
 import type { ConsentConfig, ConsentPreferences, ConsentSetup, ShopifyGlobal, StorefrontAnalyticsConfig } from "./index";
-import type { ShopifyScriptTagsOptions } from "./shopify-scripts";
+import type { ShopifyAccountWidgetData, ShopifyScriptTagsOptions } from "./shopify-scripts";
 
 describe("Shopify script option types", () => {
   it("requires complete shop identity", () => {});
@@ -46,6 +46,22 @@ export function shopifyScriptOptionTypes() {
     },
   };
   void missingShopId;
+}
+
+export function accountWidgetTypes(widget: ShopifyAccountWidgetData) {
+  const signedOut: ShopifyAccountWidgetData = { ...widget, customer: null };
+  void signedOut;
+
+  // @ts-expect-error customer must be explicit; pass null for a signed-out visitor
+  const missingCustomer: ShopifyAccountWidgetData = { shop: widget.shop };
+  void missingCustomer;
+
+  const wrongCasing: ShopifyAccountWidgetData = {
+    ...widget,
+    // @ts-expect-error providers are lowercase handles; Hydrogen writes the casing the widget compares
+    shop: { socialLoginProviders: ["Shop"] },
+  };
+  void wrongCasing;
 }
 
 // @ts-expect-error setup must return a promise representing initial consent readiness

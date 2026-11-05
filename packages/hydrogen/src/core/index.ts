@@ -140,6 +140,11 @@ export {
   renderShopifyScriptTags,
 } from "./shopify-scripts/index";
 export type {
+  ShopifyAccountWidgetCustomer,
+  ShopifyAccountWidgetData,
+  ShopifyAccountWidgetShop,
+  ShopifyAccountWidgetSocialLoginProvider,
+  ShopifyAccountWidgetTranslationKey,
   ShopifyRoutesOptions,
   ShopifyScriptsAnalyticsConfig,
   ShopifyScriptTagDescriptor,
