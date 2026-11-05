@@ -1,3 +1,5 @@
+import { trimTrailingSlashes } from "./standard-routes/path";
+
 export const SFAPI_RE = /^\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
 export const SHOPIFY_API_PROXY_PREFIX = "/__shopify";
 export const SHOPIFY_API_PROXY_RE = /^\/__shopify(?:\/|$)/;
@@ -81,7 +83,7 @@ export function normalizeStoreDomain(domain: string): string {
   }
 
   if (domain.startsWith("http://") || domain.startsWith("https://")) {
-    return domain.replace(/\/+$/, "");
+    return trimTrailingSlashes(domain);
   }
-  return `https://${domain}`.replace(/\/+$/, "");
+  return trimTrailingSlashes(`https://${domain}`);
 }

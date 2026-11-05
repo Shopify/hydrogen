@@ -358,4 +358,17 @@ describe("standard routes", () => {
       }),
     ).toBeNull();
   });
+
+  it("matches paths with long runs of slashes in linear time", () => {
+    const routeTemplates = createShopifyRouteTemplates({});
+    const slashes = "/".repeat(65_536);
+    const start = performance.now();
+
+    expect(matchStandardRouteUrl({ routeTemplates, url: `/products/a${slashes}b` })).toBeNull();
+    expect(matchStandardRouteUrl({ routeTemplates, url: `/products/a${slashes}` })).toMatchObject({
+      params: { productHandle: "a" },
+    });
+    // The quadratic regex took over a second here; the loop takes well under a millisecond.
+    expect(performance.now() - start).toBeLessThan(100);
+  });
 });
