@@ -10,6 +10,7 @@ import {
 } from "@/lib/customer-account";
 import { getCustomerSessionHandlers } from "@/lib/customer-session-handlers";
 import { predictiveSearchHandlers } from "@/lib/predictive-search-handlers";
+import { applyProxyResponseHeaders } from "@/lib/proxy-response-headers";
 import { routeTemplates } from "@/lib/route-templates";
 import { createRequestStorefrontClient } from "@/lib/storefront-client";
 import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/storefront-config";
@@ -24,7 +25,8 @@ import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/stor
  * The original request URL is forwarded to Server Components via
  * `requestContext.getForwardedRequestHeaders()` (carries `x-storefront-url` for
  * `not-found.tsx` and `getMarketFromHeaders`). SFAPI response headers are merged
- * onto the forwarded response via `requestContext.applyResponseHeaders`.
+ * onto the forwarded response via `applyProxyResponseHeaders`, which leaves `Link`
+ * to the route so Next.js does not replace a route handler's own `Link` header.
  *
  * mock.shop fallback: when no `PRIVATE_STOREFRONT_API_TOKEN` is present, the
  * shared `resolveStorefrontConfig()` falls back to `mock.shop` with tokenless
@@ -80,7 +82,7 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
   // to Server Components, then merge SFAPI response headers onto the response.
   const requestHeaders = requestContext.getForwardedRequestHeaders();
   const response = NextResponse.next({ request: { headers: requestHeaders } });
-  requestContext.applyResponseHeaders(response.headers);
+  applyProxyResponseHeaders(requestContext, response.headers);
   return response;
 }
 
