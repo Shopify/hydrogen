@@ -4,6 +4,7 @@ import { describe, it } from "vitest";
 
 import type { Buyer, BuyerResult } from "./agent/buyer.ts";
 import type { EvidenceSink } from "./evidence.ts";
+import { formatSummary } from "./report/summary.ts";
 import { PageLoadError, runScenario, type Driver } from "./runner.ts";
 import { CartReadError, type CartSnapshot } from "./scenario.ts";
 import { addToCart } from "./scenarios/add-to-cart.ts";
@@ -490,6 +491,7 @@ describe("runScenario", () => {
     assert.match(result.reason, /could not be stopped/);
     assert.ok(result.warnings.some((warning) => warning.startsWith("Closing the buyer failed")));
     assert.ok(result.warnings.some((warning) => warning.includes(CHECKOUT_URL)));
+    assert.ok(formatSummary(result).includes(CHECKOUT_URL));
   });
 
   it("stops a cooperative buyer at the first checkout so later cart changes cannot happen", async () => {
