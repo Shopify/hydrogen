@@ -2,6 +2,7 @@
 // for information about these interfaces
 
 import type {
+  PublicStorefrontClient,
   RequestScopedPrivateStorefrontClient,
   ShopifyRequestContext,
 } from "@shopify/hydrogen";
@@ -10,7 +11,8 @@ declare global {
   namespace App {
     // interface Error {}
     interface Locals {
-      storefrontClient: RequestScopedPrivateStorefrontClient;
+      /** Public and tokenless on mock.shop, private with a real store. */
+      storefrontClient: PublicStorefrontClient | RequestScopedPrivateStorefrontClient;
       shopifyRequestContext: ShopifyRequestContext;
     }
     // interface PageData {}

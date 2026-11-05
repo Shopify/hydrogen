@@ -2,12 +2,12 @@ import { env } from "$env/dynamic/private";
 import { createCustomerSessionManager, customerSessionHandlers } from "$lib/customer-account";
 import { routeTemplates } from "$lib/route-templates";
 import { getBuyerIp } from "@shared/buyer-ip";
-import { defaultI18n, storefrontConfig } from "@shared/config";
-import { getPrivateStorefrontToken } from "@shared/private-env";
+import { defaultI18n } from "@shared/config";
 import {
   STOREFRONT_CACHE_MAX_ENTRIES,
   createStorefrontCacheAdapter,
 } from "@shared/storefront-cache";
+import { resolveStorefrontConfig } from "@shared/storefront-config";
 import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
 import {
   createCartServerHandlers,
@@ -31,7 +31,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     i18n: defaultI18n,
     buyerIp,
   });
-  const storefrontClient = createPrivateStorefrontClient(requestContext);
+  const storefrontClient = createRequestStorefrontClient(requestContext);
   const sessionManager = await createCustomerSessionManager(event.request);
 
   const shopifyRoute = handleShopifyRoutes({
@@ -77,13 +77,23 @@ function applyStorefrontResponseHeaders(
   }
 }
 
-function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
+function createRequestStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
+  const config = resolveStorefrontConfig("hydrogen-example-sveltekit", env);
+
+  if (config.mode === "mock") {
+    return createStorefrontClient({
+      type: "public",
+      requestContext,
+      config: { storeDomain: config.storeDomain, cache: storefrontCache },
+    });
+  }
+
   return createStorefrontClient({
     type: "private",
     requestContext,
     config: {
-      storeDomain: storefrontConfig.storeDomain,
-      privateStorefrontToken: getPrivateStorefrontToken(env),
+      storeDomain: config.storeDomain,
+      privateStorefrontToken: config.privateStorefrontToken,
       cache: storefrontCache,
     },
   });
