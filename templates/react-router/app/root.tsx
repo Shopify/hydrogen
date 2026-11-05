@@ -26,7 +26,7 @@ import { predictiveSearchHandlers } from "~/lib/predictive-search-handlers";
 import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
-import { analyticsConsent, i18n, resolveShopIdentity } from "~/lib/shop";
+import { analyticsConsent, resolveShopIdentity } from "~/lib/shop";
 import {
   createRequestStorefrontClient,
   storefrontClientContext,
@@ -94,6 +94,7 @@ export const middleware: Route.MiddlewareFunction[] = [
 export async function loader({ context, request }: Route.LoaderArgs) {
   const env = context.get(envContext);
   const storefrontClient = context.get(storefrontClientContext);
+  const { locale } = context.get(storefrontRequestContext);
   const [cartResult, layout] = await Promise.all([
     cartHandlers.get({ storefrontClient, request }),
     loadRootLayout(storefrontClient),
@@ -104,6 +105,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     shopInfo: layout.shopInfo,
     shopIdentity: resolveShopIdentity(env, layout.shopId),
     currency: layout.currency,
+    locale,
   };
 }
 
@@ -119,7 +121,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {rootData ? (
           <ShopifyScripts
-            i18n={{ ...i18n.defaultLocale, currency: rootData.currency }}
+            i18n={{ ...rootData.locale, currency: rootData.currency }}
             shop={rootData.shopIdentity.scriptShop}
             analytics={{ channel: rootData.shopIdentity.analyticsShop.channel }}
             shopifyAnalytics={rootData.shopIdentity.shopifyAnalytics}
