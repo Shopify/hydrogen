@@ -7,12 +7,12 @@ import {
 } from "@shared/storefront-cache";
 import {
   createCartServerHandlers,
+  createContentSecurityPolicy,
   createStorefrontClient,
   createShopifyRequestContext,
   handleShopifyRedirects,
   handleShopifyRoutes,
   type ShopifyRequestContextWithBuyerIp,
-  type ShopifyRequestContext,
 } from "@shopify/hydrogen";
 import { defineMiddleware } from "astro:middleware";
 import { LRUCache } from "lru-cache";
@@ -45,6 +45,18 @@ export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
   });
   if (shopifyRoute) return shopifyRoute;
 
+  const csp = createContentSecurityPolicy({
+    shop: { storeDomain: storefrontConfig.storeDomain },
+    nonce: false,
+    directives: {
+      // Astro's native CSP hashes its generated scripts; Shopify's inline bootstraps would
+      // need hashes too. This example uses an explicit inline-script allowance instead.
+      scriptSrc: ["'unsafe-inline'"],
+      styleSrc: ["https://fonts.googleapis.com"],
+      fontSrc: ["https://fonts.gstatic.com"],
+    },
+  });
+
   locals.shopifyRequestContext = requestContext;
   locals.storefrontClient = storefrontClient;
 
@@ -60,23 +72,11 @@ export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
     if (redirect) return redirect;
   }
 
-  return applyStorefrontResponseHeaders(requestContext, response);
+  const finalResponse = new Response(response.body, response);
+  requestContext.applyResponseHeaders(finalResponse.headers);
+  csp.applyResponseHeaders(finalResponse.headers);
+  return finalResponse;
 });
-
-function applyStorefrontResponseHeaders(
-  requestContext: Pick<ShopifyRequestContext, "applyResponseHeaders">,
-  response: Response,
-): Response {
-  try {
-    requestContext.applyResponseHeaders(response.headers);
-    return response;
-  } catch (error) {
-    if (!(error instanceof TypeError)) throw error;
-    const mutableResponse = new Response(response.body, response);
-    requestContext.applyResponseHeaders(mutableResponse.headers);
-    return mutableResponse;
-  }
-}
 
 function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
   return createStorefrontClient({

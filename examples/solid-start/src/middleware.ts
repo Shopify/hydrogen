@@ -71,6 +71,7 @@ export default createMiddleware({
       }
 
       event.locals.shopifyRequestContext?.applyResponseHeaders(event.response.headers);
+      event.locals.csp?.applyResponseHeaders(event.response.headers);
     },
   ],
 });

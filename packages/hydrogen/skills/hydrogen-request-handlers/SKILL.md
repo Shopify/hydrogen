@@ -18,6 +18,8 @@ Hydrogen request handlers are framework-neutral, but the framework wiring is not
 
 Before wiring middleware or route handlers, check whether this skill has a reference file for the app's framework in `references/`. If one exists, read it and preserve that framework's routing gate. If there is no matching reference, use `references/frameworks.md` as the generic adaptation guide and map its pre-routing and post-404 phases onto the app's server lifecycle.
 
+For CSP header application, nonce propagation, and the Next proxy-to-renderer handoff, read [Content Security Policy](./references/content-security-policy.md).
+
 ## Core Gate
 
 ```

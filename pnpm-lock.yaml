@@ -95,9 +95,6 @@ importers:
       '@shopify/hydrogen-react':
         specifier: ^2026.4.3
         version: 2026.4.3(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(three@0.182.0)(vite@8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4))
-      content-security-policy-builder:
-        specifier: ^2.2.0
-        version: 2.3.0
       isbot:
         specifier: ^5.1.36
         version: 5.1.39
@@ -5574,10 +5571,6 @@ packages:
   content-disposition@0.5.4:
     resolution: {integrity: sha512-FveZTNuGw04cxlAiWbzi6zTAL/lhehaWbTtgluJh4/E95DqMwTmha3KZN1aAWA8cFIhHzMZUvLevkw5Rqk+tSQ==, tarball: https://registry.npmjs.org/content-disposition/-/content-disposition-0.5.4.tgz}
     engines: {node: '>= 0.6'}
-
-  content-security-policy-builder@2.3.0:
-    resolution: {integrity: sha512-qmdEmn1M+WpadIeBLKr9Em8VJSCjtRINCSbYsyJHQ4liTwCmrLzIRpJdJpoVDnsvWUrR5iblYhQJqA4b4Hs/iw==, tarball: https://registry.npmjs.org/content-security-policy-builder/-/content-security-policy-builder-2.3.0.tgz}
-    engines: {node: '>=18.0.0'}
 
   content-type@1.0.5:
     resolution: {integrity: sha512-nTjqfcBFEipKdXCv4YDQWCfmcLZKm81ldF0pAopTvyrFGVbcR6P/VAAd5G7N+0tTr8QqiU0tFadD6FK4NtJwOA==, tarball: https://registry.npmjs.org/content-type/-/content-type-1.0.5.tgz}
@@ -15534,8 +15527,6 @@ snapshots:
     dependencies:
       safe-buffer: 5.2.1
     optional: true
-
-  content-security-policy-builder@2.3.0: {}
 
   content-type@1.0.5: {}
 

@@ -78,6 +78,7 @@ Run these from `examples/nextjs`, or from the repository root with `pnpm --filte
 | `pnpm start` | Start the production server after `pnpm build`. |
 | `pnpm lint` | Run ESLint. |
 | `pnpm typecheck` | Run TypeScript and Hydrogen GraphQL checks. |
+| `pnpm test` | Run unit tests. |
 
 ## Pages
 
