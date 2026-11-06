@@ -20,6 +20,7 @@ import { Header } from "~/components/Header";
 import { SearchDrawer } from "~/components/SearchDrawer";
 import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
+import { useNonce } from "~/lib/csp";
 import { createRequestCustomerAccount, customerAccountContext } from "~/lib/customer-account";
 import { envContext } from "~/lib/env";
 import { predictiveSearchHandlers } from "~/lib/predictive-search-handlers";
@@ -27,11 +28,7 @@ import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
 import { analyticsConsent, resolveShopIdentity } from "~/lib/shop";
-import {
-  createRequestStorefrontClient,
-  storefrontClientContext,
-  storefrontRequestContext,
-} from "~/lib/storefront";
+import { createRequestStorefrontClient, storefrontClientContext } from "~/lib/storefront";
 
 import type { Route } from "./+types/root";
 
@@ -70,7 +67,6 @@ export const middleware: Route.MiddlewareFunction[] = [
     if (shopifyRoute) return shopifyRoute;
 
     context.set(storefrontClientContext, storefrontClient);
-    context.set(storefrontRequestContext, requestContext);
     context.set(customerAccountContext, customerAccount?.customerAccount ?? null);
 
     const response = await next();
@@ -94,7 +90,6 @@ export const middleware: Route.MiddlewareFunction[] = [
 export async function loader({ context, request }: Route.LoaderArgs) {
   const env = context.get(envContext);
   const storefrontClient = context.get(storefrontClientContext);
-  const { locale } = context.get(storefrontRequestContext);
   const [cartResult, layout] = await Promise.all([
     cartHandlers.get({ storefrontClient, request }),
     loadRootLayout(storefrontClient),
@@ -105,11 +100,12 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     shopInfo: layout.shopInfo,
     shopIdentity: resolveShopIdentity(env, layout.shopId),
     currency: layout.currency,
-    locale,
+    locale: storefrontClient.locale,
   };
 }
 
 export function Layout({ children }: { children: ReactNode }) {
+  const nonce = useNonce();
   const navigate = useNavigate();
   // Absent when the root loader failed (error page only).
   const rootData = useRouteLoaderData<typeof loader>("root");
@@ -121,6 +117,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {rootData ? (
           <ShopifyScripts
+            nonce={nonce}
             i18n={{ ...rootData.locale, currency: rootData.currency }}
             shop={rootData.shopIdentity.scriptShop}
             analytics={{ channel: rootData.shopIdentity.analyticsShop.channel }}
@@ -141,8 +138,8 @@ export function Layout({ children }: { children: ReactNode }) {
           Skip to content
         </a>
         {children}
-        <ScrollRestoration />
-        <Scripts />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );

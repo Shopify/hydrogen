@@ -140,6 +140,33 @@ describe("handleWellKnownProxy", () => {
     expect(headers.get("Sec-Shopify-Storefront-Origin")).toBe("https://headless.example");
   });
 
+  it.each([
+    "forwarded",
+    "oxygen-buyer-ip",
+    "shopify-storefront-buyer-ip",
+    "true-client-ip",
+    "x-client-ip",
+    "x-forwarded-for",
+    "x-forwarded-host",
+    "x-forwarded-port",
+    "x-forwarded-proto",
+    "x-forwarded-scheme",
+    "x-forwarded-ssl",
+    "x-real-ip",
+    "x-shopify-client-ip",
+  ])("does not forward the caller-set %s header", async (header) => {
+    await handleWellKnownProxy(
+      new Request(`https://headless.example${FEC_PRODUCE_PATH}`, {
+        method: "POST",
+        headers: { [header]: "1.2.3.4" },
+      }),
+    );
+
+    const call = mockFetch.mock.calls[0];
+    assert(call, "expected fetch to be called");
+    expect(new Headers(call[1].headers).get(header)).toBeNull();
+  });
+
   it("preserves upstream response metadata while consuming cookies", async () => {
     const result = await handleWellKnownProxy(
       new Request(`https://headless.example${ASSOCIATION_PATH}`),

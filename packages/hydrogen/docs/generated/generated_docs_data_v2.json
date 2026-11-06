@@ -4136,6 +4136,387 @@
       "override": "The options for handleShopifyRoutes: the `request`, the `requestContext`, the `storefrontClient` created with that request context, optional `routeTemplates`, and optional `handlers`, an array of handler groups. Pass `sessionManager` when a registered handler's context includes it, such as Customer Account handlers or cart handlers created with `customerSession`. Otherwise `sessionManager` is optional when the handler types are inferred from `handlers`."
     }
   },
+  "GetShopifyScriptHashesGeneratedType": {
+    "src/core/shopify-scripts/hashes.ts": {
+      "filePath": "src/core/shopify-scripts/hashes.ts",
+      "name": "GetShopifyScriptHashesGeneratedType",
+      "description": "Returns CSP hashes for the static inline bootstraps rendered by ShopifyScripts and the tag helpers. Add these to script-src when using hashes instead of nonces. Values include CSP quotes by default; pass `quoted: false` for framework configuration that expects unquoted hashes. Hashes authorize Shopify's bootstraps, not framework scripts.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "input1",
+          "description": "",
+          "value": "{ quoted?: boolean; }",
+          "isOptional": true,
+          "defaultValue": "{}",
+          "filePath": "src/core/shopify-scripts/hashes.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/shopify-scripts/hashes.ts",
+        "description": "",
+        "name": "string[]",
+        "value": "string[]"
+      },
+      "value": "export function getShopifyScriptHashes({ quoted = true }: { quoted?: boolean } = {}): string[] {\n  return quoted ? [...hashes] : hashes.map((hash) => hash.slice(1, -1));\n}"
+    }
+  },
+  "CreateContentSecurityPolicyGeneratedType": {
+    "src/core/csp/index.ts": {
+      "filePath": "src/core/csp/index.ts",
+      "name": "CreateContentSecurityPolicyGeneratedType",
+      "description": "Creates a Shopify-compatible Content Security Policy for one document response. By default it generates a nonce to pass to your framework renderer and Shopify's script tags. Set `nonce` to `false` for a nonce-free policy. Styles allow inline CSS for storefront components.\n\nCall the returned policy's `applyResponseHeaders()` to send CSP and prevent caching when it has a nonce. Set the forwarded `Content-Security-Policy` request header to `header` for a renderer such as Next.js. Incoming headers never configure the policy or its nonce.\n\nEach call creates a new policy; reuse that object throughout a document's rendering. The development build allows common local HMR connection origins. Add any additional framework development-script allowances explicitly. For static documents, authorize scripts explicitly with hashes or other sources appropriate for your framework.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "options",
+          "description": "",
+          "value": "CreateContentSecurityPolicyOptions",
+          "isOptional": true,
+          "defaultValue": "{}",
+          "filePath": "src/core/csp/index.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/csp/index.ts",
+        "description": "",
+        "name": "ContentSecurityPolicy",
+        "value": "ContentSecurityPolicy"
+      },
+      "value": "export function createContentSecurityPolicy(\n  options: CreateContentSecurityPolicyOptions = {},\n): ContentSecurityPolicy {\n  const nonce = options.nonce === false ? undefined : generateNonce();\n  const directives: ContentSecurityPolicyDirectives = getShopifyCspDirectives(options.shop);\n  mergeDirectives(directives, options.directives);\n  if (nonce !== undefined) {\n    directives.scriptSrc = withNonce(directives.scriptSrc, nonce);\n    if (directives.scriptSrcElem != null) {\n      directives.scriptSrcElem = withNonce(directives.scriptSrcElem, nonce);\n    }\n  }\n  const header = serializeDirectives(directives);\n  return Object.freeze({\n    nonce,\n    header,\n    applyResponseHeaders(headers: Headers) {\n      headers.set(\"Content-Security-Policy\", header);\n      // A cached document would reuse its nonce on subsequent responses.\n      if (nonce !== undefined) applyPrivateResponseCacheHeaders(headers);\n    },\n  });\n}"
+    }
+  },
+  "CreateContentSecurityPolicyOptions": {
+    "src/core/csp/types.ts": {
+      "filePath": "src/core/csp/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "CreateContentSecurityPolicyOptions",
+      "value": "{\n  shop?: ContentSecurityPolicyShop;\n  /** Extends individual defaults. In nonce mode, the nonce is added to `script-src` and any supplied `script-src-elem`. Browsers use `script-src-elem` over `script-src` for script elements. */\n  directives?: ContentSecurityPolicyDirectives;\n  /** Set to `false` for a nonce-free policy. This does not automatically authorize inline scripts or disable caching. */\n  nonce?: false;\n}",
+      "description": "Options for a per-document policy.",
+      "members": [
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "directives",
+          "value": "ContentSecurityPolicyDirectives",
+          "description": "Extends individual defaults. In nonce mode, the nonce is added to `script-src` and any supplied `script-src-elem`. Browsers use `script-src-elem` over `script-src` for script elements.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "nonce",
+          "value": "false",
+          "description": "Set to `false` for a nonce-free policy. This does not automatically authorize inline scripts or disable caching.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "shop",
+          "value": "ContentSecurityPolicyShop",
+          "description": "The shop's domains that browser scripts may contact.",
+          "isOptional": true
+        }
+      ]
+    }
+  },
+  "ContentSecurityPolicyDirectives": {
+    "src/core/csp/types.ts": {
+      "filePath": "src/core/csp/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ContentSecurityPolicyDirectives",
+      "value": "{\n  defaultSrc?: Sources;\n  scriptSrc?: Sources;\n  scriptSrcElem?: Sources;\n  scriptSrcAttr?: Sources;\n  styleSrc?: Sources;\n  styleSrcElem?: Sources;\n  styleSrcAttr?: Sources;\n  imgSrc?: Sources;\n  connectSrc?: Sources;\n  fontSrc?: Sources;\n  objectSrc?: Sources;\n  mediaSrc?: Sources;\n  frameSrc?: Sources;\n  childSrc?: Sources;\n  workerSrc?: Sources;\n  manifestSrc?: Sources;\n  baseUri?: Sources;\n  formAction?: Sources;\n  frameAncestors?: Sources;\n  sandbox?: Sources;\n  reportUri?: Sources;\n  reportTo?: Sources;\n  upgradeInsecureRequests?: boolean;\n}",
+      "description": "CSP directives. Arrays extend a directive's defaults. An array replaces a default consisting only of `'none'`; `null` omits the directive, except that nonce mode still creates a `script-src` containing the generated nonce.",
+      "members": [
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "baseUri",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "childSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "connectSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "defaultSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "fontSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "formAction",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "frameAncestors",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "frameSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "imgSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "manifestSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "mediaSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "objectSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "reportTo",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "reportUri",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "sandbox",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "scriptSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "scriptSrcAttr",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "scriptSrcElem",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "styleSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "styleSrcAttr",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "styleSrcElem",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "upgradeInsecureRequests",
+          "value": "boolean",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "workerSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        }
+      ]
+    }
+  },
+  "Sources": {
+    "src/core/csp/types.ts": {
+      "filePath": "src/core/csp/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "Sources",
+      "value": "readonly string[] | null",
+      "description": ""
+    }
+  },
+  "ContentSecurityPolicyShop": {
+    "src/core/csp/types.ts": {
+      "filePath": "src/core/csp/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ContentSecurityPolicyShop",
+      "value": "{\n  storeDomain?: string;\n  checkoutDomain?: string;\n}",
+      "description": "The shop's domains that browser scripts may contact.",
+      "members": [
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "checkoutDomain",
+          "value": "string",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "storeDomain",
+          "value": "string",
+          "description": "",
+          "isOptional": true
+        }
+      ]
+    }
+  },
+  "ContentSecurityPolicy": {
+    "src/core/csp/types.ts": {
+      "filePath": "src/core/csp/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ContentSecurityPolicy",
+      "value": "{\n  readonly nonce: Nonce;\n  readonly header: string;\n  /** Overwrites the response's enforcing CSP and prevents caching when it contains a nonce. Preserves response report-only policies. */\n  applyResponseHeaders(headers: Headers): void;\n}",
+      "description": "A document policy with its nonce, serialized header, and response header application.",
+      "members": [
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "MethodSignature",
+          "name": "applyResponseHeaders",
+          "value": "(headers: Headers) => void",
+          "description": "Overwrites the response's enforcing CSP and prevents caching when it contains a nonce. Preserves response report-only policies."
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "header",
+          "value": "string",
+          "description": ""
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "nonce",
+          "value": "Nonce",
+          "description": ""
+        }
+      ]
+    }
+  },
+  "GetShopifyCspDirectivesGeneratedType": {
+    "src/core/csp/index.ts": {
+      "filePath": "src/core/csp/index.ts",
+      "name": "GetShopifyCspDirectivesGeneratedType",
+      "description": "Returns fresh Shopify CSP defaults for a framework's own CSP configuration. Development connections are included by the development package export. Framework configuration loaded directly by Node can select that export with `--conditions=development`. `createContentSecurityPolicy` uses these same defaults. Pass `{ hashes: true }` as the second argument to include Shopify's bootstrap hashes in scriptSrc; other inline scripts still need authorization from the framework.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "shop",
+          "description": "",
+          "value": "ContentSecurityPolicyShop",
+          "isOptional": true,
+          "defaultValue": "{}",
+          "filePath": "src/core/csp/index.ts"
+        },
+        {
+          "name": "input2",
+          "description": "",
+          "value": "{ hashes?: boolean; }",
+          "isOptional": true,
+          "defaultValue": "{}",
+          "filePath": "src/core/csp/index.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/csp/index.ts",
+        "description": "",
+        "name": "",
+        "value": ""
+      },
+      "value": "export function getShopifyCspDirectives(\n  shop: ContentSecurityPolicyShop = {},\n  { hashes = false }: { hashes?: boolean } = {},\n) {\n  const shopOrigins = [shop.storeDomain, shop.checkoutDomain || undefined]\n    .filter((domain) => domain !== undefined)\n    .map(normalizeStoreDomain);\n\n  return {\n    defaultSrc: [\"'self'\"],\n    baseUri: [\"'self'\"],\n    objectSrc: [\"'none'\"],\n    frameAncestors: [\"'none'\"],\n    scriptSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN, ...(hashes ? getShopifyScriptHashes() : [])],\n    scriptSrcAttr: [\"'none'\"],\n    styleSrc: [\"'self'\", \"'unsafe-inline'\", SHOPIFY_CDN_ORIGIN],\n    imgSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN, \"data:\"],\n    fontSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN],\n    mediaSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN],\n    frameSrc: [\n      \"'self'\",\n      SHOPIFY_ORIGIN,\n      SHOPIFY_SHOP_APP_ORIGIN,\n      SHOPIFY_SHOP_COM_ORIGIN,\n      ...shopOrigins,\n    ],\n    connectSrc: [\n      \"'self'\",\n      SHOPIFY_CDN_ORIGIN,\n      SHOPIFY_SHOP_APP_ORIGIN,\n      SHOPIFY_SHOP_COM_ORIGIN,\n      SHOPIFY_ORIGIN,\n      \"https://*.shopifysvc.com\",\n      ...shopOrigins,\n      ...(__DEV__\n        ? [\n            \"http://localhost:*\",\n            \"https://localhost:*\",\n            \"ws://localhost:*\",\n            \"wss://localhost:*\",\n            \"http://127.0.0.1:*\",\n            \"https://127.0.0.1:*\",\n            \"ws://127.0.0.1:*\",\n            \"wss://127.0.0.1:*\",\n            \"ws://*.tryhydrogen.dev:*\",\n            \"wss://*.tryhydrogen.dev:*\",\n          ]\n        : []),\n    ],\n  } satisfies ContentSecurityPolicyDirectives;\n}"
+    }
+  },
   "ShopifyScriptsOptions": {
     "src/core/shopify-scripts/types.ts": {
       "filePath": "src/core/shopify-scripts/types.ts",
@@ -5434,7 +5815,7 @@
         "name": "ShopifyScriptTagDescriptors",
         "value": "ShopifyScriptTagDescriptors"
       },
-      "value": "export function getShopifyScriptTags({\n  account = false,\n  analytics,\n  consent,\n  debug,\n  i18n,\n  nonce,\n  shop,\n  shopifyAnalytics = true,\n  inbox = false,\n}: ShopifyScriptTagsOptions): ShopifyScriptTagDescriptors {\n  const nonceAttributes = nonce !== undefined ? { nonce } : undefined;\n  const analyticsConfig = getShopifyAnalyticsConfig({ analytics, consent, shop });\n\n  const links: ShopifyLinkDescriptor[] = [\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_CDN_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_SHOP_APP_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"prefetch\",\n        as: \"script\",\n        href: SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,\n        crossorigin: \"anonymous\",\n      },\n    },\n  ];\n  const scripts: ShopifyScriptDescriptor[] = [\n    {\n      tagName: \"script\",\n      attributes: { id: \"shopify-global-bootstrap\", ...nonceAttributes },\n      innerHTML: getShopifyGlobalBootstrapScript({ i18n, shop }),\n    },\n    {\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-actions\",\n        type: \"module\",\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,\n      },\n    },\n  ];\n\n  if (__DEV__ && debug?.standardEventsInspector) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-events-inspector\",\n        defer: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,\n      },\n    });\n  }\n\n  if (inbox) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-inbox\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_INBOX_SCRIPT,\n      },\n    });\n  }\n\n  if (account) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-account\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_ACCOUNT_SCRIPT,\n      },\n    });\n  }\n\n  // Install readiness listeners before loading the async consent library so a\n  // cached script cannot finish initialization before Hydrogen starts listening.\n  scripts.push({\n    tagName: \"script\",\n    attributes: { id: \"shopify-analytics-bus\", ...nonceAttributes },\n    innerHTML: getShopifyAnalyticsBusScript(analyticsConfig),\n  });\n\n  scripts.push({\n    tagName: \"script\",\n    attributes: {\n      id: SHOPIFY_CONSENT_SCRIPT_ID,\n      async: true,\n      crossorigin: \"anonymous\",\n      ...nonceAttributes,\n      src:\n        consent?.mode === \"default-banner\"\n          ? SHOPIFY_PRIVACY_BANNER_SCRIPT\n          : SHOPIFY_CONSENT_API_SCRIPT,\n    },\n  });\n\n  if (shopifyAnalytics) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-storefront-analytics\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,\n      },\n    });\n  }\n\n  const perfKitScript = getPerfKitScript(shop, nonceAttributes);\n  if (perfKitScript) {\n    scripts.push(perfKitScript);\n  }\n\n  return {\n    links,\n    scripts,\n    get tags() {\n      return [...links, ...scripts];\n    },\n  };\n}"
+      "value": "export function getShopifyScriptTags({\n  account = false,\n  analytics,\n  consent,\n  debug,\n  i18n,\n  nonce,\n  shop,\n  shopifyAnalytics = true,\n  inbox = false,\n}: ShopifyScriptTagsOptions): ShopifyScriptTagDescriptors {\n  const nonceAttributes = nonce !== undefined ? { nonce } : undefined;\n  const analyticsConfig = getShopifyAnalyticsConfig({ analytics, consent, shop });\n\n  const links: ShopifyLinkDescriptor[] = [\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_CDN_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_SHOP_APP_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"prefetch\",\n        as: \"script\",\n        href: SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,\n        crossorigin: \"anonymous\",\n      },\n    },\n  ];\n  const scripts: ShopifyScriptDescriptor[] = [\n    {\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-global-bootstrap\",\n        ...nonceAttributes,\n        ...shopifyGlobalBootstrap.attributes(getShopifyGlobalConfig({ i18n, shop })),\n      },\n      innerHTML: shopifyGlobalBootstrap.code,\n    },\n    {\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-actions\",\n        type: \"module\",\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,\n      },\n    },\n  ];\n\n  if (__DEV__ && debug?.standardEventsInspector) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-events-inspector\",\n        defer: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,\n      },\n    });\n  }\n\n  if (inbox) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-inbox\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_INBOX_SCRIPT,\n      },\n    });\n  }\n\n  if (account) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-account\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_ACCOUNT_SCRIPT,\n      },\n    });\n  }\n\n  // Install readiness listeners before loading the async consent library so a\n  // cached script cannot finish initialization before Hydrogen starts listening.\n  scripts.push({\n    tagName: \"script\",\n    attributes: {\n      id: \"shopify-analytics-bus\",\n      ...nonceAttributes,\n      ...shopifyAnalyticsBootstrap.attributes(analyticsConfig),\n    },\n    innerHTML: shopifyAnalyticsBootstrap.code,\n  });\n\n  scripts.push({\n    tagName: \"script\",\n    attributes: {\n      id: SHOPIFY_CONSENT_SCRIPT_ID,\n      async: true,\n      crossorigin: \"anonymous\",\n      ...nonceAttributes,\n      src:\n        consent?.mode === \"default-banner\"\n          ? SHOPIFY_PRIVACY_BANNER_SCRIPT\n          : SHOPIFY_CONSENT_API_SCRIPT,\n    },\n  });\n\n  if (shopifyAnalytics) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-storefront-analytics\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,\n      },\n    });\n  }\n\n  const perfKitScript = getPerfKitScript(shop, nonceAttributes);\n  if (perfKitScript) {\n    scripts.push(perfKitScript);\n  }\n\n  return {\n    links,\n    scripts,\n    get tags() {\n      return [...links, ...scripts];\n    },\n  };\n}"
     }
   },
   "ShopifyScriptTagDescriptors": {

@@ -104,12 +104,14 @@ describe("ShopifyScripts", () => {
     );
 
     expect(html).toContain('nonce="test-nonce"');
-    expect(html).toContain('"country":"US"');
-    expect(html).toContain('"locale":"en"');
-    expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
-    expect(html).toContain(`"shop":"${TEST_MYSHOPIFY_DOMAIN}"`);
+    expect(html).toContain("&quot;country&quot;:&quot;US&quot;");
+    expect(html).toContain("&quot;locale&quot;:&quot;en&quot;");
     expect(html).toContain(
-      '"customerPrivacy":{"config":{"isHeadless":true,"asyncConsent":true,"asyncVisitorState":true,"debug":{"hydrogen":{"generation":3,"serverTiming":false}}}',
+      "&quot;routes&quot;:{&quot;root&quot;:&quot;/&quot;,&quot;apiProxyPrefix&quot;:&quot;/__shopify&quot;}",
+    );
+    expect(html).toContain(`&quot;shop&quot;:&quot;${TEST_MYSHOPIFY_DOMAIN}&quot;`);
+    expect(html).toContain(
+      "&quot;customerPrivacy&quot;:{&quot;config&quot;:{&quot;isHeadless&quot;:true,&quot;asyncConsent&quot;:true,&quot;asyncVisitorState&quot;:true,&quot;debug&quot;:{&quot;hydrogen&quot;:{&quot;generation&quot;:3,&quot;serverTiming&quot;:false}}}",
     );
     expect(html).toContain("consentDomain=window.location.host");
     expect(html).toContain(`id="shopify-consent"`);
@@ -201,11 +203,13 @@ describe("ShopifyScripts", () => {
     expect(html).toContain(SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT);
     expect(html).toContain(SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT);
     expect(html).not.toContain(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT);
-    expect(html).toContain('"country":"US"');
-    expect(html).toContain('"locale":"en"');
-    expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
+    expect(html).toContain("&quot;country&quot;:&quot;US&quot;");
+    expect(html).toContain("&quot;locale&quot;:&quot;en&quot;");
     expect(html).toContain(
-      '"customerPrivacy":{"config":{"isHeadless":true,"asyncConsent":true,"asyncVisitorState":true,"debug":{"hydrogen":{"generation":3,"serverTiming":false}}}',
+      "&quot;routes&quot;:{&quot;root&quot;:&quot;/&quot;,&quot;apiProxyPrefix&quot;:&quot;/__shopify&quot;}",
+    );
+    expect(html).toContain(
+      "&quot;customerPrivacy&quot;:{&quot;config&quot;:{&quot;isHeadless&quot;:true,&quot;asyncConsent&quot;:true,&quot;asyncVisitorState&quot;:true,&quot;debug&quot;:{&quot;hydrogen&quot;:{&quot;generation&quot;:3,&quot;serverTiming&quot;:false}}}",
     );
     expect(html).toContain("consentDomain=window.location.host");
     expect(html).toContain(`id="shopify-consent"`);
@@ -220,14 +224,16 @@ describe("ShopifyScripts", () => {
       }),
     );
 
-    expect(html.indexOf('"asyncConsent":true')).toBeLessThan(
+    expect(html.indexOf("&quot;asyncConsent&quot;:true")).toBeLessThan(
       html.indexOf("Analytics bus already initialized"),
     );
     expect(html.indexOf("Analytics bus already initialized")).toBeLessThan(
       html.indexOf(SHOPIFY_CONSENT_API_SCRIPT),
     );
-    expect(html).toContain('"currency":{"active":"USD"}');
-    expect(html).toContain('"shop":{"shopId":"42","storefrontId":"sub-1","channel":"hydrogen"}');
+    expect(html).toContain("&quot;currency&quot;:{&quot;active&quot;:&quot;USD&quot;}");
+    expect(html).toContain(
+      "&quot;shop&quot;:{&quot;shopId&quot;:&quot;42&quot;,&quot;storefrontId&quot;:&quot;sub-1&quot;,&quot;channel&quot;:&quot;hydrogen&quot;}",
+    );
     expect(html.indexOf(SHOPIFY_CONSENT_API_SCRIPT)).toBeLessThan(
       html.indexOf("storefront/analytics/shopify.js"),
     );
@@ -244,7 +250,7 @@ describe("ShopifyScripts", () => {
     expect(html).toContain(`id="shopify-consent"`);
     expect(html).toContain(`src="${SHOPIFY_PRIVACY_BANNER_SCRIPT}"`);
     expect(html).toContain(`async=""`);
-    expect(html).toContain('"asyncConsent":true,"asyncVisitorState":true');
+    expect(html).toContain("&quot;asyncConsent&quot;:true,&quot;asyncVisitorState&quot;:true");
     expect(html).toContain("consentDomain=window.location.host");
   });
 

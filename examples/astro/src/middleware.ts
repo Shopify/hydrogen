@@ -12,7 +12,6 @@ import {
   handleShopifyRedirects,
   handleShopifyRoutes,
   type ShopifyRequestContextWithBuyerIp,
-  type ShopifyRequestContext,
 } from "@shopify/hydrogen";
 import { defineMiddleware } from "astro:middleware";
 import { LRUCache } from "lru-cache";
@@ -60,23 +59,19 @@ export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
     if (redirect) return redirect;
   }
 
-  return applyStorefrontResponseHeaders(requestContext, response);
-});
-
-function applyStorefrontResponseHeaders(
-  requestContext: Pick<ShopifyRequestContext, "applyResponseHeaders">,
-  response: Response,
-): Response {
-  try {
-    requestContext.applyResponseHeaders(response.headers);
-    return response;
-  } catch (error) {
-    if (!(error instanceof TypeError)) throw error;
-    const mutableResponse = new Response(response.body, response);
-    requestContext.applyResponseHeaders(mutableResponse.headers);
-    return mutableResponse;
+  const finalResponse = new Response(response.body, response);
+  requestContext.applyResponseHeaders(finalResponse.headers);
+  const cspHeader = finalResponse.headers.get("Content-Security-Policy");
+  if (cspHeader) {
+    // Astro hashes styles, but does not expose style-src-attr in its CSP configuration.
+    // Allow dynamic product swatches to set their background color.
+    finalResponse.headers.set(
+      "Content-Security-Policy",
+      `${cspHeader} style-src-attr 'unsafe-inline';`,
+    );
   }
-}
+  return finalResponse;
+});
 
 function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
   return createStorefrontClient({
