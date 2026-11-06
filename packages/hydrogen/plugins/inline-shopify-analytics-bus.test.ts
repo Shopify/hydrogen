@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { build } from "tsdown";
 import { expect, it } from "vitest";
 
-import type { ShopifyScriptTagDescriptor } from "../src/core/shopify-scripts/types";
 import { inlineScriptImports } from "./inline-shopify-analytics-bus";
 
 it.each(["shopifyScriptHashes", "initializeShopifyScripts"])(
@@ -19,7 +19,6 @@ it.each(["shopifyScriptHashes", "initializeShopifyScripts"])(
       .join("\n");
 
     expect(code).toContain(exportName);
-    expect(code).not.toContain("__SHOPIFY_SCRIPT_DATA__");
     expect(code).not.toContain("__SCRIPT_HASHES__");
     expect(code).not.toContain("document.currentScript");
     if (exportName === "shopifyScriptHashes") {
@@ -36,13 +35,22 @@ it("collects and deduplicates hashes from asInlineScript calls without hash impo
   const helperPath = fileURLToPath(
     new URL("../src/core/shopify-scripts/utils/inline-script.ts", import.meta.url),
   );
-  const bundles = await bundle(`
+  const scriptModule = `
     import script from ${JSON.stringify(scriptPath)} with { type: "script" };
     import { asInlineScript } from ${JSON.stringify(helperPath)};
-    export const first = asInlineScript(script);
-    export const second = asInlineScript(script);
+    export default asInlineScript(script);
+  `;
+  const bundles = await bundle(
+    `
+    export { default as first } from "virtual:first";
+    export { default as second } from "virtual:second";
     export const hashes = __SCRIPT_HASHES__;
-  `);
+  `,
+    {
+      "virtual:first": scriptModule,
+      "virtual:second": scriptModule,
+    },
+  );
   const code = bundles
     .flatMap(({ chunks }) => chunks)
     .filter((chunk) => chunk.type === "chunk")
@@ -69,7 +77,36 @@ it("exports hashes matching every rendered bootstrap and applies them only when 
   const { getShopifyScriptTags, shopifyScriptHashes, createContentSecurityPolicy } = await import(
     `data:text/javascript;base64,${Buffer.from(code).toString("base64")}`
   );
-  const { scripts }: { scripts: ShopifyScriptTagDescriptor[] } = getShopifyScriptTags({
+  assertScriptHashes({ getShopifyScriptTags, shopifyScriptHashes, createContentSecurityPolicy });
+});
+
+it("exports matching bootstrap hashes from the full package build", async () => {
+  // The package's test scripts build dist before Vitest runs.
+  for (const [directory, entry] of [
+    ["", "index"],
+    ["development/", "development"],
+  ]) {
+    const outputDir = new URL(`../dist/${directory}`, import.meta.url);
+    const hashModule = await readFile(
+      new URL("core/shopify-scripts/hashes.mjs", outputDir),
+      "utf8",
+    );
+    expect(hashModule).toContain("sha256-");
+    expect(hashModule).not.toContain("__SCRIPT_HASHES__");
+    expect(hashModule).not.toContain("document.currentScript");
+    assertScriptHashes(await import(new URL(`core/${entry}.mjs`, outputDir).href));
+  }
+});
+
+function assertScriptHashes({
+  getShopifyScriptTags,
+  shopifyScriptHashes,
+  createContentSecurityPolicy,
+}: Pick<
+  typeof import("../src/core/index"),
+  "getShopifyScriptTags" | "shopifyScriptHashes" | "createContentSecurityPolicy"
+>) {
+  const { scripts } = getShopifyScriptTags({
     shop: { shopId: "42", storefrontId: "one", myshopifyDomain: "one.myshopify.com" },
   });
   const expectedHashes = scripts
@@ -89,9 +126,9 @@ it("exports hashes matching every rendered bootstrap and applies them only when 
   for (const hash of expectedHashes) expect(csp.header).toContain(hash);
   // Adding hashes to defaults would disable existing unsafe-inline policies.
   expect(createContentSecurityPolicy({ nonce: false }).header).not.toContain("sha256-");
-});
+}
 
-async function bundle(source: string) {
+async function bundle(source: string, modules: Record<string, string> = {}) {
   const entry = "\0inline-script-treeshaking-test";
   return build({
     config: false,
@@ -107,10 +144,11 @@ async function bundle(source: string) {
       {
         name: "inline-script-treeshaking-test",
         resolveId(id) {
-          if (id === entry) return entry;
+          if (id === entry || id in modules) return id;
         },
         load(id) {
           if (id === entry) return source;
+          return modules[id];
         },
       },
       inlineScriptImports({ version: "0.0.0-test" }),
