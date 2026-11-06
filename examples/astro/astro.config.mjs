@@ -1,5 +1,5 @@
 import node from "@astrojs/node";
-import { getShopifyCspDirectives, shopifyScriptHashes } from "@shopify/hydrogen";
+import { getShopifyCspDirectives, getShopifyScriptHashes } from "@shopify/hydrogen";
 import { LOCAL_HTTPS_DEFAULTS, localHttps } from "@shopify/hydrogen/vite";
 import tailwindcss from "@tailwindcss/vite";
 // @ts-check
@@ -25,7 +25,7 @@ export default defineConfig({
       scriptDirective: {
         resources: scriptSrc,
         // Astro adds the CSP quotes around hash sources.
-        hashes: shopifyScriptHashes.map((hash) => hash.slice(1, -1)),
+        hashes: getShopifyScriptHashes({ quoted: false }),
       },
       styleDirective: { resources: [...styleSrc, "https://fonts.googleapis.com"] },
       directives: Object.entries({

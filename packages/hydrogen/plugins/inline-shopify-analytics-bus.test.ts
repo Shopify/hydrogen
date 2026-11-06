@@ -7,7 +7,7 @@ import { expect, it } from "vitest";
 
 import { inlineScriptImports } from "./inline-shopify-analytics-bus";
 
-it.each(["shopifyScriptHashes", "initializeShopifyScripts"])(
+it.each(["getShopifyScriptHashes", "initializeShopifyScripts"])(
   "does not bundle inline bootstrap bodies when importing only %s",
   async (exportName) => {
     const core = fileURLToPath(new URL("../src/core/index.ts", import.meta.url));
@@ -21,7 +21,7 @@ it.each(["shopifyScriptHashes", "initializeShopifyScripts"])(
     expect(code).toContain(exportName);
     expect(code).not.toContain("__SCRIPT_HASHES__");
     expect(code).not.toContain("document.currentScript");
-    if (exportName === "shopifyScriptHashes") {
+    if (exportName === "getShopifyScriptHashes") {
       expect(code).toContain("sha256-");
       expect(code).not.toContain("decodeURIComponent");
     }
@@ -67,17 +67,20 @@ it("collects and deduplicates hashes from asInlineScript calls without hash impo
 it("exports hashes matching every rendered bootstrap and applies them only when requested", async () => {
   const core = fileURLToPath(new URL("../src/core/index.ts", import.meta.url));
   const bundles = await bundle(`
-    export { getShopifyScriptTags, shopifyScriptHashes, createContentSecurityPolicy } from ${JSON.stringify(core)};
+    export { getShopifyScriptTags, getShopifyScriptHashes, createContentSecurityPolicy } from ${JSON.stringify(core)};
   `);
   const code = bundles
     .flatMap(({ chunks }) => chunks)
     .filter((chunk) => chunk.type === "chunk")
     .map((chunk) => chunk.code)
     .join("\n");
-  const { getShopifyScriptTags, shopifyScriptHashes, createContentSecurityPolicy } = await import(
-    `data:text/javascript;base64,${Buffer.from(code).toString("base64")}`
-  );
-  assertScriptHashes({ getShopifyScriptTags, shopifyScriptHashes, createContentSecurityPolicy });
+  const { getShopifyScriptTags, getShopifyScriptHashes, createContentSecurityPolicy } =
+    await import(`data:text/javascript;base64,${Buffer.from(code).toString("base64")}`);
+  assertScriptHashes({
+    getShopifyScriptTags,
+    getShopifyScriptHashes,
+    createContentSecurityPolicy,
+  });
 });
 
 it("exports matching bootstrap hashes from the full package build", async () => {
@@ -100,11 +103,11 @@ it("exports matching bootstrap hashes from the full package build", async () => 
 
 function assertScriptHashes({
   getShopifyScriptTags,
-  shopifyScriptHashes,
+  getShopifyScriptHashes,
   createContentSecurityPolicy,
 }: Pick<
   typeof import("../src/core/index"),
-  "getShopifyScriptTags" | "shopifyScriptHashes" | "createContentSecurityPolicy"
+  "getShopifyScriptTags" | "getShopifyScriptHashes" | "createContentSecurityPolicy"
 >) {
   const { scripts } = getShopifyScriptTags({
     shop: { shopId: "42", storefrontId: "one", myshopifyDomain: "one.myshopify.com" },
@@ -117,11 +120,18 @@ function assertScriptHashes({
     )
     .toSorted();
   expect(expectedHashes).toHaveLength(2);
-  expect(shopifyScriptHashes).toEqual(expectedHashes);
+  const quotedHashes = getShopifyScriptHashes();
+  expect(quotedHashes).toEqual(expectedHashes);
+  quotedHashes.length = 0;
+  expect(getShopifyScriptHashes()).toEqual(expectedHashes);
+  expect(getShopifyScriptHashes({ quoted: true })).toEqual(expectedHashes);
+  expect(getShopifyScriptHashes({ quoted: false })).toEqual(
+    expectedHashes.map((hash) => hash.slice(1, -1)),
+  );
 
   const csp = createContentSecurityPolicy({
     nonce: false,
-    directives: { scriptSrc: shopifyScriptHashes },
+    directives: { scriptSrc: getShopifyScriptHashes() },
   });
   for (const hash of expectedHashes) expect(csp.header).toContain(hash);
   // Adding hashes to defaults would disable existing unsafe-inline policies.

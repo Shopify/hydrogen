@@ -38,7 +38,7 @@ export {
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "./constants";
 export { getShopifyGlobal } from "./global";
-export { shopifyScriptHashes } from "./hashes";
+export { getShopifyScriptHashes } from "./hashes";
 export { initializeShopifyScripts } from "./initialize";
 export { renderShopifyScriptTag } from "./render";
 export type {

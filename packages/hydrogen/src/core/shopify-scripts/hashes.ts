@@ -1,8 +1,17 @@
 /**
- * CSP hash sources for the static inline bootstraps rendered by ShopifyScripts and the tag helpers.
- * Add these to script-src when using hashes instead of nonces. Values include CSP quotes; adapt
- * them to your framework's format. Hashes authorize Shopify's bootstraps, not framework scripts.
+ * @internal
+ */
+const hashes = __SCRIPT_HASHES__;
+
+/**
+ * Returns CSP hashes for the static inline bootstraps rendered by ShopifyScripts and the tag helpers.
+ * Add these to script-src when using hashes instead of nonces. Values include CSP quotes by default;
+ * pass `quoted: false` for framework configuration that expects unquoted hashes.
+ * Hashes authorize Shopify's bootstraps, not framework scripts.
  * @publicDocs
  */
-export const shopifyScriptHashes: readonly `'sha256-${string}'`[] =
-  /* @__PURE__ */ Object.freeze(__SCRIPT_HASHES__);
+export function getShopifyScriptHashes(options: { quoted: false }): `sha256-${string}`[];
+export function getShopifyScriptHashes(options?: { quoted?: boolean }): string[];
+export function getShopifyScriptHashes({ quoted = true }: { quoted?: boolean } = {}): string[] {
+  return quoted ? [...hashes] : hashes.map((hash) => hash.slice(1, -1));
+}

@@ -1,4 +1,4 @@
-import { getShopifyCspDirectives, shopifyScriptHashes } from "@shopify/hydrogen";
+import { getShopifyCspDirectives, getShopifyScriptHashes } from "@shopify/hydrogen";
 import adapter from "@sveltejs/adapter-node";
 
 import { storefrontConfig } from "../shared/config.ts";
@@ -9,7 +9,7 @@ const unquote = (source) => source.replace(/^'|'$/g, "");
 const directives = Object.fromEntries(
   Object.entries({
     ...shopifyDirectives,
-    scriptSrc: [...shopifyDirectives.scriptSrc, ...shopifyScriptHashes],
+    scriptSrc: [...shopifyDirectives.scriptSrc, ...getShopifyScriptHashes()],
     styleSrc: [...shopifyDirectives.styleSrc, "https://fonts.googleapis.com"],
     fontSrc: [...shopifyDirectives.fontSrc, "https://fonts.gstatic.com"],
   }).map(([name, sources]) => [

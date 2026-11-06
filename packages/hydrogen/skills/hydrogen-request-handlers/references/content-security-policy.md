@@ -23,7 +23,7 @@ const csp = createContentSecurityPolicy({
 csp.applyResponseHeaders(response.headers);
 ```
 
-`getShopifyCspDirectives(shop)` supplies the same defaults used by the creator, including development connections, for framework-native CSP configuration. Adapt its camelCase directive names and quoted source keywords to the framework's format. It does not generate nonces or hash inline scripts. For hash-based policies, use `shopifyScriptHashes` to authorize the [Shopify bootstraps](#shopify-bootstrap-hashes). Use framework-native configuration or construct your own header when you need exact replacement of the creator's defaults, such as removing its inline-style allowance.
+`getShopifyCspDirectives(shop)` supplies the same defaults used by the creator, including development connections, for framework-native CSP configuration. Adapt its camelCase directive names and quoted source keywords to the framework's format. It does not generate nonces or hash inline scripts. For hash-based policies, use `getShopifyScriptHashes()` to authorize the [Shopify bootstraps](#shopify-bootstrap-hashes). Use framework-native configuration or construct your own header when you need exact replacement of the creator's defaults, such as removing its inline-style allowance.
 
 Hydrogen's development build automatically adds local HTTP/HTTPS and WebSocket connections for `localhost` and `127.0.0.1`, plus WebSocket connections for `*.tryhydrogen.dev`, to the getter's `connectSrc` defaults. The creator inherits these defaults. The production build omits these sources. For framework config files loaded directly by Node, add `--conditions=development` to the Node command in development scripts; keep build and production commands without that flag. Custom `connectSrc` arrays retain these development defaults. Add other development origins explicitly, and add `'unsafe-eval'` to `scriptSrc` only if the framework's development runtime requires it. Keep framework-specific development allowances out of production. Add third-party resources and their network endpoints to the appropriate directives. Verify enabled Shopify features and third-party integrations with browser CSP enforcement active.
 
@@ -64,17 +64,17 @@ This allows injected inline JavaScript as well as the app's scripts. Hash-based 
 
 ## Shopify bootstrap hashes
 
-`ShopifyScripts` and the core tag helpers render static inline JavaScript with dynamic configuration in escaped `data-config` attributes. To authorize those bootstraps without nonces, add the exported `shopifyScriptHashes` to `scriptSrc`:
+`ShopifyScripts` and the core tag helpers render static inline JavaScript with dynamic configuration in escaped `data-config` attributes. To authorize those bootstraps without nonces, add the sources returned by `getShopifyScriptHashes()` to `scriptSrc`:
 
 ```ts
 const csp = createContentSecurityPolicy({
   shop,
   nonce: false,
-  directives: { scriptSrc: shopifyScriptHashes },
+  directives: { scriptSrc: getShopifyScriptHashes() },
 });
 ```
 
-These hashes are generated from the packaged script contents and include CSP quotes. Framework-native configurations may need them unquoted. They authorize only Hydrogen's inline bootstraps; the framework must also authorize its own scripts. Hashes are opt-in because adding them causes browsers to ignore `'unsafe-inline'` in the same directive. Read the export from the installed package instead of copying literal hashes, and preserve the script text when rendering.
+These hashes are generated from the packaged script contents and include CSP quotes by default. Pass `getShopifyScriptHashes({ quoted: false })` for framework-native configurations that expect unquoted hashes. They authorize only Hydrogen's inline bootstraps; the framework must also authorize its own scripts. Hashes are opt-in because adding them causes browsers to ignore `'unsafe-inline'` in the same directive. Read the hashes from the installed package instead of copying literal hashes, and preserve the script text when rendering.
 
 Prefer per-response nonces when the framework supports them: they authorize individual script elements for each response. Hashes authorize matching script code regardless of its `data-config` attributes.
 
