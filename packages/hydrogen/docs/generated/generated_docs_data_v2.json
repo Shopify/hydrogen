@@ -3948,6 +3948,31 @@
       "override": "The options for handleShopifyRoutes: the `request`, the `requestContext`, the `storefrontClient` created with that request context, optional `routeTemplates`, and optional `handlers`, an array of handler groups. Pass `sessionManager` when a registered handler's context includes it, such as Customer Account handlers or cart handlers created with `customerSession`. Otherwise `sessionManager` is optional when the handler types are inferred from `handlers`."
     }
   },
+  "GetShopifyScriptHashesGeneratedType": {
+    "src/core/shopify-scripts/hashes.ts": {
+      "filePath": "src/core/shopify-scripts/hashes.ts",
+      "name": "GetShopifyScriptHashesGeneratedType",
+      "description": "Returns CSP hashes for the static inline bootstraps rendered by ShopifyScripts and the tag helpers. Add these to script-src when using hashes instead of nonces. Values include CSP quotes by default; pass `quoted: false` for framework configuration that expects unquoted hashes. Hashes authorize Shopify's bootstraps, not framework scripts.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "input1",
+          "description": "",
+          "value": "{ quoted?: boolean; }",
+          "isOptional": true,
+          "defaultValue": "{}",
+          "filePath": "src/core/shopify-scripts/hashes.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/shopify-scripts/hashes.ts",
+        "description": "",
+        "name": "string[]",
+        "value": "string[]"
+      },
+      "value": "export function getShopifyScriptHashes({ quoted = true }: { quoted?: boolean } = {}): string[] {\n  return quoted ? [...hashes] : hashes.map((hash) => hash.slice(1, -1));\n}"
+    }
+  },
   "CreateContentSecurityPolicyGeneratedType": {
     "src/core/csp/index.ts": {
       "filePath": "src/core/csp/index.ts",
@@ -4275,13 +4300,21 @@
     "src/core/csp/index.ts": {
       "filePath": "src/core/csp/index.ts",
       "name": "GetShopifyCspDirectivesGeneratedType",
-      "description": "Returns fresh Shopify CSP defaults for a framework's own CSP configuration. Development connections are included by the development package export. Framework configuration loaded directly by Node can select that export with `--conditions=development`. `createContentSecurityPolicy` uses these same defaults. They do not authorize inline scripts; configure their authorization explicitly.",
+      "description": "Returns fresh Shopify CSP defaults for a framework's own CSP configuration. Development connections are included by the development package export. Framework configuration loaded directly by Node can select that export with `--conditions=development`. `createContentSecurityPolicy` uses these same defaults. Pass `{ hashes: true }` as the second argument to include Shopify's bootstrap hashes in scriptSrc; other inline scripts still need authorization from the framework.",
       "isPublicDocs": true,
       "params": [
         {
           "name": "shop",
           "description": "",
           "value": "ContentSecurityPolicyShop",
+          "isOptional": true,
+          "defaultValue": "{}",
+          "filePath": "src/core/csp/index.ts"
+        },
+        {
+          "name": "input2",
+          "description": "",
+          "value": "{ hashes?: boolean; }",
           "isOptional": true,
           "defaultValue": "{}",
           "filePath": "src/core/csp/index.ts"
@@ -4293,7 +4326,7 @@
         "name": "",
         "value": ""
       },
-      "value": "export function getShopifyCspDirectives(shop: ContentSecurityPolicyShop = {}) {\n  const shopOrigins = [shop.storeDomain, shop.checkoutDomain || undefined]\n    .filter((domain) => domain !== undefined)\n    .map(normalizeStoreDomain);\n\n  return {\n    defaultSrc: [\"'self'\"],\n    baseUri: [\"'self'\"],\n    objectSrc: [\"'none'\"],\n    frameAncestors: [\"'none'\"],\n    scriptSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN],\n    scriptSrcAttr: [\"'none'\"],\n    styleSrc: [\"'self'\", \"'unsafe-inline'\", SHOPIFY_CDN_ORIGIN],\n    imgSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN, \"data:\"],\n    fontSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN],\n    mediaSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN],\n    frameSrc: [\n      \"'self'\",\n      SHOPIFY_ORIGIN,\n      SHOPIFY_SHOP_APP_ORIGIN,\n      SHOPIFY_SHOP_COM_ORIGIN,\n      ...shopOrigins,\n    ],\n    connectSrc: [\n      \"'self'\",\n      SHOPIFY_CDN_ORIGIN,\n      SHOPIFY_SHOP_APP_ORIGIN,\n      SHOPIFY_SHOP_COM_ORIGIN,\n      SHOPIFY_ORIGIN,\n      \"https://*.shopifysvc.com\",\n      ...shopOrigins,\n      ...(__DEV__\n        ? [\n            \"http://localhost:*\",\n            \"https://localhost:*\",\n            \"ws://localhost:*\",\n            \"wss://localhost:*\",\n            \"http://127.0.0.1:*\",\n            \"https://127.0.0.1:*\",\n            \"ws://127.0.0.1:*\",\n            \"wss://127.0.0.1:*\",\n            \"ws://*.tryhydrogen.dev:*\",\n            \"wss://*.tryhydrogen.dev:*\",\n          ]\n        : []),\n    ],\n  } satisfies ContentSecurityPolicyDirectives;\n}"
+      "value": "export function getShopifyCspDirectives(\n  shop: ContentSecurityPolicyShop = {},\n  { hashes = false }: { hashes?: boolean } = {},\n) {\n  const shopOrigins = [shop.storeDomain, shop.checkoutDomain || undefined]\n    .filter((domain) => domain !== undefined)\n    .map(normalizeStoreDomain);\n\n  return {\n    defaultSrc: [\"'self'\"],\n    baseUri: [\"'self'\"],\n    objectSrc: [\"'none'\"],\n    frameAncestors: [\"'none'\"],\n    scriptSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN, ...(hashes ? getShopifyScriptHashes() : [])],\n    scriptSrcAttr: [\"'none'\"],\n    styleSrc: [\"'self'\", \"'unsafe-inline'\", SHOPIFY_CDN_ORIGIN],\n    imgSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN, \"data:\"],\n    fontSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN],\n    mediaSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN],\n    frameSrc: [\n      \"'self'\",\n      SHOPIFY_ORIGIN,\n      SHOPIFY_SHOP_APP_ORIGIN,\n      SHOPIFY_SHOP_COM_ORIGIN,\n      ...shopOrigins,\n    ],\n    connectSrc: [\n      \"'self'\",\n      SHOPIFY_CDN_ORIGIN,\n      SHOPIFY_SHOP_APP_ORIGIN,\n      SHOPIFY_SHOP_COM_ORIGIN,\n      SHOPIFY_ORIGIN,\n      \"https://*.shopifysvc.com\",\n      ...shopOrigins,\n      ...(__DEV__\n        ? [\n            \"http://localhost:*\",\n            \"https://localhost:*\",\n            \"ws://localhost:*\",\n            \"wss://localhost:*\",\n            \"http://127.0.0.1:*\",\n            \"https://127.0.0.1:*\",\n            \"ws://127.0.0.1:*\",\n            \"wss://127.0.0.1:*\",\n            \"ws://*.tryhydrogen.dev:*\",\n            \"wss://*.tryhydrogen.dev:*\",\n          ]\n        : []),\n    ],\n  } satisfies ContentSecurityPolicyDirectives;\n}"
     }
   },
   "ShopifyScriptsOptions": {
@@ -5594,7 +5627,7 @@
         "name": "ShopifyScriptTagDescriptors",
         "value": "ShopifyScriptTagDescriptors"
       },
-      "value": "export function getShopifyScriptTags({\n  account = false,\n  analytics,\n  consent,\n  debug,\n  i18n,\n  nonce,\n  shop,\n  shopifyAnalytics = true,\n  inbox = false,\n}: ShopifyScriptTagsOptions): ShopifyScriptTagDescriptors {\n  const nonceAttributes = nonce !== undefined ? { nonce } : undefined;\n  const analyticsConfig = getShopifyAnalyticsConfig({ analytics, consent, shop });\n\n  const links: ShopifyLinkDescriptor[] = [\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_CDN_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_SHOP_APP_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"prefetch\",\n        as: \"script\",\n        href: SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,\n        crossorigin: \"anonymous\",\n      },\n    },\n  ];\n  const scripts: ShopifyScriptDescriptor[] = [\n    {\n      tagName: \"script\",\n      attributes: { id: \"shopify-global-bootstrap\", ...nonceAttributes },\n      innerHTML: getShopifyGlobalBootstrapScript({ i18n, shop }),\n    },\n    {\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-actions\",\n        type: \"module\",\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,\n      },\n    },\n  ];\n\n  if (__DEV__ && debug?.standardEventsInspector) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-events-inspector\",\n        defer: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,\n      },\n    });\n  }\n\n  if (inbox) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-inbox\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_INBOX_SCRIPT,\n      },\n    });\n  }\n\n  if (account) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-account\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_ACCOUNT_SCRIPT,\n      },\n    });\n  }\n\n  // Install readiness listeners before loading the async consent library so a\n  // cached script cannot finish initialization before Hydrogen starts listening.\n  scripts.push({\n    tagName: \"script\",\n    attributes: { id: \"shopify-analytics-bus\", ...nonceAttributes },\n    innerHTML: getShopifyAnalyticsBusScript(analyticsConfig),\n  });\n\n  scripts.push({\n    tagName: \"script\",\n    attributes: {\n      id: SHOPIFY_CONSENT_SCRIPT_ID,\n      async: true,\n      crossorigin: \"anonymous\",\n      ...nonceAttributes,\n      src:\n        consent?.mode === \"default-banner\"\n          ? SHOPIFY_PRIVACY_BANNER_SCRIPT\n          : SHOPIFY_CONSENT_API_SCRIPT,\n    },\n  });\n\n  if (shopifyAnalytics) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-storefront-analytics\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,\n      },\n    });\n  }\n\n  const perfKitScript = getPerfKitScript(shop, nonceAttributes);\n  if (perfKitScript) {\n    scripts.push(perfKitScript);\n  }\n\n  return {\n    links,\n    scripts,\n    get tags() {\n      return [...links, ...scripts];\n    },\n  };\n}"
+      "value": "export function getShopifyScriptTags({\n  account = false,\n  analytics,\n  consent,\n  debug,\n  i18n,\n  nonce,\n  shop,\n  shopifyAnalytics = true,\n  inbox = false,\n}: ShopifyScriptTagsOptions): ShopifyScriptTagDescriptors {\n  const nonceAttributes = nonce !== undefined ? { nonce } : undefined;\n  const analyticsConfig = getShopifyAnalyticsConfig({ analytics, consent, shop });\n\n  const links: ShopifyLinkDescriptor[] = [\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_CDN_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_SHOP_APP_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"prefetch\",\n        as: \"script\",\n        href: SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,\n        crossorigin: \"anonymous\",\n      },\n    },\n  ];\n  const scripts: ShopifyScriptDescriptor[] = [\n    {\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-global-bootstrap\",\n        ...nonceAttributes,\n        ...shopifyGlobalBootstrap.attributes(getShopifyGlobalConfig({ i18n, shop })),\n      },\n      innerHTML: shopifyGlobalBootstrap.code,\n    },\n    {\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-actions\",\n        type: \"module\",\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,\n      },\n    },\n  ];\n\n  if (__DEV__ && debug?.standardEventsInspector) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-events-inspector\",\n        defer: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,\n      },\n    });\n  }\n\n  if (inbox) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-inbox\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_INBOX_SCRIPT,\n      },\n    });\n  }\n\n  if (account) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-account\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_ACCOUNT_SCRIPT,\n      },\n    });\n  }\n\n  // Install readiness listeners before loading the async consent library so a\n  // cached script cannot finish initialization before Hydrogen starts listening.\n  scripts.push({\n    tagName: \"script\",\n    attributes: {\n      id: \"shopify-analytics-bus\",\n      ...nonceAttributes,\n      ...shopifyAnalyticsBootstrap.attributes(analyticsConfig),\n    },\n    innerHTML: shopifyAnalyticsBootstrap.code,\n  });\n\n  scripts.push({\n    tagName: \"script\",\n    attributes: {\n      id: SHOPIFY_CONSENT_SCRIPT_ID,\n      async: true,\n      crossorigin: \"anonymous\",\n      ...nonceAttributes,\n      src:\n        consent?.mode === \"default-banner\"\n          ? SHOPIFY_PRIVACY_BANNER_SCRIPT\n          : SHOPIFY_CONSENT_API_SCRIPT,\n    },\n  });\n\n  if (shopifyAnalytics) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-storefront-analytics\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,\n      },\n    });\n  }\n\n  const perfKitScript = getPerfKitScript(shop, nonceAttributes);\n  if (perfKitScript) {\n    scripts.push(perfKitScript);\n  }\n\n  return {\n    links,\n    scripts,\n    get tags() {\n      return [...links, ...scripts];\n    },\n  };\n}"
     }
   },
   "ShopifyScriptTagDescriptors": {
