@@ -821,6 +821,33 @@ describe('generateSeoTags', () => {
     );
   });
 
+  it('should keep max-snippet and max-video-preview when they are 0', () => {
+    // Given
+    const input = {
+      robots: {
+        maxSnippet: 0,
+        maxVideoPreview: 0,
+      },
+    };
+
+    // When
+    const output = generateSeoTags(input);
+
+    // Then
+    expect(output).toEqual(
+      expect.arrayContaining([
+        {
+          key: 'meta-robots',
+          props: {
+            content: 'index,follow,max-snippet:0,max-video-preview:0',
+            name: 'robots',
+          },
+          tag: 'meta',
+        },
+      ]),
+    );
+  });
+
   describe('jsonLd', () => {
     it('should not generate jsonLd if not configured', () => {
       // Given
