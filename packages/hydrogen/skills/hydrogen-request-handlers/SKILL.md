@@ -32,6 +32,8 @@ Request
 
 `handleShopifyRoutes` owns Hydrogen routes the framework should never see: SFAPI proxy URLs, the generic `/__shopify/*` API proxy, `/.well-known/ucp`, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, UCP buy permalinks like `/buy/{itemId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/api/ucp/mcp`, `/graphiql` in development, Liquid-style `?variant=<numeric id>` product URLs, and app-registered handler groups such as `createCartServerHandlers()` or `createCustomerAccountServerHandlers()`.
 
+Most of these paths aren't pages, so they need a crawler policy in the app's `robots.txt`. Disallow the checkout, cart, proxy, and agent endpoints, and keep discovery paths such as `/.well-known/ucp` reachable. Invoke the `hydrogen-robots-txt` skill for the rules.
+
 ## UCP Business Profile
 
 `GET /.well-known/ucp` serves Shopify's managed UCP business profile from the headless storefront origin; `HEAD` returns the response headers without a body. Hydrogen forwards `If-None-Match` and `If-Modified-Since`, but not shopper cookies or authorization, and preserves `304 Not Modified` responses. Response headers are filtered through the small `UCP_RESPONSE_HEADERS` allowlist in the profile interceptor; upstream `Vary` is omitted because Hydrogen always requests JSON.
