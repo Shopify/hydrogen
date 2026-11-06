@@ -809,6 +809,74 @@ describe("createStorefrontClient", () => {
       expect(second.data).toEqual({ shop: { name: "Test Shop" } });
     });
 
+    it.each(["private, max-age=0", "max-age=60, no-store", "Private"])(
+      "returns a response marked `%s` without storing it",
+      async (cacheControl) => {
+        const cache = new MemoryKeyValueCache();
+        const fetch = vi.fn(async () =>
+          mockResponse(
+            { data: { shop: { name: "Treatment Shop" } } },
+            { headers: { "cache-control": cacheControl } },
+          ),
+        );
+        const client = createPublicClient({ cache, fetch });
+
+        const first = await client.graphql(SHOP_QUERY, { cache: Cache.long() });
+        const second = await client.graphql(SHOP_QUERY, { cache: Cache.long() });
+
+        expect(first.data).toEqual({ shop: { name: "Treatment Shop" } });
+        expect(second.data).toEqual({ shop: { name: "Treatment Shop" } });
+        expect(fetch).toHaveBeenCalledTimes(2);
+        expect(cache.store.size).toBe(0);
+      },
+    );
+
+    it.each([
+      ["with", Cache.long()],
+      ["without", undefined],
+    ])(
+      "makes the final response private when a request %s a cache strategy gets a private response",
+      async (_name, strategy) => {
+        const requestContext = createTestRequestContext({ headers: new Headers(), method: "GET" });
+        const fetch = vi.fn(async () =>
+          mockResponse(
+            { data: { shop: { name: "Treatment Shop" } } },
+            { headers: { "cache-control": "private, no-store" } },
+          ),
+        );
+        const client = createPublicClient({
+          cache: new MemoryKeyValueCache(),
+          fetch,
+          requestContext,
+        });
+
+        await client.graphql(SHOP_QUERY, { cache: strategy });
+
+        const headers = new Headers({ "cache-control": "public, s-maxage=600" });
+        requestContext.applyResponseHeaders(headers);
+        expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
+      },
+    );
+
+    it("keeps the final response cacheable when the response allows shared caching", async () => {
+      const requestContext = createTestRequestContext({ headers: new Headers(), method: "GET" });
+      const fetch = vi.fn(async () =>
+        mockResponse(
+          { data: { shop: { name: "Test Shop" } } },
+          { headers: { "cache-control": "public, max-age=60, no-cache" } },
+        ),
+      );
+      const cache = new MemoryKeyValueCache();
+      const client = createPublicClient({ cache, fetch, requestContext });
+
+      await client.graphql(SHOP_QUERY, { cache: Cache.long() });
+
+      const headers = new Headers({ "cache-control": "public, s-maxage=600" });
+      requestContext.applyResponseHeaders(headers);
+      expect(headers.get("cache-control")).toBe("public, s-maxage=600");
+      expect(cache.store.size).toBe(1);
+    });
+
     it("does not pass cache metadata for mutations", async () => {
       const mutation = gql(`mutation CartCreate { cartCreate(input: {}) { cart { id } } }`);
       const cache = new MemoryKeyValueCache();
