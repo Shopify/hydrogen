@@ -7,26 +7,28 @@ import { expect, it } from "vitest";
 
 import { inlineScriptImports } from "./inline-shopify-analytics-bus";
 
-it.each(["getShopifyScriptHashes", "initializeShopifyScripts"])(
-  "does not bundle inline bootstrap bodies when importing only %s",
-  async (exportName) => {
-    const core = fileURLToPath(new URL("../src/core/index.ts", import.meta.url));
-    const bundles = await bundle(`export { ${exportName} } from ${JSON.stringify(core)};`);
-    const code = bundles
-      .flatMap(({ chunks }) => chunks)
-      .filter((chunk) => chunk.type === "chunk")
-      .map((chunk) => chunk.code)
-      .join("\n");
+it.each([
+  "getShopifyScriptHashes",
+  "initializeShopifyScripts",
+  "getShopifyCspDirectives",
+  "createContentSecurityPolicy",
+])("does not bundle inline bootstrap bodies when importing only %s", async (exportName) => {
+  const core = fileURLToPath(new URL("../src/core/index.ts", import.meta.url));
+  const bundles = await bundle(`export { ${exportName} } from ${JSON.stringify(core)};`);
+  const code = bundles
+    .flatMap(({ chunks }) => chunks)
+    .filter((chunk) => chunk.type === "chunk")
+    .map((chunk) => chunk.code)
+    .join("\n");
 
-    expect(code).toContain(exportName);
-    expect(code).not.toContain("__SCRIPT_HASHES__");
-    expect(code).not.toContain("document.currentScript");
-    if (exportName === "getShopifyScriptHashes") {
-      expect(code).toContain("sha256-");
-      expect(code).not.toContain("decodeURIComponent");
-    }
-  },
-);
+  expect(code).toContain(exportName);
+  expect(code).not.toContain("__SCRIPT_HASHES__");
+  expect(code).not.toContain("document.currentScript");
+  if (exportName === "getShopifyScriptHashes") {
+    expect(code).toContain("sha256-");
+    expect(code).not.toContain("decodeURIComponent");
+  }
+});
 
 it("collects and deduplicates hashes from asInlineScript calls without hash imports", async () => {
   const scriptPath = fileURLToPath(
@@ -67,18 +69,23 @@ it("collects and deduplicates hashes from asInlineScript calls without hash impo
 it("exports hashes matching every rendered bootstrap and applies them only when requested", async () => {
   const core = fileURLToPath(new URL("../src/core/index.ts", import.meta.url));
   const bundles = await bundle(`
-    export { getShopifyScriptTags, getShopifyScriptHashes, createContentSecurityPolicy } from ${JSON.stringify(core)};
+    export { getShopifyScriptTags, getShopifyScriptHashes, getShopifyCspDirectives, createContentSecurityPolicy } from ${JSON.stringify(core)};
   `);
   const code = bundles
     .flatMap(({ chunks }) => chunks)
     .filter((chunk) => chunk.type === "chunk")
     .map((chunk) => chunk.code)
     .join("\n");
-  const { getShopifyScriptTags, getShopifyScriptHashes, createContentSecurityPolicy } =
-    await import(`data:text/javascript;base64,${Buffer.from(code).toString("base64")}`);
+  const {
+    getShopifyScriptTags,
+    getShopifyScriptHashes,
+    getShopifyCspDirectives,
+    createContentSecurityPolicy,
+  } = await import(`data:text/javascript;base64,${Buffer.from(code).toString("base64")}`);
   assertScriptHashes({
     getShopifyScriptTags,
     getShopifyScriptHashes,
+    getShopifyCspDirectives,
     createContentSecurityPolicy,
   });
 });
@@ -104,10 +111,14 @@ it("exports matching bootstrap hashes from the full package build", async () => 
 function assertScriptHashes({
   getShopifyScriptTags,
   getShopifyScriptHashes,
+  getShopifyCspDirectives,
   createContentSecurityPolicy,
 }: Pick<
   typeof import("../src/core/index"),
-  "getShopifyScriptTags" | "getShopifyScriptHashes" | "createContentSecurityPolicy"
+  | "getShopifyScriptTags"
+  | "getShopifyScriptHashes"
+  | "getShopifyCspDirectives"
+  | "createContentSecurityPolicy"
 >) {
   const { scripts } = getShopifyScriptTags({
     shop: { shopId: "42", storefrontId: "one", myshopifyDomain: "one.myshopify.com" },
@@ -128,6 +139,14 @@ function assertScriptHashes({
   expect(getShopifyScriptHashes({ quoted: false })).toEqual(
     expectedHashes.map((hash) => hash.slice(1, -1)),
   );
+
+  const defaults = getShopifyCspDirectives();
+  for (const hash of expectedHashes) expect(defaults.scriptSrc).not.toContain(hash);
+  expect(getShopifyCspDirectives(undefined, { hashes: false })).toEqual(defaults);
+  expect(getShopifyCspDirectives(undefined, { hashes: true })).toEqual({
+    ...defaults,
+    scriptSrc: [...defaults.scriptSrc, ...expectedHashes],
+  });
 
   const csp = createContentSecurityPolicy({
     nonce: false,

@@ -1,15 +1,17 @@
-import { getShopifyCspDirectives, getShopifyScriptHashes } from "@shopify/hydrogen";
+import { getShopifyCspDirectives } from "@shopify/hydrogen";
 import adapter from "@sveltejs/adapter-node";
 
 import { storefrontConfig } from "../shared/config.ts";
 
-const shopifyDirectives = getShopifyCspDirectives({ storeDomain: storefrontConfig.storeDomain });
+const shopifyDirectives = getShopifyCspDirectives(
+  { storeDomain: storefrontConfig.storeDomain },
+  { hashes: true },
+);
 // SvelteKit quotes CSP keywords and hashes itself.
 const unquote = (source) => source.replace(/^'|'$/g, "");
 const directives = Object.fromEntries(
   Object.entries({
     ...shopifyDirectives,
-    scriptSrc: [...shopifyDirectives.scriptSrc, ...getShopifyScriptHashes()],
     styleSrc: [...shopifyDirectives.styleSrc, "https://fonts.googleapis.com"],
     fontSrc: [...shopifyDirectives.fontSrc, "https://fonts.gstatic.com"],
   }).map(([name, sources]) => [
