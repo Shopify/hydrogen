@@ -508,6 +508,38 @@ describe("createCartServerHandlers", () => {
       ]);
     });
 
+    it("commits customer session cookies when getSetCookie is unavailable", async () => {
+      const getSetCookieDescriptor = Object.getOwnPropertyDescriptor(
+        Headers.prototype,
+        "getSetCookie",
+      );
+      Object.defineProperty(Headers.prototype, "getSetCookie", {
+        configurable: true,
+        value: undefined,
+      });
+
+      try {
+        mockFetch.mockResolvedValueOnce(
+          mockGqlResponse({ cartCreate: { cart: MOCK_CART, userErrors: [] } }),
+        );
+        const customerSession = createCartCustomerSession(undefined, true, CUSTOMER_ACCESS_TOKEN);
+        const cartHandlers = createCartServerHandlers({ customerSession });
+        const request = createJsonPostRequest({
+          lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+        });
+        const result = await handleCartRequest(request, defaultConfig, cartHandlers);
+
+        assert(result, "expected a response");
+        expect(result.headers.get("set-cookie")).toContain("session=1");
+      } finally {
+        if (getSetCookieDescriptor) {
+          Object.defineProperty(Headers.prototype, "getSetCookie", getSetCookieDescriptor);
+        } else {
+          Reflect.deleteProperty(Headers.prototype, "getSetCookie");
+        }
+      }
+    });
+
     it("commits refreshed customer session headers when new cart creation fails", async () => {
       mockFetch.mockRejectedValueOnce(new Error("ECONNREFUSED"));
       const customerSession = createCartCustomerSession(undefined, true, CUSTOMER_ACCESS_TOKEN);
