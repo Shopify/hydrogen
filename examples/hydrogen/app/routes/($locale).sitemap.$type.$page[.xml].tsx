@@ -28,7 +28,10 @@ export async function loader({ request, params, context: { storefront } }: Route
     getLink: ({ type, baseUrl, handle, locale: hreflang }) => {
       const path = `/${type}/${handle}`;
       const locale = hreflang ? LOCALES_BY_HREFLANG.get(hreflang) : undefined;
-      return `${baseUrl}${locale ? getLocalizedHref(path, { i18n, locale }) : path}`;
+      const href = locale ? getLocalizedHref(path, { i18n, locale }) : path;
+      // Domain routing returns an absolute URL on the locale's host; resolving against
+      // `baseUrl` keeps that host and only fills in the origin for pathname hrefs.
+      return new URL(href, baseUrl).toString();
     },
   });
 
