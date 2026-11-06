@@ -1,5 +1,22 @@
 # @shopify/mini-oxygen
 
+## 4.3.0
+
+### Minor Changes
+
+- babb77e: Upgrade Miniflare from v3 to v4, so local development runs on a 2026 Workers runtime instead of one from March 2025.
+  
+  Before, MiniOxygen quietly ran every worker with the March 2025 compatibility date, whatever date you set or Hydrogen inferred. It now runs the date you ask for. If the bundled runtime doesn't support that date yet, MiniOxygen runs the newest date it does support and prints a warning. The `compatibility_date` written to `oxygen.json` for deployments is unchanged. You can remove any `compatibilityDate` override that was only there to make local development start.
+  
+  If the Workers runtime fails to start, MiniOxygen now shows the runtime's own error message instead of a generic one. In `vite dev`, a failed start fails that request and the next request retries, instead of stopping the dev server.
+  
+  MiniOxygen re-exports `Request`, `Response`, and `fetch` from Miniflare. Those are now undici 7 classes instead of undici 5.
+
+### Patch Changes
+
+- b695c43: Bump `undici` from 7.24.0 to 7.30.1 to pick up upstream security fixes.
+- 783b18a: The `oxygen()` Vite plugin now writes `oxygen.json` in builds that use the Vite Environment API, such as React Router 8 or React Router 7 with `future.v8_viteEnvironmentApi`. Before, it skipped the file in those builds, so Oxygen ran the worker on its fallback compatibility date, `2022-10-31`. That date has no `Headers.getSetCookie()`, so Hydrogen's Storefront API client failed every request.
+
 ## 4.2.3
 
 ### Patch Changes
