@@ -109,9 +109,7 @@ export function getShopifyScriptTags({
       attributes: {
         id: "shopify-global-bootstrap",
         ...nonceAttributes,
-        "data-config": shopifyGlobalBootstrap.serializeConfig(
-          getShopifyGlobalConfig({ i18n, shop }),
-        ),
+        ...shopifyGlobalBootstrap.attributes(getShopifyGlobalConfig({ i18n, shop })),
       },
       innerHTML: shopifyGlobalBootstrap.code,
     },
@@ -175,7 +173,7 @@ export function getShopifyScriptTags({
     attributes: {
       id: "shopify-analytics-bus",
       ...nonceAttributes,
-      "data-config": shopifyAnalyticsBootstrap.serializeConfig(analyticsConfig),
+      ...shopifyAnalyticsBootstrap.attributes(analyticsConfig),
     },
     innerHTML: shopifyAnalyticsBootstrap.code,
   });
