@@ -36,7 +36,9 @@ function parseInlineScripts(html: string) {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   delete window.Shopify;
+  Reflect.deleteProperty(window, Symbol.for("shopify.hydrogen.global.initialized"));
 });
 
 it("keeps code stable across runtime configuration and nonce changes", () => {
@@ -56,6 +58,92 @@ it("keeps code stable across runtime configuration and nonce changes", () => {
   expect(changed.map((script) => script.attributes?.["data-config"])).not.toEqual(
     initial.map((script) => script.attributes?.["data-config"]),
   );
+});
+
+function runGlobalBootstrap(config: ShopifyScriptTagsOptions) {
+  const script = parseInlineScripts(renderShopifyScriptTags(config).join("\n")).find(
+    (candidate) => candidate.id === "shopify-global-bootstrap",
+  );
+  assert(script, "Expected the inline global bootstrap");
+  vi.spyOn(document, "currentScript", "get").mockReturnValue(script);
+  // oxlint-disable-next-line no-eval -- Execute the emitted bootstrap with its parsed configuration.
+  (0, eval)(script.textContent);
+}
+
+it.each(["same", "different"])(
+  "preserves initialized configuration and runtime state when rerun with %s configuration",
+  (configuration) => {
+    runGlobalBootstrap(options);
+    const shopify = window.Shopify;
+    assert(shopify, "Expected the global bootstrap to initialize Shopify");
+    const { customerPrivacy, routes, components } = shopify;
+    const analyticsProcessingAllowed = vi.fn(() => true);
+    const navigate = vi.fn();
+    Object.assign(customerPrivacy, { consentStatus: "loaded", analyticsProcessingAllowed });
+    Object.assign(routes, { navigate });
+
+    runGlobalBootstrap(
+      configuration === "same"
+        ? options
+        : {
+            ...options,
+            shop: { ...shop, myshopifyDomain: "two.myshopify.com" },
+            i18n: { country: "US", language: "EN", pathPrefix: "/en-us" },
+          },
+    );
+
+    expect(window.Shopify).toBe(shopify);
+    expect(shopify.shop).toBe(shop.myshopifyDomain);
+    expect(shopify.country).toBe("CA");
+    expect(shopify.locale).toBe("fr");
+    expect(shopify.customerPrivacy).toBe(customerPrivacy);
+    expect(shopify.customerPrivacy.consentStatus).toBe("loaded");
+    expect(shopify.customerPrivacy.analyticsProcessingAllowed).toBe(analyticsProcessingAllowed);
+    expect(shopify.routes).toBe(routes);
+    expect(shopify.routes.navigate).toBe(navigate);
+    expect(shopify.components).toBe(components);
+  },
+);
+
+it("keeps the initialization marker separate from named HTML elements", () => {
+  const form = document.createElement("form");
+  const control = document.createElement("input");
+  control.name = "shopify.hydrogen.global.initialized";
+  form.append(control);
+  // Named string properties cannot shadow the symbol marker.
+  Object.defineProperty(form, control.name, { value: control });
+  Object.defineProperty(window, "Shopify", { value: form, writable: true, configurable: true });
+  vi.stubGlobal(control.name, control);
+
+  runGlobalBootstrap(options);
+
+  expect(window.Shopify?.shop).toBe(shop.myshopifyDomain);
+  expect(window.Shopify?.country).toBe("CA");
+  expect(Reflect.get(form, control.name)).toBe(control);
+  expect(Reflect.get(window, control.name)).toBe(control);
+  expect(Reflect.get(window, Symbol.for(control.name))).toBe(true);
+});
+
+it("marks initialization complete only after a successful run", () => {
+  const existing = { customIntegration: {} };
+  Object.defineProperty(existing, "shop", {
+    configurable: true,
+    set() {
+      throw new Error("Unable to configure shop");
+    },
+  });
+  Object.defineProperty(window, "Shopify", { value: existing, writable: true, configurable: true });
+
+  expect(() => runGlobalBootstrap(options)).toThrow("Unable to configure shop");
+  expect(Reflect.get(window, Symbol.for("shopify.hydrogen.global.initialized"))).toBeUndefined();
+  Reflect.deleteProperty(existing, "shop");
+
+  runGlobalBootstrap(options);
+
+  expect(window.Shopify).toBe(existing);
+  expect(window.Shopify?.shop).toBe(shop.myshopifyDomain);
+  expect(Reflect.get(existing, "customIntegration")).toBe(existing.customIntegration);
+  expect(Reflect.get(window, Symbol.for("shopify.hydrogen.global.initialized"))).toBe(true);
 });
 
 it("rejects configuration from a named element shadowing document.currentScript", () => {

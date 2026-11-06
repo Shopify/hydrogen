@@ -73,6 +73,7 @@ describe("shopify scripts", () => {
     vi.mocked(loadScript).mockResolvedValue(true);
     vi.unstubAllGlobals();
     delete (window as any).Shopify;
+    Reflect.deleteProperty(window, Symbol.for("shopify.hydrogen.global.initialized"));
     delete (document as any).modelContext;
     delete (navigator as any).modelContext;
     Reflect.deleteProperty(window, Symbol.for("shopify.webmcp.registered"));
