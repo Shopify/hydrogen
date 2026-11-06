@@ -28,8 +28,13 @@ export type { ShopifyCountryCode, ShopifyLanguageCode } from "./i18n/types";
  * @deprecated Pass a definition from `defineShopifyI18n` to `createShopifyRequestContext` instead. Use `ShopifyLocale` for `{language, country}` and `ShopifyMatchedLocale` for the resolved locale. Removed in the next major release.
  */
 export type I18nConfig = {
+  /** The request's language. */
   language: ShopifyLanguageCode;
+  /** The request's country. */
   country: ShopifyCountryCode;
+  /**
+   * The URL prefix for localized routes, such as `/es-es`. Hydrogen adds the prefix to standard route redirects and product variant URLs.
+   */
   pathPrefix?: string;
 };
 
@@ -241,15 +246,6 @@ export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
   },
 ): ShopifyRequestContext<TI18n> {
   const { request } = input;
-  const i18n: Partial<ShopifyI18n & I18nConfig> | undefined = input.i18n;
-  const isDefinition = Boolean(i18n?.defaultLocale?.country && i18n.defaultLocale.language);
-  const isLegacyConfig = !i18n?.defaultLocale && Boolean(i18n?.country && i18n.language);
-
-  if (!isDefinition && !isLegacyConfig) {
-    throw new Error(
-      "i18n from defineShopifyI18n (with a defaultLocale) is required for Shopify request contexts.",
-    );
-  }
 
   if (input.buyerIp !== undefined && !input.buyerIp) {
     throw new Error("buyerIp must be non-empty when provided");
@@ -361,11 +357,21 @@ function resolveRequestLocale(
   url: string | undefined,
 ): RequestLocale<ShopifyI18n | I18nConfig> {
   const { i18n } = input;
+  if (
+    i18n &&
+    "defaultLocale" in i18n &&
+    i18n.defaultLocale?.country &&
+    i18n.defaultLocale.language
+  ) {
+    return input.locale ? resolveSupportedLocale(input.locale, i18n) : matchLocale(url, i18n);
+  }
   // Legacy `I18nConfig` input pins one locale, exactly as before definitions existed.
-  if (!("defaultLocale" in i18n)) {
+  if (i18n && "country" in i18n && i18n.country && i18n.language) {
     return { ...i18n, pathPrefix: normalizePathPrefix(i18n.pathPrefix) };
   }
-  return input.locale ? resolveSupportedLocale(input.locale, i18n) : matchLocale(url, i18n);
+  throw new Error(
+    "i18n from defineShopifyI18n (with a defaultLocale) is required for Shopify request contexts.",
+  );
 }
 
 function applyStorefrontRequestHeaders(context: Context, headers: Headers): void {

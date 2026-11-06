@@ -114,6 +114,15 @@ describe("createShopifyRequestContext", () => {
     expect(result.locale).toEqual({ language: "EN", country: "US", pathPrefix: "" });
   });
 
+  it("treats a legacy locale with an undefined defaultLocale key as legacy", () => {
+    const result = createShopifyRequestContext({
+      request: new Request("https://shop.example.com/fr-ca/products/snowboard"),
+      i18n: { defaultLocale: undefined, language: "EN", country: "US" },
+    } as never);
+
+    expect(result.locale).toEqual({ language: "EN", country: "US", pathPrefix: "" });
+  });
+
   it("rejects an i18n object that is neither a definition nor a legacy locale", () => {
     expect(() =>
       createShopifyRequestContext({
