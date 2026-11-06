@@ -29,14 +29,13 @@ import {
 import { getCartIdFromCookie, createCartCookie, createExpiredCartCookie } from "./cookie";
 import { getCart, getCartId, type CartDataFromQuery } from "./get-cart";
 import {
-  cartBuyerIdentityUpdateMutation,
   cartQueries,
   makeCartQueries,
   type CartDataForOptions,
   type CartQueriesForOptions,
   type CreateCartQueriesOptions,
 } from "./queries";
-import type { CartData } from "./state";
+import type { CartBuyerIdentity, CartData } from "./state";
 const log = getLogger("cart-api");
 
 const CART_API_PATH = "/api/cart" as const;
@@ -335,15 +334,18 @@ export function createCartServerHandlers(
     // Symbol-keyed and non-enumerable so the capability never registers as a
     // route in handleShopifyRoutes and stays uncallable outside Hydrogen wiring.
     Object.defineProperty(handlers, cartBuyerIdentitySync, {
-      value: createCartBuyerIdentitySync(),
+      value: createCartBuyerIdentitySync(runtimeQueries),
     });
   }
   return handlers as CartServerHandlers | CartServerHandlersWithCustomerSession;
 }
 
-function createCartBuyerIdentitySync(): CartBuyerIdentitySync {
+type RuntimeCartQueries = typeof cartQueries;
+
+function createCartBuyerIdentitySync(queries: RuntimeCartQueries): CartBuyerIdentitySync {
   return {
-    updateBuyerIdentity: updateCartBuyerIdentity,
+    updateBuyerIdentity: (context, customerAccessToken) =>
+      updateCartBuyerIdentity(context, customerAccessToken, queries),
     expiredCartCookie: createExpiredCartCookie(),
   };
 }
@@ -351,11 +353,12 @@ function createCartBuyerIdentitySync(): CartBuyerIdentitySync {
 async function updateCartBuyerIdentity(
   context: CartBuyerIdentitySyncContext,
   customerAccessToken: string | null,
+  queries: RuntimeCartQueries,
 ): Promise<void> {
   const cartId = getCartIdFromCookie(context.request);
   if (!cartId) return;
 
-  const result = await context.storefrontClient.graphql(cartBuyerIdentityUpdateMutation, {
+  const result = await context.storefrontClient.graphql(queries.cartBuyerIdentityUpdate, {
     variables: { cartId, buyerIdentity: { customerAccessToken } },
   });
   const { userErrors } = assertMutationData(result, "cartBuyerIdentityUpdate");
@@ -363,8 +366,6 @@ async function updateCartBuyerIdentity(
     throw new Error(userErrors.map(({ message }) => message).join("\n"));
   }
 }
-
-type RuntimeCartQueries = typeof cartQueries;
 
 async function handleGet(
   context: CartGetHandlerContext & Partial<CartCustomerSessionReadContext>,
@@ -375,7 +376,13 @@ async function handleGet(
   const cartIdSource = request ?? storefrontClient.requestContext;
   const result = await getCart(getCartId(cartIdSource), storefrontClient, queries.cart);
   logCartErrors(result.errors);
-  const cart = await addLoggedInCheckoutParam(result.cart, context, customerSession);
+  const reconciledCart = await reconcileBuyerCountry(
+    result.cart,
+    context,
+    queries,
+    customerSession,
+  );
+  const cart = await addLoggedInCheckoutParam(reconciledCart, context, customerSession);
   const data = { cart, ...(result.errors && { errors: result.errors }) };
   const headers = createProxyResponseHeaders(result.headers);
   applyPrivateResponseCacheHeaders(headers);
@@ -385,6 +392,74 @@ async function handleGet(
     data,
     headers,
   };
+}
+
+// The Storefront API prices a cart from its persisted buyerIdentity.countryCode,
+// not from @inContext, and checkout rewrites that country from the shipping
+// address. cartBuyerIdentityUpdate replaces the whole identity, so the reset
+// echoes email and phone and re-attaches the customer token.
+async function reconcileBuyerCountry<TCart extends CartData>(
+  cart: TCart | null,
+  context: CartGetHandlerContext & Partial<CartCustomerSessionReadContext>,
+  queries: RuntimeCartQueries,
+  customerSession?: CartCustomerSession,
+): Promise<TCart | null> {
+  const requestCountry = context.storefrontClient.requestContext.i18n.country;
+  const buyerIdentity = cart?.buyerIdentity;
+  if (!cart?.id || !buyerIdentity?.countryCode || buyerIdentity.countryCode === requestCountry) {
+    return cart;
+  }
+
+  const customerAccessToken = await getReadOnlyCustomerAccessToken(context, customerSession);
+  if (buyerIdentity.customer && !customerAccessToken) {
+    log.warn(
+      `Cart ${cart.id} is priced for ${buyerIdentity.countryCode} but the request is for ${requestCountry}. Skipping the country reset because the cart belongs to a customer and no access token is available.`,
+    );
+    return cart;
+  }
+
+  try {
+    const result = await context.storefrontClient.graphql(queries.cartBuyerIdentityUpdate, {
+      variables: {
+        cartId: cart.id,
+        buyerIdentity: buyerIdentityInputForCountry(
+          buyerIdentity,
+          requestCountry,
+          customerAccessToken,
+        ),
+      },
+    });
+    const { cart: updatedCart, userErrors } = assertMutationData(result, "cartBuyerIdentityUpdate");
+    if (userErrors.length > 0) {
+      throw new Error(userErrors.map(({ message }) => message).join("\n"));
+    }
+    return (updatedCart ?? cart) as TCart;
+  } catch (error) {
+    log.error(`Could not reset cart ${cart.id} country to ${requestCountry}`, { error });
+    return cart;
+  }
+}
+
+function buyerIdentityInputForCountry(
+  buyerIdentity: CartBuyerIdentity,
+  countryCode: CartBuyerIdentity["countryCode"],
+  customerAccessToken: string | undefined,
+) {
+  return {
+    countryCode,
+    ...(buyerIdentity.email && { email: buyerIdentity.email }),
+    ...(buyerIdentity.phone && { phone: buyerIdentity.phone }),
+    ...(customerAccessToken && { customerAccessToken }),
+  };
+}
+
+async function getReadOnlyCustomerAccessToken(
+  context: Partial<CartCustomerSessionReadContext>,
+  customerSession?: CartCustomerSession,
+): Promise<string | undefined> {
+  if (!customerSession) return undefined;
+  assertCustomerSessionReadContext(context);
+  return customerSession.getAccessToken(context.sessionManager, context.requestContext);
 }
 
 function logCartErrors(errors: CartGetData["errors"]): void {

@@ -410,6 +410,145 @@ describe("createCartServerHandlers", () => {
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
+    describe("buyer country reconciliation", () => {
+      const CA_CART = {
+        ...MOCK_CART,
+        buyerIdentity: {
+          countryCode: "CA",
+          email: "buyer@example.com",
+          phone: "+16135550123",
+          customer: null,
+        },
+      };
+      const US_CART = {
+        ...CA_CART,
+        buyerIdentity: { ...CA_CART.buyerIdentity, countryCode: "US" },
+      };
+
+      it("resets a drifted cart country to the request country", async () => {
+        mockFetch
+          .mockResolvedValueOnce(mockGqlResponse({ cart: CA_CART }))
+          .mockResolvedValueOnce(
+            mockGqlResponse({ cartBuyerIdentityUpdate: { cart: US_CART, userErrors: [] } }),
+          );
+
+        const result = await handleCartRequest(createGetRequest("cart=123"), defaultConfig);
+
+        assert(result, "expected a response");
+        expect(mockFetch).toHaveBeenCalledTimes(2);
+        const [, init] = mockFetch.mock.calls[1];
+        const gqlBody = JSON.parse(init.body);
+        expect(gqlBody.query).toContain("cartBuyerIdentityUpdate");
+        expect(gqlBody.variables).toEqual({
+          cartId: "gid://shopify/Cart/123",
+          buyerIdentity: {
+            countryCode: "US",
+            email: "buyer@example.com",
+            phone: "+16135550123",
+          },
+          country: "US",
+          language: "EN",
+        });
+        const body = await result.json();
+        expect(body.cart.buyerIdentity.countryCode).toBe("US");
+      });
+
+      it("leaves the cart alone when its country matches the request", async () => {
+        mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: US_CART }));
+
+        const result = await handleCartRequest(createGetRequest("cart=123"), defaultConfig);
+
+        assert(result, "expected a response");
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+        const body = await result.json();
+        expect(body.cart.buyerIdentity.countryCode).toBe("US");
+      });
+
+      it("keeps the logged-in customer attached while resetting the country", async () => {
+        mockFetch
+          .mockResolvedValueOnce(
+            mockGqlResponse({
+              cart: {
+                ...CA_CART,
+                buyerIdentity: { ...CA_CART.buyerIdentity, customer: { id: "gid://c/1" } },
+              },
+            }),
+          )
+          .mockResolvedValueOnce(
+            mockGqlResponse({ cartBuyerIdentityUpdate: { cart: US_CART, userErrors: [] } }),
+          );
+        const customerSession = createCartCustomerSession(CUSTOMER_ACCESS_TOKEN);
+        const cartHandlers = createCartServerHandlers({ customerSession });
+
+        await handleCartRequest(createGetRequest("cart=123"), defaultConfig, cartHandlers);
+
+        expect(mockFetch).toHaveBeenCalledTimes(2);
+        const [, init] = mockFetch.mock.calls[1];
+        const gqlBody = JSON.parse(init.body);
+        expect(gqlBody.variables.buyerIdentity).toEqual({
+          countryCode: "US",
+          email: "buyer@example.com",
+          phone: "+16135550123",
+          customerAccessToken: CUSTOMER_ACCESS_TOKEN,
+        });
+      });
+
+      it("skips the reset when a customer is attached but no access token is available", async () => {
+        const logger = createTestLogger();
+        configureLogging({ logger });
+        const attachedCart = {
+          ...CA_CART,
+          buyerIdentity: { ...CA_CART.buyerIdentity, customer: { id: "gid://c/1" } },
+        };
+        mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: attachedCart }));
+
+        const result = await handleCartRequest(createGetRequest("cart=123"), defaultConfig);
+
+        assert(result, "expected a response");
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+        const body = await result.json();
+        expect(body.cart.buyerIdentity.countryCode).toBe("CA");
+        expect(logger.warn).toHaveBeenCalledOnce();
+      });
+
+      it("returns the original cart when the reset reports user errors", async () => {
+        const logger = createTestLogger();
+        configureLogging({ logger });
+        mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: CA_CART })).mockResolvedValueOnce(
+          mockGqlResponse({
+            cartBuyerIdentityUpdate: {
+              cart: CA_CART,
+              userErrors: [{ code: "INVALID", field: ["countryCode"], message: "Unsupported" }],
+            },
+          }),
+        );
+
+        const result = await handleCartRequest(createGetRequest("cart=123"), defaultConfig);
+
+        assert(result, "expected a response");
+        const body = await result.json();
+        expect(body.cart.buyerIdentity.countryCode).toBe("CA");
+        expect(logger.error).toHaveBeenCalledOnce();
+      });
+
+      it("returns the cart it already read when the reset fails on the network", async () => {
+        const logger = createTestLogger();
+        configureLogging({ logger });
+        mockFetch
+          .mockResolvedValueOnce(mockGqlResponse({ cart: CA_CART }))
+          .mockRejectedValueOnce(new Error("Connection refused"));
+
+        const result = await handleCartRequest(createGetRequest("cart=123"), defaultConfig);
+
+        assert(result, "expected a response");
+        expect(result.status).toBe(200);
+        const body = await result.json();
+        expect(body.cart.buyerIdentity.countryCode).toBe("CA");
+        expect(body.errors).toBeUndefined();
+        expect(logger.error).toHaveBeenCalledOnce();
+      });
+    });
+
     it("throws when SFAPI returns network error", async () => {
       mockFetch.mockRejectedValueOnce(new Error("Connection refused"));
 
