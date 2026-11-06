@@ -58,11 +58,13 @@ describe("ShopifyScripts", () => {
     );
 
     expect(html).toContain('nonce="test-nonce"');
-    expect(html).toContain('"country":"US"');
-    expect(html).toContain('"locale":"en"');
-    expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
-    expect(html).toContain(`"shop":"${TEST_MYSHOPIFY_DOMAIN}"`);
-    expect(html).not.toContain('"templates"');
+    expect(html).toContain("&quot;country&quot;:&quot;US&quot;");
+    expect(html).toContain("&quot;locale&quot;:&quot;en&quot;");
+    expect(html).toContain(
+      "&quot;routes&quot;:{&quot;root&quot;:&quot;/&quot;,&quot;apiProxyPrefix&quot;:&quot;/__shopify&quot;}",
+    );
+    expect(html).toContain(`&quot;shop&quot;:&quot;${TEST_MYSHOPIFY_DOMAIN}&quot;`);
+    expect(html).not.toContain("&quot;templates&quot;");
     expect(html).toContain(`<link rel="preconnect" href="${SHOPIFY_CDN_ORIGIN}">`);
     expect(html).toContain(`<link rel="preconnect" href="${SHOPIFY_SHOP_APP_ORIGIN}">`);
     expect(html).toContain(
@@ -103,10 +105,12 @@ describe("ShopifyScripts", () => {
     expect(html).toContain(SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT);
     expect(html).toContain(SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT);
     expect(html).not.toContain(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT);
-    expect(html).toContain('"country":"US"');
-    expect(html).toContain('"locale":"en"');
-    expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
-    expect(html).not.toContain('"templates"');
+    expect(html).toContain("&quot;country&quot;:&quot;US&quot;");
+    expect(html).toContain("&quot;locale&quot;:&quot;en&quot;");
+    expect(html).toContain(
+      "&quot;routes&quot;:{&quot;root&quot;:&quot;/&quot;,&quot;apiProxyPrefix&quot;:&quot;/__shopify&quot;}",
+    );
+    expect(html).not.toContain("&quot;templates&quot;");
   });
 
   it("initializes browser script behavior once with initial props", async () => {

@@ -23,7 +23,7 @@ const csp = createContentSecurityPolicy({
 csp.applyResponseHeaders(response.headers);
 ```
 
-`getShopifyCspDirectives(shop)` supplies the same defaults used by the creator, including development connections, for framework-native CSP configuration. Adapt its camelCase directive names and quoted source keywords to the framework's format. It does not generate nonces or hash inline scripts. Use framework-native configuration or construct your own header when you need exact replacement of the creator's defaults, such as removing its inline-style allowance.
+`getShopifyCspDirectives(shop)` supplies the same defaults used by the creator, including development connections, for framework-native CSP configuration. Adapt its camelCase directive names and quoted source keywords to the framework's format. It does not generate nonces or authorize inline scripts by default. Pass `getShopifyCspDirectives(shop, { hashes: true })` to include the [Shopify bootstrap hashes](#shopify-bootstrap-hashes) in `scriptSrc`. For frameworks with a separate hashes field that expects unquoted values, use `getShopifyScriptHashes({ quoted: false })` instead. Use framework-native configuration or construct your own header when you need exact replacement of the creator's defaults, such as removing its inline-style allowance.
 
 Hydrogen's development build automatically adds local HTTP/HTTPS and WebSocket connections for `localhost` and `127.0.0.1`, plus WebSocket connections for `*.tryhydrogen.dev`, to the getter's `connectSrc` defaults. The creator inherits these defaults. The production build omits these sources. For framework config files loaded directly by Node, add `--conditions=development` to the Node command in development scripts; keep build and production commands without that flag. Custom `connectSrc` arrays retain these development defaults. Add other development origins explicitly, and add `'unsafe-eval'` to `scriptSrc` only if the framework's development runtime requires it. Keep framework-specific development allowances out of production. Add third-party resources and their network endpoints to the appropriate directives. Verify enabled Shopify features and third-party integrations with browser CSP enforcement active.
 
@@ -60,11 +60,27 @@ const csp = createContentSecurityPolicy({
 csp.applyResponseHeaders(response.headers);
 ```
 
-This allows injected inline JavaScript as well as the app's scripts. Hash-based CSP is a stricter alternative, but the framework must authorize every emitted inline script, including Shopify's bootstraps. If `scriptSrcElem` is configured, it controls script elements instead of `scriptSrc`. Adding nonce/hash sources or `'strict-dynamic'` can make browsers ignore `'unsafe-inline'`; do not mix these without accounting for all inline scripts.
+This allows injected inline JavaScript as well as the app's scripts. Hash-based CSP is a stricter alternative, but the framework must authorize every emitted inline script, including [Shopify's bootstraps](#shopify-bootstrap-hashes). If `scriptSrcElem` is configured, it controls script elements instead of `scriptSrc`. Adding nonce/hash sources or `'strict-dynamic'` can make browsers ignore `'unsafe-inline'`; do not mix these without accounting for all inline scripts.
+
+## Shopify bootstrap hashes
+
+`ShopifyScripts` and the core tag helpers render static inline JavaScript with dynamic configuration in escaped `data-config` attributes. To authorize those bootstraps without nonces, add the sources returned by `getShopifyScriptHashes()` to `scriptSrc`:
+
+```ts
+const csp = createContentSecurityPolicy({
+  shop,
+  nonce: false,
+  directives: { scriptSrc: getShopifyScriptHashes() },
+});
+```
+
+These hashes are generated from the packaged script contents and include CSP quotes by default. Pass `getShopifyScriptHashes({ quoted: false })` for framework-native configurations that expect unquoted hashes. They authorize only Hydrogen's inline bootstraps; the framework must also authorize its own scripts. Hashes are opt-in because adding them causes browsers to ignore `'unsafe-inline'` in the same directive. Read the hashes from the installed package instead of copying literal hashes, and preserve the script text when rendering.
+
+Prefer per-response nonces when the framework supports them: they authorize individual script elements for each response. Hashes authorize matching script code regardless of its `data-config` attributes.
 
 ## Next.js App Router
 
-For a prerendered shell, use the nonce-free configuration above in `proxy.ts`, after handling Hydrogen-owned routes. Delete `Content-Security-Policy` and `Content-Security-Policy-Report-Only` from the headers returned by `getForwardedRequestHeaders()` so a client-supplied policy cannot supply Next's nonce. Render `ShopifyScripts` without a nonce and avoid reading request headers solely for CSP in the layout. This preserves the shell's rendering model. See [Next's CSP guide](https://nextjs.org/docs/app/guides/content-security-policy).
+For a prerendered shell, use the `'unsafe-inline'` configuration from [CSP without nonces](#csp-without-nonces) in `proxy.ts`, after handling Hydrogen-owned routes. Delete `Content-Security-Policy` and `Content-Security-Policy-Report-Only` from the headers returned by `getForwardedRequestHeaders()` so a client-supplied policy cannot supply Next's nonce. Render `ShopifyScripts` without a nonce and avoid reading request headers solely for CSP in the layout. This preserves the shell's rendering model. See [Next's CSP guide](https://nextjs.org/docs/app/guides/content-security-policy).
 
 Nonce CSP requires dynamic document rendering. Next cannot nonce scripts in a prerendered shell; putting only `ShopifyScripts` under Suspense does not solve this. Data can remain cached independently of the document.
 

@@ -5,6 +5,7 @@ import {
   SHOPIFY_SHOP_APP_ORIGIN,
   SHOPIFY_SHOP_COM_ORIGIN,
 } from "../shopify-scripts/constants";
+import { getShopifyScriptHashes } from "../shopify-scripts/hashes";
 import { normalizeStoreDomain } from "../url";
 import type {
   ContentSecurityPolicy,
@@ -98,11 +99,15 @@ function mergeSources(value: unknown, defaults: unknown): unknown {
  * Returns fresh Shopify CSP defaults for a framework's own CSP configuration. Development
  * connections are included by the development package export. Framework configuration loaded
  * directly by Node can select that export with `--conditions=development`.
- * `createContentSecurityPolicy` uses these same defaults. They do not authorize inline scripts;
- * configure their authorization explicitly.
+ * `createContentSecurityPolicy` uses these same defaults. Pass `{ hashes: true }` as the second
+ * argument to include Shopify's bootstrap hashes in scriptSrc; other inline scripts still need
+ * authorization from the framework.
  * @publicDocs
  */
-export function getShopifyCspDirectives(shop: ContentSecurityPolicyShop = {}) {
+export function getShopifyCspDirectives(
+  shop: ContentSecurityPolicyShop = {},
+  { hashes = false }: { hashes?: boolean } = {},
+) {
   const shopOrigins = [shop.storeDomain, shop.checkoutDomain || undefined]
     .filter((domain) => domain !== undefined)
     .map(normalizeStoreDomain);
@@ -112,7 +117,7 @@ export function getShopifyCspDirectives(shop: ContentSecurityPolicyShop = {}) {
     baseUri: ["'self'"],
     objectSrc: ["'none'"],
     frameAncestors: ["'none'"],
-    scriptSrc: ["'self'", SHOPIFY_CDN_ORIGIN],
+    scriptSrc: ["'self'", SHOPIFY_CDN_ORIGIN, ...(hashes ? getShopifyScriptHashes() : [])],
     scriptSrcAttr: ["'none'"],
     styleSrc: ["'self'", "'unsafe-inline'", SHOPIFY_CDN_ORIGIN],
     imgSrc: ["'self'", SHOPIFY_CDN_ORIGIN, "data:"],

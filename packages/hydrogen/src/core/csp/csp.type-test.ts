@@ -3,6 +3,7 @@ import { expectTypeOf, it } from "vitest";
 import {
   createContentSecurityPolicy,
   getShopifyCspDirectives,
+  getShopifyScriptHashes,
   type CreateContentSecurityPolicyOptions,
 } from "../index";
 
@@ -14,6 +15,16 @@ it("accepts immutable source arrays and exposes response header application", ()
   expectTypeOf(policy.header).toEqualTypeOf<string>();
   expectTypeOf(policy.applyResponseHeaders).toEqualTypeOf<(headers: Headers) => void>();
   expectTypeOf(getShopifyCspDirectives().scriptSrc).toEqualTypeOf<string[]>();
+  expectTypeOf(getShopifyCspDirectives(undefined, { hashes: true }).scriptSrc).toEqualTypeOf<string[]>();
+});
+
+it("preserves unquoted hash types for framework configuration", () => {
+  expectTypeOf(getShopifyScriptHashes()).toEqualTypeOf<string[]>();
+  expectTypeOf(getShopifyScriptHashes({ quoted: true })).toEqualTypeOf<string[]>();
+  expectTypeOf(getShopifyScriptHashes({ quoted: false })).toEqualTypeOf<`sha256-${string}`[]>();
+
+  const quoted: boolean = Math.random() > 0.5;
+  expectTypeOf(getShopifyScriptHashes({ quoted })).toEqualTypeOf<string[]>();
 });
 
 it("infers nonce mode for default, disabled, and broad options", () => {

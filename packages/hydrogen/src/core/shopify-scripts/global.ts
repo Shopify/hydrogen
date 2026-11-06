@@ -127,17 +127,16 @@ function normalizeMyshopifyDomain(domain: string): string {
   return trimTrailingSlashes(domain.trim().replace(/^https?:\/\//i, ""));
 }
 
-/**
- * Builds the inline bootstrap script that initializes `window.Shopify` for storefront scripts.
- */
-export function getShopifyGlobalBootstrapScript({
+export const shopifyGlobalBootstrap = /* @__PURE__ */ asInlineScript(initializeShopifyGlobal);
+
+export function getShopifyGlobalConfig({
   i18n,
   shop,
 }: {
   i18n?: ShopifyScriptsI18n;
   shop: ShopifyScriptsShop;
-}): string {
-  const config: ShopifyGlobalConfig = {
+}): ShopifyGlobalConfig {
+  return {
     application: { name: "hydrogen", version: __HYDROGEN_VERSION__ },
     country: i18n?.country ?? DEFAULT_COUNTRY,
     ...(i18n?.currency !== undefined ? { currency: { active: i18n.currency.toUpperCase() } } : {}),
@@ -164,6 +163,4 @@ export function getShopifyGlobalBootstrapScript({
       },
     },
   };
-
-  return asInlineScript(initializeShopifyGlobal)(config);
 }

@@ -1,4 +1,4 @@
-import { getShopifyAnalyticsBusScript, getShopifyAnalyticsConfig } from "./analytics";
+import { shopifyAnalyticsBootstrap, getShopifyAnalyticsConfig } from "./analytics";
 import {
   SHOPIFY_ACCOUNT_SCRIPT,
   SHOPIFY_CONSENT_API_SCRIPT,
@@ -12,7 +12,7 @@ import {
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,
   SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,
 } from "./constants";
-import { getShopifyGlobalBootstrapScript } from "./global";
+import { getShopifyGlobalConfig, shopifyGlobalBootstrap } from "./global";
 import { getPerfKitScript } from "./perfkit";
 import { renderShopifyScriptTag } from "./render";
 import type {
@@ -37,7 +37,8 @@ export {
   SHOPIFY_STOREFRONT_WEBMCP_SCRIPT,
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "./constants";
-export { getShopifyGlobal, getShopifyGlobalBootstrapScript } from "./global";
+export { getShopifyGlobal } from "./global";
+export { getShopifyScriptHashes } from "./hashes";
 export { initializeShopifyScripts } from "./initialize";
 export { renderShopifyScriptTag } from "./render";
 export type {
@@ -105,8 +106,12 @@ export function getShopifyScriptTags({
   const scripts: ShopifyScriptDescriptor[] = [
     {
       tagName: "script",
-      attributes: { id: "shopify-global-bootstrap", ...nonceAttributes },
-      innerHTML: getShopifyGlobalBootstrapScript({ i18n, shop }),
+      attributes: {
+        id: "shopify-global-bootstrap",
+        ...nonceAttributes,
+        ...shopifyGlobalBootstrap.attributes(getShopifyGlobalConfig({ i18n, shop })),
+      },
+      innerHTML: shopifyGlobalBootstrap.code,
     },
     {
       tagName: "script",
@@ -165,8 +170,12 @@ export function getShopifyScriptTags({
   // cached script cannot finish initialization before Hydrogen starts listening.
   scripts.push({
     tagName: "script",
-    attributes: { id: "shopify-analytics-bus", ...nonceAttributes },
-    innerHTML: getShopifyAnalyticsBusScript(analyticsConfig),
+    attributes: {
+      id: "shopify-analytics-bus",
+      ...nonceAttributes,
+      ...shopifyAnalyticsBootstrap.attributes(analyticsConfig),
+    },
+    innerHTML: shopifyAnalyticsBootstrap.code,
   });
 
   scripts.push({

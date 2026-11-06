@@ -7,7 +7,6 @@ import {
 } from "@shared/storefront-cache";
 import {
   createCartServerHandlers,
-  createContentSecurityPolicy,
   createStorefrontClient,
   createShopifyRequestContext,
   handleShopifyRedirects,
@@ -45,18 +44,6 @@ export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
   });
   if (shopifyRoute) return shopifyRoute;
 
-  const csp = createContentSecurityPolicy({
-    shop: { storeDomain: storefrontConfig.storeDomain },
-    nonce: false,
-    directives: {
-      // Astro's native CSP hashes its generated scripts; Shopify's inline bootstraps would
-      // need hashes too. This example uses an explicit inline-script allowance instead.
-      scriptSrc: ["'unsafe-inline'"],
-      styleSrc: ["https://fonts.googleapis.com"],
-      fontSrc: ["https://fonts.gstatic.com"],
-    },
-  });
-
   locals.shopifyRequestContext = requestContext;
   locals.storefrontClient = storefrontClient;
 
@@ -74,7 +61,15 @@ export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
 
   const finalResponse = new Response(response.body, response);
   requestContext.applyResponseHeaders(finalResponse.headers);
-  csp.applyResponseHeaders(finalResponse.headers);
+  const cspHeader = finalResponse.headers.get("Content-Security-Policy");
+  if (cspHeader) {
+    // Astro hashes styles, but does not expose style-src-attr in its CSP configuration.
+    // Allow dynamic product swatches to set their background color.
+    finalResponse.headers.set(
+      "Content-Security-Policy",
+      `${cspHeader} style-src-attr 'unsafe-inline';`,
+    );
+  }
   return finalResponse;
 });
 

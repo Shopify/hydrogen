@@ -4,7 +4,7 @@ import pkg from "./package.json" with { type: "json" };
 import { inlineScriptImports } from "./plugins/inline-shopify-analytics-bus.ts";
 import { minifyGraphQLLiterals } from "./plugins/minify-graphql-literals.ts";
 
-const plugins = [minifyGraphQLLiterals(), inlineScriptImports({ version: pkg.version })];
+const plugins = () => [minifyGraphQLLiterals(), inlineScriptImports({ version: pkg.version })];
 
 export default defineConfig([
   {
@@ -26,7 +26,7 @@ export default defineConfig([
       __HYDROGEN_VERSION__: JSON.stringify(pkg.version),
       __DEV__: "false",
     },
-    plugins,
+    plugins: plugins(),
     deps: { neverBundle: ["gql.tada", "react", "vue"] },
   },
   {
@@ -43,7 +43,7 @@ export default defineConfig([
       __HYDROGEN_VERSION__: JSON.stringify(pkg.version),
       __DEV__: "true",
     },
-    plugins,
+    plugins: plugins(),
     deps: { neverBundle: ["gql.tada", "react", "vue"] },
   },
   // CLI binary — referenced via the `bin` field in package.json, not in `exports`.
@@ -54,7 +54,7 @@ export default defineConfig([
     hash: false,
     minify: false,
     sourcemap: false,
-    plugins,
+    plugins: plugins(),
   },
   {
     entry: { "ts-plugin/index": "src/ts-plugin/index.ts" },
