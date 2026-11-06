@@ -39,8 +39,8 @@ function createContext({
   const requestContext = createShopifyRequestContext({ request, i18n });
   const storefrontClient = {
     graphql,
-    i18n: requestContext.i18n,
     locale: requestContext.locale,
+    i18n: requestContext.locale,
     storeUrl: "https://shop.myshopify.com",
     requestContext,
   } as unknown as StorefrontClient;

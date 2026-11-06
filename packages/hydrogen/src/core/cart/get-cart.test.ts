@@ -60,8 +60,8 @@ function mockStorefrontClient(
   };
   return {
     type: "private",
-    i18n: DEFAULT_I18N,
     locale: { ...DEFAULT_LOCALE, pathPrefix: "" },
+    i18n: { ...DEFAULT_LOCALE, pathPrefix: "" },
     storeUrl: "https://shop.example.com",
     apiUrl: "https://shop.example.com/api/2026-01/graphql.json",
     requestContext: createShopifyRequestContext({

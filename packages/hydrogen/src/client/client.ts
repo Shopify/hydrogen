@@ -375,7 +375,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
 
   const client: StorefrontClient = {
     type: clientType,
-    i18n: requestContext.i18n,
+    i18n: locale,
     locale,
     graphql: graphql as StorefrontClient["graphql"],
     apiUrl,

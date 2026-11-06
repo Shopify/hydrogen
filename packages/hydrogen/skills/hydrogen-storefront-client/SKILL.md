@@ -249,7 +249,7 @@ export type ProductCardData =
 
 ### Variables and i18n auto-injection
 
-`$country` and `$language` are auto-injected from `requestContext.locale` when the query declares them as `$country: CountryCode` and `$language: LanguageCode` (nullable or `!`). `requestContext.i18n` is the whole `defineShopifyI18n` definition; `requestContext.locale` is the `{ language, country, pathPrefix }` resolved for this request, also exposed as `client.locale`. Static clients still create a request context, usually with empty headers plus an explicit `locale`. You only pass the variables you own:
+`$country` and `$language` are auto-injected from `requestContext.locale` when the query declares them as `$country: CountryCode` and `$language: LanguageCode` (nullable or `!`). `requestContext.locale` is the `{ language, country, pathPrefix }` resolved for this request, also exposed as `client.locale`. `requestContext.i18n` and `client.i18n` are deprecated aliases of it; don't use them. Static clients still create a request context, usually with empty headers plus an explicit `locale`. You only pass the variables you own:
 
 ```ts
 const PRODUCTS = gql(`

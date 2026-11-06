@@ -12,8 +12,8 @@ const DEFAULT_BUYER_IP = "127.0.0.1";
 
 const storefrontClient = {
   type: "private",
-  i18n: DEFAULT_I18N,
   locale: { ...DEFAULT_LOCALE, pathPrefix: "" },
+  i18n: { ...DEFAULT_LOCALE, pathPrefix: "" },
   storeUrl: "https://test-store.myshopify.com",
   apiUrl: "https://test-store.myshopify.com/api/2026-04/graphql.json",
   graphql: vi.fn(),

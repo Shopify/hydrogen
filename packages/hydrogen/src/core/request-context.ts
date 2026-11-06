@@ -19,8 +19,30 @@ import type {
   ShopifyLocale,
   ShopifyMatchedLocale,
 } from "./i18n/types";
+import { normalizePathPrefix } from "./standard-routes/path";
 
 export type { ShopifyCountryCode, ShopifyLanguageCode } from "./i18n/types";
+
+/**
+ * Deprecated: a fixed request locale with an optional path prefix. Removed in the next major release.
+ * @deprecated Pass a definition from `defineShopifyI18n` to `createShopifyRequestContext` instead. Use `ShopifyLocale` for `{language, country}` and `ShopifyMatchedLocale` for the resolved locale. Removed in the next major release.
+ */
+export type I18nConfig = {
+  language: ShopifyLanguageCode;
+  country: ShopifyCountryCode;
+  pathPrefix?: string;
+};
+
+type NormalizedI18nConfig<TConfig extends I18nConfig> = Omit<TConfig, "pathPrefix"> & {
+  pathPrefix: string;
+};
+
+/** The locale a request context resolves: matched from a definition, or the legacy fixed locale. */
+type RequestLocale<TI18n extends ShopifyI18n | I18nConfig> = TI18n extends ShopifyI18n
+  ? ShopifyMatchedLocale<TI18n>
+  : TI18n extends I18nConfig
+    ? NormalizedI18nConfig<TI18n>
+    : never;
 
 const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
 
@@ -48,6 +70,20 @@ type ShopifyRequestContextInput<TI18n extends ShopifyI18n = ShopifyI18n> =
 
 type ShopifyRequestContextWithBuyerIpInput<TI18n extends ShopifyI18n = ShopifyI18n> =
   ShopifyRequestContextInputBase<TI18n> & { buyerIp: string };
+
+/**
+ * Deprecated: the request and a fixed locale, used for every request with no URL matching. Pass a definition from `defineShopifyI18n` as `i18n` instead. Removed in the next major release.
+ */
+type LegacyShopifyRequestContextInput<TConfig extends I18nConfig> = {
+  request: StorefrontRequest;
+  /** Deprecated: the fixed `{language, country, pathPrefix}` for every request. */
+  i18n: TConfig;
+  locale?: never;
+};
+
+type RequestContextInput =
+  | ShopifyRequestContextInputBase
+  | LegacyShopifyRequestContextInput<I18nConfig>;
 
 /** The fields and methods on every request context. */
 type ShopifyRequestContextBase = {
@@ -128,20 +164,23 @@ type ShopifyRequestContextBase = {
 };
 
 /** The context for one request. Pass the context to Hydrogen's API clients and route handlers for that request. */
-export type ShopifyRequestContext<TI18n extends ShopifyI18n = ShopifyI18n> =
+export type ShopifyRequestContext<TI18n extends ShopifyI18n | I18nConfig = ShopifyI18n> =
   ShopifyRequestContextBase & {
-    /** The storefront's i18n definition, as passed to `createShopifyRequestContext`. */
-    i18n: TI18n;
     /** The locale resolved for this request, with the path prefix it is served under. */
-    locale: ShopifyMatchedLocale<TI18n>;
+    locale: RequestLocale<TI18n>;
+    /**
+     * The locale resolved for this request.
+     * @deprecated Use `locale` instead. Removed in the next major release.
+     */
+    i18n: RequestLocale<TI18n>;
   };
 
 /** A request context that includes the customer's IP address. Private Storefront API clients require this context. */
-export type ShopifyRequestContextWithBuyerIp<TI18n extends ShopifyI18n = ShopifyI18n> =
+export type ShopifyRequestContextWithBuyerIp<TI18n extends ShopifyI18n | I18nConfig = ShopifyI18n> =
   ShopifyRequestContext<TI18n> & { readonly buyerIp: string };
 
 /** The values that the request context reads from the incoming request. */
-type Context<TI18n extends ShopifyI18n = ShopifyI18n> = {
+type Context<TI18n extends ShopifyI18n | I18nConfig = ShopifyI18n> = {
   /** The incoming request's `Cookie` header. */
   cookie?: string;
   /** The incoming request's `Sec-GPC` header value, which carries the customer's Global Privacy Control signal. */
@@ -156,14 +195,26 @@ type Context<TI18n extends ShopifyI18n = ShopifyI18n> = {
   url?: string;
   /** The origin of the incoming request's URL. */
   storefrontOrigin?: string;
-  /** The storefront's i18n definition. */
-  i18n: TI18n;
   /** The locale resolved for this request. */
-  locale: ShopifyMatchedLocale<TI18n>;
+  locale: RequestLocale<TI18n>;
+  /** The same locale, under its deprecated name. */
+  i18n: RequestLocale<TI18n>;
   /** Whether the incoming request asks for an HTML document. */
   documentRequest?: boolean;
 };
 
+/**
+ * @deprecated Pass a definition from `defineShopifyI18n` as `i18n` instead of a fixed `{language, country, pathPrefix}`. Removed in the next major release.
+ */
+export function createShopifyRequestContext<const TConfig extends I18nConfig>(
+  input: LegacyShopifyRequestContextInput<TConfig> & { buyerIp: string },
+): ShopifyRequestContextWithBuyerIp<TConfig>;
+/**
+ * @deprecated Pass a definition from `defineShopifyI18n` as `i18n` instead of a fixed `{language, country, pathPrefix}`. Removed in the next major release.
+ */
+export function createShopifyRequestContext<const TConfig extends I18nConfig>(
+  input: LegacyShopifyRequestContextInput<TConfig> & { buyerIp?: never },
+): ShopifyRequestContext<TConfig>;
 /**
  * Creates the context for one incoming request. Pass the same context to the Storefront API
  * client, the Customer Account API client, and `handleShopifyRoutes`. The context resolves the
@@ -185,11 +236,16 @@ export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
  * @returns The context to pass to Hydrogen's API clients and route handlers for this request.
  */
 export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
-  input: ShopifyRequestContextInputBase<TI18n> & { buyerIp?: string },
+  input: (ShopifyRequestContextInputBase<TI18n> | LegacyShopifyRequestContextInput<I18nConfig>) & {
+    buyerIp?: string;
+  },
 ): ShopifyRequestContext<TI18n> {
-  const { request, i18n } = input;
+  const { request } = input;
+  const i18n: Partial<ShopifyI18n & I18nConfig> | undefined = input.i18n;
+  const isDefinition = Boolean(i18n?.defaultLocale?.country && i18n.defaultLocale.language);
+  const isLegacyConfig = !i18n?.defaultLocale && Boolean(i18n?.country && i18n.language);
 
-  if (!i18n?.defaultLocale?.country || !i18n?.defaultLocale?.language) {
+  if (!isDefinition && !isLegacyConfig) {
     throw new Error(
       "i18n from defineShopifyI18n (with a defaultLocale) is required for Shopify request contexts.",
     );
@@ -206,12 +262,12 @@ export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
   const isConsentManagementRequest = request.headers.get(CONSENT_MANAGEMENT_HEADER) === "1";
   const url = request.url ?? request.headers.get(STOREFRONT_URL_HEADER) ?? undefined;
   const storefrontOrigin = getUrlOrigin(url);
-  const locale = input.locale ? resolveSupportedLocale(input.locale, i18n) : matchLocale(url, i18n);
+  const locale = resolveRequestLocale(input, url);
   const context = {
     ...(cookieHeader && { cookie: cookieHeader }),
     globalPrivacyControl: request.headers.get(SEC_GPC_HEADER) ?? undefined,
-    i18n,
     locale,
+    i18n: locale,
     ...(url && { url }),
     ...(storefrontOrigin && { storefrontOrigin }),
     ...(input.buyerIp && { buyerIp: input.buyerIp }),
@@ -222,7 +278,7 @@ export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
       crypto.randomUUID(),
     ...(isDocumentRequest(request) && { documentRequest: true }),
     ...(request.signal && { signal: request.signal }),
-  } as Context<TI18n>;
+  } as Context<ShopifyI18n | I18nConfig>;
 
   let capturedCookies: string[] | undefined;
   let personalizedResponseReason: string | undefined;
@@ -298,6 +354,18 @@ export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
       }
     },
   } as ShopifyRequestContext<TI18n>;
+}
+
+function resolveRequestLocale(
+  input: RequestContextInput,
+  url: string | undefined,
+): RequestLocale<ShopifyI18n | I18nConfig> {
+  const { i18n } = input;
+  // Legacy `I18nConfig` input pins one locale, exactly as before definitions existed.
+  if (!("defaultLocale" in i18n)) {
+    return { ...i18n, pathPrefix: normalizePathPrefix(i18n.pathPrefix) };
+  }
+  return input.locale ? resolveSupportedLocale(input.locale, i18n) : matchLocale(url, i18n);
 }
 
 function applyStorefrontRequestHeaders(context: Context, headers: Headers): void {

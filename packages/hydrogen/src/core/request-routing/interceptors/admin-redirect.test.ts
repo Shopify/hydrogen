@@ -17,8 +17,8 @@ function mockStorefrontClient(
 ): PrivateStorefrontClient {
   return {
     type: "private",
-    i18n: DEFAULT_I18N,
     locale: { ...DEFAULT_LOCALE, pathPrefix: "" },
+    i18n: { ...DEFAULT_LOCALE, pathPrefix: "" },
     storeUrl,
     apiUrl: "https://test-store.myshopify.com/api/2026-04/graphql.json",
     graphql: vi.fn().mockRejectedValue(new Error("/admin redirect should not query SFAPI")),

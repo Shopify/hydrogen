@@ -26,8 +26,8 @@ function handleWellKnownProxy(request: Request) {
     },
     storefrontClient: {
       type: "private",
-      i18n: { defaultLocale: { country: "US", language: "EN" } },
       locale: { country: "US", language: "EN", pathPrefix: "" },
+      i18n: { country: "US", language: "EN", pathPrefix: "" },
       storeUrl: STORE_URL,
       apiUrl: `${STORE_URL}/api/2026-04/graphql.json`,
       requestContext,

@@ -232,7 +232,7 @@ export const routeTemplates = defineShopifyRouteTemplates({
 });
 ```
 
-**Classic data-layer call-sites map mechanically:** `storefront.query()` → `client.graphql(QUERY, {variables, cache})`, which returns `{data, errors, headers}` instead of merging errors into the result — check `errors` before reading `data`; `$country`/`$language` are auto-injected, so drop them from `variables`; `storefront.CacheLong()` → the per-call `Cache.long()` (classic's implicit default caching is **gone**, so give every query that relied on it an explicit `cache`, `Cache.short()` or `Cache.long()`, or it hits the API on every request); `storefront.i18n` → `client.locale` (the resolved `{language, country, pathPrefix}`; `client.i18n` is the `defineShopifyI18n` definition).
+**Classic data-layer call-sites map mechanically:** `storefront.query()` → `client.graphql(QUERY, {variables, cache})`, which returns `{data, errors, headers}` instead of merging errors into the result — check `errors` before reading `data`; `$country`/`$language` are auto-injected, so drop them from `variables`; `storefront.CacheLong()` → the per-call `Cache.long()` (classic's implicit default caching is **gone**, so give every query that relied on it an explicit `cache`, `Cache.short()` or `Cache.long()`, or it hits the API on every request); `storefront.i18n` → `client.locale` (the resolved `{language, country, pathPrefix}`; `client.i18n` is a deprecated alias of it).
 
 Root **middleware** in `app/root.tsx` (needs middleware enabled, see step 4) — the request lifecycle from mental-model step 1:
 

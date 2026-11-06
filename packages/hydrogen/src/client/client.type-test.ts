@@ -12,7 +12,12 @@ import type {
   PrivateStorefrontClient,
   StorefrontQueryString,
 } from './index';
-import type {CachingStrategy, ShopifyI18n} from '../core';
+import type {
+  CachingStrategy,
+  I18nConfig,
+  ShopifyI18n,
+  ShopifyRequestContext,
+} from '../core';
 import type * as StorefrontExports from './index';
 import type {ResultOf, VariablesOf} from 'gql.tada';
 
@@ -308,8 +313,8 @@ describe('type tests', () => {
         // @ts-expect-error — requestContext must come from createShopifyRequestContext()
         requestContext: {
           requestGroupId: 'group-id',
-          i18n: DEFAULT_I18N,
           locale: {...DEFAULT_LOCALE, pathPrefix: ''},
+          i18n: {...DEFAULT_LOCALE, pathPrefix: ''},
           getForwardedRequestHeaders() {
             return new Headers();
           },
@@ -357,9 +362,40 @@ describe('type tests', () => {
       });
 
       expectTypeOf(client.requestContext).toEqualTypeOf<typeof requestContext>();
-      expectTypeOf(client.i18n).toEqualTypeOf<typeof i18n>();
+      expectTypeOf(client.i18n).toEqualTypeOf<typeof client.locale>();
       expectTypeOf(client.locale.pathPrefix).toEqualTypeOf<string>();
       expectTypeOf(client.locale.market).toEqualTypeOf<'spain'>();
+    });
+
+    it('keeps the legacy I18nConfig input and output shape', () => {
+      const requestContext = createShopifyRequestContext({
+        request: {headers: new Headers()},
+        i18n: {country: 'ES', language: 'ES', market: 'spain'},
+      });
+
+      const client = createStorefrontClient({
+        type: 'public',
+        requestContext,
+        config: {storeDomain: 'test.myshopify.com'},
+      });
+
+      expectTypeOf(requestContext.i18n.market).toEqualTypeOf<'spain'>();
+      expectTypeOf(requestContext.i18n.pathPrefix).toEqualTypeOf<string>();
+      expectTypeOf(requestContext.locale).toEqualTypeOf(requestContext.i18n);
+      expectTypeOf(client.i18n.country).toEqualTypeOf<'ES'>();
+      expectTypeOf<
+        ShopifyRequestContext<{country: 'US'; language: 'EN'}>['i18n']['pathPrefix']
+      >().toEqualTypeOf<string>();
+      expectTypeOf<I18nConfig>().toHaveProperty('pathPrefix');
+    });
+
+    it('rejects a locale override with a legacy I18nConfig', () => {
+      createShopifyRequestContext({
+        request: {headers: new Headers()},
+        // @ts-expect-error — a legacy I18nConfig already pins the locale, so `locale` needs a definition
+        i18n: {country: 'ES', language: 'ES'},
+        locale: {country: 'ES', language: 'ES'},
+      });
     });
 
     it('rejects clients without requestContext', () => {
@@ -437,10 +473,10 @@ describe('type tests', () => {
     });
 
     it('rejects buyerIp callbacks', () => {
-      // @ts-expect-error — resolve request-derived buyerIp before creating the context
       createShopifyRequestContext({
         request: {headers: new Headers()},
         i18n: DEFAULT_I18N,
+        // @ts-expect-error — resolve request-derived buyerIp before creating the context
         buyerIp: (_request: Request) => '1.2.3.4',
       });
     });

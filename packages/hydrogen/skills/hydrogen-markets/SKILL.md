@@ -84,7 +84,7 @@ export async function loadProducts(request: Request) {
 
 Do not pass `country` or `language` in every query call. The request context resolves the locale once at the request boundary and the client injects the context variables into queries that declare them.
 
-`requestContext.i18n` is the definition passed in. `requestContext.locale` is the resolved locale for this request: `{ language, country, pathPrefix }` (`ShopifyMatchedLocale`). `pathPrefix` is `""` for the default locale and for domain routing, or a leading-slash prefix such as `/fr-ca` with no trailing slash. The Storefront client mirrors both as `client.i18n` and `client.locale`.
+`requestContext.locale` is the resolved locale for this request: `{ language, country, pathPrefix }` (`ShopifyMatchedLocale`). `pathPrefix` is `""` for the default locale and for domain routing, or a leading-slash prefix such as `/fr-ca` with no trailing slash. The Storefront client mirrors it as `client.locale`. The definition is not on the context: import it from your i18n module wherever you need it.
 
 ---
 
@@ -212,7 +212,7 @@ Read the relevant reference before applying the generic `Request` examples in fr
 - **Define locales once with `defineShopifyI18n`.** Keep the definition in a module both server and client code can import. Do not hand-roll host allowlists or path parsers; the definition is the allowlist.
 - **Resolve the locale through `createShopifyRequestContext({ request, i18n })`.** Pass a real `Request` when the framework has one so `request.url` drives matching. With `request: { headers }`, the forwarded `x-storefront-url` header is used instead.
 - **Pass `locale` only when there is no meaningful URL.** Static rendering, background jobs, and module-scope clients set `locale: i18n.defaultLocale` (or another supported locale). The override is validated against the definition and throws for unsupported locales.
-- **Read the resolved locale from `requestContext.locale`, never from `requestContext.i18n`.** `i18n` is the whole definition; `locale` is this request's `{ language, country, pathPrefix }`.
+- **Read the resolved locale from `requestContext.locale`, never from `requestContext.i18n`.** `i18n` is a deprecated alias kept for apps that still pass a fixed `{language, country, pathPrefix}`; it is removed in the next major release.
 - **Use market-contextualized queries.** The Storefront client injects `country` and `language` variable values when the document declares `$country` and `$language`; it does not rewrite query text. Market-sensitive queries still need `@inContext(country: $country, language: $language)` or equivalent Storefront API context in the document.
 - **Do not calculate currency locally.** Render `amount` and `currencyCode` returned by Shopify and format them with the local `hydrogen-money` skill's `formatMoney()` guidance.
 - **Keep ShopifyScripts in the same locale.** Pass `requestContext.locale` (plus optional `currency`) as the `ShopifyScripts` `i18n` prop so Shopify globals match Storefront API context.

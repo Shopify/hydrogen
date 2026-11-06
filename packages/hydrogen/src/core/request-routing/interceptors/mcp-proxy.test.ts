@@ -30,8 +30,8 @@ function handleMcpProxy(request: Request, storeUrl = defaultStoreUrl) {
     sessionManager: createTestSessionManager(request),
     storefrontClient: {
       type: "private",
-      i18n: { defaultLocale: { country: "US", language: "EN" } },
       locale: { country: "US", language: "EN", pathPrefix: "" },
+      i18n: { country: "US", language: "EN", pathPrefix: "" },
       storeUrl,
       apiUrl: `${storeUrl}/api/2026-04/graphql.json`,
       requestContext,

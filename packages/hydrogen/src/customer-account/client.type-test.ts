@@ -194,8 +194,8 @@ describe("Customer Account API type boundary", () => {
         requestContext: {
           url: "https://example.com/account",
           signal: new AbortController().signal,
-          i18n: { defaultLocale: { country: "US", language: "EN" } },
           locale: { country: "US", language: "EN", pathPrefix: "" },
+          i18n: { country: "US", language: "EN", pathPrefix: "" },
         },
       });
     };

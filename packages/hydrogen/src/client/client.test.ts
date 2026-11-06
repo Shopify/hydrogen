@@ -69,10 +69,10 @@ describe("createStorefrontClient", () => {
 
       expect(client.type).toBe("public");
       expect(typeof client.graphql).toBe("function");
-      expect(client.i18n).toEqual(DEFAULT_I18N);
       expect(typeof client.apiUrl).toBe("string");
       expect(typeof client.storeUrl).toBe("string");
       expect(client.locale).toEqual({ ...DEFAULT_LOCALE, pathPrefix: "" });
+      expect(client.i18n).toBe(client.locale);
     });
 
     it("constructs storeUrl and apiUrl from storeDomain and pinned API version", () => {
@@ -377,7 +377,6 @@ describe("createStorefrontClient", () => {
           fetch: mockFetch,
         },
       });
-      expect(client.i18n).toBe(PATHNAME_I18N);
       expect(client.locale).toEqual({ language: "ES", country: "ES", pathPrefix: "/es-es" });
       await client.graphql(LOCALIZED_QUERY);
 
