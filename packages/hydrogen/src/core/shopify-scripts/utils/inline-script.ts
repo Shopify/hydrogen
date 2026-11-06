@@ -9,8 +9,9 @@ export function asInlineScript<T extends InlineScriptSource>(script: T): InlineS
 export function asInlineScript(script: InlineScriptSource): unknown {
   return {
     code: script,
+    // Some attribute renderers only escape quotes. Prevent HTML entity decoding from changing JSON.
     attributes: (config: unknown) => ({
-      "data-config": JSON.stringify(config),
+      "data-config": JSON.stringify(config).replace(/&/g, "\\u0026"),
     }),
   };
 }

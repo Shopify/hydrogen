@@ -20,7 +20,12 @@ const options: ShopifyScriptTagsOptions = {
   i18n: { country: "CA", language: "FR", currency: "CAD", pathPrefix: "/fr-ca" },
   consent: { mode: "default-banner" },
   analytics: {
-    customData: { value: `"<&</script><script>throw new Error('injected')</script>\u2028\u2029` },
+    customData: {
+      entities: "&quot; &#34; &#x22; &amp;",
+      injection:
+        "x&quot;},&quot;shop&quot;:{&quot;shopId&quot;:&quot;gid://shopify/Shop/666&quot;},&quot;z&quot;:{&quot;a&quot;:&quot;",
+      value: `"<&</script><script>throw new Error('injected')</script>\u2028\u2029`,
+    },
   },
 };
 
@@ -76,7 +81,7 @@ it("rejects configuration from a named element shadowing document.currentScript"
   }
 });
 
-it.each(["html", "react", "vue"] as const)(
+it.each(["html", "react", "vue", "quote-only attributes"] as const)(
   "preserves script bytes and escaped configuration through %s rendering",
   async (renderer) => {
     const html =
@@ -84,7 +89,17 @@ it.each(["html", "react", "vue"] as const)(
         ? renderToStaticMarkup(createElement(ReactShopifyScripts, options))
         : renderer === "vue"
           ? await renderToString(h(VueShopifyScripts, options))
-          : renderShopifyScriptTags(options).join("\n");
+          : renderer === "quote-only attributes"
+            ? getShopifyScriptTags(options)
+                .scripts.map((script) => {
+                  // Unhead escapes attribute quotes but leaves ampersands unchanged.
+                  const attributes = Object.entries(script.attributes ?? {})
+                    .map(([name, value]) => `${name}="${String(value).replace(/"/g, "&quot;")}"`)
+                    .join(" ");
+                  return `<script ${attributes}>${script.innerHTML ?? ""}</script>`;
+                })
+                .join("\n")
+            : renderShopifyScriptTags(options).join("\n");
     const scripts = parseInlineScripts(html);
     expect(scripts).toHaveLength(2);
     const originalCode = getShopifyScriptTags(options).scripts.flatMap((script) =>
