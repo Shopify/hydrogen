@@ -3,7 +3,8 @@
 import { ShopifyScripts, type ShopifyScriptsProps } from "@shopify/hydrogen/react";
 import { useRouter } from "next/navigation";
 
-import { analyticsConsent, defaultI18n } from "@/lib/config";
+import { analyticsConsent } from "@/lib/config";
+import { defaultI18n } from "@/lib/i18n";
 import { routeTemplates } from "@/lib/route-templates";
 
 /**

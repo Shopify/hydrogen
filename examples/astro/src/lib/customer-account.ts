@@ -1,4 +1,4 @@
-import { customerAccountConfig } from "@shared/config";
+import { customerAccountConfig, i18n } from "@shared/config";
 import { EncryptedCookieCustomerSession } from "@shared/customer-session";
 import { createShopifyRequestContext } from "@shopify/hydrogen";
 import * as CAAPI from "@shopify/hydrogen/customer-account";
@@ -36,7 +36,7 @@ export async function getCustomerAccountPageData({ request }: { request: Request
   const headers = new Headers({ "Cache-Control": "private, no-store" });
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n,
   });
   const requestUrl = new URL(request.url);
   const loginFailed = requestUrl.searchParams.get("login") === "failed";

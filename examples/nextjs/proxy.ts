@@ -7,12 +7,12 @@ import { getCache } from "@vercel/functions";
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 
 import { cartHandlers } from "@/lib/cart-handlers";
-import { defaultI18n } from "@/lib/config";
 import {
   createCustomerSessionManager,
   createEphemeralSessionManager,
 } from "@/lib/customer-account";
 import { getCustomerSessionHandlers } from "@/lib/customer-session-handlers";
+import { i18n } from "@/lib/i18n";
 import { predictiveSearchHandlers } from "@/lib/predictive-search-handlers";
 import { routeTemplates } from "@/lib/route-templates";
 import { createRequestStorefrontClient } from "@/lib/storefront-client";
@@ -27,8 +27,10 @@ import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/stor
  *
  * The original request URL is forwarded to Server Components via
  * `requestContext.getForwardedRequestHeaders()` (carries `x-storefront-url` for
- * `not-found.tsx` and `getMarketFromHeaders`). SFAPI response headers are merged
- * onto the forwarded response via `requestContext.applyResponseHeaders`.
+ * `not-found.tsx` and locale resolution in `lib/storefront.ts`; without it every
+ * Server Component request context silently resolves to the default locale).
+ * SFAPI response headers are merged onto the forwarded response via
+ * `requestContext.applyResponseHeaders`.
  *
  * mock.shop fallback: when no `PRIVATE_STOREFRONT_API_TOKEN` is present, the
  * shared `resolveStorefrontConfig()` falls back to `mock.shop` with tokenless
@@ -48,7 +50,7 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
   const storefrontClient = createRequestStorefrontClient({
     config: storefrontConfig,
     request,
-    i18n: defaultI18n,
+    i18n,
     cache,
     waitUntil: event.waitUntil.bind(event),
   });

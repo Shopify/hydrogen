@@ -4,7 +4,7 @@ import type {
   ShopAnalyticsChannel,
   StorefrontAnalyticsConfig,
 } from "../analytics/types";
-import type { I18nConfig } from "../request-context";
+import type { ShopifyLocale } from "../i18n/types";
 import type { ShopifyRouteTemplates } from "../standard-routes/index";
 
 /** The sales channel and custom data for the analytics bus. */
@@ -16,8 +16,9 @@ export type ShopifyScriptsAnalyticsConfig = {
 };
 
 /** The locale that Shopify's scripts read from the browser's Shopify global. */
-export interface ShopifyScriptsI18n
-  extends Pick<I18nConfig, "country" | "language">, Partial<Pick<I18nConfig, "pathPrefix">> {
+export interface ShopifyScriptsI18n extends ShopifyLocale {
+  /** The URL prefix for localized routes, such as `/es-es`. Leave it empty for the default locale. */
+  pathPrefix?: string;
   /** The active currency code. Hydrogen converts it to uppercase. */
   currency?: string;
 }

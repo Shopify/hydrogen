@@ -251,7 +251,7 @@ export function createCustomerAccountClient({
       const variables = getVariables(
         document,
         getOptionalVariables(options.variables),
-        requestContext.i18n.language,
+        requestContext.locale.language,
       );
       const response = await fetchCustomerAccountGraphql({
         fetch: resolvedFetch,
@@ -421,7 +421,7 @@ function withAbort<T>(promise: T | Promise<T>, signal: AbortSignal | undefined):
 function getVariables(
   document: { i18nVariableNames: ReadonlySet<keyof I18nVariableTypes> },
   variables: Record<string, unknown>,
-  language: ShopifyRequestContext["i18n"]["language"],
+  language: ShopifyRequestContext["locale"]["language"],
 ): Record<string, unknown> {
   if (!document.i18nVariableNames.has("language")) return variables;
   if ("language" in variables) return variables;

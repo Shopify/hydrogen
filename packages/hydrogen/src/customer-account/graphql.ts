@@ -14,7 +14,7 @@ type CustomerAccountTadaGql = InitGraphQLTada<{
 const CUSTOMER_ACCOUNT_DOCUMENT = Symbol("CustomerAccountDocument");
 
 /**
- * Variables the Customer Account client fills from `requestContext.i18n` when the caller omits them, with the named type each must be declared as. Same-named variables of any other type belong to the caller.
+ * Variables the Customer Account client fills from `requestContext.locale` when the caller omits them, with the named type each must be declared as. Same-named variables of any other type belong to the caller.
  */
 export const CUSTOMER_ACCOUNT_I18N_VARIABLE_TYPES = {
   language: "LanguageCode",

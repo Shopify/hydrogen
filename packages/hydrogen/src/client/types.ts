@@ -298,7 +298,12 @@ export type StorefrontClient<
 > = {
   /** The client type that you passed to `createStorefrontClient`. */
   type: Type;
-  /** The country and language that the client sends for `$country` and `$language` variables. */
+  /** The locale resolved for this request. The client sends its country and language for `$country` and `$language` variables. */
+  locale: RequestContext["locale"];
+  /**
+   * The locale resolved for this request.
+   * @deprecated Use `locale` instead. Removed in the next major release.
+   */
   i18n: RequestContext["i18n"];
   /**
    * Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a

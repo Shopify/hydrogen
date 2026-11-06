@@ -27,7 +27,7 @@ import { predictiveSearchHandlers } from "~/lib/predictive-search-handlers";
 import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
-import { analyticsConsent, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
+import { analyticsConsent, resolveShopIdentity } from "~/lib/shop";
 import { createRequestStorefrontClient, storefrontClientContext } from "~/lib/storefront";
 
 import type { Route } from "./+types/root";
@@ -100,6 +100,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     shopInfo: layout.shopInfo,
     shopIdentity: resolveShopIdentity(env, layout.shopId),
     currency: layout.currency,
+    locale: storefrontClient.locale,
   };
 }
 
@@ -117,7 +118,7 @@ export function Layout({ children }: { children: ReactNode }) {
         {rootData ? (
           <ShopifyScripts
             nonce={nonce}
-            i18n={{ ...storefrontConfig.i18n, currency: rootData.currency }}
+            i18n={{ ...rootData.locale, currency: rootData.currency }}
             shop={rootData.shopIdentity.scriptShop}
             analytics={{ channel: rootData.shopIdentity.analyticsShop.channel }}
             shopifyAnalytics={rootData.shopIdentity.shopifyAnalytics}
