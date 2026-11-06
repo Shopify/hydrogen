@@ -13,7 +13,7 @@ import {
   hasProvidedEnvBindings,
   type MiniOxygenRuntimeOptions,
 } from './environment.js';
-import {getHydrogenCompatibilityDate} from './compat-date.js';
+import {getOxygenCompatibilityDate} from '../common/compat.js';
 import {
   createMiniOxygen,
   defaultLogRequestLine,
@@ -127,7 +127,7 @@ async function createOxygenPreviewRuntime(
     pluginOptions.env,
   );
   const compatibilityDate =
-    apiOptions.compatibilityDate ?? getHydrogenCompatibilityDate(root);
+    apiOptions.compatibilityDate ?? getOxygenCompatibilityDate();
   const requestHook = getPreviewRequestHook(pluginOptions, apiOptions);
 
   const previewRuntime = createMiniOxygen({
@@ -150,7 +150,7 @@ async function createOxygenPreviewRuntime(
           },
         ],
         bindings: env,
-        ...(compatibilityDate && {compatibilityDate}),
+        compatibilityDate,
       },
     ],
   });
