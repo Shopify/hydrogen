@@ -8,6 +8,12 @@ import type { Route } from "./+types/($locale).sitemap.$type.$page[.xml]";
 const SITEMAP_MAX_AGE_SECONDS = 86_400;
 const SITEMAP_CACHE_CONTROL = `max-age=${SITEMAP_MAX_AGE_SECONDS}`;
 
+// Declared before `LOCALES_BY_HREFLANG`, which calls `toHreflang` at module load.
+const HREFLANG_LANGUAGE_OVERRIDES: Partial<Record<ShopifyLocale["language"], string>> = {
+  ZH_CN: "zh-Hans",
+  ZH_TW: "zh-Hant",
+};
+
 // hreflang values are BCP 47 (`fr-CA`); the i18n definition is the single source of which exist.
 const LOCALES_BY_HREFLANG = new Map(
   getSupportedLocales(i18n).map((locale) => [toHreflang(locale), locale] as const),
@@ -40,8 +46,3 @@ function toHreflang({ language, country }: ShopifyLocale): string {
     HREFLANG_LANGUAGE_OVERRIDES[language] ?? language.replace(/_.*$/, "").toLowerCase();
   return `${primaryLanguage}-${country}`;
 }
-
-const HREFLANG_LANGUAGE_OVERRIDES: Partial<Record<ShopifyLocale["language"], string>> = {
-  ZH_CN: "zh-Hans",
-  ZH_TW: "zh-Hant",
-};
