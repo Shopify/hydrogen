@@ -40,6 +40,12 @@ export function defineShopifyRouteTemplates<const TRoutes extends ShopifyRouteTe
   return routes;
 }
 
+/**
+ * @deprecated Renamed to `defineShopifyRouteTemplates`. This alias will be removed in the next
+ * major release.
+ */
+export const createShopifyRouteTemplates = defineShopifyRouteTemplates;
+
 export function getStandardRoute<const TRoute extends StandardRouteName>(
   routeTemplates: ShopifyRouteTemplates,
   route: TRoute,
