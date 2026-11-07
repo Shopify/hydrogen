@@ -2719,17 +2719,20 @@ export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
       );
     };
 
-    const configure = () => {
+    const configureAvailableActions = () => {
       const actions = typeof window === "undefined" ? undefined : window.Shopify?.actions;
-      if (documentReady && actions?.updateCart) {
-        try {
-          configureUpdateCartOnce(actions);
-          resolveOnce(actions);
-        } catch (error) {
-          rejectOnce(error);
-        }
-        return;
+      if (!actions?.updateCart) return false;
+      try {
+        configureUpdateCartOnce(actions);
+        resolveOnce(actions);
+      } catch (error) {
+        rejectOnce(error);
       }
+      return true;
+    };
+
+    const configure = () => {
+      if (documentReady && configureAvailableActions()) return;
 
       if (scriptState === "failed") {
         rejectOnce(

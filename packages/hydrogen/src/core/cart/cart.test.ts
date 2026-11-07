@@ -6230,6 +6230,261 @@ describe("CartStore.handleFormSubmit — add intent", () => {
 // ---------------------------------------------------------------------------
 
 describe("getShopifyStandardActions", () => {
+  describe("while the Standard Actions script loads", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      Object.defineProperty(document, "readyState", {
+        value: "complete",
+        configurable: true,
+      });
+      Object.defineProperty(window, "Shopify", {
+        value: {},
+        configurable: true,
+        writable: true,
+      });
+      resetStandardActionsForTests();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+      vi.unstubAllGlobals();
+    });
+
+    function addScript(type = "") {
+      const script = document.createElement("script");
+      // Keep DOM insertion inert; the tests dispatch load and error themselves.
+      script.type = "application/json";
+      script.src = SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT;
+      document.head.append(script);
+      script.type = type;
+      return script;
+    }
+
+    function exposeActions() {
+      const updateCart = createStandardActionsMock();
+      const actions = { updateCart, getCart: mockGetCart };
+      Object.defineProperty(window, "Shopify", {
+        value: { actions },
+        configurable: true,
+        writable: true,
+      });
+      return actions;
+    }
+
+    function expectListenersRemoved(
+      addListener: ReturnType<typeof vi.spyOn>,
+      removeListener: ReturnType<typeof vi.spyOn>,
+    ) {
+      for (const event of ["load", "error"]) {
+        const listener = addListener.mock.calls.find(([type]) => type === event)?.[1];
+        expect(listener).toBeTypeOf("function");
+        expect(removeListener).toHaveBeenCalledWith(event, listener);
+      }
+    }
+
+    it.each([
+      "",
+      "module",
+      "text/javascript",
+      "application/javascript",
+      "text/ecmascript",
+      "application/ecmascript",
+      " TEXT/JAVASCRIPT ",
+    ])("shares readiness and configures once when a %j script loads", async (type) => {
+      const script = addScript(type);
+      const addListener = vi.spyOn(script, "addEventListener");
+      const removeListener = vi.spyOn(script, "removeEventListener");
+      const promise = getShopifyStandardActions();
+      const settled = vi.fn();
+      void promise.then(settled);
+      expect(getShopifyStandardActions()).toBe(promise);
+      await Promise.resolve();
+      expect(settled).not.toHaveBeenCalled();
+
+      const actions = exposeActions();
+      script.dispatchEvent(new Event("load"));
+
+      await expect(promise).resolves.toBe(actions);
+      expect(actions.updateCart.configure).toHaveBeenCalledTimes(1);
+      expectListenersRemoved(addListener, removeListener);
+      expect(vi.getTimerCount()).toBe(0);
+      script.dispatchEvent(new Event("load"));
+      await expect(getShopifyStandardActions()).resolves.toBe(actions);
+      expect(actions.updateCart.configure).toHaveBeenCalledTimes(1);
+    });
+
+    it.each(["load", "DOMContentLoaded"])(
+      "waits for both readiness events when %s arrives first",
+      async (firstEvent) => {
+        Object.defineProperty(document, "readyState", { value: "loading", configurable: true });
+        const script = addScript();
+        const removeListener = vi.spyOn(document, "removeEventListener");
+        const promise = getShopifyStandardActions();
+        const actions = exposeActions();
+        const events =
+          firstEvent === "load" ? ["load", "DOMContentLoaded"] : ["DOMContentLoaded", "load"];
+        // Actions are exposed by the script, immediately before its load event.
+        if (firstEvent === "DOMContentLoaded")
+          Object.defineProperty(window, "Shopify", {
+            value: {},
+            configurable: true,
+            writable: true,
+          });
+        (firstEvent === "load" ? script : document).dispatchEvent(new Event(events[0]));
+        expect(actions.updateCart.configure).not.toHaveBeenCalled();
+        Object.defineProperty(window, "Shopify", {
+          value: { actions },
+          configurable: true,
+          writable: true,
+        });
+        (firstEvent === "load" ? document : script).dispatchEvent(new Event(events[1]));
+        await expect(promise).resolves.toBe(actions);
+        expect(actions.updateCart.configure).toHaveBeenCalledTimes(1);
+        expect(removeListener).toHaveBeenCalledWith("DOMContentLoaded", expect.any(Function));
+        expect(vi.getTimerCount()).toBe(0);
+      },
+    );
+
+    it("discovers a script inserted before DOMContentLoaded", async () => {
+      Object.defineProperty(document, "readyState", { value: "loading", configurable: true });
+      const promise = getShopifyStandardActions();
+      const script = addScript();
+      document.dispatchEvent(new Event("DOMContentLoaded"));
+      const actions = exposeActions();
+      script.dispatchEvent(new Event("load"));
+      await expect(promise).resolves.toBe(actions);
+      expect(actions.updateCart.configure).toHaveBeenCalledTimes(1);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it.each(["loading", "complete"])(
+      "rejects script errors and cleans up while the document is %s",
+      async (readyState) => {
+        Object.defineProperty(document, "readyState", { value: readyState, configurable: true });
+        const script = addScript();
+        const addListener = vi.spyOn(script, "addEventListener");
+        const removeListener = vi.spyOn(script, "removeEventListener");
+        const removeDocumentListener = vi.spyOn(document, "removeEventListener");
+        const rejected = expect(getShopifyStandardActions()).rejects.toThrow(
+          "Standard Actions script failed to load:",
+        );
+        script.dispatchEvent(new Event("error"));
+        await rejected;
+        expectListenersRemoved(addListener, removeListener);
+        expect(removeDocumentListener).toHaveBeenCalledWith(
+          "DOMContentLoaded",
+          expect.any(Function),
+        );
+        expect(vi.getTimerCount()).toBe(0);
+        const actions = exposeActions();
+        document.dispatchEvent(new Event("DOMContentLoaded"));
+        script.dispatchEvent(new Event("load"));
+        expect(actions.updateCart.configure).not.toHaveBeenCalled();
+      },
+    );
+
+    it("rejects a loaded script that does not expose cart actions", async () => {
+      const script = addScript();
+      const addListener = vi.spyOn(script, "addEventListener");
+      const removeListener = vi.spyOn(script, "removeEventListener");
+      const rejected = expect(getShopifyStandardActions()).rejects.toThrow(
+        "Ensure the Shopify script tag has loaded before calling cart actions.",
+      );
+      script.dispatchEvent(new Event("load"));
+      await rejected;
+      expectListenersRemoved(addListener, removeListener);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it.each(["loading", "complete"])(
+      "times out, removes listeners, and permits a new attempt while the document is %s",
+      async (readyState) => {
+        Object.defineProperty(document, "readyState", { value: readyState, configurable: true });
+        const script = addScript();
+        const addListener = vi.spyOn(script, "addEventListener");
+        const removeListener = vi.spyOn(script, "removeEventListener");
+        const removeDocumentListener = vi.spyOn(document, "removeEventListener");
+        const promise = getShopifyStandardActions();
+        const settled = vi.fn();
+        void promise.catch(settled);
+        const rejected = expect(promise).rejects.toThrow(
+          "Standard Actions script did not load within 30 seconds.",
+        );
+        await vi.advanceTimersByTimeAsync(STANDARD_ACTION_TIMEOUT_IN_MS - 1);
+        expect(settled).not.toHaveBeenCalled();
+        await vi.advanceTimersByTimeAsync(1);
+        await rejected;
+        expectListenersRemoved(addListener, removeListener);
+        expect(removeDocumentListener).toHaveBeenCalledWith(
+          "DOMContentLoaded",
+          expect.any(Function),
+        );
+        expect(vi.getTimerCount()).toBe(0);
+
+        const actions = exposeActions();
+        document.dispatchEvent(new Event("DOMContentLoaded"));
+        script.dispatchEvent(new Event("load"));
+        expect(actions.updateCart.configure).not.toHaveBeenCalled();
+        Object.defineProperty(document, "readyState", { value: "complete", configurable: true });
+        const retry = getShopifyStandardActions();
+        expect(retry).not.toBe(promise);
+        await expect(retry).resolves.toBe(actions);
+        expect(actions.updateCart.configure).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    it.each([false, new Error("configuration failed")])(
+      "rejects failed configuration after load and permits retry (%s)",
+      async (failure) => {
+        const script = addScript();
+        const addListener = vi.spyOn(script, "addEventListener");
+        const removeListener = vi.spyOn(script, "removeEventListener");
+        const rejected = expect(getShopifyStandardActions()).rejects.toThrow(
+          failure instanceof Error
+            ? failure.message
+            : "Standard Actions updateCart could not be configured.",
+        );
+        const actions = exposeActions();
+        actions.updateCart.configure.mockImplementationOnce(() => {
+          if (failure instanceof Error) throw failure;
+          return failure;
+        });
+        script.dispatchEvent(new Event("load"));
+        await rejected;
+        expectListenersRemoved(addListener, removeListener);
+        expect(vi.getTimerCount()).toBe(0);
+        await expect(getShopifyStandardActions()).resolves.toBe(actions);
+        expect(actions.updateCart.configure).toHaveBeenCalledTimes(2);
+      },
+    );
+
+    it("configures the cart endpoint after a connected store's script loads", async () => {
+      const script = addScript();
+      configureCartEndpoint("/api/cart");
+      store.destroy();
+      store.connect();
+      const actions = exposeActions();
+      script.dispatchEvent(new Event("load"));
+      expect(actions.updateCart.configure).toHaveBeenCalledTimes(1);
+      await expect(getShopifyStandardActions()).resolves.toBe(actions);
+      const handler = configuredUpdateCartHandler;
+      assert(handler, "Expected the connected store to configure the cart handler after load");
+      const mockFetch = vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify({ cart: null }), { status: 200 }));
+      vi.stubGlobal("fetch", mockFetch);
+      const defaultHandler = vi.fn();
+      const payload = { lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }] };
+      await handler(defaultHandler, payload);
+      expect(defaultHandler).not.toHaveBeenCalled();
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/cart",
+        expect.objectContaining({ method: "POST", body: JSON.stringify(payload) }),
+      );
+    });
+  });
+
   afterEach(() => {
     Object.defineProperty(document, "readyState", {
       value: "complete",
