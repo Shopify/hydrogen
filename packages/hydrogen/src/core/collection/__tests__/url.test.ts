@@ -884,6 +884,47 @@ describe("category filter", () => {
     expect(filterEquals(a, b)).toBe(true);
     expect(filterEquals(a, c)).toBe(false);
   });
+
+  it("parses category filter", () => {
+    const result = parseCollectionParams(
+      params("filter.p.category=gid%3A%2F%2Fshopify%2FTaxonomyCategory%2F1"),
+    );
+    expect(result.filters).toEqual([categoryFilter]);
+  });
+
+  it("parses multiple category filters", () => {
+    const result = parseCollectionParams(
+      params(
+        "filter.p.category=gid%3A%2F%2Fshopify%2FTaxonomyCategory%2F1&filter.p.category=gid%3A%2F%2Fshopify%2FTaxonomyCategory%2F2",
+      ),
+    );
+    expect(result.filters).toEqual([
+      { category: { id: "gid://shopify/TaxonomyCategory/1" } },
+      { category: { id: "gid://shopify/TaxonomyCategory/2" } },
+    ]);
+  });
+
+  it("round-trips category filter through serialize and parse", () => {
+    const state = {
+      filters: [categoryFilter],
+      sortKey: undefined,
+      reverse: false,
+    };
+    const serialized = serializeCollectionParams(state);
+    const parsed = parseCollectionParams(serialized);
+    expect(parsed.filters).toEqual(state.filters);
+    expect(collectionParamsMatchState(serialized, state)).toBe(true);
+  });
+
+  it("returns false in collectionParamsMatchState when category filter differs", () => {
+    const state = {
+      filters: [categoryFilter],
+      sortKey: undefined,
+      reverse: false,
+    };
+    const searchParams = params("filter.p.category=gid%3A%2F%2Fshopify%2FTaxonomyCategory%2F999");
+    expect(collectionParamsMatchState(searchParams, state)).toBe(false);
+  });
 });
 
 describe("price bounds under window.Shopify.locale", () => {
