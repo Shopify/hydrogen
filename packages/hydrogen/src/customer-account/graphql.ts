@@ -1,5 +1,6 @@
 import type { DocumentDecoration, initGraphQLTada as InitGraphQLTada } from "gql.tada";
 
+import { appendFragments } from "../client/compose-document";
 import { getVariableNamesDeclaredAs } from "../client/i18n-variables";
 import { isObjectRecord } from "../core/utils/record";
 import type { introspection } from "../graphql/generated/customer-account-graphql-env";
@@ -135,18 +136,15 @@ type CustomerAccountGql = {
  */
 // oxlint-disable-next-line typescript-eslint/consistent-type-assertions -- gql.tada adds phantom helper properties to the function type that are not used at runtime.
 export const gql = ((source: string, fragments?: readonly CustomerAccountDocument[]) => {
-  let query = source;
-
-  if (fragments) {
-    const seen = new Set<string>();
-    for (const fragment of fragments) {
-      assertCustomerAccountDocument(fragment);
-      if (!seen.has(fragment.source)) {
-        seen.add(fragment.source);
-        query += "\n" + fragment.source;
-      }
-    }
-  }
+  const query = fragments
+    ? appendFragments(
+        source,
+        fragments.map((fragment) => {
+          assertCustomerAccountDocument(fragment);
+          return fragment.source;
+        }),
+      )
+    : source;
 
   const document = {
     [CUSTOMER_ACCOUNT_DOCUMENT]: true,
