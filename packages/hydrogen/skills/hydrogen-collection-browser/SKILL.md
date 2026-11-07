@@ -70,7 +70,7 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 
 - Do not use router query objects when filter param names contain dots, unless the framework preserves dotted keys literally.
 - Do not compute filter URLs manually when Hydrogen helpers can serialize/remove filters.
-- Do not write a custom mapping table from `ProductFilter` shapes to URL params. `serializeCollectionParams(...)` already maps supported shapes such as `available`, `productType`, `productVendor`, `tag`, `variantOption`, product metafields, variant metafields, and price into Liquid-compatible params.
+- Do not write a custom mapping table from `ProductFilter` shapes to URL params. `serializeCollectionParams(...)` already maps supported shapes such as `available`, `productType`, `productVendor`, `tag`, `variantOption`, product metafields, variant metafields, taxonomy metafields, and price into Liquid-compatible params.
 - Do not synthesize Storefront API `ProductFilter` objects from display metadata. `value.input` already contains the supported filter shape.
 - Do not store products in the collection store; products come from the framework data response.
 - Do not clear non-filter params such as `q`, campaign params, or variant params unless the route explicitly owns them.
