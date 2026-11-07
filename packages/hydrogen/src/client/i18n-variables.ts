@@ -12,12 +12,12 @@ export type I18nVariableName = keyof typeof I18N_VARIABLE_TYPES;
 
 // Significant GraphQL tokens plus comments, which are dropped. Matching whole
 // strings keeps their contents from being read as declarations.
-const TOKEN_RE =
+export const TOKEN_RE =
   /"""(?:\\"""|[^])*?"""|"(?:\\.|[^"\\\n\r])*"|#[^\n\r]*|[_A-Za-z][_0-9A-Za-z]*|[^\s,]/g;
 const NAME_RE = /^[_A-Za-z]/;
 const OPERATION_TYPES = new Set(["query", "mutation", "subscription"]);
-const OPENING = new Set(["(", "[", "{"]);
-const CLOSING = new Set([")", "]", "}"]);
+export const OPENING = new Set(["(", "[", "{"]);
+export const CLOSING = new Set([")", "]", "}"]);
 
 /**
  * Returns the i18n variables that the document's first operation declares as

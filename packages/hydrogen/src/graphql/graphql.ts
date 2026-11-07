@@ -1,5 +1,6 @@
 import type { DocumentDecoration, initGraphQLTada as InitGraphQLTada } from "gql.tada";
 
+import { appendFragments } from "../client/compose-document";
 import type { introspection } from "./generated/graphql-env";
 import type { StorefrontScalars } from "./scalars";
 import type { InferResult, InferVariables } from "./type-resolver";
@@ -127,21 +128,8 @@ type StorefrontGql = {
  * @publicDocs
  */
 // oxlint-disable-next-line typescript-eslint/consistent-type-assertions -- gql.tada adds phantom helper properties to the function type that are not used at runtime.
-export const gql = ((source: string, fragments?: Array<string>) => {
-  let query = source;
-
-  if (fragments) {
-    const seen = new Set<string>();
-    for (const fragment of fragments) {
-      if (!seen.has(fragment)) {
-        seen.add(fragment);
-        query += "\n" + fragment;
-      }
-    }
-  }
-
-  return query;
-}) as unknown as StorefrontGql;
+export const gql = ((source: string, fragments?: Array<string>) =>
+  fragments ? appendFragments(source, fragments) : source) as unknown as StorefrontGql;
 
 /**
  * Writes a typed Storefront API query, mutation, or fragment. At runtime, the function returns the query text with each fragment appended once.

@@ -15,6 +15,22 @@ describe("Customer Account API gql", () => {
     );
   });
 
+  it("includes a fragment shared by two composed fragments once", () => {
+    const money = gql(`fragment Money on MoneyV2 { amount currencyCode }`);
+    const order = gql(`fragment OrderTotal on Order { totalPrice { ...Money } }`, [money]);
+    const line = gql(`fragment LineTotal on LineItem { totalPrice { ...Money } }`, [money]);
+    const query = gql(`query Orders { customer { id } }`, [order, line]);
+
+    expect(query.source).toBe(
+      [
+        `query Orders { customer { id } }`,
+        `fragment OrderTotal on Order { totalPrice { ...Money } }`,
+        `fragment Money on MoneyV2 { amount currencyCode }`,
+        `fragment LineTotal on LineItem { totalPrice { ...Money } }`,
+      ].join("\n"),
+    );
+  });
+
   it.each([
     ["$language: LanguageCode", ["language"]],
     ["$language: LanguageCode!", ["language"]],
