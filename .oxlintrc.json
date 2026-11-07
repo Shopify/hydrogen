@@ -115,6 +115,7 @@
         "packages/hydrogen/src/core/cart/form.ts",
         "packages/hydrogen/src/core/cart/get-cart.ts",
         "packages/hydrogen/src/core/cart/server-handlers.ts",
+        "packages/hydrogen/src/core/cart/storefront-cart-transport.ts",
         "packages/hydrogen/src/core/predictive-search/server-handlers.ts",
         "packages/hydrogen/src/core/predictive-search/store.ts",
         "packages/hydrogen/src/core/cart/standard-actions-adapter.ts",

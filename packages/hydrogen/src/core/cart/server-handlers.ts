@@ -1,4 +1,4 @@
-import type { GraphQLFormattedError, StorefrontClient } from "../../client";
+import type { StorefrontClient } from "../../client";
 import type {
   CustomerSession,
   ReadonlyCustomerSessionManager,
@@ -20,23 +20,23 @@ import type {
 import { createCallableRouteHandler } from "../request-routing/registered-routes";
 import { getSameOriginPath } from "../url";
 import { parseCartRequest } from "./actions";
-import type { CartAction, CartLineAddInput } from "./actions";
+import type { CartAction } from "./actions";
 import {
   cartBuyerIdentitySync,
   type CartBuyerIdentitySync,
   type CartBuyerIdentitySyncContext,
 } from "./buyer-identity-sync";
 import { getCartIdFromCookie, createCartCookie, createExpiredCartCookie } from "./cookie";
-import { getCart, getCartId, type CartDataFromQuery } from "./get-cart";
-import {
-  cartBuyerIdentityUpdateMutation,
-  cartQueries,
-  makeCartQueries,
-  type CartDataForOptions,
-  type CartQueriesForOptions,
-  type CreateCartQueriesOptions,
-} from "./queries";
+import { getCartId, type CartDataFromQuery } from "./get-cart";
+import type { cartQueries, CartDataForOptions, CartQueriesForOptions } from "./queries";
 import type { CartData } from "./state";
+import { storefrontCartTransport, type StorefrontCartTransport } from "./storefront-cart-transport";
+import type {
+  CartReadResult,
+  CartTransport,
+  CartTransportContext,
+  CartWriteResult,
+} from "./transport";
 const log = getLogger("cart-api");
 
 const CART_API_PATH = "/api/cart" as const;
@@ -309,10 +309,7 @@ export function createCartServerHandlers<const TOptions extends CreateCartServer
 export function createCartServerHandlers(
   options?: CreateCartServerHandlersOptions,
 ): CartServerHandlers | CartServerHandlersWithCustomerSession {
-  const queries = options?.fragment
-    ? makeCartQueries({ fragment: options.fragment } as CreateCartQueriesOptions)
-    : cartQueries;
-  const runtimeQueries = queries as RuntimeCartQueries;
+  const transport = storefrontCartTransport({ fragment: options?.fragment });
   const customerSession = options?.customerSession;
 
   const handlers = {
@@ -320,60 +317,51 @@ export function createCartServerHandlers(
       CART_API_PATH,
       CART_GET_METHOD,
       (context: CartGetHandlerContext & Partial<CartCustomerSessionReadContext>) =>
-        handleGet(context, runtimeQueries, customerSession),
+        handleGet(context, transport, customerSession),
     ),
     post: createCallableRouteHandler(
       CART_API_PATH,
       CART_POST_METHOD,
       (context: CartPostHandlerContext & Partial<CartCustomerSessionWriteContext>) =>
-        handlePost(context, runtimeQueries, customerSession),
+        handlePost(context, transport, customerSession),
     ),
   };
 
-  Object.defineProperty(handlers, cartServerHandlersCartQuery, { value: queries.cart });
+  Object.defineProperty(handlers, cartServerHandlersCartQuery, { value: transport.cartQuery });
   if (customerSession) {
     // Symbol-keyed and non-enumerable so the capability never registers as a
     // route in handleShopifyRoutes and stays uncallable outside Hydrogen wiring.
     Object.defineProperty(handlers, cartBuyerIdentitySync, {
-      value: createCartBuyerIdentitySync(),
+      value: createCartBuyerIdentitySync(transport),
     });
   }
   return handlers as CartServerHandlers | CartServerHandlersWithCustomerSession;
 }
 
-function createCartBuyerIdentitySync(): CartBuyerIdentitySync {
+function createCartBuyerIdentitySync(transport: StorefrontCartTransport): CartBuyerIdentitySync {
   return {
-    updateBuyerIdentity: updateCartBuyerIdentity,
+    updateBuyerIdentity: async (
+      { request, storefrontClient }: CartBuyerIdentitySyncContext,
+      customerAccessToken: string | null,
+    ) => {
+      const cartId = getCartIdFromCookie(request);
+      if (!cartId) return;
+      await transport.updateBuyerIdentity(cartId, customerAccessToken, { storefrontClient });
+    },
     expiredCartCookie: createExpiredCartCookie(),
   };
 }
 
-async function updateCartBuyerIdentity(
-  context: CartBuyerIdentitySyncContext,
-  customerAccessToken: string | null,
-): Promise<void> {
-  const cartId = getCartIdFromCookie(context.request);
-  if (!cartId) return;
-
-  const result = await context.storefrontClient.graphql(cartBuyerIdentityUpdateMutation, {
-    variables: { cartId, buyerIdentity: { customerAccessToken } },
-  });
-  const { userErrors } = assertMutationData(result, "cartBuyerIdentityUpdate");
-  if (userErrors.length > 0) {
-    throw new Error(userErrors.map(({ message }) => message).join("\n"));
-  }
-}
-
-type RuntimeCartQueries = typeof cartQueries;
-
 async function handleGet(
   context: CartGetHandlerContext & Partial<CartCustomerSessionReadContext>,
-  queries: RuntimeCartQueries,
+  transport: CartTransport,
   customerSession?: CartCustomerSession,
 ): Promise<CartGetResult> {
   const { request, storefrontClient } = context;
-  const cartIdSource = request ?? storefrontClient.requestContext;
-  const result = await getCart(getCartId(cartIdSource), storefrontClient, queries.cart);
+  const cartId = getCartId(request ?? storefrontClient.requestContext);
+  const result: CartReadResult = cartId
+    ? await transport.read(cartId, { storefrontClient })
+    : { cart: null, headers: new Headers() };
   logCartErrors(result.errors);
   const cart = await addLoggedInCheckoutParam(result.cart, context, customerSession);
   const data = { cart, ...(result.errors && { errors: result.errors }) };
@@ -394,7 +382,7 @@ function logCartErrors(errors: CartGetData["errors"]): void {
 
 async function handlePost(
   context: CartPostHandlerContext & Partial<CartCustomerSessionWriteContext>,
-  queries: RuntimeCartQueries,
+  transport: CartTransport,
   customerSession?: CartCustomerSession,
 ): Promise<CartPostResult> {
   const { request, storefrontClient } = context;
@@ -427,9 +415,8 @@ async function handlePost(
   const result = await executeCartMutation(
     action,
     cartId,
-    storefrontClient,
-    queries,
-    customerAccess.accessToken,
+    transport,
+    { storefrontClient, customerAccessToken: customerAccess.accessToken },
     customerSessionHeaders,
   );
   if (result.type !== "mutation") return result.response;
@@ -437,13 +424,23 @@ async function handlePost(
   const headers = createProxyResponseHeaders(result.headers);
   appendHeaders(headers, customerSessionHeaders);
 
-  // Only persist carts the browser already owns, including newly-created carts.
-  if (cartId === cookieCartId && result.cartId !== null && result.cartId !== cookieCartId) {
-    headers.append("set-cookie", createCartCookie(result.cartId));
-  }
+  const cartCookie = createOwnedCartCookie(cartId === cookieCartId, cookieCartId, result.cart);
+  if (cartCookie) headers.append("set-cookie", cartCookie);
 
   if (isFormRequest) return redirectResult(redirectTarget, headers);
-  return jsonResult(result.data, headers);
+  const { cart, userErrors, warnings } = result;
+  return jsonResult({ cart, userErrors, warnings }, headers);
+}
+
+function createOwnedCartCookie(
+  targetsCookieCart: boolean,
+  cookieCartId: string | null,
+  cart: CartData | null,
+): string | undefined {
+  const resultCartId = typeof cart?.id === "string" ? cart.id : null;
+  if (targetsCookieCart && resultCartId !== null && resultCartId !== cookieCartId) {
+    return createCartCookie(resultCartId);
+  }
 }
 
 async function parseCartAction(
@@ -477,18 +474,14 @@ function getMissingCartResponse(
 async function executeCartMutation(
   action: CartAction,
   cartId: string | null,
-  storefrontClient: StorefrontClient,
-  queries: RuntimeCartQueries,
-  customerAccessToken: string | undefined,
+  transport: CartTransport,
+  transportContext: CartTransportContext,
   customerSessionHeaders: Headers | undefined,
 ): Promise<
-  ({ type: "mutation" } & MutationResult) | { type: "response"; response: CartPostResult }
+  ({ type: "mutation" } & CartWriteResult) | { type: "response"; response: CartPostResult }
 > {
   try {
-    return {
-      type: "mutation",
-      ...(await executeMutation(action, cartId, storefrontClient, queries, customerAccessToken)),
-    };
+    return { type: "mutation", ...(await transport.apply(cartId, action, transportContext)) };
   } catch (error) {
     if (!customerSessionHeaders) throw error;
     log.error("cart mutation failed", { error });
@@ -525,144 +518,6 @@ function appendHeaders(headers: Headers, headersToAppend: Headers | undefined) {
 
 function safeRedirectTarget(request: Request): string {
   return getSameOriginPath(request.headers.get("referer"), new URL(request.url).origin) ?? "/";
-}
-
-type MutationResult = {
-  data: Record<string, unknown>;
-  cartId: string | null;
-  headers: Headers;
-};
-
-type GraphQLResult<D> = {
-  data: D | null;
-  errors?: GraphQLFormattedError[];
-  headers: Headers;
-};
-
-function assertGraphQLData<D>(result: GraphQLResult<D>): NonNullable<D> {
-  if (result.errors || !result.data) {
-    const message = result.errors?.[0]?.message ?? "GraphQL error";
-    throw new Error(message);
-  }
-  return result.data as NonNullable<D>;
-}
-
-function assertMutationData<D, K extends keyof NonNullable<D>>(
-  result: GraphQLResult<D>,
-  key: K,
-): NonNullable<NonNullable<D>[K]> {
-  const data = assertGraphQLData(result);
-  const payload = data[key];
-  if (payload == null) {
-    throw new Error(`Missing ${String(key)} in mutation response`);
-  }
-  return payload as NonNullable<NonNullable<D>[K]>;
-}
-
-function createMutationResult(
-  cart: unknown,
-  userErrors: unknown,
-  warnings: unknown,
-  headers: Headers,
-): MutationResult {
-  const storefrontCart = (cart ?? null) as Record<string, unknown> | null;
-
-  return {
-    data: { cart: storefrontCart, userErrors, warnings },
-    cartId: typeof storefrontCart?.id === "string" ? storefrontCart.id : null,
-    headers,
-  };
-}
-
-type CartMutationClient = Pick<StorefrontClient, "graphql">;
-
-async function executeMutation(
-  action: CartAction,
-  cartId: string | null,
-  storefront: CartMutationClient,
-  queries: RuntimeCartQueries,
-  customerAccessToken?: string,
-): Promise<MutationResult> {
-  if (action.intent === "add") {
-    return executeAdd(action.lines, cartId, storefront, queries, customerAccessToken);
-  }
-
-  if (!cartId) {
-    throw new Error("cartId is required for non-add mutations");
-  }
-
-  switch (action.intent) {
-    case "update": {
-      const result = await storefront.graphql(queries.cartLinesUpdate, {
-        variables: { cartId, lines: action.lines },
-      });
-      const { cart, userErrors, warnings } = assertMutationData(result, "cartLinesUpdate");
-      return createMutationResult(cart, userErrors, warnings, result.headers);
-    }
-    case "remove": {
-      const result = await storefront.graphql(queries.cartLinesRemove, {
-        variables: { cartId, lineIds: action.lineIds },
-      });
-      const { cart, userErrors, warnings } = assertMutationData(result, "cartLinesRemove");
-      return createMutationResult(cart, userErrors, warnings, result.headers);
-    }
-    case "discount-update": {
-      const result = await storefront.graphql(queries.cartDiscountCodesUpdate, {
-        variables: { cartId, discountCodes: action.discountCodes },
-      });
-      const { cart, userErrors, warnings } = assertMutationData(result, "cartDiscountCodesUpdate");
-      return createMutationResult(cart, userErrors, warnings, result.headers);
-    }
-    case "discount-apply":
-      return executeDiscountModify(cartId, "apply", action.code, storefront, queries);
-    case "discount-remove":
-      return executeDiscountModify(cartId, "remove", action.code, storefront, queries);
-    case "note-update": {
-      const result = await storefront.graphql(queries.cartNoteUpdate, {
-        variables: { cartId, note: action.note },
-      });
-      const { cart, userErrors, warnings } = assertMutationData(result, "cartNoteUpdate");
-      return createMutationResult(cart, userErrors, warnings, result.headers);
-    }
-    case "attributes-update": {
-      const result = await storefront.graphql(queries.cartAttributesUpdate, {
-        variables: { cartId, attributes: action.attributes },
-      });
-      const { cart, userErrors, warnings } = assertMutationData(result, "cartAttributesUpdate");
-      return createMutationResult(cart, userErrors, warnings, result.headers);
-    }
-    default: {
-      const _exhaustive: never = action;
-      throw new Error(`Unhandled cart action intent: ${(_exhaustive as CartAction).intent}`);
-    }
-  }
-}
-
-async function executeAdd(
-  lines: CartLineAddInput[],
-  cartId: string | null,
-  storefront: CartMutationClient,
-  queries: RuntimeCartQueries,
-  customerAccessToken?: string,
-): Promise<MutationResult> {
-  if (cartId) {
-    const result = await storefront.graphql(queries.cartLinesAdd, {
-      variables: { cartId, lines },
-    });
-    const { cart, userErrors, warnings } = assertMutationData(result, "cartLinesAdd");
-    return createMutationResult(cart, userErrors, warnings, result.headers);
-  }
-
-  const result = await storefront.graphql(queries.cartCreate, {
-    variables: {
-      input: {
-        lines,
-        ...(customerAccessToken && { buyerIdentity: { customerAccessToken } }),
-      },
-    },
-  });
-  const { cart, userErrors, warnings } = assertMutationData(result, "cartCreate");
-  return createMutationResult(cart, userErrors, warnings, result.headers);
 }
 
 async function getCartCreateCustomerAccess(
@@ -745,32 +600,6 @@ function assertCustomerSessionWriteContext(
   context: Partial<CartCustomerSessionWriteContext>,
 ): asserts context is CartCustomerSessionWriteContext {
   assertCustomerSessionContext(context);
-}
-
-async function executeDiscountModify(
-  cartId: string,
-  mode: "apply" | "remove",
-  code: string,
-  storefront: CartMutationClient,
-  queries: RuntimeCartQueries,
-): Promise<MutationResult> {
-  // Read-then-write: SFAPI has no atomic discount modify endpoint, so concurrent
-  // requests can overwrite each other's discount codes.
-  const cartResult = await storefront.graphql(queries.cart, {
-    variables: { id: cartId },
-  });
-  const cartData = assertGraphQLData(cartResult);
-
-  const currentCodes: string[] = (cartData.cart?.discountCodes ?? []).map((dc) => dc.code);
-
-  const updatedCodes =
-    mode === "apply" ? [...currentCodes, code] : currentCodes.filter((c) => c !== code);
-
-  const result = await storefront.graphql(queries.cartDiscountCodesUpdate, {
-    variables: { cartId, discountCodes: updatedCodes },
-  });
-  const { cart, userErrors, warnings } = assertMutationData(result, "cartDiscountCodesUpdate");
-  return createMutationResult(cart, userErrors, warnings, result.headers);
 }
 
 function jsonResult<TData>(data: TData, headers: HeadersInit = {}): ShopifyRouteJsonResult<TData> {
