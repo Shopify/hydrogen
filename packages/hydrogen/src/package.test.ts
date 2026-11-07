@@ -10,7 +10,7 @@ import {
 } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
@@ -20,6 +20,7 @@ import { assert } from "./core/test-utils";
 const require = createRequire(import.meta.url);
 const PACKAGE_ROOT = resolve(import.meta.dirname, "..");
 const TS_PLUGIN_EXPORT_PATH = "./ts-plugin";
+const EXPORTS_WITHOUT_DEVELOPMENT_BUILD = new Set(["./vite", "./ts-plugin"]);
 // pack + tar + spawn on a cold CI runner can exceed vitest's 5s default.
 const TS_PLUGIN_PACK_TIMEOUT_MS = 30_000;
 const STANDARD_EVENTS_SCRIPT_URL = "https://cdn.shopify.com/storefront/standard-events.js";
@@ -53,6 +54,8 @@ const PUBLIC_ENTRY_DECLARATIONS = [
   "dist/customer-account/index.d.mts",
 ] as const;
 
+type PackageExportTarget = string | Record<string, string | Record<string, string>>;
+
 describe("package metadata", () => {
   it("ships a CLI wrapper that exists before the package is built", () => {
     expect(packageJson.bin.hydrogen).toBe("./bin/hydrogen.mjs");
@@ -61,6 +64,32 @@ describe("package metadata", () => {
 
   it("exports package metadata", () => {
     expect(packageJson.exports["./package.json"]).toBe("./package.json");
+  });
+
+  it("ships development builds for every runtime export", () => {
+    const packageExports = packageJson.exports as Record<string, PackageExportTarget>;
+
+    for (const [subpath, target] of Object.entries(packageExports)) {
+      if (typeof target === "string" || EXPORTS_WITHOUT_DEVELOPMENT_BUILD.has(subpath)) {
+        continue;
+      }
+
+      const importConditions = target.import;
+      if (typeof importConditions !== "object" || importConditions === null) {
+        throw new Error(`${subpath} has no conditional import export`);
+      }
+      const developmentImport = importConditions.development;
+      assert(typeof developmentImport === "string", `${subpath} has no development import`);
+      expect(existsSync(resolve(PACKAGE_ROOT, developmentImport)), subpath).toBe(true);
+
+      const typeConditions = target.types;
+      if (typeof typeConditions !== "object" || typeConditions === null) {
+        throw new Error(`${subpath} has no conditional type export`);
+      }
+      const developmentTypes = typeConditions.development;
+      assert(typeof developmentTypes === "string", `${subpath} has no development types`);
+      expect(existsSync(resolve(PACKAGE_ROOT, developmentTypes)), subpath).toBe(true);
+    }
   });
 
   it("resolves every ESM entry point for require-based resolvers", () => {
@@ -81,6 +110,18 @@ describe("package metadata", () => {
       expect(importTargets.map((target) => resolve(PACKAGE_ROOT, target))).toContain(
         require.resolve(`@shopify/hydrogen${exportPath.slice(1)}`),
       );
+    }
+  });
+
+  it("resolves development ESM entry points for require-based resolvers", () => {
+    for (const entry of ["", "/customer-account", "/react", "/vue"]) {
+      const resolved = execFileSync(
+        process.execPath,
+        ["--conditions=development", "-p", `require.resolve("@shopify/hydrogen${entry}")`],
+        { cwd: PACKAGE_ROOT, encoding: "utf8" },
+      ).trim();
+
+      expect(resolved).toContain(resolve(PACKAGE_ROOT, "dist/development") + sep);
     }
   });
 
@@ -341,6 +382,24 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
 
     expect(productionShopifyScripts).not.toContain(STANDARD_EVENTS_INSPECTOR_ID);
     expect(developmentShopifyScripts).toContain(STANDARD_EVENTS_INSPECTOR_ID);
+  });
+
+  it("shares cart buyer identity sync between development package exports", () => {
+    execFileSync(
+      process.execPath,
+      [
+        "--conditions=development",
+        "--input-type=module",
+        "-e",
+        `import { createCartServerHandlers } from "@shopify/hydrogen";
+import { createCustomerAccountServerHandlers, createCustomerSession } from "@shopify/hydrogen/customer-account";
+
+const customerSession = createCustomerSession({ shopId: "123", customerAccountApiClientId: "client" });
+const cartServerHandlers = createCartServerHandlers({ customerSession });
+createCustomerAccountServerHandlers({ customerSession, cartServerHandlers });`,
+      ],
+      { cwd: PACKAGE_ROOT },
+    );
   });
 
   it("tells consumer bundlers to leave URL imports to the browser", () => {
