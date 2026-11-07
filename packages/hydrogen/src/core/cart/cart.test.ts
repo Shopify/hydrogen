@@ -5407,6 +5407,104 @@ describe("multi-line update and remove events", () => {
     await vi.waitFor(() => expect(lines()).toEqual(canonical));
   });
 
+  it("keeps rejected removals and revalidates when the response canonicalizes line IDs", async () => {
+    const canonical = [
+      { id: "line-a?cart=123", quantity: 2 },
+      { id: "line-b?cart=123", quantity: 1 },
+      { id: "line-c?cart=123", quantity: 1 },
+    ];
+    const refresh = createDeferred<ReturnType<typeof serverCart>>();
+    mockGetCart.mockReturnValue(refresh.promise);
+    const removal = mockUpdateCart({
+      lines: [
+        { id: "line-a", quantity: 0 },
+        { id: "line-b", quantity: 0 },
+      ],
+    });
+
+    resolveUpdate(0, {
+      ...serverCart(4, canonical),
+      userErrors: [maximumExceeded(0), maximumExceeded(1)],
+    });
+    await removal;
+
+    expect(lines()).toEqual([
+      { id: "line-a", quantity: 2 },
+      { id: "line-b", quantity: 1 },
+      { id: "line-c", quantity: 1 },
+    ]);
+    expect(store.getState().data.totalQuantity).toBe(4);
+    expect(store.getState().revalidating).toBe(true);
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+
+    refresh.resolve({ cart: serverCart(4, canonical).cart });
+    await vi.waitFor(() => expect(lines()).toEqual(canonical));
+    expect(store.getState().revalidating).toBeFalsy();
+  });
+
+  it("only preserves the rejected removal in a partially rejected batch", async () => {
+    const canonical = [
+      { id: "line-a?cart=123", quantity: 2 },
+      { id: "line-c?cart=123", quantity: 1 },
+    ];
+    const refresh = createDeferred<ReturnType<typeof serverCart>>();
+    mockGetCart.mockReturnValue(refresh.promise);
+    const removal = mockUpdateCart({
+      lines: [
+        { id: "line-a", quantity: 0 },
+        { id: "line-b", quantity: 0 },
+      ],
+    });
+
+    resolveUpdate(0, {
+      ...serverCart(3, canonical),
+      userErrors: [maximumExceeded(0)],
+    });
+    await removal;
+
+    expect(lines()).toEqual([
+      { id: "line-a", quantity: 2 },
+      { id: "line-c", quantity: 1 },
+    ]);
+    expect(store.getState().errors.lines.get("line-a")?.userErrors).toEqual([maximumExceeded(0)]);
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+
+    refresh.resolve({ cart: serverCart(3, canonical).cart });
+    await vi.waitFor(() => expect(lines()).toEqual(canonical));
+  });
+
+  it("keeps missing removals when a batch has an unscoped userError", async () => {
+    const canonical = [
+      { id: "line-a?cart=123", quantity: 2 },
+      { id: "line-b?cart=123", quantity: 1 },
+      { id: "line-c?cart=123", quantity: 1 },
+    ];
+    const refresh = createDeferred<ReturnType<typeof serverCart>>();
+    mockGetCart.mockReturnValue(refresh.promise);
+    const removal = mockUpdateCart({
+      lines: [
+        { id: "line-a", quantity: 0 },
+        { id: "line-b", quantity: 0 },
+      ],
+    });
+
+    resolveUpdate(0, {
+      ...serverCart(4, canonical),
+      userErrors: [{ code: "INVALID", message: "Cart update failed" }],
+    });
+    await removal;
+
+    expect(lines()).toEqual([
+      { id: "line-a", quantity: 2 },
+      { id: "line-b", quantity: 1 },
+      { id: "line-c", quantity: 1 },
+    ]);
+    expect(store.getState().revalidating).toBe(true);
+
+    refresh.resolve({ cart: serverCart(4, canonical).cart });
+    await vi.waitFor(() => expect(lines()).toEqual(canonical));
+  });
+
   describe("when a newer change supersedes one line", () => {
     const superseded = [
       { id: "line-a", quantity: 5 },

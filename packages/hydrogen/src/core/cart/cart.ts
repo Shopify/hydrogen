@@ -780,6 +780,24 @@ function groupLineErrors(
   return { lines, cart };
 }
 
+function getRejectedLineIds(
+  failure: CartActionFailure | undefined,
+  lineIds: string[],
+): Set<string> {
+  const rejected = new Set<string>();
+  for (const error of failure?.userErrors ?? []) {
+    const lineIndex = findFieldIndex(error.field, "lines", "lineIds");
+    const lineId = lineIndex === undefined ? undefined : lineIds[lineIndex];
+    if (lineId) {
+      rejected.add(lineId);
+    } else {
+      // An unscoped error can apply to any requested line, so keep missing removals until refresh.
+      for (const requestedLineId of lineIds) rejected.add(requestedLineId);
+    }
+  }
+  return rejected;
+}
+
 function isDiscountWarning(code: string | undefined): boolean {
   return typeof code === "string" && code.startsWith("DISCOUNT_");
 }
@@ -1218,10 +1236,11 @@ function settleLineQuantity(
   serverLines: CartLine[],
   payload: ChangeLineQuantityPayload,
   requestRevalidation: () => void,
+  rejected = false,
 ): CartState {
   const previous = getLines(state.data);
   const matching = serverLines.find((line) => line.id === payload.lineId);
-  if (!matching && payload.quantity > 0) {
+  if (!matching && (payload.quantity > 0 || rejected)) {
     requestRevalidation();
     return state;
   }
@@ -1402,8 +1421,19 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       if (!result.cart) return state;
 
       const serverLines = getLines(cartResponseFromStandardEvent(result.cart));
+      const rejectedLineIds = getRejectedLineIds(
+        result,
+        payload.lines.map(({ lineId }) => lineId),
+      );
       return owned.reduce(
-        (current, line) => settleLineQuantity(current, serverLines, line, requestRevalidation),
+        (current, line) =>
+          settleLineQuantity(
+            current,
+            serverLines,
+            line,
+            requestRevalidation,
+            rejectedLineIds.has(line.lineId),
+          ),
         state,
       );
     },
