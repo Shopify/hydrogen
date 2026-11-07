@@ -2659,33 +2659,137 @@ function configureUpdateCartOnce(actions: ShopifyStandardActions): void {
   hasConfiguredUpdateCart = true;
 }
 
-function hasShopifyStandardActionsScript(): boolean {
-  if (typeof document === "undefined") return false;
+function getShopifyStandardActionsScript(): HTMLScriptElement | null {
+  if (typeof document === "undefined") return null;
+  return document.querySelector<HTMLScriptElement>(
+    `script[src="${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}"]`,
+  );
+}
+
+function isExecutableScriptType(type: string): boolean {
+  const normalizedType = type.trim().toLowerCase();
   return (
-    document.querySelector(`script[src="${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}"]`) !== null
+    normalizedType === "" ||
+    normalizedType === "module" ||
+    /^(text|application)\/(java|ecma)script$/.test(normalizedType)
   );
 }
 
 export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
   return (standardActionsPromise ??= new Promise<ShopifyStandardActions>((resolve, reject) => {
-    const configure = () => {
-      const actions = typeof window === "undefined" ? undefined : window.Shopify?.actions;
-      if (actions?.updateCart) {
-        configureUpdateCartOnce(actions);
-        resolve(actions);
-        return;
+    let script: HTMLScriptElement | null = null;
+    let scriptState: "pending" | "loaded" | "failed" = "pending";
+    let documentReady = typeof document === "undefined" || document.readyState !== "loading";
+    let settled = false;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+
+    const cleanup = () => {
+      if (typeof document !== "undefined") {
+        document.removeEventListener("DOMContentLoaded", onDOMContentLoaded);
       }
-      const message = hasShopifyStandardActionsScript()
-        ? "Standard Actions not available. Ensure the Shopify script tag has loaded before calling cart actions."
-        : `Standard Actions not available. Add ShopifyScripts to your document head or include ${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT} before calling cart actions.`;
-      reject(new Error(message));
+      script?.removeEventListener("load", onScriptLoad);
+      script?.removeEventListener("error", onScriptError);
+      if (timeout) clearTimeout(timeout);
     };
 
-    if (typeof document !== "undefined" && document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", configure, {
-        once: true,
-      });
-      return;
+    const rejectOnce = (error: unknown) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(error);
+    };
+
+    const resolveOnce = (actions: ShopifyStandardActions) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(actions);
+    };
+
+    const startTimeout = () => {
+      if (timeout || settled) return;
+      timeout = setTimeout(
+        () =>
+          rejectOnce(
+            new Error(
+              `Standard Actions script did not load within ${STANDARD_ACTION_TIMEOUT_IN_MS / 1000} seconds.`,
+            ),
+          ),
+        STANDARD_ACTION_TIMEOUT_IN_MS,
+      );
+    };
+
+    const configure = () => {
+      const actions = typeof window === "undefined" ? undefined : window.Shopify?.actions;
+      if (documentReady && actions?.updateCart) {
+        try {
+          configureUpdateCartOnce(actions);
+          resolveOnce(actions);
+        } catch (error) {
+          rejectOnce(error);
+        }
+        return;
+      }
+
+      if (scriptState === "failed") {
+        rejectOnce(
+          new Error(
+            `Standard Actions script failed to load: ${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}`,
+          ),
+        );
+        return;
+      }
+      if (!documentReady) {
+        if (script) startTimeout();
+        return;
+      }
+
+      script ??= getShopifyStandardActionsScript();
+      if (!script) {
+        rejectOnce(
+          new Error(
+            `Standard Actions not available. Add ShopifyScripts to your document head or include ${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT} before calling cart actions.`,
+          ),
+        );
+      } else if (!isExecutableScriptType(script.type)) {
+        rejectOnce(
+          new Error(
+            "Standard Actions not available. Ensure the Shopify script tag has loaded before calling cart actions.",
+          ),
+        );
+      } else if (scriptState === "loaded") {
+        rejectOnce(
+          new Error(
+            "Standard Actions not available. Ensure the Shopify script tag has loaded before calling cart actions.",
+          ),
+        );
+      } else {
+        startTimeout();
+      }
+    };
+
+    const onScriptLoad = () => {
+      scriptState = "loaded";
+      configure();
+    };
+    const onScriptError = () => {
+      scriptState = "failed";
+      configure();
+    };
+    const attachScriptListeners = () => {
+      script ??= getShopifyStandardActionsScript();
+      script?.addEventListener("load", onScriptLoad, { once: true });
+      script?.addEventListener("error", onScriptError, { once: true });
+    };
+    const onDOMContentLoaded = () => {
+      documentReady = true;
+      attachScriptListeners();
+      configure();
+    };
+
+    attachScriptListeners();
+    if (!documentReady) {
+      document.addEventListener("DOMContentLoaded", onDOMContentLoaded, { once: true });
     }
     configure();
   }).catch((error) => {
