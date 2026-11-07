@@ -411,8 +411,8 @@ importers:
         specifier: ^0.7.4
         version: 0.7.6
       source-map-support:
-        specifier: ^0.5.21
-        version: 0.5.21
+        specifier: npm:@stackline/source-map-support@1.0.4
+        version: '@stackline/source-map-support@1.0.4'
       stack-trace:
         specifier: ^1.0.0-pre2
         version: 1.0.0
@@ -4178,6 +4178,13 @@ packages:
 
   '@speed-highlight/core@1.2.15':
     resolution: {integrity: sha512-BMq1K3DsElxDWawkX6eLg9+CKJrTVGCBAWVuHXVUV2u0s2711qiChLSId6ikYPfxhdYocLNt3wWwSvDiTvFabw==, tarball: https://registry.npmjs.org/@speed-highlight/core/-/core-1.2.15.tgz}
+
+  '@stackline/source-map-support@1.0.4':
+    resolution: {integrity: sha512-7dzLBRS1vsa+JeKuVydEcQjLNraBvt0O0oZRYa1wiuuzsRYfmY2fdOPgA5XJ4tIzHn+npnYQ1oXQw0h/Ho78Gw==, tarball: https://registry.npmjs.org/@stackline/source-map-support/-/source-map-support-1.0.4.tgz}
+    engines: {node: '>=14.15.1'}
+
+  '@stackline/trace-mapping@1.0.0':
+    resolution: {integrity: sha512-to55jps5wfMx4vRpJL+Ri+yXa1B3H2V0C2LaXRegTIEivB/krQN3Njv9PT06Zxufek0mj4MmPIXN+gn5OCY6IA==, tarball: https://registry.npmjs.org/@stackline/trace-mapping/-/trace-mapping-1.0.0.tgz}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==, tarball: https://registry.npmjs.org/@standard-schema/spec/-/spec-1.1.0.tgz}
@@ -13854,6 +13861,15 @@ snapshots:
       - vite
 
   '@speed-highlight/core@1.2.15': {}
+
+  '@stackline/source-map-support@1.0.4':
+    dependencies:
+      '@jridgewell/trace-mapping': '@stackline/trace-mapping@1.0.0'
+
+  '@stackline/trace-mapping@1.0.0':
+    dependencies:
+      '@jridgewell/resolve-uri': 3.1.2
+      '@jridgewell/sourcemap-codec': 1.5.5
 
   '@standard-schema/spec@1.1.0': {}
 
