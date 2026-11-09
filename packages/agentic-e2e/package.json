@@ -8,7 +8,7 @@
     "test": "pnpm run test:unit",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run --dir src --exclude \"**/*.integration.test.ts\"",
-    "test:integration": "vitest run --dir src .integration.test.ts --passWithNoTests"
+    "test:integration": "vitest run --dir src .integration.test.ts"
   },
   "dependencies": {
     "@browserbasehq/stagehand": "3.7.3",
