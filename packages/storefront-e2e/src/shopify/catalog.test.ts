@@ -126,34 +126,53 @@ describe("discoverPinnedVariant", () => {
     }
   });
 
-  it("returns empty only when the catalog was fully searched", async () => {
-    const { fetch } = fakeFetch([page([product(1, { sellingPlan: true })], false)]);
+  it("skips without a cap suggestion when the catalog was fully searched", async () => {
+    const { fetch, requests } = fakeFetch([page([product(1, { sellingPlan: true })], false)]);
     const api = createStorefrontApi({ origin: "https://shop.example.com", fetch });
     assert.deepEqual(await discoverPinnedVariant(api, { maxPages: 5, context: US_EN, signal }), {
-      status: "empty",
+      status: "skipped",
       pagesScanned: 1,
+      reason: "No eligible variant was found.",
     });
+    assert.equal(requests.length, 1);
   });
 
-  it("returns incomplete when the page cap is exhausted", async () => {
-    const { fetch } = fakeFetch([
+  it("skips with a cap suggestion when the page cap is reached with more pages", async () => {
+    const { fetch, requests } = fakeFetch([
       page([product(1, { variant: fakeVariant(1, false) })], true),
       page([], true),
     ]);
     const api = createStorefrontApi({ origin: "https://shop.example.com", fetch });
-    const result = await discoverPinnedVariant(api, { maxPages: 2, context: US_EN, signal });
-    assert.equal(result.status, "incomplete");
+    assert.deepEqual(await discoverPinnedVariant(api, { maxPages: 2, context: US_EN, signal }), {
+      status: "skipped",
+      pagesScanned: 2,
+      reason: "No eligible variant was found. Try increasing --catalog-pages.",
+    });
+    assert.equal(requests.length, 2);
   });
 
-  it("returns empty when every product has a null or unavailable variant", async () => {
-    const { fetch } = fakeFetch([
+  it("skips without a cap suggestion when the last allowed page is the end", async () => {
+    const { fetch, requests } = fakeFetch([page([], true), page([], false)]);
+    const api = createStorefrontApi({ origin: "https://shop.example.com", fetch });
+    assert.deepEqual(await discoverPinnedVariant(api, { maxPages: 2, context: US_EN, signal }), {
+      status: "skipped",
+      pagesScanned: 2,
+      reason: "No eligible variant was found.",
+    });
+    assert.equal(requests.length, 2);
+  });
+
+  it("skips when every product has a null or unavailable variant", async () => {
+    const { fetch, requests } = fakeFetch([
       page([product(1, { variant: null }), product(2, { variant: fakeVariant(2, false) })], false),
     ]);
     const api = createStorefrontApi({ origin: "https://shop.example.com", fetch });
     assert.deepEqual(await discoverPinnedVariant(api, { maxPages: 2, context: US_EN, signal }), {
-      status: "empty",
+      status: "skipped",
       pagesScanned: 1,
+      reason: "No eligible variant was found.",
     });
+    assert.equal(requests.length, 1);
   });
 
   it("rejects a response without the selectedOrFirstAvailableVariant field", async () => {
@@ -200,19 +219,20 @@ describe("discoverPinnedVariant", () => {
     }
   });
 
-  it("accepts extra fields and treats null or omitted cursors as missing", async () => {
+  it("accepts extra fields and skips when the cursor is null or omitted", async () => {
     for (const endCursor of [null, undefined]) {
       const item = product(1, { variant: fakeVariant(1, false) });
       Object.assign(item, { extra: true });
       Object.assign(item.selectedOrFirstAvailableVariant ?? {}, { extra: true });
       const products = { pageInfo: { hasNextPage: true, endCursor }, nodes: [item] };
-      const { fetch } = fakeFetch([{ body: respond({ products, extra: true }) }]);
+      const { fetch, requests } = fakeFetch([{ body: respond({ products, extra: true }) }]);
       const api = createStorefrontApi({ origin: "https://shop.example.com", fetch });
-      assert.deepEqual(await discoverPinnedVariant(api, { maxPages: 1, context: US_EN, signal }), {
-        status: "incomplete",
+      assert.deepEqual(await discoverPinnedVariant(api, { maxPages: 3, context: US_EN, signal }), {
+        status: "skipped",
         pagesScanned: 1,
-        reason: "Catalog pagination returned no cursor.",
+        reason: "No eligible variant was found. Catalog pagination returned no cursor.",
       });
+      assert.equal(requests.length, 1);
     }
   });
 });
