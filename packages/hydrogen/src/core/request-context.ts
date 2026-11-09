@@ -109,6 +109,11 @@ type ShopifyRequestContextBase = {
    */
   readonly buyerIp?: string;
   /**
+   * The i18n definition the context matched its locale against. Absent for the deprecated fixed-locale input.
+   * @internal
+   */
+  readonly i18nDefinition?: ShopifyI18n;
+  /**
    * The ID that groups this request's Shopify API calls. Hydrogen reads the ID from the request headers or generates one.
    * @internal
    */
@@ -204,6 +209,8 @@ type Context<TI18n extends ShopifyI18n | I18nConfig = ShopifyI18n> = {
   locale: RequestLocale<TI18n>;
   /** The same locale, under its deprecated name. */
   i18n: RequestLocale<TI18n>;
+  /** The i18n definition the locale was matched against. */
+  i18nDefinition?: ShopifyI18n;
   /** Whether the incoming request asks for an HTML document. */
   documentRequest?: boolean;
 };
@@ -264,6 +271,7 @@ export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
     globalPrivacyControl: request.headers.get(SEC_GPC_HEADER) ?? undefined,
     locale,
     i18n: locale,
+    ...(isI18nDefinition(input.i18n) && { i18nDefinition: input.i18n }),
     ...(url && { url }),
     ...(storefrontOrigin && { storefrontOrigin }),
     ...(input.buyerIp && { buyerIp: input.buyerIp }),
@@ -357,12 +365,7 @@ function resolveRequestLocale(
   url: string | undefined,
 ): RequestLocale<ShopifyI18n | I18nConfig> {
   const { i18n } = input;
-  if (
-    i18n &&
-    "defaultLocale" in i18n &&
-    i18n.defaultLocale?.country &&
-    i18n.defaultLocale.language
-  ) {
+  if (isI18nDefinition(i18n)) {
     return input.locale ? resolveSupportedLocale(input.locale, i18n) : matchLocale(url, i18n);
   }
   // Legacy `I18nConfig` input pins one locale, exactly as before definitions existed.
@@ -371,6 +374,12 @@ function resolveRequestLocale(
   }
   throw new Error(
     "i18n from defineShopifyI18n (with a defaultLocale) is required for Shopify request contexts.",
+  );
+}
+
+function isI18nDefinition(i18n: RequestContextInput["i18n"] | undefined): i18n is ShopifyI18n {
+  return Boolean(
+    i18n && "defaultLocale" in i18n && i18n.defaultLocale?.country && i18n.defaultLocale.language,
   );
 }
 
