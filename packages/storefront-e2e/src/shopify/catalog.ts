@@ -4,7 +4,6 @@ import { z } from "zod";
 import { type StorefrontApi, type StorefrontContext } from "./storefront.ts";
 
 const PRODUCTS_PER_PAGE = 50;
-const VARIANTS_PER_PRODUCT = 50;
 
 export type PinnedVariant = {
   variantId: string;
@@ -37,66 +36,51 @@ const productPageSchema = z
           title: z.string(),
           handle: z.string(),
           requiresSellingPlan: z.boolean(),
-          variants: z.object({
-            pageInfo: pageInfoSchema,
-            nodes: z.array(
-              z.object({
-                id: z.string(),
-                title: z.string(),
-                availableForSale: z.boolean(),
-                selectedOptions: z.array(z.object({ name: z.string(), value: z.string() })),
-              }),
-            ),
-          }),
+          // The field is nullable in the schema: it must be present, but it can be null.
+          selectedOrFirstAvailableVariant: z
+            .object({
+              id: z.string(),
+              title: z.string(),
+              availableForSale: z.boolean(),
+              selectedOptions: z.array(z.object({ name: z.string(), value: z.string() })),
+            })
+            .nullable(),
         }),
       ),
     }),
   })
-  .transform(({ products }) => ({
-    ...products.pageInfo,
-    products: products.nodes.map(({ variants, ...product }) => ({
-      ...product,
-      variantsTruncated: variants.pageInfo.hasNextPage,
-      variants: variants.nodes,
-    })),
-  }));
+  .transform(({ products }) => ({ ...products.pageInfo, products: products.nodes }));
 type ProductPage = z.infer<typeof productPageSchema>;
 
 /**
- * Finds the first purchasable variant (in stable ID order) that does not
- * require a selling plan, in the given context. Every page query declares
- * `$country` and `$language` with an explicit `@inContext`; the Storefront API
- * client fills both from the context. The search is
- * bounded: when the page cap is reached, or a product's variants are
- * truncated, before a match is found, the result is `incomplete`, never `empty`.
+ * Finds the first product (in stable product ID order) that does not require a
+ * selling plan and whose `selectedOrFirstAvailableVariant` is available for
+ * sale, in the given context. Without selected options, the Storefront API
+ * returns the product's first available variant, or its first variant when none
+ * is available. Every page query declares `$country` and `$language` with an
+ * explicit `@inContext`; the Storefront API client fills both from the context.
+ * The search is bounded by product pages: when the page cap is reached before a
+ * match is found, the result is `incomplete`, never `empty`.
  */
 export async function discoverPinnedVariant(
   api: StorefrontApi,
   options: { maxPages: number; context: StorefrontContext; signal: AbortSignal },
 ): Promise<CatalogDiscovery> {
-  const document = `query StorefrontE2ECatalog($first: Int!, $after: String, $variantsFirst: Int!, $country: CountryCode!, $language: LanguageCode!) @inContext(country: $country, language: $language) {
+  const document = `query StorefrontE2ECatalog($first: Int!, $after: String, $country: CountryCode!, $language: LanguageCode!) @inContext(country: $country, language: $language) {
   products(first: $first, after: $after, sortKey: ID, query: "available_for_sale:true") {
     pageInfo { hasNextPage endCursor }
     nodes {
       id title handle requiresSellingPlan
-      variants(first: $variantsFirst) {
-        pageInfo { hasNextPage }
-        nodes { id title availableForSale selectedOptions { name value } }
-      }
+      selectedOrFirstAvailableVariant { id title availableForSale selectedOptions { name value } }
     }
   }
 }`;
 
   let after: string | undefined;
-  let truncated = false;
   for (let page = 1; page <= options.maxPages; page++) {
     const result = await api.query(
       document,
-      {
-        first: PRODUCTS_PER_PAGE,
-        after: after ?? null,
-        variantsFirst: VARIANTS_PER_PRODUCT,
-      },
+      { first: PRODUCTS_PER_PAGE, after: after ?? null },
       (data) => productPageSchema.parse(data),
       options.signal,
       options.context,
@@ -106,18 +90,8 @@ export async function discoverPinnedVariant(
     if (match !== undefined) {
       return { status: "found", variant: match, pagesScanned: page };
     }
-    truncated ||= result.products.some(
-      (product) => product.variantsTruncated && !product.requiresSellingPlan,
-    );
-
     if (!result.hasNextPage) {
-      return truncated
-        ? {
-            status: "incomplete",
-            pagesScanned: page,
-            reason: "Some products have more variants than were searched.",
-          }
-        : { status: "empty", pagesScanned: page };
+      return { status: "empty", pagesScanned: page };
     }
     if (result.endCursor === undefined) {
       return {
@@ -141,8 +115,8 @@ function findEligible(page: ProductPage): PinnedVariant | undefined {
     if (product.requiresSellingPlan) {
       continue;
     }
-    const variant = product.variants.find((candidate) => candidate.availableForSale);
-    if (variant !== undefined) {
+    const variant = product.selectedOrFirstAvailableVariant;
+    if (variant?.availableForSale === true) {
       return {
         variantId: variant.id,
         variantTitle: variant.title,
