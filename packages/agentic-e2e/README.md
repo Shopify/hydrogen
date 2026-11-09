@@ -127,6 +127,22 @@ Each run writes to a new directory `<root>/<runId>/`:
 
 The default root is `packages/agentic-e2e/agentic-e2e-results/` (ignored by git), whatever the current directory. The root `pnpm agentic-e2e` script runs the package `cli` script, so the current directory is `packages/agentic-e2e/`. A relative `--output` path resolves from that directory.
 
+## HTML report
+
+```sh
+pnpm agentic-e2e:report                               # reads agentic-e2e-results, writes agentic-e2e-results/index.html
+pnpm agentic-e2e:report --input <artifact-root> --output <file.html>
+```
+
+The command searches the input directory for run directories with a `result.json`, and reads only `result.json`, the `evidence.jsonl` next to it, and `step-NNN.png` screenshots. It changes no artifact, and it starts no browser, server, or model. It prints the HTML path and a `file://` URL. Open the file in a browser; it needs no server.
+
+- The newest run for each storefront URL and scenario is the latest run. Totals count latest runs only. Older runs stay in the report as history.
+- Verdicts and reasons come from `result.json` unchanged. `indeterminate` means the harness could not prove a result. It is not a storefront failure.
+- The timeline shows only recorded evidence: buyer actions, the agent explanations and final answer that the agent wrote, friction reports, blocked navigation, and Standard Events. It does not contain hidden model reasoning.
+- Missing files, invalid lines, and missing screenshots become warnings in the report. The report does not follow symlinks, and it ignores paths written inside `result.json`.
+- Saved strings are shown without redaction. HTML text is escaped, and links are checked.
+- Relative paths resolve from `packages/agentic-e2e/`. The output must end in `.html`, and an existing symlink at the output path is refused.
+
 ## Private reports
 
 Reports are private owner debug data. JSON, terminal output, and HTML keep URLs and query values unredacted, including the cart token (and key, when present) of a captured checkout URL, and the recorded Standard Event fields (see Artifacts). The runner does not collect model credentials, authorization headers, or cookies as report fields. SDK error messages are saved unchanged and can contain sensitive provider text. Keys with line breaks are rejected. Error objects include only their name and message, not SDK request or response properties. Screenshots are not masked and can show page content.
