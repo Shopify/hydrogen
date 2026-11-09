@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 
+import type { UpdateCartPayload } from "../../../vendor/standard-actions";
 import type { StorefrontClient } from "../../client";
 import { gql } from "../../graphql";
-import type { CartAction } from "./actions";
 import { cartBuyerIdentityUpdateMutation, cartQueries, makeCartQueries } from "./queries";
 import { storefrontCartTransport } from "./storefront-cart-transport";
 
@@ -38,13 +38,13 @@ function mutationPayload(cart: unknown = MOCK_CART) {
 }
 
 describe("storefrontCartTransport", () => {
-  describe("read", () => {
+  describe("getCart", () => {
     it("queries the cart with the custom fragment and returns the cart and headers", async () => {
       const headers = new Headers({ "server-timing": "x" });
       const { graphql, ctx } = createStorefrontClient({ data: { cart: MOCK_CART }, headers });
       const transport = storefrontCartTransport({ fragment: customCartFragment });
 
-      const result = await transport.read(CART_ID, ctx);
+      const result = await transport.getCart({ cartId: CART_ID }, ctx);
 
       expect(graphql).toHaveBeenCalledWith(makeCartQueries({ fragment: customCartFragment }).cart, {
         variables: { id: CART_ID },
@@ -57,52 +57,84 @@ describe("storefrontCartTransport", () => {
       const errors = [{ message: "Throttled" }];
       const { ctx } = createStorefrontClient({ data: null, errors });
 
-      const result = await storefrontCartTransport().read(CART_ID, ctx);
+      const result = await storefrontCartTransport().getCart({ cartId: CART_ID }, ctx);
 
       expect(result.cart).toBeNull();
       expect(result.errors).toEqual(errors);
     });
   });
 
-  describe("apply", () => {
+  describe("updateCart", () => {
     const singleMutationCases: Array<{
-      action: CartAction;
+      name: string;
+      payload: UpdateCartPayload;
       query: string;
       key: string;
       variables: Record<string, unknown>;
     }> = [
       {
-        action: { intent: "add", lines: [{ merchandiseId: "v1", quantity: 1 }] },
+        name: "new lines",
+        payload: { cartId: CART_ID, lines: [{ merchandiseId: "v1", quantity: 1 }] },
         query: cartQueries.cartLinesAdd,
         key: "cartLinesAdd",
         variables: { cartId: CART_ID, lines: [{ merchandiseId: "v1", quantity: 1 }] },
       },
       {
-        action: { intent: "update", lines: [{ id: "l1", quantity: 3 }] },
+        name: "existing lines",
+        payload: { cartId: CART_ID, lines: [{ id: "l1", quantity: 3 }] },
         query: cartQueries.cartLinesUpdate,
         key: "cartLinesUpdate",
         variables: { cartId: CART_ID, lines: [{ id: "l1", quantity: 3 }] },
       },
       {
-        action: { intent: "remove", lineIds: ["l1"] },
+        name: "existing lines that all have quantity 0",
+        payload: {
+          cartId: CART_ID,
+          lines: [
+            { id: "l1", quantity: 0 },
+            { id: "l2", quantity: 0 },
+          ],
+        },
         query: cartQueries.cartLinesRemove,
         key: "cartLinesRemove",
-        variables: { cartId: CART_ID, lineIds: ["l1"] },
+        variables: { cartId: CART_ID, lineIds: ["l1", "l2"] },
       },
       {
-        action: { intent: "discount-update", discountCodes: ["A"] },
+        name: "existing lines where only some have quantity 0",
+        payload: {
+          cartId: CART_ID,
+          lines: [
+            { id: "l1", quantity: 0 },
+            { id: "l2", quantity: 2 },
+          ],
+        },
+        query: cartQueries.cartLinesUpdate,
+        key: "cartLinesUpdate",
+        variables: {
+          cartId: CART_ID,
+          lines: [
+            { id: "l1", quantity: 0 },
+            { id: "l2", quantity: 2 },
+          ],
+        },
+      },
+      {
+        name: "discount codes",
+        payload: { cartId: CART_ID, discountCodes: ["A"] },
         query: cartQueries.cartDiscountCodesUpdate,
         key: "cartDiscountCodesUpdate",
         variables: { cartId: CART_ID, discountCodes: ["A"] },
       },
       {
-        action: { intent: "note-update", note: "Gift" },
+        name: "an empty note",
+        payload: { cartId: CART_ID, note: "" },
         query: cartQueries.cartNoteUpdate,
         key: "cartNoteUpdate",
-        variables: { cartId: CART_ID, note: "Gift" },
+        variables: { cartId: CART_ID, note: "" },
       },
       {
-        action: { intent: "attributes-update", attributes: [{ key: "k", value: "v" }] },
+        name: "attributes",
+        payload: { cartId: CART_ID, attributes: [{ key: "k", value: "v" }] },
         query: cartQueries.cartAttributesUpdate,
         key: "cartAttributesUpdate",
         variables: { cartId: CART_ID, attributes: [{ key: "k", value: "v" }] },
@@ -110,8 +142,8 @@ describe("storefrontCartTransport", () => {
     ];
 
     it.each(singleMutationCases)(
-      "runs $key for $action.intent and returns its payload and headers",
-      async ({ action, query, key, variables }) => {
+      "runs $key for $name and returns its payload and headers",
+      async ({ payload, query, key, variables }) => {
         const headers = new Headers({ "x-request-id": "1" });
         const userErrors = [{ code: null, field: null, message: "Nope" }];
         const warnings = [{ code: "MERCHANDISE_NOT_ENOUGH_STOCK", message: "Low" }];
@@ -120,7 +152,7 @@ describe("storefrontCartTransport", () => {
           headers,
         });
 
-        const result = await storefrontCartTransport().apply(CART_ID, action, ctx);
+        const result = await storefrontCartTransport().updateCart(payload, ctx);
 
         expect(graphql).toHaveBeenCalledOnce();
         expect(graphql).toHaveBeenCalledWith(query, { variables });
@@ -134,9 +166,8 @@ describe("storefrontCartTransport", () => {
       });
       const lines = [{ merchandiseId: "v1", quantity: 1 }];
 
-      await storefrontCartTransport().apply(
-        null,
-        { intent: "add", lines },
+      await storefrontCartTransport().updateCart(
+        { lines },
         { ...ctx, customerAccessToken: "token" },
       );
 
@@ -151,22 +182,47 @@ describe("storefrontCartTransport", () => {
       });
       const lines = [{ merchandiseId: "v1", quantity: 1 }];
 
-      await storefrontCartTransport().apply(null, { intent: "add", lines }, ctx);
+      await storefrontCartTransport().updateCart({ lines }, ctx);
 
       expect(graphql).toHaveBeenCalledWith(cartQueries.cartCreate, {
         variables: { input: { lines } },
       });
     });
 
-    it("ignores the customer access token when an add targets an existing cart", async () => {
+    it("creates a cart with every field of the payload in one mutation", async () => {
+      const { graphql, ctx } = createStorefrontClient({
+        data: { cartCreate: mutationPayload() },
+      });
+      const input = {
+        lines: [{ merchandiseId: "v1", quantity: 1 }],
+        note: "Gift",
+        discountCodes: ["A"],
+        attributes: [{ key: "k", value: "v" }],
+      };
+
+      await storefrontCartTransport().updateCart(input, ctx);
+
+      expect(graphql).toHaveBeenCalledOnce();
+      expect(graphql).toHaveBeenCalledWith(cartQueries.cartCreate, { variables: { input } });
+    });
+
+    it("rejects existing lines without a cart ID before calling the API", async () => {
+      const { graphql, ctx } = createStorefrontClient();
+
+      await expect(
+        storefrontCartTransport().updateCart({ lines: [{ id: "l1", quantity: 1 }] }, ctx),
+      ).rejects.toThrow("cartId is required to change existing cart lines");
+      expect(graphql).not.toHaveBeenCalled();
+    });
+
+    it("ignores the customer access token when the payload targets an existing cart", async () => {
       const { graphql, ctx } = createStorefrontClient({
         data: { cartLinesAdd: mutationPayload() },
       });
       const lines = [{ merchandiseId: "v1", quantity: 1 }];
 
-      await storefrontCartTransport().apply(
-        CART_ID,
-        { intent: "add", lines },
+      await storefrontCartTransport().updateCart(
+        { cartId: CART_ID, lines },
         { ...ctx, customerAccessToken: "token" },
       );
 
@@ -181,9 +237,8 @@ describe("storefrontCartTransport", () => {
         data: { cartNoteUpdate: mutationPayload() },
       });
 
-      await storefrontCartTransport({ fragment: customCartFragment }).apply(
-        CART_ID,
-        { intent: "note-update", note: "Gift" },
+      await storefrontCartTransport({ fragment: customCartFragment }).updateCart(
+        { cartId: CART_ID, note: "Gift" },
         ctx,
       );
 
@@ -192,48 +247,94 @@ describe("storefrontCartTransport", () => {
       });
     });
 
-    it("returns a null cart when the payload has no cart", async () => {
+    it("returns a null cart when the mutation payload has no cart", async () => {
       const { ctx } = createStorefrontClient({
         data: { cartLinesRemove: { userErrors: [], warnings: [] } },
       });
 
-      const result = await storefrontCartTransport().apply(
-        CART_ID,
-        { intent: "remove", lineIds: ["l1"] },
+      const result = await storefrontCartTransport().updateCart(
+        { cartId: CART_ID, lines: [{ id: "l1", quantity: 0 }] },
         ctx,
       );
 
       expect(result.cart).toBeNull();
     });
 
-    it.each([
-      { mode: "discount-apply", code: "NEW", expected: ["SAVE10", "NEW"] },
-      { mode: "discount-remove", code: "SAVE10", expected: [] },
-    ] as const)(
-      "$mode reads the current codes, then writes the new list",
-      async ({ mode, code, expected }) => {
-        const { graphql, ctx } = createStorefrontClient(
-          { data: { cart: MOCK_CART } },
-          { data: { cartDiscountCodesUpdate: mutationPayload() } },
-        );
+    it("runs one mutation per field in order and returns the last cart with every warning", async () => {
+      const lastCart = { ...MOCK_CART, note: "Gift" };
+      const headers = new Headers({ "x-request-id": "2" });
+      const { graphql, ctx } = createStorefrontClient(
+        {
+          data: {
+            cartDiscountCodesUpdate: {
+              cart: MOCK_CART,
+              userErrors: [],
+              warnings: [{ code: "A", message: "First" }],
+            },
+          },
+        },
+        {
+          data: {
+            cartNoteUpdate: {
+              cart: lastCart,
+              userErrors: [],
+              warnings: [{ code: "B", message: "Second" }],
+            },
+          },
+          headers,
+        },
+      );
 
-        await storefrontCartTransport().apply(CART_ID, { intent: mode, code }, ctx);
+      const result = await storefrontCartTransport().updateCart(
+        { cartId: CART_ID, discountCodes: ["A"], note: "Gift" },
+        ctx,
+      );
 
-        expect(graphql).toHaveBeenNthCalledWith(1, cartQueries.cart, {
-          variables: { id: CART_ID },
-        });
-        expect(graphql).toHaveBeenNthCalledWith(2, cartQueries.cartDiscountCodesUpdate, {
-          variables: { cartId: CART_ID, discountCodes: expected },
-        });
-      },
-    );
+      expect(graphql.mock.calls.map(([query]) => query)).toEqual([
+        cartQueries.cartDiscountCodesUpdate,
+        cartQueries.cartNoteUpdate,
+      ]);
+      expect(result).toEqual({
+        cart: lastCart,
+        userErrors: [],
+        warnings: [
+          { code: "A", message: "First" },
+          { code: "B", message: "Second" },
+        ],
+        headers,
+      });
+    });
 
-    it("rejects a non-add action without a cart ID before calling the API", async () => {
+    it("stops at the first mutation that returns user errors", async () => {
+      const userErrors = [{ code: "INVALID", field: null, message: "Bad code" }];
+      const { graphql, ctx } = createStorefrontClient({
+        data: { cartDiscountCodesUpdate: { cart: MOCK_CART, userErrors, warnings: [] } },
+      });
+
+      const result = await storefrontCartTransport().updateCart(
+        { cartId: CART_ID, discountCodes: ["A"], note: "Gift" },
+        ctx,
+      );
+
+      expect(graphql).toHaveBeenCalledOnce();
+      expect(result.userErrors).toEqual(userErrors);
+    });
+
+    it("rejects a payload with no changes before calling the API", async () => {
+      const { graphql, ctx } = createStorefrontClient();
+
+      await expect(storefrontCartTransport().updateCart({ cartId: CART_ID }, ctx)).rejects.toThrow(
+        "updateCart payload has no changes",
+      );
+      expect(graphql).not.toHaveBeenCalled();
+    });
+
+    it("rejects a line with neither an id nor a merchandiseId", async () => {
       const { graphql, ctx } = createStorefrontClient();
 
       await expect(
-        storefrontCartTransport().apply(null, { intent: "note-update", note: "x" }, ctx),
-      ).rejects.toThrow("cartId is required for non-add mutations");
+        storefrontCartTransport().updateCart({ cartId: CART_ID, lines: [{ quantity: 1 }] }, ctx),
+      ).rejects.toThrow("Each cart line needs an id or a merchandiseId");
       expect(graphql).not.toHaveBeenCalled();
     });
 
@@ -244,16 +345,16 @@ describe("storefrontCartTransport", () => {
       });
 
       await expect(
-        storefrontCartTransport().apply(CART_ID, { intent: "remove", lineIds: ["l1"] }, ctx),
+        storefrontCartTransport().updateCart({ cartId: CART_ID, note: "x" }, ctx),
       ).rejects.toThrow("Access denied");
     });
 
     it("throws when the response has no mutation payload", async () => {
-      const { ctx } = createStorefrontClient({ data: { cartLinesRemove: null } });
+      const { ctx } = createStorefrontClient({ data: { cartNoteUpdate: null } });
 
       await expect(
-        storefrontCartTransport().apply(CART_ID, { intent: "remove", lineIds: ["l1"] }, ctx),
-      ).rejects.toThrow("Missing cartLinesRemove in mutation response");
+        storefrontCartTransport().updateCart({ cartId: CART_ID, note: "x" }, ctx),
+      ).rejects.toThrow("Missing cartNoteUpdate in mutation response");
     });
   });
 

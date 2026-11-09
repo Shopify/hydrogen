@@ -1,6 +1,7 @@
+import type { CartLineInput, UpdateCartPayload } from "../../../vendor/standard-actions";
 import type { GraphQLFormattedError, StorefrontClient } from "../../client";
 import type { AnyStorefrontQueryString } from "../../graphql";
-import type { CartAction, CartLineAddInput } from "./actions";
+import type { CartLineAddInput, CartLineUpdateInput } from "./actions";
 import { getCart } from "./get-cart";
 import {
   cartBuyerIdentityUpdateMutation,
@@ -36,9 +37,11 @@ export function storefrontCartTransport(
 
   return {
     cartQuery: queries.cart,
-    read: (cartId, { storefrontClient }) => getCart(cartId, storefrontClient, queries.cart),
-    apply: (cartId, action, { storefrontClient, customerAccessToken }) =>
-      executeMutation(action, cartId, storefrontClient, queries, customerAccessToken),
+    getCart: ({ cartId }, { storefrontClient }) => getCart(cartId, storefrontClient, queries.cart),
+    updateCart: ({ cartId, ...changes }, { storefrontClient, customerAccessToken }) =>
+      cartId
+        ? updateExistingCart(cartId, changes, storefrontClient, queries)
+        : createCart(changes, storefrontClient, queries, customerAccessToken),
     updateBuyerIdentity: async (cartId, customerAccessToken, { storefrontClient }) => {
       const result = await storefrontClient.graphql(cartBuyerIdentityUpdateMutation, {
         variables: { cartId, buyerIdentity: { customerAccessToken } },
@@ -92,84 +95,28 @@ function createWriteResult(
 
 type CartMutationClient = Pick<StorefrontClient, "graphql">;
 
-async function executeMutation(
-  action: CartAction,
-  cartId: string | null,
+type CartChanges = Omit<UpdateCartPayload, "cartId">;
+
+type CartMutation = () => Promise<CartWriteResult>;
+
+async function createCart(
+  { lines, note, discountCodes, attributes }: CartChanges,
   storefront: CartMutationClient,
   queries: StorefrontCartQueries,
   customerAccessToken?: string,
 ): Promise<CartWriteResult> {
-  if (action.intent === "add") {
-    return executeAdd(action.lines, cartId, storefront, queries, customerAccessToken);
-  }
-
-  if (!cartId) {
-    throw new Error("cartId is required for non-add mutations");
-  }
-
-  switch (action.intent) {
-    case "update": {
-      const result = await storefront.graphql(queries.cartLinesUpdate, {
-        variables: { cartId, lines: action.lines },
-      });
-      return createWriteResult(assertMutationData(result, "cartLinesUpdate"), result.headers);
-    }
-    case "remove": {
-      const result = await storefront.graphql(queries.cartLinesRemove, {
-        variables: { cartId, lineIds: action.lineIds },
-      });
-      return createWriteResult(assertMutationData(result, "cartLinesRemove"), result.headers);
-    }
-    case "discount-update": {
-      const result = await storefront.graphql(queries.cartDiscountCodesUpdate, {
-        variables: { cartId, discountCodes: action.discountCodes },
-      });
-      return createWriteResult(
-        assertMutationData(result, "cartDiscountCodesUpdate"),
-        result.headers,
-      );
-    }
-    case "discount-apply":
-      return executeDiscountModify(cartId, "apply", action.code, storefront, queries);
-    case "discount-remove":
-      return executeDiscountModify(cartId, "remove", action.code, storefront, queries);
-    case "note-update": {
-      const result = await storefront.graphql(queries.cartNoteUpdate, {
-        variables: { cartId, note: action.note },
-      });
-      return createWriteResult(assertMutationData(result, "cartNoteUpdate"), result.headers);
-    }
-    case "attributes-update": {
-      const result = await storefront.graphql(queries.cartAttributesUpdate, {
-        variables: { cartId, attributes: action.attributes },
-      });
-      return createWriteResult(assertMutationData(result, "cartAttributesUpdate"), result.headers);
-    }
-    default: {
-      const _exhaustive: never = action;
-      throw new Error(`Unhandled cart action intent: ${(_exhaustive as CartAction).intent}`);
-    }
-  }
-}
-
-async function executeAdd(
-  lines: CartLineAddInput[],
-  cartId: string | null,
-  storefront: CartMutationClient,
-  queries: StorefrontCartQueries,
-  customerAccessToken?: string,
-): Promise<CartWriteResult> {
-  if (cartId) {
-    const result = await storefront.graphql(queries.cartLinesAdd, {
-      variables: { cartId, lines },
-    });
-    return createWriteResult(assertMutationData(result, "cartLinesAdd"), result.headers);
+  const { added, changed } = splitLines(lines);
+  if (changed.length > 0) {
+    throw new Error("cartId is required to change existing cart lines");
   }
 
   const result = await storefront.graphql(queries.cartCreate, {
     variables: {
       input: {
-        lines,
+        ...(lines && { lines: added }),
+        ...(note !== undefined && { note }),
+        ...(discountCodes && { discountCodes }),
+        ...(attributes && { attributes }),
         ...(customerAccessToken && { buyerIdentity: { customerAccessToken } }),
       },
     },
@@ -177,27 +124,110 @@ async function executeAdd(
   return createWriteResult(assertMutationData(result, "cartCreate"), result.headers);
 }
 
-async function executeDiscountModify(
+// The Storefront API has one mutation per kind of change, so a payload with several
+// fields runs several mutations in order and stops at the first one with user errors.
+async function updateExistingCart(
   cartId: string,
-  mode: "apply" | "remove",
-  code: string,
+  changes: CartChanges,
   storefront: CartMutationClient,
   queries: StorefrontCartQueries,
 ): Promise<CartWriteResult> {
-  // Read-then-write: SFAPI has no atomic discount modify endpoint, so concurrent
-  // requests can overwrite each other's discount codes.
-  const cartResult = await storefront.graphql(queries.cart, {
-    variables: { id: cartId },
-  });
-  const cartData = assertGraphQLData(cartResult);
+  const [first, ...rest] = cartMutations(cartId, changes, storefront, queries);
+  if (!first) {
+    throw new Error("updateCart payload has no changes");
+  }
 
-  const currentCodes: string[] = (cartData.cart?.discountCodes ?? []).map((dc) => dc.code);
+  let result = await first();
+  for (const mutation of rest) {
+    if (result.userErrors.length > 0) break;
+    const next = await mutation();
+    result = {
+      ...next,
+      userErrors: [...result.userErrors, ...next.userErrors],
+      warnings: [...result.warnings, ...next.warnings],
+    };
+  }
+  return result;
+}
 
-  const updatedCodes =
-    mode === "apply" ? [...currentCodes, code] : currentCodes.filter((c) => c !== code);
+function cartMutations(
+  cartId: string,
+  { lines, note, discountCodes, attributes }: CartChanges,
+  storefront: CartMutationClient,
+  queries: StorefrontCartQueries,
+): CartMutation[] {
+  const { added, changed } = splitLines(lines);
+  const mutations: CartMutation[] = [];
 
-  const result = await storefront.graphql(queries.cartDiscountCodesUpdate, {
-    variables: { cartId, discountCodes: updatedCodes },
-  });
-  return createWriteResult(assertMutationData(result, "cartDiscountCodesUpdate"), result.headers);
+  if (added.length > 0) {
+    mutations.push(async () => {
+      const result = await storefront.graphql(queries.cartLinesAdd, {
+        variables: { cartId, lines: added },
+      });
+      return createWriteResult(assertMutationData(result, "cartLinesAdd"), result.headers);
+    });
+  }
+  if (changed.length > 0 && changed.every(({ quantity }) => quantity === 0)) {
+    mutations.push(async () => {
+      const result = await storefront.graphql(queries.cartLinesRemove, {
+        variables: { cartId, lineIds: changed.map(({ id }) => id) },
+      });
+      return createWriteResult(assertMutationData(result, "cartLinesRemove"), result.headers);
+    });
+  } else if (changed.length > 0) {
+    mutations.push(async () => {
+      const result = await storefront.graphql(queries.cartLinesUpdate, {
+        variables: { cartId, lines: changed },
+      });
+      return createWriteResult(assertMutationData(result, "cartLinesUpdate"), result.headers);
+    });
+  }
+  if (discountCodes) {
+    mutations.push(async () => {
+      const result = await storefront.graphql(queries.cartDiscountCodesUpdate, {
+        variables: { cartId, discountCodes },
+      });
+      return createWriteResult(
+        assertMutationData(result, "cartDiscountCodesUpdate"),
+        result.headers,
+      );
+    });
+  }
+  if (note !== undefined) {
+    mutations.push(async () => {
+      const result = await storefront.graphql(queries.cartNoteUpdate, {
+        variables: { cartId, note },
+      });
+      return createWriteResult(assertMutationData(result, "cartNoteUpdate"), result.headers);
+    });
+  }
+  if (attributes) {
+    mutations.push(async () => {
+      const result = await storefront.graphql(queries.cartAttributesUpdate, {
+        variables: { cartId, attributes },
+      });
+      return createWriteResult(assertMutationData(result, "cartAttributesUpdate"), result.headers);
+    });
+  }
+  return mutations;
+}
+
+function splitLines(lines: CartLineInput[] = []): {
+  added: CartLineAddInput[];
+  changed: CartLineUpdateInput[];
+} {
+  const added = lines.filter(isNewLine);
+  const changed = lines.filter(isExistingLine);
+  if (added.length + changed.length !== lines.length) {
+    throw new Error("Each cart line needs an id or a merchandiseId");
+  }
+  return { added, changed };
+}
+
+function isNewLine(line: CartLineInput): line is CartLineAddInput {
+  return !line.id && typeof line.merchandiseId === "string";
+}
+
+function isExistingLine(line: CartLineInput): line is CartLineUpdateInput {
+  return typeof line.id === "string" && line.id !== "";
 }

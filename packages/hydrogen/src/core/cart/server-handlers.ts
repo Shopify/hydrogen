@@ -29,6 +29,7 @@ import {
 import { getCartIdFromCookie, createCartCookie, createExpiredCartCookie } from "./cookie";
 import { getCartId, type CartDataFromQuery } from "./get-cart";
 import type { cartQueries, CartDataForOptions, CartQueriesForOptions } from "./queries";
+import { runCartAction } from "./run-cart-action";
 import type { CartData } from "./state";
 import { storefrontCartTransport, type StorefrontCartTransport } from "./storefront-cart-transport";
 import type {
@@ -360,7 +361,7 @@ async function handleGet(
   const { request, storefrontClient } = context;
   const cartId = getCartId(request ?? storefrontClient.requestContext);
   const result: CartReadResult = cartId
-    ? await transport.read(cartId, { storefrontClient })
+    ? await transport.getCart({ cartId }, { storefrontClient })
     : { cart: null, headers: new Headers() };
   logCartErrors(result.errors);
   const cart = await addLoggedInCheckoutParam(result.cart, context, customerSession);
@@ -481,7 +482,10 @@ async function executeCartMutation(
   ({ type: "mutation" } & CartWriteResult) | { type: "response"; response: CartPostResult }
 > {
   try {
-    return { type: "mutation", ...(await transport.apply(cartId, action, transportContext)) };
+    return {
+      type: "mutation",
+      ...(await runCartAction(transport, cartId, action, transportContext)),
+    };
   } catch (error) {
     if (!customerSessionHeaders) throw error;
     log.error("cart mutation failed", { error });
