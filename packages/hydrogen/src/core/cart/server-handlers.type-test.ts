@@ -5,11 +5,17 @@ import { createCustomerSession } from "../../customer-account";
 import { gql } from "../../graphql";
 import type { ShopifyRouteHandlerGroup } from "../request-routing/registered-routes";
 import { createUcpCartTransport } from "../../ucp";
+import type { ShopifyRouteErrorResult } from "../request-routing/registered-routes";
 import {
   createCartServerHandlers,
   type CartDataFromHandlers,
+  type CartError,
+  type CartErrorCode,
+  type CartGetData,
+  type CartGetResult,
   type CartServerHandlers,
   type CartServerHandlersWithCustomerSession,
+  type CartServerHandlersWithTransport,
   type CreateCartServerHandlersOptions,
 } from "./server-handlers";
 import type { CartData } from "./state";
@@ -80,5 +86,42 @@ describe("CartServerHandlers route handler compatibility", () => {
       // @ts-expect-error CartServerTransport is opaque, so a plain transport object doesn't fit.
       createCartServerHandlers({ transport: { ordering: "sequential" } });
     });
+  });
+
+  it("types includeSellers on the GET context", () => {
+    type StorefrontContext = Parameters<CartServerHandlers["get"]>[0];
+    type TransportContext = Parameters<CartServerHandlersWithTransport["get"]>[0];
+
+    expectTypeOf<StorefrontContext["includeSellers"]>().toEqualTypeOf<boolean | undefined>();
+    expectTypeOf<TransportContext["includeSellers"]>().toEqualTypeOf<boolean | undefined>();
+  });
+
+  it("returns only JSON from a transport GET with includeSellers, and seller errors otherwise", () => {
+    const transport = createUcpCartTransport({ agentProfile: "https://example.com/agent.json" });
+    const handlers = createCartServerHandlers({ transport });
+    const storefrontClient = {} as PublicStorefrontClient;
+
+    expectTypeOf(handlers).toEqualTypeOf<CartServerHandlersWithTransport>();
+    expectTypeOf(() => handlers.get({ storefrontClient, includeSellers: true })).returns.resolves.toEqualTypeOf<
+      CartGetResult<CartData>
+    >();
+    expectTypeOf(() => handlers.get({ storefrontClient })).returns.resolves.toEqualTypeOf<
+      CartGetResult<CartData> | ShopifyRouteErrorResult<CartError>
+    >();
+  });
+
+  it("keeps the Storefront API GET result JSON-only", () => {
+    expectTypeOf<Awaited<ReturnType<CartServerHandlers["get"]>>["type"]>().toEqualTypeOf<"json">();
+  });
+
+  it("types the seller carts on the GET data", () => {
+    expectTypeOf<CartGetData["sellers"]>().toEqualTypeOf<
+      Array<{ seller: string; cart: CartData }> | undefined
+    >();
+  });
+
+  it("includes the seller error codes", () => {
+    expectTypeOf<"invalid_seller">().toMatchTypeOf<CartErrorCode>();
+    expectTypeOf<"seller_not_supported">().toMatchTypeOf<CartErrorCode>();
   });
 });
