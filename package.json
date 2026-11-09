@@ -36,7 +36,8 @@
     "test:local-https": "node --use-system-ca scripts/test-local-https.ts",
     "test:benchmark-harness": "tsc -p scripts/storefront-benchmark-harness/tsconfig.json && node --test scripts/storefront-benchmark-harness/*.test.ts",
     "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test",
-    "test:e2e:storefront": "turbo run test:e2e --filter @shopify/storefront-e2e"
+    "test:e2e:storefront": "turbo run test:e2e --filter @shopify/storefront-e2e",
+    "agentic-e2e": "pnpm --filter @shopify/agentic-e2e run cli"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.3",

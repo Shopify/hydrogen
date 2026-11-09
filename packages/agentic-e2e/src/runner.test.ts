@@ -5,6 +5,7 @@ import { describe, it } from "vitest";
 import type { Buyer, BuyerResult } from "./agent/buyer.ts";
 import { CartReadError } from "./browser/cart-error.ts";
 import type { EvidenceSink } from "./evidence.ts";
+import { formatSummary } from "./report/summary.ts";
 import { PageLoadError, runScenario, type Driver } from "./runner.ts";
 import type { CartSnapshot, Checkpoint, Scenario } from "./scenario.ts";
 import { addToCart } from "./scenarios/add-to-cart.ts";
@@ -501,6 +502,7 @@ describe("runScenario", () => {
     assert.match(result.reason, /could not be stopped/);
     assert.ok(result.warnings.some((warning) => warning.startsWith("Closing the buyer failed")));
     assert.ok(result.warnings.some((warning) => warning.includes(CHECKOUT_URL)));
+    assert.ok(formatSummary(result).includes(CHECKOUT_URL));
   });
 
   it("does not abort the buyer at blocked checkout navigation, so it can recover and finish the add", async () => {
