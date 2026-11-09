@@ -708,3 +708,58 @@ describe("apply", () => {
     expect(result.userErrors).toHaveLength(1);
   });
 });
+
+describe("cart expiry", () => {
+  const EXPIRES_AT = "2026-12-09T12:00:00Z";
+
+  function withExpiry<T extends { result: { structuredContent: object } }>(fixture: T): T {
+    const response = structuredClone(fixture);
+    Object.assign(response.result.structuredContent, { expires_at: EXPIRES_AT });
+    return response;
+  }
+
+  const expiringRoutes = {
+    get_cart: withExpiry(fixtures.getCart),
+    update_cart: withExpiry(fixtures.getCart),
+    create_cart: withExpiry(fixtures.createCart),
+    lookup_catalog: fixtures.lookupCatalog,
+  };
+
+  it("carries expires_at into read results", async () => {
+    stubUcp(expiringRoutes);
+
+    const result = await createTransport().getCart({ cartId: CART_ID }, createContext());
+
+    expect(result.expiresAt).toBe(EXPIRES_AT);
+  });
+
+  it.each<[string, string | null, CartAction]>([
+    ["a created cart", null, { intent: "add", lines: [{ merchandiseId: VARIANT_1, quantity: 1 }] }],
+    ["an updated cart", CART_ID, { intent: "remove", lineIds: [LINE_1] }],
+    ["a current cart with a user error", CART_ID, { intent: "note-update", note: "Hi" }],
+  ])("carries expires_at into write results for %s", async (_, cartId, action) => {
+    stubUcp(expiringRoutes);
+
+    const result = await runCartAction(createTransport(), cartId, action, createContext());
+
+    expect(result.expiresAt).toBe(EXPIRES_AT);
+  });
+
+  it("leaves expiresAt out when the store doesn't report it", async () => {
+    stubUcp(defaultRoutes);
+
+    const result = await createTransport().getCart({ cartId: CART_ID }, createContext());
+
+    expect(result).not.toHaveProperty("expiresAt");
+  });
+
+  it("rejects a cart whose expires_at isn't a string", async () => {
+    const response = structuredClone(fixtures.getCart);
+    Object.assign(response.result.structuredContent, { expires_at: 123 });
+    stubUcp({ ...defaultRoutes, get_cart: response });
+
+    await expect(createTransport().getCart({ cartId: CART_ID }, createContext())).rejects.toThrow(
+      UcpToolError,
+    );
+  });
+});

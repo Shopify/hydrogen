@@ -96,7 +96,7 @@ export function createUcpCartTransport({
       const cart = await getCart(call, cartId);
       if (!cart) return { cart: null, headers: new Headers() };
       const catalog = await lookupCatalog(call, cart, variantIds(cart));
-      return { cart: toCartData(cart, catalog), headers: new Headers() };
+      return { cart: toCartData(cart, catalog), headers: new Headers(), ...expiry(cart) };
     },
     updateCart: async ({ cartId, ...changes }, ctx) => {
       const ucp = session(ctx);
@@ -213,6 +213,7 @@ async function currentCartResult(
     userErrors: [error],
     warnings: [],
     headers: new Headers(),
+    ...expiry(cart),
   };
 }
 
@@ -222,7 +223,12 @@ function cartResult(cart: UcpCart, catalog: Map<string, CatalogEntry>): CartWrit
     userErrors: toUserErrors(cart.messages),
     warnings: toWarnings(cart.messages),
     headers: new Headers(),
+    ...expiry(cart),
   };
+}
+
+function expiry(cart: UcpCart): { expiresAt?: string } {
+  return cart.expires_at === undefined ? {} : { expiresAt: cart.expires_at };
 }
 
 function userErrorResult(error: CartUserError): CartWriteResult {
