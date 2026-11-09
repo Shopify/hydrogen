@@ -763,3 +763,135 @@ describe("cart expiry", () => {
     );
   });
 });
+
+function withoutContinueUrl<T extends { result: { structuredContent: object } }>(fixture: T): T {
+  const response = structuredClone(fixture);
+  Reflect.deleteProperty(response.result.structuredContent, "continue_url");
+  return response;
+}
+
+function checkoutUrlResponse(checkoutUrl: string | null) {
+  return {
+    data: { cart: checkoutUrl === null ? null : { checkoutUrl } },
+    headers: new Headers(),
+  };
+}
+
+describe("home-store checkout URL fallback", () => {
+  const STOREFRONT_CHECKOUT_URL = "https://shop.example.com/cart/c/fixture-cart-token?key=abc";
+
+  const routesWithoutContinueUrl = {
+    get_cart: withoutContinueUrl(fixtures.getCart),
+    update_cart: withoutContinueUrl(fixtures.getCart),
+    create_cart: withoutContinueUrl(fixtures.createCart),
+    lookup_catalog: fixtures.lookupCatalog,
+  };
+
+  function contextWithGraphql(graphql: ReturnType<typeof vi.fn>, seller?: string) {
+    const { storefrontClient } = createContext();
+    Object.assign(storefrontClient, { graphql });
+    return { storefrontClient, ...(seller && { seller }) };
+  }
+
+  it("reads the checkout URL from the Storefront API for a home cart without continue_url", async () => {
+    stubUcp(routesWithoutContinueUrl);
+    const graphql = vi.fn().mockResolvedValue(checkoutUrlResponse(STOREFRONT_CHECKOUT_URL));
+
+    const result = await createTransport().getCart(
+      { cartId: CART_ID },
+      contextWithGraphql(graphql),
+    );
+
+    expect(result.cart?.checkoutUrl).toBe(STOREFRONT_CHECKOUT_URL);
+    expect(graphql).toHaveBeenCalledTimes(1);
+    expect(graphql).toHaveBeenCalledWith(expect.stringContaining("cart(id: $id)"), {
+      variables: { id: CART_ID },
+    });
+  });
+
+  it.each<[string, string | null, CartAction]>([
+    ["a created cart", null, { intent: "add", lines: [{ merchandiseId: VARIANT_1, quantity: 1 }] }],
+    ["an updated cart", CART_ID, { intent: "remove", lineIds: [LINE_1] }],
+    ["a current cart with a user error", CART_ID, { intent: "note-update", note: "Hi" }],
+  ])("fills the checkout URL for %s", async (_, cartId, action) => {
+    stubUcp(routesWithoutContinueUrl);
+    const graphql = vi.fn().mockResolvedValue(checkoutUrlResponse(STOREFRONT_CHECKOUT_URL));
+
+    const result = await runCartAction(
+      createTransport(),
+      cartId,
+      action,
+      contextWithGraphql(graphql),
+    );
+
+    expect(result.cart?.checkoutUrl).toBe(STOREFRONT_CHECKOUT_URL);
+  });
+
+  it("skips the Storefront API when the reply has continue_url", async () => {
+    stubUcp(defaultRoutes);
+    const graphql = vi.fn();
+
+    const result = await createTransport().getCart(
+      { cartId: CART_ID },
+      contextWithGraphql(graphql),
+    );
+
+    expect(graphql).not.toHaveBeenCalled();
+    expect(result.cart?.checkoutUrl).toBe(fixtures.getCart.result.structuredContent.continue_url);
+  });
+
+  it("never queries the Storefront API for a seller cart", async () => {
+    stubUcp(routesWithoutContinueUrl);
+    const graphql = vi.fn();
+
+    const result = await createTransport().getCart(
+      { cartId: CART_ID },
+      contextWithGraphql(graphql, "raycon"),
+    );
+
+    expect(graphql).not.toHaveBeenCalled();
+    expect(result.cart?.checkoutUrl).toBeNull();
+  });
+
+  it("returns a null checkout URL and warns when the query fails", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    stubUcp(routesWithoutContinueUrl);
+    const error = new Error("network down");
+    const graphql = vi.fn().mockRejectedValue(error);
+
+    const result = await createTransport().getCart(
+      { cartId: CART_ID },
+      contextWithGraphql(graphql),
+    );
+
+    assert(result.cart, "expected the cart");
+    expect(result.cart.checkoutUrl).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      "checkout URL lookup failed, so the cart has no checkout URL",
+      { scope: "ucp-cart", error },
+    );
+  });
+
+  it("returns a null checkout URL and warns when the Storefront API has no cart", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    stubUcp(routesWithoutContinueUrl);
+    const graphql = vi.fn().mockResolvedValue({
+      data: null,
+      errors: [{ message: "Throttled" }],
+      headers: new Headers(),
+    });
+
+    const result = await createTransport().getCart(
+      { cartId: CART_ID },
+      contextWithGraphql(graphql),
+    );
+
+    expect(result.cart?.checkoutUrl).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      "checkout URL lookup returned no cart, so the cart has no checkout URL",
+      { scope: "ucp-cart", errors: ["Throttled"] },
+    );
+  });
+});

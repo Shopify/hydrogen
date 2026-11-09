@@ -1,5 +1,6 @@
 import type { CartLineInput, UpdateCartPayload } from "../../vendor/standard-actions";
-import type { CartUserError } from "../core/cart/state";
+import type { StorefrontClient } from "../client";
+import type { CartData, CartUserError } from "../core/cart/state";
 import {
   createCartServerTransport,
   type CartServerTransport,
@@ -7,6 +8,7 @@ import {
   type CartWriteResult,
 } from "../core/cart/transport";
 import { getLogger } from "../core/logging";
+import { gql } from "../graphql";
 import {
   CATALOG_LOOKUP_CAPABILITY,
   DISCOUNT_CAPABILITY,
@@ -23,6 +25,13 @@ import {
 import { createUcpToolCaller, UcpToolError, type UcpToolCaller } from "./mcp";
 
 const OPTIMISTIC_LINE_ID_PREFIX = "optimistic:";
+const CART_CHECKOUT_URL_QUERY = gql(`
+  query HydrogenUcpCartCheckoutUrl($id: ID!) {
+    cart(id: $id) {
+      checkoutUrl
+    }
+  }
+`);
 const log = getLogger("ucp-cart");
 
 /**
@@ -40,6 +49,8 @@ type UcpLineInput = { id?: string; item: { id: string }; quantity: number };
 type UcpSession = {
   call: UcpToolCaller;
   context: { address_country: string; language: string };
+  /** Finds the checkout URL for a cart whose UCP reply has no `continue_url`. */
+  checkoutUrl: (cartId: string) => Promise<string | null>;
 };
 
 type PlanError = { error: CartUserError };
@@ -54,6 +65,8 @@ type CartChanges = Omit<UpdateCartPayload, "cartId">;
  * The transport also keeps one cart per seller: the handlers' `/api/cart?seller=<handle>` route sends that seller's requests to `https://<handle>.myshopify.com/api/ucp/mcp`.
  *
  * The transport sends requests as an anonymous agent with your agent profile, and never forwards the customer's cookies. Carts have no buyer identity, note, cart attributes, line attributes, or selling plans: those changes return a user error and leave the cart unchanged. The cart store sends one change at a time to a UCP cart, because each UCP update replaces the whole cart.
+ *
+ * When a home-store cart's UCP reply has no `continue_url`, the transport reads the cart's `checkoutUrl` with one Storefront API query through the handlers' Storefront API client. When that query fails, the cart's `checkoutUrl` is `null` and the transport logs a warning. Seller carts never use the Storefront API, so a seller cart without `continue_url` has a `null` `checkoutUrl`.
  *
  * Use the transport only on the server. The function throws in a browser, and throws a `TypeError` when `agentProfile` isn't a valid URL.
  *
@@ -86,17 +99,25 @@ export function createUcpCartTransport({
       address_country: storefrontClient.i18n.country,
       language: storefrontClient.i18n.language,
     },
+    checkoutUrl:
+      seller === undefined
+        ? (cartId) => queryCheckoutUrl(storefrontClient, cartId)
+        : () => Promise.resolve(null),
   });
 
   return createCartServerTransport({
     ordering: "sequential",
     sellers: true,
     getCart: async ({ cartId }, ctx) => {
-      const { call } = session(ctx);
-      const cart = await getCart(call, cartId);
+      const ucp = session(ctx);
+      const cart = await getCart(ucp.call, cartId);
       if (!cart) return { cart: null, headers: new Headers() };
-      const catalog = await lookupCatalog(call, cart, variantIds(cart));
-      return { cart: toCartData(cart, catalog), headers: new Headers(), ...expiry(cart) };
+      const catalog = await lookupCatalog(ucp.call, cart, variantIds(cart));
+      return {
+        cart: await transportCart(ucp, cart, catalog),
+        headers: new Headers(),
+        ...expiry(cart),
+      };
     },
     updateCart: async ({ cartId, ...changes }, ctx) => {
       const ucp = session(ctx);
@@ -128,7 +149,7 @@ export function createUcpCartTransport({
           plan.lines.map(({ item }) => item.id),
         ),
       ]);
-      return cartResult(updated, catalog);
+      return cartResult(ucp, updated, catalog);
     },
   });
 }
@@ -155,7 +176,8 @@ const MISSING_MERCHANDISE: CartUserError = {
   message: "A new cart line needs a merchandiseId.",
 };
 
-async function createCart({ call, context }: UcpSession, changes: CartChanges) {
+async function createCart(ucp: UcpSession, changes: CartChanges) {
+  const { call, context } = ucp;
   if (changes.note !== undefined || changes.attributes !== undefined) {
     return userErrorResult(NOT_SUPPORTED_CART_FIELDS);
   }
@@ -172,7 +194,7 @@ async function createCart({ call, context }: UcpSession, changes: CartChanges) {
     },
     isUcpCart,
   );
-  return cartResult(created, await lookupCatalog(call, created, variantIds(created)));
+  return cartResult(ucp, created, await lookupCatalog(call, created, variantIds(created)));
 }
 
 async function getCart(call: UcpToolCaller, cartId: string): Promise<UcpCart | null> {
@@ -201,15 +223,13 @@ async function lookupCatalog(
 }
 
 async function currentCartResult(
-  { call }: UcpSession,
-  cartOrId: UcpCart | string,
+  ucp: UcpSession,
+  cart: UcpCart,
   error: CartUserError,
 ): Promise<CartWriteResult> {
-  const cart = typeof cartOrId === "string" ? await getCart(call, cartOrId) : cartOrId;
-  if (!cart) return userErrorResult(error);
-  const catalog = await lookupCatalog(call, cart, variantIds(cart));
+  const catalog = await lookupCatalog(ucp.call, cart, variantIds(cart));
   return {
-    cart: toCartData(cart, catalog),
+    cart: await transportCart(ucp, cart, catalog),
     userErrors: [error],
     warnings: [],
     headers: new Headers(),
@@ -217,14 +237,51 @@ async function currentCartResult(
   };
 }
 
-function cartResult(cart: UcpCart, catalog: Map<string, CatalogEntry>): CartWriteResult {
+async function cartResult(
+  ucp: UcpSession,
+  cart: UcpCart,
+  catalog: Map<string, CatalogEntry>,
+): Promise<CartWriteResult> {
   return {
-    cart: toCartData(cart, catalog),
+    cart: await transportCart(ucp, cart, catalog),
     userErrors: toUserErrors(cart.messages),
     warnings: toWarnings(cart.messages),
     headers: new Headers(),
     ...expiry(cart),
   };
+}
+
+async function transportCart(
+  ucp: UcpSession,
+  cart: UcpCart,
+  catalog: Map<string, CatalogEntry>,
+): Promise<CartData> {
+  const data = toCartData(cart, catalog);
+  if (data.checkoutUrl !== null) return data;
+  return { ...data, checkoutUrl: await ucp.checkoutUrl(cart.id) };
+}
+
+// Some stores' UCP carts have no `continue_url`. The Storefront API returns the checkout URL for
+// the same cart ID, but only on the home store, so seller carts never use it.
+async function queryCheckoutUrl(
+  storefrontClient: StorefrontClient,
+  cartId: string,
+): Promise<string | null> {
+  let result;
+  try {
+    result = await storefrontClient.graphql(CART_CHECKOUT_URL_QUERY, {
+      variables: { id: cartId },
+    });
+  } catch (error) {
+    log.warn("checkout URL lookup failed, so the cart has no checkout URL", { error });
+    return null;
+  }
+  const checkoutUrl = result.data?.cart?.checkoutUrl;
+  if (checkoutUrl) return checkoutUrl;
+  log.warn("checkout URL lookup returned no cart, so the cart has no checkout URL", {
+    errors: result.errors?.map(({ message }) => message),
+  });
+  return null;
 }
 
 function expiry(cart: UcpCart): { expiresAt?: string } {
