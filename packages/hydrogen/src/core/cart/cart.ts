@@ -23,6 +23,7 @@ import {
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "../shopify-scripts/index";
+import { isSellerHandle } from "./cookie";
 import { getCartAttributeFormEntries } from "./form";
 import { DEFAULT_MINIMUM_QUANTITY, sanitizeQuantity } from "./quantity";
 import type {
@@ -84,6 +85,7 @@ const NOOP = () => {};
 const EMPTY_QUANTITY = 0;
 const FNV1A_OFFSET_BASIS = 0x811c9dc5;
 const FNV1A_PRIME = 0x01000193;
+const DEFAULT_CART_ENDPOINT = "/api/cart";
 const CART_REVALIDATION_ERROR_MESSAGE =
   "Something went wrong refreshing your cart. Please try again.";
 
@@ -205,6 +207,8 @@ type CartInitialData<TData extends CartData = CartData> = {
   errors?: Array<{ message: string }>;
   /** Set by the cart GET handler when the cart backend needs one cart change at a time. Pass it through unchanged. */
   ordering?: "sequential";
+  /** Each seller's cart, set by a cart GET handler that loads seller carts. Pass it through unchanged. */
+  sellers?: Array<{ seller: string; cart: CartData }>;
 };
 
 /** Options for creating a cart store. */
@@ -216,6 +220,12 @@ export type CreateCartStoreOptions<TData extends CartData = CartData> = {
    * tells the store that no cart exists yet. Without initial data, the store starts empty and loads the cart when you call `connect()`.
    */
   initialData?: CartInitialData<TData> | PromiseLike<CartInitialData<TData>>;
+  /**
+   * The handle of the seller whose cart the store holds, such as `my-shop` for `my-shop.myshopify.com`. Without a seller, the store holds your own store's cart.
+   *
+   * A seller store sends its loads and changes to your cart endpoint with a `?seller=` query, one change at a time. It ignores Standard Actions `shopify:cart:*` events. The store throws a type error when the handle isn't lowercase letters, digits, and hyphens.
+   */
+  seller?: string;
 };
 
 type AddLinePayload = {
@@ -406,6 +416,13 @@ type CartStoreContext = {
   revalidateOnConnect: boolean;
   reservation: TransactionReservation | null;
   lastSnapshotSequence: number;
+  // Null for the home store, which goes through Standard Actions and the page-level endpoint.
+  seller: SellerCartNetwork | null;
+};
+
+type SellerCartNetwork = {
+  handle: string;
+  lastPost: Promise<unknown>;
 };
 
 type CartEventHandlers = {
@@ -667,16 +684,22 @@ function projectVisibleState(store: CartStoreContext): CartState {
 function publishVisibleState(store: CartStoreContext): void {
   const previous = store.observable.state;
   const next = reuseVisibleReferences(previous, projectVisibleState(store));
-  if (configuredCartEndpoint && previous !== next) {
+  const quantityFormEndpoint = getQuantityFormEndpoint(store);
+  if (quantityFormEndpoint && previous !== next) {
     const previousLines = new Map(getLines(previous.data).map((line) => [line.id, line]));
     const changedQuantities = getLines(next.data)
       .filter((line) => previousLines.get(line.id)?.quantity !== line.quantity)
       .map((line) => ({ id: line.id, quantity: line.quantity }));
     if (changedQuantities.length > 0) {
-      syncQuantityInputs(changedQuantities, configuredCartEndpoint);
+      syncQuantityInputs(changedQuantities, quantityFormEndpoint);
     }
   }
   store.observable.setState(next);
+}
+
+function getQuantityFormEndpoint(store: CartStoreContext): string | null {
+  if (!store.seller) return configuredCartEndpoint;
+  return typeof document === "undefined" ? null : getSellerCartEndpoint(store.seller.handle);
 }
 
 function sharesKey(left: string[], right: string[]): boolean {
@@ -1931,15 +1954,20 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   payload: TransactionPayload<TType>,
 ): Promise<void> {
   const generation = store.generation;
-  const { updateCart } = await getShopifyStandardActions();
+  const seller = store.seller;
+  const updateCart = seller
+    ? createSellerUpdateCart(seller)
+    : (await getShopifyStandardActions()).updateCart;
   if (generation !== store.generation) return;
   const reservation = reserveTransaction(store, type, payload);
   store.reservation = reservation;
   const signal = createTransactionSignal(store, reservation);
-  const eventToken = createTransactionEventToken();
+  const eventToken = seller ? null : createTransactionEventToken();
   // Standard Events can arrive asynchronously, so the reservation keeps signal ownership alive
   // until the correlated event consumes it.
-  const correlatedUpdateCart = withTransactionEventToken(updateCart, eventToken);
+  const correlatedUpdateCart = eventToken
+    ? withTransactionEventToken(updateCart, eventToken)
+    : updateCart;
   let promise: Promise<UpdateCartResult>;
 
   try {
@@ -1949,7 +1977,7 @@ async function dispatchTransactionNow<TType extends TransactionType>(
   }
   if (!reservation.consumed) {
     enqueueTransaction(store, type, payload, promise, reservation);
-    store.expectedEvents.push({ token: eventToken });
+    if (eventToken) store.expectedEvents.push({ token: eventToken });
   }
   observeMutationTransport(store, promise);
 
@@ -1982,6 +2010,18 @@ function startQueuedInitialAdd(
 ): void {
   if (queued.generation !== store.generation || queued.signal.aborted) {
     queued.deferred.reject(new DOMException("The operation was aborted.", "AbortError"));
+    return;
+  }
+
+  if (store.seller) {
+    const transport = transportAddToCart(
+      queued.payload,
+      queued.signal,
+      createSellerUpdateCart(store.seller),
+      cartId,
+    );
+    observeMutationTransport(store, transport);
+    transport.then(queued.deferred.resolve, queued.deferred.reject);
     return;
   }
 
@@ -2161,13 +2201,15 @@ function connectCartStore(store: CartStoreContext, handlers: CartEventHandlers):
   if (store.lifecycleController.signal.aborted) store.lifecycleController = new AbortController();
   if (store.cartSyncAttached) return true;
   store.cartSyncAttached = true;
-  connectedCartStores.add(store);
-  attachCartConsentListener();
-  document.addEventListener("shopify:cart:lines-update", handlers.lines);
-  document.addEventListener("shopify:cart:discount-update", handlers.discount);
-  document.addEventListener("shopify:cart:note-update", handlers.note);
-  document.addEventListener("shopify:cart:attributes-update", handlers.attributes);
-  void getShopifyStandardActions().catch(() => {});
+  if (!store.seller) {
+    connectedCartStores.add(store);
+    attachCartConsentListener();
+    document.addEventListener("shopify:cart:lines-update", handlers.lines);
+    document.addEventListener("shopify:cart:discount-update", handlers.discount);
+    document.addEventListener("shopify:cart:note-update", handlers.note);
+    document.addEventListener("shopify:cart:attributes-update", handlers.attributes);
+    void getShopifyStandardActions().catch(() => {});
+  }
   if (store.revalidateOnConnect) {
     store.revalidateOnConnect = false;
     refreshCartInStore(store);
@@ -2208,7 +2250,7 @@ function destroyCartStore(store: CartStoreContext, handlers: CartEventHandlers):
   // revalidation must wait for them.
   store.revalidateOnConnect ||= store.revalidation.requested || store.revalidation.active !== null;
   clearPendingTransactions(store);
-  if (typeof document !== "undefined" && store.cartSyncAttached) {
+  if (typeof document !== "undefined" && store.cartSyncAttached && !store.seller) {
     document.removeEventListener("shopify:cart:lines-update", handlers.lines);
     document.removeEventListener("shopify:cart:discount-update", handlers.discount);
     document.removeEventListener("shopify:cart:note-update", handlers.note);
@@ -2350,7 +2392,7 @@ function loadCartInStore(
   });
   let request: ActiveCartLoad;
   const state = { ...store.observable.state, readyPromise };
-  const promise = Promise.resolve(cartPromise ?? fetchCartData(state.data.id))
+  const promise = Promise.resolve(cartPromise ?? fetchCartData(store.seller, state.data.id))
     .then((data) => {
       if (!isCurrentCartLoad(store, request)) return;
       if (data) hydrateCartInStore(store, data);
@@ -2404,10 +2446,13 @@ export function createCartStore<TData extends CartData = CartData>(
   options: CreateCartStoreOptions<TData> = {},
 ): CartStore {
   const initialData = options.initialData;
+  const seller =
+    options.seller === undefined ? null : { handle: options.seller, lastPost: Promise.resolve() };
+  if (seller) assertSellerHandle(seller.handle);
   const asyncInitialData = isPromiseLike<CartInitialData<TData>>(initialData);
   const syncInitialData = initialData !== undefined && !asyncInitialData;
   const initialCart = syncInitialData ? initialData.cart : null;
-  if (syncInitialData) adoptCartEndpointOrdering(initialData);
+  if (syncInitialData && !seller) adoptCartEndpointOrdering(initialData);
   const settled = initialCart
     ? createCartState(initialCart)
     : syncInitialData
@@ -2437,6 +2482,7 @@ export function createCartStore<TData extends CartData = CartData>(
     revalidateOnConnect: false,
     reservation: null,
     lastSnapshotSequence: 0,
+    seller,
   };
   context = store;
   const handlers: CartEventHandlers = {
@@ -2452,7 +2498,7 @@ export function createCartStore<TData extends CartData = CartData>(
     loadCartInStore(
       store,
       Promise.resolve(initialData).then((data) => {
-        adoptCartEndpointOrdering(data);
+        if (!seller) adoptCartEndpointOrdering(data);
         return data.cart;
       }),
     ).catch((error: unknown) => log.error("cart initial load failed", { error }));
@@ -2694,6 +2740,51 @@ function postCartUpdateToEndpoint(
   return callerSignal ? rejectOnAbort(request, callerSignal) : request;
 }
 
+function assertSellerHandle(seller: string): void {
+  if (!isSellerHandle(seller)) {
+    throw new TypeError(
+      `Expected a seller handle of lowercase letters, digits, and hyphens, got "${seller}".`,
+    );
+  }
+}
+
+/** @internal */
+export function getSellerCartEndpoint(
+  seller: string,
+  endpoint = configuredCartEndpoint ?? DEFAULT_CART_ENDPOINT,
+): string {
+  assertSellerHandle(seller);
+  return `${endpoint}?seller=${encodeURIComponent(seller)}`;
+}
+
+async function sendSellerCartUpdate(
+  seller: SellerCartNetwork,
+  payload: UpdateCartPayload,
+): Promise<UpdateCartResult> {
+  const response = await fetch(getSellerCartEndpoint(seller.handle), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(STANDARD_ACTION_TIMEOUT_IN_MS),
+  });
+  if (!response.ok) throw new CartNetworkError(response.status);
+  return response.json();
+}
+
+// Seller carts always take one change at a time, on a chain private to the store, for the same
+// reason as a sequential home endpoint (see postCartUpdateToEndpoint).
+function createSellerUpdateCart(seller: SellerCartNetwork): UpdateCartTransport {
+  return (payload, options) => {
+    const callerSignal = options?.signal;
+    const request = seller.lastPost.then(() => {
+      if (callerSignal?.aborted) throw abortReason(callerSignal);
+      return sendSellerCartUpdate(seller, payload);
+    });
+    seller.lastPost = request.catch(() => {});
+    return callerSignal ? rejectOnAbort(request, callerSignal) : request;
+  };
+}
+
 function configureUpdateCartOnce(actions: ShopifyStandardActions): void {
   if (hasConfiguredUpdateCart) return;
   const configured = actions.updateCart.configure({
@@ -2758,11 +2849,21 @@ function extractNoteFromCart(cart: CartResponse): string {
 }
 
 async function fetchCart(
+  seller: SellerCartNetwork | null,
   cartId?: string | null,
   callerSignal?: AbortSignal,
 ): Promise<{ cart: CartResponse | null }> {
   const timeoutSignal = AbortSignal.timeout(STANDARD_ACTION_TIMEOUT_IN_MS);
   const signal = callerSignal ? AbortSignal.any([callerSignal, timeoutSignal]) : timeoutSignal;
+  if (seller) {
+    const response = await fetch(getSellerCartEndpoint(seller.handle), {
+      cache: "no-store",
+      signal,
+    });
+    if (!response.ok) throw new CartNetworkError(response.status);
+    const result = (await response.json()) as { cart: CartResponse | null };
+    return { cart: result.cart };
+  }
   if (configuredCartEndpoint) {
     const response = await fetch(configuredCartEndpoint, {
       cache: "no-store",
@@ -2786,8 +2887,12 @@ async function fetchCart(
   return { cart: result.cart };
 }
 
-function fetchCartData(cartId?: string | null, signal?: AbortSignal): Promise<CartData | null> {
-  return fetchCart(cartId, signal).then(({ cart }) =>
+function fetchCartData(
+  seller: SellerCartNetwork | null,
+  cartId?: string | null,
+  signal?: AbortSignal,
+): Promise<CartData | null> {
+  return fetchCart(seller, cartId, signal).then(({ cart }) =>
     cart
       ? {
           ...cart,
@@ -2831,8 +2936,12 @@ function mergeAuthoritativeCartData(previous: CartData, authoritative: CartData)
   };
 }
 
-function fetchCartRevalidationData(cartId: string, signal: AbortSignal): Promise<CartData | null> {
-  return fetchCart(cartId, signal).then(({ cart }) =>
+function fetchCartRevalidationData(
+  seller: SellerCartNetwork | null,
+  cartId: string,
+  signal: AbortSignal,
+): Promise<CartData | null> {
+  return fetchCart(seller, cartId, signal).then(({ cart }) =>
     cart ? cartResponseFromStandardEvent(cart as unknown as StandardEventCart) : null,
   );
 }
@@ -2927,8 +3036,8 @@ function revalidateCartWhenIdle(store: CartStoreContext): void {
   const controller = new AbortController();
   let request: ActiveCartRevalidation;
   const revalidationFetch = cartId
-    ? fetchCartRevalidationData(cartId, controller.signal)
-    : fetchCartData(null, controller.signal);
+    ? fetchCartRevalidationData(store.seller, cartId, controller.signal)
+    : fetchCartData(store.seller, null, controller.signal);
   const promise = revalidationFetch
     .then((cart) => applyCartRevalidation(store, request, cart))
     .catch((error: unknown) => {
@@ -2954,7 +3063,7 @@ function revalidateCartWhenIdle(store: CartStoreContext): void {
 }
 
 async function refreshCheckoutUrl(store: CartStoreContext): Promise<void> {
-  const { cart } = await fetchCart(store.observable.state.data.id);
+  const { cart } = await fetchCart(store.seller, store.observable.state.data.id);
   const current = store.observable.state;
   if (!cart || (current.data.id && current.data.id !== cart.id)) return;
   const checkoutUrl = cart.checkoutUrl ?? null;
