@@ -161,7 +161,7 @@ The core depends on web platform APIs (`fetch`, `Request`, `Response`, and Web C
 `setup` and `skills sync` copy these skills into your project. Each skill covers one part of a storefront:
 
 - **Setup and verification**: `hydrogen-setup`, `hydrogen-smoke-test`
-- **Data and requests**: `hydrogen-storefront-client`, `hydrogen-request-handlers`, `hydrogen-routing`, `hydrogen-markets`
+- **Data and requests**: `hydrogen-storefront-client`, `hydrogen-request-handlers`, `hydrogen-routing`, `hydrogen-markets`, `hydrogen-robots-txt`
 - **Cart**: `hydrogen-cart-ui`, `hydrogen-cart-drawer`, `hydrogen-cart-metafields`
 - **Products, collections, and search**: `hydrogen-variant-form`, `hydrogen-collection-browser`, `hydrogen-predictive-search`, `hydrogen-image`, `hydrogen-money`
 - **Checkout, accounts, and analytics**: `hydrogen-shop-pay`, `hydrogen-customer-account`, `hydrogen-analytics`
