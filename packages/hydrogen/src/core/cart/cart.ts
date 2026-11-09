@@ -2740,7 +2740,8 @@ function postCartUpdateToEndpoint(
   return callerSignal ? rejectOnAbort(request, callerSignal) : request;
 }
 
-function assertSellerHandle(seller: string): void {
+/** @internal */
+export function assertSellerHandle(seller: string): void {
   if (!isSellerHandle(seller)) {
     throw new TypeError(
       `Expected a seller handle of lowercase letters, digits, and hyphens, got "${seller}".`,
