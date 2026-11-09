@@ -20,6 +20,7 @@ import {
   STOREFRONT_URL_HEADER,
 } from "./headers";
 import { normalizePathPrefix } from "./standard-routes/path";
+import { parseCookieHeader } from "./utils/cookie-header";
 
 const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
 
@@ -350,19 +351,4 @@ function isDocumentRequest(request: StorefrontRequest): boolean {
   if (destination === "document") return true;
 
   return request.headers.get("accept")?.includes("text/html") ?? false;
-}
-
-function parseCookieHeader(cookieHeader: string | undefined): Map<string, string> {
-  const cookies = new Map<string, string>();
-  if (!cookieHeader) return cookies;
-
-  for (const cookie of cookieHeader.split(";")) {
-    const separator = cookie.indexOf("=");
-    if (separator < 0) continue;
-
-    const name = cookie.slice(0, separator).trim();
-    if (!cookies.has(name)) cookies.set(name, cookie.slice(separator + 1));
-  }
-
-  return cookies;
 }
