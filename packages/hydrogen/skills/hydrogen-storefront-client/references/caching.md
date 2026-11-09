@@ -25,3 +25,5 @@ A stale-while-revalidate refresh runs under `waitUntil` after the caller already
 ## Never cache private data
 
 Do not pass a `cache` strategy to personalized reads (cart, customer); keep them on a request-scoped client. Cache mode `private` is unsupported — for buyer-specific caching use `createRunWithCache` with an explicit private key.
+
+The client never stores a Storefront API response whose `Cache-Control` header contains `private` or `no-store`, even when the query passes a `cache` strategy, and such a response makes the final response private through `applyResponseHeaders()`. There is no option to override this.

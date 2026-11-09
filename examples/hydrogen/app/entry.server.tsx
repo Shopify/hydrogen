@@ -1,9 +1,10 @@
+import { createContentSecurityPolicy } from "@shopify/hydrogen";
 import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
 import { ServerRouter, type RouterContextProvider } from "react-router";
 import type { EntryContext } from "react-router";
 
-import { createContentSecurityPolicy } from "~/lib/csp";
+import { NonceProvider } from "~/lib/csp";
 
 export default async function handleRequest(
   request: Request,
@@ -12,7 +13,7 @@ export default async function handleRequest(
   reactRouterContext: EntryContext,
   context: RouterContextProvider,
 ) {
-  const { nonce, header, NonceProvider } = createContentSecurityPolicy({
+  const csp = createContentSecurityPolicy({
     shop: {
       checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
       storeDomain: context.env.PUBLIC_STORE_DOMAIN,
@@ -20,11 +21,11 @@ export default async function handleRequest(
   });
 
   const body = await renderToReadableStream(
-    <NonceProvider>
-      <ServerRouter context={reactRouterContext} url={request.url} nonce={nonce} />
+    <NonceProvider value={csp.nonce}>
+      <ServerRouter context={reactRouterContext} url={request.url} nonce={csp.nonce} />
     </NonceProvider>,
     {
-      nonce,
+      nonce: csp.nonce,
       signal: request.signal,
       onError(error) {
         console.error(error);
@@ -38,7 +39,7 @@ export default async function handleRequest(
   }
 
   responseHeaders.set("Content-Type", "text/html");
-  responseHeaders.set("Content-Security-Policy", header);
+  csp.applyResponseHeaders(responseHeaders);
 
   return new Response(body, {
     headers: responseHeaders,

@@ -1,6 +1,7 @@
 import { createShopifyRequestContext, createStorefrontClient } from "@shopify/hydrogen";
 
-import { defaultI18n, shop, storefrontConfig } from "./config";
+import { shop, storefrontConfig } from "./config";
+import { i18n } from "./i18n";
 
 /**
  * Browser-safe public Storefront client (`hydrogen-storefront-client` /
@@ -34,7 +35,7 @@ const requestContext = createShopifyRequestContext({
   // Static request context — no `headers()`, no buyer IP. The public client is
   // per-IP-throttled by Shopify, not per-buyer.
   request: { headers: new Headers() },
-  i18n: defaultI18n,
+  i18n,
 });
 
 export const publicStorefrontClient = createStorefrontClient({

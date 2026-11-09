@@ -1,7 +1,14 @@
 import type { IncompleteShopifyGlobal, ShopifyGlobalConfig } from "./global";
 
 export default function initializeShopifyGlobal(config: ShopifyGlobalConfig) {
-  const shopifyWindow: { Shopify?: IncompleteShopifyGlobal } = window;
+  const initialized = Symbol.for("shopify.hydrogen.global.initialized");
+  const shopifyWindow: {
+    Shopify?: IncompleteShopifyGlobal;
+    [initialized]?: boolean;
+  } = window;
+
+  if (shopifyWindow[initialized] === true) return;
+
   const shopify = Object.assign((shopifyWindow.Shopify ??= {}), config, {
     // Configure Storefront Components in case they are used
     components: {
@@ -16,4 +23,5 @@ export default function initializeShopifyGlobal(config: ShopifyGlobalConfig) {
   // Privacy banner defaults to hostname, which drops protocol/port. Use the current
   // host for tokenless consent requests.
   shopify.customerPrivacy.config.consentDomain = window.location.host;
+  shopifyWindow[initialized] = true;
 }

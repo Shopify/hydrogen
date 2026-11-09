@@ -24,7 +24,7 @@ import type {
  * @returns The route templates, typed for Hydrogen's route, redirect, and URL helpers.
  * @example
  * ```ts
- * const routeTemplates = createShopifyRouteTemplates({
+ * const routeTemplates = defineShopifyRouteTemplates({
  *   product: "/p/:productHandle",
  *   collection: "/c/:collectionHandle",
  *   article: "/journal/:blogHandle/:articleHandle",
@@ -34,10 +34,20 @@ import type {
  * ```
  * @publicDocs
  */
-export function createShopifyRouteTemplates<const TRoutes extends ShopifyRouteTemplates>(
+export function defineShopifyRouteTemplates<const TRoutes extends ShopifyRouteTemplates>(
   routes: TRoutes,
 ): TRoutes {
   return routes;
+}
+
+/**
+ * @deprecated Renamed to `defineShopifyRouteTemplates`. This alias will be removed in the next
+ * major release.
+ */
+export function createShopifyRouteTemplates<const TRoutes extends ShopifyRouteTemplates>(
+  routes: TRoutes,
+): TRoutes {
+  return defineShopifyRouteTemplates(routes);
 }
 
 export function getStandardRoute<const TRoute extends StandardRouteName>(

@@ -36,7 +36,7 @@ Hydrogen migration:
 - [ ] 4. react-router.config.ts added (middleware enabled for your React Router version, buildDirectory 'dist')
 - [ ] 5. Request wiring (request context + storefront client + route templates, plus a session manager when a handler needs one)
 - [ ] 6. Route filename + import + json()/defer() sweep
-- [ ] CSP/nonce: classic's utilities are gone — port CSP/nonce as app code, then check the browser console for CSP violations
+- [ ] CSP/nonce: create a per-document policy with `createContentSecurityPolicy({shop})` and apply it with `csp.applyResponseHeaders(response.headers)`; keep React nonce context in app code, then check the browser console for CSP violations
 - [ ] 7. Connect a store — env vars in .env (private token, or public token), or MOCK_SHOP=1 for the tokenless mock.shop demo
 - [ ] Optional subsystems: detect each → migrate or skip, and report every skip
 - [ ] Root middleware runs: GET /api/cart returns 200 JSON from the cart handler; a 404 or the app's 404 page means middleware isn't enabled for your React Router version (step 4)
@@ -145,6 +145,7 @@ import {
   type CachingStrategy,
   createShopifyRequestContext,
   createStorefrontClient,
+  defineShopifyI18n,
   type PublicStorefrontClient,
   type RequestScopedPrivateStorefrontClient,
   type ShopifyRequestContext,
@@ -174,14 +175,15 @@ function getBuyerIp(headers: Headers) {
   throw new Error('No buyer IP header on the request');
 }
 
+// Module scope. Add `routing` to serve more locales by path prefix or hostname; the request context matches the locale from the URL.
+const i18n = defineShopifyI18n({defaultLocale: {country: 'US', language: 'EN'}});
+
 export function createRequestStorefrontClient(
   request: Request,
   env: Env,
   cache: CacheInstance,
   waitUntil: ExecutionContext['waitUntil'],
 ): RequestStorefrontClient {
-  const i18n = {country: 'US', language: 'EN'} as const;             // or derive from the URL/domain
-
   // mock.shop is auth-free and 401s any token header, so it always gets the tokenless public client.
   if (env.MOCK_SHOP === '1' || !env.PUBLIC_STORE_DOMAIN) {
     return createStorefrontClient({
@@ -224,13 +226,13 @@ export function createRequestStorefrontClient(
 `app/lib/route-templates.ts` — maps Shopify entities to your route shapes. Pass it to `handleShopifyRoutes` (optional in the type, but handler-owned URLs come out wrong without it), to `handleShopifyRedirects` (**required** there), and to the `routes` prop of `ShopifyScripts`:
 
 ```ts
-import {createShopifyRouteTemplates} from '@shopify/hydrogen';
-export const routeTemplates = createShopifyRouteTemplates({
+import {defineShopifyRouteTemplates} from '@shopify/hydrogen';
+export const routeTemplates = defineShopifyRouteTemplates({
   productInCollection: '/products/:productHandle',
 });
 ```
 
-**Classic data-layer call-sites map mechanically:** `storefront.query()` → `client.graphql(QUERY, {variables, cache})`, which returns `{data, errors, headers}` instead of merging errors into the result — check `errors` before reading `data`; `$country`/`$language` are auto-injected, so drop them from `variables`; `storefront.CacheLong()` → the per-call `Cache.long()` (classic's implicit default caching is **gone**, so give every query that relied on it an explicit `cache`, `Cache.short()` or `Cache.long()`, or it hits the API on every request); `storefront.i18n` → `client.i18n`.
+**Classic data-layer call-sites map mechanically:** `storefront.query()` → `client.graphql(QUERY, {variables, cache})`, which returns `{data, errors, headers}` instead of merging errors into the result — check `errors` before reading `data`; `$country`/`$language` are auto-injected, so drop them from `variables`; `storefront.CacheLong()` → the per-call `Cache.long()` (classic's implicit default caching is **gone**, so give every query that relied on it an explicit `cache`, `Cache.short()` or `Cache.long()`, or it hits the API on every request); `storefront.i18n` → `client.locale` (the resolved `{language, country, pathPrefix}`; `client.i18n` is a deprecated alias of it).
 
 Root **middleware** in `app/root.tsx` (needs middleware enabled, see step 4) — the request lifecycle from mental-model step 1:
 
@@ -321,7 +323,7 @@ Don't trust "it renders." Gate on the build first: `react-router build` and `rea
 
 After the build gate and smoke test pass, **keep the dev server running and load the home page in a browser.** Fix every console error and warning before handing off. If you have no browser tool, say so in the handoff and ask the user to check the console themselves. Then hand off to the user. Tell them to test the migrated code with `npm run dev` (or `npm run dev:https` when they need customer login locally), and to pay special attention to the areas a migration most often gets subtly wrong while still compiling:
 
-- **CSP/nonce** — classic Hydrogen's `createContentSecurityPolicy`/`NonceProvider`/`useNonce` are gone; CSP is app-owned now, so port it as your own app code. A dropped nonce leaves pages rendering fine while hydration (cart, variant picker, analytics) is silently dead — check the browser console for CSP violations after migrating.
+- **CSP/nonce** — use `createContentSecurityPolicy({shop})` from `@shopify/hydrogen`. The returned policy exposes `nonce` and `header`; `csp.applyResponseHeaders()` sends the policy and prevents nonce-bearing HTML from being cached. Apply Shopify request-context headers separately with `requestContext.applyResponseHeaders(response.headers)`. Keep `NonceProvider`/`useNonce` in app code and pass the nonce to the server renderer, framework scripts, and `ShopifyScripts`. For cached HTML or a prerendered shell, use `nonce: false` and authorize inline scripts explicitly; CSP then leaves cache headers unchanged. Move classic's top-level directive properties under `directives`; arrays still extend defaults, with a replacement exception for defaults consisting only of `'none'`. Convert source strings to arrays and `false` omissions to `null`. Review `defaultSrc` customizations: the new policy has explicit script, image, font, media, and frame directives that take precedence over the fallback. The development build adds common local connection sources automatically. See `hydrogen-request-handlers/references/content-security-policy.md` for the full migration comparison and framework wiring. A dropped nonce can silently prevent hydration — verify browser behavior after migrating.
 - **Analytics** — the commerce funnel (`view_item`/`add_to_cart`/…) silently dropping while page views still fire (`references/analytics.md`).
 - **Cart actions** — add / remove / quantity edits and the drawer opening on add (`references/cart.md`).
 - **Customer login** — the full OAuth round-trip, which needs an HTTPS origin locally (`references/customer-account.md`).

@@ -3,6 +3,8 @@ import { execFileSync } from "node:child_process";
 import { registerHooks } from "node:module";
 import test, { afterEach, mock } from "node:test";
 
+import { defineShopifyI18n } from "@shopify/hydrogen";
+
 import type { ResolvedStorefrontConfig } from "../lib/storefront-config.ts";
 
 // The template's `lib/` modules use extensionless relative imports (bundler
@@ -30,7 +32,7 @@ const PRIVATE_TOKEN_HEADER = "Shopify-Storefront-Private-Token";
 const PUBLIC_TOKEN_HEADER = "X-Shopify-Storefront-Access-Token";
 const BUYER_IP_HEADER = "Shopify-Storefront-Buyer-IP";
 const STOREFRONT_ID_HEADER = "Shopify-Storefront-Id";
-const I18N = { country: "US", language: "EN" } as const;
+const I18N = defineShopifyI18n({ defaultLocale: { country: "US", language: "EN" } });
 
 const MOCK_DEFAULT: ResolvedStorefrontConfig = { mode: "mock", storeDomain: "mock.shop" };
 const MOCK_CUSTOM: ResolvedStorefrontConfig = { mode: "mock", storeDomain: "pets.mock.shop" };

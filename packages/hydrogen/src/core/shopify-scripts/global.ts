@@ -1,5 +1,5 @@
 import type { ShopifyGlobal } from "../../globals";
-import type { I18nConfig } from "../request-context";
+import type { ShopifyCountryCode, ShopifyLanguageCode } from "../i18n/types";
 import {
   matchStandardRouteUrl,
   resolveStandardRouteUrl,
@@ -14,9 +14,9 @@ import { asInlineScript } from "./utils/inline-script";
 
 export type ShopifyGlobalConfig = {
   application: ShopifyGlobal["application"];
-  country: I18nConfig["country"];
+  country: ShopifyCountryCode;
   currency?: NonNullable<ShopifyGlobal["currency"]>;
-  locale: Lowercase<I18nConfig["language"]>;
+  locale: Lowercase<ShopifyLanguageCode>;
   customerPrivacy: {
     config: NonNullable<ShopifyGlobal["customerPrivacy"]["config"]> & {
       /** Temporary diagnostic metadata for instrumentation; does not change consent or token behavior. */
@@ -117,7 +117,7 @@ function shouldHandoff(url: string): boolean {
   }
 }
 
-function getShopifyRoutesRoot(pathPrefix: I18nConfig["pathPrefix"]): string {
+function getShopifyRoutesRoot(pathPrefix: string | undefined): string {
   const normalizedPathPrefix = normalizePathPrefix(pathPrefix);
 
   return normalizedPathPrefix ? `${normalizedPathPrefix}/` : DEFAULT_ROUTES_ROOT;
@@ -127,17 +127,16 @@ function normalizeMyshopifyDomain(domain: string): string {
   return trimTrailingSlashes(domain.trim().replace(/^https?:\/\//i, ""));
 }
 
-/**
- * Builds the inline bootstrap script that initializes `window.Shopify` for storefront scripts.
- */
-export function getShopifyGlobalBootstrapScript({
+export const shopifyGlobalBootstrap = /* @__PURE__ */ asInlineScript(initializeShopifyGlobal);
+
+export function getShopifyGlobalConfig({
   i18n,
   shop,
 }: {
   i18n?: ShopifyScriptsI18n;
   shop: ShopifyScriptsShop;
-}): string {
-  const config: ShopifyGlobalConfig = {
+}): ShopifyGlobalConfig {
+  return {
     application: { name: "hydrogen", version: __HYDROGEN_VERSION__ },
     country: i18n?.country ?? DEFAULT_COUNTRY,
     ...(i18n?.currency !== undefined ? { currency: { active: i18n.currency.toUpperCase() } } : {}),
@@ -164,6 +163,4 @@ export function getShopifyGlobalBootstrapScript({
       },
     },
   };
-
-  return asInlineScript(initializeShopifyGlobal)(config);
 }
