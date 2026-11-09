@@ -624,6 +624,22 @@ describe("createCustomerSession", () => {
     expect(sessionManager.data).toEqual({ tokens: validSessionData().tokens });
   });
 
+  it("reports a failed token request as token_exchange_failed with the original cause", async () => {
+    const networkError = new TypeError("fetch failed");
+    const customerSession = createSession({ fetch: vi.fn().mockRejectedValue(networkError) });
+    const sessionManager = new TestSessionManager({ pendingLogin: validPendingLogin() });
+    const request = new Request(
+      `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=stored-state`,
+    );
+
+    const error = await customerSession
+      .handleOAuthCallback(sessionManager, createRequestContext(request), request)
+      .catch((reason: unknown) => reason);
+
+    expect(error).toBeInstanceOf(CustomerAccountOAuthError);
+    expect(error).toMatchObject({ code: "token_exchange_failed", cause: networkError });
+  });
+
   it("logs out by clearing Customer Account state and returning Shopify logout URL", async () => {
     const customerSession = createSession();
     const sessionManager = new TestSessionManager(validSessionData());
@@ -1430,5 +1446,46 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(response?.headers.get("set-cookie")).toBe("session=1");
     expect(sessionManager.data).toBeUndefined();
     expect(sessionManager.removeCalls).toEqual([SESSION_KEY]);
+  });
+
+  it.each<[string, (url: RequestInfo | URL, init?: RequestInit) => Promise<Response>]>([
+    ["the token request rejects", () => Promise.reject(new TypeError("fetch failed"))],
+    [
+      "the token request times out",
+      (_url, init) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(init.signal?.reason));
+        }),
+    ],
+    [
+      "the token response is not JSON",
+      () => Promise.resolve(new Response("<html>Bad gateway</html>")),
+    ],
+  ])("redirects to the failed-login page when %s", async (_failure, fetch) => {
+    const defaultTimeoutInMs = 10;
+    const sessionManager = new TestSessionManager({
+      pendingLogin: validPendingLogin(),
+    });
+    const request = new Request(
+      `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=stored-state`,
+    );
+
+    const [response] = await Promise.all([
+      handleShopifyRoutes({
+        request,
+        sessionManager,
+        handlers: [
+          createCustomerAccountServerHandlers({
+            customerSession: createSession({ fetch: vi.fn(fetch), defaultTimeoutInMs }),
+          }),
+        ],
+      }),
+      vi.advanceTimersByTimeAsync(defaultTimeoutInMs),
+    ]);
+
+    expect(response?.status).toBe(303);
+    expect(response?.headers.get("location")).toBe(`${ORIGIN}/account?login=failed`);
+    expect(response?.headers.get("set-cookie")).toBe("session=1");
+    expect(sessionManager.data).toBeUndefined();
   });
 });

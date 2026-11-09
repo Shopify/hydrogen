@@ -1,5 +1,5 @@
 /**
- * The error that a Customer Account API request throws when the request fails. The client throws this error for a non-OK HTTP status, a response that isn't valid GraphQL, a response without data, or a network failure. The OAuth callback also throws this error when its token request times out.
+ * The error that a Customer Account API request throws when the request fails. The client throws this error for a non-OK HTTP status, a response that isn't valid GraphQL, a response without data, or a network failure.
  *
  * Catch this class to handle every Customer Account API failure, including authentication and timeout errors. Read `status`, `requestId`, and `retryAfter` to handle the failure. Network failures have no status or request ID, and only non-OK responses include a retry-after value.
  *
