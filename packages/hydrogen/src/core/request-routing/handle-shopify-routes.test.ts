@@ -531,8 +531,8 @@ describe("handleShopifyRoutes", () => {
   });
 
   it("uses the provided private client for registered cart handlers", async () => {
-    const request = new Request("https://my-app.com/api/cart?cartId=123", {
-      headers: { "oxygen-buyer-ip": "10.0.0.2" },
+    const request = new Request("https://my-app.com/api/cart", {
+      headers: { cookie: "cart=123", "oxygen-buyer-ip": "10.0.0.2" },
     });
     const requestContext = createShopifyRequestContext({
       request,
@@ -562,7 +562,9 @@ describe("handleShopifyRoutes", () => {
   });
 
   it("uses the provided public client for registered cart handlers", async () => {
-    const request = new Request("https://my-app.com/api/cart?cartId=123");
+    const request = new Request("https://my-app.com/api/cart", {
+      headers: { cookie: "cart=123" },
+    });
     const requestContext = createShopifyRequestContext({ request, i18n: DEFAULT_I18N });
     const storefrontClient = createStorefrontClient({
       type: "public",

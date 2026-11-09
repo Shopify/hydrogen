@@ -73,10 +73,10 @@ function mockGqlErrorResponse(errors: Array<{ message: string }>): Response {
   });
 }
 
-function createGetRequest(cookies?: string): Request {
+function createGetRequest(cookies?: string, url = "https://my-app.com/api/cart"): Request {
   const headers: Record<string, string> = {};
   if (cookies) headers.cookie = cookies;
-  return new Request("https://my-app.com/api/cart", {
+  return new Request(url, {
     method: "GET",
     headers,
   });
@@ -408,6 +408,22 @@ describe("createCartServerHandlers", () => {
       const body = await result.json();
       expect(body).toEqual({ cart: null });
       expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("ignores cartId query param for GET cart identity", async () => {
+      mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
+
+      await handleCartRequest(
+        createGetRequest(
+          "cart=cookie-cart",
+          "https://my-app.com/api/cart?cartId=gid%3A%2F%2Fshopify%2FCart%2Fquery-cart",
+        ),
+        defaultConfig,
+      );
+
+      const [, init] = mockFetch.mock.calls[0];
+      const gqlBody = JSON.parse(init.body);
+      expect(gqlBody.variables.id).toBe("gid://shopify/Cart/cookie-cart");
     });
 
     it("throws when SFAPI returns network error", async () => {
