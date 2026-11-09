@@ -101,6 +101,8 @@ import {
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
 import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-account";
+// Only for UCP-backed carts: pass the result as `createCartServerHandlers({ transport })`.
+import { createUcpCartTransport } from "@shopify/hydrogen/ucp";
 ```
 
 ## Verify

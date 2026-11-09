@@ -50,6 +50,8 @@ const CART_FRAGMENT = gql(`
 export const cartHandlers = createCartServerHandlers({ fragment: CART_FRAGMENT });
 ```
 
+`fragment` can't be combined with a `transport` (UCP carts): the combination throws a `TypeError`.
+
 They then appear in cart state. Read a **primitive** in the selector so referential equality can skip re-renders:
 
 ```ts
