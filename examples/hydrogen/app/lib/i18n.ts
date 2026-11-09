@@ -1,25 +1,32 @@
-import type { I18nConfig } from "@shopify/hydrogen";
+import { defineShopifyI18n, type ShopifyLocale } from "@shopify/hydrogen";
 
-export type I18nLocale = I18nConfig & {
-  pathPrefix: string;
+/**
+ * The storefront's locales. `EN-US` is served unprefixed; the others under `/en-ca` and `/fr-ca`.
+ * `createShopifyRequestContext` resolves the request locale from this definition.
+ */
+export const i18n = defineShopifyI18n({
+  defaultLocale: { country: "US", language: "EN" },
+  routing: {
+    type: "pathname",
+    locales: [
+      { country: "CA", language: "EN" },
+      { country: "CA", language: "FR" },
+    ],
+  },
+});
+
+const SCRIPT_TAGS: Partial<Record<ShopifyLocale["language"], string>> = {
+  ZH_CN: "zh-Hans",
+  ZH_TW: "zh-Hant",
 };
 
-const LOCALES_BY_PATH_PART: Record<string, Pick<I18nLocale, "country" | "language">> = {
-  "EN-CA": { country: "CA", language: "EN" },
-  "EN-US": { country: "US", language: "EN" },
-  "FR-CA": { country: "CA", language: "FR" },
-};
-
-export function getLocaleFromRequest(request: Request): I18nLocale {
-  const url = new URL(request.url);
-  const firstPathPart = url.pathname.split("/")[1]?.toUpperCase() ?? "";
-  let pathPrefix = "";
-  let locale = LOCALES_BY_PATH_PART["EN-US"];
-
-  if (LOCALES_BY_PATH_PART[firstPathPart]) {
-    pathPrefix = "/" + firstPathPart;
-    locale = LOCALES_BY_PATH_PART[firstPathPart];
-  }
-
-  return { ...locale, pathPrefix };
+/**
+ * `<html lang>` names the content language, so the market country is not appended. Shopify's
+ * regional codes become BCP 47 tags (`PT_BR` -> `pt-BR`); Chinese differs by script, not region.
+ */
+export function toHtmlLang(language: ShopifyLocale["language"]): string {
+  return (
+    SCRIPT_TAGS[language] ??
+    language.toLowerCase().replace(/_(\w+)$/, (_, region: string) => `-${region.toUpperCase()}`)
+  );
 }

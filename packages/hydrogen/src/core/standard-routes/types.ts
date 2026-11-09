@@ -1,5 +1,3 @@
-import type { I18nConfig } from "../request-context";
-
 /** A path template that starts with `/` and includes the named handle placeholder. */
 type StandardRouteTemplateWithParam<Param extends string> =
   | `/${string}:${Param}`
@@ -125,7 +123,10 @@ export type StandardRouteParamsByName = {
   productInCollection: { collectionHandle: string; productHandle: string };
   search: Record<string, never>;
 };
-export type StandardRouteOptions = Pick<I18nConfig, "pathPrefix">;
+export type StandardRouteOptions = {
+  /** The URL prefix for localized routes, such as `/es-es`. */
+  pathPrefix?: string;
+};
 
 /** The standard route that a storefront URL matches, with its handles, page template name, and templates. */
 export type ShopifyStandardRouteMatch<

@@ -7,7 +7,7 @@ import {
 export function createStorefrontApiClient(storefrontDomain: string): StorefrontClient {
   const requestContext = createShopifyRequestContext({
     request: new Request(storefrontDomain),
-    i18n: { country: "US", language: "EN" },
+    i18n: { defaultLocale: { country: "US", language: "EN" } },
   });
 
   return createStorefrontClient({

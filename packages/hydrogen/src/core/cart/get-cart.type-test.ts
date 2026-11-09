@@ -5,7 +5,7 @@ import { handleShopifyRoutes } from "../request-routing/handle-shopify-routes";
 import { createShopifyRequestContext } from "../request-context";
 import { createCartServerHandlers } from "./server-handlers";
 
-const i18n = { country: "US", language: "EN" } as const;
+const i18n = { defaultLocale: { country: "US", language: "EN" } } as const;
 const requestContext = createShopifyRequestContext({
   request: new Request("https://shop.example.com"),
   i18n,

@@ -13,7 +13,7 @@ import {
   getMockShopDomain,
   getPrivateStorefrontToken,
   getStoreDomain,
-  storefrontConfig,
+  i18n,
   shouldUseMockShop,
 } from "~/lib/shop";
 
@@ -27,8 +27,6 @@ export function createRequestStorefrontClient(
   cache: CacheInstance,
   waitUntil: ExecutionContext["waitUntil"],
 ): RequestStorefrontClient {
-  const { i18n } = storefrontConfig;
-
   if (shouldUseMockShop(env)) {
     return createStorefrontClient({
       type: "public",

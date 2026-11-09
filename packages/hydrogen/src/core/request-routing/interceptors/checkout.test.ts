@@ -14,7 +14,7 @@ type TestStorefrontConfig = {
 };
 
 const PRIVATE_CACHE_CONTROL = "private, no-store, max-age=0, must-revalidate";
-const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
+const DEFAULT_I18N = { defaultLocale: { country: "US", language: "EN" } } as const;
 
 const defaultConfig: TestStorefrontConfig = {
   storeDomain: "test-store.myshopify.com",

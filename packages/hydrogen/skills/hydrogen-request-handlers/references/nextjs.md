@@ -10,7 +10,7 @@ For CSP, see [Content Security Policy](./content-security-policy.md). Call `csp.
 
 The scaffold defaults to a public client; `NEXT_PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` from the app's trusted deployment headers per the buyer-IP guidance from `hydrogen-storefront-client`.
 
-This shape assumes app-owned server-only helpers and values for `customerSession`, `createSessionManager`, and `routeTemplates`. Do not import those names from Hydrogen.
+This shape assumes app-owned server-only helpers and values for `customerSession`, `createSessionManager`, `routeTemplates`, and `i18n` (the `defineShopifyI18n` definition in `lib/i18n.ts`). Do not import those names from Hydrogen.
 
 ```ts
 import {
@@ -22,6 +22,8 @@ import {
 import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-account";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { i18n } from "@/lib/i18n";
+
 const cartHandlers = createCartServerHandlers({ customerSession });
 const customerAccountHandlers = createCustomerAccountServerHandlers({
   customerSession,
@@ -31,7 +33,7 @@ const customerAccountHandlers = createCustomerAccountServerHandlers({
 export async function proxy(request: NextRequest) {
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n,
   });
   const storefrontClient = createStorefrontClient({
     type: "public",
@@ -117,7 +119,7 @@ With `cacheComponents: true`, keep request-time work in an async child under `<S
 
 ## Storefront Client
 
-In server components, use a cached server-only factory that reads `headers()` and creates a request-scoped client (public by default). In `proxy.ts`, use the actual `NextRequest` so URL, signal, and forwarded headers are preserved. `requestContext.getForwardedRequestHeaders()` carries the original URL through `x-storefront-url` for `not-found.tsx`.
+In server components, use a cached server-only factory that reads `headers()` and creates a request-scoped client (public by default). In `proxy.ts`, use the actual `NextRequest` so URL, signal, and forwarded headers are preserved. `requestContext.getForwardedRequestHeaders()` carries the original URL through `x-storefront-url` for `not-found.tsx`, and `createShopifyRequestContext({ request: { headers }, i18n })` reads that same header to resolve `requestContext.locale` in Server Components. Module-scope static clients have no URL; pass `locale: i18n.defaultLocale` there.
 
 When a Server Component or layout reads Customer Account session state under Cache Components, put that read below an explicit dynamic boundary (`connection()` + `<Suspense>`). Do not rely on static route-segment config that Cache Components rejects.
 

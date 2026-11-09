@@ -25,7 +25,8 @@ import {
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
 } from "../core/headers";
-import type { I18nConfig, ShopifyRequestContext } from "../core/request-context";
+import type { ShopifyLocale } from "../core/i18n/types";
+import type { ShopifyRequestContext } from "../core/request-context";
 import { normalizeStoreDomain } from "../core/url";
 import type { AnyStorefrontQueryString } from "../graphql";
 import { StorefrontApiError, StorefrontTimeoutError } from "./errors";
@@ -201,7 +202,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       throw new Error(`Unsupported client type: ${clientType}`);
   }
 
-  const i18n = requestContext.i18n;
+  const locale = requestContext.locale;
   const requestHeaders = new Headers(staticHeaders);
   requestContext.applyStorefrontRequestHeaders(requestHeaders);
 
@@ -243,7 +244,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       );
     }
 
-    const variables = buildVariables(queryText, opts.variables, i18n);
+    const variables = buildVariables(queryText, opts.variables, locale);
     const externalSignals = [requestContext.signal, opts.signal].filter(
       (signal): signal is AbortSignal => Boolean(signal),
     );
@@ -381,7 +382,8 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
 
   const client: StorefrontClient = {
     type: clientType,
-    i18n,
+    i18n: locale,
+    locale,
     graphql: graphql as StorefrontClient["graphql"],
     apiUrl,
     storeUrl,
@@ -406,12 +408,12 @@ function getLocationOrigin(location: string | null, baseUrl: string): string | u
 function buildVariables(
   queryText: string,
   userVariables: Record<string, unknown> | undefined,
-  resolvedI18n: I18nConfig,
+  locale: ShopifyLocale,
 ): Record<string, unknown> {
   const variables: Record<string, unknown> = { ...userVariables };
 
   for (const name of getI18nVariableNames(queryText)) {
-    variables[name] = resolvedI18n[name];
+    variables[name] = locale[name];
   }
 
   return variables;
