@@ -16,7 +16,8 @@ export async function useServerRenderedCart() {
     { key: "cart" },
   );
 
-  // `useFetch` runs `/api/cart` as its own request, so the cart route's private headers never reach this page.
+  // `useFetch` runs `/api/cart` as its own request with its own request context, so neither the
+  // cart route's private headers nor the cart handler's personalized mark reach this page.
   if (event && data.value?.cart) {
     const { shopifyRequestContext } = event.context;
     if (!shopifyRequestContext) {

@@ -61,6 +61,8 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 }
 ```
 
+When the request has a cart ID, `cartHandlers.get()` marks the request context personalized before it fetches, so `requestContext.applyResponseHeaders()` keeps the page out of shared caches whether the shell awaits or streams the cart.
+
 Wrap cart content that needs the full cart in a local Suspense boundary and read it with `useSuspenseCart()`:
 
 ```tsx
