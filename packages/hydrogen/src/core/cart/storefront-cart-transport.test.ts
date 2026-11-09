@@ -38,6 +38,10 @@ function mutationPayload(cart: unknown = MOCK_CART) {
 }
 
 describe("storefrontCartTransport", () => {
+  it("doesn't support seller carts", () => {
+    expect(storefrontCartTransport().sellers).toBe(false);
+  });
+
   describe("getCart", () => {
     it("queries the cart with the custom fragment and returns the cart and headers", async () => {
       const headers = new Headers({ "server-timing": "x" });

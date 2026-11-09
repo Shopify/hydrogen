@@ -13,6 +13,7 @@ const CART = { ...EMPTY_CART_DATA, id: CART_ID };
 function createTransport(ordering: CartTransport["ordering"] = "sequential") {
   const transport = {
     ordering,
+    sellers: false,
     getCart: vi.fn().mockResolvedValue({ cart: CART, headers: new Headers() }),
     updateCart: vi.fn().mockResolvedValue({
       cart: CART,

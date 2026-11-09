@@ -51,6 +51,8 @@ type CartChanges = Omit<UpdateCartPayload, "cartId">;
 /**
  * Creates a cart transport that keeps carts in your store's Universal Commerce Protocol (UCP) cart, through the store's UCP MCP endpoint at `/api/ucp/mcp`. Pass the transport to `createCartServerHandlers`.
  *
+ * The transport also keeps one cart per seller: the handlers' `/api/cart?seller=<handle>` route sends that seller's requests to `https://<handle>.myshopify.com/api/ucp/mcp`.
+ *
  * The transport sends requests as an anonymous agent with your agent profile, and never forwards the customer's cookies. Carts have no buyer identity, note, cart attributes, line attributes, or selling plans: those changes return a user error and leave the cart unchanged. The cart store sends one change at a time to a UCP cart, because each UCP update replaces the whole cart.
  *
  * Use the transport only on the server. The function throws in a browser, and throws a `TypeError` when `agentProfile` isn't a valid URL.
@@ -78,8 +80,8 @@ export function createUcpCartTransport({
   }
   const profile = new URL(agentProfile).href;
 
-  const session = ({ storefrontClient }: CartTransportContext): UcpSession => ({
-    call: createUcpToolCaller(profile, storefrontClient),
+  const session = ({ storefrontClient, seller }: CartTransportContext): UcpSession => ({
+    call: createUcpToolCaller(profile, storefrontClient, seller),
     context: {
       address_country: storefrontClient.i18n.country,
       language: storefrontClient.i18n.language,
@@ -88,6 +90,7 @@ export function createUcpCartTransport({
 
   return createCartServerTransport({
     ordering: "sequential",
+    sellers: true,
     getCart: async ({ cartId }, ctx) => {
       const { call } = session(ctx);
       const cart = await getCart(call, cartId);

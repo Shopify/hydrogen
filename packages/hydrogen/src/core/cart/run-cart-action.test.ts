@@ -25,7 +25,7 @@ function createTransport(read: Partial<CartReadResult> = {}) {
   return {
     getCart,
     updateCart,
-    transport: { ordering: "concurrent" as const, getCart, updateCart },
+    transport: { ordering: "concurrent" as const, sellers: false, getCart, updateCart },
   };
 }
 

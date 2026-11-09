@@ -93,8 +93,11 @@ afterEach(() => {
 });
 
 describe("createUcpCartTransport", () => {
-  it("creates a sequential transport", () => {
-    expect(createTransport().ordering).toBe("sequential");
+  it("creates a sequential transport that supports sellers", () => {
+    const transport = createTransport();
+
+    expect(transport.ordering).toBe("sequential");
+    expect(transport.sellers).toBe(true);
   });
 
   it("throws in a browser", () => {
@@ -136,6 +139,29 @@ describe("UCP requests", () => {
       },
     });
   });
+
+  it("sends a seller's requests to the seller's myshopify.com UCP endpoint", async () => {
+    stubUcp(defaultRoutes);
+
+    await createTransport().getCart({ cartId: CART_ID }, { ...createContext(), seller: "raycon" });
+
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+      "https://raycon.myshopify.com/api/ucp/mcp",
+      "https://raycon.myshopify.com/api/ucp/mcp",
+    ]);
+  });
+
+  it.each(["evil.com/x#", "a@b", "Raycon", "a.b"])(
+    "rejects a seller %j whose endpoint isn't <seller>.myshopify.com",
+    async (seller) => {
+      stubUcp(defaultRoutes);
+
+      await expect(
+        createTransport().getCart({ cartId: CART_ID }, { ...createContext(), seller }),
+      ).rejects.toThrow(TypeError);
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
 
   it("sends a new idempotency key with each cart write and none with reads", async () => {
     stubUcp(defaultRoutes);
