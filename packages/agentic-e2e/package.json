@@ -3,7 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "lint": "oxlint .",
+    "test": "pnpm run test:unit",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run --dir src --exclude \"**/*.integration.test.ts\"",
+    "test:integration": "vitest run --dir src .integration.test.ts --passWithNoTests"
+  },
   "dependencies": {
     "@browserbasehq/stagehand": "3.7.3",
     "@shopify/hydrogen": "workspace:*",
