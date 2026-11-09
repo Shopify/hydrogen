@@ -18,9 +18,15 @@ export type {
   ShopifyRouteHandlerResult,
   ShopifyRouteJsonResult,
   ShopifyRouteRedirectResult,
+  ShopifyRouteResponseResult,
   ShopifyRedirectStatus,
   ShopifyRouteSessionManager,
 } from "./route-types";
+
+/** `method` value that matches every HTTP method. */
+export const ANY_METHOD = "*";
+/** `pathname` suffix that turns a handler into a prefix match. */
+export const WILDCARD_PATHNAME_SUFFIX = "/*";
 
 const HTTP_OK_STATUS = 200;
 const HTTP_SEE_OTHER_STATUS = 303;
@@ -34,7 +40,7 @@ const VALID_REDIRECT_STATUSES = [
  * Creates a custom endpoint in your app for one pathname and HTTP method. Collect handlers in an
  * object, and pass an array of handler objects to `handleShopifyRoutes` in its `handlers` option.
  *
- * Use paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, or error result from the handler. Hydrogen sends a JSON result with status `200`, an error result with status `400` by default, and a redirect result with status `303` by default. When a redirect result uses a status other than `301`, `302`, `303`, 307, or 308, the promise from `handleShopifyRoutes` rejects.
+ * Use paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, error, or response result from the handler. Hydrogen sends a JSON result with status `200`, an error result with status `400` by default, and a redirect result with status `303` by default. When a redirect result uses a status other than `301`, `302`, `303`, 307, or 308, the promise from `handleShopifyRoutes` rejects.
  *
  * Annotate the handler's context parameter with only the fields the handler reads, for example
  * `Omit<ShopifyRouteHandlerContext, "sessionManager">`, so apps without a session manager can
@@ -47,9 +53,9 @@ const VALID_REDIRECT_STATUSES = [
  * stand-in that throws when the handler uses it. A check such as `if (sessionManager)` is always
  * true, so don't use it as a fallback.
  *
- * @param pathname The exact URL pathname that the handler matches. Hydrogen doesn't match path parameters or prefixes.
- * @param method The HTTP method that the handler matches, in uppercase, such as `POST`.
- * @param handler The function that receives the request, its context, the session manager, and the Storefront API client, and returns a JSON, redirect, or error result.
+ * @param pathname The URL pathname that the handler matches. A pathname that ends with `/*`, such as `/a/*`, matches that path and every path under it; exact pathnames win over these. Hydrogen doesn't match path parameters.
+ * @param method The HTTP method that the handler matches, in uppercase, such as `POST`, or `*` to match every method.
+ * @param handler The function that receives the request, its context, the session manager, and the Storefront API client, and returns a JSON, redirect, error, or response result.
  * @returns The handler to add to a handler object.
  * @publicDocs
  */
@@ -85,10 +91,12 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
   const routeHandlers = handlers.flatMap((group) => Object.values(group));
   if (routeHandlers.length === 0) return null;
 
-  const pathMatches = routeHandlers.filter((entry) => entry.pathname === url.pathname);
+  const pathMatches = matchRouteHandlers(routeHandlers, url.pathname);
   if (pathMatches.length === 0) return null;
 
-  const match = pathMatches.find((candidate) => candidate.method === request.method);
+  const match = pathMatches.find(
+    (candidate) => candidate.method === request.method || candidate.method === ANY_METHOD,
+  );
   if (!match)
     return Promise.resolve(
       new Response("Method Not Allowed", { status: HTTP_METHOD_NOT_ALLOWED_STATUS }),
@@ -119,7 +127,27 @@ function createMissingSessionManager(pathname: string): ShopifyRouteSessionManag
   };
 }
 
+/** Literal pathnames match exactly and win over `/*` wildcard pathnames. */
+function matchRouteHandlers(
+  routeHandlers: ShopifyRouteHandler[],
+  pathname: string,
+): ShopifyRouteHandler[] {
+  const exactMatches = routeHandlers.filter((handler) => handler.pathname === pathname);
+  if (exactMatches.length > 0) return exactMatches;
+
+  return routeHandlers.filter((handler) => matchesWildcardPathname(handler.pathname, pathname));
+}
+
+function matchesWildcardPathname(handlerPathname: string, pathname: string): boolean {
+  if (!handlerPathname.endsWith(WILDCARD_PATHNAME_SUFFIX)) return false;
+
+  const base = handlerPathname.slice(0, -WILDCARD_PATHNAME_SUFFIX.length);
+  return pathname === base || pathname.startsWith(`${base}/`);
+}
+
 function createShopifyRouteResponse(result: ShopifyRouteHandlerResult, request: Request): Response {
+  if (result.type === "response") return result.response;
+
   if (result.type === "redirect") {
     const headers = new Headers(result.headers);
     headers.set("location", resolveRedirectLocation(result.location, request));

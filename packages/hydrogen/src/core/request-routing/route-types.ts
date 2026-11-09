@@ -80,13 +80,33 @@ export type ShopifyRouteErrorResult<TError extends ShopifyRouteError = ShopifyRo
   headers?: HeadersInit;
 };
 
-/** The JSON, redirect, or error result that a route handler returns. */
+/**
+ * A route handler result that Hydrogen sends as-is, for handlers that pass a response through or
+ * serve something other than JSON. Hydrogen applies request-context response headers on top.
+ */
+export type ShopifyRouteResponseResult = {
+  /** Set to `response` to send a fully formed response. */
+  type: "response";
+  /** The response that Hydrogen sends. */
+  response: Response;
+};
+
+/** The JSON, redirect, error, or response result that a route handler returns. */
 export type ShopifyRouteHandlerResult<
   TData = unknown,
   TError extends ShopifyRouteError = ShopifyRouteError,
-> = ShopifyRouteJsonResult<TData> | ShopifyRouteRedirectResult | ShopifyRouteErrorResult<TError>;
+> =
+  | ShopifyRouteJsonResult<TData>
+  | ShopifyRouteRedirectResult
+  | ShopifyRouteErrorResult<TError>
+  | ShopifyRouteResponseResult;
 
-/** A route handler function that also carries the pathname and HTTP method it matches. */
+/**
+ * A route handler function that also carries the pathname and HTTP method it matches. `pathname`
+ * matches exactly, or as a prefix when it ends with `/*` (`/a/*` matches `/a` and `/a/anything`);
+ * literal pathnames win over wildcards. `method` matches one HTTP method, or every method when it
+ * is `"*"`.
+ */
 export type CallableRouteHandler<
   TContext,
   TResult,

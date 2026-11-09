@@ -30,7 +30,9 @@ Request
   -> framework 404 page
 ```
 
-`handleShopifyRoutes` owns Hydrogen routes the framework should never see: SFAPI proxy URLs, the generic `/__shopify/*` API proxy, `/.well-known/ucp`, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, UCP buy permalinks like `/buy/{itemId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/api/ucp/mcp`, `/graphiql` in development, Liquid-style `?variant=<numeric id>` product URLs, and app-registered handler groups such as `createCartServerHandlers()` or `createCustomerAccountServerHandlers()`.
+`handleShopifyRoutes` owns Hydrogen routes the framework should never see: SFAPI proxy URLs, the generic `/__shopify/*` API proxy, `/.well-known/ucp`, `/checkout`, cart permalinks like `/cart/{variantId}:{quantity}`, UCP buy permalinks like `/buy/{itemId}:{quantity}`, AJAX cart URLs like `/cart.js` and `/cart/add.js`, `/api/mcp`, `/api/ucp/mcp`, `/graphiql` in development, Liquid-style `?variant=<numeric id>` product URLs, and app-registered handler groups such as `createCartServerHandlers()`, `createCustomerAccountServerHandlers()`, or `createAppProxyServerHandlers()`.
+
+Handler groups may register a wildcard pathname such as `/a/*` (matches `/a` and everything under it; literal pathnames win) and the any-method marker `"*"`. Handlers that pass through or serve non-JSON bodies return `{ type: "response", response }`.
 
 ## UCP Business Profile
 
@@ -39,6 +41,27 @@ Request
 Successful profiles and `304` responses use public caching with a 60-second freshness lifetime and a 300-second stale-if-error window. Unpublished profiles return a JSON `404`, and other non-JSON upstream errors become JSON errors with the upstream status. Redirects and non-JSON successes return `502`; fetch timeouts return `504`. All errors use `Cache-Control: no-store`. Methods other than `GET` and `HEAD` continue to framework routing.
 
 Serve the storefront over HTTPS and wire `handleShopifyRoutes` before framework routing so the profile is available without an app-owned route. Return the matched response directly without adding session headers or applying request-context headers again.
+
+## App Proxies
+
+Shopify apps that render pages or endpoints on the storefront (Digital Downloads, reviews, wishlists, loyalty, subscriptions portals) do it through app proxy URLs (`/apps/*`, `/a/*`, `/community/*`, `/tools/*`). Register the app proxy handlers when the store has such apps installed:
+
+```ts
+import { createAppProxyServerHandlers } from "@shopify/hydrogen";
+
+// Limit `prefixes` to the ones the store's apps use; omit it to proxy all four.
+const appProxyHandlers = createAppProxyServerHandlers({ prefixes: ["a"] });
+
+handleShopifyRoutes({
+  request,
+  requestContext,
+  storefrontClient,
+  routeTemplates,
+  handlers: [cartHandlers, appProxyHandlers],
+});
+```
+
+The app's response is passed through unchanged (status, body, `content-type`, `content-disposition`, redirects) for every HTTP method. Hydrogen adds `_fd=0` upstream so Shopify does not redirect back to the primary domain, and rewrites store-origin redirects onto the storefront origin. Register it only when the store needs it, and prefer limiting `prefixes`. A handler registered at a literal pathname under a proxied prefix still wins. Like Hydrogen's other proxies, the group answers requests with a `callback` query parameter (JSONP) with `400`, so app widgets that load data through JSONP don't work, and app `Set-Cookie` headers aren't passed through on `GET` requests or HTML pages, so apps that keep their own cookie session may not work. The app's `Cache-Control` is kept as sent. The visitor's cookies are forwarded upstream, so if an app renders customer-specific pages, pass `personalized: true` to make every proxied response private and uncacheable. Link to app proxy pages with a plain `<a href>` (a full document navigation), not the framework's client-side link component: the proxy runs on the server, so a client-side route change would reach the framework 404 instead.
 
 ## Variant Id Redirects
 
@@ -75,11 +98,11 @@ const redirect = await handleShopifyRedirects({
 - When creating a private client, resolve trusted `buyerIp` first and pass it to `createShopifyRequestContext`. Use the `hydrogen-storefront-client` buyer-IP guidance for the app's deployment.
 - Create `requestContext` with `createShopifyRequestContext({ request, i18n, buyerIp })` where buyer context exists and the framework exposes a real `Request`; use `request: { headers }` only when no `Request` exists.
 - Pass the same request-scoped `requestContext` and `storefrontClient` into `handleShopifyRoutes` and registered handler groups, plus the same request-scoped `sessionManager` when a handler needs one.
-- `handleShopifyRoutes` requires `sessionManager` only when a registered handler reads the session: Customer Account handlers, cart handlers created with `customerSession`, or custom handlers whose context includes it. Apps whose handlers never read the session, such as cart and predictive search only, can omit it. The requirement comes from the handler types, so a handler list that conditionally includes Customer Account handlers still needs a session manager on every request; when the account handlers are not registered, an in-memory session manager is enough, as in the starter templates. Annotate custom `createShopifyRouteHandler` contexts as `Omit<ShopifyRouteHandlerContext, "sessionManager">` when they do not use the session. Hydrogen infers the context only from an annotated parameter: a handler with no parameter or an unannotated destructured parameter gets the full context and still requires `sessionManager`. A context that declares `sessionManager`, even as optional, requires one. Optional gives no runtime fallback: when an untyped caller omits it, the handler receives a stand-in that throws on use, so `if (sessionManager)` is always true.
+- `handleShopifyRoutes` requires `sessionManager` only when a registered handler reads the session: Customer Account handlers, cart handlers created with `customerSession`, or custom handlers whose context includes it. Apps whose handlers never read the session, such as cart, predictive search, and app proxy handlers only, can omit it. The requirement comes from the handler types, so a handler list that conditionally includes Customer Account handlers still needs a session manager on every request; when the account handlers are not registered, an in-memory session manager is enough, as in the starter templates. Annotate custom `createShopifyRouteHandler` contexts as `Omit<ShopifyRouteHandlerContext, "sessionManager">` when they do not use the session. Hydrogen infers the context only from an annotated parameter: a handler with no parameter or an unannotated destructured parameter gets the full context and still requires `sessionManager`. A context that declares `sessionManager`, even as optional, requires one. Optional gives no runtime fallback: when an untyped caller omits it, the handler receives a stand-in that throws on use, so `if (sessionManager)` is always true.
 - Call `handleShopifyRoutes` without awaiting it immediately. It returns `null` synchronously when no route matches; only return or await the promise after checking that it is truthy.
 - If the app has a request-level `try/catch` that converts errors into a `Response`, use `return await shopifyRoute` inside that boundary so rejected route promises reach the same error handling as synchronous setup failures. If the framework owns request error handling, return `shopifyRoute` directly. Do not add an inline `.catch()` unless the matched route intentionally needs different error handling.
 - Pass `request` and `storefrontClient` into `handleShopifyRedirects`; it does not receive a session manager.
-- Pass registered handler groups explicitly, for example `handlers: [cartHandlers, customerAccountHandlers]`.
+- Pass registered handler groups explicitly, for example `handlers: [cartHandlers, appProxyHandlers, customerAccountHandlers]`.
 - Pass `routeTemplates` into `handleShopifyRoutes` so Liquid-parity `?variant=` product links resolve to canonical option params instead of passing through as ordinary product-page requests.
 - `handleShopifyRoutes` and `handleShopifyRedirects` apply request-context response headers before returning matched Shopify responses. Return those responses directly without calling `requestContext.applyResponseHeaders()` again.
 - Link and submit to Customer Account routes (`/account/login`, `/account/authorize`, `/account/refresh`, `/account/logout`) with plain HTML `<a>`/`<form>`, never the framework's client-side navigation component (`<Form>`/`<Link>` in React Router, `next/link` in Next.js, `NuxtLink` in Nuxt). The login and logout handlers return raw HTTP redirects to external Shopify URLs, which client-nav cannot process.
@@ -93,6 +116,7 @@ Use public package exports:
 
 ```ts
 import {
+  createAppProxyServerHandlers,
   createCartServerHandlers,
   createPredictiveSearchServerHandlers,
   createShopifyRequestContext,
@@ -117,3 +141,4 @@ Run the app in dev and production modes, then check:
 8. `GET /products/{handle}?variant={numeric id}` returns a 302 to the option-params URL when `routeTemplates` is passed to `handleShopifyRoutes`; `?variant=garbage` falls through to the product page.
 9. Cart, Customer Account, and consent responses preserve eligible `Set-Cookie` headers. Consent responses remain private and non-cacheable even when personal state is returned only in the body.
 10. Authenticated Customer Account responses do not preserve public or CDN cache-control headers.
+11. With `createAppProxyServerHandlers()` registered, `GET /a/<app-subpath>` returns the app's response (not the framework 404) and a redirect returned by the app lands on the storefront origin. Without it, the same path reaches the framework router.
