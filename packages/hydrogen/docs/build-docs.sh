@@ -9,7 +9,7 @@ fi
 # src/vue is left out because its exports share names with src/react, and generate-docs keeps only one.
 generate-docs \
   --overridePath ./docs/typeOverride.json \
-  --input ./src/cli ./src/client ./src/core ./src/customer-account ./src/graphql ./src/react ./src/ts-plugin ./src/vite \
+  --input ./src/cli ./src/client ./src/core ./src/customer-account ./src/graphql ./src/react ./src/ts-plugin ./src/ucp ./src/vite \
   --output "$OUTPUT_DIR"
 
 # Symbol-keyed members come out as `__@name@<id>`, where <id> is a TypeScript checker counter

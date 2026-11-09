@@ -51,6 +51,7 @@ const FRAMEWORK_BROWSER_ENTRY_DECLARATIONS = [
 const PUBLIC_ENTRY_DECLARATIONS = [
   ...BROWSER_ENTRY_DECLARATIONS,
   "dist/customer-account/index.d.mts",
+  "dist/ucp/index.d.mts",
 ] as const;
 
 describe("package metadata", () => {
