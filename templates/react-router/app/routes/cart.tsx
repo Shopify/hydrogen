@@ -2,7 +2,7 @@ import { ShopPayButton } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
 
 import { publishCartViewed } from "~/components/AnalyticsTrackers";
-import { CartLineItem } from "~/components/CartDrawer";
+import { CartLineItem, SellerCartSections, useHasSellerLines } from "~/components/CartDrawer";
 import { useCart } from "~/lib/cart";
 import { formatPrice } from "~/lib/money";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
@@ -17,6 +17,7 @@ export default function CartRoute() {
   const cart = useCart((state) => state.data);
   const loading = useCart((state) => state.loading);
   const lines = cart.lines.nodes;
+  const hasSellerLines = useHasSellerLines();
 
   useEffect(() => {
     publishCartViewed(cart);
@@ -32,7 +33,7 @@ export default function CartRoute() {
         Cart
       </h1>
       {loading ? <p className="text-on-surface-secondary">Loading cart…</p> : null}
-      {!loading && lines.length === 0 ? (
+      {!loading && lines.length === 0 && !hasSellerLines ? (
         <div>
           <p className="text-on-surface font-medium">Your cart is empty.</p>
           <p className="text-on-surface-secondary mt-2 text-sm">
@@ -71,6 +72,9 @@ export default function CartRoute() {
           </aside>
         </div>
       ) : null}
+      <div className="lg:w-2/3">
+        <SellerCartSections emptyCartFocusId="cart-page-title" headingLevel="h2" />
+      </div>
     </main>
   );
 }

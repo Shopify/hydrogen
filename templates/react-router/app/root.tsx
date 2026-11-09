@@ -8,6 +8,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  type ShouldRevalidateFunction,
   useNavigate,
   useRouteLoaderData,
 } from "react-router";
@@ -91,7 +92,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const env = context.get(envContext);
   const storefrontClient = context.get(storefrontClientContext);
   const [cartResult, layout] = await Promise.all([
-    cartHandlers.get({ storefrontClient, request }),
+    cartHandlers.get({ storefrontClient, request, includeSellers: true }),
     loadRootLayout(storefrontClient),
   ]);
 
@@ -102,6 +103,13 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     currency: layout.currency,
   };
 }
+
+// Reading the cart re-reads every seller's cart, so plain navigations keep the cart the
+// browser store already holds. Form submissions still revalidate.
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+  formMethod,
+  defaultShouldRevalidate,
+}) => (formMethod ? defaultShouldRevalidate : false);
 
 export function Layout({ children }: { children: ReactNode }) {
   const nonce = useNonce();

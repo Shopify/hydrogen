@@ -7,8 +7,12 @@ import {
   type CollectionCardData,
 } from "~/components/CollectionCard";
 import { HomeHero } from "~/components/HomeHero";
+import { ListenNow } from "~/components/ListenNow";
 import { ProductCard, PRODUCT_CARD_FRAGMENT, type ProductCardData } from "~/components/ProductCard";
+import { envContext } from "~/lib/env";
+import { searchGlobalCatalog } from "~/lib/global-catalog";
 import { selectHomeHero } from "~/lib/home-hero";
+import { getMockShopDomain, getStoreDomain, shouldUseMockShop } from "~/lib/shop";
 import { storefrontClientContext } from "~/lib/storefront";
 import {
   FALLBACK_SHOP_NAME,
@@ -68,8 +72,16 @@ export function meta({ matches }: Route.MetaArgs) {
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
+  const env = context.get(envContext);
   const storefrontClient = context.get(storefrontClientContext);
-  const { data } = await storefrontClient.graphql(HOME_QUERY);
+  const [{ data }, listenNowItems] = await Promise.all([
+    storefrontClient.graphql(HOME_QUERY),
+    searchGlobalCatalog({
+      query: "headphones",
+      limit: 9,
+      homeStoreDomain: shouldUseMockShop(env) ? getMockShopDomain(env) : getStoreDomain(env),
+    }),
+  ]);
 
   // New arrivals: the most recently created products (by creation date, not
   // publication date), newest first, in the order the Storefront API returns.
@@ -83,6 +95,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     featuredProducts,
     featuredCollections,
     heroCollections,
+    listenNowItems,
   };
 }
 
@@ -166,6 +179,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     <main className="flex-1" id="main-content" tabIndex={-1}>
       <HomeHero hero={hero} />
       <NewArrivals products={loaderData.featuredProducts} />
+      <ListenNow items={loaderData.listenNowItems} />
       <ShopByCategory collections={loaderData.featuredCollections} />
     </main>
   );
