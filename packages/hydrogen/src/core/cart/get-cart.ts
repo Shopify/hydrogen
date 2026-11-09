@@ -83,6 +83,8 @@ export function getCartId(input: CartIdSource): string | null {
  *
  * When the cart ID is `null`, the function returns a `null` cart without a network request. The function throws when the Storefront API request fails.
  *
+ * The function doesn't mark the response as personalized. When a page renders the cart, call `markResponseAsPersonalized()` on the request context, or read the cart with the GET handler from `createCartServerHandlers()`, which marks the response for you.
+ *
  * @param cartId The ID of the cart to fetch, or `null` to skip the request.
  * @param storefront The Storefront API client that runs the cart query.
  * @param cartQuery A cart query document that replaces the default cart query.
@@ -129,6 +131,8 @@ export async function getCart<TQuery extends AnyStorefrontQueryString = typeof c
  * Pass a custom cart query to get a cart with that query's fields. Declare an `$id` variable in the query. The function passes the cart ID as the query's only variable.
  *
  * When the cart ID is `null`, the function returns a `null` cart without a network request. The function throws when the Storefront API request fails.
+ *
+ * The function doesn't mark the response as personalized. When a page renders the cart, call `markResponseAsPersonalized()` on the request context, or read the cart with the GET handler from `createCartServerHandlers()`, which marks the response for you.
  *
  * @example
  * ```ts

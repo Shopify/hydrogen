@@ -66,7 +66,7 @@ After Add to cart, the suite must be able to inspect the added line in a cart dr
 
 Render the cart on the server. If the cart loads in the browser, an Add to cart that starts before the load finishes builds on an empty cart, and the stock-limit rollback test fails.
 
-A document that contains a server-rendered cart holds buyer-specific state. Give it the same cache policy as the cart GET route: `Cache-Control: private, no-store, max-age=0, must-revalidate`, with no `Surrogate-Control` or vendor `*-Cache-Control` headers. Otherwise a shared cache can serve one buyer's cart to another buyer. Call `requestContext.markResponseAsPersonalized()` on requests that render a cart, and `requestContext.applyResponseHeaders()` applies that policy.
+A document that contains a server-rendered cart holds buyer-specific state. Give it the same cache policy as the cart GET route: `Cache-Control: private, no-store, max-age=0, must-revalidate`, with no `Surrogate-Control` or vendor `*-Cache-Control` headers. Otherwise a shared cache can serve one buyer's cart to another buyer. Call `requestContext.markResponseAsPersonalized()` on requests that render a cart, and `requestContext.applyResponseHeaders()` applies that policy. `cartHandlers.get()` marks the response for you when the request has a cart ID; a manual call is needed only when using `getCart()` directly or when the page fetches `/api/cart` as a separate sub-request, such as Nuxt `useFetch`.
 
 Each line must expose:
 
