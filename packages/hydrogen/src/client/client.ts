@@ -71,6 +71,8 @@ const REQUEST_IDENTITY_HEADERS = new Set([
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const CACHE_ENABLED_GRAPHQL_CLIENTS = new WeakSet<StorefrontClient["graphql"]>();
 const SHOULD_CACHE_RESULT = Symbol();
+const PRIVATE_RESPONSE_DIRECTIVES = new Set(["private", "no-store"]);
+const STOREFRONT_PRIVATE_RESPONSE_PERSONALIZATION_REASON = "storefront-api-private-response";
 
 type ShouldCacheResult = (body: object) => boolean;
 
@@ -312,6 +314,11 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       if (hydrogenCacheStatus !== "hit") {
         requestContext.captureSubrequestHeaders(responseHeaders);
       }
+      if (isPrivateResponse(responseHeaders)) {
+        requestContext.markResponseAsPersonalized(
+          STOREFRONT_PRIVATE_RESPONSE_PERSONALIZATION_REASON,
+        );
+      }
 
       if (!response.ok) {
         const bodyHint = await response.text().catch(() => "");
@@ -431,8 +438,8 @@ function createStorefrontCacheOptions(
   return {
     key: createStorefrontCacheKey(apiUrl, init),
     strategy,
-    shouldCacheResponse: async ({ json }: FetchCacheResponseContext) => {
-      if (!json) return false;
+    shouldCacheResponse: async ({ headers, json }: FetchCacheResponseContext) => {
+      if (!json || isPrivateResponse(headers)) return false;
 
       const body = await json().catch(() => undefined);
       if (typeof body !== "object" || body == null || Array.isArray(body) || "errors" in body) {
@@ -446,6 +453,17 @@ function createStorefrontCacheOptions(
     // disabled the client timeout to own the foreground one.
     backgroundSignal: () => AbortSignal.timeout(backgroundTimeoutInMs),
   };
+}
+
+function isPrivateResponse(headers: Headers): boolean {
+  return (
+    headers
+      .get("cache-control")
+      ?.split(",")
+      .some((directive) =>
+        PRIVATE_RESPONSE_DIRECTIVES.has(directive.split("=")[0]?.trim().toLowerCase() ?? ""),
+      ) ?? false
+  );
 }
 
 function createStorefrontCacheKey(apiUrl: string, init: PlainRequestInit) {

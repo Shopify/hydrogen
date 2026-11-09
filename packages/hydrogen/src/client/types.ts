@@ -101,7 +101,10 @@ type CommonOptions = {
   defaultTimeoutInMs?: number;
   /**
    * The cache that stores query results. The client caches only queries that pass a `cache`
-   * strategy. The client never caches mutations or results with GraphQL errors.
+   * strategy. The client never caches mutations, results with GraphQL errors, or responses whose
+   * `Cache-Control` header contains `private` or `no-store`. A response with either directive also
+   * makes the final response private when you call `applyResponseHeaders()`, whether or not the
+   * query passes a `cache` strategy.
    */
   // Mirrored by the `cache?: CacheConfig` inference hole in
   // CreateStorefrontClientArgs — keep the key and type in sync.
