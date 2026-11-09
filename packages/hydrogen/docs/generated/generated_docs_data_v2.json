@@ -3677,23 +3677,23 @@
     "src/core/cart/get-cart.ts": {
       "filePath": "src/core/cart/get-cart.ts",
       "name": "GetCartIdGeneratedType",
-      "description": "Reads the cart ID from a request.\n\nThe function checks the `cartId` search parameter first, then the `cart` cookie. The function returns a search parameter value unchanged and adds the `gid://shopify/Cart/` prefix to a cookie value.",
+      "description": "Reads the cart ID from the `cart` cookie of a request.\n\nThe function adds the `gid://shopify/Cart/` prefix to the cookie value.",
       "isPublicDocs": true,
       "params": [
         {
           "name": "input",
-          "description": "The request or request context that carries the cart ID.",
+          "description": "The request or request context that carries the cart cookie.",
           "value": "CartIdSource",
           "filePath": "src/core/cart/get-cart.ts"
         }
       ],
       "returns": {
         "filePath": "src/core/cart/get-cart.ts",
-        "description": "The cart ID, or `null` when neither the search parameter nor the cookie has one.",
+        "description": "The cart ID, or `null` when the request has no `cart` cookie.",
         "name": "string | null",
         "value": "string | null"
       },
-      "value": "export function getCartId(input: CartIdSource): string | null {\n  if (input.url) {\n    const parsedUrl = new URL(input.url, \"https://hydrogen.local\");\n    const cartId = parsedUrl.searchParams.get(\"cartId\");\n    if (cartId) return cartId;\n  }\n\n  return getCartIdFromCookie(input);\n}",
+      "value": "export function getCartId(input: CartIdSource): string | null {\n  return getCartIdFromCookie(input);\n}",
       "examples": [
         {
           "title": "Example",
@@ -3713,8 +3713,8 @@
       "filePath": "src/core/cart/get-cart.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CartIdSource",
-      "value": "Request | Pick<ShopifyRequestContext, \"cookie\" | \"url\">",
-      "description": "A request, or a request context with a `Cookie` header and a URL."
+      "value": "Request | Pick<ShopifyRequestContext, \"cookie\">",
+      "description": "A request, or a request context with a `Cookie` header."
     }
   },
   "GetCartGeneratedType": {
