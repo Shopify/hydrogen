@@ -832,14 +832,20 @@ describe("shopify scripts", () => {
     expect(loadScript).not.toHaveBeenCalled();
   });
 
-  it("loads the WebMCP CDN script with model context", async () => {
+  it.each([undefined, "test-nonce", ""])("loads WebMCP with nonce %s", async (nonce) => {
     (navigator as any).modelContext = { registerTool: vi.fn() };
 
-    await expect(initializeShopifyScripts({ routes: emptyRouteTemplates })).resolves.toBe(true);
+    await expect(initializeShopifyScripts({ routes: emptyRouteTemplates, nonce })).resolves.toBe(
+      true,
+    );
 
     expect(loadScript).toHaveBeenCalledWith(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT, {
       in: "head",
-      attributes: { id: "shopify-webmcp", crossorigin: "anonymous" },
+      attributes: {
+        id: "shopify-webmcp",
+        crossorigin: "anonymous",
+        ...(nonce !== undefined ? { nonce } : {}),
+      },
     });
   });
 

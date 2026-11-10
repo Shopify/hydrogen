@@ -97,6 +97,7 @@ export const ShopifyScripts = defineComponent({
       void initializeShopifyScripts({
         consent: props.consent,
         navigate: props.navigate,
+        nonce: props.nonce,
         routes: props.routes,
         webMcp: props.webMcp !== false,
       });
