@@ -37,7 +37,6 @@ const accountWidget: ShopifyAccountWidgetData = {
 - `socialLoginProviders`: offer only providers enabled for the shop; a provider that isn't enabled renders a sign-in button that fails. Read them from the Storefront API (see below). Hydrogen writes the casing the widget compares.
 - `translations` is optional. Missing keys use the widget's English defaults. Keys are typed by `ShopifyAccountWidgetTranslationKey`.
 - `customer.socialLoginProvider` is optional. Pass `"shop"` for customers who signed in with Shop to show the Shop-branded avatar. Other providers don't change how the widget looks.
-- `shop.b2bEnabled` is optional and only shows Shop sign-in as a button instead of a card.
 - Hydrogen adds the shop ID from the `shop` option and the country and language from the `i18n` option. It keeps legacy customer accounts and the email marketing opt-in off.
 - Build each object from exactly the listed fields. A missing required field or any other field throws, because the data is rendered into the HTML: map Customer Account API results field by field instead of spreading them (a spread brings `__typename` and other fields along), and keep access tokens in server code. The Customer Account API names two fields differently: `avatarUrl` is `imageUrl`, and `email` is `emailAddress.emailAddress`.
 - `shop` is required for signed-out visitors too. Without the JSON, the component falls back to fetching through a `<shopify-store>` element; with no store on the page it renders a bare signed-out button with no social sign-in or translations.

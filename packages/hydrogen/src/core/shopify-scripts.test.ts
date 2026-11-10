@@ -769,7 +769,6 @@ describe("shopify scripts", () => {
         shop: {
           socialLoginProviders: ["shop", "apple", "google", "facebook"],
           translations: { "signed_in_state.greeting_with_name": "Bonjour, {{first_name}}" },
-          b2bEnabled: true,
         },
       },
     });
@@ -789,7 +788,6 @@ describe("shopify scripts", () => {
     expect(shop.customerAccountTranslations).toEqual([
       { key: "account_menu.signed_in_state.greeting_with_name", value: "Bonjour, {{first_name}}" },
     ]);
-    expect(shop.b2bEnabled).toBe(true);
   });
 
   it.each([

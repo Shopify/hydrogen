@@ -74,8 +74,6 @@ export type ShopifyAccountWidgetShop = {
    * use the widget's English defaults.
    */
   translations?: Partial<Record<ShopifyAccountWidgetTranslationKey, string>>;
-  /** Shows Shop sign-in as a button instead of a card, for B2B shops. Defaults to `false`. */
-  b2bEnabled?: boolean;
 };
 
 /**
@@ -115,7 +113,7 @@ export function getShopifyAccountWidgetDataScript(
   }
   assertFields(
     settings,
-    { required: ["socialLoginProviders"], optional: ["translations", "b2bEnabled"] },
+    { required: ["socialLoginProviders"], optional: ["translations"] },
     "accountWidget.shop",
   );
 
@@ -141,7 +139,8 @@ export function getShopifyAccountWidgetDataScript(
       shop: {
         id: shop.shopId,
         legacyCustomerAccounts: false,
-        b2bEnabled: settings.b2bEnabled ?? false,
+        // Only picks the Shop sign-in card's style, and the card never shows with a custom `sign-in-url`.
+        b2bEnabled: false,
         // Off until Hydrogen's login route forwards the widget's `marketing_consent` choice.
         marketingConsentSigninEnabled: false,
         marketingConsentPreselected: false,

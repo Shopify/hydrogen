@@ -5708,17 +5708,9 @@
       "filePath": "src/core/shopify-scripts/account-widget.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyAccountWidgetShop",
-      "value": "{\n  /**\n   * The social sign-in providers to offer. Pass the shop's enabled providers from the Storefront\n   * API's `shop.socialLoginProviders`, lowercased: a provider that isn't enabled shows a button\n   * that fails.\n   */\n  socialLoginProviders: ShopifyAccountWidgetSocialLoginProvider[];\n  /**\n   * Translated strings for the account sheet, such as from the Storefront API's\n   * `shop.customerAccountTranslations` with the `account_menu.` key prefix removed. Missing keys\n   * use the widget's English defaults.\n   */\n  translations?: Partial<Record<ShopifyAccountWidgetTranslationKey, string>>;\n  /** Shows Shop sign-in as a button instead of a card, for B2B shops. Defaults to `false`. */\n  b2bEnabled?: boolean;\n}",
+      "value": "{\n  /**\n   * The social sign-in providers to offer. Pass the shop's enabled providers from the Storefront\n   * API's `shop.socialLoginProviders`, lowercased: a provider that isn't enabled shows a button\n   * that fails.\n   */\n  socialLoginProviders: ShopifyAccountWidgetSocialLoginProvider[];\n  /**\n   * Translated strings for the account sheet, such as from the Storefront API's\n   * `shop.customerAccountTranslations` with the `account_menu.` key prefix removed. Missing keys\n   * use the widget's English defaults.\n   */\n  translations?: Partial<Record<ShopifyAccountWidgetTranslationKey, string>>;\n}",
       "description": "The shop settings that control the account widget's sign-in options.",
       "members": [
-        {
-          "filePath": "src/core/shopify-scripts/account-widget.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "b2bEnabled",
-          "value": "boolean",
-          "description": "Shows Shop sign-in as a button instead of a card, for B2B shops. Defaults to `false`.",
-          "isOptional": true
-        },
         {
           "filePath": "src/core/shopify-scripts/account-widget.ts",
           "syntaxKind": "PropertySignature",
