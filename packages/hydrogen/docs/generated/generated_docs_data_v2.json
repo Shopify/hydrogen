@@ -5628,7 +5628,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyAccountWidgetData",
       "value": "{\n  /** The signed-in customer, or `null` when the visitor is signed out. */\n  customer: ShopifyAccountWidgetCustomer | null;\n  shop: ShopifyAccountWidgetShop;\n}",
-      "description": "The data that `<shopify-account>` reads from the page. When this data is on the page, the component skips its own Storefront API requests. Hydrogen adds the shop ID and locale from the `shop` and `i18n` options, and keeps legacy customer accounts and the marketing opt-in off.\n\nUnknown and missing fields throw, so values such as access tokens can never reach the HTML.",
+      "description": "The data that `<shopify-account>` reads from the page. When this data is on the page, the component skips its own Storefront API requests. Hydrogen adds the shop ID and locale from the `shop` and `i18n` options, and keeps legacy customer accounts and the marketing opt-in off.\n\nUnknown fields, missing fields, and non-string values throw, so values such as access tokens can't reach the HTML through a spread API response.",
       "members": [
         {
           "filePath": "src/core/shopify-scripts/account-widget.ts",

@@ -823,6 +823,44 @@ describe("shopify scripts", () => {
     );
   });
 
+  it("rejects required fields set to undefined, because JSON would drop them", () => {
+    const accountWidget = {
+      ...TEST_ACCOUNT_WIDGET_DATA,
+      customer: { ...TEST_ACCOUNT_WIDGET_CUSTOMER, firstName: undefined },
+    } as unknown as typeof TEST_ACCOUNT_WIDGET_DATA;
+
+    expect(() => getShopifyScriptTags({ shop: TEST_SHOP, accountWidget })).toThrow(
+      "accountWidget.customer is missing required field(s): firstName",
+    );
+  });
+
+  it.each([
+    [
+      "accountWidget.customer.firstName",
+      {
+        ...TEST_ACCOUNT_WIDGET_DATA,
+        customer: { ...TEST_ACCOUNT_WIDGET_CUSTOMER, firstName: { accessToken: "shcat_secret" } },
+      },
+    ],
+    [
+      "accountWidget.shop.translations.signed_in_state.greeting_with_name",
+      {
+        ...TEST_ACCOUNT_WIDGET_DATA,
+        shop: {
+          ...TEST_ACCOUNT_WIDGET_DATA.shop,
+          translations: { "signed_in_state.greeting_with_name": { accessToken: "shcat_secret" } },
+        },
+      },
+    ],
+  ])("rejects a non-string value in %s instead of rendering it", (path, accountWidget) => {
+    expect(() =>
+      getShopifyScriptTags({
+        shop: TEST_SHOP,
+        accountWidget: accountWidget as unknown as typeof TEST_ACCOUNT_WIDGET_DATA,
+      }),
+    ).toThrow(`${path} must be a string`);
+  });
+
   it("rejects providers in a casing or name the widget doesn't recognize", () => {
     const accountWidget = {
       ...TEST_ACCOUNT_WIDGET_DATA,

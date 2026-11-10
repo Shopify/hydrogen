@@ -81,7 +81,8 @@ export type ShopifyAccountWidgetShop = {
  * component skips its own Storefront API requests. Hydrogen adds the shop ID and locale from the
  * `shop` and `i18n` options, and keeps legacy customer accounts and the marketing opt-in off.
  *
- * Unknown and missing fields throw, so values such as access tokens can never reach the HTML.
+ * Unknown fields, missing fields, and non-string values throw, so values such as access tokens
+ * can't reach the HTML through a spread API response.
  */
 export type ShopifyAccountWidgetData = {
   /** The signed-in customer, or `null` when the visitor is signed out. */
@@ -110,6 +111,11 @@ export function getShopifyAccountWidgetDataScript(
       },
       "accountWidget.customer",
     );
+    for (const field of ["firstName", "lastName", "email", "avatarUrl"] as const) {
+      if (customer[field] !== null) {
+        assertString(customer[field], `accountWidget.customer.${field}`);
+      }
+    }
   }
   assertFields(
     settings,
@@ -177,10 +183,18 @@ function isSocialLoginProvider(
 // Keys aren't checked at runtime: they come from the Storefront API, which can add keys the
 // widget doesn't use yet. The widget ignores unknown keys, and the values are escaped strings.
 function getTranslations(translations: ShopifyAccountWidgetShop["translations"] = {}) {
-  return Object.entries(translations).map(([key, value]) => ({
-    key: `account_menu.${key}`,
-    value,
-  }));
+  return Object.entries(translations).map(([key, value]) => {
+    assertString(value, `accountWidget.shop.translations.${key}`);
+    return { key: `account_menu.${key}`, value };
+  });
+}
+
+// The types already require strings, but plain JavaScript or a cast could pass an object, which
+// would be written into the page HTML as-is.
+function assertString(value: unknown, path: string): asserts value is string {
+  if (typeof value !== "string") {
+    throw new Error(`${path} must be a string, but received ${typeof value}.`);
+  }
 }
 
 // Unknown fields throw so extra values, such as access tokens, can't reach the HTML through a
@@ -202,7 +216,8 @@ function assertFields<T extends object>(
     );
   }
 
-  const missingFields = required.filter((field) => !(field in value));
+  // `undefined` counts as missing because `JSON.stringify` drops the key.
+  const missingFields = required.filter((field) => value[field] === undefined);
   if (missingFields.length > 0) {
     throw new Error(`${path} is missing required field(s): ${missingFields.join(", ")}.`);
   }
