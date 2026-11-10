@@ -1,11 +1,14 @@
 import { defineComponent, h, onMounted, shallowRef, watch } from "vue";
 
+import { getLogger } from "../core/logging";
 import { hasShopifyAccountWidgetData } from "../core/shopify-scripts/account-widget";
 import { CUSTOMER_ACCOUNT_PATHS } from "../core/url";
 
 // The data lives in the single JSON script tag that `ShopifyScripts` renders, so every
 // `AccountWidget` restarts together. Only the browser changes the version.
 const accountWidgetDataVersion = shallowRef(0);
+
+const log = getLogger("account-widget");
 
 // Set when an `AccountWidget` mounts before the JSON script tag exists, such as when
 // `ShopifyScripts` mounts later. The widget may have connected with no data to read.
@@ -23,7 +26,9 @@ export function restartAccountWidgetsMissingData() {
 }
 
 function checkAccountWidgetData() {
-  if (!hasShopifyAccountWidgetData()) hasAccountWidgetsWithoutData = true;
+  if (hasShopifyAccountWidgetData()) return;
+  hasAccountWidgetsWithoutData = true;
+  log.warn("account widget rendered without its data. Pass `accountWidget` to ShopifyScripts");
 }
 
 /**

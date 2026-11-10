@@ -5,6 +5,7 @@ import { hydrateRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { configureLogging } from "../core/logging";
 import * as shopifyScriptsCore from "../core/shopify-scripts";
 import {
   SHOPIFY_ACCOUNT_SCRIPT,
@@ -21,6 +22,7 @@ import {
 import { defineShopifyRouteTemplates } from "../core/standard-routes/index";
 import {
   assert,
+  createTestLogger,
   getRenderedSignedOutAccountWidgetData,
   recordShopifyAccountConnections,
   TEST_ACCOUNT_WIDGET_CUSTOMER,
@@ -31,6 +33,7 @@ import { ShopifyScripts } from "./shopify-scripts";
 
 afterEach(() => {
   cleanup();
+  configureLogging({});
   vi.restoreAllMocks();
   delete window.Shopify;
 });
@@ -211,6 +214,22 @@ describe("ShopifyScripts", () => {
       null,
       TEST_ACCOUNT_WIDGET_CUSTOMER.firstName,
     ]);
+  });
+
+  it("warns when an AccountWidget mounts without the account widget data", () => {
+    vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts").mockResolvedValue(undefined);
+    const logger = createTestLogger();
+    configureLogging({ logger });
+
+    render(accountPage(TEST_ACCOUNT_WIDGET_DATA));
+    expect(logger.warn).not.toHaveBeenCalled();
+    cleanup();
+
+    render(<AccountWidget />);
+    expect(logger.warn).toHaveBeenCalledWith(
+      "account widget rendered without its data. Pass `accountWidget` to ShopifyScripts",
+      { scope: "account-widget" },
+    );
   });
 
   it("keeps already-rendered scripts in place when the account widget is toggled", () => {

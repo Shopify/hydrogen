@@ -14007,7 +14007,7 @@
         "name": "",
         "value": ""
       },
-      "value": "export function AccountWidget({ fallback, ...attributes }: AccountWidgetProps) {\n  // The server never bumps the version, and keys aren't part of the HTML, so hydration can use\n  // the current version without remounting.\n  const version = useSyncExternalStore(\n    subscribeToAccountWidgetData,\n    getAccountWidgetDataVersion,\n    getAccountWidgetDataVersion,\n  );\n\n  useEffect(() => {\n    if (!hasShopifyAccountWidgetData()) hasAccountWidgetsWithoutData = true;\n  }, [version]);\n\n  return createElement(\n    \"shopify-account\",\n    { ...attributes, key: version, \"sign-in-url\": CUSTOMER_ACCOUNT_PATHS.login },\n    fallback == null ? null : createElement(\"div\", { slot: \"signed-out-avatar\" }, fallback),\n  );\n}"
+      "value": "export function AccountWidget({ fallback, ...attributes }: AccountWidgetProps) {\n  // The server never bumps the version, and keys aren't part of the HTML, so hydration can use\n  // the current version without remounting.\n  const version = useSyncExternalStore(\n    subscribeToAccountWidgetData,\n    getAccountWidgetDataVersion,\n    getAccountWidgetDataVersion,\n  );\n\n  useEffect(() => {\n    if (hasShopifyAccountWidgetData()) return;\n    hasAccountWidgetsWithoutData = true;\n    log.warn(\"account widget rendered without its data. Pass `accountWidget` to ShopifyScripts\");\n  }, [version]);\n\n  return createElement(\n    \"shopify-account\",\n    { ...attributes, key: version, \"sign-in-url\": CUSTOMER_ACCOUNT_PATHS.login },\n    fallback == null ? null : createElement(\"div\", { slot: \"signed-out-avatar\" }, fallback),\n  );\n}"
     }
   },
   "CreateCartComponentsGeneratedType": {

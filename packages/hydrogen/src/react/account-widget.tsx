@@ -3,6 +3,7 @@
 import { createElement, useEffect, useSyncExternalStore } from "react";
 import type * as React from "react";
 
+import { getLogger } from "../core/logging";
 import { hasShopifyAccountWidgetData } from "../core/shopify-scripts/account-widget";
 import { CUSTOMER_ACCOUNT_PATHS } from "../core/url";
 
@@ -30,6 +31,8 @@ function subscribeToAccountWidgetData(listener: () => void) {
 }
 
 const getAccountWidgetDataVersion = () => accountWidgetDataVersion;
+
+const log = getLogger("account-widget");
 
 // Set when an `AccountWidget` mounts before the JSON script tag exists, such as when
 // `ShopifyScripts` mounts later. The widget may have connected with no data to read.
@@ -66,7 +69,9 @@ export function AccountWidget({ fallback, ...attributes }: AccountWidgetProps) {
   );
 
   useEffect(() => {
-    if (!hasShopifyAccountWidgetData()) hasAccountWidgetsWithoutData = true;
+    if (hasShopifyAccountWidgetData()) return;
+    hasAccountWidgetsWithoutData = true;
+    log.warn("account widget rendered without its data. Pass `accountWidget` to ShopifyScripts");
   }, [version]);
 
   return createElement(

@@ -6,6 +6,7 @@ import { renderToString } from "vue/server-renderer";
 
 import { setupStorefrontAnalytics } from "../core/analytics/bus";
 import type { ConsentSetup } from "../core/analytics/types";
+import { configureLogging } from "../core/logging";
 import {
   SHOPIFY_ACCOUNT_SCRIPT,
   SHOPIFY_CDN_ORIGIN,
@@ -20,6 +21,7 @@ import * as shopifyScriptsCore from "../core/shopify-scripts";
 import { defineShopifyRouteTemplates } from "../core/standard-routes/index";
 import {
   assert,
+  createTestLogger,
   getRenderedSignedOutAccountWidgetData,
   recordShopifyAccountConnections,
   TEST_ACCOUNT_WIDGET_CUSTOMER,
@@ -30,6 +32,7 @@ import { AccountWidget } from "./account-widget";
 import { ShopifyScripts } from "./shopify-scripts";
 
 afterEach(() => {
+  configureLogging({});
   vi.restoreAllMocks();
   delete window.Shopify;
 });
@@ -214,6 +217,28 @@ describe("ShopifyScripts", () => {
       TEST_ACCOUNT_WIDGET_CUSTOMER.firstName,
     ]);
     wrapper.unmount();
+  });
+
+  it("warns when an AccountWidget mounts without the account widget data", () => {
+    vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts").mockResolvedValue(undefined);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const logger = createTestLogger();
+    configureLogging({ logger });
+
+    mount(
+      defineComponent(() => () => [
+        h(ShopifyScripts, { shop: TEST_SHOP, accountWidget: TEST_ACCOUNT_WIDGET_DATA }),
+        h(AccountWidget),
+      ]),
+      { attachTo: document.body },
+    ).unmount();
+    expect(logger.warn).not.toHaveBeenCalled();
+
+    mount(AccountWidget, { attachTo: document.body }).unmount();
+    expect(logger.warn).toHaveBeenCalledWith(
+      "account widget rendered without its data. Pass `accountWidget` to ShopifyScripts",
+      { scope: "account-widget" },
+    );
   });
 
   it("initializes browser script behavior once with initial props", async () => {
