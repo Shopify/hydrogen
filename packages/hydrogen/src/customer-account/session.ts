@@ -821,6 +821,7 @@ async function handleAuthorizeRoute(
     return redirectResult(location, await commitSession(sessionManager));
   } catch (error) {
     if (!(error instanceof CustomerAccountOAuthError)) throw error;
+    log.warn("sign-in failed", { code: error.code, error });
     const origin = await resolveRouteOrigin(sessionManager, request, originOption);
     return redirectResult(
       sanitizeReturnTo(loginFailedRedirectPath, origin),
@@ -1301,7 +1302,14 @@ async function readTokenResponseJson(
   response: Response,
   signal: AbortSignal,
 ): Promise<TokenEndpointResponse> {
-  const json = await withAbort(response.json(), signal);
+  const json = await withAbort(response.json(), signal).catch((error: unknown) => {
+    if (!(error instanceof SyntaxError)) throw error;
+    throw new CustomerAccountOAuthError(
+      "invalid_token_response",
+      "Customer Account OAuth response must be JSON",
+      { cause: error },
+    );
+  });
   if (!isObjectRecord(json)) {
     throw new CustomerAccountOAuthError(
       "invalid_token_response",
