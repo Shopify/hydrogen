@@ -572,6 +572,27 @@ describe('getSeoMeta', () => {
     ]);
   });
 
+  it('should keep max-snippet and max-video-preview when they are 0', () => {
+    // Given
+    const input = {
+      robots: {
+        maxSnippet: 0,
+        maxVideoPreview: 0,
+      },
+    };
+
+    // When
+    const output = getSeoMeta(input);
+
+    // Then
+    expect(output).toEqual([
+      {
+        content: 'index,follow,max-snippet:0,max-video-preview:0',
+        name: 'robots',
+      },
+    ]);
+  });
+
   describe('jsonLd', () => {
     it('should not generate jsonLd if not configured', () => {
       // Given
