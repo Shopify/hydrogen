@@ -12,7 +12,7 @@ import {
 import {joinPath} from '@shopify/cli-kit/node/path';
 
 it.each([false, true])(
-  'profiles real rebuilds and stops cleanly with hung evaluation: %s',
+  'profiles client and server rebuilds and stops cleanly with hung evaluation: %s',
   async (hung) => {
     await inTemporaryDirectory(async (directory) => {
       const cliDirectory = fileURLToPath(
@@ -81,6 +81,8 @@ it.each([false, true])(
           }
           if (record.type === 'profile-completed') {
             if (++successes === 1) {
+              setTimeout(() => writeFileSync(directory + '/client.js', 'console.log("client changed");'), 100);
+            } else if (successes === 2) {
               previousProfile = readFileSync(output, 'utf8');
               // Let Vite finish the build hook before editing watched source.
               setTimeout(() => writeFileSync(directory + '/server.js', 'throw new Error("startup failed");'), 100);
@@ -141,6 +143,10 @@ it.each([false, true])(
         'build-started',
         'build-completed',
         'profile-started',
+        'profile-completed',
+        'build-started',
+        'build-completed',
+        'profile-started',
         'profile-failed',
         'build-started',
         'build-completed',
@@ -153,7 +159,7 @@ it.each([false, true])(
         format: 'cpuprofile',
       });
       expect(records[4].totalTimeMs).toBeGreaterThan(0);
-      expect(records[8].error).toEqual({message: 'startup failed'});
+      expect(records[12].error).toEqual({message: 'startup failed'});
       expect(stderr).toContain('Worker startup');
       expect(stdout).not.toContain('Worker startup');
       expect(
