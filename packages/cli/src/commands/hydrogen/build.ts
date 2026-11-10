@@ -140,6 +140,8 @@ type RunBuildOptions = {
   bundleStats?: boolean;
   lockfileCheck?: boolean;
   watch?: boolean;
+  signal?: AbortSignal;
+  registerCleanup?: (close: () => Promise<unknown>) => void;
   onServerBuildStart?: () => void | Promise<void>;
   onServerBuildFinish?: (
     cycle: number,
@@ -193,6 +195,8 @@ export async function runBuild({
   assetPath,
   bundleStats = !isCI(),
   watch = false,
+  signal,
+  registerCleanup,
   onServerBuildStart,
   onServerBuildFinish,
   onBuildStart,
@@ -302,7 +306,47 @@ export async function runBuild({
         )
       : undefined;
   if (clientBuildTrigger) await writeFile(clientBuildTrigger, '0');
+  let serverBuildStatus: DeferredPromise;
+  let codegenProcess: ReturnType<typeof spawnCodegenProcess> | undefined;
+  const buildWatchers = new Set<{close: () => Promise<void>}>();
+  let pendingCleanup = Promise.resolve();
+  // Register close after each acquisition: shutdown can start between resources,
+  // and a late registration must close any newly acquired watcher or codegen process.
+  const close = () => {
+    closing = true;
+    codegenProcess?.removeAllListeners('close');
+    codegenProcess?.kill('SIGINT');
+    codegenProcess = undefined;
 
+    const pendingBuild =
+      clientBuildStatus?.state === 'pending' ||
+      serverBuildStatus?.state === 'pending';
+    if (pendingBuild) {
+      clientBuildStatus?.promise.catch(() => {});
+      clientBuildStatus?.reject();
+      serverBuildStatus?.promise.catch(() => {});
+      serverBuildStatus?.reject();
+    }
+
+    const watchers = [...buildWatchers];
+    buildWatchers.clear();
+    pendingCleanup = Promise.allSettled([
+      pendingCleanup,
+      ...watchers.map((watcher) =>
+        Promise.resolve().then(() => watcher.close()),
+      ),
+    ]).then(async () => {
+      if (pendingBuild) {
+        // Give Rollup time to stop builds before removing files.
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+      if (clientBuildTrigger) await removeFile(clientBuildTrigger);
+    });
+    return pendingCleanup;
+  };
+
+  // Vite exposes no cancellation handle for a non-watch build. Let it settle
+  // before checking the signal; session shutdown still has a five-second deadline.
   // Client build first
   const clientBuild = await vite
     .build({
@@ -365,9 +409,13 @@ export async function runBuild({
       throw error;
     });
 
-  if (!json) console.log('');
+  if ('close' in clientBuild) {
+    buildWatchers.add(clientBuild);
+    registerCleanup?.(close);
+  }
+  signal?.throwIfAborted();
 
-  let serverBuildStatus: DeferredPromise;
+  if (!json) console.log('');
 
   // Server/SSR build
   const serverBuild = await vite
@@ -482,14 +530,15 @@ export async function runBuild({
       ],
     })
     .catch(async (error: unknown) => {
-      closing = true;
-      try {
-        if ('close' in clientBuild) await clientBuild.close();
-      } finally {
-        if (clientBuildTrigger) await removeFile(clientBuildTrigger);
-      }
+      await close();
       throw error;
     });
+
+  if ('close' in serverBuild) {
+    buildWatchers.add(serverBuild);
+    registerCleanup?.(close);
+  }
+  signal?.throwIfAborted();
 
   if (!watch) {
     await Promise.all([
@@ -505,12 +554,14 @@ export async function runBuild({
     configFilePath: codegenConfigPath,
   };
 
-  const codegenProcess = useCodegen
+  codegenProcess = useCodegen
     ? watch
       ? spawnCodegenProcess(codegenOptions)
       : await codegen(codegenOptions).then(() => undefined)
     : undefined;
 
+  if (codegenProcess) registerCleanup?.(close);
+  signal?.throwIfAborted();
   if (!watch && process.env.NODE_ENV !== 'development') {
     if (bundleStats) {
       const bundleAnalysisPath =
@@ -561,30 +612,6 @@ export async function runBuild({
 
   return {
     result,
-    async close() {
-      closing = true;
-      codegenProcess?.removeAllListeners('close');
-      codegenProcess?.kill('SIGINT');
-
-      const promises: Array<Promise<void>> = [];
-      if ('close' in clientBuild) promises.push(clientBuild.close());
-      if ('close' in serverBuild) promises.push(serverBuild.close());
-
-      await Promise.allSettled(promises);
-
-      if (
-        clientBuildStatus?.state === 'pending' ||
-        serverBuildStatus?.state === 'pending'
-      ) {
-        clientBuildStatus?.promise.catch(() => {});
-        clientBuildStatus?.reject();
-        serverBuildStatus?.promise.catch(() => {});
-        serverBuildStatus?.reject();
-
-        // Give time for Rollup to stop builds before removing files
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
-      if (clientBuildTrigger) await removeFile(clientBuildTrigger);
-    },
+    close,
   };
 }
