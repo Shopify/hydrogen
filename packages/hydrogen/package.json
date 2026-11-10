@@ -119,7 +119,7 @@
     "@types/react-dom": "^19.2.3",
     "@vue/test-utils": "^2.4.0",
     "graphql": "^16.13.2",
-    "happy-dom": "^20.9.0",
+    "happy-dom": "^21.0.4",
     "magic-string": "^0.30.21",
     "oxc-parser": "0.135.0",
     "oxc-walker": "^1.0.0",
