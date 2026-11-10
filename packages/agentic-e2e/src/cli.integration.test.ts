@@ -1,28 +1,56 @@
 import { execFileSync } from "node:child_process";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
-import { createServer, type Server } from "node:http";
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { Stagehand } from "@browserbasehq/stagehand";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { MAX_STEPS } from "./agent/stagehand-agent.ts";
 import { createBrowserSession } from "./browser/session.ts";
 import { main } from "./cli.ts";
 
-// Real headless Chromium against a local HTTP fixture. Uses Playwright's Chromium (install it
-// with `pnpm --filter @shopify/agentic-e2e run browser:install`) or AGENTIC_E2E_BROWSER_PATH.
-vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 });
+// Real headless Chromium and real Stagehand 3.7.3 against local HTTP fixtures. The model
+// endpoint is a local fake that speaks the Anthropic Messages API: no real model call, no real
+// key. Uses Playwright's Chromium (install it with `pnpm --filter @shopify/agentic-e2e run
+// browser:install`) or AGENTIC_E2E_BROWSER_PATH.
+vi.setConfig({ testTimeout: 60_000, hookTimeout: 30_000 });
 
-let server: Server;
+const DUMMY_KEY = "sk-dummy-agentic-e2e-test-key";
+const fake = vi.hoisted(() => ({ modelOrigin: "" }));
+
+// The one code seam: point the model config at the local fake endpoint.
+vi.mock("./agent/model-config.ts", async (importOriginal) => {
+  const original = await importOriginal<typeof import("./agent/model-config.ts")>();
+  return {
+    shopifyProxyModel: (env: NodeJS.ProcessEnv) => ({
+      ...original.shopifyProxyModel(env),
+      baseURL: `${fake.modelOrigin}/v1`,
+    }),
+  };
+});
+
+type ModelRequest = { path: string; apiKey: unknown; usageTag: unknown; tools: string[] };
+type Reply = (request: ModelRequest) => Record<string, unknown> | undefined;
+
+let store: Server;
+let model: Server;
 let origin: string;
 let closedPortOrigin: string;
 let workDir: string;
 let profileRoot: string;
 let stdout: string[];
+let modelRequests: ModelRequest[];
+/** Builds the reply for each model request. `undefined` holds the request open. */
+let reply: Reply;
+let held: ServerResponse[];
+/** For each Stagehand CDP socket close: whether the browser was still running at that time. */
+let stagehandCloses: Array<{ browserRunning: boolean }>;
 
 beforeAll(async () => {
-  server = createServer((request, response) => {
+  store = createServer((request, response) => {
     const path = new URL(request.url ?? "/", "http://fixture").pathname;
     if (path === "/start") {
       response.writeHead(302, { location: "/home" }).end();
@@ -31,12 +59,16 @@ beforeAll(async () => {
     } else if (path === "/home") {
       response
         .writeHead(200, { "content-type": "text/html" })
-        .end("<!doctype html><title>Fixture Home</title><p>Home</p>");
+        .end(
+          `<!doctype html><title>Fixture Home</title><p>Home</p><div style="height:3000px"></div>`,
+        );
     } else {
       response.writeHead(500, { "content-type": "text/html" }).end("<title>Broken</title>");
     }
   });
-  origin = await listen(server);
+  model = createServer(onModelRequest);
+  origin = await listen(store);
+  fake.modelOrigin = await listen(model);
   // A port that was just free and is now closed: connections are refused.
   const probe = createServer();
   closedPortOrigin = await listen(probe);
@@ -47,15 +79,31 @@ beforeAll(async () => {
 beforeEach(async () => {
   profileRoot = await mkdtemp(join(workDir, "tmp-"));
   vi.stubEnv("TMPDIR", profileRoot);
+  vi.stubEnv("SHOPIFY_PROXY_KEY", DUMMY_KEY);
+  vi.stubEnv("BRAVE_API_KEY", undefined);
   stdout = [];
+  modelRequests = [];
+  held = [];
+  stagehandCloses = [];
+  reply = () => undefined;
   vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
     stdout.push(String(chunk));
     return true;
   });
   vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+  // A socket that closes while the browser still runs was released by Stagehand, not by the
+  // browser exit.
+  const init = Stagehand.prototype.init;
+  vi.spyOn(Stagehand.prototype, "init").mockImplementation(async function (this: Stagehand) {
+    await init.call(this);
+    this.context.conn.onTransportClosed(() =>
+      stagehandCloses.push({ browserRunning: browserProcesses().length > 0 }),
+    );
+  });
 });
 
 afterEach(async () => {
+  for (const response of held) response.destroy();
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
   // Every test must leave no browser process and no temporary profile behind.
@@ -64,22 +112,128 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  server.closeAllConnections();
-  await close(server);
+  store.closeAllConnections();
+  model.closeAllConnections();
+  await Promise.all([close(store), close(model)]);
   await rm(workDir, { recursive: true, force: true });
 });
 
-describe("main", () => {
-  it("opens the URL and reports the final URL and title", async () => {
+describe("main with the agent", () => {
+  it("reports agent-completed when the agent scrolls and confirms completion", async () => {
+    let turns = 0;
+    reply = ({ tools }) => {
+      if (isFinalAssessment(tools)) return done(true);
+      turns += 1;
+      return turns === 1 ? scroll() : text("I scrolled down once.");
+    };
+    // Stagehand writes unredacted session logs when these are set. This file imports Stagehand
+    // statically, so this test proves only that main() removes them from the environment, not
+    // that the SDK never read them.
+    vi.stubEnv("BROWSERBASE_FLOW_LOGS", "1");
+    vi.stubEnv("BROWSERBASE_CONFIG_DIR", join(workDir, "stagehand-logs"));
+
     await expect(main([`${origin}/start`])).resolves.toBe(0);
 
-    expect(results()).toEqual([{ status: "opened", url: `${origin}/home`, title: "Fixture Home" }]);
+    expect(results()).toEqual([
+      {
+        status: "agent-completed",
+        url: `${origin}/home`,
+        title: "Fixture Home",
+        summary: "Scrolled down once.",
+      },
+    ]);
+    expect(modelRequests).toHaveLength(3);
+    for (const request of modelRequests) {
+      expect(request).toMatchObject({
+        path: "/v1/messages",
+        apiKey: DUMMY_KEY,
+        usageTag: "agentic-e2e",
+      });
+    }
+    // URL navigation and external search are not offered to the model.
+    expect(modelRequests[0]?.tools).toContain("scroll");
+    expect(modelRequests[0]?.tools).not.toContain("goto");
+    expect(modelRequests[0]?.tools).not.toContain("search");
+    expect(process.env.BROWSERBASE_FLOW_LOGS).toBeUndefined();
+    expect(process.env.BROWSERBASE_CONFIG_DIR).toBeUndefined();
+    expectStagehandDetached();
   });
 
-  it("reports an HTTP error page as indeterminate", async () => {
+  it("reports the step limit as indeterminate, even when the final assessment says done", async () => {
+    reply = ({ tools }) => (isFinalAssessment(tools) ? done(true) : scroll());
+
+    await expect(main([`${origin}/home`])).resolves.toBe(2);
+
+    expect(results()).toEqual([
+      { status: "indeterminate", reason: `The agent reached the ${MAX_STEPS}-step limit.` },
+    ]);
+    expect(modelRequests.filter((request) => !isFinalAssessment(request.tools))).toHaveLength(
+      MAX_STEPS,
+    );
+    expectStagehandDetached();
+  });
+
+  it("reports agent-completed when the agent calls done on the last step", async () => {
+    let turns = 0;
+    reply = () => {
+      turns += 1;
+      return turns < MAX_STEPS ? scroll() : done(true);
+    };
+
+    await expect(main([`${origin}/home`])).resolves.toBe(0);
+
+    expect(results()).toEqual([
+      {
+        status: "agent-completed",
+        url: `${origin}/home`,
+        title: "Fixture Home",
+        summary: expect.stringContaining("Scrolled down once."),
+      },
+    ]);
+    // Stagehand ended the loop on `done`: no forced final assessment followed.
+    expect(modelRequests).toHaveLength(MAX_STEPS);
+    expectStagehandDetached();
+  });
+
+  it("reports an interrupt during the agent run as indeterminate", async () => {
+    const { promise: requested, resolve } = Promise.withResolvers<void>();
+    reply = () => {
+      resolve();
+      return undefined;
+    };
+
+    const run = main([`${origin}/home`]);
+    await requested;
+    process.emit("SIGINT", "SIGINT");
+
+    await expect(run).resolves.toBe(2);
+    expect(results()).toEqual([{ status: "indeterminate", reason: "Interrupted by SIGINT." }]);
+    expectStagehandDetached();
+  });
+
+  it("reports a model error as indeterminate without the key in the reason", async () => {
+    // An error body that echoes the key, the worst case for the reason text.
+    reply = () => ({
+      type: "error",
+      error: { type: "authentication_error", message: `invalid x-api-key: ${DUMMY_KEY}` },
+    });
+
+    await expect(main([`${origin}/home`])).resolves.toBe(2);
+
+    expect(results()).toEqual([
+      { status: "indeterminate", reason: expect.stringMatching(/^The agent failed: /) },
+    ]);
+    expect(stdout.join("")).toContain("[redacted]");
+    expect(stdout.join("")).not.toContain(DUMMY_KEY);
+    expectStagehandDetached();
+  });
+
+  it("reports an HTTP error page as indeterminate without a model call", async () => {
     await expect(main([`${origin}/broken`])).resolves.toBe(2);
 
     expect(results()).toEqual([{ status: "indeterminate", reason: "HTTP 500" }]);
+    expect(modelRequests).toEqual([]);
+    expectStagehandDetached();
   });
 
   it("reports an unreachable port as indeterminate", async () => {
@@ -88,6 +242,7 @@ describe("main", () => {
     expect(results()).toEqual([
       { status: "indeterminate", reason: expect.stringContaining("ERR_CONNECTION_REFUSED") },
     ]);
+    expectStagehandDetached();
   });
 
   it("waits for browser and profile cleanup after SIGINT soon after the browser process appears", async () => {
@@ -122,6 +277,75 @@ describe("createBrowserSession", () => {
     await expect(createBrowserSession(join(workDir, "missing-browser"))).rejects.toThrow();
   });
 });
+
+function onModelRequest(request: IncomingMessage, response: ServerResponse) {
+  const chunks: Buffer[] = [];
+  request.on("data", (chunk: Buffer) => chunks.push(chunk));
+  request.on("end", () => {
+    const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as {
+      tools?: Array<{ name: string }>;
+    };
+    const entry: ModelRequest = {
+      path: new URL(request.url ?? "/", "http://model").pathname,
+      apiKey: request.headers["x-api-key"],
+      usageTag: request.headers["shopify-usage-tag"],
+      tools: (body.tools ?? []).map((tool) => tool.name),
+    };
+    modelRequests.push(entry);
+    const answer = reply(entry);
+    if (answer === undefined) {
+      held.push(response);
+      return;
+    }
+    const status = answer.type === "error" ? 401 : 200;
+    response.writeHead(status, { "content-type": "application/json" }).end(JSON.stringify(answer));
+  });
+}
+
+/** Stagehand's forced final call offers only the `done` tool. */
+function isFinalAssessment(tools: string[]): boolean {
+  return tools.length === 1 && tools[0] === "done";
+}
+
+function scroll() {
+  return message([
+    { type: "tool_use", id: "toolu_scroll", name: "scroll", input: { direction: "down" } },
+  ]);
+}
+
+function text(value: string) {
+  return message([{ type: "text", text: value }]);
+}
+
+function done(taskComplete: boolean) {
+  return message([
+    {
+      type: "tool_use",
+      id: "toolu_done",
+      name: "done",
+      input: { reasoning: "Scrolled down once.", taskComplete },
+    },
+  ]);
+}
+
+function message(content: Array<Record<string, unknown>>) {
+  return {
+    id: "msg_fixture",
+    type: "message",
+    role: "assistant",
+    model: "claude-haiku-5-5",
+    content,
+    stop_reason: content.some((block) => block.type === "tool_use") ? "tool_use" : "end_turn",
+    stop_sequence: null,
+    usage: { input_tokens: 1, output_tokens: 1 },
+  };
+}
+
+/** Stagehand attached once and closed its CDP socket before the browser closed. */
+function expectStagehandDetached() {
+  expect(Stagehand.prototype.init).toHaveBeenCalledOnce();
+  expect(stagehandCloses).toEqual([{ browserRunning: true }]);
+}
 
 function results(): unknown[] {
   return stdout

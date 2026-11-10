@@ -15,6 +15,8 @@ export interface BrowserSessionOptions {
 
 export interface BrowserSession {
   page: Page;
+  /** The browser's DevTools WebSocket URL, for a second CDP client such as Stagehand. */
+  cdpUrl: string;
   /** Closes the browser process and removes the temporary profile. Safe to call twice. */
   close(): Promise<void>;
 }
@@ -47,7 +49,7 @@ export async function createBrowserSession(
     // On abort, `owned.close()` kills the browser, which also ends a pending CDP connection.
     const page = await untilAborted(owned.connect(cdpUrl), signal);
     let closing: Promise<void> | undefined;
-    return { page, close: async () => (closing ??= owned.close()) };
+    return { page, cdpUrl, close: async () => (closing ??= owned.close()) };
   } catch (error) {
     await owned.close();
     throw error;
