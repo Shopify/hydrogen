@@ -1,0 +1,26 @@
+const INTERRUPT_SIGNALS: readonly NodeJS.Signals[] = ["SIGINT", "SIGTERM", "SIGHUP"];
+
+/**
+ * Runs `run` with a signal that aborts on SIGINT, SIGTERM, or SIGHUP. The handlers stay attached
+ * until `run` settles: a repeated signal must not restore the default kill, which would skip
+ * browser cleanup and the result. The handlers are removed on every path.
+ */
+export async function withInterruptSignals<T>(
+  run: (interrupt: AbortSignal) => Promise<T>,
+): Promise<T> {
+  const controller = new AbortController();
+  const onSignal = (signal: NodeJS.Signals): void => {
+    if (controller.signal.aborted) {
+      process.stderr.write(`Received ${signal} again. Cleanup is still running.\n`);
+      return;
+    }
+    process.stderr.write(`Received ${signal}. Stopping the run.\n`);
+    controller.abort(new Error(`Interrupted by ${signal}.`));
+  };
+  for (const signal of INTERRUPT_SIGNALS) process.on(signal, onSignal);
+  try {
+    return await run(controller.signal);
+  } finally {
+    for (const signal of INTERRUPT_SIGNALS) process.off(signal, onSignal);
+  }
+}

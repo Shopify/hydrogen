@@ -3,7 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "lint": "oxlint .",
+    "typecheck": "tsc --noEmit",
+    "cli": "node src/cli.ts",
+    "browser:install": "playwright-core install --no-shell chromium",
+    "test": "pnpm run test:unit",
+    "test:unit": "vitest run --dir src --exclude \"**/*.integration.test.ts\"",
+    "test:integration": "vitest run --dir src .integration.test.ts"
+  },
   "dependencies": {
     "@browserbasehq/stagehand": "3.7.3",
     "@shopify/hydrogen": "workspace:*",
