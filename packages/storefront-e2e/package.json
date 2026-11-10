@@ -1,0 +1,22 @@
+{
+  "name": "@shopify/storefront-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "oxlint .",
+    "test": "pnpm run test:unit",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test",
+    "test:unit": "vitest run src/runtime-config.test.ts"
+  },
+  "dependencies": {
+    "@shopify/hydrogen": "workspace:*"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^25.8.0",
+    "typescript": "catalog:",
+    "vitest": "^3.0.0"
+  }
+}

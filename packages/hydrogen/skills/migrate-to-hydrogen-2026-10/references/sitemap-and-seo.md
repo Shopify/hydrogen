@@ -1,0 +1,6 @@
+# Sitemap & SEO traps
+
+Read if the source has `sitemap.xml`/`robots.txt` routes or a `seo` export.
+
+- **Sitemaps: `getSitemap`/`getSitemapIndex` are gone.** The 2026-10 library does not ship them, and the classic versions were typed for the classic `Storefront` client (`.query`) — the new request-scoped client only exposes `.graphql`, so they don't port. Write a small local `app/lib/sitemap.ts` that runs the sitemap queries via `storefront.graphql` and preserves any custom URL transforms (renamed routes, locale prefixes). The route files then call the local lib.
+- **robots.txt: keep the merchant's rules, then add the new handler paths.** The classic route ports as-is, so don't swap it for a default file. Remove anything that queries the classic client (`context.storefront.query(ROBOTS_QUERY)` for `shop.id`, used only to build `/{shopId}/checkouts` and `/{shopId}/orders` rules). Re-check each rule against the migrated routes, and drop rules for paths the app no longer serves. Then add rules for the paths Hydrogen 2026-10's request handlers serve when they aren't already covered: `/admin`, `/checkout`, `/buy/`, `/api/`, `/__shopify`. Keep `/.well-known/` reachable. Invoke the `hydrogen-robots-txt` skill for the reason behind each rule. If the source has no robots.txt route, add one with that skill.

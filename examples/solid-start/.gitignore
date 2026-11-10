@@ -1,0 +1,8 @@
+.env
+!.env.example
+.vinxi/
+node_modules/
+.output/
+dist/
+.nitro/
+app.config.timestamp_*.js

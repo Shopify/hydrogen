@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "main": "../dist/ts-plugin/index.cjs",
+  "types": "../dist/ts-plugin/index.d.cts"
+}
