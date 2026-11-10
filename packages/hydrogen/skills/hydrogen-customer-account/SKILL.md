@@ -70,6 +70,7 @@ The Customer Account handlers own:
 - `GET /account/authorize`
 - `GET /account/refresh`
 - `POST /account/logout`
+- `GET /account/widget-data`, the JSON data for Shopify's `<shopify-account>` component
 
 Do not reimplement login, authorize, refresh, or logout unless the app needs custom behavior that preserves the same safeguards: `return_to` limited to the same origin, same-origin logout POST checks, `cache-control: no-store`, committed session cookies on the returned response, and request-context response headers.
 
@@ -95,6 +96,18 @@ Hydrogen ships no account UI yet — the app owns it. A storefront with the hand
 - **Logout** — a plain HTML `<form method="post" action="/account/logout">` with a submit button. The handler enforces same-origin POST and returns a raw redirect (to Shopify's logout endpoint when an `id_token` exists); a native browser submit follows it, a client-side form component or fetch call does not. This also keeps logout working without JavaScript. An optional `return_to` search param on the action URL controls the post-logout destination.
 - **Navbar** — link to `/account`. A static link is enough; the page handles both states. If showing signed-in state in the header, use `isLoggedIn()` behind the framework's streaming primitive per the Server Rendering rules above.
 - Never serialize tokens or session objects into loader data or HTML; render only derived profile fields.
+
+## Account Widget
+
+Shopify's `<shopify-account>` component shows an avatar that opens an account sheet. Load its script with `<ShopifyScripts account />` (or `account: true` on the script helpers) and point the component at the widget data route:
+
+```html
+<shopify-account account-data-url="/account/widget-data" sign-in-url="/account/login">
+  <div slot="signed-out-avatar">Sign in</div>
+</shopify-account>
+```
+
+The route returns the signed-in customer's name, email, and avatar (or `customer: null`), the shop's sign-in providers, and its translations for the request's locale. The access token stays on the server. The response is private and uncacheable; an upstream failure returns `502` instead of showing a signed-in customer as signed out.
 
 ## Typed Queries
 
