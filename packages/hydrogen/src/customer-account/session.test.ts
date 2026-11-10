@@ -1789,28 +1789,44 @@ describe("account widget data route", () => {
     expect(error?.headers.get("x-content-type-options")).toBe("nosniff");
   });
 
-  it.each([401, 403])(
-    "treats a %i from the Customer Account API as signed out and clears the stored tokens",
-    async (status) => {
-      const sessionManager = new TestSessionManager(validSessionData());
-      const storefrontFetch = storefrontFetchReturning();
+  it("treats a 401 from the Customer Account API as signed out and clears the stored tokens", async () => {
+    const sessionManager = new TestSessionManager(validSessionData());
+    const storefrontFetch = storefrontFetchReturning();
 
-      const response = await requestWidgetData({
-        sessionManager,
-        fetch: vi.fn(() => Promise.resolve(new Response(null, { status }))),
-        storefrontFetch,
-        withCart: true,
-      });
+    const response = await requestWidgetData({
+      sessionManager,
+      fetch: vi.fn(() => Promise.resolve(new Response(null, { status: 401 }))),
+      storefrontFetch,
+      withCart: true,
+    });
 
-      expect(response?.status).toBe(200);
-      expect(response?.headers.get("set-cookie")).toBe("session=1");
-      expect(sessionManager.data).toBeUndefined();
-      await expect(response?.json()).resolves.toMatchObject({ customer: null });
-      expect(getCartMutations(storefrontFetch)).toEqual([
-        { cartId: CART_GID, buyerIdentity: { customerAccessToken: null } },
-      ]);
-    },
-  );
+    expect(response?.status).toBe(200);
+    expect(response?.headers.get("set-cookie")).toBe("session=1");
+    expect(sessionManager.data).toBeUndefined();
+    await expect(response?.json()).resolves.toMatchObject({ customer: null });
+    expect(getCartMutations(storefrontFetch)).toEqual([
+      { cartId: CART_GID, buyerIdentity: { customerAccessToken: null } },
+    ]);
+  });
+
+  it("returns a 502 and keeps the stored tokens on a 403 from the Customer Account API", async () => {
+    const sessionManager = new TestSessionManager(validSessionData());
+    const storefrontFetch = storefrontFetchReturning();
+
+    const response = await requestWidgetData({
+      sessionManager,
+      fetch: vi.fn(() => Promise.resolve(new Response(null, { status: 403 }))),
+      storefrontFetch,
+      withCart: true,
+    });
+
+    expect(response?.status).toBe(502);
+    await expect(response?.json()).resolves.toMatchObject({
+      error: { code: "customer_unavailable" },
+    });
+    expect(sessionManager.data?.tokens?.accessToken).toBe(ACCESS_TOKEN);
+    expect(getCartMutations(storefrontFetch)).toEqual([]);
+  });
 
   it("attaches the cart to the customer after a token refresh", async () => {
     const storefrontFetch = storefrontFetchReturning();
@@ -1879,7 +1895,7 @@ describe("account widget data route", () => {
     expect(getCartMutations(storefrontFetch)).toEqual([]);
   });
 
-  it("stops a slow token refresh at the deadline and keeps the refreshable session", async () => {
+  it("stops waiting for a slow token refresh at the deadline and keeps the refreshable session", async () => {
     const signals: AbortSignal[] = [];
     const sessionManager = new TestSessionManager(
       validSessionData({ tokens: { expiresAt: NOW_IN_MS } }),
@@ -1894,7 +1910,7 @@ describe("account widget data route", () => {
       error: { code: "customer_unavailable" },
     });
     expect(signals).toHaveLength(1);
-    expect(signals[0]?.aborted).toBe(true);
+    expect(signals[0]?.aborted).toBe(false);
     expect(sessionManager.data?.tokens?.refreshToken).toBe(REFRESH_TOKEN);
   });
 
@@ -1938,5 +1954,35 @@ describe("account widget data route", () => {
         expect.stringContaining("account widget customer query failed"),
       ]),
     );
+  });
+
+  it("keeps a shared refresh running for other callers when the request that started it aborts", async () => {
+    const token = Promise.withResolvers<Response>();
+    const fetch = vi.fn(() => token.promise);
+    const customerSession = createSession({ fetch });
+    const expiredSession = () =>
+      new TestSessionManager(validSessionData({ tokens: { expiresAt: NOW_IN_MS } }));
+    const controller = new AbortController();
+    const request = new Request(WIDGET_DATA_URL, { signal: controller.signal });
+
+    const widgetResponse = handleShopifyRoutes({
+      request,
+      sessionManager: expiredSession(),
+      storefrontFetch: storefrontFetchReturning(),
+      handlers: [createCustomerAccountServerHandlers({ customerSession })],
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    const joiningSessionManager = expiredSession();
+    const joiningToken = customerSession.getOrRefreshAccessToken(
+      joiningSessionManager,
+      createRequestContext(),
+    );
+    controller.abort();
+
+    await expect(widgetResponse).resolves.toHaveProperty("status", 502);
+    token.resolve(tokenResponse());
+    await expect(joiningToken).resolves.toBe(NEW_ACCESS_TOKEN);
+    expect(joiningSessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

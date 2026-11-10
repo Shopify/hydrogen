@@ -293,7 +293,7 @@ export type CustomerAccountServerHandlers<
   /**
    * Returns the data for `<shopify-account account-data-url="/account/widget-data">` at `/account/widget-data`: the signed-in customer's name, email, and avatar, or `null` for signed-out visitors, plus the shop's sign-in providers and account sheet translations for the request's locale. Accepts `GET`. The customer's access token stays on the server.
    *
-   * The route refreshes an expired access token and commits the session. The response is private and uncacheable. When the Customer Account API rejects the access token with a `401` or `403` status, the route clears the stored tokens and returns `customer: null`. When the Storefront API or Customer Account API request fails otherwise, or a signed-in customer's token can't be refreshed for a temporary reason, the route returns a `502` error instead of partial data. The token refresh and the API requests share an 8-second deadline, within the component's 10-second timeout. The route needs `storefrontClient` in the handler context, and throws when the customer session doesn't come from `createCustomerSession`.
+   * The route refreshes an expired access token and commits the session. The response is private and uncacheable. When the Customer Account API rejects the access token with a `401` status, the route clears the stored tokens and returns `customer: null`. When the Storefront API or Customer Account API request fails otherwise, or a signed-in customer's token can't be refreshed for a temporary reason, the route returns a `502` error instead of partial data. The token refresh and the API requests share an 8-second deadline, within the component's 10-second timeout. The route needs `storefrontClient` in the handler context, and throws when the customer session doesn't come from `createCustomerSession`.
    */
   widgetData: CallableRouteHandler<
     TContext & Pick<ShopifyRouteHandlerContext, "storefrontClient">,
@@ -403,7 +403,7 @@ type OAuthCallbackResult = {
   accessToken: string;
 };
 type InternalRefreshOptions = RequestOriginOptions & {
-  /** Stops the refresh request, which then counts as a transient failure. */
+  /** Stops waiting for the refresh, which then counts as a transient failure. The shared refresh request keeps running. */
   signal?: AbortSignal;
 };
 type CustomerSessionInternals = {
@@ -1074,9 +1074,9 @@ function createWidgetDataResult(
   };
 }
 
-// `<shopify-account>` aborts its request after 10 seconds. Finishing the refresh and every query
-// before then leaves time to deliver the response, so a rotated refresh token reaches the
-// browser's cookie instead of a response nobody reads.
+// `<shopify-account>` aborts its request after 10 seconds. Responding before then means tokens a
+// finished refresh wrote reach the browser's cookie instead of a response nobody reads. A shared
+// refresh still running at the deadline keeps going for any other request waiting on it.
 function createWidgetDataDeadline(requestSignal: AbortSignal | undefined) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
@@ -1089,7 +1089,7 @@ function createWidgetDataDeadline(requestSignal: AbortSignal | undefined) {
 }
 
 function isRejectedAccessToken(error: unknown): boolean {
-  return error instanceof CustomerAccountApiError && (error.status === 401 || error.status === 403);
+  return error instanceof CustomerAccountApiError && error.status === 401;
 }
 
 // Settled up front so a rejection that happens before it is awaited isn't reported as unhandled.
@@ -1379,30 +1379,30 @@ async function getRefreshResult({
   signal: AbortSignal | undefined;
 }): Promise<RefreshResult> {
   const flightKey = `${origin}\n${refreshToken}`;
-  const existingFlight = refreshFlights.get(flightKey);
-  if (existingFlight) {
-    // Stops only this caller's wait: the request that started the flight still writes its result.
-    if (!signal) return existingFlight;
-    return withAbort(existingFlight, signal).catch(() => ({ type: "transient" }));
+  let flight = refreshFlights.get(flightKey);
+  if (!flight) {
+    flight = refreshAccessToken({
+      endpoints,
+      customerAccountApiClientId,
+      refreshToken,
+      idToken,
+      origin,
+      fetch,
+      timeoutInMs,
+    }).finally(() => refreshFlights.delete(flightKey));
+    refreshFlights.set(flightKey, flight);
   }
+  return waitForRefresh(flight, signal);
+}
 
-  const flight = refreshAccessToken({
-    endpoints,
-    customerAccountApiClientId,
-    refreshToken,
-    idToken,
-    origin,
-    fetch,
-    timeoutInMs,
-    signal,
-  });
-  refreshFlights.set(flightKey, flight);
-
-  try {
-    return await flight;
-  } finally {
-    refreshFlights.delete(flightKey);
-  }
+// The flight is shared and runs on its own timeout, so a caller's signal, including the signal of
+// the caller that started it, stops only that caller's wait. Callers still waiting get the result.
+function waitForRefresh(
+  flight: Promise<RefreshResult>,
+  signal: AbortSignal | undefined,
+): Promise<RefreshResult> {
+  if (!signal) return flight;
+  return withAbort(flight, signal).catch((): RefreshResult => ({ type: "transient" }));
 }
 
 async function refreshAccessToken({
@@ -1413,7 +1413,6 @@ async function refreshAccessToken({
   origin,
   fetch,
   timeoutInMs,
-  signal: callerSignal,
 }: {
   endpoints: CustomerAccountEndpoints;
   customerAccountApiClientId: string;
@@ -1422,7 +1421,6 @@ async function refreshAccessToken({
   origin: string;
   fetch: typeof globalThis.fetch;
   timeoutInMs: number;
-  signal: AbortSignal | undefined;
 }): Promise<RefreshResult> {
   const body = new URLSearchParams({
     grant_type: REFRESH_TOKEN_GRANT_TYPE,
@@ -1431,20 +1429,16 @@ async function refreshAccessToken({
   });
 
   try {
-    return await withTokenRequestTimeout(
-      timeoutInMs,
-      async (signal) => {
-        const response = await postTokenRequest({
-          url: endpoints.tokenUrl,
-          origin,
-          body,
-          fetch,
-          signal,
-        });
-        return readRefreshResult(response, refreshToken, idToken, signal);
-      },
-      callerSignal,
-    );
+    return await withTokenRequestTimeout(timeoutInMs, async (signal) => {
+      const response = await postTokenRequest({
+        url: endpoints.tokenUrl,
+        origin,
+        body,
+        fetch,
+        signal,
+      });
+      return readRefreshResult(response, refreshToken, idToken, signal);
+    });
   } catch {
     return { type: "transient" };
   }
@@ -1509,7 +1503,6 @@ async function postTokenRequest({
 async function withTokenRequestTimeout<T>(
   timeoutInMs: number,
   operation: (signal: AbortSignal) => Promise<T>,
-  callerSignal?: AbortSignal,
 ): Promise<T> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
@@ -1521,9 +1514,7 @@ async function withTokenRequestTimeout<T>(
   }, timeoutInMs);
 
   try {
-    return await operation(
-      callerSignal ? AbortSignal.any([controller.signal, callerSignal]) : controller.signal,
-    );
+    return await operation(controller.signal);
   } finally {
     clearTimeout(timeoutId);
   }

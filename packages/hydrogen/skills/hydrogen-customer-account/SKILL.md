@@ -107,7 +107,7 @@ Shopify's `<shopify-account>` component shows an avatar that opens an account sh
 </shopify-account>
 ```
 
-The route returns the signed-in customer's name, email, and avatar (or `customer: null`), the shop's sign-in providers, and its translations for the request's locale. The access token stays on the server. The response is private and uncacheable. A token the Customer Account API rejects is cleared and returns `customer: null`; any other upstream failure returns `502`, so `<shopify-account>` logs it and keeps its current state on `refresh()` instead of quietly signing the customer out.
+The route returns the signed-in customer's name, email, and avatar (or `customer: null`), the shop's sign-in providers, and its translations for the request's locale. The access token stays on the server. The response is private and uncacheable. A token the Customer Account API rejects with `401` is cleared and returns `customer: null`; any other upstream failure returns `502`, so `<shopify-account>` logs it and keeps its current state on `refresh()` instead of quietly signing the customer out.
 
 ## Typed Queries
 
