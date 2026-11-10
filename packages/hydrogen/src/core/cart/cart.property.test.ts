@@ -18,6 +18,9 @@ const DISCOUNT_PER_CODE = 5;
 
 // Response orderings multiply the cases to explore, so these run more than the default 100.
 const RUNS = { numRuns: 1_000 };
+// A property that holds runs all its sessions, which takes a few seconds on a CI runner. Vitest's
+// 5-second default leaves a slow runner too little room.
+const TIMEOUT_IN_MS = 30_000;
 
 type FakeLine = { id: string; variant: string; quantity: number };
 type FakeCart = { id: string; lines: FakeLine[]; discountCodes: string[]; note: string };
@@ -515,7 +518,7 @@ afterEach(() => {
   resetStandardActionsForTests();
 });
 
-describe("cart store against a fake Shopify", () => {
+describe("cart store against a fake Shopify", { timeout: TIMEOUT_IN_MS }, () => {
   it("shows Shopify's cart whenever nothing is pending, in any response order", async () => {
     await assertForAnySession(
       fc.oneof(...cartChanges, addElsewhere),
