@@ -190,6 +190,29 @@ describe("ShopifyScripts", () => {
     ]);
   });
 
+  it("remounts an AccountWidget that connected before ShopifyScripts rendered its data", () => {
+    vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts").mockResolvedValue(undefined);
+    const connectedData = recordShopifyAccountConnections();
+    const signedIn = { ...TEST_ACCOUNT_WIDGET_DATA, customer: TEST_ACCOUNT_WIDGET_CUSTOMER };
+    const { container, rerender } = render(<AccountWidget />);
+    const widget = container.querySelector("shopify-account");
+
+    expect(connectedData).toEqual([null]);
+
+    rerender(
+      <>
+        <AccountWidget />
+        <ShopifyScripts shop={TEST_SHOP} accountWidget={signedIn} />
+      </>,
+    );
+
+    expect(container.querySelector("shopify-account")).not.toBe(widget);
+    expect(connectedData.map((data) => data?.customer?.firstName ?? null)).toEqual([
+      null,
+      TEST_ACCOUNT_WIDGET_CUSTOMER.firstName,
+    ]);
+  });
+
   it("keeps already-rendered scripts in place when the account widget is toggled", () => {
     vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts").mockResolvedValue(undefined);
     const { container, rerender } = render(<ShopifyScripts shop={TEST_SHOP} />);

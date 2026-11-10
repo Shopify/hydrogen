@@ -160,6 +160,11 @@ export function getShopifyAccountWidgetDataScript(
   };
 }
 
+/** Whether the page has the account widget's JSON script tag. Call only in the browser. */
+export function hasShopifyAccountWidgetData() {
+  return document.getElementById(SHOPIFY_ACCOUNT_WIDGET_DATA_ID) !== null;
+}
+
 /** Finds the account widget's JSON script tag among the generated script descriptors. */
 export function findShopifyAccountWidgetDataScript(scripts: readonly ShopifyScriptDescriptor[]) {
   return scripts.find(({ attributes }) => attributes?.id === SHOPIFY_ACCOUNT_WIDGET_DATA_ID);

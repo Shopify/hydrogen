@@ -1,8 +1,9 @@
 "use client";
 
-import { createElement, useSyncExternalStore } from "react";
+import { createElement, useEffect, useSyncExternalStore } from "react";
 import type * as React from "react";
 
+import { hasShopifyAccountWidgetData } from "../core/shopify-scripts/account-widget";
 import { CUSTOMER_ACCOUNT_PATHS } from "../core/url";
 
 /**
@@ -30,10 +31,20 @@ function subscribeToAccountWidgetData(listener: () => void) {
 
 const getAccountWidgetDataVersion = () => accountWidgetDataVersion;
 
+// Set when an `AccountWidget` mounts before the JSON script tag exists, such as when
+// `ShopifyScripts` mounts later. The widget may have connected with no data to read.
+let hasAccountWidgetsWithoutData = false;
+
 /** Remounts every mounted `AccountWidget` so each one reads the updated JSON script tag. */
 export function restartAccountWidgets() {
+  hasAccountWidgetsWithoutData = false;
   accountWidgetDataVersion += 1;
   for (const listener of accountWidgetDataListeners) listener();
+}
+
+/** Remounts every `AccountWidget` if one mounted before the JSON script tag existed. */
+export function restartAccountWidgetsMissingData() {
+  if (hasAccountWidgetsWithoutData) restartAccountWidgets();
 }
 
 /**
@@ -53,6 +64,10 @@ export function AccountWidget({ fallback, ...attributes }: AccountWidgetProps) {
     getAccountWidgetDataVersion,
     getAccountWidgetDataVersion,
   );
+
+  useEffect(() => {
+    if (!hasShopifyAccountWidgetData()) hasAccountWidgetsWithoutData = true;
+  }, [version]);
 
   return createElement(
     "shopify-account",

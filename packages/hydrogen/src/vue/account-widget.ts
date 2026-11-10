@@ -1,14 +1,29 @@
-import { defineComponent, h, shallowRef } from "vue";
+import { defineComponent, h, onMounted, shallowRef, watch } from "vue";
 
+import { hasShopifyAccountWidgetData } from "../core/shopify-scripts/account-widget";
 import { CUSTOMER_ACCOUNT_PATHS } from "../core/url";
 
 // The data lives in the single JSON script tag that `ShopifyScripts` renders, so every
 // `AccountWidget` restarts together. Only the browser changes the version.
 const accountWidgetDataVersion = shallowRef(0);
 
+// Set when an `AccountWidget` mounts before the JSON script tag exists, such as when
+// `ShopifyScripts` mounts later. The widget may have connected with no data to read.
+let hasAccountWidgetsWithoutData = false;
+
 /** Remounts every mounted `AccountWidget` so each one reads the updated JSON script tag. */
 export function restartAccountWidgets() {
+  hasAccountWidgetsWithoutData = false;
   accountWidgetDataVersion.value += 1;
+}
+
+/** Remounts every `AccountWidget` if one mounted before the JSON script tag existed. */
+export function restartAccountWidgetsMissingData() {
+  if (hasAccountWidgetsWithoutData) restartAccountWidgets();
+}
+
+function checkAccountWidgetData() {
+  if (!hasShopifyAccountWidgetData()) hasAccountWidgetsWithoutData = true;
 }
 
 /**
@@ -23,6 +38,9 @@ export function restartAccountWidgets() {
 export const AccountWidget = defineComponent({
   name: "AccountWidget",
   setup(_props, { slots }) {
+    onMounted(checkAccountWidgetData);
+    watch(accountWidgetDataVersion, checkAccountWidgetData, { flush: "post" });
+
     return () =>
       h(
         "shopify-account",

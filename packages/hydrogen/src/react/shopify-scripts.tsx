@@ -11,7 +11,7 @@ import {
 } from "../core/shopify-scripts";
 import { findShopifyAccountWidgetDataScript } from "../core/shopify-scripts/account-widget";
 import { getShopifyScriptTagKey } from "../core/shopify-scripts/render";
-import { restartAccountWidgets } from "./account-widget";
+import { restartAccountWidgets, restartAccountWidgetsMissingData } from "./account-widget";
 
 /**
  * Props for the `ShopifyScripts` component in React and Vue. The component renders Shopify's script
@@ -77,9 +77,12 @@ function useRestartAccountWidgetsOnChange(serialized: string | undefined) {
   const previous = useRef(serialized);
 
   useEffect(() => {
-    if (previous.current === serialized) return;
-    previous.current = serialized;
-    restartAccountWidgets();
+    if (previous.current !== serialized) {
+      previous.current = serialized;
+      restartAccountWidgets();
+    } else if (serialized !== undefined) {
+      restartAccountWidgetsMissingData();
+    }
   }, [serialized]);
 }
 

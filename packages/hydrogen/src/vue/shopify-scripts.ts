@@ -10,7 +10,7 @@ import {
   type ShopifyRoutesOptions,
 } from "../core/shopify-scripts/index";
 import { getShopifyScriptTagKey } from "../core/shopify-scripts/render";
-import { restartAccountWidgets } from "./account-widget";
+import { restartAccountWidgets, restartAccountWidgetsMissingData } from "./account-widget";
 
 /**
  * Props for the Vue ShopifyScripts component.
@@ -107,12 +107,15 @@ export const ShopifyScripts = defineComponent({
 
     const scriptTags = computed(() => getShopifyScriptTags(props));
 
-    // `flush: "post"` runs after the JSON script tag updates, so remounted widgets read the new data.
-    watch(
+    const accountWidgetData = computed(
       () => findShopifyAccountWidgetDataScript(scriptTags.value.scripts)?.innerHTML,
-      restartAccountWidgets,
-      { flush: "post" },
     );
+
+    // `flush: "post"` runs after the JSON script tag updates, so remounted widgets read the new data.
+    watch(accountWidgetData, restartAccountWidgets, { flush: "post" });
+    onMounted(() => {
+      if (accountWidgetData.value !== undefined) restartAccountWidgetsMissingData();
+    });
 
     return () =>
       scriptTags.value.tags.map(({ tagName, attributes, innerHTML }) =>

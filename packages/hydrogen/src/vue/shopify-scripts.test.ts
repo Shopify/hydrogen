@@ -187,6 +187,35 @@ describe("ShopifyScripts", () => {
     wrapper.unmount();
   });
 
+  it("remounts an AccountWidget that connected before ShopifyScripts rendered its data", async () => {
+    vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts").mockResolvedValue(undefined);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const connectedData = recordShopifyAccountConnections();
+    const signedIn = { ...TEST_ACCOUNT_WIDGET_DATA, customer: TEST_ACCOUNT_WIDGET_CUSTOMER };
+    const showScripts = shallowRef(false);
+    const wrapper = mount(
+      defineComponent(() => () => [
+        h(AccountWidget),
+        showScripts.value ? h(ShopifyScripts, { shop: TEST_SHOP, accountWidget: signedIn }) : null,
+      ]),
+      { attachTo: document.body },
+    );
+    const widget = document.querySelector("shopify-account");
+
+    expect(connectedData).toEqual([null]);
+
+    showScripts.value = true;
+    await nextTick();
+    await nextTick();
+
+    expect(document.querySelector("shopify-account")).not.toBe(widget);
+    expect(connectedData.map((data) => data?.customer?.firstName ?? null)).toEqual([
+      null,
+      TEST_ACCOUNT_WIDGET_CUSTOMER.firstName,
+    ]);
+    wrapper.unmount();
+  });
+
   it("initializes browser script behavior once with initial props", async () => {
     const initializeShopifyScripts = vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts");
     const navigate = vi.fn();
