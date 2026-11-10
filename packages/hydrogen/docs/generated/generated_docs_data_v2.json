@@ -4517,272 +4517,6 @@
       "value": "export function getShopifyCspDirectives(\n  shop: ContentSecurityPolicyShop = {},\n  { hashes = false }: { hashes?: boolean } = {},\n) {\n  const shopOrigins = [shop.storeDomain, shop.checkoutDomain || undefined]\n    .filter((domain) => domain !== undefined)\n    .map(normalizeStoreDomain);\n\n  return {\n    defaultSrc: [\"'self'\"],\n    baseUri: [\"'self'\"],\n    objectSrc: [\"'none'\"],\n    frameAncestors: [\"'none'\"],\n    scriptSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN, ...(hashes ? getShopifyScriptHashes() : [])],\n    scriptSrcAttr: [\"'none'\"],\n    styleSrc: [\"'self'\", \"'unsafe-inline'\", SHOPIFY_CDN_ORIGIN],\n    imgSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN, \"data:\"],\n    fontSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN],\n    mediaSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN],\n    frameSrc: [\n      \"'self'\",\n      SHOPIFY_ORIGIN,\n      SHOPIFY_SHOP_APP_ORIGIN,\n      SHOPIFY_SHOP_COM_ORIGIN,\n      ...shopOrigins,\n    ],\n    connectSrc: [\n      \"'self'\",\n      SHOPIFY_CDN_ORIGIN,\n      SHOPIFY_SHOP_APP_ORIGIN,\n      SHOPIFY_SHOP_COM_ORIGIN,\n      SHOPIFY_ORIGIN,\n      \"https://*.shopifysvc.com\",\n      ...shopOrigins,\n      ...(__DEV__\n        ? [\n            \"http://localhost:*\",\n            \"https://localhost:*\",\n            \"ws://localhost:*\",\n            \"wss://localhost:*\",\n            \"http://127.0.0.1:*\",\n            \"https://127.0.0.1:*\",\n            \"ws://127.0.0.1:*\",\n            \"wss://127.0.0.1:*\",\n            \"ws://*.tryhydrogen.dev:*\",\n            \"wss://*.tryhydrogen.dev:*\",\n          ]\n        : []),\n    ],\n  } satisfies ContentSecurityPolicyDirectives;\n}"
     }
   },
-  "ShopifyScriptsOptions": {
-    "src/core/shopify-scripts/types.ts": {
-      "filePath": "src/core/shopify-scripts/types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "ShopifyScriptsOptions",
-      "value": "ShopifyScriptTagsOptions & InitializeShopifyScriptsOptions",
-      "description": "Options for both `getShopifyScriptTags` and `initializeShopifyScripts`. Build one object and pass it to both functions.",
-      "isPublicDocs": true
-    }
-  },
-  "ShopifyScriptTagsOptions": {
-    "src/core/shopify-scripts/types.ts": {
-      "filePath": "src/core/shopify-scripts/types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "ShopifyScriptTagsOptions",
-      "value": "{\n  /**\n   * Loads the customer account component. Render `shopify-account` where you want the account UI to appear.\n   * @see [shopify-account](https://shopify.dev/docs/api/storefront-web-components/components/shopify-account)\n   */\n  account?: boolean;\n  /** The sales channel and custom data for the analytics bus. */\n  analytics?: ShopifyScriptsAnalyticsConfig;\n  /** Which consent script to load and how the analytics bus waits for consent. */\n  consent?: ConsentConfig;\n  /** Development-only debugging tools. */\n  debug?: {\n    /** Loads Shopify's standard events inspector in development builds. */\n    standardEventsInspector?: boolean;\n  };\n  /** The country, language, currency, and path prefix for Shopify's scripts. Defaults to US English. */\n  i18n?: ShopifyScriptsI18n;\n  /** Loads Inbox. Render `shopify-chat` where you want the chat UI to appear. */\n  inbox?: boolean;\n  /**\n   * Adds a `nonce` attribute to every script tag.\n   */\n  nonce?: string;\n  /** The shop's IDs and permanent domain. */\n  shop: ShopifyScriptsShop;\n  /** Loads Shopify's storefront analytics script. Defaults to `true`. */\n  shopifyAnalytics?: boolean;\n}",
-      "description": "The shop details and the features whose scripts to load.",
-      "members": [
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "account",
-          "value": "boolean",
-          "description": "Loads the customer account component. Render `shopify-account` where you want the account UI to appear.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "analytics",
-          "value": "ShopifyScriptsAnalyticsConfig",
-          "description": "The sales channel and custom data for the analytics bus.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "consent",
-          "value": "ConsentConfig",
-          "description": "Which consent script to load and how the analytics bus waits for consent.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "debug",
-          "value": "{ standardEventsInspector?: boolean; }",
-          "description": "Development-only debugging tools.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "i18n",
-          "value": "ShopifyScriptsI18n",
-          "description": "The country, language, currency, and path prefix for Shopify's scripts. Defaults to US English.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "inbox",
-          "value": "boolean",
-          "description": "Loads Inbox. Render `shopify-chat` where you want the chat UI to appear.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "nonce",
-          "value": "string",
-          "description": "Adds a `nonce` attribute to every script tag.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "shop",
-          "value": "ShopifyScriptsShop",
-          "description": "The shop's IDs and permanent domain."
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "shopifyAnalytics",
-          "value": "boolean",
-          "description": "Loads Shopify's storefront analytics script. Defaults to `true`.",
-          "isOptional": true
-        }
-      ]
-    }
-  },
-  "ShopifyScriptsAnalyticsConfig": {
-    "src/core/shopify-scripts/types.ts": {
-      "filePath": "src/core/shopify-scripts/types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "ShopifyScriptsAnalyticsConfig",
-      "value": "{\n  /** The sales channel that Shopify attributes analytics to. Defaults to `hydrogen`. */\n  channel?: ShopAnalyticsChannel;\n  /** Extra values that analytics destinations can read from the bus configuration. */\n  customData?: StorefrontAnalyticsConfig[\"customData\"];\n}",
-      "description": "The sales channel and custom data for the analytics bus.",
-      "members": [
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "channel",
-          "value": "ShopAnalyticsChannel",
-          "description": "The sales channel that Shopify attributes analytics to. Defaults to `hydrogen`.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "customData",
-          "value": "Record<string, unknown>",
-          "description": "Extra values that analytics destinations can read from the bus configuration.",
-          "isOptional": true
-        }
-      ]
-    }
-  },
-  "ShopAnalyticsChannel": {
-    "src/core/analytics/types.ts": {
-      "filePath": "src/core/analytics/types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "ShopAnalyticsChannel",
-      "value": "\"hydrogen\" | \"headless\"",
-      "description": "The sales channel that Shopify attributes a storefront's analytics to."
-    }
-  },
-  "ConsentConfig": {
-    "src/core/analytics/types.ts": {
-      "filePath": "src/core/analytics/types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "ConsentConfig",
-      "value": "{ mode?: \"no-banner\"; setup?: never } | { mode: \"default-banner\"; setup?: never } | { mode: \"custom-banner\"; setup: ConsentSetup }",
-      "description": "Chooses which Shopify consent script loads and when the analytics bus releases events to destinations.\n\n- `default-banner` loads Shopify's hosted privacy banner. When the customer   must see the banner, destinations wait until the customer accepts or\n  declines. Otherwise, events release as soon as the consent API loads.\n- `custom-banner` loads only the Customer Privacy API and requires a   `setup` callback that integrates a third-party consent provider.\n  Events release once the callback resolves.\n- `no-banner` loads only the Customer Privacy API and releases events   once the API loads. Omitting the mode has the same effect.\n\nIn every mode, destinations receive events only while the Customer Privacy API allows analytics processing."
-    }
-  },
-  "ConsentSetup": {
-    "src/core/analytics/types.ts": {
-      "filePath": "src/core/analytics/types.ts",
-      "name": "ConsentSetup",
-      "description": "Connects a third-party consent provider to Shopify's Customer Privacy API. Hydrogen calls the function once, after the Customer Privacy API loads. Pass the provider's choice to `window.Shopify.customerPrivacy`, and resolve after Shopify receives the choice. Hydrogen then delivers the events that consent allows. When the promise rejects, Hydrogen logs the error, keeps events blocked, and doesn't call the function again.",
-      "params": [],
-      "returns": {
-        "filePath": "src/core/analytics/types.ts",
-        "description": "A promise that resolves after consent syncs with Shopify, or rejects to keep delivery blocked.",
-        "name": "Promise<void>",
-        "value": "Promise<void>"
-      },
-      "value": "() => Promise<void>"
-    }
-  },
-  "ShopifyScriptsI18n": {
-    "src/core/shopify-scripts/types.ts": {
-      "filePath": "src/core/shopify-scripts/types.ts",
-      "name": "ShopifyScriptsI18n",
-      "description": "The locale that Shopify's scripts read from the browser's Shopify global.",
-      "members": [
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "country",
-          "value": "ShopifyCountryCode",
-          "description": ""
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "currency",
-          "value": "string",
-          "description": "The active currency code. Hydrogen converts it to uppercase.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "language",
-          "value": "ShopifyLanguageCode",
-          "description": ""
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "pathPrefix",
-          "value": "string",
-          "description": "The URL prefix for localized routes, such as `/es-es`. Leave it empty for the default locale.",
-          "isOptional": true
-        }
-      ],
-      "value": "export interface ShopifyScriptsI18n extends ShopifyLocale {\n  /** The URL prefix for localized routes, such as `/es-es`. Leave it empty for the default locale. */\n  pathPrefix?: string;\n  /** The active currency code. Hydrogen converts it to uppercase. */\n  currency?: string;\n}"
-    }
-  },
-  "ShopifyScriptsShop": {
-    "src/core/shopify-scripts/types.ts": {
-      "filePath": "src/core/shopify-scripts/types.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "ShopifyScriptsShop",
-      "value": "{\n  /** The shop's ID, as a numeric string or a Shop GID. */\n  shopId: string;\n  /** The Hydrogen storefront's ID. Hydrogen leaves it out of Headless channel analytics. */\n  storefrontId: string;\n  /** The shop's permanent `*.myshopify.com` domain. Hydrogen sets it as `window.Shopify.shop`. */\n  myshopifyDomain: string;\n}",
-      "description": "The shop identifiers that Shopify's scripts and analytics use.",
-      "members": [
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "myshopifyDomain",
-          "value": "string",
-          "description": "The shop's permanent `*.myshopify.com` domain. Hydrogen sets it as `window.Shopify.shop`."
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "shopId",
-          "value": "string",
-          "description": "The shop's ID, as a numeric string or a Shop GID."
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "storefrontId",
-          "value": "string",
-          "description": "The Hydrogen storefront's ID. Hydrogen leaves it out of Headless channel analytics."
-        }
-      ]
-    }
-  },
-  "InitializeShopifyScriptsOptions": {
-    "src/core/shopify-scripts/types.ts": {
-      "filePath": "src/core/shopify-scripts/types.ts",
-      "name": "InitializeShopifyScriptsOptions",
-      "description": "The route, consent, and WebMCP settings for starting Shopify's scripts in the browser.",
-      "members": [
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "consent",
-          "value": "ConsentConfig",
-          "description": "The consent configuration that you passed to the script tags. The bus runs the setup callback once.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "navigate",
-          "value": "(url: string) => void | Promise<void>",
-          "description": "Navigates to a URL after Shopify's scripts resolve it to your app's route. Defaults to a full page load. Checkout, cart permalink, buy permalink, and customer account paths always use a full page load.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "routes",
-          "value": "ShopifyRouteTemplates",
-          "description": "Your app's custom route templates, which Shopify's scripts use to match and resolve storefront URLs.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/shopify-scripts/types.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "webMcp",
-          "value": "boolean",
-          "description": "Loads Shopify WebMCP tools when the browser supports WebMCP. Defaults to `true`.",
-          "isOptional": true
-        }
-      ],
-      "value": "export interface InitializeShopifyScriptsOptions extends ShopifyRoutesOptions {\n  /** The consent configuration that you passed to the script tags. The bus runs the setup callback once. */\n  consent?: ConsentConfig;\n  /** Loads Shopify WebMCP tools when the browser supports WebMCP. Defaults to `true`. */\n  webMcp?: boolean;\n}"
-    }
-  },
   "AnalyticsEventGeneratedType": {
     "src/core/analytics/events.ts": {
       "filePath": "src/core/analytics/events.ts",
@@ -5448,6 +5182,30 @@
       ]
     }
   },
+  "ConsentConfig": {
+    "src/core/analytics/types.ts": {
+      "filePath": "src/core/analytics/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ConsentConfig",
+      "value": "{ mode?: \"no-banner\"; setup?: never } | { mode: \"default-banner\"; setup?: never } | { mode: \"custom-banner\"; setup: ConsentSetup }",
+      "description": "Chooses which Shopify consent script loads and when the analytics bus releases events to destinations.\n\n- `default-banner` loads Shopify's hosted privacy banner. When the customer   must see the banner, destinations wait until the customer accepts or\n  declines. Otherwise, events release as soon as the consent API loads.\n- `custom-banner` loads only the Customer Privacy API and requires a   `setup` callback that integrates a third-party consent provider.\n  Events release once the callback resolves.\n- `no-banner` loads only the Customer Privacy API and releases events   once the API loads. Omitting the mode has the same effect.\n\nIn every mode, destinations receive events only while the Customer Privacy API allows analytics processing."
+    }
+  },
+  "ConsentSetup": {
+    "src/core/analytics/types.ts": {
+      "filePath": "src/core/analytics/types.ts",
+      "name": "ConsentSetup",
+      "description": "Connects a third-party consent provider to Shopify's Customer Privacy API. Hydrogen calls the function once, after the Customer Privacy API loads. Pass the provider's choice to `window.Shopify.customerPrivacy`, and resolve after Shopify receives the choice. Hydrogen then delivers the events that consent allows. When the promise rejects, Hydrogen logs the error, keeps events blocked, and doesn't call the function again.",
+      "params": [],
+      "returns": {
+        "filePath": "src/core/analytics/types.ts",
+        "description": "A promise that resolves after consent syncs with Shopify, or rejects to keep delivery blocked.",
+        "name": "Promise<void>",
+        "value": "Promise<void>"
+      },
+      "value": "() => Promise<void>"
+    }
+  },
   "AnalyticsTrackingValues": {
     "src/core/analytics/types.ts": {
       "filePath": "src/core/analytics/types.ts",
@@ -5772,6 +5530,372 @@
       "members": []
     }
   },
+  "ShopifyScriptsOptions": {
+    "src/core/shopify-scripts/types.ts": {
+      "filePath": "src/core/shopify-scripts/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyScriptsOptions",
+      "value": "ShopifyScriptTagsOptions & InitializeShopifyScriptsOptions",
+      "description": "Options for both `getShopifyScriptTags` and `initializeShopifyScripts`. Build one object and pass it to both functions.",
+      "isPublicDocs": true
+    }
+  },
+  "ShopifyScriptTagsOptions": {
+    "src/core/shopify-scripts/types.ts": {
+      "filePath": "src/core/shopify-scripts/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyScriptTagsOptions",
+      "value": "{\n  /**\n   * Loads the customer account component and renders the data it reads. Render `AccountWidget`,\n   * or `shopify-account`, where you want the account UI to appear.\n   *\n   * Pass this option whenever you want the widget, including for signed-out visitors: set\n   * `customer` to `null` when nobody is signed in. Leave the option out to omit the widget.\n   *\n   * `shopify-account` reads the data once, when it connects. If you change the data without\n   * `AccountWidget`, remount every `shopify-account` element yourself.\n   * @see [shopify-account](https://shopify.dev/docs/api/storefront-web-components/components/shopify-account)\n   */\n  accountWidget?: ShopifyAccountWidgetData;\n  /** The sales channel and custom data for the analytics bus. */\n  analytics?: ShopifyScriptsAnalyticsConfig;\n  /** Which consent script to load and how the analytics bus waits for consent. */\n  consent?: ConsentConfig;\n  /** Development-only debugging tools. */\n  debug?: {\n    /** Loads Shopify's standard events inspector in development builds. */\n    standardEventsInspector?: boolean;\n  };\n  /** The country, language, currency, and path prefix for Shopify's scripts. Defaults to US English. */\n  i18n?: ShopifyScriptsI18n;\n  /** Loads Inbox. Render `shopify-chat` where you want the chat UI to appear. */\n  inbox?: boolean;\n  /**\n   * Adds a `nonce` attribute to every script tag.\n   */\n  nonce?: string;\n  /** The shop's IDs and permanent domain. */\n  shop: ShopifyScriptsShop;\n  /** Loads Shopify's storefront analytics script. Defaults to `true`. */\n  shopifyAnalytics?: boolean;\n}",
+      "description": "The shop details and the features whose scripts to load.",
+      "members": [
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "accountWidget",
+          "value": "ShopifyAccountWidgetData",
+          "description": "Loads the customer account component and renders the data it reads. Render `AccountWidget`, or `shopify-account`, where you want the account UI to appear.\n\nPass this option whenever you want the widget, including for signed-out visitors: set `customer` to `null` when nobody is signed in. Leave the option out to omit the widget.\n\n`shopify-account` reads the data once, when it connects. If you change the data without `AccountWidget`, remount every `shopify-account` element yourself.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "analytics",
+          "value": "ShopifyScriptsAnalyticsConfig",
+          "description": "The sales channel and custom data for the analytics bus.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "consent",
+          "value": "ConsentConfig",
+          "description": "Which consent script to load and how the analytics bus waits for consent.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "debug",
+          "value": "{ standardEventsInspector?: boolean; }",
+          "description": "Development-only debugging tools.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "i18n",
+          "value": "ShopifyScriptsI18n",
+          "description": "The country, language, currency, and path prefix for Shopify's scripts. Defaults to US English.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "inbox",
+          "value": "boolean",
+          "description": "Loads Inbox. Render `shopify-chat` where you want the chat UI to appear.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "nonce",
+          "value": "string",
+          "description": "Adds a `nonce` attribute to every script tag.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "shop",
+          "value": "ShopifyScriptsShop",
+          "description": "The shop's IDs and permanent domain."
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "shopifyAnalytics",
+          "value": "boolean",
+          "description": "Loads Shopify's storefront analytics script. Defaults to `true`.",
+          "isOptional": true
+        }
+      ]
+    }
+  },
+  "ShopifyAccountWidgetData": {
+    "src/core/shopify-scripts/account-widget.ts": {
+      "filePath": "src/core/shopify-scripts/account-widget.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyAccountWidgetData",
+      "value": "{\n  /** The signed-in customer, or `null` when the visitor is signed out. */\n  customer: ShopifyAccountWidgetCustomer | null;\n  shop: ShopifyAccountWidgetShop;\n}",
+      "description": "The data that `<shopify-account>` reads from the page. When this data is on the page, the component skips its own Storefront API requests. Hydrogen adds the shop ID and locale from the `shop` and `i18n` options, and keeps legacy customer accounts and the marketing opt-in off.\n\nUnknown and missing fields throw, so values such as access tokens can never reach the HTML.",
+      "members": [
+        {
+          "filePath": "src/core/shopify-scripts/account-widget.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "customer",
+          "value": "ShopifyAccountWidgetCustomer | null",
+          "description": "The signed-in customer, or `null` when the visitor is signed out."
+        },
+        {
+          "filePath": "src/core/shopify-scripts/account-widget.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "shop",
+          "value": "ShopifyAccountWidgetShop",
+          "description": "The shop settings that control the account widget's sign-in options."
+        }
+      ]
+    }
+  },
+  "ShopifyAccountWidgetCustomer": {
+    "src/core/shopify-scripts/account-widget.ts": {
+      "filePath": "src/core/shopify-scripts/account-widget.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyAccountWidgetCustomer",
+      "value": "{\n  /** Shown in the greeting and used for the avatar initial. */\n  firstName: string | null;\n  /** Used for the avatar initial when there's no first name. */\n  lastName: string | null;\n  /** Shown in the account sheet and used for the avatar initial as a last resort. */\n  email: string | null;\n  /** The customer's avatar image URL. When `null`, the widget shows the customer's initial. */\n  avatarUrl: string | null;\n  /** The provider the customer signed in with. `shop` shows a Shop-branded avatar. Defaults to `null`. */\n  socialLoginProvider?: ShopifyAccountWidgetSocialLoginProvider | null;\n}",
+      "description": "The signed-in customer that the account widget displays.",
+      "members": [
+        {
+          "filePath": "src/core/shopify-scripts/account-widget.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "avatarUrl",
+          "value": "string | null",
+          "description": "The customer's avatar image URL. When `null`, the widget shows the customer's initial."
+        },
+        {
+          "filePath": "src/core/shopify-scripts/account-widget.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "email",
+          "value": "string | null",
+          "description": "Shown in the account sheet and used for the avatar initial as a last resort."
+        },
+        {
+          "filePath": "src/core/shopify-scripts/account-widget.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "firstName",
+          "value": "string | null",
+          "description": "Shown in the greeting and used for the avatar initial."
+        },
+        {
+          "filePath": "src/core/shopify-scripts/account-widget.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "lastName",
+          "value": "string | null",
+          "description": "Used for the avatar initial when there's no first name."
+        },
+        {
+          "filePath": "src/core/shopify-scripts/account-widget.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "socialLoginProvider",
+          "value": "ShopifyAccountWidgetSocialLoginProvider | null",
+          "description": "The provider the customer signed in with. `shop` shows a Shop-branded avatar. Defaults to `null`.",
+          "isOptional": true
+        }
+      ]
+    }
+  },
+  "ShopifyAccountWidgetSocialLoginProvider": {
+    "src/core/shopify-scripts/account-widget.ts": {
+      "filePath": "src/core/shopify-scripts/account-widget.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyAccountWidgetSocialLoginProvider",
+      "value": "keyof typeof SOCIAL_LOGIN_PROVIDER_HANDLES",
+      "description": "A social sign-in provider that the account widget can offer."
+    }
+  },
+  "ShopifyAccountWidgetShop": {
+    "src/core/shopify-scripts/account-widget.ts": {
+      "filePath": "src/core/shopify-scripts/account-widget.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyAccountWidgetShop",
+      "value": "{\n  /**\n   * The social sign-in providers to offer. Pass the shop's enabled providers from the Storefront\n   * API's `shop.socialLoginProviders`, lowercased: a provider that isn't enabled shows a button\n   * that fails.\n   */\n  socialLoginProviders: ShopifyAccountWidgetSocialLoginProvider[];\n  /**\n   * Translated strings for the account sheet, such as from the Storefront API's\n   * `shop.customerAccountTranslations` with the `account_menu.` key prefix removed. Missing keys\n   * use the widget's English defaults.\n   */\n  translations?: Partial<Record<ShopifyAccountWidgetTranslationKey, string>>;\n  /** Shows Shop sign-in as a button instead of a card, for B2B shops. Defaults to `false`. */\n  b2bEnabled?: boolean;\n}",
+      "description": "The shop settings that control the account widget's sign-in options.",
+      "members": [
+        {
+          "filePath": "src/core/shopify-scripts/account-widget.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "b2bEnabled",
+          "value": "boolean",
+          "description": "Shows Shop sign-in as a button instead of a card, for B2B shops. Defaults to `false`.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/shopify-scripts/account-widget.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "socialLoginProviders",
+          "value": "(\"shop\" | \"apple\" | \"google\" | \"facebook\")[]",
+          "description": "The social sign-in providers to offer. Pass the shop's enabled providers from the Storefront API's `shop.socialLoginProviders`, lowercased: a provider that isn't enabled shows a button that fails."
+        },
+        {
+          "filePath": "src/core/shopify-scripts/account-widget.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "translations",
+          "value": "Partial<Record<ShopifyAccountWidgetTranslationKey, string>>",
+          "description": "Translated strings for the account sheet, such as from the Storefront API's `shop.customerAccountTranslations` with the `account_menu.` key prefix removed. Missing keys use the widget's English defaults.",
+          "isOptional": true
+        }
+      ]
+    }
+  },
+  "ShopifyAccountWidgetTranslationKey": {
+    "src/core/shopify-scripts/account-widget.ts": {
+      "filePath": "src/core/shopify-scripts/account-widget.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyAccountWidgetTranslationKey",
+      "value": "\"signed_out_state.sheet_title\" | \"signed_out_state.section_divider\" | \"signed_out_state.alternate_divider\" | \"signed_out_state.use_email_button\" | \"signed_out_state.email_field_label\" | \"signed_out_state.shop_login_button\" | \"signed_out_state.continue_with_google\" | \"signed_out_state.continue_with_facebook\" | \"signed_out_state.continue_with_apple\" | \"signed_out_state.orders_button\" | \"signed_out_state.profile_button\" | \"signed_in_state.greeting_with_name\" | \"signed_in_state.greeting_without_name\" | \"signed_in_state.orders_button\" | \"signed_in_state.profile_button\" | \"location_picker.sheet_title\" | \"location_picker.search_field_placeholder\" | \"aria_labels.close_menu\" | \"aria_labels.back_to_main_menu\" | \"aria_labels.open_submenu\" | \"aria_labels.loading_menu\" | \"aria_labels.loading\" | \"aria_labels.account\" | \"aria_labels.sign_in_with_email\" | \"aria_labels.sign_in\"",
+      "description": "A string in the account sheet that can be translated."
+    }
+  },
+  "ShopifyScriptsAnalyticsConfig": {
+    "src/core/shopify-scripts/types.ts": {
+      "filePath": "src/core/shopify-scripts/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyScriptsAnalyticsConfig",
+      "value": "{\n  /** The sales channel that Shopify attributes analytics to. Defaults to `hydrogen`. */\n  channel?: ShopAnalyticsChannel;\n  /** Extra values that analytics destinations can read from the bus configuration. */\n  customData?: StorefrontAnalyticsConfig[\"customData\"];\n}",
+      "description": "The sales channel and custom data for the analytics bus.",
+      "members": [
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "channel",
+          "value": "ShopAnalyticsChannel",
+          "description": "The sales channel that Shopify attributes analytics to. Defaults to `hydrogen`.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "customData",
+          "value": "Record<string, unknown>",
+          "description": "Extra values that analytics destinations can read from the bus configuration.",
+          "isOptional": true
+        }
+      ]
+    }
+  },
+  "ShopAnalyticsChannel": {
+    "src/core/analytics/types.ts": {
+      "filePath": "src/core/analytics/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopAnalyticsChannel",
+      "value": "\"hydrogen\" | \"headless\"",
+      "description": "The sales channel that Shopify attributes a storefront's analytics to."
+    }
+  },
+  "ShopifyScriptsI18n": {
+    "src/core/shopify-scripts/types.ts": {
+      "filePath": "src/core/shopify-scripts/types.ts",
+      "name": "ShopifyScriptsI18n",
+      "description": "The locale that Shopify's scripts read from the browser's Shopify global.",
+      "members": [
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "country",
+          "value": "ShopifyCountryCode",
+          "description": ""
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "currency",
+          "value": "string",
+          "description": "The active currency code. Hydrogen converts it to uppercase.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "language",
+          "value": "ShopifyLanguageCode",
+          "description": ""
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "pathPrefix",
+          "value": "string",
+          "description": "The URL prefix for localized routes, such as `/es-es`. Leave it empty for the default locale.",
+          "isOptional": true
+        }
+      ],
+      "value": "export interface ShopifyScriptsI18n extends ShopifyLocale {\n  /** The URL prefix for localized routes, such as `/es-es`. Leave it empty for the default locale. */\n  pathPrefix?: string;\n  /** The active currency code. Hydrogen converts it to uppercase. */\n  currency?: string;\n}"
+    }
+  },
+  "ShopifyScriptsShop": {
+    "src/core/shopify-scripts/types.ts": {
+      "filePath": "src/core/shopify-scripts/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyScriptsShop",
+      "value": "{\n  /** The shop's ID, as a numeric string or a Shop GID. */\n  shopId: string;\n  /** The Hydrogen storefront's ID. Hydrogen leaves it out of Headless channel analytics. */\n  storefrontId: string;\n  /** The shop's permanent `*.myshopify.com` domain. Hydrogen sets it as `window.Shopify.shop`. */\n  myshopifyDomain: string;\n}",
+      "description": "The shop identifiers that Shopify's scripts and analytics use.",
+      "members": [
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "myshopifyDomain",
+          "value": "string",
+          "description": "The shop's permanent `*.myshopify.com` domain. Hydrogen sets it as `window.Shopify.shop`."
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "shopId",
+          "value": "string",
+          "description": "The shop's ID, as a numeric string or a Shop GID."
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "storefrontId",
+          "value": "string",
+          "description": "The Hydrogen storefront's ID. Hydrogen leaves it out of Headless channel analytics."
+        }
+      ]
+    }
+  },
+  "InitializeShopifyScriptsOptions": {
+    "src/core/shopify-scripts/types.ts": {
+      "filePath": "src/core/shopify-scripts/types.ts",
+      "name": "InitializeShopifyScriptsOptions",
+      "description": "The route, consent, and WebMCP settings for starting Shopify's scripts in the browser.",
+      "members": [
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "consent",
+          "value": "ConsentConfig",
+          "description": "The consent configuration that you passed to the script tags. The bus runs the setup callback once.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "navigate",
+          "value": "(url: string) => void | Promise<void>",
+          "description": "Navigates to a URL after Shopify's scripts resolve it to your app's route. Defaults to a full page load. Checkout, cart permalink, buy permalink, and customer account paths always use a full page load.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "routes",
+          "value": "ShopifyRouteTemplates",
+          "description": "Your app's custom route templates, which Shopify's scripts use to match and resolve storefront URLs.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "webMcp",
+          "value": "boolean",
+          "description": "Loads Shopify WebMCP tools when the browser supports WebMCP. Defaults to `true`.",
+          "isOptional": true
+        }
+      ],
+      "value": "export interface InitializeShopifyScriptsOptions extends ShopifyRoutesOptions {\n  /** The consent configuration that you passed to the script tags. The bus runs the setup callback once. */\n  consent?: ConsentConfig;\n  /** Loads Shopify WebMCP tools when the browser supports WebMCP. Defaults to `true`. */\n  webMcp?: boolean;\n}"
+    }
+  },
   "InitializeShopifyScriptsGeneratedType": {
     "src/core/shopify-scripts/initialize.ts": {
       "filePath": "src/core/shopify-scripts/initialize.ts",
@@ -5815,7 +5939,7 @@
         "name": "ShopifyScriptTagDescriptors",
         "value": "ShopifyScriptTagDescriptors"
       },
-      "value": "export function getShopifyScriptTags({\n  account = false,\n  analytics,\n  consent,\n  debug,\n  i18n,\n  nonce,\n  shop,\n  shopifyAnalytics = true,\n  inbox = false,\n}: ShopifyScriptTagsOptions): ShopifyScriptTagDescriptors {\n  const nonceAttributes = nonce !== undefined ? { nonce } : undefined;\n  const analyticsConfig = getShopifyAnalyticsConfig({ analytics, consent, shop });\n\n  const links: ShopifyLinkDescriptor[] = [\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_CDN_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_SHOP_APP_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"prefetch\",\n        as: \"script\",\n        href: SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,\n        crossorigin: \"anonymous\",\n      },\n    },\n  ];\n  const scripts: ShopifyScriptDescriptor[] = [\n    {\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-global-bootstrap\",\n        ...nonceAttributes,\n        ...shopifyGlobalBootstrap.attributes(getShopifyGlobalConfig({ i18n, shop })),\n      },\n      innerHTML: shopifyGlobalBootstrap.code,\n    },\n    {\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-actions\",\n        type: \"module\",\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,\n      },\n    },\n  ];\n\n  if (__DEV__ && debug?.standardEventsInspector) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-events-inspector\",\n        defer: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,\n      },\n    });\n  }\n\n  if (inbox) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-inbox\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_INBOX_SCRIPT,\n      },\n    });\n  }\n\n  if (account) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-account\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_ACCOUNT_SCRIPT,\n      },\n    });\n  }\n\n  // Install readiness listeners before loading the async consent library so a\n  // cached script cannot finish initialization before Hydrogen starts listening.\n  scripts.push({\n    tagName: \"script\",\n    attributes: {\n      id: \"shopify-analytics-bus\",\n      ...nonceAttributes,\n      ...shopifyAnalyticsBootstrap.attributes(analyticsConfig),\n    },\n    innerHTML: shopifyAnalyticsBootstrap.code,\n  });\n\n  scripts.push({\n    tagName: \"script\",\n    attributes: {\n      id: SHOPIFY_CONSENT_SCRIPT_ID,\n      async: true,\n      crossorigin: \"anonymous\",\n      ...nonceAttributes,\n      src:\n        consent?.mode === \"default-banner\"\n          ? SHOPIFY_PRIVACY_BANNER_SCRIPT\n          : SHOPIFY_CONSENT_API_SCRIPT,\n    },\n  });\n\n  if (shopifyAnalytics) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-storefront-analytics\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,\n      },\n    });\n  }\n\n  const perfKitScript = getPerfKitScript(shop, nonceAttributes);\n  if (perfKitScript) {\n    scripts.push(perfKitScript);\n  }\n\n  return {\n    links,\n    scripts,\n    get tags() {\n      return [...links, ...scripts];\n    },\n  };\n}"
+      "value": "export function getShopifyScriptTags({\n  accountWidget,\n  analytics,\n  consent,\n  debug,\n  i18n,\n  nonce,\n  shop,\n  shopifyAnalytics = true,\n  inbox = false,\n}: ShopifyScriptTagsOptions): ShopifyScriptTagDescriptors {\n  const nonceAttributes = nonce !== undefined ? { nonce } : undefined;\n  const analyticsConfig = getShopifyAnalyticsConfig({ analytics, consent, shop });\n\n  const links: ShopifyLinkDescriptor[] = [\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_CDN_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_SHOP_APP_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"prefetch\",\n        as: \"script\",\n        href: SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,\n        crossorigin: \"anonymous\",\n      },\n    },\n  ];\n  const scripts: ShopifyScriptDescriptor[] = [\n    {\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-global-bootstrap\",\n        ...nonceAttributes,\n        ...shopifyGlobalBootstrap.attributes(getShopifyGlobalConfig({ i18n, shop })),\n      },\n      innerHTML: shopifyGlobalBootstrap.code,\n    },\n    {\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-actions\",\n        type: \"module\",\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,\n      },\n    },\n  ];\n\n  if (__DEV__ && debug?.standardEventsInspector) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-events-inspector\",\n        defer: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,\n      },\n    });\n  }\n\n  if (inbox) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-inbox\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_INBOX_SCRIPT,\n      },\n    });\n  }\n\n  if (accountWidget) {\n    scripts.push(getShopifyAccountWidgetDataScript(accountWidget, { shop, i18n }));\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-account\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_ACCOUNT_SCRIPT,\n      },\n    });\n  }\n\n  // Install readiness listeners before loading the async consent library so a\n  // cached script cannot finish initialization before Hydrogen starts listening.\n  scripts.push({\n    tagName: \"script\",\n    attributes: {\n      id: \"shopify-analytics-bus\",\n      ...nonceAttributes,\n      ...shopifyAnalyticsBootstrap.attributes(analyticsConfig),\n    },\n    innerHTML: shopifyAnalyticsBootstrap.code,\n  });\n\n  scripts.push({\n    tagName: \"script\",\n    attributes: {\n      id: SHOPIFY_CONSENT_SCRIPT_ID,\n      async: true,\n      crossorigin: \"anonymous\",\n      ...nonceAttributes,\n      src:\n        consent?.mode === \"default-banner\"\n          ? SHOPIFY_PRIVACY_BANNER_SCRIPT\n          : SHOPIFY_CONSENT_API_SCRIPT,\n    },\n  });\n\n  if (shopifyAnalytics) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-storefront-analytics\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,\n      },\n    });\n  }\n\n  const perfKitScript = getPerfKitScript(shop, nonceAttributes);\n  if (perfKitScript) {\n    scripts.push(perfKitScript);\n  }\n\n  return {\n    links,\n    scripts,\n    get tags() {\n      return [...links, ...scripts];\n    },\n  };\n}"
     }
   },
   "ShopifyScriptTagDescriptors": {
@@ -6002,7 +6126,7 @@
       "params": [
         {
           "name": "options",
-          "description": "The shop details and the features, such as account and analytics, whose scripts to load.",
+          "description": "The shop details and the features, such as the account widget and analytics, whose scripts to load.",
           "value": "ShopifyScriptTagsOptions",
           "filePath": "src/core/shopify-scripts/index.ts"
         }
@@ -11632,6 +11756,2268 @@
       "description": "Result of a Customer Account API request. Check `errors` to tell the outcomes apart.\n\nOn success, `data` holds the result and `errors` is `undefined`. When the response has GraphQL errors, `errors` holds them and `data` can be `null`. Every result includes the raw response headers."
     }
   },
+  "AccountWidgetProps": {
+    "src/react/account-widget.tsx": {
+      "filePath": "src/react/account-widget.tsx",
+      "name": "AccountWidgetProps",
+      "description": "Props for the React `AccountWidget` component. Pass `ShopifyScripts` the `accountWidget` option so the widget has data to read.",
+      "isPublicDocs": true,
+      "members": [
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "about",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "accessKey",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-activedescendant",
+          "value": "string | undefined",
+          "description": "Identifies the currently active element when DOM focus is on a composite widget, textbox, group, or application.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-atomic",
+          "value": "Booleanish | undefined",
+          "description": "Indicates whether assistive technologies will present all, or only parts of, the changed region based on the change notifications defined by the aria-relevant attribute.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-autocomplete",
+          "value": "\"none\" | \"inline\" | \"list\" | \"both\" | undefined",
+          "description": "Indicates whether inputting text could trigger display of one or more predictions of the user's intended value for an input and specifies how predictions would be presented if they are made.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-braillelabel",
+          "value": "string | undefined",
+          "description": "Defines a string value that labels the current element, which is intended to be converted into Braille.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-brailleroledescription",
+          "value": "string | undefined",
+          "description": "Defines a human-readable, author-localized abbreviated description for the role of an element, which is intended to be converted into Braille.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-busy",
+          "value": "Booleanish | undefined",
+          "description": "Used to represent DOM API's where users can either pass true or false as a boolean or as its equivalent strings.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-checked",
+          "value": "boolean | \"false\" | \"mixed\" | \"true\" | undefined",
+          "description": "Indicates the current \"checked\" state of checkboxes, radio buttons, and other widgets.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-colcount",
+          "value": "number | undefined",
+          "description": "Defines the total number of columns in a table, grid, or treegrid.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-colindex",
+          "value": "number | undefined",
+          "description": "Defines an element's column index or position with respect to the total number of columns within a table, grid, or treegrid.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-colindextext",
+          "value": "string | undefined",
+          "description": "Defines a human readable text alternative of aria-colindex.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-colspan",
+          "value": "number | undefined",
+          "description": "Defines the number of columns spanned by a cell or gridcell within a table, grid, or treegrid.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-controls",
+          "value": "string | undefined",
+          "description": "Identifies the element (or elements) whose contents or presence are controlled by the current element.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-current",
+          "value": "boolean | \"false\" | \"true\" | \"page\" | \"step\" | \"location\" | \"date\" | \"time\" | undefined",
+          "description": "Indicates the element that represents the current item within a container or set of related elements.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-describedby",
+          "value": "string | undefined",
+          "description": "Identifies the element (or elements) that describes the object.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-description",
+          "value": "string | undefined",
+          "description": "Defines a string value that describes or annotates the current element.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-details",
+          "value": "string | undefined",
+          "description": "Identifies the element that provides a detailed, extended description for the object.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-disabled",
+          "value": "Booleanish | undefined",
+          "description": "Indicates that the element is perceivable but disabled, so it is not editable or otherwise operable.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-dropeffect",
+          "value": "\"none\" | \"copy\" | \"execute\" | \"link\" | \"move\" | \"popup\" | undefined",
+          "description": "Indicates what functions can be performed when a dragged object is released on the drop target.",
+          "isOptional": true,
+          "deprecationMessage": "in ARIA 1.1"
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-errormessage",
+          "value": "string | undefined",
+          "description": "Identifies the element that provides an error message for the object.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-expanded",
+          "value": "Booleanish | undefined",
+          "description": "Indicates whether the element, or another grouping element it controls, is currently expanded or collapsed.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-flowto",
+          "value": "string | undefined",
+          "description": "Identifies the next element (or elements) in an alternate reading order of content which, at the user's discretion, allows assistive technology to override the general default of reading in document source order.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-grabbed",
+          "value": "Booleanish | undefined",
+          "description": "Indicates an element's \"grabbed\" state in a drag-and-drop operation.",
+          "isOptional": true,
+          "deprecationMessage": "in ARIA 1.1"
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-haspopup",
+          "value": "boolean | \"false\" | \"true\" | \"menu\" | \"listbox\" | \"tree\" | \"grid\" | \"dialog\" | undefined",
+          "description": "Indicates the availability and type of interactive popup element, such as menu or dialog, that can be triggered by an element.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-hidden",
+          "value": "Booleanish | undefined",
+          "description": "Indicates whether the element is exposed to an accessibility API.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-invalid",
+          "value": "boolean | \"false\" | \"true\" | \"grammar\" | \"spelling\" | undefined",
+          "description": "Indicates the entered value does not conform to the format expected by the application.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-keyshortcuts",
+          "value": "string | undefined",
+          "description": "Indicates keyboard shortcuts that an author has implemented to activate or give focus to an element.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-label",
+          "value": "string | undefined",
+          "description": "Defines a string value that labels the current element.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-labelledby",
+          "value": "string | undefined",
+          "description": "Identifies the element (or elements) that labels the current element.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-level",
+          "value": "number | undefined",
+          "description": "Defines the hierarchical level of an element within a structure.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-live",
+          "value": "\"off\" | \"assertive\" | \"polite\" | undefined",
+          "description": "Indicates that an element will be updated, and describes the types of updates the user agents, assistive technologies, and user can expect from the live region.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-modal",
+          "value": "Booleanish | undefined",
+          "description": "Indicates whether an element is modal when displayed.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-multiline",
+          "value": "Booleanish | undefined",
+          "description": "Indicates whether a text box accepts multiple lines of input or only a single line.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-multiselectable",
+          "value": "Booleanish | undefined",
+          "description": "Indicates that the user may select more than one item from the current selectable descendants.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-orientation",
+          "value": "\"horizontal\" | \"vertical\" | undefined",
+          "description": "Indicates whether the element's orientation is horizontal, vertical, or unknown/ambiguous.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-owns",
+          "value": "string | undefined",
+          "description": "Identifies an element (or elements) in order to define a visual, functional, or contextual parent/child relationship between DOM elements where the DOM hierarchy cannot be used to represent the relationship.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-placeholder",
+          "value": "string | undefined",
+          "description": "Defines a short hint (a word or short phrase) intended to aid the user with data entry when the control has no value. A hint could be a sample value or a brief description of the expected format.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-posinset",
+          "value": "number | undefined",
+          "description": "Defines an element's number or position in the current set of listitems or treeitems. Not required if all elements in the set are present in the DOM.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-pressed",
+          "value": "boolean | \"false\" | \"mixed\" | \"true\" | undefined",
+          "description": "Indicates the current \"pressed\" state of toggle buttons.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-readonly",
+          "value": "Booleanish | undefined",
+          "description": "Indicates that the element is not editable, but is otherwise operable.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-relevant",
+          "value": "| \"additions\"\n            | \"additions removals\"\n            | \"additions text\"\n            | \"all\"\n            | \"removals\"\n            | \"removals additions\"\n            | \"removals text\"\n            | \"text\"\n            | \"text additions\"\n            | \"text removals\"\n            | undefined",
+          "description": "Indicates what notifications the user agent will trigger when the accessibility tree within a live region is modified.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-required",
+          "value": "Booleanish | undefined",
+          "description": "Indicates that user input is required on the element before a form may be submitted.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-roledescription",
+          "value": "string | undefined",
+          "description": "Defines a human-readable, author-localized description for the role of an element.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-rowcount",
+          "value": "number | undefined",
+          "description": "Defines the total number of rows in a table, grid, or treegrid.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-rowindex",
+          "value": "number | undefined",
+          "description": "Defines an element's row index or position with respect to the total number of rows within a table, grid, or treegrid.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-rowindextext",
+          "value": "string | undefined",
+          "description": "Defines a human readable text alternative of aria-rowindex.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-rowspan",
+          "value": "number | undefined",
+          "description": "Defines the number of rows spanned by a cell or gridcell within a table, grid, or treegrid.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-selected",
+          "value": "Booleanish | undefined",
+          "description": "Indicates the current \"selected\" state of various widgets.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-setsize",
+          "value": "number | undefined",
+          "description": "Defines the number of items in the current set of listitems or treeitems. Not required if all elements in the set are present in the DOM.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-sort",
+          "value": "\"none\" | \"ascending\" | \"descending\" | \"other\" | undefined",
+          "description": "Indicates if items in a table or grid are sorted in ascending or descending order.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-valuemax",
+          "value": "number | undefined",
+          "description": "Defines the maximum allowed value for a range widget.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-valuemin",
+          "value": "number | undefined",
+          "description": "Defines the minimum allowed value for a range widget.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-valuenow",
+          "value": "number | undefined",
+          "description": "Defines the current value for a range widget.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-valuetext",
+          "value": "string | undefined",
+          "description": "Defines the human readable text alternative of aria-valuenow for a range widget.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "autoCapitalize",
+          "value": "\"off\" | \"none\" | \"on\" | \"sentences\" | \"words\" | \"characters\" | undefined | (string & {})",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "autoCorrect",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "autoFocus",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "autoSave",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "className",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "color",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "content",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "contentEditable",
+          "value": "Booleanish | \"inherit\" | \"plaintext-only\" | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "contextMenu",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "dangerouslySetInnerHTML",
+          "value": "{\n            // Should be InnerHTML['innerHTML'].\n            // But unfortunately we're mixing renderer-specific type declarations.\n            __html: string | TrustedHTML;\n        } | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "datatype",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "defaultChecked",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "defaultValue",
+          "value": "string | number | readonly string[] | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "dir",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "draggable",
+          "value": "Booleanish | undefined",
+          "description": "Used to represent DOM API's where users can either pass true or false as a boolean or as its equivalent strings.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "enterKeyHint",
+          "value": "\"enter\" | \"done\" | \"go\" | \"next\" | \"previous\" | \"search\" | \"send\" | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "exportparts",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "fallback",
+          "value": "React.ReactNode",
+          "description": "Replaces the default avatar shown to signed-out visitors, such as with your own icon.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "hidden",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "id",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "inert",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "inlist",
+          "value": "any",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "inputMode",
+          "value": "\"none\" | \"text\" | \"tel\" | \"url\" | \"email\" | \"numeric\" | \"decimal\" | \"search\" | undefined",
+          "description": "Hints at the type of data that might be entered by the user while editing the element or its contents",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "is",
+          "value": "string | undefined",
+          "description": "Specify that a standard HTML element should behave like a defined custom built-in element",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "itemID",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "itemProp",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "itemRef",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "itemScope",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "itemType",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "lang",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "nonce",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAbort",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAbortCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAnimationEnd",
+          "value": "AnimationEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAnimationEndCapture",
+          "value": "AnimationEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAnimationIteration",
+          "value": "AnimationEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAnimationIterationCapture",
+          "value": "AnimationEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAnimationStart",
+          "value": "AnimationEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAnimationStartCapture",
+          "value": "AnimationEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAuxClick",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAuxClickCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onBeforeInput",
+          "value": "InputEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onBeforeInputCapture",
+          "value": "InputEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onBeforeToggle",
+          "value": "ToggleEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onBlur",
+          "value": "FocusEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onBlurCapture",
+          "value": "FocusEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCanPlay",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCanPlayCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCanPlayThrough",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCanPlayThroughCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onChange",
+          "value": "ChangeEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onChangeCapture",
+          "value": "ChangeEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onClick",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onClickCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCompositionEnd",
+          "value": "CompositionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCompositionEndCapture",
+          "value": "CompositionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCompositionStart",
+          "value": "CompositionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCompositionStartCapture",
+          "value": "CompositionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCompositionUpdate",
+          "value": "CompositionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCompositionUpdateCapture",
+          "value": "CompositionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onContextMenu",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onContextMenuCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCopy",
+          "value": "ClipboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCopyCapture",
+          "value": "ClipboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCut",
+          "value": "ClipboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCutCapture",
+          "value": "ClipboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDoubleClick",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDoubleClickCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDrag",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragEnd",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragEndCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragEnter",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragEnterCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragExit",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragExitCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragLeave",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragLeaveCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragOver",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragOverCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragStart",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragStartCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDrop",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDropCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDurationChange",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDurationChangeCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onEmptied",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onEmptiedCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onEncrypted",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onEncryptedCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onEnded",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onEndedCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onError",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onErrorCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onFocus",
+          "value": "FocusEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onFocusCapture",
+          "value": "FocusEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onGotPointerCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onGotPointerCaptureCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onInput",
+          "value": "InputEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onInputCapture",
+          "value": "InputEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onInvalid",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onInvalidCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onKeyDown",
+          "value": "KeyboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onKeyDownCapture",
+          "value": "KeyboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onKeyPress",
+          "value": "KeyboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true,
+          "deprecationMessage": "Use `onKeyUp` or `onKeyDown` instead"
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onKeyPressCapture",
+          "value": "KeyboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true,
+          "deprecationMessage": "Use `onKeyUpCapture` or `onKeyDownCapture` instead"
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onKeyUp",
+          "value": "KeyboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onKeyUpCapture",
+          "value": "KeyboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoad",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoadCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoadedData",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoadedDataCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoadedMetadata",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoadedMetadataCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoadStart",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoadStartCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLostPointerCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLostPointerCaptureCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseDown",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseDownCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseEnter",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseLeave",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseMove",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseMoveCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseOut",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseOutCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseOver",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseOverCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseUp",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseUpCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPaste",
+          "value": "ClipboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPasteCapture",
+          "value": "ClipboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPause",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPauseCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPlay",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPlayCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPlaying",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPlayingCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerCancel",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerCancelCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerDown",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerDownCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerEnter",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerLeave",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerMove",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerMoveCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerOut",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerOutCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerOver",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerOverCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerUp",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerUpCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onProgress",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onProgressCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onRateChange",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onRateChangeCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onReset",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onResetCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onScroll",
+          "value": "UIEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onScrollCapture",
+          "value": "UIEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onScrollEnd",
+          "value": "UIEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onScrollEndCapture",
+          "value": "UIEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSeeked",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSeekedCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSeeking",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSeekingCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSelect",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSelectCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onStalled",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onStalledCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSubmit",
+          "value": "SubmitEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSubmitCapture",
+          "value": "SubmitEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSuspend",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSuspendCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTimeUpdate",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTimeUpdateCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onToggle",
+          "value": "ToggleEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchCancel",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchCancelCapture",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchEnd",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchEndCapture",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchMove",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchMoveCapture",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchStart",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchStartCapture",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTransitionCancel",
+          "value": "TransitionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTransitionCancelCapture",
+          "value": "TransitionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTransitionEnd",
+          "value": "TransitionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTransitionEndCapture",
+          "value": "TransitionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTransitionRun",
+          "value": "TransitionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTransitionRunCapture",
+          "value": "TransitionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTransitionStart",
+          "value": "TransitionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTransitionStartCapture",
+          "value": "TransitionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onVolumeChange",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onVolumeChangeCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onWaiting",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onWaitingCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onWheel",
+          "value": "WheelEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onWheelCapture",
+          "value": "WheelEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "part",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "popover",
+          "value": "\"\" | \"auto\" | \"manual\" | \"hint\" | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "popoverTarget",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "popoverTargetAction",
+          "value": "\"toggle\" | \"show\" | \"hide\" | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "prefix",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "property",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "radioGroup",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "rel",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "resource",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "results",
+          "value": "number | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "rev",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "role",
+          "value": "AriaRole | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "security",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "slot",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "spellCheck",
+          "value": "Booleanish | undefined",
+          "description": "Used to represent DOM API's where users can either pass true or false as a boolean or as its equivalent strings.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "style",
+          "value": "CSSProperties | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "suppressContentEditableWarning",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "suppressHydrationWarning",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "tabIndex",
+          "value": "number | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "title",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "translate",
+          "value": "\"yes\" | \"no\" | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "typeof",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "unselectable",
+          "value": "\"on\" | \"off\" | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/account-widget.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "vocab",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        }
+      ],
+      "value": "export interface AccountWidgetProps extends Omit<React.HTMLAttributes<HTMLElement>, \"children\"> {\n  /** Replaces the default avatar shown to signed-out visitors, such as with your own icon. */\n  fallback?: React.ReactNode;\n}"
+    }
+  },
+  "AccountWidgetGeneratedType": {
+    "src/react/account-widget.tsx": {
+      "filePath": "src/react/account-widget.tsx",
+      "name": "AccountWidgetGeneratedType",
+      "description": "Renders Shopify's account widget, the `shopify-account` component. The component reads its data once, when it connects, so `AccountWidget` remounts it whenever the `accountWidget` data passed to `ShopifyScripts` changes. Sign-in goes through Hydrogen's `/account/login` route.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "input1",
+          "description": "The signed-out fallback and HTML attributes.",
+          "value": "AccountWidgetProps",
+          "filePath": "src/react/account-widget.tsx"
+        }
+      ],
+      "returns": {
+        "filePath": "src/react/account-widget.tsx",
+        "description": "The `shopify-account` element.",
+        "name": "",
+        "value": ""
+      },
+      "value": "export function AccountWidget({ fallback, ...attributes }: AccountWidgetProps) {\n  // The server never bumps the version, and keys aren't part of the HTML, so hydration can use\n  // the current version without remounting.\n  const version = useSyncExternalStore(\n    subscribeToAccountWidgetData,\n    getAccountWidgetDataVersion,\n    getAccountWidgetDataVersion,\n  );\n\n  return createElement(\n    \"shopify-account\",\n    { ...attributes, key: version, \"sign-in-url\": CUSTOMER_ACCOUNT_PATHS.login },\n    fallback == null ? null : createElement(\"div\", { slot: \"signed-out-avatar\" }, fallback),\n  );\n}"
+    }
+  },
   "CreateCartComponentsGeneratedType": {
     "src/react/cart.tsx": {
       "filePath": "src/react/cart.tsx",
@@ -13069,9 +15455,9 @@
         {
           "filePath": "src/react/shopify-scripts.tsx",
           "syntaxKind": "PropertySignature",
-          "name": "account",
-          "value": "boolean",
-          "description": "Loads the customer account component. Render `shopify-account` where you want the account UI to appear.",
+          "name": "accountWidget",
+          "value": "ShopifyAccountWidgetData",
+          "description": "Loads the customer account component and renders the data it reads. Render `AccountWidget`, or `shopify-account`, where you want the account UI to appear.\n\nPass this option whenever you want the widget, including for signed-out visitors: set `customer` to `null` when nobody is signed in. Leave the option out to omit the widget.\n\n`shopify-account` reads the data once, when it connects. If you change the data without `AccountWidget`, remount every `shopify-account` element yourself.",
           "isOptional": true
         },
         {
@@ -13185,7 +15571,7 @@
         "name": "",
         "value": ""
       },
-      "value": "export function ShopifyScripts(options: ShopifyScriptsProps) {\n  const { consent, navigate, routes, webMcp = true, ...scriptOptions } = options;\n\n  useEffect(() => {\n    void initializeShopifyScripts({ consent, navigate, routes, webMcp });\n    // oxlint-disable-next-line react-hooks/exhaustive-deps -- ShopifyScripts browser startup is initialized once from initial props.\n  }, []);\n\n  return createElement(\n    Fragment,\n    null,\n    getShopifyScriptTags({ ...scriptOptions, consent }).tags.map(\n      ({ tagName, attributes, innerHTML }, index) =>\n        createElement(tagName, {\n          key: index,\n          ...getReactAttributes(attributes),\n          ...(innerHTML ? { dangerouslySetInnerHTML: { __html: innerHTML } } : {}),\n        }),\n    ),\n  );\n}"
+      "value": "export function ShopifyScripts(options: ShopifyScriptsProps) {\n  const { consent, navigate, routes, webMcp = true, ...scriptOptions } = options;\n\n  useEffect(() => {\n    void initializeShopifyScripts({ consent, navigate, routes, webMcp });\n    // oxlint-disable-next-line react-hooks/exhaustive-deps -- ShopifyScripts browser startup is initialized once from initial props.\n  }, []);\n\n  const { scripts, tags } = getShopifyScriptTags({ ...scriptOptions, consent });\n  useRestartAccountWidgetsOnChange(findShopifyAccountWidgetDataScript(scripts)?.innerHTML);\n\n  return createElement(\n    Fragment,\n    null,\n    tags.map(({ tagName, attributes, innerHTML }) =>\n      createElement(tagName, {\n        key: getShopifyScriptTagKey(attributes),\n        ...getReactAttributes(attributes),\n        ...(innerHTML ? { dangerouslySetInnerHTML: { __html: innerHTML } } : {}),\n      }),\n    ),\n  );\n}"
     }
   }
 }
