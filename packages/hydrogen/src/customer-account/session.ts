@@ -208,10 +208,9 @@ export type CustomerSession = {
   /**
    * Completes sign-in from Shopify's OAuth callback request, saves the customer's tokens to your session storage, and returns the path to send the customer to. Commit the session to the response after the call.
    *
-   * The method throws `CustomerAccountOAuthError` when sign-in fails a check, and `CustomerAccountApiError` when the token request times out. After a failure, the customer needs to start sign-in again.
+   * The method throws `CustomerAccountOAuthError` when sign-in fails, including when the token request fails or times out. After a failure, the customer needs to start sign-in again.
    *
-   * @throws {CustomerAccountOAuthError} When the callback parameters, pending login, token exchange, token response, or ID token claims fail validation.
-   * @throws {CustomerAccountApiError} When the token request times out.
+   * @throws {CustomerAccountOAuthError} When the callback parameters, pending login, token exchange, token response, or ID token claims fail validation, or when the token request fails or times out.
    */
   handleOAuthCallback(
     sessionManager: WritableCustomerSessionManager,
@@ -822,6 +821,7 @@ async function handleAuthorizeRoute(
     return redirectResult(location, await commitSession(sessionManager));
   } catch (error) {
     if (!(error instanceof CustomerAccountOAuthError)) throw error;
+    log.warn("sign-in failed", { code: error.code, error });
     const origin = await resolveRouteOrigin(sessionManager, request, originOption);
     return redirectResult(
       sanitizeReturnTo(loginFailedRedirectPath, origin),
@@ -1082,29 +1082,38 @@ async function exchangeAuthorizationCode({
     code,
     code_verifier: codeVerifier,
   });
-  return withTokenRequestTimeout(timeoutInMs, async (signal) => {
-    const response = await postTokenRequest({
-      url: endpoints.tokenUrl,
-      origin,
-      body,
-      fetch,
-      signal,
+  try {
+    return await withTokenRequestTimeout(timeoutInMs, async (signal) => {
+      const response = await postTokenRequest({
+        url: endpoints.tokenUrl,
+        origin,
+        body,
+        fetch,
+        signal,
+      });
+
+      if (!response.ok) {
+        cancelResponseBody(response);
+        const errorCode =
+          response.status === 400 || response.status === 401
+            ? "token_exchange_rejected"
+            : "token_exchange_failed";
+        throw new CustomerAccountOAuthError(
+          errorCode,
+          `Customer Account OAuth token exchange failed with ${response.status}`,
+        );
+      }
+
+      return parseRequiredTokenResponse(await readTokenResponseJson(response, signal));
     });
-
-    if (!response.ok) {
-      cancelResponseBody(response);
-      const errorCode =
-        response.status === 400 || response.status === 401
-          ? "token_exchange_rejected"
-          : "token_exchange_failed";
-      throw new CustomerAccountOAuthError(
-        errorCode,
-        `Customer Account OAuth token exchange failed with ${response.status}`,
-      );
-    }
-
-    return parseRequiredTokenResponse(await readTokenResponseJson(response, signal));
-  });
+  } catch (error) {
+    if (error instanceof CustomerAccountOAuthError) throw error;
+    throw new CustomerAccountOAuthError(
+      "token_exchange_failed",
+      "Customer Account OAuth token exchange failed",
+      { cause: error },
+    );
+  }
 }
 
 async function getRefreshResult({
@@ -1293,7 +1302,14 @@ async function readTokenResponseJson(
   response: Response,
   signal: AbortSignal,
 ): Promise<TokenEndpointResponse> {
-  const json = await withAbort(response.json(), signal);
+  const json = await withAbort(response.json(), signal).catch((error: unknown) => {
+    if (!(error instanceof SyntaxError)) throw error;
+    throw new CustomerAccountOAuthError(
+      "invalid_token_response",
+      "Customer Account OAuth response must be JSON",
+      { cause: error },
+    );
+  });
   if (!isObjectRecord(json)) {
     throw new CustomerAccountOAuthError(
       "invalid_token_response",

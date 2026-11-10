@@ -624,6 +624,42 @@ describe("createCustomerSession", () => {
     expect(sessionManager.data).toEqual({ tokens: validSessionData().tokens });
   });
 
+  it("reports a failed token request as token_exchange_failed with the original cause", async () => {
+    const networkError = new TypeError("fetch failed");
+    const customerSession = createSession({ fetch: vi.fn().mockRejectedValue(networkError) });
+    const sessionManager = new TestSessionManager({ pendingLogin: validPendingLogin() });
+    const request = new Request(
+      `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=stored-state`,
+    );
+
+    const error = await customerSession
+      .handleOAuthCallback(sessionManager, createRequestContext(request), request)
+      .catch((reason: unknown) => reason);
+
+    expect(error).toBeInstanceOf(CustomerAccountOAuthError);
+    expect(error).toMatchObject({ code: "token_exchange_failed", cause: networkError });
+  });
+
+  it("reports a token response that isn't JSON as invalid_token_response", async () => {
+    const customerSession = createSession({
+      fetch: vi.fn().mockResolvedValue(new Response("<html>Bad gateway</html>")),
+    });
+    const sessionManager = new TestSessionManager({ pendingLogin: validPendingLogin() });
+    const request = new Request(
+      `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=stored-state`,
+    );
+
+    const error = await customerSession
+      .handleOAuthCallback(sessionManager, createRequestContext(request), request)
+      .catch((reason: unknown) => reason);
+
+    expect(error).toBeInstanceOf(CustomerAccountOAuthError);
+    expect(error).toMatchObject({
+      code: "invalid_token_response",
+      cause: expect.any(SyntaxError),
+    });
+  });
+
   it("logs out by clearing Customer Account state and returning Shopify logout URL", async () => {
     const customerSession = createSession();
     const sessionManager = new TestSessionManager(validSessionData());
@@ -1408,6 +1444,8 @@ describe("createCustomerAccountServerHandlers", () => {
   });
 
   it("redirects expected OAuth failures to the failed-login page and commits cleared state", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
     const sessionManager = new TestSessionManager({
       pendingLogin: validPendingLogin(),
     });
@@ -1430,5 +1468,64 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(response?.headers.get("set-cookie")).toBe("session=1");
     expect(sessionManager.data).toBeUndefined();
     expect(sessionManager.removeCalls).toEqual([SESSION_KEY]);
+    expect(logger.warn).toHaveBeenCalledWith("sign-in failed", {
+      scope: "customer-account",
+      code: "state_mismatch",
+      error: expect.any(CustomerAccountOAuthError),
+    });
+  });
+
+  it.each<[string, (url: RequestInfo | URL, init?: RequestInit) => Promise<Response>, string]>([
+    [
+      "the token request rejects",
+      () => Promise.reject(new TypeError("fetch failed")),
+      "token_exchange_failed",
+    ],
+    [
+      "the token request times out",
+      (_url, init) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(init.signal?.reason));
+        }),
+      "token_exchange_failed",
+    ],
+    [
+      "the token response is not JSON",
+      () => Promise.resolve(new Response("<html>Bad gateway</html>")),
+      "invalid_token_response",
+    ],
+  ])("redirects to the failed-login page and logs when %s", async (_failure, fetch, code) => {
+    const defaultTimeoutInMs = 10;
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const sessionManager = new TestSessionManager({
+      pendingLogin: validPendingLogin(),
+    });
+    const request = new Request(
+      `${ORIGIN}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}?code=code-123&state=stored-state`,
+    );
+
+    const [response] = await Promise.all([
+      handleShopifyRoutes({
+        request,
+        sessionManager,
+        handlers: [
+          createCustomerAccountServerHandlers({
+            customerSession: createSession({ fetch: vi.fn(fetch), defaultTimeoutInMs }),
+          }),
+        ],
+      }),
+      vi.advanceTimersByTimeAsync(defaultTimeoutInMs),
+    ]);
+
+    expect(response?.status).toBe(303);
+    expect(response?.headers.get("location")).toBe(`${ORIGIN}/account?login=failed`);
+    expect(response?.headers.get("set-cookie")).toBe("session=1");
+    expect(sessionManager.data).toBeUndefined();
+    expect(logger.warn).toHaveBeenCalledWith("sign-in failed", {
+      scope: "customer-account",
+      code,
+      error: expect.objectContaining({ code }),
+    });
   });
 });
