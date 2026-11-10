@@ -57,7 +57,7 @@ const customerAccountHandlers = createCustomerAccountServerHandlers({
 With this wiring, Hydrogen owns the whole loop:
 
 - New carts are created with the current customer's buyer identity when the session has a usable access token or successfully refreshed access token, and authenticated cart reads mark checkout URLs with `logged_in=true` (from the cart handlers' `customerSession` option).
-- Authorization and refresh attach the customer to the cart from the request's cart cookie; a definitive refresh rejection detaches it. Transient refresh failures leave the cart untouched.
+- Authorization and refresh (including a refresh by the widget data route) attach the customer to the cart from the request's cart cookie; a definitive refresh rejection detaches it. Transient refresh failures leave the cart untouched.
 - Logout detaches the customer from the cart.
 
 Sync is best-effort: a failed cart mutation never blocks the route's redirect. Attach failures are logged and can be retried by a later refresh. If detach fails during logout or definitive refresh rejection, the handler expires the cart cookie so a shared device never keeps a cart bound to the previous customer.
@@ -107,7 +107,7 @@ Shopify's `<shopify-account>` component shows an avatar that opens an account sh
 </shopify-account>
 ```
 
-The route returns the signed-in customer's name, email, and avatar (or `customer: null`), the shop's sign-in providers, and its translations for the request's locale. The access token stays on the server. The response is private and uncacheable; an upstream failure returns `502`, so `<shopify-account>` logs it and keeps its current state on `refresh()` instead of quietly signing the customer out.
+The route returns the signed-in customer's name, email, and avatar (or `customer: null`), the shop's sign-in providers, and its translations for the request's locale. The access token stays on the server. The response is private and uncacheable. A token the Customer Account API rejects is cleared and returns `customer: null`; any other upstream failure returns `502`, so `<shopify-account>` logs it and keeps its current state on `refresh()` instead of quietly signing the customer out.
 
 ## Typed Queries
 

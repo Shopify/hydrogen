@@ -357,6 +357,7 @@ async function updateCartBuyerIdentity(
 
   const result = await context.storefrontClient.graphql(cartBuyerIdentityUpdateMutation, {
     variables: { cartId, buyerIdentity: { customerAccessToken } },
+    signal: context.signal,
   });
   const { userErrors } = assertMutationData(result, "cartBuyerIdentityUpdate");
   if (userErrors.length > 0) {
