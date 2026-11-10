@@ -973,7 +973,8 @@ async function handleWidgetDataRoute(
       headers,
     );
   }
-  // `customer: null` would show a signed-in customer as signed out, so failures return an error.
+  // An error, not `customer: null`, so `<shopify-account>` keeps its current state on `refresh()`
+  // and logs the failure instead of quietly signing the customer out.
   if (status === "transient" || customer?.status === "rejected") {
     log.error("account widget customer query failed", {
       error: customer?.status === "rejected" ? customer.reason : "transient token refresh failure",
