@@ -15,11 +15,16 @@ export const CUSTOMER_ACCOUNT_PATHS = {
   login: "/account/login",
   logout: "/account/logout",
   refresh: "/account/refresh",
+  widgetData: "/account/widget-data",
 } as const;
 
-const CUSTOMER_ACCOUNT_HANDOFF_PATHS: ReadonlySet<string> = new Set(
-  Object.values(CUSTOMER_ACCOUNT_PATHS),
-);
+// The widget data route answers `fetch()` with JSON, so it isn't a navigation destination.
+const CUSTOMER_ACCOUNT_HANDOFF_PATHS: ReadonlySet<string> = new Set([
+  CUSTOMER_ACCOUNT_PATHS.authorize,
+  CUSTOMER_ACCOUNT_PATHS.login,
+  CUSTOMER_ACCOUNT_PATHS.logout,
+  CUSTOMER_ACCOUNT_PATHS.refresh,
+]);
 
 /**
  * Returns whether the pathname conventionally represents a Hydrogen document-level server handoff.

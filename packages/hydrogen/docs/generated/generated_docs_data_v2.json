@@ -7006,6 +7006,308 @@
       "value": "export class CustomerAccountOAuthError extends Error {\n  /** The failure code, one of the codes in the class description. */\n  readonly code: string;\n\n  /** Always `CustomerAccountOAuthError`. */\n  declare name: string;\n  /** Describes the sign-in failure. Read `code` to handle the failure. */\n  declare message: string;\n  /** The stack trace, when the JavaScript runtime records one. */\n  declare stack?: string;\n\n  constructor(code: string, message: string, options?: { cause?: unknown }) {\n    super(message, options?.cause ? { cause: options.cause } : undefined);\n    this.name = \"CustomerAccountOAuthError\";\n    this.code = code;\n  }\n}"
     }
   },
+  "CustomerAccountGqlForDocs": {
+    "src/customer-account/graphql.ts": {
+      "filePath": "src/customer-account/graphql.ts",
+      "name": "CustomerAccountGqlForDocs",
+      "description": "Creates a typed Customer Account API query or mutation from a GraphQL source string. Pass the document to the Customer Account API client. Call `gql` as a regular function.\n\nPass an array of fragment documents as the second argument to append the fragments to the operation. Each fragment must come from this `gql` function, or the call throws a `TypeError`.\n\nTo validate documents, run `hydrogen gql check` in your `typecheck` script with the `@shopify/hydrogen/ts-plugin` setup. Framework typecheck commands don't validate the documents.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "source",
+          "description": "The GraphQL source of an operation or a fragment.",
+          "value": "string",
+          "filePath": "src/customer-account/graphql.ts"
+        },
+        {
+          "name": "fragments",
+          "description": "The fragment documents that the operation uses.",
+          "value": "readonly AnyCustomerAccountDocument[]",
+          "isOptional": true,
+          "filePath": "src/customer-account/graphql.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/customer-account/graphql.ts",
+        "description": "A typed document to pass to the Customer Account API client.",
+        "name": "AnyCustomerAccountDocument",
+        "value": "AnyCustomerAccountDocument"
+      },
+      "value": "(source: string, fragments?: readonly AnyCustomerAccountDocument[]) => AnyCustomerAccountDocument"
+    }
+  },
+  "AnyCustomerAccountDocument": {
+    "src/customer-account/graphql.ts": {
+      "filePath": "src/customer-account/graphql.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "AnyCustomerAccountDocument",
+      "value": "CustomerAccountDocument<unknown, never, string>",
+      "description": "Any Customer Account API document. Use the type as a constraint when a function accepts any document."
+    }
+  },
+  "CustomerAccountDocument": {
+    "src/customer-account/graphql.ts": {
+      "filePath": "src/customer-account/graphql.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "CustomerAccountDocument",
+      "value": "DocumentDecoration<Result, Variables> & {\n  readonly [CUSTOMER_ACCOUNT_DOCUMENT]: true;\n  readonly source: Source;\n}",
+      "description": "A Customer Account API query or mutation that `gql` from `@shopify/hydrogen/customer-account` returns. TypeScript infers the result and variables types from the document's GraphQL source.\n\nCreate documents only with the Customer Account `gql` function. The client throws a `TypeError` for any other object."
+    }
+  },
+  "CreateCustomerAccountClientGeneratedType": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "name": "CreateCustomerAccountClientGeneratedType",
+      "description": "Creates a client that sends Customer Account API requests from your server. Create the client with the current request's context.\n\nThe function throws when the shop ID, API version, or timeout is invalid, when the request context has no HTTPS URL, when no fetch implementation is available, and when the function runs in a browser.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "input1",
+          "description": "The shop ID, the API version, the request context, a custom fetch, and the request timeout.",
+          "value": "CreateCustomerAccountClientOptions",
+          "filePath": "src/customer-account/client.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/customer-account/client.ts",
+        "description": "A client with the GraphQL endpoint URL and a `graphql()` method for Customer Account API requests.",
+        "name": "CustomerAccountClient",
+        "value": "CustomerAccountClient"
+      },
+      "value": "export function createCustomerAccountClient({\n  shopId,\n  customerApiVersion = CUSTOMER_ACCOUNT_API_VERSION,\n  requestContext,\n  fetch: customFetch,\n  defaultTimeoutInMs = DEFAULT_TIMEOUT_IN_MS,\n}: CreateCustomerAccountClientOptions): CustomerAccountClient {\n  if (typeof document !== \"undefined\") {\n    throw new Error(\n      \"Customer Account API tokens cannot be used in a browser context. Use this client from server or edge routes only.\",\n    );\n  }\n\n  validateShopId(shopId);\n  validateCustomerApiVersion(customerApiVersion);\n  validateTimeout(defaultTimeoutInMs);\n\n  const resolvedFetch = customFetch ?? globalThis.fetch;\n  if (typeof resolvedFetch !== \"function\") {\n    throw new Error(\n      \"No fetch function available. Pass a fetch option or ensure globalThis.fetch exists.\",\n    );\n  }\n\n  const origin = getOrigin(requestContext.url);\n  const apiUrl = `https://shopify.com/${shopId}/account/customer/api/${customerApiVersion}/graphql`;\n\n  async function graphql<const Doc extends AnyCustomerAccountDocument>(\n    document: Doc,\n    ...rest: CustomerAccountGqlRestParam<Doc>\n  ): Promise<CustomerAccountGraphqlResult<ResultOfDoc<Doc>>>;\n  async function graphql(\n    document: AnyCustomerAccountDocument,\n    ...rest: [options?: CustomerAccountGraphqlOptions<unknown>]\n  ): Promise<CustomerAccountGraphqlResult<unknown>> {\n    assertCustomerAccountDocument(document);\n    const options = validateGraphqlOptions(rest[0]);\n    requestContext.markResponseAsPersonalized(CUSTOMER_ACCOUNT_GRAPHQL_PERSONALIZATION_REASON);\n    const accessToken = validateAccessToken(options.accessToken);\n    const externalSignals = [requestContext.signal, options.signal].filter(\n      (signal): signal is AbortSignal => Boolean(signal),\n    );\n    throwIfAlreadyAborted(externalSignals);\n\n    const { signal: timeoutSignal, cleanup: cleanupTimeout } =\n      createCustomerAccountTimeoutSignal(defaultTimeoutInMs);\n    externalSignals.push(timeoutSignal);\n    const signal = AbortSignal.any(externalSignals);\n\n    try {\n      const variables = getVariables(\n        document,\n        getOptionalVariables(options.variables),\n        requestContext.locale.language,\n      );\n      const response = await fetchCustomerAccountGraphql({\n        fetch: resolvedFetch,\n        apiUrl,\n        accessToken,\n        origin,\n        query: document.source,\n        variables,\n        signal,\n        timeoutSignal,\n        timeoutInMs: defaultTimeoutInMs,\n      });\n\n      return await readCustomerAccountGraphqlResponse(\n        response,\n        signal,\n        timeoutSignal,\n        defaultTimeoutInMs,\n      );\n    } finally {\n      cleanupTimeout();\n    }\n  }\n\n  return { apiUrl, graphql };\n}",
+      "examples": [
+        {
+          "title": "Example",
+          "description": "",
+          "tabs": [
+            {
+              "code": "import { createCustomerAccountClient, gql } from \"@shopify/hydrogen/customer-account\";\n\nconst customerAccount = createCustomerAccountClient({\n  shopId: \"12345\",\n  requestContext,\n});\n\nconst { data } = await customerAccount.graphql(\n  gql(`query { customer { firstName } }`),\n  { accessToken },\n);",
+              "title": "Example"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "CreateCustomerAccountClientOptions": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "CreateCustomerAccountClientOptions",
+      "value": "{\n  /** Numeric Shopify shop ID as a string of digits, such as `12345`. */\n  shopId: string;\n  /**\n   * Customer Account API version in `YYYY-MM` format. Defaults to `2026-10`.\n   */\n  customerApiVersion?: string;\n  /**\n   * The context for the current request, from `createShopifyRequestContext`.\n   *\n   * The context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.\n   *\n   * The client fills `$language: LanguageCode` from the context's language and stops requests when the context's signal aborts.\n   */\n  requestContext: ShopifyRequestContext;\n  /** Custom fetch implementation. Defaults to the global fetch. */\n  fetch?: typeof globalThis.fetch;\n  /**\n   * Timeout for each request in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to `30000`.\n   */\n  defaultTimeoutInMs?: number;\n}",
+      "description": "Options for creating a Customer Account API client.",
+      "members": [
+        {
+          "filePath": "src/customer-account/client.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "customerApiVersion",
+          "value": "string",
+          "description": "Customer Account API version in `YYYY-MM` format. Defaults to `2026-10`.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/customer-account/client.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "defaultTimeoutInMs",
+          "value": "number",
+          "description": "Timeout for each request in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to `30000`.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/customer-account/client.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "fetch",
+          "value": "{ (input: RequestInfo | URL, init?: RequestInit): Promise<Response>; (input: string | Request | URL, init?: RequestInit): Promise<Response>; }",
+          "description": "Custom fetch implementation. Defaults to the global fetch.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/customer-account/client.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "requestContext",
+          "value": "ShopifyRequestContext",
+          "description": "The context for the current request, from `createShopifyRequestContext`.\n\nThe context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.\n\nThe client fills `$language: LanguageCode` from the context's language and stops requests when the context's signal aborts."
+        },
+        {
+          "filePath": "src/customer-account/client.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "shopId",
+          "value": "string",
+          "description": "Numeric Shopify shop ID as a string of digits, such as `12345`."
+        }
+      ]
+    }
+  },
+  "CustomerAccountClient": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "CustomerAccountClient",
+      "value": "{\n  /** The GraphQL endpoint, `https://shopify.com/{shopId}/account/customer/api/{version}/graphql`. */\n  readonly apiUrl: string;\n  /**\n   * Sends a Customer Account API query or mutation with the customer's access token, and returns the data, any GraphQL errors, and the response headers. Pass a document from the Customer Account `gql` function.\n   *\n   * The request makes the final response private and uncacheable when you call `applyResponseHeaders()`. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.\n   *\n   * The method throws a `TypeError` for a document from any other `gql` function, including the Storefront API `gql` function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. A missing or malformed access token throws `CustomerAccountAuthenticationError`, a timeout throws `CustomerAccountTimeoutError`, and other request failures throw `CustomerAccountApiError`.\n   *\n   * @throws {TypeError} When another gql function created the document, or when the variables aren't an object.\n   * @throws {CustomerAccountAuthenticationError} When the options object is missing or the access token fails validation.\n   * @throws {CustomerAccountTimeoutError} When the request exceeds the client's timeout.\n   * @throws {CustomerAccountApiError} On a non-OK HTTP status, unparseable JSON, a response without data, or a network failure.\n   *\n   * @example\n   * ```ts\n   * const result = await client.graphql(\n   *   gql(`query { customer { firstName lastName } }`),\n   *   { accessToken },\n   * );\n   *\n   * if (result.errors) {\n   *   console.error(result.errors);\n   * } else {\n   *   console.log(result.data.customer.firstName);\n   * }\n   * ```\n   */\n  graphql: <const Doc extends AnyCustomerAccountDocument>(\n    document: Doc,\n    ...options: CustomerAccountGqlRestParam<Doc>\n  ) => Promise<CustomerAccountGraphqlResult<ResultOfDoc<Doc>>>;\n}",
+      "description": "A client that sends Customer Account API requests from your server for the current request.",
+      "members": [
+        {
+          "filePath": "src/customer-account/client.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "apiUrl",
+          "value": "string",
+          "description": "The GraphQL endpoint, `https://shopify.com/{shopId}/account/customer/api/{version}/graphql`."
+        },
+        {
+          "filePath": "src/customer-account/client.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "graphql",
+          "value": "<const Doc extends AnyCustomerAccountDocument>(document: Doc, ...options: CustomerAccountGqlRestParam<Doc>) => Promise<CustomerAccountGraphqlResult<ResultOfDoc<Doc>>>",
+          "description": "Sends a Customer Account API query or mutation with the customer's access token, and returns the data, any GraphQL errors, and the response headers. Pass a document from the Customer Account `gql` function.\n\nThe request makes the final response private and uncacheable when you call `applyResponseHeaders()`. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.\n\nThe method throws a `TypeError` for a document from any other `gql` function, including the Storefront API `gql` function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. A missing or malformed access token throws `CustomerAccountAuthenticationError`, a timeout throws `CustomerAccountTimeoutError`, and other request failures throw `CustomerAccountApiError`.",
+          "examples": [
+            {
+              "title": "Example",
+              "description": "",
+              "tabs": [
+                {
+                  "code": "const result = await client.graphql(\n  gql(`query { customer { firstName lastName } }`),\n  { accessToken },\n);\n\nif (result.errors) {\n  console.error(result.errors);\n} else {\n  console.log(result.data.customer.firstName);\n}",
+                  "title": "Example"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "CustomerAccountGqlRestParam": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "CustomerAccountGqlRestParam",
+      "value": "HasNoRequiredKeys<UserVariables<Doc>> extends true\n    ? [options: CustomerAccountGraphqlOptions<UserVariables<Doc>>]\n    : [\n        options: CustomerAccountGraphqlOptions<UserVariables<Doc>> & {\n          variables: UserVariables<Doc>;\n        },\n      ]",
+      "description": "The options argument for a Customer Account API request.\n\nPass `variables` when the document declares a required variable other than `$language: LanguageCode`. TypeScript reports an error when a required variable is missing."
+    }
+  },
+  "VariablesOfDoc": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "VariablesOfDoc",
+      "value": "Doc extends CustomerAccountDocument<unknown, infer Variables, string> ? Variables : never",
+      "description": "The variables that a Customer Account document declares."
+    }
+  },
+  "I18nVariableNamesOfDoc": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "I18nVariableNamesOfDoc",
+      "value": "string extends SourceOf<Doc>\n    ? I18nVariableNamesByValue<VariablesOfDoc<Doc>>\n    : InferVariableNamesDeclaredAs<SourceOf<Doc>, I18nVariableTypes>",
+      "description": "The variables the client fills when omitted: those declared with the expected type, such as `$language: LanguageCode`."
+    }
+  },
+  "SourceOf": {
+    "src/customer-account/graphql.ts": {
+      "filePath": "src/customer-account/graphql.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "SourceOf",
+      "value": "Doc extends { readonly source: infer Source extends string }\n  ? Source\n  : never",
+      "description": "Extracts the source string literal type from a Customer Account document."
+    }
+  },
+  "I18nVariableNamesByValue": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "I18nVariableNamesByValue",
+      "value": "I18nVariableNamesByValue<Variables>",
+      "description": ""
+    }
+  },
+  "InferVariableNamesDeclaredAs": {
+    "src/graphql/type-resolver.ts": {
+      "filePath": "src/graphql/type-resolver.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "InferVariableNamesDeclaredAs",
+      "value": "parseDocument<T> extends infer Doc\n    ? Doc extends { kind: \"Document\"; definitions: infer Defs extends readonly unknown[] }\n      ? FirstOperation<Defs> extends { variableDefinitions: infer Vars extends readonly unknown[] }\n        ? DeclaredNameOfType<Vars[number], Types>\n        : never\n      : never\n    : never",
+      "description": "Names of the first operation's variables that are declared with the named type `Types` maps them to, nullable or non-null. List types never match."
+    }
+  },
+  "FirstOperation": {
+    "src/graphql/type-resolver.ts": {
+      "filePath": "src/graphql/type-resolver.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "FirstOperation",
+      "value": "Defs extends readonly [infer Def, ...infer Rest]\n  ? Def extends { kind: \"OperationDefinition\" }\n    ? Def\n    : FirstOperation<Rest>\n  : never",
+      "description": ""
+    }
+  },
+  "DeclaredNameOfType": {
+    "src/graphql/type-resolver.ts": {
+      "filePath": "src/graphql/type-resolver.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "DeclaredNameOfType",
+      "value": "Definition extends {\n  variable: { name: { value: infer Name extends keyof Types } };\n  type: infer Type;\n}\n  ? (Type extends { kind: \"NonNullType\"; type: infer Inner } ? Inner : Type) extends {\n      kind: \"NamedType\";\n      name: { value: Types[Name] };\n    }\n    ? Name\n    : never\n  : never",
+      "description": ""
+    }
+  },
+  "I18nVariableTypes": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "I18nVariableTypes",
+      "value": "typeof CUSTOMER_ACCOUNT_I18N_VARIABLE_TYPES",
+      "description": ""
+    }
+  },
+  "OptionalI18nVariables": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "OptionalI18nVariables",
+      "value": "{\n  [K in keyof Variables & Names]?: Variables[K];\n}",
+      "description": "Optional versions of the variables that the client fills from the request context when you omit them."
+    }
+  },
+  "CustomerAccountGraphqlOptions": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "CustomerAccountGraphqlOptions",
+      "value": "{\n  /** The customer's access token, such as one from the customer session's `getOrRefreshAccessToken()` method. */\n  accessToken: string;\n  /**\n   * The document's variables. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.\n   */\n  variables?: Variables;\n  /**\n   * Stops this request when the signal aborts. The request also stops when the request context's signal aborts or the timeout passes.\n   */\n  signal?: AbortSignal;\n}",
+      "description": "Options for a single Customer Account API request.",
+      "members": [
+        {
+          "filePath": "src/customer-account/client.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "accessToken",
+          "value": "string",
+          "description": "The customer's access token, such as one from the customer session's `getOrRefreshAccessToken()` method."
+        },
+        {
+          "filePath": "src/customer-account/client.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "signal",
+          "value": "AbortSignal",
+          "description": "Stops this request when the signal aborts. The request also stops when the request context's signal aborts or the timeout passes.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/customer-account/client.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "variables",
+          "value": "Variables",
+          "description": "The document's variables. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.",
+          "isOptional": true
+        }
+      ]
+    }
+  },
+  "CustomerAccountGraphqlResult": {
+    "src/customer-account/client.ts": {
+      "filePath": "src/customer-account/client.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "CustomerAccountGraphqlResult",
+      "value": "{ data: Result; errors?: undefined; headers: Headers } | { data: Result | null; errors: GraphQLFormattedError[]; headers: Headers }",
+      "description": "Result of a Customer Account API request. Check `errors` to tell the outcomes apart.\n\nOn success, `data` holds the result and `errors` is `undefined`. When the response has GraphQL errors, `errors` holds them and `data` can be `null`. Every result includes the raw response headers."
+    }
+  },
   "CustomerSession": {
     "src/customer-account/session.ts": {
       "filePath": "src/customer-account/session.ts",
@@ -7298,7 +7600,7 @@
         "name": "CustomerSessionWithInternals",
         "value": "CustomerSessionWithInternals"
       },
-      "value": "export function createCustomerSession({\n  shopId,\n  customerAccountApiClientId,\n  customerAccountApiUrl,\n  fetch: customFetch,\n  defaultTimeoutInMs = DEFAULT_TIMEOUT_IN_MS,\n}: CreateCustomerSessionOptions): CustomerSessionWithInternals {\n  if (typeof document !== \"undefined\") {\n    throw new Error(\n      \"Customer Account OAuth sessions cannot be used in a browser context. Use this helper from server or edge routes only.\",\n    );\n  }\n\n  validateShopId(shopId);\n  validateCustomerAccountApiClientId(customerAccountApiClientId);\n  validateTimeout(defaultTimeoutInMs);\n\n  const fetch = customFetch ?? globalThis.fetch;\n  if (typeof fetch !== \"function\") {\n    throw new Error(\n      \"No fetch function available. Pass a fetch option or ensure globalThis.fetch exists.\",\n    );\n  }\n\n  const endpoints = createCustomerAccountEndpoints(shopId, customerAccountApiUrl);\n  const refreshFlights = new Map<string, Promise<RefreshResult>>();\n\n  async function getAccessToken(\n    sessionManager: ReadonlyCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n  ) {\n    requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON);\n    const accessToken = getUsableAccessToken(await readSessionData(sessionManager));\n    return accessToken;\n  }\n\n  async function getOrRefreshAccessToken(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options: RequestOriginOptions = {},\n  ) {\n    const result = await getOrRefreshAccessTokenResult(sessionManager, requestContext, options);\n    return result.accessToken;\n  }\n\n  async function getOrRefreshAccessTokenResult(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options: RequestOriginOptions = {},\n  ): Promise<TokenRefreshResult> {\n    requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON);\n    const sessionData = await readSessionData(sessionManager);\n    const accessToken = getUsableAccessToken(sessionData);\n    if (accessToken) return { status: \"authenticated\", accessToken };\n\n    const refreshToken = getRefreshToken(sessionData);\n    if (!refreshToken) return { status: \"unauthenticated\", accessToken: undefined };\n\n    const origin = await getResolvedOrigin(sessionManager, options.origin);\n    const idToken = sessionData.tokens?.idToken;\n    const refreshResult = await getRefreshResult({\n      refreshFlights,\n      refreshToken,\n      idToken,\n      origin,\n      endpoints,\n      customerAccountApiClientId,\n      fetch,\n      timeoutInMs: defaultTimeoutInMs,\n    });\n\n    if (refreshResult.type === \"success\") {\n      const refreshedAccessToken = refreshResult.tokens.accessToken;\n      if (!refreshedAccessToken) {\n        return { status: \"transient\", accessToken: undefined };\n      }\n      await writeTokens(sessionManager, refreshResult.tokens);\n      return {\n        status: \"authenticated\",\n        accessToken: refreshedAccessToken,\n      };\n    }\n\n    if (refreshResult.type === \"invalid\") {\n      await clearTokens(sessionManager);\n      return { status: \"unauthenticated\", accessToken: undefined };\n    }\n\n    return { status: \"transient\", accessToken: undefined };\n  }\n\n  async function prepareLoginUrl(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options: PrepareLoginUrlOptions,\n  ) {\n    requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_MUTATION_PERSONALIZATION_REASON);\n    const origin = await getResolvedOrigin(sessionManager, options.origin);\n    const state = generateRandomBase64Url();\n    const nonce = generateRandomBase64Url();\n    const codeVerifier = generateRandomBase64Url();\n    const codeChallenge = await createCodeChallenge(codeVerifier);\n    const returnTo = sanitizeReturnTo(options.returnTo, origin);\n    const createdAt = Date.now();\n\n    const sessionData = await readSessionData(sessionManager);\n    await writeSessionData(sessionManager, {\n      ...sessionData,\n      pendingLogin: { state, nonce, codeVerifier, returnTo, origin, createdAt },\n    });\n\n    const loginUrl = new URL(endpoints.authorizeUrl);\n    loginUrl.searchParams.set(\"client_id\", customerAccountApiClientId);\n    loginUrl.searchParams.set(\"scope\", CUSTOMER_ACCOUNT_SCOPE);\n    loginUrl.searchParams.set(\"response_type\", \"code\");\n    loginUrl.searchParams.set(\"redirect_uri\", `${origin}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}`);\n    loginUrl.searchParams.set(\"state\", state);\n    loginUrl.searchParams.set(\"nonce\", nonce);\n    loginUrl.searchParams.set(\"code_challenge\", codeChallenge);\n    loginUrl.searchParams.set(\"code_challenge_method\", CODE_CHALLENGE_METHOD);\n    setOptionalLoginParams(loginUrl, options);\n\n    return loginUrl.toString();\n  }\n\n  async function handleOAuthCallback(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    request: Request,\n  ) {\n    return (await handleOAuthCallbackResult(sessionManager, requestContext, request)).location;\n  }\n\n  async function handleOAuthCallbackResult(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    request: Request,\n  ): Promise<OAuthCallbackResult> {\n    requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_MUTATION_PERSONALIZATION_REASON);\n    try {\n      return await completeOAuthCallback({\n        sessionManager,\n        request,\n        endpoints,\n        customerAccountApiClientId,\n        fetch,\n        timeoutInMs: defaultTimeoutInMs,\n      });\n    } catch (error) {\n      await clearPendingLogin(sessionManager);\n      throw error;\n    }\n  }\n\n  async function logout(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options: LogoutOptions = {},\n  ) {\n    requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_MUTATION_PERSONALIZATION_REASON);\n    const origin = await getResolvedOrigin(sessionManager, options.origin);\n    const sessionData = await readSessionData(sessionManager);\n    const idToken = sessionData.tokens?.idToken;\n    const postLogoutRedirectUri = absoluteSameOriginUrl(\n      options.postLogoutRedirectUri ?? origin,\n      origin,\n    );\n\n    await sessionManager.removeSessionItem(CUSTOMER_ACCOUNT_SESSION_KEY);\n\n    if (!idToken) return postLogoutRedirectUri;\n\n    const logoutUrl = new URL(endpoints.logoutUrl);\n    logoutUrl.searchParams.set(\"id_token_hint\", idToken);\n    logoutUrl.searchParams.set(\"post_logout_redirect_uri\", postLogoutRedirectUri);\n    return logoutUrl.toString();\n  }\n\n  const customerSession: CustomerSessionWithInternals = {\n    [CUSTOMER_SESSION_INTERNAL_BRAND]: true,\n    isLoggedIn: async (sessionManager, requestContext) => {\n      requestContext.markResponseAsPersonalized(\n        CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON,\n      );\n      return hasCustomerSession(await readSessionData(sessionManager));\n    },\n    getAccessToken,\n    getOrRefreshAccessToken,\n    prepareLoginUrl,\n    handleOAuthCallback,\n    logout,\n  };\n  customerSessionInternals.set(customerSession, {\n    getOrRefreshAccessToken: getOrRefreshAccessTokenResult,\n    handleOAuthCallback: handleOAuthCallbackResult,\n  });\n  return customerSession;\n}",
+      "value": "export function createCustomerSession({\n  shopId,\n  customerAccountApiClientId,\n  customerAccountApiUrl,\n  fetch: customFetch,\n  defaultTimeoutInMs = DEFAULT_TIMEOUT_IN_MS,\n}: CreateCustomerSessionOptions): CustomerSessionWithInternals {\n  if (typeof document !== \"undefined\") {\n    throw new Error(\n      \"Customer Account OAuth sessions cannot be used in a browser context. Use this helper from server or edge routes only.\",\n    );\n  }\n\n  validateShopId(shopId);\n  validateCustomerAccountApiClientId(customerAccountApiClientId);\n  validateTimeout(defaultTimeoutInMs);\n\n  const fetch = customFetch ?? globalThis.fetch;\n  if (typeof fetch !== \"function\") {\n    throw new Error(\n      \"No fetch function available. Pass a fetch option or ensure globalThis.fetch exists.\",\n    );\n  }\n\n  const endpoints = createCustomerAccountEndpoints(shopId, customerAccountApiUrl);\n  const refreshFlights = new Map<string, Promise<RefreshResult>>();\n\n  async function getAccessToken(\n    sessionManager: ReadonlyCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n  ) {\n    requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON);\n    const accessToken = getUsableAccessToken(await readSessionData(sessionManager));\n    return accessToken;\n  }\n\n  async function getOrRefreshAccessToken(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options: RequestOriginOptions = {},\n  ) {\n    const result = await getOrRefreshAccessTokenResult(sessionManager, requestContext, options);\n    return result.accessToken;\n  }\n\n  async function getOrRefreshAccessTokenResult(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options: RequestOriginOptions = {},\n  ): Promise<TokenRefreshResult> {\n    requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON);\n    const sessionData = await readSessionData(sessionManager);\n    const accessToken = getUsableAccessToken(sessionData);\n    if (accessToken) return { status: \"authenticated\", accessToken };\n\n    const refreshToken = getRefreshToken(sessionData);\n    if (!refreshToken) return { status: \"unauthenticated\", accessToken: undefined };\n\n    const origin = await getResolvedOrigin(sessionManager, options.origin);\n    const idToken = sessionData.tokens?.idToken;\n    const refreshResult = await getRefreshResult({\n      refreshFlights,\n      refreshToken,\n      idToken,\n      origin,\n      endpoints,\n      customerAccountApiClientId,\n      fetch,\n      timeoutInMs: defaultTimeoutInMs,\n    });\n\n    if (refreshResult.type === \"success\") {\n      const refreshedAccessToken = refreshResult.tokens.accessToken;\n      if (!refreshedAccessToken) {\n        return { status: \"transient\", accessToken: undefined };\n      }\n      await writeTokens(sessionManager, refreshResult.tokens);\n      return {\n        status: \"authenticated\",\n        accessToken: refreshedAccessToken,\n      };\n    }\n\n    if (refreshResult.type === \"invalid\") {\n      await clearTokens(sessionManager);\n      return { status: \"unauthenticated\", accessToken: undefined };\n    }\n\n    return { status: \"transient\", accessToken: undefined };\n  }\n\n  async function prepareLoginUrl(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options: PrepareLoginUrlOptions,\n  ) {\n    requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_MUTATION_PERSONALIZATION_REASON);\n    const origin = await getResolvedOrigin(sessionManager, options.origin);\n    const state = generateRandomBase64Url();\n    const nonce = generateRandomBase64Url();\n    const codeVerifier = generateRandomBase64Url();\n    const codeChallenge = await createCodeChallenge(codeVerifier);\n    const returnTo = sanitizeReturnTo(options.returnTo, origin);\n    const createdAt = Date.now();\n\n    const sessionData = await readSessionData(sessionManager);\n    await writeSessionData(sessionManager, {\n      ...sessionData,\n      pendingLogin: { state, nonce, codeVerifier, returnTo, origin, createdAt },\n    });\n\n    const loginUrl = new URL(endpoints.authorizeUrl);\n    loginUrl.searchParams.set(\"client_id\", customerAccountApiClientId);\n    loginUrl.searchParams.set(\"scope\", CUSTOMER_ACCOUNT_SCOPE);\n    loginUrl.searchParams.set(\"response_type\", \"code\");\n    loginUrl.searchParams.set(\"redirect_uri\", `${origin}${CUSTOMER_ACCOUNT_AUTHORIZE_PATH}`);\n    loginUrl.searchParams.set(\"state\", state);\n    loginUrl.searchParams.set(\"nonce\", nonce);\n    loginUrl.searchParams.set(\"code_challenge\", codeChallenge);\n    loginUrl.searchParams.set(\"code_challenge_method\", CODE_CHALLENGE_METHOD);\n    setOptionalLoginParams(loginUrl, options);\n\n    return loginUrl.toString();\n  }\n\n  async function handleOAuthCallback(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    request: Request,\n  ) {\n    return (await handleOAuthCallbackResult(sessionManager, requestContext, request)).location;\n  }\n\n  async function handleOAuthCallbackResult(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    request: Request,\n  ): Promise<OAuthCallbackResult> {\n    requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_MUTATION_PERSONALIZATION_REASON);\n    try {\n      return await completeOAuthCallback({\n        sessionManager,\n        request,\n        endpoints,\n        customerAccountApiClientId,\n        fetch,\n        timeoutInMs: defaultTimeoutInMs,\n      });\n    } catch (error) {\n      await clearPendingLogin(sessionManager);\n      throw error;\n    }\n  }\n\n  async function logout(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options: LogoutOptions = {},\n  ) {\n    requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_MUTATION_PERSONALIZATION_REASON);\n    const origin = await getResolvedOrigin(sessionManager, options.origin);\n    const sessionData = await readSessionData(sessionManager);\n    const idToken = sessionData.tokens?.idToken;\n    const postLogoutRedirectUri = absoluteSameOriginUrl(\n      options.postLogoutRedirectUri ?? origin,\n      origin,\n    );\n\n    await sessionManager.removeSessionItem(CUSTOMER_ACCOUNT_SESSION_KEY);\n\n    if (!idToken) return postLogoutRedirectUri;\n\n    const logoutUrl = new URL(endpoints.logoutUrl);\n    logoutUrl.searchParams.set(\"id_token_hint\", idToken);\n    logoutUrl.searchParams.set(\"post_logout_redirect_uri\", postLogoutRedirectUri);\n    return logoutUrl.toString();\n  }\n\n  const customerSession: CustomerSessionWithInternals = {\n    [CUSTOMER_SESSION_INTERNAL_BRAND]: true,\n    isLoggedIn: async (sessionManager, requestContext) => {\n      requestContext.markResponseAsPersonalized(\n        CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON,\n      );\n      return hasCustomerSession(await readSessionData(sessionManager));\n    },\n    getAccessToken,\n    getOrRefreshAccessToken,\n    prepareLoginUrl,\n    handleOAuthCallback,\n    logout,\n  };\n  customerSessionInternals.set(customerSession, {\n    getOrRefreshAccessToken: getOrRefreshAccessTokenResult,\n    handleOAuthCallback: handleOAuthCallbackResult,\n    createCustomerAccountClient: (requestContext) =>\n      createCustomerAccountClient({ shopId, requestContext, fetch, defaultTimeoutInMs }),\n  });\n  return customerSession;\n}",
       "examples": [
         {
           "title": "Example",
@@ -7375,7 +7677,7 @@
     "src/customer-account/session.ts": {
       "filePath": "src/customer-account/session.ts",
       "name": "CreateCustomerAccountServerHandlersGeneratedType",
-      "description": "Creates the customer account routes under `/account` for sign-in, the OAuth callback, token refresh, and logout. Add the returned object to the `handlers` option of `handleShopifyRoutes`.\n\nThe login route redirects to Shopify's login page. The authorize and refresh routes redirect back to a same-origin path in your app. The logout route redirects to Shopify's logout endpoint when the session has an ID token, and to the post-logout URL otherwise. Each redirect commits the session and sends `cache-control: no-store`.\n\nLink to these paths with full-page navigation, such as a plain `<a>` link or a `<form>`. Client-side navigation components can't follow these redirects.",
+      "description": "Creates the customer account routes under `/account` for sign-in, the OAuth callback, token refresh, and logout. Add the returned object to the `handlers` option of `handleShopifyRoutes`.\n\nThe login route redirects to Shopify's login page. The authorize and refresh routes redirect back to a same-origin path in your app. The logout route redirects to Shopify's logout endpoint when the session has an ID token, and to the post-logout URL otherwise. Each redirect commits the session and sends `cache-control: no-store`.\n\nLink to these paths with full-page navigation, such as a plain `<a>` link or a `<form>`. Client-side navigation components can't follow these redirects.\n\nThe widget data route at `/account/widget-data` returns JSON for Shopify's `<shopify-account>` component, so the component can show the signed-in customer without the access token reaching the page.",
       "isPublicDocs": true,
       "params": [
         {
@@ -7387,11 +7689,23 @@
       ],
       "returns": {
         "filePath": "src/customer-account/session.ts",
-        "description": "The login, authorize, refresh, and logout routes.",
+        "description": "The login, authorize, refresh, logout, and account widget data routes.",
         "name": "CustomerAccountServerHandlers | CustomerAccountServerHandlersWithCartSync",
         "value": "CustomerAccountServerHandlers | CustomerAccountServerHandlersWithCartSync"
       },
-      "value": "export function createCustomerAccountServerHandlers(\n  options: CreateCustomerAccountServerHandlersOptions,\n): CustomerAccountServerHandlers | CustomerAccountServerHandlersWithCartSync {\n  const {\n    customerSession,\n    defaultPostLoginRedirectPathname = DEFAULT_POST_LOGIN_REDIRECT_PATHNAME,\n    loginFailedRedirectPath = FAILED_LOGIN_PATH,\n    postLogoutRedirectUri = DEFAULT_POST_LOGOUT_REDIRECT_URI,\n  } = options;\n  const { origin: originOption } = options;\n  const cartSync = resolveCartBuyerIdentitySync(options);\n\n  return {\n    authorize: createCallableRouteHandler(\n      CUSTOMER_ACCOUNT_AUTHORIZE_PATH,\n      \"GET\",\n      async (context: CustomerAccountRuntimeRouteHandlerContext) => {\n        return handleAuthorizeRoute(\n          customerSession,\n          context,\n          loginFailedRedirectPath,\n          originOption,\n          cartSync,\n        );\n      },\n    ),\n    login: createCallableRouteHandler(\n      CUSTOMER_ACCOUNT_LOGIN_PATH,\n      \"GET\",\n      async (context: CustomerAccountRuntimeRouteHandlerContext) => {\n        const { request, sessionManager, requestContext } = context;\n        return handleLoginRoute(\n          customerSession,\n          sessionManager,\n          requestContext,\n          request,\n          defaultPostLoginRedirectPathname,\n          originOption,\n        );\n      },\n    ),\n    logout: createCallableRouteHandler(\n      CUSTOMER_ACCOUNT_LOGOUT_PATH,\n      \"POST\",\n      async (context: CustomerAccountRuntimeRouteHandlerContext) => {\n        return handleLogoutRoute(\n          customerSession,\n          context,\n          postLogoutRedirectUri,\n          originOption,\n          cartSync,\n        );\n      },\n    ),\n    refresh: createCallableRouteHandler(\n      CUSTOMER_ACCOUNT_REFRESH_PATH,\n      \"GET\",\n      async (context: CustomerAccountRuntimeRouteHandlerContext) => {\n        return handleRefreshRoute(customerSession, context, originOption, cartSync);\n      },\n    ),\n  };\n}"
+      "value": "export function createCustomerAccountServerHandlers(\n  options: CreateCustomerAccountServerHandlersOptions,\n): CustomerAccountServerHandlers | CustomerAccountServerHandlersWithCartSync {\n  const {\n    customerSession,\n    defaultPostLoginRedirectPathname = DEFAULT_POST_LOGIN_REDIRECT_PATHNAME,\n    loginFailedRedirectPath = FAILED_LOGIN_PATH,\n    postLogoutRedirectUri = DEFAULT_POST_LOGOUT_REDIRECT_URI,\n  } = options;\n  const { origin: originOption } = options;\n  const cartSync = resolveCartBuyerIdentitySync(options);\n\n  return {\n    authorize: createCallableRouteHandler(\n      CUSTOMER_ACCOUNT_AUTHORIZE_PATH,\n      \"GET\",\n      async (context: CustomerAccountRuntimeRouteHandlerContext) => {\n        return handleAuthorizeRoute(\n          customerSession,\n          context,\n          loginFailedRedirectPath,\n          originOption,\n          cartSync,\n        );\n      },\n    ),\n    login: createCallableRouteHandler(\n      CUSTOMER_ACCOUNT_LOGIN_PATH,\n      \"GET\",\n      async (context: CustomerAccountRuntimeRouteHandlerContext) => {\n        const { request, sessionManager, requestContext } = context;\n        return handleLoginRoute(\n          customerSession,\n          sessionManager,\n          requestContext,\n          request,\n          defaultPostLoginRedirectPathname,\n          originOption,\n        );\n      },\n    ),\n    logout: createCallableRouteHandler(\n      CUSTOMER_ACCOUNT_LOGOUT_PATH,\n      \"POST\",\n      async (context: CustomerAccountRuntimeRouteHandlerContext) => {\n        return handleLogoutRoute(\n          customerSession,\n          context,\n          postLogoutRedirectUri,\n          originOption,\n          cartSync,\n        );\n      },\n    ),\n    refresh: createCallableRouteHandler(\n      CUSTOMER_ACCOUNT_REFRESH_PATH,\n      \"GET\",\n      async (context: CustomerAccountRuntimeRouteHandlerContext) => {\n        return handleRefreshRoute(customerSession, context, originOption, cartSync);\n      },\n    ),\n    widgetData: createCallableRouteHandler(\n      CUSTOMER_ACCOUNT_WIDGET_DATA_PATH,\n      \"GET\",\n      async (context: CustomerAccountWidgetDataRouteHandlerContext) => {\n        return handleWidgetDataRoute(customerSession, context, originOption);\n      },\n    ),\n  };\n}",
+      "examples": [
+        {
+          "title": "Example",
+          "description": "",
+          "tabs": [
+            {
+              "code": "<ShopifyScripts shop={shop} account />\n<shopify-account account-data-url=\"/account/widget-data\" sign-in-url=\"/account/login\">\n  <div slot=\"signed-out-avatar\">Sign in</div>\n</shopify-account>",
+              "title": "Example"
+            }
+          ]
+        }
+      ]
     }
   },
   "CreateCustomerAccountServerHandlersOptions": {
@@ -7589,8 +7903,8 @@
       "filePath": "src/customer-account/session.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CustomerAccountServerHandlers",
-      "value": "{\n  /** Completes sign-in at `/account/authorize`, the OAuth callback, and redirects the customer to the return path. Accepts `GET`. */\n  authorize: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_AUTHORIZE_PATH,\n    \"GET\"\n  >;\n  /** Starts sign-in at `/account/login` and redirects the customer to Shopify's login page. Accepts `GET`. Pass `return_to`, `locale`, `acr_values`, `login_hint`, and `login_hint_mode` as search params. The route sends the request context's country to Shopify. */\n  login: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_LOGIN_PATH,\n    \"GET\"\n  >;\n  /**\n   * Logs the customer out at `/account/logout`. Accepts `POST`. For CSRF protection, the route returns a `403` response unless the `Origin` or `Referer` header matches your storefront's origin.\n   *\n   * Through `handleShopifyRoutes`, a GET request to the logout path returns a `405` response. Log out with a `<form method=\"post\" action=\"/account/logout\">` and a submit button, which works without JavaScript.\n   */\n  logout: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_LOGOUT_PATH,\n    \"POST\"\n  >;\n  /** Refreshes the access token at `/account/refresh` and redirects the customer to the same-origin `return_to` path, which defaults to `/account`. Accepts `GET`. */\n  refresh: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_REFRESH_PATH,\n    \"GET\"\n  >;\n}",
-      "description": "The login, authorize, refresh, and logout routes for customer accounts. Add the object to the `handlers` option of `handleShopifyRoutes`.",
+      "value": "{\n  /** Completes sign-in at `/account/authorize`, the OAuth callback, and redirects the customer to the return path. Accepts `GET`. */\n  authorize: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_AUTHORIZE_PATH,\n    \"GET\"\n  >;\n  /** Starts sign-in at `/account/login` and redirects the customer to Shopify's login page. Accepts `GET`. Pass `return_to`, `locale`, `acr_values`, `login_hint`, and `login_hint_mode` as search params. The route sends the request context's country to Shopify. */\n  login: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_LOGIN_PATH,\n    \"GET\"\n  >;\n  /**\n   * Logs the customer out at `/account/logout`. Accepts `POST`. For CSRF protection, the route returns a `403` response unless the `Origin` or `Referer` header matches your storefront's origin.\n   *\n   * Through `handleShopifyRoutes`, a GET request to the logout path returns a `405` response. Log out with a `<form method=\"post\" action=\"/account/logout\">` and a submit button, which works without JavaScript.\n   */\n  logout: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_LOGOUT_PATH,\n    \"POST\"\n  >;\n  /** Refreshes the access token at `/account/refresh` and redirects the customer to the same-origin `return_to` path, which defaults to `/account`. Accepts `GET`. */\n  refresh: CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_REFRESH_PATH,\n    \"GET\"\n  >;\n  /**\n   * Returns the data for `<shopify-account account-data-url=\"/account/widget-data\">` at `/account/widget-data`: the signed-in customer's name, email, and avatar, or `null` for signed-out visitors, plus the shop's sign-in providers and account sheet translations for the request's locale. Accepts `GET`. The customer's access token stays on the server.\n   *\n   * The route refreshes an expired access token and commits the session. The response is private and uncacheable. When the Storefront API or Customer Account API request fails, or a signed-in customer's token can't be refreshed for a temporary reason, the route returns a `502` error instead of partial data. The route needs `storefrontClient` in the handler context, and throws when the customer session doesn't come from `createCustomerSession`.\n   */\n  widgetData: CallableRouteHandler<\n    TContext & Pick<ShopifyRouteHandlerContext, \"storefrontClient\">,\n    CustomerAccountWidgetDataResult,\n    typeof CUSTOMER_ACCOUNT_WIDGET_DATA_PATH,\n    \"GET\"\n  >;\n}",
+      "description": "The login, authorize, refresh, logout, and account widget data routes for customer accounts. Add the object to the `handlers` option of `handleShopifyRoutes`.",
       "members": [
         {
           "filePath": "src/customer-account/session.ts",
@@ -7619,6 +7933,13 @@
           "name": "refresh",
           "value": "CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_REFRESH_PATH,\n    \"GET\"\n  >",
           "description": "Refreshes the access token at `/account/refresh` and redirects the customer to the same-origin `return_to` path, which defaults to `/account`. Accepts `GET`."
+        },
+        {
+          "filePath": "src/customer-account/session.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "widgetData",
+          "value": "CallableRouteHandler<\n    TContext & Pick<ShopifyRouteHandlerContext, \"storefrontClient\">,\n    CustomerAccountWidgetDataResult,\n    typeof CUSTOMER_ACCOUNT_WIDGET_DATA_PATH,\n    \"GET\"\n  >",
+          "description": "Returns the data for `<shopify-account account-data-url=\"/account/widget-data\">` at `/account/widget-data`: the signed-in customer's name, email, and avatar, or `null` for signed-out visitors, plus the shop's sign-in providers and account sheet translations for the request's locale. Accepts `GET`. The customer's access token stays on the server.\n\nThe route refreshes an expired access token and commits the session. The response is private and uncacheable. When the Storefront API or Customer Account API request fails, or a signed-in customer's token can't be refreshed for a temporary reason, the route returns a `502` error instead of partial data. The route needs `storefrontClient` in the handler context, and throws when the customer session doesn't come from `createCustomerSession`."
         }
       ]
     }
@@ -7639,6 +7960,160 @@
       "name": "CustomerAccountRouteResult",
       "value": "ShopifyRouteRedirectResult | ShopifyRouteErrorResult",
       "description": "A redirect, or a `403` error when a logout request comes from another origin."
+    }
+  },
+  "CustomerAccountWidgetDataResult": {
+    "src/customer-account/session.ts": {
+      "filePath": "src/customer-account/session.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "CustomerAccountWidgetDataResult",
+      "value": "ShopifyRouteJsonResult<AccountWidgetData> | ShopifyRouteErrorResult",
+      "description": "The account widget's data, or a `502` error when an upstream request fails."
+    }
+  },
+  "AccountWidgetData": {
+    "src/customer-account/widget-data.ts": {
+      "filePath": "src/customer-account/widget-data.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "AccountWidgetData",
+      "value": "{\n  /** The signed-in customer, or `null` when the visitor is signed out. */\n  customer: AccountWidgetCustomer | null;\n  shop: AccountWidgetShop;\n  visitor: { country: string; language: string };\n}",
+      "description": "The JSON that `<shopify-account account-data-url>` reads, in the shape of the `shopify-customer-account-data` script that Liquid themes render.",
+      "members": [
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "customer",
+          "value": "AccountWidgetCustomer | null",
+          "description": "The signed-in customer, or `null` when the visitor is signed out."
+        },
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "shop",
+          "value": "AccountWidgetShop",
+          "description": "The shop settings that `<shopify-account>` reads for its sign-in options and strings."
+        },
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "visitor",
+          "value": "{ country: string; language: string; }",
+          "description": ""
+        }
+      ]
+    }
+  },
+  "AccountWidgetCustomer": {
+    "src/customer-account/widget-data.ts": {
+      "filePath": "src/customer-account/widget-data.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "AccountWidgetCustomer",
+      "value": "{\n  id: string;\n  email: string | null;\n  displayName: string;\n  firstName: string | null;\n  lastName: string | null;\n  avatarUrl: string;\n}",
+      "description": "The signed-in customer that `<shopify-account>` displays.",
+      "members": [
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "avatarUrl",
+          "value": "string",
+          "description": ""
+        },
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "displayName",
+          "value": "string",
+          "description": ""
+        },
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "email",
+          "value": "string | null",
+          "description": ""
+        },
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "firstName",
+          "value": "string | null",
+          "description": ""
+        },
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "id",
+          "value": "string",
+          "description": ""
+        },
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "lastName",
+          "value": "string | null",
+          "description": ""
+        }
+      ]
+    }
+  },
+  "AccountWidgetShop": {
+    "src/customer-account/widget-data.ts": {
+      "filePath": "src/customer-account/widget-data.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "AccountWidgetShop",
+      "value": "{\n  id: string;\n  socialLoginProviders: { handle: string }[];\n  customerAccountTranslations: { key: string; value: string }[];\n  legacyCustomerAccounts: false;\n  b2bEnabled: false;\n  marketingConsentSigninEnabled: false;\n  marketingConsentPreselected: false;\n}",
+      "description": "The shop settings that `<shopify-account>` reads for its sign-in options and strings.",
+      "members": [
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "b2bEnabled",
+          "value": "false",
+          "description": ""
+        },
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "customerAccountTranslations",
+          "value": "{ key: string; value: string; }[]",
+          "description": ""
+        },
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "id",
+          "value": "string",
+          "description": ""
+        },
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "legacyCustomerAccounts",
+          "value": "false",
+          "description": ""
+        },
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "marketingConsentPreselected",
+          "value": "false",
+          "description": ""
+        },
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "marketingConsentSigninEnabled",
+          "value": "false",
+          "description": ""
+        },
+        {
+          "filePath": "src/customer-account/widget-data.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "socialLoginProviders",
+          "value": "{ handle: string; }[]",
+          "description": ""
+        }
+      ]
     }
   },
   "CustomerAccountServerHandlersWithCartSync": {
@@ -7676,6 +8151,13 @@
           "name": "refresh",
           "value": "CallableRouteHandler<\n    TContext,\n    CustomerAccountRouteResult,\n    typeof CUSTOMER_ACCOUNT_REFRESH_PATH,\n    \"GET\"\n  >",
           "description": "Refreshes the access token at `/account/refresh` and redirects the customer to the same-origin `return_to` path, which defaults to `/account`. Accepts `GET`."
+        },
+        {
+          "filePath": "src/customer-account/session.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "widgetData",
+          "value": "CallableRouteHandler<\n    TContext & Pick<ShopifyRouteHandlerContext, \"storefrontClient\">,\n    CustomerAccountWidgetDataResult,\n    typeof CUSTOMER_ACCOUNT_WIDGET_DATA_PATH,\n    \"GET\"\n  >",
+          "description": "Returns the data for `<shopify-account account-data-url=\"/account/widget-data\">` at `/account/widget-data`: the signed-in customer's name, email, and avatar, or `null` for signed-out visitors, plus the shop's sign-in providers and account sheet translations for the request's locale. Accepts `GET`. The customer's access token stays on the server.\n\nThe route refreshes an expired access token and commits the session. The response is private and uncacheable. When the Storefront API or Customer Account API request fails, or a signed-in customer's token can't be refreshed for a temporary reason, the route returns a `502` error instead of partial data. The route needs `storefrontClient` in the handler context, and throws when the customer session doesn't come from `createCustomerSession`."
         }
       ]
     }
@@ -11328,308 +11810,6 @@
           "description": "Returns the formatted range. Template literals and string concatenation call the method for you."
         }
       ]
-    }
-  },
-  "CustomerAccountGqlForDocs": {
-    "src/customer-account/graphql.ts": {
-      "filePath": "src/customer-account/graphql.ts",
-      "name": "CustomerAccountGqlForDocs",
-      "description": "Creates a typed Customer Account API query or mutation from a GraphQL source string. Pass the document to the Customer Account API client. Call `gql` as a regular function.\n\nPass an array of fragment documents as the second argument to append the fragments to the operation. Each fragment must come from this `gql` function, or the call throws a `TypeError`.\n\nTo validate documents, run `hydrogen gql check` in your `typecheck` script with the `@shopify/hydrogen/ts-plugin` setup. Framework typecheck commands don't validate the documents.",
-      "isPublicDocs": true,
-      "params": [
-        {
-          "name": "source",
-          "description": "The GraphQL source of an operation or a fragment.",
-          "value": "string",
-          "filePath": "src/customer-account/graphql.ts"
-        },
-        {
-          "name": "fragments",
-          "description": "The fragment documents that the operation uses.",
-          "value": "readonly AnyCustomerAccountDocument[]",
-          "isOptional": true,
-          "filePath": "src/customer-account/graphql.ts"
-        }
-      ],
-      "returns": {
-        "filePath": "src/customer-account/graphql.ts",
-        "description": "A typed document to pass to the Customer Account API client.",
-        "name": "AnyCustomerAccountDocument",
-        "value": "AnyCustomerAccountDocument"
-      },
-      "value": "(source: string, fragments?: readonly AnyCustomerAccountDocument[]) => AnyCustomerAccountDocument"
-    }
-  },
-  "AnyCustomerAccountDocument": {
-    "src/customer-account/graphql.ts": {
-      "filePath": "src/customer-account/graphql.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "AnyCustomerAccountDocument",
-      "value": "CustomerAccountDocument<unknown, never, string>",
-      "description": "Any Customer Account API document. Use the type as a constraint when a function accepts any document."
-    }
-  },
-  "CustomerAccountDocument": {
-    "src/customer-account/graphql.ts": {
-      "filePath": "src/customer-account/graphql.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "CustomerAccountDocument",
-      "value": "DocumentDecoration<Result, Variables> & {\n  readonly [CUSTOMER_ACCOUNT_DOCUMENT]: true;\n  readonly source: Source;\n}",
-      "description": "A Customer Account API query or mutation that `gql` from `@shopify/hydrogen/customer-account` returns. TypeScript infers the result and variables types from the document's GraphQL source.\n\nCreate documents only with the Customer Account `gql` function. The client throws a `TypeError` for any other object."
-    }
-  },
-  "CreateCustomerAccountClientGeneratedType": {
-    "src/customer-account/client.ts": {
-      "filePath": "src/customer-account/client.ts",
-      "name": "CreateCustomerAccountClientGeneratedType",
-      "description": "Creates a client that sends Customer Account API requests from your server. Create the client with the current request's context.\n\nThe function throws when the shop ID, API version, or timeout is invalid, when the request context has no HTTPS URL, when no fetch implementation is available, and when the function runs in a browser.",
-      "isPublicDocs": true,
-      "params": [
-        {
-          "name": "input1",
-          "description": "The shop ID, the API version, the request context, a custom fetch, and the request timeout.",
-          "value": "CreateCustomerAccountClientOptions",
-          "filePath": "src/customer-account/client.ts"
-        }
-      ],
-      "returns": {
-        "filePath": "src/customer-account/client.ts",
-        "description": "A client with the GraphQL endpoint URL and a `graphql()` method for Customer Account API requests.",
-        "name": "CustomerAccountClient",
-        "value": "CustomerAccountClient"
-      },
-      "value": "export function createCustomerAccountClient({\n  shopId,\n  customerApiVersion = CUSTOMER_ACCOUNT_API_VERSION,\n  requestContext,\n  fetch: customFetch,\n  defaultTimeoutInMs = DEFAULT_TIMEOUT_IN_MS,\n}: CreateCustomerAccountClientOptions): CustomerAccountClient {\n  if (typeof document !== \"undefined\") {\n    throw new Error(\n      \"Customer Account API tokens cannot be used in a browser context. Use this client from server or edge routes only.\",\n    );\n  }\n\n  validateShopId(shopId);\n  validateCustomerApiVersion(customerApiVersion);\n  validateTimeout(defaultTimeoutInMs);\n\n  const resolvedFetch = customFetch ?? globalThis.fetch;\n  if (typeof resolvedFetch !== \"function\") {\n    throw new Error(\n      \"No fetch function available. Pass a fetch option or ensure globalThis.fetch exists.\",\n    );\n  }\n\n  const origin = getOrigin(requestContext.url);\n  const apiUrl = `https://shopify.com/${shopId}/account/customer/api/${customerApiVersion}/graphql`;\n\n  async function graphql<const Doc extends AnyCustomerAccountDocument>(\n    document: Doc,\n    ...rest: CustomerAccountGqlRestParam<Doc>\n  ): Promise<CustomerAccountGraphqlResult<ResultOfDoc<Doc>>>;\n  async function graphql(\n    document: AnyCustomerAccountDocument,\n    ...rest: [options?: CustomerAccountGraphqlOptions<unknown>]\n  ): Promise<CustomerAccountGraphqlResult<unknown>> {\n    assertCustomerAccountDocument(document);\n    const options = validateGraphqlOptions(rest[0]);\n    requestContext.markResponseAsPersonalized(CUSTOMER_ACCOUNT_GRAPHQL_PERSONALIZATION_REASON);\n    const accessToken = validateAccessToken(options.accessToken);\n    const externalSignals = [requestContext.signal, options.signal].filter(\n      (signal): signal is AbortSignal => Boolean(signal),\n    );\n    throwIfAlreadyAborted(externalSignals);\n\n    const { signal: timeoutSignal, cleanup: cleanupTimeout } =\n      createCustomerAccountTimeoutSignal(defaultTimeoutInMs);\n    externalSignals.push(timeoutSignal);\n    const signal = AbortSignal.any(externalSignals);\n\n    try {\n      const variables = getVariables(\n        document,\n        getOptionalVariables(options.variables),\n        requestContext.locale.language,\n      );\n      const response = await fetchCustomerAccountGraphql({\n        fetch: resolvedFetch,\n        apiUrl,\n        accessToken,\n        origin,\n        query: document.source,\n        variables,\n        signal,\n        timeoutSignal,\n        timeoutInMs: defaultTimeoutInMs,\n      });\n\n      return await readCustomerAccountGraphqlResponse(\n        response,\n        signal,\n        timeoutSignal,\n        defaultTimeoutInMs,\n      );\n    } finally {\n      cleanupTimeout();\n    }\n  }\n\n  return { apiUrl, graphql };\n}",
-      "examples": [
-        {
-          "title": "Example",
-          "description": "",
-          "tabs": [
-            {
-              "code": "import { createCustomerAccountClient, gql } from \"@shopify/hydrogen/customer-account\";\n\nconst customerAccount = createCustomerAccountClient({\n  shopId: \"12345\",\n  requestContext,\n});\n\nconst { data } = await customerAccount.graphql(\n  gql(`query { customer { firstName } }`),\n  { accessToken },\n);",
-              "title": "Example"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "CreateCustomerAccountClientOptions": {
-    "src/customer-account/client.ts": {
-      "filePath": "src/customer-account/client.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "CreateCustomerAccountClientOptions",
-      "value": "{\n  /** Numeric Shopify shop ID as a string of digits, such as `12345`. */\n  shopId: string;\n  /**\n   * Customer Account API version in `YYYY-MM` format. Defaults to `2026-10`.\n   */\n  customerApiVersion?: string;\n  /**\n   * The context for the current request, from `createShopifyRequestContext`.\n   *\n   * The context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.\n   *\n   * The client fills `$language: LanguageCode` from the context's language and stops requests when the context's signal aborts.\n   */\n  requestContext: ShopifyRequestContext;\n  /** Custom fetch implementation. Defaults to the global fetch. */\n  fetch?: typeof globalThis.fetch;\n  /**\n   * Timeout for each request in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to `30000`.\n   */\n  defaultTimeoutInMs?: number;\n}",
-      "description": "Options for creating a Customer Account API client.",
-      "members": [
-        {
-          "filePath": "src/customer-account/client.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "customerApiVersion",
-          "value": "string",
-          "description": "Customer Account API version in `YYYY-MM` format. Defaults to `2026-10`.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/customer-account/client.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "defaultTimeoutInMs",
-          "value": "number",
-          "description": "Timeout for each request in milliseconds. Must be a positive integer no greater than 2,147,483,647. Defaults to `30000`.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/customer-account/client.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "fetch",
-          "value": "{ (input: RequestInfo | URL, init?: RequestInit): Promise<Response>; (input: string | Request | URL, init?: RequestInit): Promise<Response>; }",
-          "description": "Custom fetch implementation. Defaults to the global fetch.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/customer-account/client.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "requestContext",
-          "value": "ShopifyRequestContext",
-          "description": "The context for the current request, from `createShopifyRequestContext`.\n\nThe context's URL must use HTTPS, or creating the client throws. Local `http://` URLs on localhost, 127.0.0.1, and ::1 also work for development.\n\nThe client fills `$language: LanguageCode` from the context's language and stops requests when the context's signal aborts."
-        },
-        {
-          "filePath": "src/customer-account/client.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "shopId",
-          "value": "string",
-          "description": "Numeric Shopify shop ID as a string of digits, such as `12345`."
-        }
-      ]
-    }
-  },
-  "CustomerAccountClient": {
-    "src/customer-account/client.ts": {
-      "filePath": "src/customer-account/client.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "CustomerAccountClient",
-      "value": "{\n  /** The GraphQL endpoint, `https://shopify.com/{shopId}/account/customer/api/{version}/graphql`. */\n  readonly apiUrl: string;\n  /**\n   * Sends a Customer Account API query or mutation with the customer's access token, and returns the data, any GraphQL errors, and the response headers. Pass a document from the Customer Account `gql` function.\n   *\n   * The request makes the final response private and uncacheable when you call `applyResponseHeaders()`. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.\n   *\n   * The method throws a `TypeError` for a document from any other `gql` function, including the Storefront API `gql` function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. A missing or malformed access token throws `CustomerAccountAuthenticationError`, a timeout throws `CustomerAccountTimeoutError`, and other request failures throw `CustomerAccountApiError`.\n   *\n   * @throws {TypeError} When another gql function created the document, or when the variables aren't an object.\n   * @throws {CustomerAccountAuthenticationError} When the options object is missing or the access token fails validation.\n   * @throws {CustomerAccountTimeoutError} When the request exceeds the client's timeout.\n   * @throws {CustomerAccountApiError} On a non-OK HTTP status, unparseable JSON, a response without data, or a network failure.\n   *\n   * @example\n   * ```ts\n   * const result = await client.graphql(\n   *   gql(`query { customer { firstName lastName } }`),\n   *   { accessToken },\n   * );\n   *\n   * if (result.errors) {\n   *   console.error(result.errors);\n   * } else {\n   *   console.log(result.data.customer.firstName);\n   * }\n   * ```\n   */\n  graphql: <const Doc extends AnyCustomerAccountDocument>(\n    document: Doc,\n    ...options: CustomerAccountGqlRestParam<Doc>\n  ) => Promise<CustomerAccountGraphqlResult<ResultOfDoc<Doc>>>;\n}",
-      "description": "A client that sends Customer Account API requests from your server for the current request.",
-      "members": [
-        {
-          "filePath": "src/customer-account/client.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "apiUrl",
-          "value": "string",
-          "description": "The GraphQL endpoint, `https://shopify.com/{shopId}/account/customer/api/{version}/graphql`."
-        },
-        {
-          "filePath": "src/customer-account/client.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "graphql",
-          "value": "<const Doc extends AnyCustomerAccountDocument>(document: Doc, ...options: CustomerAccountGqlRestParam<Doc>) => Promise<CustomerAccountGraphqlResult<ResultOfDoc<Doc>>>",
-          "description": "Sends a Customer Account API query or mutation with the customer's access token, and returns the data, any GraphQL errors, and the response headers. Pass a document from the Customer Account `gql` function.\n\nThe request makes the final response private and uncacheable when you call `applyResponseHeaders()`. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.\n\nThe method throws a `TypeError` for a document from any other `gql` function, including the Storefront API `gql` function, and for variables that aren't an object. When a signal aborts, the method throws the signal's reason. A missing or malformed access token throws `CustomerAccountAuthenticationError`, a timeout throws `CustomerAccountTimeoutError`, and other request failures throw `CustomerAccountApiError`.",
-          "examples": [
-            {
-              "title": "Example",
-              "description": "",
-              "tabs": [
-                {
-                  "code": "const result = await client.graphql(\n  gql(`query { customer { firstName lastName } }`),\n  { accessToken },\n);\n\nif (result.errors) {\n  console.error(result.errors);\n} else {\n  console.log(result.data.customer.firstName);\n}",
-                  "title": "Example"
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "CustomerAccountGqlRestParam": {
-    "src/customer-account/client.ts": {
-      "filePath": "src/customer-account/client.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "CustomerAccountGqlRestParam",
-      "value": "HasNoRequiredKeys<UserVariables<Doc>> extends true\n    ? [options: CustomerAccountGraphqlOptions<UserVariables<Doc>>]\n    : [\n        options: CustomerAccountGraphqlOptions<UserVariables<Doc>> & {\n          variables: UserVariables<Doc>;\n        },\n      ]",
-      "description": "The options argument for a Customer Account API request.\n\nPass `variables` when the document declares a required variable other than `$language: LanguageCode`. TypeScript reports an error when a required variable is missing."
-    }
-  },
-  "VariablesOfDoc": {
-    "src/customer-account/client.ts": {
-      "filePath": "src/customer-account/client.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "VariablesOfDoc",
-      "value": "Doc extends CustomerAccountDocument<unknown, infer Variables, string> ? Variables : never",
-      "description": "The variables that a Customer Account document declares."
-    }
-  },
-  "I18nVariableNamesOfDoc": {
-    "src/customer-account/client.ts": {
-      "filePath": "src/customer-account/client.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "I18nVariableNamesOfDoc",
-      "value": "string extends SourceOf<Doc>\n    ? I18nVariableNamesByValue<VariablesOfDoc<Doc>>\n    : InferVariableNamesDeclaredAs<SourceOf<Doc>, I18nVariableTypes>",
-      "description": "The variables the client fills when omitted: those declared with the expected type, such as `$language: LanguageCode`."
-    }
-  },
-  "SourceOf": {
-    "src/customer-account/graphql.ts": {
-      "filePath": "src/customer-account/graphql.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "SourceOf",
-      "value": "Doc extends { readonly source: infer Source extends string }\n  ? Source\n  : never",
-      "description": "Extracts the source string literal type from a Customer Account document."
-    }
-  },
-  "I18nVariableNamesByValue": {
-    "src/customer-account/client.ts": {
-      "filePath": "src/customer-account/client.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "I18nVariableNamesByValue",
-      "value": "I18nVariableNamesByValue<Variables>",
-      "description": ""
-    }
-  },
-  "InferVariableNamesDeclaredAs": {
-    "src/graphql/type-resolver.ts": {
-      "filePath": "src/graphql/type-resolver.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "InferVariableNamesDeclaredAs",
-      "value": "parseDocument<T> extends infer Doc\n    ? Doc extends { kind: \"Document\"; definitions: infer Defs extends readonly unknown[] }\n      ? FirstOperation<Defs> extends { variableDefinitions: infer Vars extends readonly unknown[] }\n        ? DeclaredNameOfType<Vars[number], Types>\n        : never\n      : never\n    : never",
-      "description": "Names of the first operation's variables that are declared with the named type `Types` maps them to, nullable or non-null. List types never match."
-    }
-  },
-  "FirstOperation": {
-    "src/graphql/type-resolver.ts": {
-      "filePath": "src/graphql/type-resolver.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "FirstOperation",
-      "value": "Defs extends readonly [infer Def, ...infer Rest]\n  ? Def extends { kind: \"OperationDefinition\" }\n    ? Def\n    : FirstOperation<Rest>\n  : never",
-      "description": ""
-    }
-  },
-  "DeclaredNameOfType": {
-    "src/graphql/type-resolver.ts": {
-      "filePath": "src/graphql/type-resolver.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "DeclaredNameOfType",
-      "value": "Definition extends {\n  variable: { name: { value: infer Name extends keyof Types } };\n  type: infer Type;\n}\n  ? (Type extends { kind: \"NonNullType\"; type: infer Inner } ? Inner : Type) extends {\n      kind: \"NamedType\";\n      name: { value: Types[Name] };\n    }\n    ? Name\n    : never\n  : never",
-      "description": ""
-    }
-  },
-  "I18nVariableTypes": {
-    "src/customer-account/client.ts": {
-      "filePath": "src/customer-account/client.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "I18nVariableTypes",
-      "value": "typeof CUSTOMER_ACCOUNT_I18N_VARIABLE_TYPES",
-      "description": ""
-    }
-  },
-  "OptionalI18nVariables": {
-    "src/customer-account/client.ts": {
-      "filePath": "src/customer-account/client.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "OptionalI18nVariables",
-      "value": "{\n  [K in keyof Variables & Names]?: Variables[K];\n}",
-      "description": "Optional versions of the variables that the client fills from the request context when you omit them."
-    }
-  },
-  "CustomerAccountGraphqlOptions": {
-    "src/customer-account/client.ts": {
-      "filePath": "src/customer-account/client.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "CustomerAccountGraphqlOptions",
-      "value": "{\n  /** The customer's access token, such as one from the customer session's `getOrRefreshAccessToken()` method. */\n  accessToken: string;\n  /**\n   * The document's variables. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.\n   */\n  variables?: Variables;\n  /**\n   * Stops this request when the signal aborts. The request also stops when the request context's signal aborts or the timeout passes.\n   */\n  signal?: AbortSignal;\n}",
-      "description": "Options for a single Customer Account API request.",
-      "members": [
-        {
-          "filePath": "src/customer-account/client.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "accessToken",
-          "value": "string",
-          "description": "The customer's access token, such as one from the customer session's `getOrRefreshAccessToken()` method."
-        },
-        {
-          "filePath": "src/customer-account/client.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "signal",
-          "value": "AbortSignal",
-          "description": "Stops this request when the signal aborts. The request also stops when the request context's signal aborts or the timeout passes.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/customer-account/client.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "variables",
-          "value": "Variables",
-          "description": "The document's variables. When the document declares `$language: LanguageCode` and you omit it, the client fills the variable from the request context's language. A `$language` variable of any other type stays yours.",
-          "isOptional": true
-        }
-      ]
-    }
-  },
-  "CustomerAccountGraphqlResult": {
-    "src/customer-account/client.ts": {
-      "filePath": "src/customer-account/client.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "CustomerAccountGraphqlResult",
-      "value": "{ data: Result; errors?: undefined; headers: Headers } | { data: Result | null; errors: GraphQLFormattedError[]; headers: Headers }",
-      "description": "Result of a Customer Account API request. Check `errors` to tell the outcomes apart.\n\nOn success, `data` holds the result and `errors` is `undefined`. When the response has GraphQL errors, `errors` holds them and `data` can be `null`. Every result includes the raw response headers."
     }
   },
   "CreateCartComponentsGeneratedType": {

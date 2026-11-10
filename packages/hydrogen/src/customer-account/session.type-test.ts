@@ -10,6 +10,7 @@ import {
   CUSTOMER_ACCOUNT_LOGIN_PATH,
   CUSTOMER_ACCOUNT_LOGOUT_PATH,
   CUSTOMER_ACCOUNT_REFRESH_PATH,
+  CUSTOMER_ACCOUNT_WIDGET_DATA_PATH,
   type Awaitable,
   type CreateCustomerAccountServerHandlersOptions,
   type CustomerAccountServerHandlers,
@@ -53,6 +54,7 @@ describe("Customer Account session type boundary", () => {
     expectTypeOf(CUSTOMER_ACCOUNT_LOGIN_PATH).toEqualTypeOf<"/account/login">();
     expectTypeOf(CUSTOMER_ACCOUNT_LOGOUT_PATH).toEqualTypeOf<"/account/logout">();
     expectTypeOf(CUSTOMER_ACCOUNT_REFRESH_PATH).toEqualTypeOf<"/account/refresh">();
+    expectTypeOf(CUSTOMER_ACCOUNT_WIDGET_DATA_PATH).toEqualTypeOf<"/account/widget-data">();
   });
 
   it("allows read-only managers for read-only session checks", () => {
@@ -140,5 +142,9 @@ describe("Customer Account session type boundary", () => {
     expectTypeOf(handlers.login).toHaveProperty("method").toEqualTypeOf<"GET">();
     expectTypeOf(handlers.logout).toHaveProperty("method").toEqualTypeOf<"POST">();
     expectTypeOf(handlers.refresh).toHaveProperty("method").toEqualTypeOf<"GET">();
+    expectTypeOf(handlers.widgetData).toHaveProperty("pathname").toEqualTypeOf<
+      typeof CUSTOMER_ACCOUNT_WIDGET_DATA_PATH
+    >();
+    expectTypeOf(handlers.widgetData).toHaveProperty("method").toEqualTypeOf<"GET">();
   });
 });

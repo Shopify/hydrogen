@@ -12,11 +12,19 @@ import {
   type CallableRouteHandler,
   type ShopifyRouteErrorResult,
   type ShopifyRouteHandlerContext,
+  type ShopifyRouteJsonResult,
   type ShopifyRouteRedirectResult,
   type ShopifyRouteSessionManager,
 } from "../core/request-routing/registered-routes";
 import { CUSTOMER_ACCOUNT_PATHS, getSameOriginPath } from "../core/url";
+import { createCustomerAccountClient, type CustomerAccountClient } from "./client";
 import { CustomerAccountApiError, CustomerAccountOAuthError } from "./errors";
+import {
+  getAccountWidgetVisitor,
+  queryAccountWidgetCustomer,
+  queryAccountWidgetShop,
+  type AccountWidgetData,
+} from "./widget-data";
 
 const log = getLogger("customer-account");
 
@@ -44,6 +52,12 @@ export const CUSTOMER_ACCOUNT_LOGOUT_PATH = CUSTOMER_ACCOUNT_PATHS.logout;
  * @publicDocs
  */
 export const CUSTOMER_ACCOUNT_REFRESH_PATH = CUSTOMER_ACCOUNT_PATHS.refresh;
+/**
+ * Account widget data route path: `"/account/widget-data"`.
+ *
+ * @publicDocs
+ */
+export const CUSTOMER_ACCOUNT_WIDGET_DATA_PATH = CUSTOMER_ACCOUNT_PATHS.widgetData;
 
 const CUSTOMER_ACCOUNT_SESSION_KEY = "customerAccount";
 const DEFAULT_LOGIN_RETURN_TO_PATH = "/account";
@@ -53,6 +67,7 @@ const FAILED_LOGIN_PATH = "/account?login=failed";
 const FORBIDDEN_STATUS = 403;
 const FORBIDDEN_ERROR_CODE = "forbidden";
 const FORBIDDEN_ERROR_MESSAGE = "Forbidden";
+const BAD_GATEWAY_STATUS = 502;
 const NO_STORE_CACHE_CONTROL = "no-store";
 const AUTHORIZATION_CODE_GRANT_TYPE = "authorization_code";
 const REFRESH_TOKEN_GRANT_TYPE = "refresh_token";
@@ -231,7 +246,7 @@ export type CustomerSession = {
 };
 
 /**
- * The login, authorize, refresh, and logout routes for customer accounts. Add the object to the `handlers` option of `handleShopifyRoutes`.
+ * The login, authorize, refresh, logout, and account widget data routes for customer accounts. Add the object to the `handlers` option of `handleShopifyRoutes`.
  */
 export type CustomerAccountServerHandlers<
   TContext extends CustomerAccountRouteHandlerContext = CustomerAccountRouteHandlerContext,
@@ -266,6 +281,17 @@ export type CustomerAccountServerHandlers<
     TContext,
     CustomerAccountRouteResult,
     typeof CUSTOMER_ACCOUNT_REFRESH_PATH,
+    "GET"
+  >;
+  /**
+   * Returns the data for `<shopify-account account-data-url="/account/widget-data">` at `/account/widget-data`: the signed-in customer's name, email, and avatar, or `null` for signed-out visitors, plus the shop's sign-in providers and account sheet translations for the request's locale. Accepts `GET`. The customer's access token stays on the server.
+   *
+   * The route refreshes an expired access token and commits the session. The response is private and uncacheable. When the Storefront API or Customer Account API request fails, or a signed-in customer's token can't be refreshed for a temporary reason, the route returns a `502` error instead of partial data. The route needs `storefrontClient` in the handler context, and throws when the customer session doesn't come from `createCustomerSession`.
+   */
+  widgetData: CallableRouteHandler<
+    TContext & Pick<ShopifyRouteHandlerContext, "storefrontClient">,
+    CustomerAccountWidgetDataResult,
+    typeof CUSTOMER_ACCOUNT_WIDGET_DATA_PATH,
     "GET"
   >;
 };
@@ -375,10 +401,15 @@ type CustomerSessionInternals = {
     requestContext: ShopifyRequestContext,
     request: Request,
   ): Promise<OAuthCallbackResult>;
+  createCustomerAccountClient(requestContext: ShopifyRequestContext): CustomerAccountClient;
 };
 const customerSessionInternals = new WeakMap<CustomerSession, CustomerSessionInternals>();
 /** A redirect, or a `403` error when a logout request comes from another origin. */
 type CustomerAccountRouteResult = ShopifyRouteRedirectResult | ShopifyRouteErrorResult;
+/** The account widget's data, or a `502` error when an upstream request fails. */
+type CustomerAccountWidgetDataResult =
+  | ShopifyRouteJsonResult<AccountWidgetData>
+  | ShopifyRouteErrorResult;
 type CustomerAccountRouteHandlerContext = {
   request: Request;
   sessionManager: WritableCustomerSessionManager;
@@ -386,6 +417,9 @@ type CustomerAccountRouteHandlerContext = {
 };
 type CustomerAccountRuntimeRouteHandlerContext = CustomerAccountRouteHandlerContext & {
   storefrontClient?: StorefrontClient;
+};
+type CustomerAccountWidgetDataRouteHandlerContext = CustomerAccountRouteHandlerContext & {
+  storefrontClient: StorefrontClient;
 };
 type CustomerAccountServerHandlersForOptions<TOptions> = TOptions extends {
   cartServerHandlers: CartBuyerIdentitySyncSource;
@@ -615,6 +649,8 @@ export function createCustomerSession({
   customerSessionInternals.set(customerSession, {
     getOrRefreshAccessToken: getOrRefreshAccessTokenResult,
     handleOAuthCallback: handleOAuthCallbackResult,
+    createCustomerAccountClient: (requestContext) =>
+      createCustomerAccountClient({ shopId, requestContext, fetch, defaultTimeoutInMs }),
   });
   return customerSession;
 }
@@ -637,7 +673,17 @@ export async function getCustomerSessionRefreshResult(
  *
  * Link to these paths with full-page navigation, such as a plain `<a>` link or a `<form>`. Client-side navigation components can't follow these redirects.
  *
- * @returns The login, authorize, refresh, and logout routes.
+ * The widget data route at `/account/widget-data` returns JSON for Shopify's `<shopify-account>` component, so the component can show the signed-in customer without the access token reaching the page.
+ *
+ * @example
+ * ```tsx
+ * <ShopifyScripts shop={shop} account />
+ * <shopify-account account-data-url="/account/widget-data" sign-in-url="/account/login">
+ *   <div slot="signed-out-avatar">Sign in</div>
+ * </shopify-account>
+ * ```
+ *
+ * @returns The login, authorize, refresh, logout, and account widget data routes.
  * @publicDocs
  */
 export function createCustomerAccountServerHandlers<
@@ -645,7 +691,7 @@ export function createCustomerAccountServerHandlers<
 >(options: TOptions): CustomerAccountServerHandlersForOptions<TOptions>;
 /**
  * @param options The customer session, the redirect paths, and optional cart handlers for the account routes.
- * @returns The login, authorize, refresh, and logout routes.
+ * @returns The login, authorize, refresh, logout, and account widget data routes.
  */
 export function createCustomerAccountServerHandlers(
   options: CreateCustomerAccountServerHandlersOptions,
@@ -706,6 +752,13 @@ export function createCustomerAccountServerHandlers(
       "GET",
       async (context: CustomerAccountRuntimeRouteHandlerContext) => {
         return handleRefreshRoute(customerSession, context, originOption, cartSync);
+      },
+    ),
+    widgetData: createCallableRouteHandler(
+      CUSTOMER_ACCOUNT_WIDGET_DATA_PATH,
+      "GET",
+      async (context: CustomerAccountWidgetDataRouteHandlerContext) => {
+        return handleWidgetDataRoute(customerSession, context, originOption);
       },
     ),
   };
@@ -877,6 +930,86 @@ function refreshRedirectResult(
   const returnTo =
     requestUrl.searchParams.get("return_to") ?? requestUrl.searchParams.get("returnTo");
   return redirectResult(sanitizeReturnTo(returnTo, origin), headers);
+}
+
+async function handleWidgetDataRoute(
+  customerSession: CustomerSession,
+  context: CustomerAccountWidgetDataRouteHandlerContext,
+  originOption: string | ((request: Request) => string) | undefined,
+): Promise<CustomerAccountWidgetDataResult> {
+  const internal = customerSessionInternals.get(customerSession);
+  if (!internal) {
+    throw new Error(
+      "The account widget data route requires the customerSession returned by createCustomerSession.",
+    );
+  }
+
+  const { request, sessionManager, requestContext, storefrontClient } = context;
+  const origin = await resolveRouteOrigin(sessionManager, request, originOption);
+  const shopRequest = settle(queryAccountWidgetShop(storefrontClient));
+  const { status, accessToken } = await internal.getOrRefreshAccessToken(
+    sessionManager,
+    requestContext,
+    { origin },
+  );
+  const customerRequest = accessToken
+    ? settle(
+        queryAccountWidgetCustomer(
+          internal.createCustomerAccountClient(requestContext),
+          accessToken,
+        ),
+      )
+    : undefined;
+  const [shop, customer] = await Promise.all([shopRequest, customerRequest]);
+
+  const headers = new Headers(await commitSession(sessionManager));
+  headers.set("cache-control", NO_STORE_CACHE_CONTROL);
+
+  if (shop.status === "rejected") {
+    log.error("account widget shop query failed", { error: shop.reason });
+    return badGatewayResult(
+      "shop_unavailable",
+      "The shop's account settings are unavailable",
+      headers,
+    );
+  }
+  // `customer: null` would show a signed-in customer as signed out, so failures return an error.
+  if (status === "transient" || customer?.status === "rejected") {
+    log.error("account widget customer query failed", {
+      error: customer?.status === "rejected" ? customer.reason : "transient token refresh failure",
+    });
+    return badGatewayResult(
+      "customer_unavailable",
+      "The customer's account is unavailable",
+      headers,
+    );
+  }
+
+  return {
+    type: "json",
+    data: {
+      customer: customer?.value ?? null,
+      shop: shop.value,
+      visitor: getAccountWidgetVisitor(requestContext),
+    },
+    headers,
+  };
+}
+
+// Settled up front so a rejection that happens before it is awaited isn't reported as unhandled.
+function settle<T>(promise: Promise<T>): Promise<PromiseSettledResult<T>> {
+  return promise.then(
+    (value) => ({ status: "fulfilled", value }),
+    (reason: unknown) => ({ status: "rejected", reason }),
+  );
+}
+
+function badGatewayResult(
+  code: string,
+  message: string,
+  headers: Headers,
+): ShopifyRouteErrorResult {
+  return { type: "error", status: BAD_GATEWAY_STATUS, error: { code, message }, headers };
 }
 
 async function handleOAuthCallbackWithAccessToken(
