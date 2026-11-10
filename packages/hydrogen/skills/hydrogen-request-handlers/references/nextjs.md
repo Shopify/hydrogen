@@ -17,6 +17,7 @@ import {
   createCartServerHandlers,
   createShopifyRequestContext,
   createStorefrontClient,
+  getCartId,
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
 import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-account";
@@ -57,6 +58,7 @@ export async function proxy(request: NextRequest) {
 
   const requestHeaders = requestContext.getForwardedRequestHeaders();
   const response = NextResponse.next({ request: { headers: requestHeaders } });
+  if (getCartId(request)) requestContext.markResponseAsPersonalized("cart");
   // Next.js drops a route handler's header when the proxy already set it, so leave `Link` to the route.
   const link = response.headers.get("link");
   requestContext.applyResponseHeaders(response.headers);
@@ -73,6 +75,8 @@ export const config = {
 Next.js copies headers from `NextResponse.next()` onto the final response before the route runs, then skips any route handler header with the same name (only `Set-Cookie`, `Vary` and the authenticate headers are appended). Save the pass-through response's `Link` before `applyResponseHeaders` and restore it afterwards. This keeps any `Link` the proxy set itself and leaves out the UCP discovery `Link`, so a route handler's own `Link` is never replaced. Responses returned by `handleShopifyRoutes` are final and keep the UCP link. Next.js pages advertise UCP through the `<link rel="ucp">` tag rendered by `ShopifyScripts` instead.
 
 Upgrade note: apps upgrading Hydrogen whose proxy calls `applyResponseHeaders` directly will lose their route handlers' `Link` headers unless they adopt the save-and-restore pattern in `examples/nextjs/lib/proxy-response-headers.ts`.
+
+The proxy sends the page's response headers before Server Components render, so a cart read during render can't make the page private. When the request has a cart ID, mark the response personalized in the proxy. Next keeps a `Cache-Control` header that the proxy sets, so without the mark a public cache header would also apply to a page that renders the buyer's cart.
 
 The proxy returns a matched promise directly so Next owns any rejection. If the app adds a request-level `try/catch` that returns a custom error response, use `return await shopifyRoute` inside that boundary after the truthy check.
 
