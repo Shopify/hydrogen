@@ -522,7 +522,9 @@ describe("handleShopifyRoutes", () => {
   });
 
   it("does not handle cart routes without registered cart handlers", async () => {
-    const request = new Request("https://my-app.com/api/cart?cartId=123");
+    const request = new Request("https://my-app.com/api/cart", {
+      headers: { cookie: "cart=123" },
+    });
 
     const result = await handleShopifyRoutes({ request });
 
