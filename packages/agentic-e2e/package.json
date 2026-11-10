@@ -1,0 +1,18 @@
+{
+  "name": "@shopify/agentic-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "@browserbasehq/stagehand": "3.7.3",
+    "@shopify/hydrogen": "workspace:*",
+    "playwright-core": "1.59.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "typescript": "catalog:",
+    "vitest": "^3.0.0"
+  }
+}
