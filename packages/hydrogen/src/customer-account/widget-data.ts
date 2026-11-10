@@ -80,10 +80,11 @@ export type AccountWidgetData = {
 
 export async function queryAccountWidgetShop(
   storefrontClient: StorefrontClient,
+  signal: AbortSignal,
 ): Promise<AccountWidgetShop> {
   const result = await storefrontClient.graphql(
     ACCOUNT_WIDGET_SHOP_QUERY,
-    withStorefrontClientCache(storefrontClient, {}, Cache.long()),
+    withStorefrontClientCache(storefrontClient, { signal }, Cache.long()),
   );
   if (result.errors) {
     throw new Error("Storefront API returned errors for the account widget shop query", {
@@ -114,9 +115,11 @@ export async function queryAccountWidgetShop(
 export async function queryAccountWidgetCustomer(
   customerAccountClient: CustomerAccountClient,
   accessToken: string,
+  signal: AbortSignal,
 ): Promise<AccountWidgetCustomer> {
   const result = await customerAccountClient.graphql(ACCOUNT_WIDGET_CUSTOMER_QUERY, {
     accessToken,
+    signal,
   });
   if (result.errors) {
     throw new Error("Customer Account API returned errors for the account widget customer query", {

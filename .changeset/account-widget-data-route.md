@@ -10,4 +10,4 @@
 </shopify-account>
 ```
 
-Load the component with `<ShopifyScripts account />`. The route refreshes expired access tokens and commits the session, and its responses are private and uncacheable. When the Storefront API or Customer Account API request fails, it returns a `502` error instead of partial data. The route needs a customer session from `createCustomerSession`. The path is exported as `CUSTOMER_ACCOUNT_WIDGET_DATA_PATH`.
+Load the component with `<ShopifyScripts account />`. The route refreshes expired access tokens and commits the session, and its responses are private and uncacheable. When the Customer Account API rejects the access token, the route clears it and returns `customer: null`; other Storefront API or Customer Account API failures return a `502` error instead of partial data. The refresh and API requests share an 8-second deadline, within the component's 10-second timeout. With `cartServerHandlers`, a refresh or sign-out on this route attaches or detaches the cart's customer, like the refresh route. The route needs a customer session from `createCustomerSession`. The path is exported as `CUSTOMER_ACCOUNT_WIDGET_DATA_PATH`.
