@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { assert } from "../test-utils";
 import {
   defineShopifyI18n,
+  getHtmlLang,
   getLocalePathSegment,
   getLocalizedHref,
   getSupportedLocales,
@@ -425,6 +426,18 @@ describe("getLocalePathSegment", () => {
       const matched = matchLocale(url, pathnameI18n);
       expect(resolveSupportedLocale(getLocalePathSegment(matched), pathnameI18n)).toEqual(matched);
     }
+  });
+});
+
+describe("getHtmlLang", () => {
+  it.each([
+    ["EN", "en"],
+    ["PT_BR", "pt-BR"],
+    ["PT_PT", "pt-PT"],
+    ["ZH_CN", "zh-Hans"],
+    ["ZH_TW", "zh-Hant"],
+  ] as const)("converts %s -> %s", (language, expected) => {
+    expect(getHtmlLang(language)).toBe(expected);
   });
 });
 

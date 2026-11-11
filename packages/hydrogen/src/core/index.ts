@@ -3,6 +3,7 @@ export { createShopifyRouteTemplates, defineShopifyRouteTemplates } from "./stan
 export type { ShopifyRouteTemplates } from "./standard-routes/index";
 export {
   defineShopifyI18n,
+  getHtmlLang,
   getLocalePathSegment,
   getLocalizedHref,
   getSupportedLocales,
