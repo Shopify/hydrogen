@@ -141,16 +141,16 @@ export interface CartNetworkEntry {
   status?: number;
 }
 
-/** The buyer that the cart belongs to. The country sets the cart's pricing and currency. */
+/** The buyer that the cart belongs to. The Storefront API prices the cart for the buyer's country. */
 export interface CartBuyerIdentity {
-  /** The country that prices the cart. Set from the request's country when the cart is created, and reset to the request's country when the two drift apart. */
+  /** The country that the cart is priced for. A country without a market on the shop gets the shop's default currency. The cart GET handler resets the country to the request's country when the two differ, except on a B2B cart. */
   countryCode?: CountryCode | null;
   /** The buyer's email address. */
   email?: string | null;
   /** The buyer's phone number. */
   phone?: string | null;
-  /** The customer that the cart is attached to, or `null` for a guest cart. */
-  customer?: { id: string } | null;
+  /** The B2B company location that the customer buys for, or `null` for a non-B2B cart. */
+  purchasingCompany?: { location: { id: string } } | null;
 }
 
 /** A key-value pair attached to the cart or to an individual cart line. */

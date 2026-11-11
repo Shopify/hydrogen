@@ -119,8 +119,10 @@ const HYDROGEN_CART_FRAGMENT = gql(`
       countryCode
       email
       phone
-      customer {
-        id
+      purchasingCompany {
+        location {
+          id
+        }
       }
     }
   }

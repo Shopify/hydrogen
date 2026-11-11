@@ -243,7 +243,12 @@ const SERVER_CART = {
     ],
   },
   discountCodes: [],
-  buyerIdentity: { countryCode: "US", email: null, phone: null, customer: null },
+  buyerIdentity: {
+    countryCode: "US",
+    email: null,
+    phone: null,
+    purchasingCompany: null,
+  },
 };
 
 const storefrontSchema = buildSchema(

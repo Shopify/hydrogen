@@ -40,7 +40,7 @@ import {
   type CartQueriesForOptions,
   type CreateCartQueriesOptions,
 } from "./queries";
-import type { CartBuyerIdentity, CartData } from "./state";
+import type { CartData } from "./state";
 const log = getLogger("cart-api");
 
 const CART_API_PATH = "/api/cart" as const;
@@ -353,6 +353,7 @@ export function createCartServerHandlers(
 }
 
 type RuntimeCartQueries = typeof cartQueries;
+type RuntimeCartData = CartDataFromQuery<RuntimeCartQueries["cart"]>;
 
 function createCartBuyerIdentitySync(queries: RuntimeCartQueries): CartBuyerIdentitySync {
   return {
@@ -388,12 +389,7 @@ async function handleGet(
   const cartIdSource = request ?? storefrontClient.requestContext;
   const result = await getCart(getCartId(cartIdSource), storefrontClient, queries.cart);
   logCartErrors(result.errors);
-  const reconciledCart = await reconcileBuyerCountry(
-    result.cart,
-    context,
-    queries,
-    customerSession,
-  );
+  const reconciledCart = await reconcileBuyerCountry(result.cart, storefrontClient, queries);
   const cart = await addLoggedInCheckoutParam(reconciledCart, context, customerSession);
   const data = { cart, ...(result.errors && { errors: result.errors }) };
   const headers = createProxyResponseHeaders(result.headers);
@@ -408,70 +404,49 @@ async function handleGet(
 
 // The Storefront API prices a cart from its persisted buyerIdentity.countryCode,
 // not from @inContext, and checkout rewrites that country from the shipping
-// address. cartBuyerIdentityUpdate replaces the whole identity, so the reset
-// echoes email and phone and re-attaches the customer token.
-async function reconcileBuyerCountry<TCart extends CartData>(
-  cart: TCart | null,
-  context: CartGetHandlerContext & Partial<CartCustomerSessionReadContext>,
+// address. cartBuyerIdentityUpdate keeps the customer and preferences that the
+// input omits but clears email and phone, so the reset echoes those two.
+// B2B carts are priced by their company location, so the reset leaves them alone.
+async function reconcileBuyerCountry(
+  cart: RuntimeCartData | null,
+  storefrontClient: StorefrontClient,
   queries: RuntimeCartQueries,
-  customerSession?: CartCustomerSession,
-): Promise<TCart | null> {
-  const requestCountry = context.storefrontClient.requestContext.i18n.country;
+): Promise<RuntimeCartData | null> {
+  const requestCountry = storefrontClient.requestContext.i18n.country;
   const buyerIdentity = cart?.buyerIdentity;
-  if (!cart?.id || !buyerIdentity?.countryCode || buyerIdentity.countryCode === requestCountry) {
-    return cart;
-  }
-
-  const customerAccessToken = await getReadOnlyCustomerAccessToken(context, customerSession);
-  if (buyerIdentity.customer && !customerAccessToken) {
-    log.warn(
-      `Cart ${cart.id} is priced for ${buyerIdentity.countryCode} but the request is for ${requestCountry}. Skipping the country reset because the cart belongs to a customer and no access token is available.`,
-    );
+  if (
+    !cart ||
+    !buyerIdentity?.countryCode ||
+    buyerIdentity.countryCode === requestCountry ||
+    buyerIdentity.purchasingCompany
+  ) {
     return cart;
   }
 
   try {
-    const result = await context.storefrontClient.graphql(queries.cartBuyerIdentityUpdate, {
+    const result = await storefrontClient.graphql(queries.cartBuyerIdentityUpdate, {
       variables: {
         cartId: cart.id,
-        buyerIdentity: buyerIdentityInputForCountry(
-          buyerIdentity,
-          requestCountry,
-          customerAccessToken,
-        ),
+        buyerIdentity: {
+          countryCode: requestCountry,
+          ...(buyerIdentity.email && { email: buyerIdentity.email }),
+          ...(buyerIdentity.phone && { phone: buyerIdentity.phone }),
+        },
       },
     });
     const { cart: updatedCart, userErrors } = assertMutationData(result, "cartBuyerIdentityUpdate");
     if (userErrors.length > 0) {
       throw new Error(userErrors.map(({ message }) => message).join("\n"));
     }
-    return (updatedCart ?? cart) as TCart;
+    return updatedCart ?? cart;
   } catch (error) {
-    log.error(`Could not reset cart ${cart.id} country to ${requestCountry}`, { error });
+    log.error("cart country reset failed", {
+      error,
+      cartCountry: buyerIdentity.countryCode,
+      requestCountry,
+    });
     return cart;
   }
-}
-
-function buyerIdentityInputForCountry(
-  buyerIdentity: CartBuyerIdentity,
-  countryCode: CartBuyerIdentity["countryCode"],
-  customerAccessToken: string | undefined,
-) {
-  return {
-    countryCode,
-    ...(buyerIdentity.email && { email: buyerIdentity.email }),
-    ...(buyerIdentity.phone && { phone: buyerIdentity.phone }),
-    ...(customerAccessToken && { customerAccessToken }),
-  };
-}
-
-async function getReadOnlyCustomerAccessToken(
-  context: Partial<CartCustomerSessionReadContext>,
-  customerSession?: CartCustomerSession,
-): Promise<string | undefined> {
-  if (!customerSession) return undefined;
-  assertCustomerSessionReadContext(context);
-  return customerSession.getAccessToken(context.sessionManager, context.requestContext);
 }
 
 function logCartErrors(errors: CartGetData["errors"]): void {

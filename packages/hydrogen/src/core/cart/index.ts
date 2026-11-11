@@ -36,6 +36,7 @@ export type {
   CartLineCost,
   CartLineMerchandise,
   CartCost,
+  CartBuyerIdentity,
   DiscountCode,
   Attribute,
 } from "./state";
