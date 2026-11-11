@@ -131,7 +131,7 @@ async function runOnce(url: URL): Promise<RunResult> {
     const storefront = await pinFromStorefront(url, interrupt);
     if (storefront.status !== "pinned") return storefront;
     const { context, pinned } = storefront;
-    const run = await runAgent(url, pinned, model, interrupt);
+    const run = await runAgent(url, context, pinned, model, interrupt);
     return run.status === "agent-completed" ? { ...run, context, pinned } : run;
   });
 }
@@ -165,6 +165,7 @@ async function pinFromStorefront(url: URL, interrupt: AbortSignal): Promise<Stor
  */
 async function runAgent(
   storefrontUrl: URL,
+  context: StorefrontContext,
   pinned: PinnedVariant,
   model: ModelConfig,
   interrupt: AbortSignal,
@@ -181,7 +182,7 @@ async function runAgent(
     process.stderr.write("Running the agent task.\n");
     const outcome = await agent.run({
       page: session.page,
-      task: buildObjective(pinned),
+      task: buildObjective({ pinned, context }),
       model,
       interrupt,
     });
