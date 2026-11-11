@@ -202,7 +202,8 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
       const widthParts = getUnitValueParts(nWidthProp.toString());
       const nWidth = `${widthParts.number}${widthParts.unit}`;
 
-      const autoHeight = height === undefined || height === null;
+      const autoHeight =
+        height === undefined || height === null || height === 'auto';
       const heightParts = autoHeight
         ? null
         : getUnitValueParts(height.toString());
@@ -406,7 +407,9 @@ const FixedWidthImage = React.forwardRef<
         src: normalizedProps.src,
         width: intWidth,
         height: fixedHeight,
-        crop: normalizedProps.height === 'auto' ? undefined : crop,
+        // Match the srcset 1x candidate. fixedHeight can come from aspectRatio,
+        // and without crop the CDN fits instead of cropping to that ratio.
+        crop,
       });
 
       return {

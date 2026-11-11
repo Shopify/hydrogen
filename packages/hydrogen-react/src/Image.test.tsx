@@ -211,6 +211,19 @@ describe('<Image />', () => {
       expect(img.srcset).not.toContain('3x');
     });
 
+    it('uses the same crop for src as the 1x srcset candidate when height is derived from aspectRatio', () => {
+      const data = {height: 600, width: 800};
+
+      render(
+        <Image {...defaultProps} data={data} width={300} aspectRatio="1/1" />,
+      );
+
+      const img = screen.getByTestId<HTMLImageElement>('test-element');
+      const oneX = img.srcset.split(', ')[0].replace(/ 1x$/, '');
+      expect(img.src).toBe(oneX);
+      expect(img.src).toContain('crop=center');
+    });
+
     it('does not create srcset with greater dimensions than source image when using aspect-ratio', () => {
       const data = {height: 300, width: 400};
 
