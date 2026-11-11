@@ -46,6 +46,8 @@ type MockStorefrontClientOptions = {
 };
 
 const DEFAULT_BUYER_IP = "127.0.0.1";
+const DEFAULT_LOCALE = { country: "US", language: "EN" } as const;
+const DEFAULT_I18N = { defaultLocale: DEFAULT_LOCALE } as const;
 
 function mockStorefrontClient(
   data: unknown,
@@ -58,12 +60,13 @@ function mockStorefrontClient(
   };
   return {
     type: "private",
-    i18n: { country: "US", language: "EN", pathPrefix: "" },
+    locale: { ...DEFAULT_LOCALE, pathPrefix: "" },
+    i18n: { ...DEFAULT_LOCALE, pathPrefix: "" },
     storeUrl: "https://shop.example.com",
     apiUrl: "https://shop.example.com/api/2026-01/graphql.json",
     requestContext: createShopifyRequestContext({
       request: options.request ?? new Request("https://shop.example.com/"),
-      i18n: { country: "US", language: "EN" },
+      i18n: DEFAULT_I18N,
       buyerIp: DEFAULT_BUYER_IP,
     }),
     graphql: options.rejectWith
@@ -157,41 +160,41 @@ describe("getCart", () => {
 });
 
 describe("getCartId", () => {
-  it("reads cart ID from the cartId query param", () => {
+  it("ignores a cartId query param without a cart cookie", () => {
     const request = new Request(
       "http://localhost/api/cart?cartId=gid%3A%2F%2Fshopify%2FCart%2Fquery-cart",
     );
-    expect(getCartId(request)).toBe("gid://shopify/Cart/query-cart");
+    expect(getCartId(request)).toBeNull();
   });
 
-  it("prefers cartId query param over cart cookie", () => {
+  it("reads the cart cookie instead of a cartId query param", () => {
     const request = new Request(
       "http://localhost/api/cart?cartId=gid%3A%2F%2Fshopify%2FCart%2Fquery-cart",
       {
         headers: { cookie: "cart=cookie-cart" },
       },
     );
-    expect(getCartId(request)).toBe("gid://shopify/Cart/query-cart");
+    expect(getCartId(request)).toBe("gid://shopify/Cart/cookie-cart");
   });
 
-  it("reads cart ID from a request context URL", () => {
+  it("reads the request context cookie instead of a cartId query param in its URL", () => {
     const context = createShopifyRequestContext({
       request: {
         headers: new Headers({ cookie: "cart=cookie-cart" }),
         url: "http://localhost/api/cart?cartId=gid%3A%2F%2Fshopify%2FCart%2Fcontext-query-cart",
       },
-      i18n: { country: "US", language: "EN" },
+      i18n: DEFAULT_I18N,
     });
 
-    expect(getCartId(context)).toBe("gid://shopify/Cart/context-query-cart");
+    expect(getCartId(context)).toBe("gid://shopify/Cart/cookie-cart");
   });
 
-  it("falls back to request context cookie when URL is missing", () => {
+  it("reads the request context cookie", () => {
     const context = createShopifyRequestContext({
       request: {
         headers: new Headers({ cookie: "cart=context-cookie-cart" }),
       },
-      i18n: { country: "US", language: "EN" },
+      i18n: DEFAULT_I18N,
     });
 
     expect(getCartId(context)).toBe("gid://shopify/Cart/context-cookie-cart");

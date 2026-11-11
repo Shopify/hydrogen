@@ -207,13 +207,16 @@ export function initializeShopPayButtonElement(
 ): void {
   syncShopPayButtonElementAttributes(element, getShopPayButtonElementAttributes(options));
 
-  const shadowRoot = element.shadowRoot ?? element.attachShadow({ mode: "open" });
   const template = element.querySelector("template[shadowrootmode]");
+  let shadowRoot = element.shadowRoot;
 
-  if (template instanceof HTMLTemplateElement) {
-    shadowRoot.append(template.content.cloneNode(true));
-    template.remove();
+  if (!shadowRoot) {
+    shadowRoot = element.attachShadow({ mode: "open" });
+    if (template instanceof HTMLTemplateElement) {
+      shadowRoot.append(template.content.cloneNode(true));
+    }
   }
+  template?.remove();
 
   renderShopPayButtonShadowRoot(shadowRoot, options);
 }

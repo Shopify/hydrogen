@@ -6,6 +6,8 @@ SolidStart uses Vinxi (Nitro under the hood) and provides middleware via `create
 
 The middleware creates the client per-request and attaches it to `event.locals`. Server functions retrieve it via `getRequestEvent()`. The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` per the `hydrogen-storefront-client` buyer-IP guidance.
 
+`i18n` is the module-scope `defineShopifyI18n` definition (see `SKILL.md`); the request context matches the locale from `event.request.url`.
+
 ```ts
 // src/middleware.ts
 import { createMiddleware } from "@solidjs/start/middleware";
@@ -13,12 +15,13 @@ import {
   createStorefrontClient,
   createShopifyRequestContext,
 } from "@shopify/hydrogen";
+import { i18n } from "~/lib/i18n";
 
 export default createMiddleware({
   onRequest: (event) => {
     const requestContext = createShopifyRequestContext({
       request: event.request,
-      i18n: { country: "US", language: "EN" },
+      i18n,
     });
 
     const client = createStorefrontClient({
@@ -98,12 +101,13 @@ import {
   createStorefrontClient,
   createShopifyRequestContext,
 } from "@shopify/hydrogen";
+import { i18n } from "~/lib/i18n";
 
 export default createMiddleware({
   onRequest: (event) => {
     const requestContext = createShopifyRequestContext({
       request: event.request,
-      i18n: { country: "US", language: "EN" },
+      i18n,
     });
 
     const client = createStorefrontClient({

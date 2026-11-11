@@ -946,6 +946,50 @@
       "members": []
     }
   },
+  "GetHtmlLangGeneratedType": {
+    "src/core/i18n/locale.ts": {
+      "filePath": "src/core/i18n/locale.ts",
+      "name": "GetHtmlLangGeneratedType",
+      "description": "Converts a Shopify language code into the BCP 47 tag for the `<html lang>` attribute: `EN` → `en`, `PT_BR` → `pt-BR`, `ZH_TW` → `zh-Hant`.\n\nThe attribute names the language the page is written in, so it takes the language code only, not the market country: Portuguese content sold in Canada is still `pt-BR`. Use the market country for `hreflang` instead, where the region names the targeted audience.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "language",
+          "description": "",
+          "value": "ShopifyLanguageCode",
+          "filePath": "src/core/i18n/locale.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/i18n/locale.ts",
+        "description": "",
+        "name": "string",
+        "value": "string"
+      },
+      "value": "export function getHtmlLang(language: ShopifyLanguageCode): string {\n  return (\n    HTML_LANG_SCRIPT_TAGS[language] ??\n    language.toLowerCase().replace(/_(\\w+)$/, (_, region: string) => `-${region.toUpperCase()}`)\n  );\n}",
+      "examples": [
+        {
+          "title": "Example",
+          "description": "",
+          "tabs": [
+            {
+              "code": "<html lang={getHtmlLang(requestContext.locale.language)}>",
+              "title": "Example"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "ShopifyLanguageCode": {
+    "src/core/i18n/types.ts": {
+      "filePath": "src/core/i18n/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyLanguageCode",
+      "value": "",
+      "description": ""
+    }
+  },
   "StorefrontApiError": {
     "src/client/errors.ts": {
       "filePath": "src/client/errors.ts",
@@ -1119,23 +1163,23 @@
     "src/core/request-context.ts": {
       "filePath": "src/core/request-context.ts",
       "name": "CreateShopifyRequestContextGeneratedType",
-      "description": "Creates the context for one incoming request. Pass the same context to the Storefront API client, the Customer Account API client, and `handleShopifyRoutes`. The context forwards the customer's cookies, locale, and privacy signal to Shopify, and adds Shopify's cookies and cache headers to your response.\n\nCall `applyResponseHeaders()` on each response that your app builds. Pass `buyerIp` with the customer's trusted IP address when you use a private Storefront API client. The function throws when `i18n` lacks a country or language, and when `buyerIp` is an empty string.",
+      "description": "Creates the context for one incoming request. Pass the same context to the Storefront API client, the Customer Account API client, and `handleShopifyRoutes`. The context resolves the request's locale from your i18n definition, forwards the customer's cookies, locale, and privacy signal to Shopify, and adds Shopify's cookies and cache headers to your response.\n\nCall `applyResponseHeaders()` on each response that your app builds. Pass `buyerIp` with the customer's trusted IP address when you use a private Storefront API client. The function throws when `i18n` doesn't come from `defineShopifyI18n`, when `locale` isn't one of the definition's supported locales, and when `buyerIp` is an empty string.",
       "isPublicDocs": true,
       "params": [
         {
           "name": "input",
-          "description": "The incoming request, its locale, and the customer's IP address for private Storefront API clients.",
-          "value": "ShopifyRequestContextInputBase<I18n> & { buyerIp?: string; }",
+          "description": "The incoming request, the storefront's i18n definition, and the customer's IP address for private Storefront API clients.",
+          "value": "(ShopifyRequestContextInputBase<TI18n> | LegacyShopifyRequestContextInput<I18nConfig>) & { ...; }",
           "filePath": "src/core/request-context.ts"
         }
       ],
       "returns": {
         "filePath": "src/core/request-context.ts",
         "description": "The context to pass to Hydrogen's API clients and route handlers for this request.",
-        "name": "ShopifyRequestContext<const I18n extends I18nConfig>",
-        "value": "ShopifyRequestContext<const I18n extends I18nConfig>"
+        "name": "ShopifyRequestContext<const TI18n extends ShopifyI18n>",
+        "value": "ShopifyRequestContext<const TI18n extends ShopifyI18n>"
       },
-      "value": "export function createShopifyRequestContext<const I18n extends I18nConfig>(\n  input: ShopifyRequestContextInputBase<I18n> & { buyerIp?: string },\n): ShopifyRequestContext<I18n> {\n  const { request } = input;\n\n  if (!input.i18n?.country || !input.i18n?.language) {\n    throw new Error(\"i18n with country and language is required for Shopify request contexts.\");\n  }\n\n  if (input.buyerIp !== undefined && !input.buyerIp) {\n    throw new Error(\"buyerIp must be non-empty when provided\");\n  }\n\n  const requestMethod = request.method?.toUpperCase();\n  const i18n = normalizeI18n(input.i18n);\n  const cookieHeader = request.headers.get(\"cookie\") || undefined;\n  const inboundCookies = parseCookieHeader(cookieHeader);\n  const hasEssentialCookie = inboundCookies.has(SHOPIFY_ESSENTIAL_COOKIE);\n  const isConsentManagementRequest = request.headers.get(CONSENT_MANAGEMENT_HEADER) === \"1\";\n  const url = request.url ?? request.headers.get(STOREFRONT_URL_HEADER) ?? undefined;\n  const storefrontOrigin = getUrlOrigin(url);\n  const context = {\n    ...(cookieHeader && { cookie: cookieHeader }),\n    globalPrivacyControl: request.headers.get(SEC_GPC_HEADER) ?? undefined,\n    i18n,\n    ...(url && { url }),\n    ...(storefrontOrigin && { storefrontOrigin }),\n    ...(input.buyerIp && { buyerIp: input.buyerIp }),\n    requestGroupId:\n      request.headers.get(REQUEST_GROUP_ID_HEADER) ??\n      request.headers.get(\"x-request-id\") ??\n      request.headers.get(\"request-id\") ??\n      crypto.randomUUID(),\n    ...(isDocumentRequest(request) && { documentRequest: true }),\n    ...(request.signal && { signal: request.signal }),\n  } as Context<I18n>;\n\n  let capturedCookies: string[] | undefined;\n  let personalizedResponseReason: string | undefined;\n  let sessionEstablishingReason: string | undefined;\n  let storefrontRateLimited = false;\n  let storefrontRetryDeadline: bigint | undefined;\n  let warnedMissingStatus = false;\n\n  const captureSubrequestHeaders = (headers: Headers): void => {\n    // Capture the first fresh response cookies to increase the\n    // chance of returning them from the main server response. The main response\n    // needs headers set at send time, while the body can stream later, so this\n    // may not be used if subrequests finish after the main response is sent.\n    const cookies = headers.getSetCookie();\n    if (cookies.length > 0) capturedCookies ??= cookies;\n  };\n\n  return {\n    ...context,\n    getForwardedRequestHeaders() {\n      const headers = new Headers(request.headers);\n      applyStorefrontRequestHeaders(context, headers);\n      if (context.url) headers.set(STOREFRONT_URL_HEADER, context.url);\n      return headers;\n    },\n    applyStorefrontRequestHeaders(headers) {\n      applyStorefrontRequestHeaders(context, headers);\n    },\n    captureSubrequestHeaders,\n    consumeStorefrontResponseHeaders(headers) {\n      captureSubrequestHeaders(headers);\n      headers.delete(\"set-cookie\");\n    },\n    captureStorefrontRateLimit(retryAfter) {\n      storefrontRateLimited = true;\n      const value = getSafeRetryAfterValue(retryAfter);\n      if (value === undefined) return;\n\n      const deadline = getRetryDeadline(value);\n      if (storefrontRetryDeadline === undefined || deadline > storefrontRetryDeadline) {\n        storefrontRetryDeadline = deadline;\n      }\n    },\n    markResponseAsPersonalized(reason) {\n      personalizedResponseReason ??= reason;\n    },\n    markResponseAsSessionEstablishing(reason) {\n      sessionEstablishingReason ??= reason;\n    },\n    applyResponseHeaders(headers, status) {\n      headers.set(\"powered-by\", \"Shopify, Hydrogen\");\n\n      // Without the status, the method cannot tell a `429` from a recovered page, and a framework\n      // can drop the rate-limit headers silently. Warn once so the omission is visible.\n      if (status === undefined && storefrontRateLimited && !warnedMissingStatus) {\n        warnedMissingStatus = true;\n        log.warn(\n          \"storefront api rate limited this request; pass response.status to applyResponseHeaders to keep rate-limit headers on a 429\",\n        );\n      }\n\n      // A framework can drop the headers of a thrown `429` response, as React Router does, so add\n      // them here. Only a `429` changes: a page that recovered from the rate limit keeps its cache\n      // headers.\n      if (status === RATE_LIMITED_STATUS && storefrontRateLimited) {\n        applyNoStoreResponseCacheHeaders(headers);\n        // The retry advice is the later of the response's own valid header and the latest captured\n        // deadline, so one rule applies whichever path produced the `429`.\n        const existing = getSafeRetryAfterValue(headers.get(\"retry-after\"));\n        let deadline = storefrontRetryDeadline;\n        if (existing !== undefined) {\n          const existingDeadline = getRetryDeadline(existing);\n          if (deadline === undefined || existingDeadline > deadline) deadline = existingDeadline;\n        }\n        if (deadline !== undefined) {\n          const remaining = deadline - BigInt(Date.now());\n          const seconds = remaining > 0n ? (remaining + 999n) / 1000n : 0n;\n          headers.set(\"Retry-After\", seconds.toString());\n        }\n      }\n\n      // Documents may be shared or streamed, so they must not carry buyer-specific state.\n      const isDocumentResponse =\n        context.documentRequest || (headers.get(\"content-type\")?.startsWith(\"text/html\") ?? false);\n\n      // Keep GET and HEAD responses cacheable, and fail closed when the request method is unknown.\n      // Cold sessions may only be established by the explicitly marked consent request.\n      const mayReturnShopifyState =\n        requestMethod !== undefined &&\n        requestMethod !== \"GET\" &&\n        requestMethod !== \"HEAD\" &&\n        !isDocumentResponse &&\n        (hasEssentialCookie ||\n          isConsentManagementRequest ||\n          sessionEstablishingReason !== undefined);\n\n      // Replay cookies captured from fresh SFAPI and proxy responses when allowed.\n      if (capturedCookies && mayReturnShopifyState) {\n        const existingSetCookies = new Set(headers.getSetCookie());\n        for (const value of capturedCookies) {\n          if (existingSetCookies.has(value)) continue;\n          headers.append(\"set-cookie\", value);\n          existingSetCookies.add(value);\n        }\n      }\n\n      // Consent/session responses can contain private state in the body without setting cookies.\n      if (\n        personalizedResponseReason ||\n        isConsentManagementRequest ||\n        sessionEstablishingReason !== undefined ||\n        headers.has(\"set-cookie\")\n      ) {\n        applyPrivateResponseCacheHeaders(headers);\n      }\n    },\n  } as ShopifyRequestContext<I18n>;\n}"
+      "value": "export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(\n  input: (ShopifyRequestContextInputBase<TI18n> | LegacyShopifyRequestContextInput<I18nConfig>) & {\n    buyerIp?: string;\n  },\n): ShopifyRequestContext<TI18n> {\n  const { request } = input;\n\n  if (input.buyerIp !== undefined && !input.buyerIp) {\n    throw new Error(\"buyerIp must be non-empty when provided\");\n  }\n\n  const requestMethod = request.method?.toUpperCase();\n  const cookieHeader = request.headers.get(\"cookie\") || undefined;\n  const inboundCookies = parseCookieHeader(cookieHeader);\n  const hasEssentialCookie = inboundCookies.has(SHOPIFY_ESSENTIAL_COOKIE);\n  const isConsentManagementRequest = request.headers.get(CONSENT_MANAGEMENT_HEADER) === \"1\";\n  const url = request.url ?? request.headers.get(STOREFRONT_URL_HEADER) ?? undefined;\n  const storefrontOrigin = getUrlOrigin(url);\n  const locale = resolveRequestLocale(input, url);\n  const context = {\n    ...(cookieHeader && { cookie: cookieHeader }),\n    globalPrivacyControl: request.headers.get(SEC_GPC_HEADER) ?? undefined,\n    locale,\n    i18n: locale,\n    ...(isI18nDefinition(input.i18n) && { i18nDefinition: input.i18n }),\n    ...(url && { url }),\n    ...(storefrontOrigin && { storefrontOrigin }),\n    ...(input.buyerIp && { buyerIp: input.buyerIp }),\n    requestGroupId:\n      request.headers.get(REQUEST_GROUP_ID_HEADER) ??\n      request.headers.get(\"x-request-id\") ??\n      request.headers.get(\"request-id\") ??\n      crypto.randomUUID(),\n    ...(isDocumentRequest(request) && { documentRequest: true }),\n    ...(request.signal && { signal: request.signal }),\n  } as Context<ShopifyI18n | I18nConfig>;\n\n  let capturedCookies: string[] | undefined;\n  let personalizedResponseReason: string | undefined;\n  let sessionEstablishingReason: string | undefined;\n  let storefrontRateLimited = false;\n  let storefrontRetryDeadline: bigint | undefined;\n  let warnedMissingStatus = false;\n\n  const captureSubrequestHeaders = (headers: Headers): void => {\n    // Capture the first fresh response cookies to increase the\n    // chance of returning them from the main server response. The main response\n    // needs headers set at send time, while the body can stream later, so this\n    // may not be used if subrequests finish after the main response is sent.\n    const cookies = headers.getSetCookie();\n    if (cookies.length > 0) capturedCookies ??= cookies;\n  };\n\n  return {\n    ...context,\n    getForwardedRequestHeaders() {\n      const headers = new Headers(request.headers);\n      applyStorefrontRequestHeaders(context, headers);\n      if (context.url) headers.set(STOREFRONT_URL_HEADER, context.url);\n      return headers;\n    },\n    applyStorefrontRequestHeaders(headers) {\n      applyStorefrontRequestHeaders(context, headers);\n    },\n    captureSubrequestHeaders,\n    consumeStorefrontResponseHeaders(headers) {\n      captureSubrequestHeaders(headers);\n      headers.delete(\"set-cookie\");\n    },\n    captureStorefrontRateLimit(retryAfter) {\n      storefrontRateLimited = true;\n      const value = getSafeRetryAfterValue(retryAfter);\n      if (value === undefined) return;\n\n      const deadline = getRetryDeadline(value);\n      if (storefrontRetryDeadline === undefined || deadline > storefrontRetryDeadline) {\n        storefrontRetryDeadline = deadline;\n      }\n    },\n    markResponseAsPersonalized(reason) {\n      personalizedResponseReason ??= reason;\n    },\n    markResponseAsSessionEstablishing(reason) {\n      sessionEstablishingReason ??= reason;\n    },\n    applyResponseHeaders(headers, status) {\n      headers.set(\"powered-by\", \"Shopify, Hydrogen\");\n\n      // Without the status, the method cannot tell a `429` from a recovered page, and a framework\n      // can drop the rate-limit headers silently. Warn once so the omission is visible.\n      if (status === undefined && storefrontRateLimited && !warnedMissingStatus) {\n        warnedMissingStatus = true;\n        log.warn(\n          \"storefront api rate limited this request; pass response.status to applyResponseHeaders to keep rate-limit headers on a 429\",\n        );\n      }\n\n      // A framework can drop the headers of a thrown `429` response, as React Router does, so add\n      // them here. Only a `429` changes: a page that recovered from the rate limit keeps its cache\n      // headers.\n      if (status === RATE_LIMITED_STATUS && storefrontRateLimited) {\n        applyNoStoreResponseCacheHeaders(headers);\n        // The retry advice is the later of the response's own valid header and the latest captured\n        // deadline, so one rule applies whichever path produced the `429`.\n        const existing = getSafeRetryAfterValue(headers.get(\"retry-after\"));\n        let deadline = storefrontRetryDeadline;\n        if (existing !== undefined) {\n          const existingDeadline = getRetryDeadline(existing);\n          if (deadline === undefined || existingDeadline > deadline) deadline = existingDeadline;\n        }\n        if (deadline !== undefined) {\n          const remaining = deadline - BigInt(Date.now());\n          const seconds = remaining > 0n ? (remaining + 999n) / 1000n : 0n;\n          headers.set(\"Retry-After\", seconds.toString());\n        }\n      }\n\n      // Documents may be shared or streamed, so they must not carry buyer-specific state.\n      const isDocumentResponse =\n        context.documentRequest || (headers.get(\"content-type\")?.startsWith(\"text/html\") ?? false);\n\n      // Keep GET and HEAD responses cacheable, and fail closed when the request method is unknown.\n      // Cold sessions may only be established by the explicitly marked consent request.\n      const mayReturnShopifyState =\n        requestMethod !== undefined &&\n        requestMethod !== \"GET\" &&\n        requestMethod !== \"HEAD\" &&\n        !isDocumentResponse &&\n        (hasEssentialCookie ||\n          isConsentManagementRequest ||\n          sessionEstablishingReason !== undefined);\n\n      // Replay cookies captured from fresh SFAPI and proxy responses when allowed.\n      if (capturedCookies && mayReturnShopifyState) {\n        const existingSetCookies = new Set(headers.getSetCookie());\n        for (const value of capturedCookies) {\n          if (existingSetCookies.has(value)) continue;\n          headers.append(\"set-cookie\", value);\n          existingSetCookies.add(value);\n        }\n      }\n\n      // Consent/session responses can contain private state in the body without setting cookies.\n      if (\n        personalizedResponseReason ||\n        isConsentManagementRequest ||\n        sessionEstablishingReason !== undefined ||\n        headers.has(\"set-cookie\")\n      ) {\n        applyPrivateResponseCacheHeaders(headers);\n      }\n    },\n  } as ShopifyRequestContext<TI18n>;\n}"
     }
   },
   "ShopifyRequestContextInputBase": {
@@ -1143,15 +1187,23 @@
       "filePath": "src/core/request-context.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyRequestContextInputBase",
-      "value": "{\n  /**\n   * The incoming request from your framework. When the framework exposes no request, such as during prerendering, pass `{ headers: new Headers() }`.\n   */\n  request: StorefrontRequest;\n  /** The request's language, country, and optional localized path prefix. */\n  i18n: I18n;\n}",
-      "description": "The incoming request and its locale.",
+      "value": "{\n  /**\n   * The incoming request from your framework. When the framework exposes no request, such as during prerendering, pass `{ headers: new Headers() }`.\n   */\n  request: StorefrontRequest;\n  /** The storefront's i18n definition from `defineShopifyI18n`. Hydrogen matches the request's locale against it. */\n  i18n: TI18n;\n  /**\n   * The locale to use instead of matching the request URL. The locale must be one of the definition's supported locales.\n   * Pass it when the request has no meaningful URL, such as during static rendering.\n   */\n  locale?: ShopifyLocale;\n}",
+      "description": "The incoming request and the storefront's i18n definition.",
       "members": [
         {
           "filePath": "src/core/request-context.ts",
           "syntaxKind": "PropertySignature",
           "name": "i18n",
-          "value": "I18n",
-          "description": "The request's language, country, and optional localized path prefix."
+          "value": "TI18n",
+          "description": "The storefront's i18n definition from `defineShopifyI18n`. Hydrogen matches the request's locale against it."
+        },
+        {
+          "filePath": "src/core/request-context.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "locale",
+          "value": "ShopifyLocale",
+          "description": "The locale to use instead of matching the request URL. The locale must be one of the definition's supported locales. Pass it when the request has no meaningful URL, such as during static rendering.",
+          "isOptional": true
         },
         {
           "filePath": "src/core/request-context.ts",
@@ -1163,6 +1215,40 @@
       ]
     }
   },
+  "ShopifyLocale": {
+    "src/core/i18n/types.ts": {
+      "filePath": "src/core/i18n/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyLocale",
+      "value": "{\n  language: ShopifyLanguageCode;\n  country: ShopifyCountryCode;\n}",
+      "description": "A `{language, country}` pair identifying one locale a storefront serves.",
+      "members": [
+        {
+          "filePath": "src/core/i18n/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "country",
+          "value": "ShopifyCountryCode",
+          "description": ""
+        },
+        {
+          "filePath": "src/core/i18n/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "language",
+          "value": "ShopifyLanguageCode",
+          "description": ""
+        }
+      ]
+    }
+  },
+  "ShopifyCountryCode": {
+    "src/core/i18n/types.ts": {
+      "filePath": "src/core/i18n/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyCountryCode",
+      "value": "",
+      "description": ""
+    }
+  },
   "StorefrontRequest": {
     "src/core/request-context.ts": {
       "filePath": "src/core/request-context.ts",
@@ -1172,12 +1258,78 @@
       "description": "The incoming request's headers, plus its method, abort signal, and URL when the framework provides them."
     }
   },
+  "LegacyShopifyRequestContextInput": {
+    "src/core/request-context.ts": {
+      "filePath": "src/core/request-context.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "LegacyShopifyRequestContextInput",
+      "value": "{\n  request: StorefrontRequest;\n  /** Deprecated: the fixed `{language, country, pathPrefix}` for every request. */\n  i18n: TConfig;\n  locale?: never;\n}",
+      "description": "Deprecated: the request and a fixed locale, used for every request with no URL matching. Pass a definition from `defineShopifyI18n` as `i18n` instead. Removed in the next major release.",
+      "members": [
+        {
+          "filePath": "src/core/request-context.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "i18n",
+          "value": "TConfig",
+          "description": "Deprecated: the fixed `{language, country, pathPrefix}` for every request."
+        },
+        {
+          "filePath": "src/core/request-context.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "locale",
+          "value": "never",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/request-context.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "request",
+          "value": "StorefrontRequest",
+          "description": "The incoming request's headers, plus its method, abort signal, and URL when the framework provides them."
+        }
+      ]
+    }
+  },
+  "I18nConfig": {
+    "src/core/request-context.ts": {
+      "filePath": "src/core/request-context.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "I18nConfig",
+      "value": "{\n  /** The request's language. */\n  language: ShopifyLanguageCode;\n  /** The request's country. */\n  country: ShopifyCountryCode;\n  /**\n   * The URL prefix for localized routes, such as `/es-es`. Hydrogen adds the prefix to standard route redirects and product variant URLs.\n   */\n  pathPrefix?: string;\n}",
+      "description": "Deprecated: a fixed request locale with an optional path prefix. Removed in the next major release.",
+      "members": [
+        {
+          "filePath": "src/core/request-context.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "country",
+          "value": "ShopifyCountryCode",
+          "description": "The request's country."
+        },
+        {
+          "filePath": "src/core/request-context.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "language",
+          "value": "ShopifyLanguageCode",
+          "description": "The request's language."
+        },
+        {
+          "filePath": "src/core/request-context.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "pathPrefix",
+          "value": "string",
+          "description": "The URL prefix for localized routes, such as `/es-es`. Hydrogen adds the prefix to standard route redirects and product variant URLs.",
+          "isOptional": true
+        }
+      ]
+    }
+  },
   "ShopifyRequestContext": {
     "src/core/request-context.ts": {
       "filePath": "src/core/request-context.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyRequestContext",
-      "value": "ShopifyRequestContextBase & {\n    i18n: NormalizedI18nConfig<I18n>;\n  }",
+      "value": "ShopifyRequestContextBase & {\n    /** The locale resolved for this request, with the path prefix it is served under. */\n    locale: RequestLocale<TI18n>;\n    /**\n     * The locale resolved for this request.\n     * @deprecated Use `locale` instead. Removed in the next major release.\n     */\n    i18n: RequestLocale<TI18n>;\n  }",
       "description": "The context for one request. Pass the context to Hydrogen's API clients and route handlers for that request."
     }
   },
@@ -1186,7 +1338,7 @@
       "filePath": "src/core/request-context.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyRequestContextBase",
-      "value": "{\n  // -- Private fields --\n  /**\n   * A type-only marker. Create request contexts only with `createShopifyRequestContext`.\n   * @internal\n   */\n  readonly __hydrogenShopifyRequestContextBrand: never;\n  /**\n   * The incoming request's `Cookie` header. Hydrogen forwards the header to the Storefront API.\n   * @internal\n   */\n  cookie?: string;\n  /**\n   * The customer's trusted IP address. Private Storefront API clients require it.\n   * @internal\n   */\n  readonly buyerIp?: string;\n  /**\n   * The ID that groups this request's Shopify API calls. Hydrogen reads the ID from the request headers or generates one.\n   * @internal\n   */\n  requestGroupId: string;\n  /**\n   * The incoming request's abort signal. Hydrogen's API clients stop their requests when the signal aborts.\n   * @internal\n   */\n  signal?: AbortSignal;\n  /**\n   * The incoming request's URL.\n   * @internal\n   */\n  url?: string;\n  /**\n   * The origin of the incoming request's URL. Hydrogen forwards the origin to the Storefront API.\n   * @internal\n   */\n  storefrontOrigin?: string;\n  /**\n   * Adds the Hydrogen SDK headers and the customer's cookie, privacy, and origin headers to a\n   * Storefront API request. The Storefront API client and the API proxies call the method for you.\n   * @internal\n   */\n  applyStorefrontRequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from the first Storefront API response that sets cookies. The Storefront API\n   * client calls the method for you, and `applyResponseHeaders()` can add the cookies to your response.\n   * @internal\n   */\n  captureSubrequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from a proxied Storefront API response and removes the `set-cookie` header\n   * from that response. The API proxies in `handleShopifyRoutes` call the method for you.\n   * @internal\n   */\n  consumeStorefrontResponseHeaders(headers: Headers): void;\n  /**\n   * Tracks Storefront API `429` responses and the latest valid retry deadline, independent of\n   * completion order. Delay-seconds start at capture time; HTTP dates specify absolute deadlines.\n   * Invalid values do not replace valid advice. The Storefront API client calls the method for you.\n   * @internal\n   */\n  captureStorefrontRateLimit?(retryAfter: string | undefined): void;\n  /**\n   * Lets the final response set Shopify cookies before the customer has a Shopify session, and\n   * marks the response as private and uncacheable. The UCP MCP proxy calls the method for you.\n   * @internal\n   */\n  markResponseAsSessionEstablishing(reason: string): void;\n\n  // -- Public fields --\n  /** The request's language, country, and path prefix. The path prefix starts with `/` and has no trailing slash, or is an empty string when you don't set one. */\n  i18n: NormalizedI18nConfig;\n  /** Returns the incoming request's headers with Shopify's request headers added. Pass the headers when you forward the request to a proxy or another origin. */\n  getForwardedRequestHeaders(): Headers;\n  /**\n   * Marks the final response as private and uncacheable because the response holds customer data, such as a server-rendered cart. `applyResponseHeaders()` then sets `Cache-Control: private, no-store, max-age=0, must-revalidate` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. Call the method before `applyResponseHeaders()`, and only on requests whose response holds customer data, so other responses stay cacheable. Pass a short `reason` that names the customer data. The Customer Account API client and the customer session call the method for you.\n   */\n  markResponseAsPersonalized(reason: string): void;\n  /**\n   * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.\n   *\n   * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses marked with `markResponseAsPersonalized()` private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.\n   *\n   * Pass the response's `status` as well. When the status is `429` and the Storefront API rate limited a request that used this context, the method sets `Cache-Control: no-store` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. It also sets `Retry-After` to the later of the response's own valid `Retry-After` value and the latest valid retry deadline from all Storefront API `429` responses on this context, including recovered errors. Delay-seconds and IMF-fixdates are accepted. The value is the remaining delay-seconds, rounded up and never negative. React Router doesn't copy the headers of a thrown response, so this keeps the headers of a `429` from `withStorefrontRateLimit`. Responses with other statuses keep their cache headers.\n   *\n   * When you omit `status` after a Storefront API rate limit, the method logs one warning and adds no rate-limit headers.  The `429` response can then lose `Retry-After` and `Cache-Control: no-store`.\n   */\n  applyResponseHeaders(headers: Headers, status?: number): void;\n}",
+      "value": "{\n  // -- Private fields --\n  /**\n   * A type-only marker. Create request contexts only with `createShopifyRequestContext`.\n   * @internal\n   */\n  readonly __hydrogenShopifyRequestContextBrand: never;\n  /**\n   * The incoming request's `Cookie` header. Hydrogen forwards the header to the Storefront API.\n   * @internal\n   */\n  cookie?: string;\n  /**\n   * The customer's trusted IP address. Private Storefront API clients require it.\n   * @internal\n   */\n  readonly buyerIp?: string;\n  /**\n   * The i18n definition the context matched its locale against. Absent for the deprecated fixed-locale input.\n   * @internal\n   */\n  readonly i18nDefinition?: ShopifyI18n;\n  /**\n   * The ID that groups this request's Shopify API calls. Hydrogen reads the ID from the request headers or generates one.\n   * @internal\n   */\n  requestGroupId: string;\n  /**\n   * The incoming request's abort signal. Hydrogen's API clients stop their requests when the signal aborts.\n   * @internal\n   */\n  signal?: AbortSignal;\n  /**\n   * The incoming request's URL.\n   * @internal\n   */\n  url?: string;\n  /**\n   * The origin of the incoming request's URL. Hydrogen forwards the origin to the Storefront API.\n   * @internal\n   */\n  storefrontOrigin?: string;\n  /**\n   * Adds the Hydrogen SDK headers and the customer's cookie, privacy, and origin headers to a\n   * Storefront API request. The Storefront API client and the API proxies call the method for you.\n   * @internal\n   */\n  applyStorefrontRequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from the first Storefront API response that sets cookies. The Storefront API\n   * client calls the method for you, and `applyResponseHeaders()` can add the cookies to your response.\n   * @internal\n   */\n  captureSubrequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from a proxied Storefront API response and removes the `set-cookie` header\n   * from that response. The API proxies in `handleShopifyRoutes` call the method for you.\n   * @internal\n   */\n  consumeStorefrontResponseHeaders(headers: Headers): void;\n  /**\n   * Tracks Storefront API `429` responses and the latest valid retry deadline, independent of\n   * completion order. Delay-seconds start at capture time; HTTP dates specify absolute deadlines.\n   * Invalid values do not replace valid advice. The Storefront API client calls the method for you.\n   * @internal\n   */\n  captureStorefrontRateLimit?(retryAfter: string | undefined): void;\n  /**\n   * Lets the final response set Shopify cookies before the customer has a Shopify session, and\n   * marks the response as private and uncacheable. The UCP MCP proxy calls the method for you.\n   * @internal\n   */\n  markResponseAsSessionEstablishing(reason: string): void;\n\n  // -- Public fields --\n  /** Returns the incoming request's headers with Shopify's request headers added. Pass the headers when you forward the request to a proxy or another origin. */\n  getForwardedRequestHeaders(): Headers;\n  /**\n   * Marks the final response as private and uncacheable because the response holds customer data, such as a server-rendered cart. `applyResponseHeaders()` then sets `Cache-Control: private, no-store, max-age=0, must-revalidate` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. Call the method before `applyResponseHeaders()`, and only on requests whose response holds customer data, so other responses stay cacheable. Pass a short `reason` that names the customer data. The Customer Account API client and the customer session call the method for you.\n   */\n  markResponseAsPersonalized(reason: string): void;\n  /**\n   * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.\n   *\n   * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses marked with `markResponseAsPersonalized()` private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.\n   *\n   * Pass the response's `status` as well. When the status is `429` and the Storefront API rate limited a request that used this context, the method sets `Cache-Control: no-store` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. It also sets `Retry-After` to the later of the response's own valid `Retry-After` value and the latest valid retry deadline from all Storefront API `429` responses on this context, including recovered errors. Delay-seconds and IMF-fixdates are accepted. The value is the remaining delay-seconds, rounded up and never negative. React Router doesn't copy the headers of a thrown response, so this keeps the headers of a `429` from `withStorefrontRateLimit`. Responses with other statuses keep their cache headers.\n   *\n   * When you omit `status` after a Storefront API rate limit, the method logs one warning and adds no rate-limit headers.  The `429` response can then lose `Retry-After` and `Cache-Control: no-store`.\n   */\n  applyResponseHeaders(headers: Headers, status?: number): void;\n}",
       "description": "The fields and methods on every request context.",
       "members": [
         {
@@ -1258,9 +1410,10 @@
         {
           "filePath": "src/core/request-context.ts",
           "syntaxKind": "PropertySignature",
-          "name": "i18n",
-          "value": "NormalizedI18nConfig",
-          "description": "The request's language, country, and path prefix. The path prefix starts with `/` and has no trailing slash, or is an empty string when you don't set one."
+          "name": "i18nDefinition",
+          "value": "ShopifyI18n",
+          "description": "The i18n definition the context matched its locale against. Absent for the deprecated fixed-locale input.",
+          "isOptional": true
         },
         {
           "filePath": "src/core/request-context.ts",
@@ -1319,64 +1472,102 @@
       "override": "[Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) - Web API"
     }
   },
-  "NormalizedI18nConfig": {
-    "src/core/request-context.ts": {
-      "filePath": "src/core/request-context.ts",
+  "ShopifyI18n": {
+    "src/core/i18n/types.ts": {
+      "filePath": "src/core/i18n/types.ts",
       "syntaxKind": "TypeAliasDeclaration",
-      "name": "NormalizedI18nConfig",
-      "value": "Omit<I18n, \"pathPrefix\"> & {\n  pathPrefix: string;\n}",
-      "description": "The request's locale, with a path prefix that starts with `/` or is an empty string."
-    }
-  },
-  "I18nConfig": {
-    "src/core/request-context.ts": {
-      "filePath": "src/core/request-context.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "I18nConfig",
-      "value": "{\n  /** The request's language. */\n  language: ShopifyLanguageCode;\n  /** The request's country. */\n  country: ShopifyCountryCode;\n  /**\n   * The URL prefix for localized routes, such as `/es-es`. Hydrogen adds the prefix to standard route redirects and product variant URLs.\n   */\n  pathPrefix?: string;\n}",
-      "description": "The language, country, and optional localized path prefix for a request.",
+      "name": "ShopifyI18n",
+      "value": "{\n  /** Locale used when routing determines nothing: unprefixed paths or unrecognized hostnames. */\n  defaultLocale: ShopifyLocale;\n  /** Omit for single-locale storefronts. */\n  routing?: ShopifyI18nRouting;\n}",
+      "description": "Module-scope internationalization definition shared by the server request context, route matching, URL builders, and client scripts. Create it with `defineShopifyI18n`.",
       "members": [
         {
-          "filePath": "src/core/request-context.ts",
+          "filePath": "src/core/i18n/types.ts",
           "syntaxKind": "PropertySignature",
-          "name": "country",
-          "value": "ShopifyCountryCode",
-          "description": "The request's country."
+          "name": "defaultLocale",
+          "value": "ShopifyLocale",
+          "description": "Locale used when routing determines nothing: unprefixed paths or unrecognized hostnames."
         },
         {
-          "filePath": "src/core/request-context.ts",
+          "filePath": "src/core/i18n/types.ts",
           "syntaxKind": "PropertySignature",
-          "name": "language",
-          "value": "ShopifyLanguageCode",
-          "description": "The request's language."
-        },
-        {
-          "filePath": "src/core/request-context.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "pathPrefix",
-          "value": "string",
-          "description": "The URL prefix for localized routes, such as `/es-es`. Hydrogen adds the prefix to standard route redirects and product variant URLs.",
+          "name": "routing",
+          "value": "ShopifyI18nRouting",
+          "description": "Omit for single-locale storefronts.",
           "isOptional": true
         }
       ]
     }
   },
-  "ShopifyCountryCode": {
-    "src/core/request-context.ts": {
-      "filePath": "src/core/request-context.ts",
+  "ShopifyI18nRouting": {
+    "src/core/i18n/types.ts": {
+      "filePath": "src/core/i18n/types.ts",
       "syntaxKind": "TypeAliasDeclaration",
-      "name": "ShopifyCountryCode",
-      "value": "",
-      "description": "A country code that both the Storefront API and the Customer Account API accept."
+      "name": "ShopifyI18nRouting",
+      "value": "{\n      type: \"pathname\";\n      /**\n       * Locales served under a prefix. `defaultLocale` is served unprefixed only and must not be\n       * listed here, so every page has one canonical URL.\n       */\n      locales: readonly ShopifyPathnameLocale[];\n    } | {\n      type: \"domain\";\n      /**\n       * Locales served per hostname. `defaultLocale` must be listed here so it has a canonical\n       * hostname for links and sitemaps; it is also what unrecognized hosts (localhost, preview\n       * URLs) resolve to.\n       */\n      locales: readonly ShopifyDomainLocale[];\n    }",
+      "description": ""
     }
   },
-  "ShopifyLanguageCode": {
+  "ShopifyPathnameLocale": {
+    "src/core/i18n/types.ts": {
+      "filePath": "src/core/i18n/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyPathnameLocale",
+      "value": "ShopifyLocale & {\n  pathSegment?: string;\n}",
+      "description": "A locale served under a URL path prefix.\n\nThe prefix is derived from the locale as `/{language}-{country}` (lowercased, `_` → `-`), so `{language: \"FR\", country: \"CA\"}` is served at `/fr-ca`. Set `pathSegment` when the derived segment is undesirable, for example `PT_BR` + `BR` derives to `pt-br-br`. A segment is a single path part: no slashes."
+    }
+  },
+  "ShopifyDomainLocale": {
+    "src/core/i18n/types.ts": {
+      "filePath": "src/core/i18n/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyDomainLocale",
+      "value": "ShopifyLocale & {\n  hostname: string;\n}",
+      "description": "A locale served from its own hostname. Match is exact on `URL.hostname` (no port), so `fr.example.com`, `example.fr`, and `example.com` are three separate entries. Aliases such as `www.` are a redirect concern and must not be listed here."
+    }
+  },
+  "RequestLocale": {
     "src/core/request-context.ts": {
       "filePath": "src/core/request-context.ts",
       "syntaxKind": "TypeAliasDeclaration",
-      "name": "ShopifyLanguageCode",
-      "value": "",
-      "description": "A language code that both the Storefront API and the Customer Account API accept."
+      "name": "RequestLocale",
+      "value": "TI18n extends ShopifyI18n\n  ? ShopifyMatchedLocale<TI18n>\n  : TI18n extends I18nConfig\n    ? NormalizedI18nConfig<TI18n>\n    : never",
+      "description": "The locale a request context resolves: matched from a definition, or the legacy fixed locale."
+    }
+  },
+  "ShopifyMatchedLocale": {
+    "src/core/i18n/types.ts": {
+      "filePath": "src/core/i18n/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifyMatchedLocale",
+      "value": "DistributiveOmit<\n  ShopifySupportedLocale<TI18n>,\n  \"pathSegment\"\n> & {\n  pathPrefix: string;\n}",
+      "description": "A locale resolved for one request. `pathSegment` is replaced by the derived `pathPrefix` (`\"\"` for the default locale and under domain routing), which is what URL builders consume. Domain-routed locales keep their `hostname` so canonical and `hreflang` URLs can be built."
+    }
+  },
+  "DistributiveOmit": {
+    "src/core/i18n/types.ts": {
+      "filePath": "src/core/i18n/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "DistributiveOmit",
+      "value": "T extends unknown ? Omit<T, K> : never",
+      "description": ""
+    }
+  },
+  "ShopifySupportedLocale": {
+    "src/core/i18n/types.ts": {
+      "filePath": "src/core/i18n/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ShopifySupportedLocale",
+      "value": "ShopifySupportedLocale<TI18n>",
+      "description": "Every locale entry a definition can resolve to, keeping any extra per-locale fields."
+    }
+  },
+  "NormalizedI18nConfig": {
+    "src/core/request-context.ts": {
+      "filePath": "src/core/request-context.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "NormalizedI18nConfig",
+      "value": "Omit<TConfig, \"pathPrefix\"> & {\n  pathPrefix: string;\n}",
+      "description": ""
     }
   },
   "InferResult": {
@@ -1511,7 +1702,7 @@
           "syntaxKind": "PropertySignature",
           "name": "cache",
           "value": "CacheInstance",
-          "description": "The cache that stores query results. The client caches only queries that pass a `cache` strategy. The client never caches mutations or results with GraphQL errors.",
+          "description": "The cache that stores query results. The client caches only queries that pass a `cache` strategy. The client never caches mutations, results with GraphQL errors, or responses whose `Cache-Control` header contains `private` or `no-store`. A response with either directive also makes the final response private when you call `applyResponseHeaders()`, whether or not the query passes a `cache` strategy.",
           "isOptional": true
         },
         {
@@ -1584,7 +1775,7 @@
           "syntaxKind": "PropertySignature",
           "name": "cache",
           "value": "CacheInstance",
-          "description": "The cache that stores query results. The client caches only queries that pass a `cache` strategy. The client never caches mutations or results with GraphQL errors.",
+          "description": "The cache that stores query results. The client caches only queries that pass a `cache` strategy. The client never caches mutations, results with GraphQL errors, or responses whose `Cache-Control` header contains `private` or `no-store`. A response with either directive also makes the final response private when you call `applyResponseHeaders()`, whether or not the query passes a `cache` strategy.",
           "isOptional": true
         },
         {
@@ -1656,7 +1847,7 @@
           "syntaxKind": "PropertySignature",
           "name": "cache",
           "value": "CacheInstance",
-          "description": "The cache that stores query results. The client caches only queries that pass a `cache` strategy. The client never caches mutations or results with GraphQL errors.",
+          "description": "The cache that stores query results. The client caches only queries that pass a `cache` strategy. The client never caches mutations, results with GraphQL errors, or responses whose `Cache-Control` header contains `private` or `no-store`. A response with either directive also makes the final response private when you call `applyResponseHeaders()`, whether or not the query passes a `cache` strategy.",
           "isOptional": true
         },
         {
@@ -1905,7 +2096,15 @@
           "syntaxKind": "PropertySignature",
           "name": "i18n",
           "value": "RequestContext[\"i18n\"]",
-          "description": "The country and language that the client sends for `$country` and `$language` variables."
+          "description": "The locale resolved for this request.",
+          "deprecationMessage": "Use `locale` instead. Removed in the next major release."
+        },
+        {
+          "filePath": "src/client/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "locale",
+          "value": "RequestContext[\"locale\"]",
+          "description": "The locale resolved for this request. The client sends its country and language for `$country` and `$language` variables."
         },
         {
           "filePath": "src/client/types.ts",
@@ -2035,7 +2234,15 @@
           "syntaxKind": "PropertySignature",
           "name": "i18n",
           "value": "RequestContext[\"i18n\"]",
-          "description": "The country and language that the client sends for `$country` and `$language` variables."
+          "description": "The locale resolved for this request.",
+          "deprecationMessage": "Use `locale` instead. Removed in the next major release."
+        },
+        {
+          "filePath": "src/client/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "locale",
+          "value": "RequestContext[\"locale\"]",
+          "description": "The locale resolved for this request. The client sends its country and language for `$country` and `$language` variables."
         },
         {
           "filePath": "src/client/types.ts",
@@ -2096,8 +2303,16 @@
           "filePath": "src/client/types.ts",
           "syntaxKind": "PropertySignature",
           "name": "i18n",
-          "value": "Omit<I18nConfig, \"pathPrefix\"> & { pathPrefix: string; }",
-          "description": "The country and language that the client sends for `$country` and `$language` variables."
+          "value": "ShopifyMatchedLocale<ShopifyI18n>",
+          "description": "The locale resolved for this request.",
+          "deprecationMessage": "Use `locale` instead. Removed in the next major release."
+        },
+        {
+          "filePath": "src/client/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "locale",
+          "value": "ShopifyMatchedLocale<ShopifyI18n>",
+          "description": "The locale resolved for this request. The client sends its country and language for `$country` and `$language` variables."
         },
         {
           "filePath": "src/client/types.ts",
@@ -2159,7 +2374,15 @@
           "syntaxKind": "PropertySignature",
           "name": "i18n",
           "value": "RequestContext[\"i18n\"]",
-          "description": "The country and language that the client sends for `$country` and `$language` variables."
+          "description": "The locale resolved for this request.",
+          "deprecationMessage": "Use `locale` instead. Removed in the next major release."
+        },
+        {
+          "filePath": "src/client/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "locale",
+          "value": "RequestContext[\"locale\"]",
+          "description": "The locale resolved for this request. The client sends its country and language for `$country` and `$language` variables."
         },
         {
           "filePath": "src/client/types.ts",
@@ -2213,7 +2436,7 @@
         "name": "StorefrontClient",
         "value": "StorefrontClient"
       },
-      "value": "export function createStorefrontClient(args: CreateStorefrontClientArgs): StorefrontClient {\n  const { config, requestContext, type: clientType } = args;\n\n  if (!config.storeDomain) {\n    throw new Error(\"storeDomain is required and must be non-empty\");\n  }\n\n  const storeUrl = normalizeStoreDomain(config.storeDomain);\n  const apiVersion = config.apiVersion ?? STOREFRONT_API_VERSION;\n  const apiUrl = `${storeUrl}/api/${apiVersion}/graphql.json`;\n\n  const originFetch = config.fetch ?? globalThis.fetch;\n  if (typeof originFetch !== \"function\") {\n    throw new Error(\n      \"No fetch function available. Pass a fetch option or ensure globalThis.fetch exists.\",\n    );\n  }\n  const resolvedFetch = config.cache\n    ? createFetchWithCache({\n        cache: config.cache,\n        waitUntil: config.waitUntil,\n        fetch: originFetch as typeof globalThis.fetch,\n      })\n    : originFetch;\n\n  const timeoutInMs = config.defaultTimeoutInMs ?? DEFAULT_TIMEOUT_IN_MS;\n  if (timeoutInMs < 0 || Number.isNaN(timeoutInMs)) {\n    throw new Error(\"defaultTimeoutInMs must be a non-negative number\");\n  }\n\n  const staticHeaders: Record<string, string> = {\n    \"content-type\": \"application/json\",\n  };\n  if (config.storefrontId) {\n    staticHeaders[STOREFRONT_ID_HEADER] = config.storefrontId;\n  }\n\n  switch (clientType) {\n    case \"private\":\n    case \"private_no_buyer_context\":\n      if (typeof document !== \"undefined\") {\n        throw new Error(\n          \"private storefront tokens cannot be used in a browser context. Use a publicStorefrontToken instead.\",\n        );\n      }\n      if (!config.privateStorefrontToken) {\n        throw new Error(\"privateStorefrontToken is required\");\n      }\n      staticHeaders[STOREFRONT_PRIVATE_TOKEN_HEADER] = config.privateStorefrontToken;\n      break;\n    case \"public\":\n      if (config.publicStorefrontToken !== undefined && !config.publicStorefrontToken) {\n        throw new Error(\"publicStorefrontToken must be non-empty when provided\");\n      }\n      if (config.publicStorefrontToken) {\n        staticHeaders[STOREFRONT_ACCESS_TOKEN_HEADER] = config.publicStorefrontToken;\n      }\n      break;\n    default:\n      clientType satisfies never;\n      throw new Error(`Unsupported client type: ${clientType}`);\n  }\n\n  const i18n = requestContext.i18n;\n  const requestHeaders = new Headers(staticHeaders);\n  requestContext.applyStorefrontRequestHeaders(requestHeaders);\n\n  if (clientType === \"private\") {\n    const { buyerIp } = requestContext;\n    if (!buyerIp) {\n      throw new TypeError(\"requestContext.buyerIp is required for private Storefront API clients\");\n    }\n    requestHeaders.set(STOREFRONT_BUYER_IP_HEADER, buyerIp);\n  }\n\n  async function graphql(\n    doc: DocLike | string,\n    ...rest: [options?: Record<string, unknown>]\n  ): Promise<StorefrontGraphqlResult<DocLike>> {\n    const opts = (rest[0] ?? {}) as {\n      variables?: Record<string, unknown>;\n      signal?: AbortSignal;\n      cache?: CachingStrategy;\n      [SHOULD_CACHE_RESULT]?: ShouldCacheResult;\n    };\n\n    const queryText = typeof doc === \"string\" ? doc : (doc as unknown as string);\n    if (typeof queryText !== \"string\") {\n      throw new StorefrontApiError(\n        \"Expected gql() to return a string at runtime. Check gql.tada version compatibility.\",\n      );\n    }\n\n    if (opts.cache && !config.cache) {\n      throw new StorefrontCacheConfigError(\n        \"Storefront API cache options require a cache configured in createStorefrontClient().\",\n      );\n    }\n\n    if (opts.cache?.mode === \"private\") {\n      throw new StorefrontCacheConfigError(\n        \"Storefront API cache mode 'private' is not supported yet. Use Cache() without private mode, or cache buyer-specific work with createRunWithCache() and an explicit private key.\",\n      );\n    }\n\n    const variables = buildVariables(queryText, opts.variables, i18n);\n    const externalSignals = [requestContext.signal, opts.signal].filter(\n      (signal): signal is AbortSignal => Boolean(signal),\n    );\n\n    const earlyAbortSignal = externalSignals.find((signal) => signal.aborted);\n    if (earlyAbortSignal) {\n      throw (\n        earlyAbortSignal.reason ??\n        new DOMException(\"signal is aborted without reason\", \"AbortError\")\n      );\n    }\n\n    let requestId: string | undefined;\n    let responseHeaders: Headers;\n    let responseText: string;\n    let status: number;\n    let timeoutSignal: AbortSignal | undefined;\n\n    if (timeoutInMs > 0) {\n      timeoutSignal = AbortSignal.timeout(timeoutInMs);\n      externalSignals.push(timeoutSignal);\n    }\n\n    try {\n      const init: PlainRequestInit = {\n        method: \"POST\",\n        headers: new Headers(requestHeaders),\n        body: JSON.stringify({ query: queryText, variables }),\n        // Never follow redirects: runtimes forward custom Shopify credential headers across\n        // origins, so a 3xx fails closed through the redirect check below.\n        redirect: \"manual\",\n        signal: externalSignals.length > 0 ? AbortSignal.any(externalSignals) : undefined,\n      };\n\n      const cacheOptions = createStorefrontCacheOptions(\n        apiUrl,\n        init,\n        queryText,\n        opts.cache,\n        opts[SHOULD_CACHE_RESULT],\n        timeoutInMs > 0 ? timeoutInMs : DEFAULT_TIMEOUT_IN_MS,\n      );\n      const response = await (resolvedFetch as ResolvedStorefrontFetch)(apiUrl, init, cacheOptions);\n\n      responseHeaders = response.headers;\n      requestId = responseHeaders.get(\"x-request-id\") ?? undefined;\n      status = response.status;\n\n      // Reject redirects before capturing headers so a rejected response can't set cookies.\n      // Browsers hide a manual redirect's status behind an opaque response, so leave it out.\n      const isOpaqueRedirect = response.type === \"opaqueredirect\";\n      if (isOpaqueRedirect || REDIRECT_STATUSES.has(status)) {\n        // Don't await: a cancel waits on any unread clone (tee) a custom fetch kept.\n        void response.body?.cancel().catch(() => {});\n        // Name only the target origin, which diagnoses a misconfigured `storeDomain` (e.g. an\n        // `http://` domain redirected to https) without logging the target's path or query.\n        const locationOrigin = getLocationOrigin(responseHeaders.get(\"location\"), apiUrl);\n        throw new StorefrontApiError(\n          isOpaqueRedirect\n            ? \"SFAPI responded with a redirect; redirects are not followed\"\n            : `SFAPI responded with a redirect (${status}${locationOrigin ? ` to ${locationOrigin}` : \"\"}); redirects are not followed`,\n          { status: isOpaqueRedirect ? undefined : status, requestId, queryText, variables },\n        );\n      }\n\n      const hydrogenCacheStatus = getHydrogenCacheStatus(responseHeaders);\n      if (hydrogenCacheStatus !== \"hit\") {\n        requestContext.captureSubrequestHeaders(responseHeaders);\n      }\n\n      if (!response.ok) {\n        const retryAfter = responseHeaders.get(\"retry-after\") ?? undefined;\n        // `applyResponseHeaders()` adds the value when the app answers this error with a `429`.\n        if (status === RATE_LIMITED_STATUS) requestContext.captureStorefrontRateLimit?.(retryAfter);\n        const bodyHint = await response.text().catch(() => \"\");\n        throw new StorefrontApiError(\n          `SFAPI responded with ${status}${bodyHint ? `: ${bodyHint.slice(0, 200)}` : \"\"}`,\n          { status, requestId, retryAfter, queryText, variables },\n        );\n      }\n\n      responseText = await response.text();\n    } catch (error) {\n      if (error instanceof StorefrontApiError) throw error;\n      if (error instanceof StorefrontTimeoutError) throw error;\n      if (error instanceof StorefrontCacheConfigError) throw error;\n      if (\n        error instanceof DOMException &&\n        error.name === \"TimeoutError\" &&\n        timeoutSignal?.aborted\n      ) {\n        throw new StorefrontTimeoutError(timeoutInMs);\n      }\n      if (error instanceof DOMException && error.name === \"AbortError\") {\n        throw error;\n      }\n      throw new StorefrontApiError(\"SFAPI request failed\", { cause: error });\n    }\n\n    let json: unknown;\n    try {\n      json = JSON.parse(responseText);\n    } catch (cause) {\n      throw new StorefrontApiError(\n        `Failed to parse SFAPI response as JSON (${apiUrl}, status ${status})` +\n          (responseText ? `: ${responseText.slice(0, 200)}` : \"\"),\n        { status, requestId, cause, queryText, variables },\n      );\n    }\n\n    if (typeof json !== \"object\" || json === null || Array.isArray(json)) {\n      throw new StorefrontApiError(\n        `SFAPI returned unexpected JSON type: ${Array.isArray(json) ? \"array\" : typeof json}`,\n        { status, requestId, queryText, variables },\n      );\n    }\n\n    const body = json as { data?: unknown; errors?: GraphQLFormattedError[] };\n    // Branch to populate the two arms of the StorefrontGraphqlResult union: callers\n    // narrowing on `errors` get a non-null `data` only when no errors are present.\n    if (body.errors) {\n      return {\n        data: body.data ?? null,\n        errors: body.errors,\n        headers: responseHeaders,\n      };\n    }\n    return {\n      data: body.data,\n      headers: responseHeaders,\n    };\n  }\n\n  const client: StorefrontClient = {\n    type: clientType,\n    i18n,\n    graphql: graphql as StorefrontClient[\"graphql\"],\n    apiUrl,\n    storeUrl,\n    storefrontId: config.storefrontId,\n    requestContext,\n  };\n\n  if (config.cache) CACHE_ENABLED_GRAPHQL_CLIENTS.add(client.graphql);\n\n  return client;\n}"
+      "value": "export function createStorefrontClient(args: CreateStorefrontClientArgs): StorefrontClient {\n  const { config, requestContext, type: clientType } = args;\n\n  if (!config.storeDomain) {\n    throw new Error(\"storeDomain is required and must be non-empty\");\n  }\n\n  const storeUrl = normalizeStoreDomain(config.storeDomain);\n  const apiVersion = config.apiVersion ?? STOREFRONT_API_VERSION;\n  const apiUrl = `${storeUrl}/api/${apiVersion}/graphql.json`;\n\n  const originFetch = config.fetch ?? globalThis.fetch;\n  if (typeof originFetch !== \"function\") {\n    throw new Error(\n      \"No fetch function available. Pass a fetch option or ensure globalThis.fetch exists.\",\n    );\n  }\n  const resolvedFetch = config.cache\n    ? createFetchWithCache({\n        cache: config.cache,\n        waitUntil: config.waitUntil,\n        fetch: originFetch as typeof globalThis.fetch,\n      })\n    : originFetch;\n\n  const timeoutInMs = config.defaultTimeoutInMs ?? DEFAULT_TIMEOUT_IN_MS;\n  if (timeoutInMs < 0 || Number.isNaN(timeoutInMs)) {\n    throw new Error(\"defaultTimeoutInMs must be a non-negative number\");\n  }\n\n  const staticHeaders: Record<string, string> = {\n    \"content-type\": \"application/json\",\n  };\n  // Browsers drop a script-set User-Agent or send a CORS preflight for it.\n  if (typeof document === \"undefined\") {\n    staticHeaders[\"user-agent\"] = HYDROGEN_USER_AGENT;\n  }\n  if (config.storefrontId) {\n    staticHeaders[STOREFRONT_ID_HEADER] = config.storefrontId;\n  }\n\n  switch (clientType) {\n    case \"private\":\n    case \"private_no_buyer_context\":\n      if (typeof document !== \"undefined\") {\n        throw new Error(\n          \"private storefront tokens cannot be used in a browser context. Use a publicStorefrontToken instead.\",\n        );\n      }\n      if (!config.privateStorefrontToken) {\n        throw new Error(\"privateStorefrontToken is required\");\n      }\n      staticHeaders[STOREFRONT_PRIVATE_TOKEN_HEADER] = config.privateStorefrontToken;\n      break;\n    case \"public\":\n      if (config.publicStorefrontToken !== undefined && !config.publicStorefrontToken) {\n        throw new Error(\"publicStorefrontToken must be non-empty when provided\");\n      }\n      if (config.publicStorefrontToken) {\n        staticHeaders[STOREFRONT_ACCESS_TOKEN_HEADER] = config.publicStorefrontToken;\n      }\n      break;\n    default:\n      clientType satisfies never;\n      throw new Error(`Unsupported client type: ${clientType}`);\n  }\n\n  const locale = requestContext.locale;\n  const requestHeaders = new Headers(staticHeaders);\n  requestContext.applyStorefrontRequestHeaders(requestHeaders);\n\n  if (clientType === \"private\") {\n    const { buyerIp } = requestContext;\n    if (!buyerIp) {\n      throw new TypeError(\"requestContext.buyerIp is required for private Storefront API clients\");\n    }\n    requestHeaders.set(STOREFRONT_BUYER_IP_HEADER, buyerIp);\n  }\n\n  async function graphql(\n    doc: DocLike | string,\n    ...rest: [options?: Record<string, unknown>]\n  ): Promise<StorefrontGraphqlResult<DocLike>> {\n    const opts = (rest[0] ?? {}) as {\n      variables?: Record<string, unknown>;\n      signal?: AbortSignal;\n      cache?: CachingStrategy;\n      [SHOULD_CACHE_RESULT]?: ShouldCacheResult;\n    };\n\n    const queryText = typeof doc === \"string\" ? doc : (doc as unknown as string);\n    if (typeof queryText !== \"string\") {\n      throw new StorefrontApiError(\n        \"Expected gql() to return a string at runtime. Check gql.tada version compatibility.\",\n      );\n    }\n\n    if (opts.cache && !config.cache) {\n      throw new StorefrontCacheConfigError(\n        \"Storefront API cache options require a cache configured in createStorefrontClient().\",\n      );\n    }\n\n    if (opts.cache?.mode === \"private\") {\n      throw new StorefrontCacheConfigError(\n        \"Storefront API cache mode 'private' is not supported yet. Use Cache() without private mode, or cache buyer-specific work with createRunWithCache() and an explicit private key.\",\n      );\n    }\n\n    const variables = buildVariables(queryText, opts.variables, locale);\n    const externalSignals = [requestContext.signal, opts.signal].filter(\n      (signal): signal is AbortSignal => Boolean(signal),\n    );\n\n    const earlyAbortSignal = externalSignals.find((signal) => signal.aborted);\n    if (earlyAbortSignal) {\n      throw (\n        earlyAbortSignal.reason ??\n        new DOMException(\"signal is aborted without reason\", \"AbortError\")\n      );\n    }\n\n    let requestId: string | undefined;\n    let responseHeaders: Headers;\n    let responseText: string;\n    let status: number;\n    let timeoutSignal: AbortSignal | undefined;\n\n    if (timeoutInMs > 0) {\n      timeoutSignal = AbortSignal.timeout(timeoutInMs);\n      externalSignals.push(timeoutSignal);\n    }\n\n    try {\n      const init: PlainRequestInit = {\n        method: \"POST\",\n        headers: new Headers(requestHeaders),\n        body: JSON.stringify({ query: queryText, variables }),\n        // Never follow redirects: runtimes forward custom Shopify credential headers across\n        // origins, so a 3xx fails closed through the redirect check below.\n        redirect: \"manual\",\n        signal: externalSignals.length > 0 ? AbortSignal.any(externalSignals) : undefined,\n      };\n\n      const cacheOptions = createStorefrontCacheOptions(\n        apiUrl,\n        init,\n        queryText,\n        opts.cache,\n        opts[SHOULD_CACHE_RESULT],\n        timeoutInMs > 0 ? timeoutInMs : DEFAULT_TIMEOUT_IN_MS,\n      );\n      const response = await (resolvedFetch as ResolvedStorefrontFetch)(apiUrl, init, cacheOptions);\n\n      responseHeaders = response.headers;\n      requestId = responseHeaders.get(\"x-request-id\") ?? undefined;\n      status = response.status;\n\n      // Reject redirects before capturing headers so a rejected response can't set cookies.\n      // Browsers hide a manual redirect's status behind an opaque response, so leave it out.\n      const isOpaqueRedirect = response.type === \"opaqueredirect\";\n      if (isOpaqueRedirect || REDIRECT_STATUSES.has(status)) {\n        // Don't await: a cancel waits on any unread clone (tee) a custom fetch kept.\n        void response.body?.cancel().catch(() => {});\n        // Name only the target origin, which diagnoses a misconfigured `storeDomain` (e.g. an\n        // `http://` domain redirected to https) without logging the target's path or query.\n        const locationOrigin = getLocationOrigin(responseHeaders.get(\"location\"), apiUrl);\n        throw new StorefrontApiError(\n          isOpaqueRedirect\n            ? \"SFAPI responded with a redirect; redirects are not followed\"\n            : `SFAPI responded with a redirect (${status}${locationOrigin ? ` to ${locationOrigin}` : \"\"}); redirects are not followed`,\n          { status: isOpaqueRedirect ? undefined : status, requestId, queryText, variables },\n        );\n      }\n\n      const hydrogenCacheStatus = getHydrogenCacheStatus(responseHeaders);\n      if (hydrogenCacheStatus !== \"hit\") {\n        requestContext.captureSubrequestHeaders(responseHeaders);\n      }\n      if (isPrivateResponse(responseHeaders)) {\n        requestContext.markResponseAsPersonalized(\n          STOREFRONT_PRIVATE_RESPONSE_PERSONALIZATION_REASON,\n        );\n      }\n\n      if (!response.ok) {\n        const retryAfter = responseHeaders.get(\"retry-after\") ?? undefined;\n        // `applyResponseHeaders()` adds the value when the app answers this error with a `429`.\n        if (status === RATE_LIMITED_STATUS) requestContext.captureStorefrontRateLimit?.(retryAfter);\n        const bodyHint = await response.text().catch(() => \"\");\n        throw new StorefrontApiError(\n          `SFAPI responded with ${status}${bodyHint ? `: ${bodyHint.slice(0, 200)}` : \"\"}`,\n          { status, requestId, retryAfter, queryText, variables },\n        );\n      }\n\n      responseText = await response.text();\n    } catch (error) {\n      if (error instanceof StorefrontApiError) throw error;\n      if (error instanceof StorefrontTimeoutError) throw error;\n      if (error instanceof StorefrontCacheConfigError) throw error;\n      if (\n        error instanceof DOMException &&\n        error.name === \"TimeoutError\" &&\n        timeoutSignal?.aborted\n      ) {\n        throw new StorefrontTimeoutError(timeoutInMs);\n      }\n      if (error instanceof DOMException && error.name === \"AbortError\") {\n        throw error;\n      }\n      throw new StorefrontApiError(\"SFAPI request failed\", { cause: error });\n    }\n\n    let json: unknown;\n    try {\n      json = JSON.parse(responseText);\n    } catch (cause) {\n      throw new StorefrontApiError(\n        `Failed to parse SFAPI response as JSON (${apiUrl}, status ${status})` +\n          (responseText ? `: ${responseText.slice(0, 200)}` : \"\"),\n        { status, requestId, cause, queryText, variables },\n      );\n    }\n\n    if (typeof json !== \"object\" || json === null || Array.isArray(json)) {\n      throw new StorefrontApiError(\n        `SFAPI returned unexpected JSON type: ${Array.isArray(json) ? \"array\" : typeof json}`,\n        { status, requestId, queryText, variables },\n      );\n    }\n\n    const body = json as { data?: unknown; errors?: GraphQLFormattedError[] };\n    // Branch to populate the two arms of the StorefrontGraphqlResult union: callers\n    // narrowing on `errors` get a non-null `data` only when no errors are present.\n    if (body.errors) {\n      return {\n        data: body.data ?? null,\n        errors: body.errors,\n        headers: responseHeaders,\n      };\n    }\n    return {\n      data: body.data,\n      headers: responseHeaders,\n    };\n  }\n\n  const client: StorefrontClient = {\n    type: clientType,\n    i18n: locale,\n    locale,\n    graphql: graphql as StorefrontClient[\"graphql\"],\n    apiUrl,\n    storeUrl,\n    storefrontId: config.storefrontId,\n    requestContext,\n  };\n\n  if (config.cache) CACHE_ENABLED_GRAPHQL_CLIENTS.add(client.graphql);\n\n  return client;\n}"
     }
   },
   "CreateStorefrontClientArgs": {
@@ -2230,7 +2453,7 @@
       "filePath": "src/client/types.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "StorefrontClient",
-      "value": "{\n  /** The client type that you passed to `createStorefrontClient`. */\n  type: Type;\n  /** The country and language that the client sends for `$country` and `$language` variables. */\n  i18n: RequestContext[\"i18n\"];\n  /**\n   * Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a\n   * plain query string. When the operation declares `$country: CountryCode` or\n   * `$language: LanguageCode`, the client sets the variable from the request context and overrides\n   * any value you pass. Variables with other types stay caller-owned.\n   *\n   * The method throws an error when a query passes a `cache` strategy and the client has no cache,\n   * or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch\n   * this configuration error. To cache customer-specific data, use `createRunWithCache` with a key\n   * unique to the customer.\n   */\n  graphql: <const Doc extends DocLike | string>(\n    doc: Doc,\n    ...options: GqlRestParam<ResolveDoc<Doc>, Extra>\n  ) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>;\n  /** The Storefront API GraphQL endpoint that the client calls. */\n  apiUrl: string;\n  /** Your store's URL with its protocol, such as `https://my-store.myshopify.com`. */\n  storeUrl: string;\n  /** The storefront ID from the client options. */\n  storefrontId?: string;\n  /** The request context that you passed to `createStorefrontClient`. */\n  requestContext: RequestContext;\n}",
+      "value": "{\n  /** The client type that you passed to `createStorefrontClient`. */\n  type: Type;\n  /** The locale resolved for this request. The client sends its country and language for `$country` and `$language` variables. */\n  locale: RequestContext[\"locale\"];\n  /**\n   * The locale resolved for this request.\n   * @deprecated Use `locale` instead. Removed in the next major release.\n   */\n  i18n: RequestContext[\"i18n\"];\n  /**\n   * Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a\n   * plain query string. When the operation declares `$country: CountryCode` or\n   * `$language: LanguageCode`, the client sets the variable from the request context and overrides\n   * any value you pass. Variables with other types stay caller-owned.\n   *\n   * The method throws an error when a query passes a `cache` strategy and the client has no cache,\n   * or when the strategy uses `private` mode. A catch block for `StorefrontApiError` doesn't catch\n   * this configuration error. To cache customer-specific data, use `createRunWithCache` with a key\n   * unique to the customer.\n   */\n  graphql: <const Doc extends DocLike | string>(\n    doc: Doc,\n    ...options: GqlRestParam<ResolveDoc<Doc>, Extra>\n  ) => Promise<StorefrontGraphqlResult<ResolveDoc<Doc>>>;\n  /** The Storefront API GraphQL endpoint that the client calls. */\n  apiUrl: string;\n  /** Your store's URL with its protocol, such as `https://my-store.myshopify.com`. */\n  storeUrl: string;\n  /** The storefront ID from the client options. */\n  storefrontId?: string;\n  /** The request context that you passed to `createStorefrontClient`. */\n  requestContext: RequestContext;\n}",
       "description": "A Storefront API client. Call `graphql()` with a document to run a query or mutation and get a typed result.",
       "members": [
         {
@@ -2252,7 +2475,15 @@
           "syntaxKind": "PropertySignature",
           "name": "i18n",
           "value": "RequestContext[\"i18n\"]",
-          "description": "The country and language that the client sends for `$country` and `$language` variables."
+          "description": "The locale resolved for this request.",
+          "deprecationMessage": "Use `locale` instead. Removed in the next major release."
+        },
+        {
+          "filePath": "src/client/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "locale",
+          "value": "RequestContext[\"locale\"]",
+          "description": "The locale resolved for this request. The client sends its country and language for `$country` and `$language` variables."
         },
         {
           "filePath": "src/client/types.ts",
@@ -2286,10 +2517,10 @@
       ]
     }
   },
-  "CreateShopifyRouteTemplatesGeneratedType": {
+  "DefineShopifyRouteTemplatesGeneratedType": {
     "src/core/standard-routes/build.ts": {
       "filePath": "src/core/standard-routes/build.ts",
-      "name": "CreateShopifyRouteTemplatesGeneratedType",
+      "name": "DefineShopifyRouteTemplatesGeneratedType",
       "description": "Tells Hydrogen where your app serves products, collections, and other Shopify resources. Pass the returned object to `handleShopifyRoutes`, `handleShopifyRedirects`, the `ShopifyScripts` `routes` option, and the predictive search URL helpers.\n\nAdd a key only for a route that your app serves at a non-standard path. Hydrogen uses Shopify's default path for each key that you leave out. Pass an empty object when your app serves every route at its default path. Each template starts with `/` and includes the handle placeholders for its route. Leave the locale path prefix out of templates. Hydrogen adds the prefix for you.\n\nTypeScript checks the shape of each template. The function returns the object that you pass.",
       "isPublicDocs": true,
       "params": [
@@ -2306,14 +2537,14 @@
         "name": "const TRoutes extends ShopifyRouteTemplates",
         "value": "const TRoutes extends ShopifyRouteTemplates"
       },
-      "value": "export function createShopifyRouteTemplates<const TRoutes extends ShopifyRouteTemplates>(\n  routes: TRoutes,\n): TRoutes {\n  return routes;\n}",
+      "value": "export function defineShopifyRouteTemplates<const TRoutes extends ShopifyRouteTemplates>(\n  routes: TRoutes,\n): TRoutes {\n  return routes;\n}",
       "examples": [
         {
           "title": "Example",
           "description": "",
           "tabs": [
             {
-              "code": "const routeTemplates = createShopifyRouteTemplates({\n  product: \"/p/:productHandle\",\n  collection: \"/c/:collectionHandle\",\n  article: \"/journal/:blogHandle/:articleHandle\",\n  cart: \"/basket\",\n  policy: \"/legal/:policyHandle\",\n});",
+              "code": "const routeTemplates = defineShopifyRouteTemplates({\n  product: \"/p/:productHandle\",\n  collection: \"/c/:collectionHandle\",\n  article: \"/journal/:blogHandle/:articleHandle\",\n  cart: \"/basket\",\n  policy: \"/legal/:policyHandle\",\n});",
               "title": "Example"
             }
           ]
@@ -3511,23 +3742,23 @@
     "src/core/cart/get-cart.ts": {
       "filePath": "src/core/cart/get-cart.ts",
       "name": "GetCartIdGeneratedType",
-      "description": "Reads the cart ID from a request.\n\nThe function checks the `cartId` search parameter first, then the `cart` cookie. The function returns a search parameter value unchanged and adds the `gid://shopify/Cart/` prefix to a cookie value.",
+      "description": "Reads the cart ID from the `cart` cookie of a request.\n\nThe function adds the `gid://shopify/Cart/` prefix to the cookie value.",
       "isPublicDocs": true,
       "params": [
         {
           "name": "input",
-          "description": "The request or request context that carries the cart ID.",
+          "description": "The request or request context that carries the cart cookie.",
           "value": "CartIdSource",
           "filePath": "src/core/cart/get-cart.ts"
         }
       ],
       "returns": {
         "filePath": "src/core/cart/get-cart.ts",
-        "description": "The cart ID, or `null` when neither the search parameter nor the cookie has one.",
+        "description": "The cart ID, or `null` when the request has no `cart` cookie.",
         "name": "string | null",
         "value": "string | null"
       },
-      "value": "export function getCartId(input: CartIdSource): string | null {\n  if (input.url) {\n    const parsedUrl = new URL(input.url, \"https://hydrogen.local\");\n    const cartId = parsedUrl.searchParams.get(\"cartId\");\n    if (cartId) return cartId;\n  }\n\n  return getCartIdFromCookie(input);\n}",
+      "value": "export function getCartId(input: CartIdSource): string | null {\n  return getCartIdFromCookie(input);\n}",
       "examples": [
         {
           "title": "Example",
@@ -3547,8 +3778,8 @@
       "filePath": "src/core/cart/get-cart.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CartIdSource",
-      "value": "Request | Pick<ShopifyRequestContext, \"cookie\" | \"url\">",
-      "description": "A request, or a request context with a `Cookie` header and a URL."
+      "value": "Request | Pick<ShopifyRequestContext, \"cookie\">",
+      "description": "A request, or a request context with a `Cookie` header."
     }
   },
   "GetCartGeneratedType": {
@@ -3950,7 +4181,7 @@
     "src/core/request-routing/handle-shopify-routes.ts": {
       "filePath": "src/core/request-routing/handle-shopify-routes.ts",
       "name": "HandleShopifyRoutesForDocs",
-      "description": "Serves Shopify's storefront endpoints and your custom route handlers from your app. Call the function at the start of request handling, before your framework's router.\n\nWhen a route matches, the function returns a promise for the response. Return that response as is, because the response already carries the request context's headers. When no route matches, the function returns `null` synchronously, and your framework's router handles the request. The function throws when `requestContext` differs from the Storefront API client's request context. When a route handler throws, the returned promise rejects. With `rateLimitHandling: \"response\"`, a thrown `StorefrontApiError` with status `429` resolves to a JSON `429` response with the error code `rate_limited`, a constant message, `Cache-Control: no-store`, and a validated `Retry-After` header. Inside a `try` block, use `return await` on the result.\n\nThe function checks these routes in order and returns the first match: the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, the UCP business profile at `/.well-known/ucp`, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.\n\nSome routes answer unsupported methods with a `405` response. A registered handler path returns `405` for any method that no handler on that path registers. Checkout and cart permalinks accept only `GET` and `HEAD`. Buy permalinks accept only `GET`, and the UCP MCP proxy accepts only `POST`.\n\nWhen your bundler resolves the package's `development` export condition, the function also serves the GraphiQL explorer at `/graphiql` for GET requests that match no other route, and accepts a `graphiql` option. Set `graphiql.customerAccount` to an object with `apiUrl`, `accessToken`, and `schemaUrl` to add a Customer Account API tab. The explorer skips the tab when it can't fetch the schema.",
+      "description": "Serves Shopify's storefront endpoints and your custom route handlers from your app. Call the function at the start of request handling, before your framework's router.\n\nWhen a route matches, the function returns a promise for the response. Return that response as is, because the response already carries the request context's headers. When no route matches, the function returns `null` synchronously, and your framework's router handles the request. The function throws when `requestContext` differs from the Storefront API client's request context. When a route handler throws, the returned promise rejects. With `rateLimitHandling: \"response\"`, a thrown `StorefrontApiError` with status `429` resolves to a JSON `429` response with the error code `rate_limited`, a constant message, `Cache-Control: no-store`, and a validated `Retry-After` header. Inside a `try` block, use `return await` on the result.\n\nThe function checks these routes in order and returns the first match: the Hydrogen manifest at `/__shopify/hydrogen/manifest.json`, the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, the UCP business profile at `/.well-known/ucp`, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.\n\nThe Hydrogen manifest is always on. It describes your app's route templates and the locales of the `defineShopifyI18n` definition in the request context, so Shopify services can build URLs for your storefront. Its `routes` field is `null` when you don't pass `routeTemplates`, and its `i18n` field is `null` when the request context has no definition.\n\nSome routes answer unsupported methods with a `405` response. A registered handler path returns `405` for any method that no handler on that path registers. The Hydrogen manifest, checkout permalinks, and cart permalinks accept only `GET` and `HEAD`. Buy permalinks accept only `GET`, and the UCP MCP proxy accepts only `POST`.\n\nWhen your bundler resolves the package's `development` export condition, the function also serves the GraphiQL explorer at `/graphiql` for GET requests that match no other route, and accepts a `graphiql` option. Set `graphiql.customerAccount` to an object with `apiUrl`, `accessToken`, and `schemaUrl` to add a Customer Account API tab. The explorer skips the tab when it can't fetch the schema.",
       "isPublicDocs": true,
       "params": [
         {
@@ -3976,6 +4207,387 @@
       "value": "HydrogenRoutesOptions",
       "members": [],
       "override": "The options for handleShopifyRoutes: the `request`, the `requestContext`, the `storefrontClient` created with that request context, optional `routeTemplates`, and optional `handlers`, an array of handler groups. Pass `sessionManager` when a registered handler's context includes it, such as Customer Account handlers or cart handlers created with `customerSession`. Otherwise `sessionManager` is optional when the handler types are inferred from `handlers`."
+    }
+  },
+  "GetShopifyScriptHashesGeneratedType": {
+    "src/core/shopify-scripts/hashes.ts": {
+      "filePath": "src/core/shopify-scripts/hashes.ts",
+      "name": "GetShopifyScriptHashesGeneratedType",
+      "description": "Returns CSP hashes for the static inline bootstraps rendered by ShopifyScripts and the tag helpers. Add these to script-src when using hashes instead of nonces. Values include CSP quotes by default; pass `quoted: false` for framework configuration that expects unquoted hashes. Hashes authorize Shopify's bootstraps, not framework scripts.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "input1",
+          "description": "",
+          "value": "{ quoted?: boolean; }",
+          "isOptional": true,
+          "defaultValue": "{}",
+          "filePath": "src/core/shopify-scripts/hashes.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/shopify-scripts/hashes.ts",
+        "description": "",
+        "name": "string[]",
+        "value": "string[]"
+      },
+      "value": "export function getShopifyScriptHashes({ quoted = true }: { quoted?: boolean } = {}): string[] {\n  return quoted ? [...hashes] : hashes.map((hash) => hash.slice(1, -1));\n}"
+    }
+  },
+  "CreateContentSecurityPolicyGeneratedType": {
+    "src/core/csp/index.ts": {
+      "filePath": "src/core/csp/index.ts",
+      "name": "CreateContentSecurityPolicyGeneratedType",
+      "description": "Creates a Shopify-compatible Content Security Policy for one document response. By default it generates a nonce to pass to your framework renderer and Shopify's script tags. Set `nonce` to `false` for a nonce-free policy. Styles allow inline CSS for storefront components.\n\nCall the returned policy's `applyResponseHeaders()` to send CSP and prevent caching when it has a nonce. Set the forwarded `Content-Security-Policy` request header to `header` for a renderer such as Next.js. Incoming headers never configure the policy or its nonce.\n\nEach call creates a new policy; reuse that object throughout a document's rendering. The development build allows common local HMR connection origins. Add any additional framework development-script allowances explicitly. For static documents, authorize scripts explicitly with hashes or other sources appropriate for your framework.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "options",
+          "description": "",
+          "value": "CreateContentSecurityPolicyOptions",
+          "isOptional": true,
+          "defaultValue": "{}",
+          "filePath": "src/core/csp/index.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/csp/index.ts",
+        "description": "",
+        "name": "ContentSecurityPolicy",
+        "value": "ContentSecurityPolicy"
+      },
+      "value": "export function createContentSecurityPolicy(\n  options: CreateContentSecurityPolicyOptions = {},\n): ContentSecurityPolicy {\n  const nonce = options.nonce === false ? undefined : generateNonce();\n  const directives: ContentSecurityPolicyDirectives = getShopifyCspDirectives(options.shop);\n  mergeDirectives(directives, options.directives);\n  if (nonce !== undefined) {\n    directives.scriptSrc = withNonce(directives.scriptSrc, nonce);\n    if (directives.scriptSrcElem != null) {\n      directives.scriptSrcElem = withNonce(directives.scriptSrcElem, nonce);\n    }\n  }\n  const header = serializeDirectives(directives);\n  return Object.freeze({\n    nonce,\n    header,\n    applyResponseHeaders(headers: Headers) {\n      headers.set(\"Content-Security-Policy\", header);\n      // A cached document would reuse its nonce on subsequent responses.\n      if (nonce !== undefined) applyPrivateResponseCacheHeaders(headers);\n    },\n  });\n}"
+    }
+  },
+  "CreateContentSecurityPolicyOptions": {
+    "src/core/csp/types.ts": {
+      "filePath": "src/core/csp/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "CreateContentSecurityPolicyOptions",
+      "value": "{\n  shop?: ContentSecurityPolicyShop;\n  /** Extends individual defaults. In nonce mode, the nonce is added to `script-src` and any supplied `script-src-elem`. Browsers use `script-src-elem` over `script-src` for script elements. */\n  directives?: ContentSecurityPolicyDirectives;\n  /** Set to `false` for a nonce-free policy. This does not automatically authorize inline scripts or disable caching. */\n  nonce?: false;\n}",
+      "description": "Options for a per-document policy.",
+      "members": [
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "directives",
+          "value": "ContentSecurityPolicyDirectives",
+          "description": "Extends individual defaults. In nonce mode, the nonce is added to `script-src` and any supplied `script-src-elem`. Browsers use `script-src-elem` over `script-src` for script elements.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "nonce",
+          "value": "false",
+          "description": "Set to `false` for a nonce-free policy. This does not automatically authorize inline scripts or disable caching.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "shop",
+          "value": "ContentSecurityPolicyShop",
+          "description": "The shop's domains that browser scripts may contact.",
+          "isOptional": true
+        }
+      ]
+    }
+  },
+  "ContentSecurityPolicyDirectives": {
+    "src/core/csp/types.ts": {
+      "filePath": "src/core/csp/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ContentSecurityPolicyDirectives",
+      "value": "{\n  defaultSrc?: Sources;\n  scriptSrc?: Sources;\n  scriptSrcElem?: Sources;\n  scriptSrcAttr?: Sources;\n  styleSrc?: Sources;\n  styleSrcElem?: Sources;\n  styleSrcAttr?: Sources;\n  imgSrc?: Sources;\n  connectSrc?: Sources;\n  fontSrc?: Sources;\n  objectSrc?: Sources;\n  mediaSrc?: Sources;\n  frameSrc?: Sources;\n  childSrc?: Sources;\n  workerSrc?: Sources;\n  manifestSrc?: Sources;\n  baseUri?: Sources;\n  formAction?: Sources;\n  frameAncestors?: Sources;\n  sandbox?: Sources;\n  reportUri?: Sources;\n  reportTo?: Sources;\n  upgradeInsecureRequests?: boolean;\n}",
+      "description": "CSP directives. Arrays extend a directive's defaults. An array replaces a default consisting only of `'none'`; `null` omits the directive, except that nonce mode still creates a `script-src` containing the generated nonce.",
+      "members": [
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "baseUri",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "childSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "connectSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "defaultSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "fontSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "formAction",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "frameAncestors",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "frameSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "imgSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "manifestSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "mediaSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "objectSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "reportTo",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "reportUri",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "sandbox",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "scriptSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "scriptSrcAttr",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "scriptSrcElem",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "styleSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "styleSrcAttr",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "styleSrcElem",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "upgradeInsecureRequests",
+          "value": "boolean",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "workerSrc",
+          "value": "Sources",
+          "description": "",
+          "isOptional": true
+        }
+      ]
+    }
+  },
+  "Sources": {
+    "src/core/csp/types.ts": {
+      "filePath": "src/core/csp/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "Sources",
+      "value": "readonly string[] | null",
+      "description": ""
+    }
+  },
+  "ContentSecurityPolicyShop": {
+    "src/core/csp/types.ts": {
+      "filePath": "src/core/csp/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ContentSecurityPolicyShop",
+      "value": "{\n  storeDomain?: string;\n  checkoutDomain?: string;\n}",
+      "description": "The shop's domains that browser scripts may contact.",
+      "members": [
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "checkoutDomain",
+          "value": "string",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "storeDomain",
+          "value": "string",
+          "description": "",
+          "isOptional": true
+        }
+      ]
+    }
+  },
+  "ContentSecurityPolicy": {
+    "src/core/csp/types.ts": {
+      "filePath": "src/core/csp/types.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ContentSecurityPolicy",
+      "value": "{\n  readonly nonce: Nonce;\n  readonly header: string;\n  /** Overwrites the response's enforcing CSP and prevents caching when it contains a nonce. Preserves response report-only policies. */\n  applyResponseHeaders(headers: Headers): void;\n}",
+      "description": "A document policy with its nonce, serialized header, and response header application.",
+      "members": [
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "MethodSignature",
+          "name": "applyResponseHeaders",
+          "value": "(headers: Headers) => void",
+          "description": "Overwrites the response's enforcing CSP and prevents caching when it contains a nonce. Preserves response report-only policies."
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "header",
+          "value": "string",
+          "description": ""
+        },
+        {
+          "filePath": "src/core/csp/types.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "nonce",
+          "value": "Nonce",
+          "description": ""
+        }
+      ]
+    }
+  },
+  "GetShopifyCspDirectivesGeneratedType": {
+    "src/core/csp/index.ts": {
+      "filePath": "src/core/csp/index.ts",
+      "name": "GetShopifyCspDirectivesGeneratedType",
+      "description": "Returns fresh Shopify CSP defaults for a framework's own CSP configuration. Development connections are included by the development package export. Framework configuration loaded directly by Node can select that export with `--conditions=development`. `createContentSecurityPolicy` uses these same defaults. Pass `{ hashes: true }` as the second argument to include Shopify's bootstrap hashes in scriptSrc; other inline scripts still need authorization from the framework.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "shop",
+          "description": "",
+          "value": "ContentSecurityPolicyShop",
+          "isOptional": true,
+          "defaultValue": "{}",
+          "filePath": "src/core/csp/index.ts"
+        },
+        {
+          "name": "input2",
+          "description": "",
+          "value": "{ hashes?: boolean; }",
+          "isOptional": true,
+          "defaultValue": "{}",
+          "filePath": "src/core/csp/index.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/csp/index.ts",
+        "description": "",
+        "name": "",
+        "value": ""
+      },
+      "value": "export function getShopifyCspDirectives(\n  shop: ContentSecurityPolicyShop = {},\n  { hashes = false }: { hashes?: boolean } = {},\n) {\n  const shopOrigins = [shop.storeDomain, shop.checkoutDomain || undefined]\n    .filter((domain) => domain !== undefined)\n    .map(normalizeStoreDomain);\n\n  return {\n    defaultSrc: [\"'self'\"],\n    baseUri: [\"'self'\"],\n    objectSrc: [\"'none'\"],\n    frameAncestors: [\"'none'\"],\n    scriptSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN, ...(hashes ? getShopifyScriptHashes() : [])],\n    scriptSrcAttr: [\"'none'\"],\n    styleSrc: [\"'self'\", \"'unsafe-inline'\", SHOPIFY_CDN_ORIGIN],\n    imgSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN, \"data:\"],\n    fontSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN],\n    mediaSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN],\n    frameSrc: [\n      \"'self'\",\n      SHOPIFY_ORIGIN,\n      SHOPIFY_SHOP_APP_ORIGIN,\n      SHOPIFY_SHOP_COM_ORIGIN,\n      ...shopOrigins,\n    ],\n    connectSrc: [\n      \"'self'\",\n      SHOPIFY_CDN_ORIGIN,\n      SHOPIFY_SHOP_APP_ORIGIN,\n      SHOPIFY_SHOP_COM_ORIGIN,\n      SHOPIFY_ORIGIN,\n      \"https://*.shopifysvc.com\",\n      ...shopOrigins,\n      ...(__DEV__\n        ? [\n            \"http://localhost:*\",\n            \"https://localhost:*\",\n            \"ws://localhost:*\",\n            \"wss://localhost:*\",\n            \"http://127.0.0.1:*\",\n            \"https://127.0.0.1:*\",\n            \"ws://127.0.0.1:*\",\n            \"wss://127.0.0.1:*\",\n            \"ws://*.tryhydrogen.dev:*\",\n            \"wss://*.tryhydrogen.dev:*\",\n          ]\n        : []),\n    ],\n  } satisfies ContentSecurityPolicyDirectives;\n}"
     }
   },
   "WithStorefrontRateLimitGeneratedType": {
@@ -4164,7 +4776,7 @@
           "syntaxKind": "PropertySignature",
           "name": "country",
           "value": "ShopifyCountryCode",
-          "description": "The request's country."
+          "description": ""
         },
         {
           "filePath": "src/core/shopify-scripts/types.ts",
@@ -4179,18 +4791,18 @@
           "syntaxKind": "PropertySignature",
           "name": "language",
           "value": "ShopifyLanguageCode",
-          "description": "The request's language."
+          "description": ""
         },
         {
           "filePath": "src/core/shopify-scripts/types.ts",
           "syntaxKind": "PropertySignature",
           "name": "pathPrefix",
           "value": "string",
-          "description": "The URL prefix for localized routes, such as `/es-es`. Hydrogen adds the prefix to standard route redirects and product variant URLs.",
+          "description": "The URL prefix for localized routes, such as `/es-es`. Leave it empty for the default locale.",
           "isOptional": true
         }
       ],
-      "value": "export interface ShopifyScriptsI18n\n  extends Pick<I18nConfig, \"country\" | \"language\">, Partial<Pick<I18nConfig, \"pathPrefix\">> {\n  /** The active currency code. Hydrogen converts it to uppercase. */\n  currency?: string;\n}"
+      "value": "export interface ShopifyScriptsI18n extends ShopifyLocale {\n  /** The URL prefix for localized routes, such as `/es-es`. Leave it empty for the default locale. */\n  pathPrefix?: string;\n  /** The active currency code. Hydrogen converts it to uppercase. */\n  currency?: string;\n}"
     }
   },
   "ShopifyScriptsShop": {
@@ -5094,7 +5706,7 @@
       "filePath": "src/globals.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyGlobal",
-      "value": "{\n  actions: ShopifyStandardActions;\n  analytics?: StorefrontAnalytics;\n  /** The application that rendered the page. */\n  application: {\n    name: \"hydrogen\";\n    /** The `@shopify/hydrogen` release in use. */\n    version: string;\n  };\n  /** The store settings that Shopify's storefront web components read. */\n  components: {\n    config: {\n      storeDomain: string;\n      publicAccessToken?: string;\n      apiVersion?: string;\n      country?: string;\n      language?: string;\n    };\n  };\n  /** The customer's country code. Defaults to `US`. */\n  country: I18nConfig[\"country\"] | string;\n  /** The active currency code, in uppercase. */\n  currency?: {\n    active: string;\n  };\n  /** Shopify's Customer Privacy API, which reads and updates the customer's consent. */\n  customerPrivacy: {\n    config?: {\n      isHeadless?: boolean;\n      asyncConsent?: boolean;\n      asyncVisitorState?: boolean;\n      consentDomain?: string;\n    };\n    consentStatus?: \"loading\" | \"loaded\";\n    currentVisitorConsent: () => Record<string, unknown>;\n    preferencesProcessingAllowed: () => boolean;\n    saleOfDataAllowed: () => boolean;\n    marketingAllowed: () => boolean;\n    analyticsProcessingAllowed: () => boolean;\n    /** Synchronizes consent with Shopify. Await completion before using the updated consent. */\n    setTrackingConsent: (consent: Record<string, unknown>) => Promise<unknown>;\n    shouldShowBanner: () => boolean;\n    shouldShowGDPRBanner: () => boolean;\n  };\n  /** The customer's language code, in lowercase. Defaults to `en`. */\n  locale: Lowercase<I18nConfig[\"language\"]> | string;\n  /**\n   * Navigates to a storefront URL.\n   * @deprecated Use `Shopify.routes.navigate` instead.\n   */\n  navigate?: (url: string) => void | Promise<void>;\n  /** The storefront's route settings and navigation helper. */\n  routes: {\n    /** The locale path prefix with a trailing slash, or `\"/\"` when the storefront has no prefix. */\n    root: string;\n    /** @private */\n    apiProxyPrefix?: string;\n    /** @private */\n    match?: (url: string) => ShopifyStandardRouteMatch | null;\n    /** @private */\n    resolve?: (url: string) => string;\n    /** Navigates to a storefront URL after resolving it to your app's route. */\n    navigate?: (url: string) => void | Promise<void>;\n    [key: string]: unknown;\n  };\n  /** The shop's permanent `*.myshopify.com` domain. */\n  shop: string;\n  [key: string]: unknown;\n}",
+      "value": "{\n  actions: ShopifyStandardActions;\n  analytics?: StorefrontAnalytics;\n  /** The application that rendered the page. */\n  application: {\n    name: \"hydrogen\";\n    /** The `@shopify/hydrogen` release in use. */\n    version: string;\n  };\n  /** The store settings that Shopify's storefront web components read. */\n  components: {\n    config: {\n      storeDomain: string;\n      publicAccessToken?: string;\n      apiVersion?: string;\n      country?: string;\n      language?: string;\n    };\n  };\n  /** The customer's country code. Defaults to `US`. */\n  country: ShopifyCountryCode | string;\n  /** The active currency code, in uppercase. */\n  currency?: {\n    active: string;\n  };\n  /** Shopify's Customer Privacy API, which reads and updates the customer's consent. */\n  customerPrivacy: {\n    config?: {\n      isHeadless?: boolean;\n      asyncConsent?: boolean;\n      asyncVisitorState?: boolean;\n      consentDomain?: string;\n    };\n    consentStatus?: \"loading\" | \"loaded\";\n    currentVisitorConsent: () => Record<string, unknown>;\n    preferencesProcessingAllowed: () => boolean;\n    saleOfDataAllowed: () => boolean;\n    marketingAllowed: () => boolean;\n    analyticsProcessingAllowed: () => boolean;\n    /** Synchronizes consent with Shopify. Await completion before using the updated consent. */\n    setTrackingConsent: (consent: Record<string, unknown>) => Promise<unknown>;\n    shouldShowBanner: () => boolean;\n    shouldShowGDPRBanner: () => boolean;\n  };\n  /** The customer's language code, in lowercase. Defaults to `en`. */\n  locale: Lowercase<ShopifyLanguageCode> | string;\n  /**\n   * Navigates to a storefront URL.\n   * @deprecated Use `Shopify.routes.navigate` instead.\n   */\n  navigate?: (url: string) => void | Promise<void>;\n  /** The storefront's route settings and navigation helper. */\n  routes: {\n    /** The locale path prefix with a trailing slash, or `\"/\"` when the storefront has no prefix. */\n    root: string;\n    /** @private */\n    apiProxyPrefix?: string;\n    /** @private */\n    match?: (url: string) => ShopifyStandardRouteMatch | null;\n    /** @private */\n    resolve?: (url: string) => string;\n    /** Navigates to a storefront URL after resolving it to your app's route. */\n    navigate?: (url: string) => void | Promise<void>;\n    [key: string]: unknown;\n  };\n  /** The shop's permanent `*.myshopify.com` domain. */\n  shop: string;\n  [key: string]: unknown;\n}",
       "description": "The `window.Shopify` object that Shopify's scripts and Hydrogen share in the browser.",
       "isPublicDocs": true,
       "members": [
@@ -5131,7 +5743,7 @@
           "filePath": "src/globals.ts",
           "syntaxKind": "PropertySignature",
           "name": "country",
-          "value": "I18nConfig[\"country\"] | string",
+          "value": "ShopifyCountryCode | string",
           "description": "The customer's country code. Defaults to `US`."
         },
         {
@@ -5153,7 +5765,7 @@
           "filePath": "src/globals.ts",
           "syntaxKind": "PropertySignature",
           "name": "locale",
-          "value": "Lowercase<I18nConfig[\"language\"]> | string",
+          "value": "Lowercase<ShopifyLanguageCode> | string",
           "description": "The customer's language code, in lowercase. Defaults to `en`."
         },
         {
@@ -5299,7 +5911,7 @@
         "name": "ShopifyScriptTagDescriptors",
         "value": "ShopifyScriptTagDescriptors"
       },
-      "value": "export function getShopifyScriptTags({\n  account = false,\n  analytics,\n  consent,\n  debug,\n  i18n,\n  nonce,\n  shop,\n  shopifyAnalytics = true,\n  inbox = false,\n}: ShopifyScriptTagsOptions): ShopifyScriptTagDescriptors {\n  const nonceAttributes = nonce !== undefined ? { nonce } : undefined;\n  const analyticsConfig = getShopifyAnalyticsConfig({ analytics, consent, shop });\n\n  const links: ShopifyLinkDescriptor[] = [\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_CDN_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_SHOP_APP_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"prefetch\",\n        as: \"script\",\n        href: SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,\n        crossorigin: \"anonymous\",\n      },\n    },\n  ];\n  const scripts: ShopifyScriptDescriptor[] = [\n    {\n      tagName: \"script\",\n      attributes: { id: \"shopify-global-bootstrap\", ...nonceAttributes },\n      innerHTML: getShopifyGlobalBootstrapScript({ i18n, shop }),\n    },\n    {\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-actions\",\n        type: \"module\",\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,\n      },\n    },\n  ];\n\n  if (__DEV__ && debug?.standardEventsInspector) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-events-inspector\",\n        defer: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,\n      },\n    });\n  }\n\n  if (inbox) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-inbox\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_INBOX_SCRIPT,\n      },\n    });\n  }\n\n  if (account) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-account\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_ACCOUNT_SCRIPT,\n      },\n    });\n  }\n\n  // Install readiness listeners before loading the async consent library so a\n  // cached script cannot finish initialization before Hydrogen starts listening.\n  scripts.push({\n    tagName: \"script\",\n    attributes: { id: \"shopify-analytics-bus\", ...nonceAttributes },\n    innerHTML: getShopifyAnalyticsBusScript(analyticsConfig),\n  });\n\n  scripts.push({\n    tagName: \"script\",\n    attributes: {\n      id: SHOPIFY_CONSENT_SCRIPT_ID,\n      async: true,\n      crossorigin: \"anonymous\",\n      ...nonceAttributes,\n      src:\n        consent?.mode === \"default-banner\"\n          ? SHOPIFY_PRIVACY_BANNER_SCRIPT\n          : SHOPIFY_CONSENT_API_SCRIPT,\n    },\n  });\n\n  if (shopifyAnalytics) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-storefront-analytics\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,\n      },\n    });\n  }\n\n  const perfKitScript = getPerfKitScript(shop, nonceAttributes);\n  if (perfKitScript) {\n    scripts.push(perfKitScript);\n  }\n\n  return {\n    links,\n    scripts,\n    get tags() {\n      return [...links, ...scripts];\n    },\n  };\n}"
+      "value": "export function getShopifyScriptTags({\n  account = false,\n  analytics,\n  consent,\n  debug,\n  i18n,\n  nonce,\n  shop,\n  shopifyAnalytics = true,\n  inbox = false,\n}: ShopifyScriptTagsOptions): ShopifyScriptTagDescriptors {\n  const nonceAttributes = nonce !== undefined ? { nonce } : undefined;\n  const analyticsConfig = getShopifyAnalyticsConfig({ analytics, consent, shop });\n\n  const links: ShopifyLinkDescriptor[] = [\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_CDN_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"preconnect\",\n        href: SHOPIFY_SHOP_APP_ORIGIN,\n      },\n    },\n    {\n      tagName: \"link\",\n      attributes: {\n        rel: \"prefetch\",\n        as: \"script\",\n        href: SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT,\n        crossorigin: \"anonymous\",\n      },\n    },\n  ];\n  const scripts: ShopifyScriptDescriptor[] = [\n    {\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-global-bootstrap\",\n        ...nonceAttributes,\n        ...shopifyGlobalBootstrap.attributes(getShopifyGlobalConfig({ i18n, shop })),\n      },\n      innerHTML: shopifyGlobalBootstrap.code,\n    },\n    {\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-actions\",\n        type: \"module\",\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,\n      },\n    },\n  ];\n\n  if (__DEV__ && debug?.standardEventsInspector) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-standard-events-inspector\",\n        defer: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT,\n      },\n    });\n  }\n\n  if (inbox) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-inbox\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_INBOX_SCRIPT,\n      },\n    });\n  }\n\n  if (account) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-account\",\n        type: \"module\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_ACCOUNT_SCRIPT,\n      },\n    });\n  }\n\n  // Install readiness listeners before loading the async consent library so a\n  // cached script cannot finish initialization before Hydrogen starts listening.\n  scripts.push({\n    tagName: \"script\",\n    attributes: {\n      id: \"shopify-analytics-bus\",\n      ...nonceAttributes,\n      ...shopifyAnalyticsBootstrap.attributes(analyticsConfig),\n    },\n    innerHTML: shopifyAnalyticsBootstrap.code,\n  });\n\n  scripts.push({\n    tagName: \"script\",\n    attributes: {\n      id: SHOPIFY_CONSENT_SCRIPT_ID,\n      async: true,\n      crossorigin: \"anonymous\",\n      ...nonceAttributes,\n      src:\n        consent?.mode === \"default-banner\"\n          ? SHOPIFY_PRIVACY_BANNER_SCRIPT\n          : SHOPIFY_CONSENT_API_SCRIPT,\n    },\n  });\n\n  if (shopifyAnalytics) {\n    scripts.push({\n      tagName: \"script\",\n      attributes: {\n        id: \"shopify-storefront-analytics\",\n        async: true,\n        crossorigin: \"anonymous\",\n        ...nonceAttributes,\n        src: SHOPIFY_STOREFRONT_ANALYTICS_SCRIPT,\n      },\n    });\n  }\n\n  const perfKitScript = getPerfKitScript(shop, nonceAttributes);\n  if (perfKitScript) {\n    scripts.push(perfKitScript);\n  }\n\n  return {\n    links,\n    scripts,\n    get tags() {\n      return [...links, ...scripts];\n    },\n  };\n}"
     }
   },
   "ShopifyScriptTagDescriptors": {
@@ -6289,7 +6901,7 @@
     "src/customer-account/errors.ts": {
       "filePath": "src/customer-account/errors.ts",
       "name": "CustomerAccountApiError",
-      "description": "The error that a Customer Account API request throws when the request fails. The client throws this error for a non-OK HTTP status, a response that isn't valid GraphQL, a response without data, or a network failure. The OAuth callback also throws this error when its token request times out.\n\nCatch this class to handle every Customer Account API failure, including authentication and timeout errors. Read `status`, `requestId`, and `retryAfter` to handle the failure. Network failures have no status or request ID, and only non-OK responses include a retry-after value.",
+      "description": "The error that a Customer Account API request throws when the request fails. The client throws this error for a non-OK HTTP status, a response that isn't valid GraphQL, a response without data, or a network failure.\n\nCatch this class to handle every Customer Account API failure, including authentication and timeout errors. Read `status`, `requestId`, and `retryAfter` to handle the failure. Network failures have no status or request ID, and only non-OK responses include a retry-after value.",
       "isPublicDocs": true,
       "members": [
         {
@@ -6495,7 +7107,7 @@
       "filePath": "src/customer-account/session.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CustomerSession",
-      "value": "{\n  /**\n   * Returns `true` when the customer has a usable access token or a refresh token. The method never refreshes tokens.\n   *\n   * Use the result for UI state, such as an account link. Gate Customer Account API data on an access token from `getOrRefreshAccessToken()`.\n   */\n  isLoggedIn(\n    sessionManager: ReadonlyCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n  ): Promise<boolean>;\n  /**\n   * Returns the customer's stored access token, or `undefined` when the token is missing or expired. The method never refreshes the token or writes to the session. Call `getOrRefreshAccessToken()` to refresh an expired token.\n   */\n  getAccessToken(\n    sessionManager: ReadonlyCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n  ): Promise<string | undefined>;\n  /**\n   * Returns a usable access token for the customer. When the stored token is missing or expired, the session gets new tokens from Shopify and writes them to your session storage. Call the method only where you commit the session to the response.\n   *\n   * Returns `undefined` when the customer has no refresh token, or when a temporary refresh failure keeps the session for a retry. When Shopify rejects the refresh token with a `400` or `401` status, the session clears the stored tokens and returns `undefined`. Refresh failures never throw.\n   */\n  getOrRefreshAccessToken(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options?: RequestOriginOptions,\n  ): Promise<string | undefined>;\n  /**\n   * Starts customer sign-in and returns the URL of Shopify's login page. Commit the session to the response, then redirect the customer to the URL.\n   *\n   * The customer has 10 minutes to finish signing in. After that, the OAuth callback fails with the `missing_pending_login` code.\n   */\n  prepareLoginUrl(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options: PrepareLoginUrlOptions,\n  ): Promise<string>;\n  /**\n   * Completes sign-in from Shopify's OAuth callback request, saves the customer's tokens to your session storage, and returns the path to send the customer to. Commit the session to the response after the call.\n   *\n   * The method throws `CustomerAccountOAuthError` when sign-in fails a check, and `CustomerAccountApiError` when the token request times out. After a failure, the customer needs to start sign-in again.\n   *\n   * @throws {CustomerAccountOAuthError} When the callback parameters, pending login, token exchange, token response, or ID token claims fail validation.\n   * @throws {CustomerAccountApiError} When the token request times out.\n   */\n  handleOAuthCallback(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    request: Request,\n  ): Promise<string>;\n  /**\n   * Clears the customer's session data and returns the URL to send the customer to. Commit the session to the response after the call.\n   *\n   * When the session has an ID token, the URL points to Shopify's logout endpoint with the post-logout URL attached. Without an ID token, the method returns the post-logout URL.\n   */\n  logout(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options?: LogoutOptions,\n  ): Promise<string>;\n}",
+      "value": "{\n  /**\n   * Returns `true` when the customer has a usable access token or a refresh token. The method never refreshes tokens.\n   *\n   * Use the result for UI state, such as an account link. Gate Customer Account API data on an access token from `getOrRefreshAccessToken()`.\n   */\n  isLoggedIn(\n    sessionManager: ReadonlyCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n  ): Promise<boolean>;\n  /**\n   * Returns the customer's stored access token, or `undefined` when the token is missing or expired. The method never refreshes the token or writes to the session. Call `getOrRefreshAccessToken()` to refresh an expired token.\n   */\n  getAccessToken(\n    sessionManager: ReadonlyCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n  ): Promise<string | undefined>;\n  /**\n   * Returns a usable access token for the customer. When the stored token is missing or expired, the session gets new tokens from Shopify and writes them to your session storage. Call the method only where you commit the session to the response.\n   *\n   * Returns `undefined` when the customer has no refresh token, or when a temporary refresh failure keeps the session for a retry. When Shopify rejects the refresh token with a `400` or `401` status, the session clears the stored tokens and returns `undefined`. Refresh failures never throw.\n   */\n  getOrRefreshAccessToken(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options?: RequestOriginOptions,\n  ): Promise<string | undefined>;\n  /**\n   * Starts customer sign-in and returns the URL of Shopify's login page. Commit the session to the response, then redirect the customer to the URL.\n   *\n   * The customer has 10 minutes to finish signing in. After that, the OAuth callback fails with the `missing_pending_login` code.\n   */\n  prepareLoginUrl(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options: PrepareLoginUrlOptions,\n  ): Promise<string>;\n  /**\n   * Completes sign-in from Shopify's OAuth callback request, saves the customer's tokens to your session storage, and returns the path to send the customer to. Commit the session to the response after the call.\n   *\n   * The method throws `CustomerAccountOAuthError` when sign-in fails, including when the token request fails or times out. After a failure, the customer needs to start sign-in again.\n   *\n   * @throws {CustomerAccountOAuthError} When the callback parameters, pending login, token exchange, token response, or ID token claims fail validation, or when the token request fails or times out.\n   */\n  handleOAuthCallback(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    request: Request,\n  ): Promise<string>;\n  /**\n   * Clears the customer's session data and returns the URL to send the customer to. Commit the session to the response after the call.\n   *\n   * When the session has an ID token, the URL points to Shopify's logout endpoint with the post-logout URL attached. Without an ID token, the method returns the post-logout URL.\n   */\n  logout(\n    sessionManager: WritableCustomerSessionManager,\n    requestContext: ShopifyRequestContext,\n    options?: LogoutOptions,\n  ): Promise<string>;\n}",
       "description": "Signs customers in and out with Shopify customer accounts, and gives your server their Customer Account API access tokens. Use the session on the server only.\n\nPass your session storage and the request context to each method. Each method makes the final response private and uncacheable.",
       "isPublicDocs": true,
       "members": [
@@ -6518,7 +7130,7 @@
           "syntaxKind": "MethodSignature",
           "name": "handleOAuthCallback",
           "value": "(sessionManager: ShopifyRouteSessionManager, requestContext: ShopifyRequestContext, request: Request) => Promise<string>",
-          "description": "Completes sign-in from Shopify's OAuth callback request, saves the customer's tokens to your session storage, and returns the path to send the customer to. Commit the session to the response after the call.\n\nThe method throws `CustomerAccountOAuthError` when sign-in fails a check, and `CustomerAccountApiError` when the token request times out. After a failure, the customer needs to start sign-in again."
+          "description": "Completes sign-in from Shopify's OAuth callback request, saves the customer's tokens to your session storage, and returns the path to send the customer to. Commit the session to the response after the call.\n\nThe method throws `CustomerAccountOAuthError` when sign-in fails, including when the token request fails or times out. After a failure, the customer needs to start sign-in again."
         },
         {
           "filePath": "src/customer-account/session.ts",
@@ -6567,7 +7179,7 @@
       "filePath": "src/core/request-context.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "Context",
-      "value": "{\n  /** The incoming request's `Cookie` header. */\n  cookie?: string;\n  /** The incoming request's `Sec-GPC` header value, which carries the customer's Global Privacy Control signal. */\n  globalPrivacyControl?: string;\n  /** The customer's trusted IP address. */\n  buyerIp?: string;\n  /** The ID that groups this request's Shopify API calls. Hydrogen reads the ID from the request headers or generates one. */\n  requestGroupId: string;\n  /** The incoming request's abort signal. */\n  signal?: AbortSignal;\n  /** The incoming request's URL. */\n  url?: string;\n  /** The origin of the incoming request's URL. */\n  storefrontOrigin?: string;\n  /** The request's language, country, and path prefix. */\n  i18n: NormalizedI18nConfig<I18n>;\n  /** Whether the incoming request asks for an HTML document. */\n  documentRequest?: boolean;\n}",
+      "value": "{\n  /** The incoming request's `Cookie` header. */\n  cookie?: string;\n  /** The incoming request's `Sec-GPC` header value, which carries the customer's Global Privacy Control signal. */\n  globalPrivacyControl?: string;\n  /** The customer's trusted IP address. */\n  buyerIp?: string;\n  /** The ID that groups this request's Shopify API calls. Hydrogen reads the ID from the request headers or generates one. */\n  requestGroupId: string;\n  /** The incoming request's abort signal. */\n  signal?: AbortSignal;\n  /** The incoming request's URL. */\n  url?: string;\n  /** The origin of the incoming request's URL. */\n  storefrontOrigin?: string;\n  /** The locale resolved for this request. */\n  locale: RequestLocale<TI18n>;\n  /** The same locale, under its deprecated name. */\n  i18n: RequestLocale<TI18n>;\n  /** The i18n definition the locale was matched against. */\n  i18nDefinition?: ShopifyI18n;\n  /** Whether the incoming request asks for an HTML document. */\n  documentRequest?: boolean;\n}",
       "description": "The values that the request context reads from the incoming request.",
       "members": [
         {
@@ -6606,8 +7218,23 @@
           "filePath": "src/core/request-context.ts",
           "syntaxKind": "PropertySignature",
           "name": "i18n",
-          "value": "NormalizedI18nConfig<I18n>",
-          "description": "The request's language, country, and path prefix."
+          "value": "RequestLocale<TI18n>",
+          "description": "The same locale, under its deprecated name."
+        },
+        {
+          "filePath": "src/core/request-context.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "i18nDefinition",
+          "value": "ShopifyI18n",
+          "description": "The i18n definition the locale was matched against.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/request-context.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "locale",
+          "value": "RequestLocale<TI18n>",
+          "description": "The locale resolved for this request."
         },
         {
           "filePath": "src/core/request-context.ts",
@@ -7358,7 +7985,7 @@
           "syntaxKind": "MethodSignature",
           "name": "handleOAuthCallback",
           "value": "(sessionManager: ShopifyRouteSessionManager, requestContext: ShopifyRequestContext, request: Request) => Promise<string>",
-          "description": "Completes sign-in from Shopify's OAuth callback request, saves the customer's tokens to your session storage, and returns the path to send the customer to. Commit the session to the response after the call.\n\nThe method throws `CustomerAccountOAuthError` when sign-in fails a check, and `CustomerAccountApiError` when the token request times out. After a failure, the customer needs to start sign-in again."
+          "description": "Completes sign-in from Shopify's OAuth callback request, saves the customer's tokens to your session storage, and returns the path to send the customer to. Commit the session to the response after the call.\n\nThe method throws `CustomerAccountOAuthError` when sign-in fails, including when the token request fails or times out. After a failure, the customer needs to start sign-in again."
         },
         {
           "filePath": "src/core/cart/server-handlers.ts",
@@ -10482,7 +11109,7 @@
       "filePath": "src/core/predictive-search/url.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "PredictiveSearchItemUrlOptions",
-      "value": "{\n  /** Prefix to add before the route path, such as a locale prefix. */\n  pathPrefix?: string;\n  /** Route templates for product, collection, page, and article paths, from `createShopifyRouteTemplates`. */\n  routes: ShopifyRouteTemplates;\n  /** Search term that the customer typed. The link carries the term in the `q` URL parameter. */\n  term: string;\n}",
+      "value": "{\n  /** Prefix to add before the route path, such as a locale prefix. */\n  pathPrefix?: string;\n  /** Route templates for product, collection, page, and article paths, from `defineShopifyRouteTemplates`. */\n  routes: ShopifyRouteTemplates;\n  /** Search term that the customer typed. The link carries the term in the `q` URL parameter. */\n  term: string;\n}",
       "description": "Options for the link of a product, collection, page, or article result.\n\nPass the route templates and the customer's search term.",
       "members": [
         {
@@ -10498,7 +11125,7 @@
           "syntaxKind": "PropertySignature",
           "name": "routes",
           "value": "ShopifyRouteTemplates",
-          "description": "Route templates for product, collection, page, and article paths, from `createShopifyRouteTemplates`."
+          "description": "Route templates for product, collection, page, and article paths, from `defineShopifyRouteTemplates`."
         },
         {
           "filePath": "src/core/predictive-search/url.ts",
@@ -10899,7 +11526,7 @@
         "name": "CustomerAccountClient",
         "value": "CustomerAccountClient"
       },
-      "value": "export function createCustomerAccountClient({\n  shopId,\n  customerApiVersion = CUSTOMER_ACCOUNT_API_VERSION,\n  requestContext,\n  fetch: customFetch,\n  defaultTimeoutInMs = DEFAULT_TIMEOUT_IN_MS,\n}: CreateCustomerAccountClientOptions): CustomerAccountClient {\n  if (typeof document !== \"undefined\") {\n    throw new Error(\n      \"Customer Account API tokens cannot be used in a browser context. Use this client from server or edge routes only.\",\n    );\n  }\n\n  validateShopId(shopId);\n  validateCustomerApiVersion(customerApiVersion);\n  validateTimeout(defaultTimeoutInMs);\n\n  const resolvedFetch = customFetch ?? globalThis.fetch;\n  if (typeof resolvedFetch !== \"function\") {\n    throw new Error(\n      \"No fetch function available. Pass a fetch option or ensure globalThis.fetch exists.\",\n    );\n  }\n\n  const origin = getOrigin(requestContext.url);\n  const apiUrl = `https://shopify.com/${shopId}/account/customer/api/${customerApiVersion}/graphql`;\n\n  async function graphql<const Doc extends AnyCustomerAccountDocument>(\n    document: Doc,\n    ...rest: CustomerAccountGqlRestParam<Doc>\n  ): Promise<CustomerAccountGraphqlResult<ResultOfDoc<Doc>>>;\n  async function graphql(\n    document: AnyCustomerAccountDocument,\n    ...rest: [options?: CustomerAccountGraphqlOptions<unknown>]\n  ): Promise<CustomerAccountGraphqlResult<unknown>> {\n    assertCustomerAccountDocument(document);\n    const options = validateGraphqlOptions(rest[0]);\n    requestContext.markResponseAsPersonalized(CUSTOMER_ACCOUNT_GRAPHQL_PERSONALIZATION_REASON);\n    const accessToken = validateAccessToken(options.accessToken);\n    const externalSignals = [requestContext.signal, options.signal].filter(\n      (signal): signal is AbortSignal => Boolean(signal),\n    );\n    throwIfAlreadyAborted(externalSignals);\n\n    const { signal: timeoutSignal, cleanup: cleanupTimeout } =\n      createCustomerAccountTimeoutSignal(defaultTimeoutInMs);\n    externalSignals.push(timeoutSignal);\n    const signal = AbortSignal.any(externalSignals);\n\n    try {\n      const variables = getVariables(\n        document,\n        getOptionalVariables(options.variables),\n        requestContext.i18n.language,\n      );\n      const response = await fetchCustomerAccountGraphql({\n        fetch: resolvedFetch,\n        apiUrl,\n        accessToken,\n        origin,\n        query: document.source,\n        variables,\n        signal,\n        timeoutSignal,\n        timeoutInMs: defaultTimeoutInMs,\n      });\n\n      return await readCustomerAccountGraphqlResponse(\n        response,\n        signal,\n        timeoutSignal,\n        defaultTimeoutInMs,\n      );\n    } finally {\n      cleanupTimeout();\n    }\n  }\n\n  return { apiUrl, graphql };\n}",
+      "value": "export function createCustomerAccountClient({\n  shopId,\n  customerApiVersion = CUSTOMER_ACCOUNT_API_VERSION,\n  requestContext,\n  fetch: customFetch,\n  defaultTimeoutInMs = DEFAULT_TIMEOUT_IN_MS,\n}: CreateCustomerAccountClientOptions): CustomerAccountClient {\n  if (typeof document !== \"undefined\") {\n    throw new Error(\n      \"Customer Account API tokens cannot be used in a browser context. Use this client from server or edge routes only.\",\n    );\n  }\n\n  validateShopId(shopId);\n  validateCustomerApiVersion(customerApiVersion);\n  validateTimeout(defaultTimeoutInMs);\n\n  const resolvedFetch = customFetch ?? globalThis.fetch;\n  if (typeof resolvedFetch !== \"function\") {\n    throw new Error(\n      \"No fetch function available. Pass a fetch option or ensure globalThis.fetch exists.\",\n    );\n  }\n\n  const origin = getOrigin(requestContext.url);\n  const apiUrl = `https://shopify.com/${shopId}/account/customer/api/${customerApiVersion}/graphql`;\n\n  async function graphql<const Doc extends AnyCustomerAccountDocument>(\n    document: Doc,\n    ...rest: CustomerAccountGqlRestParam<Doc>\n  ): Promise<CustomerAccountGraphqlResult<ResultOfDoc<Doc>>>;\n  async function graphql(\n    document: AnyCustomerAccountDocument,\n    ...rest: [options?: CustomerAccountGraphqlOptions<unknown>]\n  ): Promise<CustomerAccountGraphqlResult<unknown>> {\n    assertCustomerAccountDocument(document);\n    const options = validateGraphqlOptions(rest[0]);\n    requestContext.markResponseAsPersonalized(CUSTOMER_ACCOUNT_GRAPHQL_PERSONALIZATION_REASON);\n    const accessToken = validateAccessToken(options.accessToken);\n    const externalSignals = [requestContext.signal, options.signal].filter(\n      (signal): signal is AbortSignal => Boolean(signal),\n    );\n    throwIfAlreadyAborted(externalSignals);\n\n    const { signal: timeoutSignal, cleanup: cleanupTimeout } =\n      createCustomerAccountTimeoutSignal(defaultTimeoutInMs);\n    externalSignals.push(timeoutSignal);\n    const signal = AbortSignal.any(externalSignals);\n\n    try {\n      const variables = getVariables(\n        document,\n        getOptionalVariables(options.variables),\n        requestContext.locale.language,\n      );\n      const response = await fetchCustomerAccountGraphql({\n        fetch: resolvedFetch,\n        apiUrl,\n        accessToken,\n        origin,\n        query: document.source,\n        variables,\n        signal,\n        timeoutSignal,\n        timeoutInMs: defaultTimeoutInMs,\n      });\n\n      return await readCustomerAccountGraphqlResponse(\n        response,\n        signal,\n        timeoutSignal,\n        defaultTimeoutInMs,\n      );\n    } finally {\n      cleanupTimeout();\n    }\n  }\n\n  return { apiUrl, graphql };\n}",
       "examples": [
         {
           "title": "Example",

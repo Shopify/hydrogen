@@ -90,10 +90,13 @@ Invoke the `hydrogen-storefront-client` skill to wire the Storefront API client 
 
 Invoke the `hydrogen-request-handlers` skill to wire `handleShopifyRoutes` before routing, `handleShopifyRedirects` after a 404 or in the framework's catch-all route, and request-context response-header propagation for custom and framework responses.
 
+Then invoke the `hydrogen-robots-txt` skill to serve `/robots.txt`, so crawlers stay off the cart, account, checkout, and Hydrogen handler paths.
+
 ### Continue when
 
 - [ ] `/api/graphiql` returns 200 in development mode
 - [ ] `/admin` redirects to the Shopify Admin in development mode
+- [ ] `/robots.txt` returns 200 `text/plain` with the `hydrogen-robots-txt` rules adjusted to the app's routes
 
 ## Set Up The Customer Account API
 

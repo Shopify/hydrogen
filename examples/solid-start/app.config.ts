@@ -17,6 +17,8 @@ if (devServer) process.env.PORT = String(devServer.port);
 
 export default defineConfig({
   middleware: "src/middleware.ts",
+  // Server-function responses use JSON so the browser does not need unsafe-eval.
+  serialization: { mode: "json" },
   server: {
     https: devServer?.https,
   },

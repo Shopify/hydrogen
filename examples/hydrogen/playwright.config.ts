@@ -28,6 +28,9 @@ export default defineConfig({
   fullyParallel: true,
   timeout: 60 * 1000,
   use: {
+    // Installed Google Chrome auto-updates, while Playwright's bundled Chromium can trail
+    // Chrome security releases. Set PLAYWRIGHT_BROWSER_CHANNEL=chromium for the bundled build.
+    channel: process.env.PLAYWRIGHT_BROWSER_CHANNEL || "chrome",
     // Capture screenshot on failure
     screenshot: "only-on-failure",
     // Record trace on first retry (helps debug flaky tests)

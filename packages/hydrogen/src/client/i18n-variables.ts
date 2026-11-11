@@ -1,5 +1,5 @@
 /**
- * Variables the client fills from `requestContext.i18n`, with the named type
+ * Variables the client fills from `requestContext.locale`, with the named type
  * each must be declared as. Same-named variables of any other type belong to
  * the caller.
  */

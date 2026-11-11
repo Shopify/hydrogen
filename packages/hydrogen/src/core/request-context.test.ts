@@ -16,16 +16,28 @@ import {
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
 } from "./headers";
+import type { ShopifyI18n } from "./i18n/types";
 import { configureLogging } from "./logging";
-import { createShopifyRequestContext, type I18nConfig } from "./request-context";
+import { createShopifyRequestContext } from "./request-context";
 import { assert, createTestLogger } from "./test-utils";
 
-const DEFAULT_I18N = { country: "US", language: "EN" } as I18nConfig;
+const DEFAULT_LOCALE = { country: "US", language: "EN" } as const;
+const DEFAULT_I18N = { defaultLocale: DEFAULT_LOCALE } as const satisfies ShopifyI18n;
+const PATHNAME_I18N = {
+  defaultLocale: DEFAULT_LOCALE,
+  routing: {
+    type: "pathname",
+    locales: [
+      { language: "ES", country: "ES" },
+      { language: "FR", country: "CA" },
+    ],
+  },
+} as const satisfies ShopifyI18n;
 
 type StorefrontRequest = Pick<Request, "headers"> &
   Partial<Pick<Request, "method" | "signal" | "url">>;
 
-function createTestRequestContext(request: StorefrontRequest, i18n: I18nConfig = DEFAULT_I18N) {
+function createTestRequestContext(request: StorefrontRequest, i18n: ShopifyI18n = DEFAULT_I18N) {
   return createShopifyRequestContext({ request, i18n });
 }
 
@@ -35,7 +47,7 @@ describe("createShopifyRequestContext", () => {
       createShopifyRequestContext({
         request: { headers: new Headers() },
       } as never),
-    ).toThrow("i18n with country and language is required");
+    ).toThrow("i18n from defineShopifyI18n (with a defaultLocale) is required");
   });
 
   it("stores request metadata and creates a request group ID", () => {
@@ -73,21 +85,76 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get(SHOPIFY_STOREFRONT_ORIGIN_HEADER)).toBe("https://example.com");
   });
 
-  it("stores request-scoped i18n metadata", () => {
+  it("resolves the locale matched from the request URL, mirrored on the deprecated i18n field", () => {
     const result = createTestRequestContext(
-      { headers: new Headers() },
-      {
-        country: "ES",
-        language: "ES",
-        pathPrefix: "/es-es/",
-      },
+      new Request("https://shop.example.com/es-es/products/snowboard"),
+      PATHNAME_I18N,
     );
 
-    expect(result.i18n).toEqual({
+    expect(result.locale).toEqual({
       country: "ES",
       language: "ES",
       pathPrefix: "/es-es",
     });
+    expect(result.i18n).toBe(result.locale);
+  });
+
+  it("pins a legacy I18nConfig locale without matching the request URL", () => {
+    const result = createShopifyRequestContext({
+      request: new Request("https://shop.example.com/fr-ca/products/snowboard"),
+      i18n: { language: "ES", country: "ES", pathPrefix: "es-es/", market: "spain" },
+    });
+
+    const expectedLocale = { language: "ES", country: "ES", pathPrefix: "/es-es", market: "spain" };
+    expect(result.locale).toEqual(expectedLocale);
+    expect(result.i18n).toEqual(expectedLocale);
+  });
+
+  it("defaults a legacy I18nConfig path prefix to an empty string", () => {
+    const result = createShopifyRequestContext({
+      request: { headers: new Headers() },
+      i18n: { language: "EN", country: "US" },
+    });
+
+    expect(result.locale).toEqual({ language: "EN", country: "US", pathPrefix: "" });
+  });
+
+  it("treats a legacy locale with an undefined defaultLocale key as legacy", () => {
+    const result = createShopifyRequestContext({
+      request: new Request("https://shop.example.com/fr-ca/products/snowboard"),
+      i18n: { defaultLocale: undefined, language: "EN", country: "US" },
+    } as never);
+
+    expect(result.locale).toEqual({ language: "EN", country: "US", pathPrefix: "" });
+  });
+
+  it("rejects an i18n object that is neither a definition nor a legacy locale", () => {
+    expect(() =>
+      createShopifyRequestContext({
+        request: { headers: new Headers() },
+        i18n: { language: "EN" },
+      } as never),
+    ).toThrow("i18n from defineShopifyI18n (with a defaultLocale) is required");
+  });
+
+  it("uses an explicit locale override instead of matching the URL", () => {
+    const result = createShopifyRequestContext({
+      request: new Request("https://shop.example.com/es-es/products/snowboard"),
+      i18n: PATHNAME_I18N,
+      locale: { language: "FR", country: "CA" },
+    });
+
+    expect(result.locale).toEqual({ country: "CA", language: "FR", pathPrefix: "/fr-ca" });
+  });
+
+  it("rejects a locale override that is not in the definition", () => {
+    expect(() =>
+      createShopifyRequestContext({
+        request: new Request("https://shop.example.com/"),
+        i18n: PATHNAME_I18N,
+        locale: { language: "DE", country: "DE" },
+      }),
+    ).toThrow("Locale DE-DE is not defined in this storefront's i18n");
   });
 
   it("stores trusted buyer IP metadata", () => {
@@ -125,33 +192,43 @@ describe("createShopifyRequestContext", () => {
   it("defaults pathPrefix to an empty string", () => {
     const result = createTestRequestContext({ headers: new Headers() });
 
-    expect(result.i18n.pathPrefix).toBe("");
+    expect(result.locale).toEqual({ ...DEFAULT_LOCALE, pathPrefix: "" });
   });
 
-  it("normalizes pathPrefix with a leading slash and no trailing slash", () => {
+  it("resolves the default locale with an empty pathPrefix for unprefixed URLs", () => {
     const result = createTestRequestContext(
-      { headers: new Headers() },
-      {
-        country: "ES",
-        language: "ES",
-        pathPrefix: "///es-es///",
-      },
+      new Request("https://shop.example.com/products/snowboard"),
+      PATHNAME_I18N,
     );
 
-    expect(result.i18n.pathPrefix).toBe("/es-es");
+    expect(result.locale).toEqual({ ...DEFAULT_LOCALE, pathPrefix: "" });
   });
 
-  it("normalizes pathPrefix with surrounding whitespace", () => {
+  it("derives pathPrefix with a leading slash and no trailing slash from the URL", () => {
     const result = createTestRequestContext(
-      { headers: new Headers() },
-      {
-        country: "FR",
-        language: "FR",
-        pathPrefix: " /fr-ca/ ",
-      },
+      new Request("https://shop.example.com/es-es/"),
+      PATHNAME_I18N,
     );
 
-    expect(result.i18n.pathPrefix).toBe("/fr-ca");
+    expect(result.locale.pathPrefix).toBe("/es-es");
+  });
+
+  it("matches the locale prefix case-insensitively", () => {
+    const result = createTestRequestContext(
+      new Request("https://shop.example.com/FR-CA/products/snowboard"),
+      PATHNAME_I18N,
+    );
+
+    expect(result.locale.pathPrefix).toBe("/fr-ca");
+  });
+
+  it("falls back to the default locale for an unknown prefix", () => {
+    const result = createTestRequestContext(
+      new Request("https://shop.example.com/de-de/products/snowboard"),
+      PATHNAME_I18N,
+    );
+
+    expect(result.locale).toEqual({ ...DEFAULT_LOCALE, pathPrefix: "" });
   });
 
   it.each([

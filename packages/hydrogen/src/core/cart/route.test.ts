@@ -11,10 +11,10 @@ import { createCartServerHandlers } from "./server-handlers";
 
 type TestStorefrontConfig = {
   storeDomain: string;
-  i18n?: { country: "US" | "CA"; language: "EN" | "FR" };
+  locale?: { country: "US" | "CA"; language: "EN" | "FR" };
 };
 
-const DEFAULT_I18N = { country: "US", language: "EN" } as const;
+const DEFAULT_LOCALE = { country: "US", language: "EN" } as const;
 
 const defaultConfig: TestStorefrontConfig = {
   storeDomain: "https://test-store.myshopify.com",
@@ -73,10 +73,10 @@ function mockGqlErrorResponse(errors: Array<{ message: string }>): Response {
   });
 }
 
-function createGetRequest(cookies?: string): Request {
+function createGetRequest(cookies?: string, url = "https://my-app.com/api/cart"): Request {
   const headers: Record<string, string> = {};
   if (cookies) headers.cookie = cookies;
-  return new Request("https://my-app.com/api/cart", {
+  return new Request(url, {
     method: "GET",
     headers,
   });
@@ -122,7 +122,7 @@ function createPrivateStorefrontClient(
     type: "private",
     requestContext: createShopifyRequestContext({
       request,
-      i18n: fixture.i18n ?? DEFAULT_I18N,
+      i18n: { defaultLocale: fixture.locale ?? DEFAULT_LOCALE },
       buyerIp: "127.0.0.1",
     }),
     config: {
@@ -392,7 +392,7 @@ describe("createCartServerHandlers", () => {
 
       await handleCartRequest(createGetRequest("cart=123"), {
         ...defaultConfig,
-        i18n: { country: "CA", language: "FR" },
+        locale: { country: "CA", language: "FR" },
       });
 
       const [, init] = mockFetch.mock.calls[0];
@@ -410,6 +410,22 @@ describe("createCartServerHandlers", () => {
       const body = await result.json();
       expect(body).toEqual({ cart: null });
       expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it("ignores cartId query param for GET cart identity", async () => {
+      mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
+
+      await handleCartRequest(
+        createGetRequest(
+          "cart=cookie-cart",
+          "https://my-app.com/api/cart?cartId=gid%3A%2F%2Fshopify%2FCart%2Fquery-cart",
+        ),
+        defaultConfig,
+      );
+
+      const [, init] = mockFetch.mock.calls[0];
+      const gqlBody = JSON.parse(init.body);
+      expect(gqlBody.variables.id).toBe("gid://shopify/Cart/cookie-cart");
     });
 
     it("throws when SFAPI returns network error", async () => {

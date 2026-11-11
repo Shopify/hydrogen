@@ -1,6 +1,10 @@
+import { trimTrailingSlashes } from "./standard-routes/path";
+
 export const SFAPI_RE = /^\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
 export const SHOPIFY_API_PROXY_PREFIX = "/__shopify";
 export const SHOPIFY_API_PROXY_RE = /^\/__shopify(?:\/|$)/;
+// Served by Hydrogen itself, so it must be matched before the API proxy claims `/__shopify`.
+export const HYDROGEN_MANIFEST_PATH = `${SHOPIFY_API_PROXY_PREFIX}/hydrogen/manifest.json`;
 export const MCP_RE = /^\/api\/mcp$/;
 export const UCP_MCP_RE = /^\/api\/ucp\/mcp$/;
 export const CHECKOUT_RE = /^\/checkout$/;
@@ -81,7 +85,7 @@ export function normalizeStoreDomain(domain: string): string {
   }
 
   if (domain.startsWith("http://") || domain.startsWith("https://")) {
-    return domain.replace(/\/+$/, "");
+    return trimTrailingSlashes(domain);
   }
-  return `https://${domain}`.replace(/\/+$/, "");
+  return trimTrailingSlashes(`https://${domain}`);
 }

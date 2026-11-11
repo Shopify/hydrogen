@@ -1,4 +1,5 @@
 import { getLogger } from "../logging";
+import { stripI18nPathPrefix } from "../standard-routes/path";
 import {
   RATE_LIMITED_STATUS,
   createRateLimitResponseHeaders,
@@ -94,7 +95,10 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
   const routeHandlers = handlers.flatMap((group) => Object.values(group));
   if (routeHandlers.length === 0) return null;
 
-  const pathMatches = routeHandlers.filter((entry) => entry.pathname === url.pathname);
+  // Handlers register unprefixed pathnames; under pathname i18n routing the request may carry
+  // the locale prefix (`/fr-ca/api/cart`), so match against the stripped path.
+  const pathname = stripI18nPathPrefix(url.pathname, requestContext.locale.pathPrefix);
+  const pathMatches = routeHandlers.filter((entry) => entry.pathname === pathname);
   if (pathMatches.length === 0) return null;
 
   const match = pathMatches.find((candidate) => candidate.method === request.method);

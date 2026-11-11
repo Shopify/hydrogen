@@ -8,8 +8,20 @@ export function prependPathPrefix(pathname: string, pathPrefix: string | undefin
 export function normalizePathPrefix(pathPrefix: string | undefined): string {
   if (!pathPrefix) return "";
 
-  const trimmedPathPrefix = pathPrefix.trim().replace(/^\/+|\/+$/g, "");
+  const trimmedPathPrefix = trimTrailingSlashes(pathPrefix.trim().replace(/^\/+/, ""));
   return trimmedPathPrefix ? `/${trimmedPathPrefix}` : "";
+}
+
+/**
+ * Removes every trailing `/`.
+ *
+ * A loop instead of `/\/+$/`: the regex rescans the slash run from each start position, so a
+ * request path with a long run of slashes not at the end takes quadratic time.
+ */
+export function trimTrailingSlashes(value: string): string {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === "/") end--;
+  return value.slice(0, end);
 }
 
 function parseUrl(url: string, baseUrl: string | undefined): URL | null {
@@ -42,7 +54,7 @@ export function isAbsoluteUrl(url: string): boolean {
 
 export function stripTrailingSlash(pathname: string): string {
   if (pathname === "/") return pathname;
-  return pathname.replace(/\/+$/, "");
+  return trimTrailingSlashes(pathname);
 }
 
 /**

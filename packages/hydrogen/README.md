@@ -64,14 +64,12 @@ The editor plugin generates `storefront-graphql-env.d.ts` and `customer-account-
 Use `@shopify/hydrogen/customer-account` for type-safe Customer Account API requests from server code:
 
 ```ts
-import { createShopifyRequestContext } from "@shopify/hydrogen";
+import { createShopifyRequestContext, defineShopifyI18n } from "@shopify/hydrogen";
 import * as CAAPI from "@shopify/hydrogen/customer-account";
 
 const CUSTOMER_QUERY = CAAPI.gql(`query { customer { firstName emailAddress { emailAddress } } }`);
-const requestContext = createShopifyRequestContext({
-  request,
-  i18n: { country: "US", language: "EN" },
-});
+const i18n = defineShopifyI18n({ defaultLocale: { country: "US", language: "EN" } });
+const requestContext = createShopifyRequestContext({ request, i18n });
 
 const customerAccount = CAAPI.createCustomerAccountClient({
   shopId: env.SHOP_ID,
