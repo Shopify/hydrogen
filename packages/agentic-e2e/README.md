@@ -36,7 +36,7 @@ The country and language come from this query, sent without `@inContext`:
 localization { language { isoCode } country { isoCode } }
 ```
 
-This is the context that the Storefront API makes active for this request. The command sends no `@inContext`, no access token, no cookies, and no buyer-IP header. A proxy at the storefront origin can add its own buyer-IP header, so the answer can depend on where the command runs. It is not the locale of the browser or of the page. The command does not check them against the browser, and it does not verify the market that the browser shows. When the query fails, the result is `indeterminate`. There is no default country or language.
+This is the context that the Storefront API makes active for this request. It is not the locale of the browser or of the page. The command does not check them against the browser, and it does not verify the market that the browser shows. When the query fails, the result is `indeterminate`. There is no default country or language.
 
 ### Pinned variant
 
