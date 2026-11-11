@@ -6,36 +6,21 @@ import {
   createShopifyRequestContext,
   createStorefrontClient,
   defineShopifyI18n,
-  type ShopifyCountryCode,
   type ShopifyLanguageCode,
 } from "@shopify/hydrogen";
-import { z } from "zod";
+import type { CountryCode, LanguageCode } from "@shopify/hydrogen/storefront-api-types";
+import type { z } from "zod";
 
 /** Per request. Hydrogen's client enforces it and throws `StorefrontTimeoutError`. */
 export const REQUEST_DEADLINE_MS = 10_000;
 
 /** The country and language that the Storefront API reports as active. */
-export type StorefrontContext = { country: ShopifyCountryCode; language: ShopifyLanguageCode };
-
-const countryCode = z.custom<ShopifyCountryCode>(
-  (value) => typeof value === "string" && /^[A-Z]{2}$/.test(value),
-  "Expected a two-letter country code",
-);
-const languageCode = z.custom<ShopifyLanguageCode>(
-  (value) => typeof value === "string" && /^[A-Z]{2,3}(?:_[A-Z]{2,4})?$/.test(value),
-  "Expected a Storefront API language code",
-);
+export type StorefrontContext = { country: CountryCode; language: LanguageCode };
 
 // No `@inContext`: the API answers with the context that it makes active by default.
 const LOCALIZATION_QUERY = `query AgenticE2ELocalization {
   localization { language { isoCode } country { isoCode } }
 }`;
-const localizationSchema = z.object({
-  localization: z.object({
-    language: z.object({ isoCode: languageCode }),
-    country: z.object({ isoCode: countryCode }),
-  }),
-});
 
 // Inert: the request context needs a locale, but the query declares no `$country` or
 // `$language`, so the client sends neither.
@@ -48,8 +33,19 @@ export async function discoverContext(
 ): Promise<StorefrontContext> {
   const client = publicStorefrontClient(storefrontUrl, BOOTSTRAP_LOCALE);
   const result = await client.graphql(LOCALIZATION_QUERY, { signal });
-  const { localization } = readData(result, localizationSchema);
-  return { country: localization.country.isoCode, language: localization.language.isoCode };
+  throwOnGraphQLErrors(result.errors);
+  const localization = result.data?.localization;
+  return {
+    country: required(localization?.country?.isoCode, "localization.country.isoCode"),
+    language: required(localization?.language?.isoCode, "localization.language.isoCode"),
+  };
+}
+
+function required<T>(value: T | null | undefined, path: string): T {
+  if (value === undefined || value === null) {
+    throw new Error(`Invalid response data: ${path} is missing`);
+  }
+  return value;
 }
 
 /**
@@ -62,7 +58,15 @@ export function publicStorefrontClient(storefrontUrl: URL, locale: StorefrontCon
     type: "public",
     requestContext: createShopifyRequestContext({
       request: { headers: new Headers() },
-      i18n: defineShopifyI18n({ defaultLocale: locale }),
+      i18n: defineShopifyI18n({
+        defaultLocale: {
+          country: locale.country,
+          // `ShopifyLanguageCode` also fits the Customer Account API. This client sends only
+          // Storefront API requests, where every Storefront API language code is valid.
+          // oxlint-disable-next-line typescript/consistent-type-assertions -- see above.
+          language: locale.language as ShopifyLanguageCode,
+        },
+      }),
     }),
     config: { storeDomain: storefrontUrl.origin, defaultTimeoutInMs: REQUEST_DEADLINE_MS },
   });
@@ -73,14 +77,18 @@ export function readData<T>(
   result: { data: unknown; errors?: ReadonlyArray<{ message: string }> },
   schema: z.ZodType<T>,
 ): T {
-  if (result.errors !== undefined && result.errors.length > 0) {
-    const messages = result.errors.map((error) => error.message).join("; ");
-    throw new Error(`GraphQL errors: ${messages}`);
-  }
+  throwOnGraphQLErrors(result.errors);
   const parsed = schema.safeParse(result.data);
   if (!parsed.success) {
     const issues = parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`);
     throw new Error(`Invalid response data: ${issues.join("; ")}`);
   }
   return parsed.data;
+}
+
+function throwOnGraphQLErrors(errors: ReadonlyArray<{ message: string }> | undefined): void {
+  if (errors !== undefined && errors.length > 0) {
+    const messages = errors.map((error) => error.message).join("; ");
+    throw new Error(`GraphQL errors: ${messages}`);
+  }
 }

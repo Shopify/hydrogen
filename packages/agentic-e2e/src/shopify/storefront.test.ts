@@ -67,19 +67,18 @@ describe("discoverContext", () => {
     stubFetch([{ body: { data: { localization: { language: { isoCode: "EN" } } } } }]);
 
     await expect(discoverContext(STOREFRONT_URL, signal)).rejects.toThrow(
-      /^Invalid response data: localization\.country: /,
+      "Invalid response data: localization.country.isoCode is missing",
     );
   });
 
-  it.each([
-    { country: "usa", language: "EN", path: "localization.country.isoCode" },
-    { country: "US", language: "en", path: "localization.language.isoCode" },
-  ])("rejects the malformed code at $path", async ({ country, language, path }) => {
-    stubFetch([{ body: localization(country, language) }]);
+  // Storefront API language codes that Hydrogen's shared `ShopifyLanguageCode` leaves out.
+  it.each(["LA", "SH", "MO"])("accepts the Storefront API language code %s", async (language) => {
+    stubFetch([{ body: localization("CA", language) }]);
 
-    await expect(discoverContext(STOREFRONT_URL, signal)).rejects.toThrow(
-      `Invalid response data: ${path}: `,
-    );
+    await expect(discoverContext(STOREFRONT_URL, signal)).resolves.toEqual({
+      country: "CA",
+      language,
+    });
   });
 
   it("keeps Hydrogen's error for an HTTP error status", async () => {
