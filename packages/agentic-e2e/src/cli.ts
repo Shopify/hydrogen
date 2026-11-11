@@ -2,7 +2,7 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 
 import { createBrowserSession, type BrowserSession } from "./browser/session.ts";
-import { withInterruptSignals } from "./interrupt.ts";
+import { untilAborted, withInterruptSignals } from "./interrupt.ts";
 
 const NAVIGATION_DEADLINE_MS = 30_000;
 
@@ -82,9 +82,10 @@ export async function main(argv: readonly string[]): Promise<number> {
 async function openUrl(url: URL): Promise<RunResult> {
   return withInterruptSignals(async (interrupt) => {
     process.stderr.write(`Opening ${url.href}\n`);
-    const starting = createBrowserSession();
+    let session: BrowserSession | undefined;
     try {
-      const session = await untilAborted(starting, interrupt);
+      // An interrupt during startup makes this reject after the browser and profile are removed.
+      session = await createBrowserSession(undefined, { signal: interrupt });
       return await navigate(session, url, interrupt);
     } catch (error) {
       const reason = errorMessage(error);
@@ -92,14 +93,9 @@ async function openUrl(url: URL): Promise<RunResult> {
       return { status: "indeterminate", reason };
     } finally {
       // A failed cleanup is reported, but it must not replace the result.
-      await starting
-        .then(
-          async (session) => session.close(),
-          () => undefined,
-        )
-        .catch((error: unknown) => {
-          process.stderr.write(`Cleanup failed: ${errorMessage(error)}\n`);
-        });
+      await session?.close().catch((error: unknown) => {
+        process.stderr.write(`Cleanup failed: ${errorMessage(error)}\n`);
+      });
     }
   });
 }
@@ -131,20 +127,6 @@ async function navigate(
     return { status: "opened", url: session.page.url(), title };
   } finally {
     clearTimeout(timer);
-  }
-}
-
-/** Rejects with the signal reason on abort. The losing promise settles after the browser closes. */
-async function untilAborted<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
-  promise.catch(() => undefined);
-  signal.throwIfAborted();
-  const { promise: aborted, reject } = Promise.withResolvers<never>();
-  const onAbort = () => reject(signal.reason);
-  signal.addEventListener("abort", onAbort, { once: true });
-  try {
-    return await Promise.race([promise, aborted]);
-  } finally {
-    signal.removeEventListener("abort", onAbort);
   }
 }
 

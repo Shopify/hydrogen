@@ -6,6 +6,13 @@ import { join } from "node:path";
 
 import { chromium, type Browser, type Page } from "playwright-core";
 
+import { untilAborted } from "../interrupt.ts";
+
+export interface BrowserSessionOptions {
+  /** Aborts the startup. The session then removes the browser and the profile, and rejects. */
+  signal?: AbortSignal;
+}
+
 export interface BrowserSession {
   page: Page;
   /** Closes the browser process and removes the temporary profile. Safe to call twice. */
@@ -17,21 +24,28 @@ const LAUNCH_TIMEOUT_MS = 30_000;
 const GRACEFUL_CLOSE_MS = 2_000;
 const EXIT_WAIT_MS = 1_000;
 const DISCONNECT_MS = 1_000;
+const NEVER_ABORTED = new AbortController().signal;
 
 /**
  * Launches a headless browser that this session owns, with a fresh temporary profile, and
  * connects Playwright to it over CDP.
  *
- * Executable order: `executablePath`, `PLAYWRIGHT_BROWSER_EXECUTABLE_PATH`, then the Chromium
- * build that matches this package's `playwright-core` (install it with `browser:install`).
+ * Executable order: `executablePath`, `AGENTIC_E2E_BROWSER_PATH`, then the Chromium build that
+ * matches this package's `playwright-core` (install it with `browser:install`).
  */
-export async function createBrowserSession(executablePath?: string): Promise<BrowserSession> {
+export async function createBrowserSession(
+  executablePath?: string,
+  { signal = NEVER_ABORTED }: BrowserSessionOptions = {},
+): Promise<BrowserSession> {
+  signal.throwIfAborted();
   const executable = resolveExecutablePath(executablePath);
   const userDataDir = await mkdtemp(join(tmpdir(), "agentic-e2e-browser-"));
   const owned = new OwnedBrowser(userDataDir);
   try {
-    const cdpUrl = await owned.launch(executable);
-    const page = await owned.connect(cdpUrl);
+    signal.throwIfAborted();
+    const cdpUrl = await owned.launch(executable, signal);
+    // On abort, `owned.close()` kills the browser, which also ends a pending CDP connection.
+    const page = await untilAborted(owned.connect(cdpUrl), signal);
     let closing: Promise<void> | undefined;
     return { page, close: async () => (closing ??= owned.close()) };
   } catch (error) {
@@ -44,6 +58,7 @@ class OwnedBrowser {
   private child: ChildProcess | undefined;
   private exited: Promise<void> = Promise.resolve();
   private browser: Browser | undefined;
+  private connecting: Promise<Browser> | undefined;
   private readonly killOnExit = () => this.kill();
   private readonly userDataDir: string;
 
@@ -51,7 +66,7 @@ class OwnedBrowser {
     this.userDataDir = userDataDir;
   }
 
-  async launch(executablePath: string): Promise<string> {
+  async launch(executablePath: string, signal: AbortSignal): Promise<string> {
     const child = spawn(executablePath, browserArgs(this.userDataDir), {
       detached: process.platform !== "win32",
       stdio: ["ignore", "ignore", "pipe"],
@@ -62,11 +77,12 @@ class OwnedBrowser {
       child.once("error", () => resolve());
     });
     process.once("exit", this.killOnExit);
-    return readDevToolsUrl(child);
+    return readDevToolsUrl(child, signal);
   }
 
   async connect(cdpUrl: string): Promise<Page> {
-    this.browser = await chromium.connectOverCDP(cdpUrl, { timeout: LAUNCH_TIMEOUT_MS });
+    this.connecting = chromium.connectOverCDP(cdpUrl, { timeout: LAUNCH_TIMEOUT_MS });
+    this.browser = await this.connecting;
     const context = this.browser.contexts()[0];
     if (!context) throw new Error("Browser has no default context");
     return context.pages()[0] ?? (await context.newPage());
@@ -84,7 +100,11 @@ class OwnedBrowser {
       // write end of the stderr pipe open. Release the read end so it cannot keep Node alive.
       this.child?.stderr?.removeAllListeners();
       this.child?.stderr?.destroy();
-      await settlesWithin(this.browser?.close(), DISCONNECT_MS);
+      // Also disconnects a CDP connection that finishes after an aborted startup.
+      await settlesWithin(
+        this.connecting?.then((browser) => browser.close()),
+        DISCONNECT_MS,
+      );
       process.off("exit", this.killOnExit);
       await rm(this.userDataDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
     }
@@ -112,7 +132,7 @@ class OwnedBrowser {
 }
 
 function resolveExecutablePath(explicit: string | undefined): string {
-  const configured = [explicit, process.env.PLAYWRIGHT_BROWSER_EXECUTABLE_PATH].find(
+  const configured = [explicit, process.env.AGENTIC_E2E_BROWSER_PATH].find(
     (candidate) => candidate !== undefined && candidate !== "",
   );
   if (configured !== undefined) return configured;
@@ -143,7 +163,7 @@ function browserArgs(userDataDir: string): string[] {
   ];
 }
 
-async function readDevToolsUrl(child: ChildProcess): Promise<string> {
+async function readDevToolsUrl(child: ChildProcess, signal: AbortSignal): Promise<string> {
   const stderr = child.stderr;
   if (!stderr) throw new Error("Browser stderr is not available");
   return new Promise((resolve, reject) => {
@@ -156,6 +176,7 @@ async function readDevToolsUrl(child: ChildProcess): Promise<string> {
     const onExit = () =>
       finish(() => reject(new Error(`Browser exited during startup: ${output.slice(-2_000)}`)));
     const onError = (error: Error) => finish(() => reject(error));
+    const onAbort = () => finish(() => reject(signal.reason));
     const timer = setTimeout(
       () => finish(() => reject(new Error("Timed out waiting for the browser DevTools endpoint"))),
       LAUNCH_TIMEOUT_MS,
@@ -165,6 +186,7 @@ async function readDevToolsUrl(child: ChildProcess): Promise<string> {
       stderr?.off("data", onData);
       child.off("exit", onExit);
       child.off("error", onError);
+      signal.removeEventListener("abort", onAbort);
       // Keep draining stderr so the browser never blocks on a full pipe.
       stderr?.resume();
       settle();
@@ -172,6 +194,7 @@ async function readDevToolsUrl(child: ChildProcess): Promise<string> {
     stderr.on("data", onData);
     child.once("exit", onExit);
     child.once("error", onError);
+    signal.addEventListener("abort", onAbort, { once: true });
   });
 }
 

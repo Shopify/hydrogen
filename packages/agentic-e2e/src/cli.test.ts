@@ -102,6 +102,32 @@ describe("main", () => {
     expect(process.listenerCount("SIGINT")).toBe(listenersBefore);
   });
 
+  it("passes the interrupt signal to browser startup and reports a cancelled start", async () => {
+    // A startup that ends only when its signal aborts, like the real session.
+    vi.mocked(createBrowserSession).mockImplementation(
+      async (_executablePath, options) =>
+        new Promise((_resolve, reject) => {
+          const signal = options?.signal;
+          signal?.addEventListener("abort", () => reject(signal.reason), { once: true });
+        }),
+    );
+    const listenersBefore = process.listenerCount("SIGTERM");
+
+    const run = main(["https://shop.example"]);
+    await vi.waitFor(() => expect(createBrowserSession).toHaveBeenCalledOnce());
+    const [executablePath, options] = vi.mocked(createBrowserSession).mock.calls[0] ?? [];
+    expect(executablePath).toBeUndefined();
+    expect(options?.signal?.aborted).toBe(false);
+    process.emit("SIGTERM", "SIGTERM");
+
+    await expect(run).resolves.toBe(2);
+    expect(options?.signal?.aborted).toBe(true);
+    expect(stdout).toEqual([
+      `${JSON.stringify({ status: "indeterminate", reason: "Interrupted by SIGTERM." })}\n`,
+    ]);
+    expect(process.listenerCount("SIGTERM")).toBe(listenersBefore);
+  });
+
   it("still prints the result when browser cleanup fails", async () => {
     const page = {
       goto: vi.fn(async () => ({ status: () => 200 })),

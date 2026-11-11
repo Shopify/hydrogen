@@ -8,7 +8,7 @@ pnpm agentic-e2e https://your-storefront.example
 
 The command starts Chromium with a fresh temporary profile, loads the URL, then removes the browser process and the profile.
 
-Run `pnpm --filter @shopify/agentic-e2e run browser:install` once before the first run. It downloads the Chromium build that matches this package's Playwright version (about 340 MB) into Playwright's shared cache. To use another Chromium-based browser, set `PLAYWRIGHT_BROWSER_EXECUTABLE_PATH` to its executable.
+Run `pnpm --filter @shopify/agentic-e2e run browser:install` once before the first run. It downloads the Chromium build that matches this package's Playwright version (about 340 MB) into Playwright's shared cache. To use another Chromium-based browser, set `AGENTIC_E2E_BROWSER_PATH` to its executable.
 
 The result goes to stdout. Diagnostics go to stderr.
 

@@ -24,3 +24,17 @@ export async function withInterruptSignals<T>(
     for (const signal of INTERRUPT_SIGNALS) process.off(signal, onSignal);
   }
 }
+
+/** Rejects with the signal reason on abort. The losing promise can settle later. */
+export async function untilAborted<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+  promise.catch(() => undefined);
+  signal.throwIfAborted();
+  const { promise: aborted, reject } = Promise.withResolvers<never>();
+  const onAbort = () => reject(signal.reason);
+  signal.addEventListener("abort", onAbort, { once: true });
+  try {
+    return await Promise.race([promise, aborted]);
+  } finally {
+    signal.removeEventListener("abort", onAbort);
+  }
+}

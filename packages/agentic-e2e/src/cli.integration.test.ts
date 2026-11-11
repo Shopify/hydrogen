@@ -11,8 +11,7 @@ import { createBrowserSession } from "./browser/session.ts";
 import { main } from "./cli.ts";
 
 // Real headless Chromium against a local HTTP fixture. Uses Playwright's Chromium (install it
-// with `pnpm --filter @shopify/agentic-e2e run browser:install`) or
-// PLAYWRIGHT_BROWSER_EXECUTABLE_PATH.
+// with `pnpm --filter @shopify/agentic-e2e run browser:install`) or AGENTIC_E2E_BROWSER_PATH.
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 });
 
 let server: Server;
@@ -27,6 +26,8 @@ beforeAll(async () => {
     const path = new URL(request.url ?? "/", "http://fixture").pathname;
     if (path === "/start") {
       response.writeHead(302, { location: "/home" }).end();
+    } else if (path === "/hang") {
+      // Never answers, so a run cannot finish before the interrupt.
     } else if (path === "/home") {
       response
         .writeHead(200, { "content-type": "text/html" })
@@ -87,6 +88,21 @@ describe("main", () => {
     expect(results()).toEqual([
       { status: "indeterminate", reason: expect.stringContaining("ERR_CONNECTION_REFUSED") },
     ]);
+  });
+
+  it("stops on SIGINT while the browser starts and removes the browser and profile", async () => {
+    const run = main([`${origin}/hang`]);
+    // Interrupt as soon as the browser process exists: during launch or CDP connection setup.
+    await vi.waitFor(() => expect(browserProcesses()).not.toEqual([]), {
+      timeout: 10_000,
+      interval: 5,
+    });
+    const interruptedAt = performance.now();
+    process.emit("SIGINT", "SIGINT");
+
+    await expect(run).resolves.toBe(2);
+    expect(performance.now() - interruptedAt).toBeLessThan(5_000);
+    expect(results()).toEqual([{ status: "indeterminate", reason: "Interrupted by SIGINT." }]);
   });
 });
 
