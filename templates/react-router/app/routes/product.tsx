@@ -54,7 +54,12 @@ const PRODUCT_VARIANT_FRAGMENT = gql(`
 
 const PRODUCT_QUERY = gql(
   `
-    query ProductPage($handle: String!, $selectedOptions: [SelectedOptionInput!]!) {
+    query ProductPage(
+      $handle: String!
+      $selectedOptions: [SelectedOptionInput!]!
+      $country: CountryCode
+      $language: LanguageCode
+    ) @inContext(country: $country, language: $language) {
       product(handle: $handle) {
         id
         handle

@@ -15,7 +15,9 @@ export const SEARCH_QUERY = gql(
       $sortKey: SearchSortKeys
       $reverse: Boolean
       $productFilters: [ProductFilter!]
-    ) {
+      $country: CountryCode
+      $language: LanguageCode
+    ) @inContext(country: $country, language: $language) {
       shop {
         paymentSettings {
           currencyCode
