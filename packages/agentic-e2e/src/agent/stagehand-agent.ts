@@ -25,9 +25,13 @@ const DETACH_TIMEOUT_MS = 2_000;
 /** Stagehand 3.7.3 returns, not throws, runtime failures with this message prefix. */
 const FAILURE_PREFIX = "Failed to execute task:";
 
+/** The `agent` field of a run that the command stopped at the first add event. */
+export const STOPPED_AT_ADD = "Stopped by the command after the add event.";
+
+/** What the agent run reports. It feeds the `agent` field of the result, never the verdict. */
 export type AgentOutcome =
-  | { status: "completed"; summary: string }
-  | { status: "indeterminate"; reason: string };
+  | { completed: true; summary: string }
+  | { completed: false; reason: string };
 
 export type AgentRunInput = {
   /** The page the agent works on. */
@@ -37,6 +41,8 @@ export type AgentRunInput = {
   model: ModelConfig;
   /** When it aborts, `run` rejects with its reason. */
   interrupt: AbortSignal;
+  /** When it aborts, `run` returns at once with {@link STOPPED_AT_ADD} and does not throw. */
+  stop: AbortSignal;
 };
 
 export interface StagehandAgent {
@@ -84,10 +90,13 @@ export async function attachStagehand(cdpUrl: string): Promise<StagehandAgent> {
 
 async function runTask(
   stagehand: Stagehand,
-  { page, task, model, interrupt }: AgentRunInput,
+  { page, task, model, interrupt, stop }: AgentRunInput,
 ): Promise<AgentOutcome> {
   const deadline = AbortSignal.timeout(RUN_DEADLINE_MS);
-  const signal = AbortSignal.any([interrupt, deadline]);
+  // Stagehand passes this signal to the model calls of the agent loop. The race below returns at
+  // once; the caller then detaches Stagehand. A tool call still in flight can finish before the
+  // detach is confirmed, and cannot act after it.
+  const signal = AbortSignal.any([interrupt, stop, deadline]);
   const redact = (text: string) => text.replaceAll(model.apiKey, "[redacted]");
   const modelOptions = {
     modelName: model.modelName,
@@ -127,23 +136,24 @@ async function runTask(
     );
   } catch (error) {
     interrupt.throwIfAborted();
+    if (stop.aborted) return notCompleted(STOPPED_AT_ADD);
     if (deadline.aborted) {
-      return indeterminate(`The agent did not finish in ${RUN_DEADLINE_MS} ms.`);
+      return notCompleted(`The agent did not finish in ${RUN_DEADLINE_MS} ms.`);
     }
-    return indeterminate(redact(`The agent failed: ${errorMessage(error)}`));
+    return notCompleted(redact(`The agent failed: ${errorMessage(error)}`));
   }
   // The loop was cut off while the agent still wanted to act.
   if (steps >= MAX_STEPS && lastStepCutOff) {
-    return indeterminate(`The agent reached the ${MAX_STEPS}-step limit.`);
+    return notCompleted(`The agent reached the ${MAX_STEPS}-step limit.`);
   }
   if (result.message.startsWith(FAILURE_PREFIX)) {
     const cause = errorMessage(result.message.slice(FAILURE_PREFIX.length));
-    return indeterminate(redact(`The agent failed: ${cause}`));
+    return notCompleted(redact(`The agent failed: ${cause}`));
   }
   if (!confirmsCompletion(result)) {
-    return indeterminate("The agent did not confirm that it completed the task.");
+    return notCompleted("The agent did not confirm that it completed the task.");
   }
-  return { status: "completed", summary: redact(result.message) };
+  return { completed: true, summary: redact(result.message) };
 }
 
 /**
@@ -172,6 +182,6 @@ async function detach(stagehand: Stagehand): Promise<void> {
   await within(stagehand.close(), DETACH_TIMEOUT_MS, "").catch(() => undefined);
 }
 
-function indeterminate(reason: string): AgentOutcome {
-  return { status: "indeterminate", reason };
+function notCompleted(reason: string): AgentOutcome {
+  return { completed: false, reason };
 }

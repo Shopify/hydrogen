@@ -36,27 +36,45 @@ const MODEL: ModelConfig = {
 const PAGE = {} as Page;
 
 /** Starts a run whose SDK call never ends, and resolves once the SDK call started. */
-async function startRun({ interrupt }: { interrupt: AbortSignal }) {
+async function startRun({ interrupt, stop }: { interrupt: AbortSignal; stop: AbortSignal }) {
   const { promise: started, resolve } = Promise.withResolvers<AbortSignal>();
   sdk.execute.mockImplementation(async ({ signal }) => {
     resolve(signal);
     return new Promise(() => undefined);
   });
   const agent = await attachStagehand("ws://browser");
-  const running = agent.run({ page: PAGE, task: "Add it.", model: MODEL, interrupt });
+  const running = agent.run({ page: PAGE, task: "Add it.", model: MODEL, interrupt, stop });
   return { running, sdkSignal: await started };
 }
 
 describe("StagehandAgent.run", () => {
-  it("rejects with the interrupt reason when the interrupt aborts", async () => {
+  it("returns the fixed outcome at once when the stop signal aborts, and does not throw", async () => {
+    const stop = new AbortController();
+    const { running, sdkSignal } = await startRun({
+      interrupt: new AbortController().signal,
+      stop: stop.signal,
+    });
+
+    stop.abort();
+
+    await expect(running).resolves.toEqual({
+      completed: false,
+      reason: "Stopped by the command after the add event.",
+    });
+    // The SDK receives the stop through its own signal.
+    expect(sdkSignal.aborted).toBe(true);
+  });
+
+  it("still rejects with the interrupt reason when the interrupt aborts", async () => {
     const interrupt = new AbortController();
-    const { running, sdkSignal } = await startRun({ interrupt: interrupt.signal });
+    const { running } = await startRun({
+      interrupt: interrupt.signal,
+      stop: new AbortController().signal,
+    });
 
     interrupt.abort(new Error("Interrupted by SIGINT."));
 
     await expect(running).rejects.toThrow("Interrupted by SIGINT.");
-    // The SDK receives the interrupt through its own signal.
-    expect(sdkSignal.aborted).toBe(true);
   });
 
   it("reports the step limit when all 20 steps call a tool that is not done", async () => {
@@ -73,13 +91,11 @@ describe("StagehandAgent.run", () => {
       task: "Add it.",
       model: MODEL,
       interrupt: new AbortController().signal,
+      stop: new AbortController().signal,
     });
 
     expect(sdk.execute.mock.lastCall?.[0].maxSteps).toBe(20);
-    expect(outcome).toEqual({
-      status: "indeterminate",
-      reason: "The agent reached the 20-step limit.",
-    });
+    expect(outcome).toEqual({ completed: false, reason: "The agent reached the 20-step limit." });
   });
 
   it("reports a result without a done action as not confirmed", async () => {
@@ -91,10 +107,11 @@ describe("StagehandAgent.run", () => {
       task: "Add it.",
       model: MODEL,
       interrupt: new AbortController().signal,
+      stop: new AbortController().signal,
     });
 
     expect(outcome).toEqual({
-      status: "indeterminate",
+      completed: false,
       reason: "The agent did not confirm that it completed the task.",
     });
   });
@@ -103,13 +120,16 @@ describe("StagehandAgent.run", () => {
     const deadline = new AbortController();
     const timeout = vi.spyOn(AbortSignal, "timeout").mockReturnValue(deadline.signal);
     try {
-      const { running } = await startRun({ interrupt: new AbortController().signal });
+      const { running } = await startRun({
+        interrupt: new AbortController().signal,
+        stop: new AbortController().signal,
+      });
       expect(timeout).toHaveBeenCalledWith(180_000);
 
       deadline.abort();
 
       await expect(running).resolves.toEqual({
-        status: "indeterminate",
+        completed: false,
         reason: "The agent did not finish in 180000 ms.",
       });
     } finally {
