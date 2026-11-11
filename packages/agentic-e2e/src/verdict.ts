@@ -26,16 +26,23 @@ export type VerifyAddInput = {
   agentStart: number;
   /** The pinned variant. */
   variantId: string;
+  /**
+   * The agent confirmed that it completed the task (a `done` action with `taskCompleted: true`).
+   * Used only when no add event was recorded.
+   */
+  agentCompleted: boolean;
   /** Waits until `done()` is true, up to {@link ADD_WAIT_MS}, and ends on the interrupt. */
   waitForOutcomes: (done: () => boolean) => Promise<void>;
 };
 
 /**
- * Decides the result from the recorded add events only. The agent's own report is not an input,
- * and the cart is not read. The caller stops the agent at the first add event and confirms the
- * detach first.
+ * Decides the result from the recorded add events and, only when there is no add event, from
+ * whether the agent confirmed completion. The agent's text is not an input, and the cart is not
+ * read. The caller stops the agent at the first add event and confirms the detach first.
  *
- * - No add event at or after `agentStart` in the log by now (after the detach): indeterminate.
+ * - No add event at or after `agentStart` in the log by now (after the detach): fail when the
+ *   agent confirmed completion, because the storefront dispatched no add event for an add that
+ *   the agent reports. Else indeterminate.
  * - Every add event at or after `agentStart` must hold exactly 1 unit of the pinned variant and
  *   have a promise. Then it waits (through `waitForOutcomes`, bounded by the caller to
  *   {@link ADD_WAIT_MS} and ended by the caller on the interrupt) until every add event has an
@@ -47,10 +54,16 @@ export async function verifyAdd({
   events,
   agentStart,
   variantId,
+  agentCompleted,
   waitForOutcomes,
 }: VerifyAddInput): Promise<Verdict> {
   const adds = (): Add[] => recordedAdds(events, agentStart, variantId);
   if (adds().length === 0) {
+    if (agentCompleted) {
+      return fail(
+        "The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.",
+      );
+    }
     return {
       status: "indeterminate",
       reason: "No add Standard Event was recorded by the time Stagehand was disconnected.",

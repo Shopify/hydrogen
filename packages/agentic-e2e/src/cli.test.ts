@@ -36,6 +36,8 @@ const PINNED: PinnedVariant = {
 const PASS_REASON =
   "Every add event held exactly 1 unit of the pinned variant and resolved without cart user errors.";
 const NO_ADD = "No add Standard Event was recorded by the time Stagehand was disconnected.";
+const CLAIMED_ADD =
+  "The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.";
 /** The `agent` field of a run that the first add event stopped. */
 const STOPPED: AgentOutcome = {
   completed: false,
@@ -242,10 +244,29 @@ describe("main", () => {
     ]);
   });
 
-  it.each<AgentOutcome>([
-    { completed: true, summary: "Added." },
-    { completed: false, reason: "The agent reached the 20-step limit." },
-  ])("is indeterminate when the agent ends with no add event: %j", async (outcome) => {
+  it("fails with exit 1 when the agent confirms completion but no add event was dispatched", async () => {
+    const { agent } = fakes({ adds: false });
+
+    await expect(main(["https://shop.example"])).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        status: "fail",
+        reason: CLAIMED_ADD,
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: { completed: true, summary: "Added." },
+      },
+    ]);
+    expect(agent.detach).toHaveBeenCalled();
+  });
+
+  it("is indeterminate with the agent's final message when the agent ends with no add event and no completion", async () => {
+    const outcome: AgentOutcome = {
+      completed: false,
+      reason: "The agent reached the 20-step limit.",
+      message: "I could not find the Add to cart button.",
+    };
     const { agent } = fakes({ adds: false, outcome });
 
     await expect(main(["https://shop.example"])).resolves.toBe(2);
@@ -256,7 +277,11 @@ describe("main", () => {
         reason: NO_ADD,
         context: CONTEXT,
         pinned: PINNED,
-        agent: outcome,
+        agent: {
+          completed: false,
+          reason: "The agent reached the 20-step limit.",
+          message: "I could not find the Add to cart button.",
+        },
       },
     ]);
     expect(agent.detach).toHaveBeenCalled();
@@ -294,12 +319,13 @@ describe("main", () => {
       return log;
     });
 
-    await expect(main(["https://shop.example"])).resolves.toBe(2);
+    // The early add does not count: the agent's completion then meets no add event.
+    await expect(main(["https://shop.example"])).resolves.toBe(1);
 
     expect(results()).toEqual([
       {
-        status: "indeterminate",
-        reason: NO_ADD,
+        status: "fail",
+        reason: CLAIMED_ADD,
         context: CONTEXT,
         pinned: PINNED,
         agent: { completed: true, summary: "Added." },
@@ -543,8 +569,13 @@ describe("main", () => {
     process.emit("SIGTERM", "SIGTERM");
 
     await expect(run).resolves.toBe(2);
-    expect(stdout).toEqual([
-      `${JSON.stringify({ status: "indeterminate", reason: "Interrupted by SIGTERM." })}\n`,
+    expect(results()).toEqual([
+      {
+        status: "indeterminate",
+        reason: "Interrupted by SIGTERM.",
+        context: CONTEXT,
+        pinned: PINNED,
+      },
     ]);
     expect(process.listenerCount("SIGTERM")).toBe(listenersBefore);
   });

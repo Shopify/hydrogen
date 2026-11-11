@@ -177,8 +177,9 @@ async function pinFromStorefront(url: URL, interrupt: AbortSignal): Promise<Stor
  * Starts the browser, records add events and attaches Stagehand before the first navigation,
  * opens the product page, and runs the add task. The first add event stops the agent run. Then it
  * confirms the Stagehand detach: after that the agent cannot act, but a tool call already in
- * progress at the stop can finish before it. Then code decides the verdict from the add events
- * only. Always detaches Stagehand and closes the browser before it returns.
+ * progress at the stop can finish before it. Then code decides the verdict from the add events,
+ * and, when there is none, from whether the agent confirmed completion. Always detaches Stagehand
+ * and closes the browser before it returns.
  */
 async function runAddToCart(
   storefrontUrl: URL,
@@ -226,6 +227,7 @@ async function runAddToCart(
         events: log.events,
         agentStart,
         variantId: pinned.variantId,
+        agentCompleted: agentOutcome.completed,
         // The 5-second limit starts here, after the confirmed detach.
         waitForOutcomes: async (done) => log.waitFor(done, ADD_WAIT_MS, interrupt),
       }),
