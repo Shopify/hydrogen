@@ -1,6 +1,6 @@
 # Agentic E2E
 
-`agentic-e2e` checks that an AI agent can add one product to the cart of a storefront through its UI. It pins one product variant through the Storefront API, opens the product page of that variant in a headless browser that it owns, and asks one AI agent to add exactly 1 unit of that variant to the cart. Code, not the agent, then decides the result from Shopify Standard Events. Only when there is no add event, the code also uses whether the agent confirmed that it completed the task. **The command does not read the cart yet:** `pass` means that the storefront's add event resolved without cart user errors, not that the cart was checked. The command prints one JSON result line and closes the browser.
+`agentic-e2e` checks that an AI agent can add one product to the cart of a storefront through its UI. It pins one product variant through the Storefront API, opens the product page of that variant in a headless browser that it owns, and asks one AI agent to add exactly 1 unit of that variant to the cart. Code, not the agent, then decides the result from Shopify Standard Events and one read of the session cart. Only when there is no add event, the code also uses whether the agent confirmed that it completed the task. The command prints one JSON result line and closes the browser.
 
 **Supported storefronts:** only storefronts that dispatch the `shopify:cart:lines-update` Standard Event with a `promise` (Hydrogen storefronts do). A storefront that does not dispatch it, for example a Liquid theme without Standard Events, is out of scope: the result is `fail` when the agent reports that it added the item, and `indeterminate` when it does not, even when the item reaches the cart.
 
@@ -25,30 +25,34 @@ SHOPIFY_PROXY_KEY=... pnpm -s agentic-e2e https://your-storefront.example
 
 | Status          | Exit | Meaning                                                                                                                   |
 | --------------- | ---- | ------------------------------------------------------------------------------------------------------------------------- |
-| `pass`          | 0    | Every add event held 1 unit of the pinned variant and resolved without cart user errors. The cart is not read.            |
-| `fail`          | 1    | No clean add event for exactly 1 unit of the pinned variant, or the agent reports an add with no add event (see below).   |
+| `pass`          | 0    | Every add event held 1 unit of the pinned variant, its promise resolved, and the session cart holds exactly 1 unit of it. |
+| `fail`          | 1    | The storefront did not deliver exactly 1 unit of the pinned variant, or the agent reports an add with no add event.       |
 | `indeterminate` | 2    | The command could not decide (see below).                                                                                 |
 | `skipped`       | 3    | No eligible variant was found. No browser starts.                                                                         |
 | usage error     | 64   | No URL, more than one argument, an unknown flag, an invalid URL, a URL that is not http(s), a URL with credentials, or a URL with a path other than `/`. No browser starts. |
 
 ```json
-{"status":"pass","reason":"Every add event held exactly 1 unit of the pinned variant and resolved without cart user errors.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"productHandle":"snowboard","productTitle":"Snowboard","variantId":"gid://shopify/ProductVariant/1","selectedOptions":[{"name":"Title","value":"Default Title"}]},"agent":{"completed":false,"reason":"Stopped by the command after the add event."}}
-{"status":"fail","reason":"An add event promise was rejected.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"…":"…"},"agent":{"completed":false,"reason":"Stopped by the command after the add event."}}
-{"status":"fail","reason":"The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"…":"…"},"agent":{"completed":true,"summary":"I added 1 unit to the cart."}}
+{"status":"pass","reason":"The cart holds exactly 1 unit of the pinned variant.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"productHandle":"snowboard","productTitle":"Snowboard","variantId":"gid://shopify/ProductVariant/1","selectedOptions":[{"name":"Title","value":"Default Title"}]},"cart":{"lines":[{"variantId":"gid://shopify/ProductVariant/1","quantity":1}]},"agent":{"completed":false,"reason":"Stopped by the command after the add event."}}
+{"status":"fail","reason":"An add event promise was rejected, so the cart was not read.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"…":"…"},"agent":{"completed":false,"reason":"Stopped by the command after the add event."}}
+{"status":"fail","reason":"The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched, so the cart was not read.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"…":"…"},"agent":{"completed":true,"summary":"I added 1 unit to the cart."}}
 {"status":"skipped","reason":"No eligible variant: the catalog was searched to the end.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"}}
-{"status":"indeterminate","reason":"No add Standard Event was recorded by the time Stagehand was disconnected.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"…":"…"},"agent":{"completed":false,"reason":"The agent reached the 20-step limit.","message":"I could not find the Add to cart button."}}
+{"status":"indeterminate","reason":"No add Standard Event was recorded by the time Stagehand was disconnected, so the cart was not read.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"…":"…"},"agent":{"completed":false,"reason":"The agent reached the 20-step limit.","message":"I could not find the Add to cart button."}}
 {"status":"indeterminate","reason":"HTTP 500","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"…":"…"}}
 ```
 
-`agent` tells what the agent reported: `{"completed":false,"reason":"Stopped by the command after the add event."}` when the command stopped it; `{"completed":true,"summary":…}` when it ended by itself with a `done` action with `taskCompleted: true`; else `{"completed":false,"reason":…}` (step limit, deadline, agent or model error, or no confirmed completion). `message` is the final message that Stagehand returned, with the key redacted. It is present only when Stagehand returned a result: at the step limit, for a failure result, or with no confirmed completion. It is not present after a thrown error, the deadline, or a stop by the command. `summary` and `message` are for triage only: the status never uses the text of the agent. The status uses `completed` only when no add event was recorded (see [How the result is decided](#how-the-result-is-decided)). An `indeterminate` result has `context`, `pinned`, and `agent` when they exist.
+`cart` is present only when the cart was read: a `fail` without `cart` comes from the add events, or from an agent that reports an add with no add event. `agent` tells what the agent reported: `{"completed":false,"reason":"Stopped by the command after the add event."}` when the command stopped it; `{"completed":true,"summary":…}` when it ended by itself with a `done` action with `taskCompleted: true`; else `{"completed":false,"reason":…}` (step limit, deadline, agent or model error, or no confirmed completion). `message` is the final message that Stagehand returned, with the key redacted. It is present only when Stagehand returned a result: at the step limit, for a failure result, or with no confirmed completion. It is not present after a thrown error, the deadline, or a stop by the command. `summary` and `message` are for triage only: the status never uses the text of the agent. The status uses `completed` only when no add event was recorded (see [How the result is decided](#how-the-result-is-decided)). An `indeterminate` result has `context`, `pinned`, and `agent` when they exist.
 
-`fail` means one of these: an add event did not hold exactly 1 unit of the pinned variant (another product or another quantity); an add event had no `promise`; a `promise` was rejected; a `promise` resolved with cart `userErrors`; a `promise` had no outcome within 5 seconds; or no add event was recorded, but the agent confirmed that it completed the task (`"completed":true`).
+`fail` means one of these:
+
+- After an add event: an add event did not hold exactly 1 unit of the pinned variant (another product or another quantity); an add event had no `promise`; a `promise` was rejected; a `promise` resolved with cart `userErrors`; a `promise` had no outcome within 5 seconds; or the cart was read and does not hold exactly 1 unit of the pinned variant.
+- No add event was recorded, but the agent confirmed that it completed the task (`"completed":true`). The cart is not read.
 
 `indeterminate` means one of these:
 
 - Before the agent: `SHOPIFY_PROXY_KEY` is not set or is not one line; a Storefront API error, invalid response, or deadline; the browser did not start; the event recorder could not be installed; a navigation error or an HTTP status of 400 or higher on the product page; a page that does not show content; Stagehand did not attach.
-- No add event was recorded by the time Stagehand was disconnected, and the agent did not confirm that it completed the task (it hit the step limit, the deadline, or an error, or it ended without a confirmed `done`). `agent.message` shows the final message of the agent when Stagehand returned one.
+- No add event was recorded by the time Stagehand was disconnected, and the agent did not confirm that it completed the task (it hit the step limit, the deadline, or an error, or it ended without a confirmed `done`). The cart is not read. `agent.message` shows the final message of the agent when Stagehand returned one.
 - Tool-side problems, also after an add event: an interrupt (SIGINT, SIGTERM, or SIGHUP); the Stagehand release was not confirmed.
+- The cart could not be read after resolved add events, for any reason (see [Session cart](#session-cart)). The code cannot see the storefront cart, so it does not decide.
 
 ## How the result is decided
 
@@ -56,11 +60,24 @@ An add event is a `shopify:cart:lines-update` Standard Event with `action: "add"
 
 1. Before the first navigation, the command adds a script to the page. It records each `shopify:cart:lines-update` event (its `action`, each line's `merchandiseId` and `quantity`, and whether it has a `promise`) and the outcome of the event's `promise`.
 2. The agent runs. **The command stops the agent at the first add event**, then disconnects Stagehand from the browser and confirms it. After the confirmed disconnect, the agent cannot act. A tool call already in progress at the stop can finish before that.
-3. If no add event was recorded by the time Stagehand was disconnected: `fail` when the agent confirmed that it completed the task (a `done` action with `taskCompleted: true`), because the storefront dispatched no add event for the add that the agent reports. Else `indeterminate`.
-4. Every add event must hold exactly 1 unit of the pinned variant, summed over its lines (other lines are allowed), and must have a `promise`. Then the command waits up to 5 seconds, from after the confirmed disconnect, until every add event's `promise` has an outcome. A wrong item or quantity, a missing `promise`, a rejected `promise`, a `promise` that resolved with cart `userErrors`, or no outcome in 5 seconds: `fail`. After an interrupt, no wait continues.
-5. Every add event's `promise` resolved without cart `userErrors`: `pass`. The command does not read the cart, so it does not know what the cart holds.
+3. If no add event was recorded by the time Stagehand was disconnected, the cart is not read. The result is `fail` when the agent confirmed that it completed the task (a `done` action with `taskCompleted: true`), because the storefront dispatched no add event for the add that the agent reports. Else it is `indeterminate`.
+4. Every add event must hold exactly 1 unit of the pinned variant, summed over its lines (other lines are allowed), and must have a `promise`. Then the command waits up to 5 seconds, from after the confirmed disconnect, until every add event's `promise` has an outcome. A wrong item or quantity, a missing `promise`, a rejected `promise`, a `promise` that resolved with cart `userErrors`, or no outcome in 5 seconds: `fail`, and the cart is not read.
+5. The command reads the session cart once, with no retry, from the origin that the product page landed on (see [Session cart](#session-cart)). Any read problem is `indeterminate`. After an interrupt, no wait continues and no cart request starts.
+6. The quantities of the pinned variant are summed across all cart lines. Exactly 1: `pass`. Anything else: `fail`. Other lines, such as an automatic gift, are allowed.
 
 **Standard Events are required.** A storefront that does not dispatch `shopify:cart:lines-update` with a `promise` cannot pass: without an add event the result is `fail` when the agent reports completion and `indeterminate` when it does not, even when the item reaches the cart, and an add event without a `promise` is `fail`. The listener is in the capture phase on `document`, so events dispatched directly on `window` are not recorded.
+
+### Session cart
+
+The cart is read with one `GET <origin>/cart.js`, where `<origin>` is the origin that the product page landed on (after redirects). The path is fixed: no base path such as `/en-ca` and no `window.Shopify` value is used. The request goes through the browser context's request API, which sends the cookies of the browser's cookie store, so the session cookie goes with it and the location of the open page does not matter. There is no polling and no retry. The request does not follow redirects and has a 5-second limit that includes the body. Only `items[].variant_id` and `items[].quantity` are used. The command sets no cookie itself (a `Set-Cookie` in the answer is stored, as a browser would), uses no cart ID, and does not call the storefront's own cart actions.
+
+Every cart read problem gives `indeterminate`, never `fail`:
+
+- A bad answer of the endpoint: an HTTP error, a redirect, a response that is not JSON, or a response that does not have the cart shape. The reason says what happened and that the storefront does not serve a usable `cart.js` (cart.js is not configured), so the cart was not checked.
+- The request failed: a network error, or the browser context went away.
+- No response within 5 seconds.
+
+A storefront that does not serve a usable `/cart.js` at the root of its origin cannot pass: it ends `indeterminate` after a resolved add.
 
 ## Storefront API
 
@@ -83,8 +100,10 @@ There is one model path: `anthropic/claude-haiku-5-5` through the Shopify AI pro
 - **Only storefronts that dispatch Standard Events are supported:** `shopify:cart:lines-update` with a `promise`. A storefront that does not dispatch the event, for example a Liquid theme without Standard Events, ends `fail` when the agent reports that it added the item, and `indeterminate` when it does not, even when the item reaches the cart. An add event without a `promise` is `fail`.
 - **A wrong agent claim gives a false `fail`.** When the agent reports completion but did not add the item, and no add event comes, the result is `fail`. `agent.summary` (or `agent.message`, when the agent did not complete) helps to find the cause.
 - **Checkout and account pages are not blocked.** The agent is only told not to go there, and its run is stopped at the first add event. Nothing stops it before that if it does not obey, and a tool call already in progress at the stop can finish before the disconnect is confirmed.
-- **The cart is not read.** `pass` trusts the add event's `promise` and its cart `userErrors`. It does not prove that the cart holds the item.
 - One main page only. Events in popups or frames are not recorded.
+- A storefront that does not serve a usable `/cart.js` at the root of its origin cannot pass. It ends `indeterminate` after a resolved add.
+- A request that is already in flight can change the cart after the read.
+- The cart JSON is assumed to be the cart that the storefront UI uses.
 - The script observes `event.promise` with a rejection handler. This marks a native promise as handled, so the storefront may not get an `unhandledrejection` for it.
 - `pnpm build:pkgs` (or `pnpm --filter @shopify/hydrogen build`) is needed first.
 - There is one model path.
@@ -100,6 +119,6 @@ pnpm --filter @shopify/agentic-e2e test:unit
 pnpm --filter @shopify/agentic-e2e test:integration
 ```
 
-The integration tests use one local HTTP server for the storefront pages, the Storefront API, and an add endpoint, and a local fake model endpoint that scripts the agent's clicks. They make no real model call and need no key.
+The integration tests use one local HTTP server for the storefront pages, the Storefront API, `/cart.js`, and an add endpoint behind a session cookie, and a local fake model endpoint that scripts the agent's clicks. They make no real model call and need no key.
 
 The test script of `@shopify/hydrogen` rebuilds its `dist`, so do not run it at the same time as these tests. Turbo runs `@shopify/agentic-e2e#test` after `@shopify/hydrogen#test`. `packages/storefront-e2e` is a separate package. This package does not change or use it.

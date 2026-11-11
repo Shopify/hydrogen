@@ -10,7 +10,8 @@ export type ObjectiveInput = {
 /**
  * The agent task for the pinned variant in the run's market. The product page is already open, so
  * no route is named. Store strings are JSON-quoted and labelled as data, to reduce instruction
- * injection through product content. The task ends at the add.
+ * injection through product content. The task ends at the add: the cart is checked in code, not
+ * through the UI.
  */
 export function buildObjective({ pinned, context }: ObjectiveInput): string {
   const options = pinned.selectedOptions.filter(

@@ -17,9 +17,10 @@ import { main } from "./cli.ts";
 
 // Real headless Chromium, real Stagehand 3.7.3, and the real Hydrogen Storefront client against
 // local HTTP fixtures. The store fixture serves the storefront pages, the Storefront API
-// endpoint, and an add endpoint. The model endpoint is a local fake that speaks the Anthropic
-// Messages API: no real model call, no real key. Uses Playwright's Chromium (install it with
-// `pnpm --filter @shopify/agentic-e2e run browser:install`) or AGENTIC_E2E_BROWSER_PATH.
+// endpoint, `/cart.js`, and an add endpoint behind a session cookie. The model endpoint is a
+// local fake that speaks the Anthropic Messages API: no real model call, no real key. Uses
+// Playwright's Chromium (install it with `pnpm --filter @shopify/agentic-e2e run
+// browser:install`) or AGENTIC_E2E_BROWSER_PATH.
 vi.setConfig({ testTimeout: 90_000, hookTimeout: 30_000 });
 
 const DUMMY_KEY = "sk-dummy-agentic-e2e-test-key";
@@ -50,15 +51,17 @@ vi.mock("./browser/session.ts", async (importOriginal) => {
 });
 
 const CONTEXT = { country: "CA", language: "FR", countryName: "Canada", currency: "CAD" };
+const VARIANT_NUMBER = 7;
 const PINNED = {
   productHandle: "fixture-board",
   productTitle: "Fixture Board",
-  variantId: "gid://shopify/ProductVariant/7",
+  variantId: `gid://shopify/ProductVariant/${VARIANT_NUMBER}`,
   selectedOptions: [{ name: "Size", value: "Medium" }],
 };
-const NO_ADD = "No add Standard Event was recorded by the time Stagehand was disconnected.";
+const NO_ADD =
+  "No add Standard Event was recorded by the time Stagehand was disconnected, so the cart was not read.";
 const CLAIMED_ADD =
-  "The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.";
+  "The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched, so the cart was not read.";
 /** The `agent` field of a run that the first add event stopped. */
 const STOPPED = { completed: false, reason: "Stopped by the command after the add event." };
 
@@ -73,10 +76,16 @@ type StoreMode = {
    * event without a promise, or no Standard Event.
    */
   addEvent: "with-promise" | "without-promise" | "none";
-  /** HTTP status of the add endpoint. Not 200: the add promise rejects. */
+  /** HTTP status of the add endpoint. Not 200: the add promise rejects and the cart stays. */
   addStatus: number;
+  /** Units the add endpoint puts in the cart for each add, whatever was asked. */
+  unitsPerAdd: number;
   /** The add endpoint holds its answer until Stagehand detaches. */
   holdAdd: boolean;
+  /** After the add resolves, the page navigates itself to the same server under `localhost`. */
+  leaveAfterAdd: boolean;
+  /** HTTP status of `/cart.js`. */
+  cartStatus: number;
 };
 
 type ModelRequest = {
@@ -102,8 +111,14 @@ let held: ServerResponse[];
 let catalog: Catalog;
 let apiRequests: ApiRequest[];
 let mode: StoreMode;
-/** Store events in order: adds and releases. */
+/** Cart quantity of the pinned variant by session cookie. */
+let carts: Map<string, number>;
+let sessionCounter = 0;
+/** Session cookies that the product page set in this test. */
+let issuedSessions: string[];
+/** Store events in order: adds, releases, cart reads, and traps. */
 let storeLog: string[];
+let cartReads: Array<{ host: string | undefined; path: string; cookie: string | undefined }>;
 let stderr: string[];
 let heldAdds: Array<() => void>;
 /** For each Stagehand CDP socket close: whether the browser was still running at that time. */
@@ -135,8 +150,18 @@ beforeEach(async () => {
   reply = () => undefined;
   catalog = { products: [eligibleProduct(PINNED.productHandle)] };
   apiRequests = [];
-  mode = { addEvent: "with-promise", addStatus: 200, holdAdd: false };
+  mode = {
+    addEvent: "with-promise",
+    addStatus: 200,
+    unitsPerAdd: 1,
+    holdAdd: false,
+    leaveAfterAdd: false,
+    cartStatus: 200,
+  };
+  carts = new Map();
+  issuedSessions = [];
   storeLog = [];
+  cartReads = [];
   heldAdds = [];
   vi.mocked(createBrowserSession).mockClear();
   vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
@@ -178,7 +203,7 @@ afterAll(async () => {
 });
 
 describe("main with the agent", () => {
-  it("stops the agent at the add, and passes when the add event resolves", async () => {
+  it("stops the agent at the add, and passes when the add resolves and the session cart holds 1 unit", async () => {
     // The script would click Add a second time. The stop at the first add event prevents it.
     reply = clickAdd("button: Add to cart");
     // Stagehand writes unredacted session logs when these are set. This file imports Stagehand
@@ -194,17 +219,23 @@ describe("main with the agent", () => {
     expect(results()).toEqual([
       {
         status: "pass",
-        reason:
-          "Every add event held exactly 1 unit of the pinned variant and resolved without cart user errors.",
+        reason: "The cart holds exactly 1 unit of the pinned variant.",
         context: CONTEXT,
         pinned: PINNED,
+        cart: { lines: [{ variantId: PINNED.variantId, quantity: 1 }] },
         agent: STOPPED,
       },
     ]);
     // One planning request and the `act` tool's own request. No step after the add event.
     expect(modelRequests).toHaveLength(2);
-    // One add only.
-    expect(storeLog).toEqual(["add"]);
+    // One add, then one cart read at the root of the landed origin, not under the `/en-ca` base
+    // path, with the session cookie that the product page set. The command never called the
+    // storefront's own cart action.
+    expect(storeLog).toEqual(["add 1", "cart.js"]);
+    expect(issuedSessions).toHaveLength(1);
+    expect(cartReads).toEqual([
+      { host: new URL(origin).host, path: "/cart.js", cookie: `cart_session=${issuedSessions[0]}` },
+    ]);
     // The bootstrap sends no context. The catalog query carries the discovered context.
     expect(apiRequests).toHaveLength(2);
     expect(apiRequests[0]?.query).not.toContain("@inContext");
@@ -244,13 +275,36 @@ describe("main with the agent", () => {
 
     await expect(main([origin])).resolves.toBe(0);
 
-    expect(results()).toEqual([expect.objectContaining({ status: "pass", agent: STOPPED })]);
-    // The add was answered only after Stagehand detached.
-    expect(storeLog).toEqual(["add", "add answered"]);
+    expect(results()).toEqual([
+      expect.objectContaining({
+        status: "pass",
+        cart: { lines: [{ variantId: PINNED.variantId, quantity: 1 }] },
+        agent: STOPPED,
+      }),
+    ]);
+    // The add was answered only after Stagehand detached, and the cart was read after that.
+    expect(storeLog).toEqual(["add 1", "add answered", "cart.js"]);
+    expect(cartReads.map((read) => read.path)).toEqual(["/cart.js"]);
     expectStagehandDetached();
   });
 
-  it("fails with exit 1 when the add promise rejects", async () => {
+  it("passes when the page went to another origin after the add: the cart request goes to the landed origin", async () => {
+    mode.leaveAfterAdd = true;
+    reply = clickAdd();
+
+    await expect(main([origin])).resolves.toBe(0);
+
+    expect(results()).toEqual([expect.objectContaining({ status: "pass", agent: STOPPED })]);
+    // The page left for `localhost` before the read. The request still went to the storefront
+    // origin, with its session cookie.
+    expect(storeLog).toEqual(["add 1", `elsewhere on ${new URL(foreignOrigin()).host}`, "cart.js"]);
+    expect(cartReads).toEqual([
+      { host: new URL(origin).host, path: "/cart.js", cookie: `cart_session=${issuedSessions[0]}` },
+    ]);
+    expectStagehandDetached();
+  });
+
+  it("fails with exit 1 and no cart read when the add promise rejects", async () => {
     mode.addStatus = 500;
     reply = clickAdd();
 
@@ -259,17 +313,57 @@ describe("main with the agent", () => {
     expect(results()).toEqual([
       {
         status: "fail",
-        reason: "An add event promise was rejected.",
+        reason: "An add event promise was rejected, so the cart was not read.",
         context: CONTEXT,
         pinned: PINNED,
         agent: STOPPED,
       },
     ]);
     expect(storeLog).toEqual(["add rejected"]);
+    expect(cartReads).toEqual([]);
     expectStagehandDetached();
   });
 
-  it("fails with exit 1 when the add event has no promise", async () => {
+  it("fails with exit 1 and one cart read when the cart holds another quantity", async () => {
+    mode.unitsPerAdd = 2;
+    reply = clickAdd();
+
+    await expect(main([origin])).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      expect.objectContaining({
+        status: "fail",
+        reason: "Expected 1 unit of the pinned variant in the cart, found 2.",
+        cart: { lines: [{ variantId: PINNED.variantId, quantity: 2 }] },
+        agent: STOPPED,
+      }),
+    ]);
+    expect(storeLog).toEqual(["add 2", "cart.js"]);
+    expectStagehandDetached();
+  });
+
+  it("reports indeterminate with exit 2 when /cart.js answers HTTP 404 after a resolved add", async () => {
+    mode.cartStatus = 404;
+    reply = clickAdd();
+
+    await expect(main([origin])).resolves.toBe(2);
+
+    expect(results()).toEqual([
+      {
+        status: "indeterminate",
+        reason:
+          "The session cart could not be read: the cart JSON endpoint answered HTTP 404. This storefront does not serve a usable cart.js (cart.js is not configured), so the cart was not checked.",
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: STOPPED,
+      },
+    ]);
+    // One read, no retry.
+    expect(storeLog).toEqual(["add 1", "cart.js"]);
+    expectStagehandDetached();
+  });
+
+  it("fails with exit 1 and no cart read when the add event has no promise", async () => {
     mode.addEvent = "without-promise";
     reply = clickAdd();
 
@@ -278,16 +372,17 @@ describe("main with the agent", () => {
     expect(results()).toEqual([
       {
         status: "fail",
-        reason: "An add event had no promise, so its outcome is unknown.",
+        reason: "An add event had no promise, so its outcome is unknown and the cart was not read.",
         context: CONTEXT,
         pinned: PINNED,
         agent: STOPPED,
       },
     ]);
+    expect(cartReads).toEqual([]);
     expectStagehandDetached();
   });
 
-  it("fails with exit 1 when the storefront dispatches no Standard Events and the agent reports done", async () => {
+  it("fails with exit 1 and no cart read when the storefront dispatches no Standard Events and the agent reports done", async () => {
     mode.addEvent = "none";
     reply = clickAdd();
 
@@ -303,12 +398,13 @@ describe("main with the agent", () => {
         agent: { completed: true, summary: "Added 1 unit." },
       },
     ]);
-    // The add happened, but the storefront dispatched no add event.
-    expect(storeLog).toEqual(["add"]);
+    // The add happened, but without an add event the cart is not read.
+    expect(storeLog).toEqual(["add 1"]);
+    expect(cartReads).toEqual([]);
     expectStagehandDetached();
   });
 
-  it("fails with exit 1 when the agent reports done without any add", async () => {
+  it("fails with exit 1 and no cart read when the agent reports done without any add", async () => {
     reply = () => done(true);
 
     await expect(main([origin])).resolves.toBe(1);
@@ -348,6 +444,7 @@ describe("main with the agent", () => {
     expect(modelRequests.filter((request) => !isFinalAssessment(request.tools))).toHaveLength(
       MAX_STEPS,
     );
+    expect(cartReads).toEqual([]);
     expectStagehandDetached();
   });
 
@@ -595,20 +692,30 @@ describe("createBrowserSession", () => {
 
 function onStoreRequest(request: IncomingMessage, response: ServerResponse) {
   const path = new URL(request.url ?? "/", "http://fixture").pathname;
+  const session = /(?:^|;\s*)cart_session=([^;]+)/.exec(request.headers.cookie ?? "")?.[1];
   if (/^\/api\/[^/]+\/graphql\.json$/.test(path)) {
     onApiRequest(request, response);
   } else if (path.endsWith("/products/hang")) {
     // Never answers, so a run cannot finish before the interrupt.
   } else if (path.endsWith("/products/fixture-board")) {
-    response.writeHead(200, { "content-type": "text/html" }).end(productPage());
-  } else if (path === "/cart/add" && request.method === "POST") {
+    sessionCounter += 1;
+    const id = `s${sessionCounter}`;
+    issuedSessions.push(id);
+    response
+      .writeHead(200, {
+        "content-type": "text/html",
+        "set-cookie": `cart_session=${id}; Path=/; HttpOnly; SameSite=Lax`,
+      })
+      .end(productPage());
+  } else if (path === "/cart/add" && request.method === "POST" && session !== undefined) {
     request.resume();
     if (mode.addStatus !== 200) {
       storeLog.push("add rejected");
       response.writeHead(mode.addStatus, { "content-type": "text/plain" }).end("down");
       return;
     }
-    storeLog.push("add");
+    carts.set(session, (carts.get(session) ?? 0) + mode.unitsPerAdd);
+    storeLog.push(`add ${mode.unitsPerAdd}`);
     const answer = () =>
       response
         .writeHead(200, { "content-type": "application/json" })
@@ -621,17 +728,42 @@ function onStoreRequest(request: IncomingMessage, response: ServerResponse) {
       storeLog.push("add answered");
       answer();
     });
+  } else if (path === "/cart.js") {
+    storeLog.push("cart.js");
+    cartReads.push({ host: request.headers.host, path, cookie: request.headers.cookie });
+    if (mode.cartStatus !== 200) {
+      response.writeHead(mode.cartStatus, { "content-type": "text/plain" }).end("down");
+      return;
+    }
+    const quantity = session === undefined ? 0 : (carts.get(session) ?? 0);
+    const items = quantity === 0 ? [] : [{ variant_id: VARIANT_NUMBER, quantity, title: "Board" }];
+    response
+      .writeHead(200, { "content-type": "application/json" })
+      .end(JSON.stringify({ token: "secret-token", item_count: quantity, items }));
+  } else if (path === "/elsewhere") {
+    storeLog.push(`elsewhere on ${request.headers.host}`);
+    response
+      .writeHead(200, { "content-type": "text/html" })
+      .end("<title>Elsewhere</title><p>Elsewhere</p>");
+  } else if (path === "/trap/get-cart") {
+    storeLog.push("getCart called");
+    response.writeHead(204).end();
   } else {
     response.writeHead(500, { "content-type": "text/html" }).end("<title>Broken</title>");
   }
 }
 
 /**
- * A product page with an Add to cart button. The add posts to `/cart/add`. By default the click
- * dispatches `shopify:cart:lines-update` on the document with the add promise, like a Hydrogen
- * storefront. The promise rejects on an HTTP error.
+ * A product page with an Add to cart button. The add posts to `/cart/add` with the session
+ * cookie. By default the click dispatches `shopify:cart:lines-update` on the document with the
+ * add promise, like a Hydrogen storefront. The promise rejects on an HTTP error. The storefront's
+ * own `getCart` action is a trap: the command must not call it.
  */
 function productPage(): string {
+  const shopify = `window.Shopify = { actions: { getCart() { navigator.sendBeacon("/trap/get-cart"); return Promise.resolve({}); } } };`;
+  const leave = mode.leaveAfterAdd
+    ? `location.href = ${JSON.stringify(`${foreignOrigin()}/elsewhere`)};`
+    : "";
   const promise = mode.addEvent === "with-promise" ? ", promise" : "";
   const dispatch =
     mode.addEvent === "none"
@@ -643,6 +775,7 @@ function productPage(): string {
 <button id="add" type="button">Add to cart</button>
 <p id="status"></p>
 <script>
+${shopify}
 document.getElementById("add").addEventListener("click", () => {
   const promise = fetch("/cart/add", {
     method: "POST",
@@ -653,7 +786,7 @@ document.getElementById("add").addEventListener("click", () => {
     return response.json();
   });
   ${dispatch}
-  promise.then(() => { document.getElementById("status").textContent = "Added"; }, () => undefined);
+  promise.then(() => { document.getElementById("status").textContent = "Added"; ${leave} }, () => undefined);
 });
 </script>`;
 }
@@ -752,6 +885,11 @@ function clickAdd(...more: string[]): Reply {
       { type: "tool_use", id: "toolu_act", name: "act", input: { action: `click the ${target}` } },
     ]);
   };
+}
+
+/** The same fixture server on another origin, with its own cookies. */
+function foreignOrigin(): string {
+  return origin.replace("127.0.0.1", "localhost");
 }
 
 /** Stagehand's forced final call offers only the `done` tool. */

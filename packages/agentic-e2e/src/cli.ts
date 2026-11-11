@@ -11,6 +11,7 @@ import {
   type StagehandAgent,
 } from "./agent/stagehand-agent.ts";
 import { errorMessage, untilAborted } from "./async.ts";
+import { readCart, type CartSnapshot } from "./browser/cart.ts";
 import { createBrowserSession } from "./browser/session.ts";
 import { withInterruptSignals } from "./interrupt.ts";
 import { observeAddEvents } from "./shopify/add-events.ts";
@@ -27,8 +28,8 @@ export const USAGE = `Usage: pnpm agentic-e2e <url>
 
 Asks the Storefront API at the origin of <url> for the active country and language, pins one
 eligible variant, opens its product page in a headless browser, asks an AI agent to add exactly
-1 unit of that variant to the cart, checks the add Standard Events in code (it does not read the
-cart), and prints one JSON result line. Requires SHOPIFY_PROXY_KEY.
+1 unit of that variant to the cart, checks the result in code, and prints one JSON result line.
+Requires SHOPIFY_PROXY_KEY.
 
 <url> must be the storefront root URL, such as https://your-storefront.example/. A path such
 as /en-ca is not supported.
@@ -53,7 +54,8 @@ type Indeterminate = {
 };
 
 type AddRun =
-  | { status: "pass" | "fail"; reason: string; agent: AgentOutcome }
+  | { status: "pass"; reason: string; cart: CartSnapshot; agent: AgentOutcome }
+  | { status: "fail"; reason: string; cart?: CartSnapshot; agent: AgentOutcome }
   | { status: "indeterminate"; reason: string; agent?: AgentOutcome };
 
 type StorefrontPin =
@@ -63,10 +65,20 @@ type StorefrontPin =
 
 export type RunResult =
   | {
-      status: "pass" | "fail";
+      status: "pass";
       reason: string;
       context: StorefrontContext;
       pinned: PinnedVariant;
+      cart: CartSnapshot;
+      agent: AgentOutcome;
+    }
+  | {
+      status: "fail";
+      reason: string;
+      context: StorefrontContext;
+      pinned: PinnedVariant;
+      /** Absent when the event layer failed: the cart was not read. */
+      cart?: CartSnapshot;
       agent: AgentOutcome;
     }
   | { status: "skipped"; reason: string; context: StorefrontContext }
@@ -146,7 +158,24 @@ async function runOnce(url: URL): Promise<RunResult> {
     if (run.status === "indeterminate") {
       return { status: run.status, reason: run.reason, context, pinned, ...agentField(run.agent) };
     }
-    return { status: run.status, reason: run.reason, context, pinned, agent: run.agent };
+    if (run.status === "pass") {
+      return {
+        status: run.status,
+        reason: run.reason,
+        context,
+        pinned,
+        cart: run.cart,
+        agent: run.agent,
+      };
+    }
+    return {
+      status: run.status,
+      reason: run.reason,
+      context,
+      pinned,
+      ...(run.cart === undefined ? {} : { cart: run.cart }),
+      agent: run.agent,
+    };
   });
 }
 
@@ -177,9 +206,9 @@ async function pinFromStorefront(url: URL, interrupt: AbortSignal): Promise<Stor
  * Starts the browser, records add events and attaches Stagehand before the first navigation,
  * opens the product page, and runs the add task. The first add event stops the agent run. Then it
  * confirms the Stagehand detach: after that the agent cannot act, but a tool call already in
- * progress at the stop can finish before it. Then code decides the verdict from the add events,
- * and, when there is none, from whether the agent confirmed completion. Always detaches Stagehand
- * and closes the browser before it returns.
+ * progress at the stop can finish before it. Then code decides the verdict from the add events
+ * and one cart read, and, when there is no add event, from whether the agent confirmed
+ * completion. Always detaches Stagehand and closes the browser before it returns.
  */
 async function runAddToCart(
   storefrontUrl: URL,
@@ -199,6 +228,8 @@ async function runAddToCart(
     attaching = attachStagehand(session.cdpUrl);
     const agent = await untilAborted(attaching, interrupt);
     await openPage(session.page, url, interrupt);
+    // The origin the product page landed on, after redirects. The cart is read from this origin.
+    const origin = new URL(session.page.url()).origin;
     process.stderr.write("Running the agent task.\n");
     // Only events received from now on count.
     const agentStart = log.events.length;
@@ -220,7 +251,7 @@ async function runAddToCart(
     );
     // Rejects when the release is not confirmed: the result is then indeterminate.
     await agent.detach();
-    // An interrupt during the detach ends the run here: no wait.
+    // An interrupt during the detach ends the run here: no wait and no cart request.
     interrupt.throwIfAborted();
     const verdict = await untilAborted(
       verifyAdd({
@@ -228,8 +259,10 @@ async function runAddToCart(
         agentStart,
         variantId: pinned.variantId,
         agentCompleted: agentOutcome.completed,
+        interrupt,
         // The 5-second limit starts here, after the confirmed detach.
         waitForOutcomes: async (done) => log.waitFor(done, ADD_WAIT_MS, interrupt),
+        readCart: async () => readCart(session.page.context().request, origin),
       }),
       interrupt,
     );
