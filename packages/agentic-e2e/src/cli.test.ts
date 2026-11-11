@@ -15,7 +15,12 @@ vi.mock("./shopify/catalog.ts", async (importOriginal) => ({
 }));
 
 const KEY = "sk-secret-proxy-key-123";
-const CONTEXT: StorefrontContext = { country: "CA", language: "FR" };
+const CONTEXT: StorefrontContext = {
+  country: "CA",
+  language: "FR",
+  countryName: "Canada",
+  currency: "CAD",
+};
 const PINNED: PinnedVariant = {
   productHandle: "board",
   productTitle: "Board",
@@ -174,6 +179,12 @@ describe("main", () => {
       }),
       interrupt: expect.any(AbortSignal),
     });
+    // The task names the run's market from the Storefront API context.
+    expect(agent.run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        task: expect.stringContaining('Shop in the "Canada" store (prices in "CAD")'),
+      }),
+    );
     expect(stdout.join("") + stderr.join("")).not.toContain(KEY);
   });
 
