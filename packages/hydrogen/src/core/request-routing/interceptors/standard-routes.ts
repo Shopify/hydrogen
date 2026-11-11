@@ -18,7 +18,7 @@ export function handleStandardRouteRedirects({
   const url = new URL(request.url);
   const target = getStandardRouteTarget({
     pathname: url.pathname,
-    pathPrefix: storefrontClient.requestContext.i18n.pathPrefix,
+    pathPrefix: storefrontClient.requestContext.locale.pathPrefix,
     routeTemplates,
   });
 

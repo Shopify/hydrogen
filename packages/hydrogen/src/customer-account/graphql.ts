@@ -1,5 +1,6 @@
 import type { DocumentDecoration, initGraphQLTada as InitGraphQLTada } from "gql.tada";
 
+import { getVariableNamesDeclaredAs } from "../client/i18n-variables";
 import { isObjectRecord } from "../core/utils/record";
 import { appendFragments, type Dedupe, type JoinParts } from "../graphql/fragments";
 import type { introspection } from "../graphql/generated/customer-account-graphql-env";
@@ -12,7 +13,15 @@ type CustomerAccountTadaGql = InitGraphQLTada<{
 }>;
 
 const CUSTOMER_ACCOUNT_DOCUMENT = Symbol("CustomerAccountDocument");
-const VARIABLE_DEFINITION_RE = /\$([_A-Za-z][_0-9A-Za-z]*)\s*:/g;
+
+/**
+ * Variables the Customer Account client fills from `requestContext.locale` when the caller omits them, with the named type each must be declared as. Same-named variables of any other type belong to the caller.
+ */
+export const CUSTOMER_ACCOUNT_I18N_VARIABLE_TYPES = {
+  language: "LanguageCode",
+} as const;
+
+type CustomerAccountI18nVariableName = keyof typeof CUSTOMER_ACCOUNT_I18N_VARIABLE_TYPES;
 
 /**
  * A Customer Account API query or mutation that `gql` from `@shopify/hydrogen/customer-account` returns. TypeScript infers the result and variables types from the document's GraphQL source.
@@ -81,7 +90,8 @@ export type ComposedSource<
 > = JoinParts<ComposedParts<Source, Fragments>>;
 
 type CustomerAccountDocumentValue = AnyCustomerAccountDocument & {
-  readonly variableNames: ReadonlySet<string>;
+  /** The i18n variables that the first operation declares with their expected type, such as `$language: LanguageCode`. */
+  readonly i18nVariableNames: ReadonlySet<CustomerAccountI18nVariableName>;
 };
 
 type CustomerAccountGql = {
@@ -159,7 +169,9 @@ export const gql = ((source: string, fragments?: readonly CustomerAccountDocumen
   const document = {
     [CUSTOMER_ACCOUNT_DOCUMENT]: true,
     source: query,
-    variableNames: getVariableNames(query),
+    i18nVariableNames: new Set(
+      getVariableNamesDeclaredAs(query, CUSTOMER_ACCOUNT_I18N_VARIABLE_TYPES),
+    ),
   } satisfies CustomerAccountDocumentValue;
   return document;
 }) as unknown as CustomerAccountGql;
@@ -175,14 +187,6 @@ export function assertCustomerAccountDocument(
   if (!isCustomerAccountDocument(value)) {
     throw new TypeError("Expected a Customer Account API document returned by CAAPI.gql().");
   }
-}
-
-function getVariableNames(source: string): ReadonlySet<string> {
-  const names = new Set<string>();
-  for (const match of source.matchAll(VARIABLE_DEFINITION_RE)) {
-    names.add(match[1]);
-  }
-  return names;
 }
 
 /**

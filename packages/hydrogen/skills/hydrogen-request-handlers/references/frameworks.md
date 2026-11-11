@@ -3,7 +3,7 @@
 ## Contents
 
 - Single-Hook Shape
-- React Router 7
+- React Router
 - SolidStart
 - Unknown Framework Decision Tree
 - Gotchas
@@ -32,7 +32,7 @@ Prefer this over adding `.catch()` only to the returned promise: the request-lev
 
 The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` per the `hydrogen-storefront-client` buyer-IP guidance.
 
-This shape assumes app-owned `getBuyerIp` and `routeTemplates` values. Cart and predictive search handlers do not read the session, so no `sessionManager` is passed; add a request-scoped one when registering Customer Account handlers or cart handlers created with `customerSession`.
+This shape assumes app-owned `getBuyerIp`, `routeTemplates`, and `i18n` (the `defineShopifyI18n` definition from `SKILL.md`) values. Cart and predictive search handlers do not read the session, so no `sessionManager` is passed; add a request-scoped one when registering Customer Account handlers or cart handlers created with `customerSession`.
 
 ```ts
 import {
@@ -43,6 +43,7 @@ import {
   handleShopifyRedirects,
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
+import { i18n } from "./lib/i18n";
 
 const cartHandlers = createCartServerHandlers();
 const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
@@ -50,7 +51,7 @@ const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
 export async function handleRequest(request: Request, next: () => Promise<Response>) {
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n,
   });
   const storefrontClient = createStorefrontClient({
     type: "public",
@@ -81,11 +82,11 @@ export async function handleRequest(request: Request, next: () => Promise<Respon
 }
 ```
 
-## React Router 7
+## React Router
 
 React Router framework mode needs:
 
-- Verify `future.v8_middleware: true` is set in `react-router.config.ts`.
+- Make sure middleware is enabled for your version of React Router.
 - A final splat route such as `route("*", "routes/catchall.tsx")`.
 - Root-route middleware that creates the Storefront client, runs Hydrogen routes, stores the client in context, and applies response headers after `next()`.
 - A public Storefront client by default; when upgrading to `type: "private"`, resolve trusted `buyerIp` before `createStorefrontClient` per the buyer-IP guidance from `hydrogen-storefront-client`.
@@ -99,6 +100,7 @@ import {
   handleShopifyRedirects,
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
+import { i18n } from "~/lib/i18n";
 
 const cartHandlers = createCartServerHandlers();
 const predictiveSearchHandlers = createPredictiveSearchServerHandlers();
@@ -107,7 +109,7 @@ export const middleware: Route.MiddlewareFunction[] = [
   async ({ context, request }, next) => {
     const requestContext = createShopifyRequestContext({
       request,
-      i18n: { country: "US", language: "EN" },
+      i18n,
     });
     const storefrontClient = createStorefrontClient({
       type: "public",

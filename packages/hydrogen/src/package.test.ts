@@ -1,5 +1,13 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+} from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -15,6 +23,7 @@ const TS_PLUGIN_EXPORT_PATH = "./ts-plugin";
 // pack + tar + spawn on a cold CI runner can exceed vitest's 5s default.
 const TS_PLUGIN_PACK_TIMEOUT_MS = 30_000;
 const STANDARD_EVENTS_SCRIPT_URL = "https://cdn.shopify.com/storefront/standard-events.js";
+const URL_IMPORT = /\bimport\((?:\s|\/\*.*?\*\/|\/\/[^\n]*)*["'`]https?:[^)]*\)/gs;
 const STANDARD_EVENTS_INSPECTOR_ID = "shopify-standard-events-inspector";
 const COPY_GENERATED_GRAPHQL_ASSETS_SCRIPT_PATH = resolve(
   PACKAGE_ROOT,
@@ -52,6 +61,27 @@ describe("package metadata", () => {
 
   it("exports package metadata", () => {
     expect(packageJson.exports["./package.json"]).toBe("./package.json");
+  });
+
+  it("resolves every ESM entry point for require-based resolvers", () => {
+    const esmEntries = Object.entries(packageJson.exports).flatMap(([exportPath, target]) =>
+      typeof target === "object" && "import" in target
+        ? [
+            {
+              exportPath,
+              importTargets:
+                typeof target.import === "string" ? [target.import] : Object.values(target.import),
+            },
+          ]
+        : [],
+    );
+    expect(esmEntries.map(({ exportPath }) => exportPath)).toContain("./react");
+
+    for (const { exportPath, importTargets } of esmEntries) {
+      expect(importTargets.map((target) => resolve(PACKAGE_ROOT, target))).toContain(
+        require.resolve(`@shopify/hydrogen${exportPath.slice(1)}`),
+      );
+    }
   });
 
   it("exports copied generated GraphQL assets from dist", () => {
@@ -248,6 +278,57 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     }
   });
 
+  it("selects shared CSP defaults through the development package condition", () => {
+    const script = `
+      import { createContentSecurityPolicy, getShopifyCspDirectives } from "@shopify/hydrogen";
+      process.stdout.write(JSON.stringify({
+        header: createContentSecurityPolicy({ nonce: false }).header,
+        extendedHeader: createContentSecurityPolicy({
+          nonce: false,
+          directives: { connectSrc: ["https://analytics.example"] },
+        }).header,
+        defaults: getShopifyCspDirectives(),
+      }));
+    `;
+    const readPolicy = (
+      conditions: string[],
+      nodeEnv: string,
+    ): {
+      header: string;
+      extendedHeader: string;
+      defaults: { connectSrc: string[]; scriptSrc: string[]; styleSrc: string[] };
+    } =>
+      JSON.parse(
+        execFileSync(process.execPath, [...conditions, "--input-type=module", "-e", script], {
+          cwd: PACKAGE_ROOT,
+          encoding: "utf8",
+          env: { ...process.env, NODE_ENV: nodeEnv, NODE_OPTIONS: undefined },
+        }),
+      );
+
+    // The package condition, not NODE_ENV, selects the compiled CSP behavior.
+    const production = readPolicy([], "development");
+    const development = readPolicy(["--conditions=development"], "production");
+    for (const host of ["localhost", "127.0.0.1", "tryhydrogen.dev"]) {
+      expect(production.header).not.toContain(host);
+      expect(development.header).toContain(host);
+      expect(production.extendedHeader).not.toContain(host);
+      expect(development.extendedHeader).toContain(host);
+      expect(production.defaults.connectSrc.some((source) => source.includes(host))).toBe(false);
+      expect(development.defaults.connectSrc.some((source) => source.includes(host))).toBe(true);
+    }
+    expect(production.extendedHeader).toContain("https://analytics.example");
+    expect(development.extendedHeader).toContain("https://analytics.example");
+    expect(development.header).toContain("wss://*.tryhydrogen.dev:*");
+    expect(development.defaults.scriptSrc).toEqual(production.defaults.scriptSrc);
+    expect(development.defaults.styleSrc).toEqual(production.defaults.styleSrc);
+    const scriptSrc = development.header
+      .split(";")
+      .find((part) => part.trim().startsWith("script-src "));
+    assert(scriptSrc, "expected the development script-src directive");
+    expect(scriptSrc).not.toMatch(/unsafe-inline|unsafe-eval/);
+  });
+
   it("only includes the standard events inspector in the development build", () => {
     const productionShopifyScripts = readFileSync(
       resolve(PACKAGE_ROOT, "dist/core/shopify-scripts/index.mjs"),
@@ -262,12 +343,19 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     expect(developmentShopifyScripts).toContain(STANDARD_EVENTS_INSPECTOR_ID);
   });
 
-  it("preserves the standard events URL as a literal dynamic import", () => {
-    const pageViewScript = readFileSync(
-      resolve(PACKAGE_ROOT, "dist/core/shopify-scripts/page-view.mjs"),
-      "utf8",
-    );
+  it("tells consumer bundlers to leave URL imports to the browser", () => {
+    const distDirectory = resolve(PACKAGE_ROOT, "dist");
+    const urlImports = readdirSync(distDirectory, { encoding: "utf8", recursive: true })
+      .filter((file) => file.endsWith(".mjs"))
+      .flatMap(
+        (file) => readFileSync(resolve(distDirectory, file), "utf8").match(URL_IMPORT) ?? [],
+      );
 
-    expect(pageViewScript).toContain(`import("${STANDARD_EVENTS_SCRIPT_URL}")`);
+    expect(urlImports).toEqual(
+      expect.arrayContaining([expect.stringContaining(STANDARD_EVENTS_SCRIPT_URL)]),
+    );
+    for (const urlImport of urlImports) {
+      expect(urlImport).toContain("/* webpackIgnore: true */");
+    }
   });
 });

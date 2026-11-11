@@ -21,7 +21,7 @@ Read each step file and complete it fully before opening the next. Every step en
 - Setup is **not complete** until the final verify step's commands have been executed in this session and passed. If you are about to summarize results and have not just run them, stop and run them. Reporting success with failing or unrun checks is a failed setup, not a finished one.
 
 1. `steps/1-inspect-app.md` — verify basic compatibility, identify the styling approach, detect the framework and its reference files.
-2. `steps/2-scaffold.md` — route conventions, environment variable names, server-side env access, Storefront API client with `hydrogen gql check`, API route handlers, Customer Account API.
+2. `steps/2-scaffold.md` — route conventions, environment variable names, server-side env access, Storefront API client with `hydrogen gql check`, API route handlers, `robots.txt`, Customer Account API.
 3. `steps/3-build-home-page.md` — server-rendered home page listing collections and products.
 4. `steps/4-collection-and-search.md` — collection and search browsing with URL-synced filters.
 5. `steps/5-cart.md` — the `/cart` route with progressive enhancement.
@@ -38,7 +38,7 @@ Read each step file and complete it fully before opening the next. Every step en
 
 - **Account UI / session storage** — the `hydrogen-customer-account` skill wires sessions and OAuth handlers during scaffold, and the account-page step builds the minimal profile + logout UI, but the app owns the framework session adapter, richer account pages, and order history UI. Keep account tokens server-side or in encrypted HttpOnly cookies, and do not retry account mutations after a timeout unless the operation is externally idempotent.
 - **Image optimization** — use the framework's image component (or `<img srcset>`) with Shopify CDN URL transforms; do not expect a Hydrogen `Image` component.
-- **SEO** — render meta/Open Graph tags and JSON-LD `Product`/`BreadcrumbList` structured data with the framework's head/metadata API using Storefront API data.
+- **SEO** — render meta/Open Graph tags and JSON-LD `Product`/`BreadcrumbList` structured data with the framework's head/metadata API using Storefront API data. Serve `/robots.txt` with the `hydrogen-robots-txt` skill during scaffold.
 
 Mention these to the user when they are relevant to the storefront being built rather than skipping them silently.
 

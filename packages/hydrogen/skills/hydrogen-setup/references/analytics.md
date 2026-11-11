@@ -212,7 +212,7 @@ Destinations are consent-gated and receive retained history once tracking is all
 
 Each framework should derive `shop` and `i18n` on the server and render ShopifyScripts before publishing. The exact env API varies by framework; these examples show the data flow, not a requirement to use these file names.
 
-Do not query `localization.language` just to echo the language already passed to `@inContext`. If the app only knows country/language and does not have a market currency code, add `currencyCode` to the app's market config or query `localization { country { currency { isoCode } } }` as a fallback.
+Read the locale from `requestContext.locale` (or `storefrontClient.locale`), the `{ language, country, pathPrefix }` resolved for the request from the `defineShopifyI18n` definition. Do not query `localization.language` just to echo the language already passed to `@inContext`. If the app does not have a currency code for the locale, add `currency` to the locale entries in `defineShopifyI18n` (extra fields survive on `requestContext.locale`) or query `localization { country { currency { isoCode } } }` as a fallback.
 
 React root layout:
 
@@ -223,7 +223,7 @@ React root layout:
     storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0",
     myshopifyDomain: env.PUBLIC_STORE_DOMAIN,
   }}
-  i18n={{ country: market.country, language: market.language, currency: market.currencyCode }}
+  i18n={{ ...storefrontClient.locale, currency: currencyCode }}
   consent={{ mode: "default-banner" }}
 />
 ```
@@ -237,7 +237,7 @@ const shopifyTags = renderShopifyScriptTags({
     storefrontId: env.PUBLIC_STOREFRONT_ID ?? "0",
     myshopifyDomain: env.PUBLIC_STORE_DOMAIN,
   },
-  i18n: { country: market.country, language: market.language, currency: market.currencyCode },
+  i18n: { ...requestContext.locale, currency: currencyCode },
   consent: { mode: "default-banner" },
 });
 ```
@@ -583,7 +583,7 @@ analytics?.addDestination({
 
 Register all event consumers with `addDestination()` and subscribe inside its setup callback. Consent gating happens at the bus level before destination callbacks see the payload.
 
-Removing and re-adding a destination, even with the same name, creates a fresh registration and replays retained history again. This can duplicate deliveries on component remounts, including React Strict Mode's development effect replay. Keep destinations registered for the page's lifetime; use the returned cleanup when intentionally removing an integration.
+The bus tracks replay progress by destination name. Re-adding a removed name resumes after the last event the bus processed for that name, including events it did not subscribe to, so component remounts and React Strict Mode's development effect replay do not redeliver retained events. If a re-added destination subscribes to additional event types, earlier retained events of those types are not replayed. A re-added name does receive retained events published while it was removed. A new name starts from the beginning of retained history. Still prefer registering destinations for the page's lifetime; use the returned cleanup when intentionally removing an integration.
 
 Destinations that need Shopify visitor IDs can call `getTrackingValues()` from the callback's second argument: `subscribe(event, (payload, { getTrackingValues }) => { ... })`. It reads current `uniqueToken` and `visitToken` values from the consent API when called, including during replay, and requests fallback generation with the tag `hydrogen:<destination name>`. Unavailable tokens are empty strings, and the getter also returns empty strings whenever analytics tracking is not currently allowed, so a retained getter cannot read or generate tokens after consent is revoked. Call it inside the destination callback; registration itself does not read or generate tokens.
 
@@ -615,7 +615,7 @@ For production, re-verify against the production bundle. Several gotchas only ap
 - **Astro page-view fires only on full loads.** Astro is MPA-by-default. If you adopt View Transitions, listen for `astro:after-swap` instead of relying on the inline-script-runs-on-load behavior — otherwise SPA-nav transitions skip `page_viewed`.
 - **Required product fields silently drop the Monorail leg.** Missing `id`/`title`/`vendor`/`variantId`/`variantTitle`/`price` causes the Shopify analytics subscriber to skip Monorail dispatch and log a field-specific error. The bus event still fires for your subscribers — the loss is only in Shopify analytics. Watch the console.
 - **A product event without a currency logs a warning. Shopify analytics still sends it.** `[shopify:warn:analytics] product_added_to_cart was sent without a currency` means the cart fragment's `cost.amountPerQuantity` has no `currencyCode` and `window.Shopify.currency.active` is unset. Select `currencyCode` in the fragment or pass `i18n.currency`. `product_viewed` cannot reach this warning through the typed `ProductPayload`, whose `price` is `MoneyV2`.
-- **Register destinations once per page lifetime.** Hydrogen owns the shared bus. Removing and re-adding a destination resets its replay position, so component remounts can deliver retained events again.
+- **Replay progress is keyed by destination name.** Re-adding a removed name resumes where it left off, but a new name (for example one that includes a random suffix or a route key) receives all retained history again. Use a stable name per integration.
 - **Lighthouse skip is silent.** Monorail dispatch is skipped for Chrome Lighthouse user-agents. If your synthetic monitoring runs Lighthouse, you will see no Monorail requests in those runs — this is intentional.
 
 ---

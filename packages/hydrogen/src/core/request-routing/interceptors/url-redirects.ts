@@ -1,4 +1,5 @@
 import { gql } from "../../../graphql";
+import { trimTrailingSlashes } from "../../standard-routes/path";
 import type { RedirectOptions } from "../handle-shopify-redirects";
 
 type UrlRedirectOptions = Pick<RedirectOptions, "request" | "storefrontClient">;
@@ -26,7 +27,7 @@ export async function handleUrlRedirects({
   const url = new URL(request.url);
   const { pathname, searchParams } = url;
 
-  const queryPath = pathname.toLowerCase().replace(/\/+$/, "");
+  const queryPath = trimTrailingSlashes(pathname.toLowerCase());
   const result = await storefrontClient.graphql(REDIRECT_QUERY, {
     variables: { query: `path:${queryPath}` },
   });

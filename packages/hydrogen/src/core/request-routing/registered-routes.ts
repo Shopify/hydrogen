@@ -1,6 +1,8 @@
+import { stripI18nPathPrefix } from "../standard-routes/path";
 import type {
   CallableRouteHandler,
   HydrogenRouteInterceptor,
+  ShopifyRouteHandler,
   ShopifyRouteHandlerContext,
   ShopifyRouteHandlerResult,
   ShopifyRedirectStatus,
@@ -37,11 +39,18 @@ const VALID_REDIRECT_STATUSES = [
  *
  * Annotate the handler's context parameter with only the fields the handler reads, for example
  * `Omit<ShopifyRouteHandlerContext, "sessionManager">`, so apps without a session manager can
- * register it.
+ * register it. Hydrogen infers the context only from an annotated parameter. A handler with no
+ * parameter, or with an unannotated destructured parameter, gets the full context, so
+ * `handleShopifyRoutes` still requires `sessionManager` for it.
+ *
+ * Marking `sessionManager` optional in the annotation doesn't make it optional at runtime. It
+ * still makes `sessionManager` required, and when an untyped caller omits it, Hydrogen passes a
+ * stand-in that throws when the handler uses it. A check such as `if (sessionManager)` is always
+ * true, so don't use it as a fallback.
  *
  * @param pathname The exact URL pathname that the handler matches. Hydrogen doesn't match path parameters or prefixes.
  * @param method The HTTP method that the handler matches, in uppercase, such as `POST`.
- * @param handler The function that receives the request, its context, the session, and the Storefront API client, and returns a JSON, redirect, or error result.
+ * @param handler The function that receives the request, its context, the session manager, and the Storefront API client, and returns a JSON, redirect, or error result.
  * @returns The handler to add to a handler object.
  * @publicDocs
  */
@@ -53,7 +62,7 @@ export function createShopifyRouteHandler<
   pathname: TPathname,
   method: TMethod,
   handler: (context: TContext) => Promise<ShopifyRouteHandlerResult>,
-): CallableRouteHandler<TContext, ShopifyRouteHandlerResult, TPathname, TMethod> {
+): ShopifyRouteHandler<TPathname, TMethod, TContext> {
   return createCallableRouteHandler(pathname, method, handler);
 }
 
@@ -77,7 +86,10 @@ export const handleShopifyRouteHandlers: HydrogenRouteInterceptor = (
   const routeHandlers = handlers.flatMap((group) => Object.values(group));
   if (routeHandlers.length === 0) return null;
 
-  const pathMatches = routeHandlers.filter((entry) => entry.pathname === url.pathname);
+  // Handlers register unprefixed pathnames; under pathname i18n routing the request may carry
+  // the locale prefix (`/fr-ca/api/cart`), so match against the stripped path.
+  const pathname = stripI18nPathPrefix(url.pathname, requestContext.locale.pathPrefix);
+  const pathMatches = routeHandlers.filter((entry) => entry.pathname === pathname);
   if (pathMatches.length === 0) return null;
 
   const match = pathMatches.find((candidate) => candidate.method === request.method);

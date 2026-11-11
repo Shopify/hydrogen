@@ -2,7 +2,7 @@ import { env } from "$env/dynamic/private";
 import { createCustomerSessionManager, customerSessionHandlers } from "$lib/customer-account";
 import { routeTemplates } from "$lib/route-templates";
 import { getBuyerIp } from "@shared/buyer-ip";
-import { defaultI18n, storefrontConfig } from "@shared/config";
+import { i18n, storefrontConfig } from "@shared/config";
 import { getPrivateStorefrontToken } from "@shared/private-env";
 import {
   STOREFRONT_CACHE_MAX_ENTRIES,
@@ -14,7 +14,6 @@ import {
   createStorefrontClient,
   createShopifyRequestContext,
   type ShopifyRequestContextWithBuyerIp,
-  type ShopifyRequestContext,
 } from "@shopify/hydrogen";
 import type { Handle } from "@sveltejs/kit";
 import { LRUCache } from "lru-cache";
@@ -28,7 +27,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   const buyerIp = getBuyerIp(event.request.headers);
   const requestContext = createShopifyRequestContext({
     request: event.request,
-    i18n: defaultI18n,
+    i18n,
     buyerIp,
   });
   const storefrontClient = createPrivateStorefrontClient(requestContext);
@@ -59,23 +58,10 @@ export const handle: Handle = async ({ event, resolve }) => {
     if (redirect) return redirect;
   }
 
-  return applyStorefrontResponseHeaders(requestContext, response);
+  const finalResponse = new Response(response.body, response);
+  requestContext.applyResponseHeaders(finalResponse.headers);
+  return finalResponse;
 };
-
-function applyStorefrontResponseHeaders(
-  requestContext: Pick<ShopifyRequestContext, "applyResponseHeaders">,
-  response: Response,
-): Response {
-  try {
-    requestContext.applyResponseHeaders(response.headers);
-    return response;
-  } catch (error) {
-    if (!(error instanceof TypeError)) throw error;
-    const mutableResponse = new Response(response.body, response);
-    requestContext.applyResponseHeaders(mutableResponse.headers);
-    return mutableResponse;
-  }
-}
 
 function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
   return createStorefrontClient({

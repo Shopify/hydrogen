@@ -1,11 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { STOREFRONT_URL_HEADER } from "../core/headers";
-import {
-  createShopifyRequestContext,
-  type I18nConfig,
-  type ShopifyRequestContext,
-} from "../core/request-context";
+import type { ShopifyLocale } from "../core/i18n/types";
+import { createShopifyRequestContext } from "../core/request-context";
 import {
   createCustomerAccountClient,
   CustomerAccountApiError,
@@ -18,7 +15,8 @@ import {
 const SHOP_ID = "123456789";
 const CUSTOMER_ACCOUNT_TOKEN = "customer-token";
 const LANGUAGE_CODE = "FR";
-const DEFAULT_I18N = { country: "US", language: "EN" } satisfies I18nConfig;
+const DEFAULT_LOCALE = { country: "US", language: "EN" } as const satisfies ShopifyLocale;
+const DEFAULT_I18N = { defaultLocale: DEFAULT_LOCALE } as const;
 const LONG_TIMEOUT_IN_MS = 60_000;
 const TOO_LONG_TIMEOUT_IN_MS = 2_147_483_648;
 const CUSTOMER_QUERY = gql(`query CustomerName { customer { firstName } }`);
@@ -44,16 +42,14 @@ function createRequest(url = "https://example.com/account") {
   return new Request(url);
 }
 
-function createRequestContext(url?: string): ShopifyRequestContext<typeof DEFAULT_I18N>;
-function createRequestContext<const I18n extends I18nConfig>(
-  url: string,
-  i18n: I18n,
-): ShopifyRequestContext<I18n>;
-function createRequestContext(url = "https://example.com/account", i18n = DEFAULT_I18N) {
-  return createShopifyRequestContext({ request: createRequest(url), i18n });
+function createRequestContext(
+  url = "https://example.com/account",
+  defaultLocale: ShopifyLocale = DEFAULT_LOCALE,
+) {
+  return createShopifyRequestContext({ request: createRequest(url), i18n: { defaultLocale } });
 }
 
-function createHeaderRequestContext(url: string): ShopifyRequestContext<typeof DEFAULT_I18N> {
+function createHeaderRequestContext(url: string) {
   return createShopifyRequestContext({
     request: { headers: new Headers({ [STOREFRONT_URL_HEADER]: url }) },
     i18n: DEFAULT_I18N,
@@ -144,7 +140,7 @@ describe("createCustomerAccountClient", () => {
     expect(headers.get("Authorization")).toBe(CUSTOMER_ACCOUNT_TOKEN);
     expect(headers.get("Content-Type")).toBe("application/json");
     expect(headers.get("Origin")).toBe("https://example.com");
-    expect(headers.get("User-Agent")).toBeTruthy();
+    expect(headers.get("User-Agent")).toBe("Hydrogen 0.0.0-test");
     expect(headers.get("Cookie")).toBeNull();
     expect(headers.get("Shopify-Storefront-Y")).toBeNull();
     expect(JSON.parse(String(init.body))).toEqual({
@@ -206,6 +202,69 @@ describe("createCustomerAccountClient", () => {
         "query CustomerName($language: LanguageCode) @inContext(language: $language) { customer { firstName } }",
       variables: { language: callerLanguageCode },
     });
+  });
+
+  it("auto-fills a non-null LanguageCode language variable when omitted", async () => {
+    const fetchMock = createMockFetch();
+    const client = createClient({
+      fetch: fetchMock,
+      requestContext: createRequestContext("https://example.com/account", {
+        country: "CA",
+        language: LANGUAGE_CODE,
+      }),
+    });
+
+    await client.graphql(
+      gql(
+        `query CustomerName($language: LanguageCode!) @inContext(language: $language) { customer { firstName } }`,
+      ),
+      graphqlOptions(),
+    );
+
+    const { init } = getFetchRequest(fetchMock);
+    expect(JSON.parse(String(init.body)).variables).toEqual({ language: LANGUAGE_CODE });
+  });
+
+  it("does not auto-fill an omitted language variable of another type", async () => {
+    const fetchMock = createMockFetch();
+    const client = createClient({
+      fetch: fetchMock,
+      requestContext: createRequestContext("https://example.com/account", {
+        country: "CA",
+        language: LANGUAGE_CODE,
+      }),
+    });
+
+    await client.graphql(
+      gql(
+        `query CustomerMetafield($language: String = "custom") { customer { metafield(namespace: $language, key: "promo") { value } } }`,
+      ),
+      graphqlOptions(),
+    );
+
+    const { init } = getFetchRequest(fetchMock);
+    expect(JSON.parse(String(init.body)).variables).toEqual({});
+  });
+
+  it("sends the caller's value for a language variable of another type", async () => {
+    const fetchMock = createMockFetch();
+    const client = createClient({
+      fetch: fetchMock,
+      requestContext: createRequestContext("https://example.com/account", {
+        country: "CA",
+        language: LANGUAGE_CODE,
+      }),
+    });
+
+    await client.graphql(
+      gql(
+        `query CustomerMetafield($language: String!) { customer { metafield(namespace: "custom", key: $language) { value } } }`,
+      ),
+      { accessToken: CUSTOMER_ACCOUNT_TOKEN, variables: { language: "promo-key" } },
+    );
+
+    const { init } = getFetchRequest(fetchMock);
+    expect(JSON.parse(String(init.body)).variables).toEqual({ language: "promo-key" });
   });
 
   it("uses an https origin when the incoming local request is http", async () => {
