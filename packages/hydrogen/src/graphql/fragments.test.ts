@@ -65,4 +65,72 @@ describe("appendFragments", () => {
 
     expect(() => appendFragments(source, [PRODUCT_CARD])).toThrow('Fragment "Image"');
   });
+
+  it("finds a definition that follows a string containing `#` on the same line", () => {
+    const source = `query { search(query: "#tag") { id } } ${IMAGE}`;
+
+    expect(appendFragments(source, [IMAGE])).toBe(source);
+  });
+
+  it("throws when two definitions differ after a string containing `}`", () => {
+    const first = `fragment P on Product { metafield(namespace: "x}", key: "a") { value } }`;
+    const second = `fragment P on Product { metafield(namespace: "x}", key: "b") { value } }`;
+
+    expect(() => appendFragments("query { a }", [first, second])).toThrow('Fragment "P"');
+  });
+
+  it("appends one copy of a shared fragment that contains a string with `{`", () => {
+    const shared = `fragment F on Product { metafield(namespace: "{x", key: "a") { value } }`;
+    const withTrailing = `fragment A on Product { ...F ...G }\n${shared}\nfragment G on Product { id }`;
+    const withoutTrailing = `fragment B on Product { ...F }\n${shared}`;
+
+    const query = appendFragments("query { a }", [withTrailing, withoutTrailing]);
+
+    expect(count(query, "fragment F on Product")).toBe(1);
+    expect(count(query, "fragment B on Product")).toBe(1);
+  });
+
+  it.each([
+    ["a string", `query { search(query: "fragment Image on Image") { id } }`],
+    ["a block string", `query { search(query: """fragment Image on Image { id }""") { id } }`],
+  ])("ignores fragment syntax inside %s", (_, source) => {
+    expect(appendFragments(source, [IMAGE])).toBe(`${source}\n${IMAGE}`);
+  });
+
+  it("appends one copy of a fragment whose definitions differ only in formatting", () => {
+    const reformatted = `fragment Image on Image {\n  url\n  # alt text for screen readers\n  altText\n}`;
+
+    const query = appendFragments("query { a }", [IMAGE, reformatted]);
+
+    expect(query).toBe(`query { a }\n${IMAGE}`);
+  });
+
+  it("appends only the new definitions of a text that repeats a known one, as written", () => {
+    expect(appendFragments("query { a }", [PRODUCT_CARD, COLLECTION_CARD])).toBe(
+      `query { a }\n${PRODUCT_CARD}\nfragment CollectionCard on Collection { handle image { ...Image } }`,
+    );
+  });
+
+  it.each([
+    ["an escaped quote", String.raw`"say \"{\""`],
+    ["an escaped block quote", String.raw`"""say \""" {"""`],
+  ])("reads a string with %s as one token", (_, value) => {
+    const shared = `fragment F on Product { metafield(namespace: ${value}, key: "a") { value } }`;
+    const first = `fragment A on Product { ...F }\n${shared}`;
+    const second = `fragment B on Product { ...F }\n${shared}`;
+
+    const query = appendFragments("query { a }", [first, second]);
+
+    expect(count(query, "fragment F on Product")).toBe(1);
+    expect(count(query, "fragment B on Product")).toBe(1);
+  });
+
+  it.each([
+    ["an unclosed brace", `fragment Broken on Image {`],
+    ["an unclosed string", `fragment Broken on Image { url(transform: "x) }`],
+  ])("appends a text with %s as written, once", (_, unparseable) => {
+    expect(appendFragments("query { a }", [unparseable, unparseable])).toBe(
+      `query { a }\n${unparseable}`,
+    );
+  });
 });
