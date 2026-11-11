@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { attachStagehand, type AgentOutcome } from "./agent/stagehand-agent.ts";
+import { attachStagehand, type AgentOutcome, type AgentRunInput } from "./agent/stagehand-agent.ts";
 import { createBrowserSession } from "./browser/session.ts";
 import { main, parseCliArgs, USAGE } from "./cli.ts";
 import { pinVariant, type PinnedVariant } from "./shopify/catalog.ts";
@@ -131,7 +131,7 @@ describe("main", () => {
     expect(createBrowserSession).not.toHaveBeenCalled();
   });
 
-  it("pins a variant, attaches before navigation, opens the product page, and reports agent-completed", async () => {
+  it("pins a variant, attaches before navigation, opens the product page, runs the add task, and reports agent-completed", async () => {
     const { session, agent } = fakes();
 
     await expect(main(["https://shop.example/?x=1#top"])).resolves.toBe(0);
@@ -141,7 +141,7 @@ describe("main", () => {
         status: "agent-completed",
         url: "https://shop.example/",
         title: "Home",
-        summary: "Scrolled once.",
+        summary: "Added.",
         context: CONTEXT,
         pinned: PINNED,
       },
@@ -166,13 +166,14 @@ describe("main", () => {
       expect.anything(),
     );
     expect(attachStagehand).toHaveBeenCalledWith("ws://browser");
-    expect(agent.run).toHaveBeenCalledWith(
-      session.page,
-      expect.objectContaining({
+    expect(agent.run).toHaveBeenCalledWith({
+      page: session.page,
+      task: expect.stringContaining("Add exactly 1 unit of that variant to the cart."),
+      model: expect.objectContaining({
         apiKey: KEY,
       }),
-      expect.any(AbortSignal),
-    );
+      interrupt: expect.any(AbortSignal),
+    });
     expect(stdout.join("") + stderr.join("")).not.toContain(KEY);
   });
 
@@ -268,7 +269,7 @@ describe("main", () => {
   });
 
   it("reports an agent outcome that is not completed as indeterminate", async () => {
-    const reason = "The agent reached the 5-step limit.";
+    const reason = "The agent reached the 20-step limit.";
     const { session, agent } = fakes({ outcome: { status: "indeterminate", reason } });
 
     await expect(main(["https://shop.example"])).resolves.toBe(2);
@@ -314,10 +315,10 @@ describe("main", () => {
     const { promise: running, resolve: runStarted } = Promise.withResolvers<void>();
     const { session, agent } = fakes();
     // A run that only ends through its signal, like the real agent module.
-    agent.run.mockImplementation(async (_page: unknown, _model: unknown, signal: AbortSignal) => {
+    agent.run.mockImplementation(async ({ interrupt }) => {
       runStarted();
       return new Promise((_resolve, reject) => {
-        signal.addEventListener("abort", () => reject(signal.reason));
+        interrupt.addEventListener("abort", () => reject(interrupt.reason));
       });
     });
     const listenersBefore = process.listenerCount("SIGINT");
@@ -418,7 +419,7 @@ describe("main", () => {
 
 function fakes({
   page: pageOverrides = {},
-  outcome = { status: "completed", summary: "Scrolled once." },
+  outcome = { status: "completed", summary: "Added." },
 }: { page?: Record<string, unknown>; outcome?: AgentOutcome } = {}) {
   const track =
     <T>(name: string, value: T) =>
@@ -441,9 +442,7 @@ function fakes({
     close: vi.fn(track("close", undefined)),
   };
   const agent = {
-    run: vi.fn<(page: unknown, model: unknown, signal: AbortSignal) => Promise<AgentOutcome>>(
-      track("run", outcome),
-    ),
+    run: vi.fn<(input: AgentRunInput) => Promise<AgentOutcome>>(track("run", outcome)),
     detach: vi.fn(track("detach", undefined)),
   };
   vi.mocked(createBrowserSession).mockResolvedValue(
