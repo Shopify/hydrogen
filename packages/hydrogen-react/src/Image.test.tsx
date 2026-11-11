@@ -1,7 +1,7 @@
 import {Mock, vi, describe, expect, it} from 'vitest';
 import {render, screen} from '@testing-library/react';
 import {faker} from '@faker-js/faker';
-import {Image} from './Image.js';
+import {Image, generateImageWidths} from './Image.js';
 
 const defaultProps = {
   sizes: '100vw',
@@ -211,6 +211,19 @@ describe('<Image />', () => {
       expect(img.srcset).not.toContain('3x');
     });
 
+    it('uses x descriptors and the given width for unitless string widths', () => {
+      const data = {height: 800, width: 800};
+
+      render(<Image {...defaultProps} data={data} width="250" />);
+
+      const img = screen.getByTestId<HTMLImageElement>('test-element');
+      expect(img.srcset).toContain('width=250');
+      expect(img.srcset).toContain('1x');
+      expect(img.srcset).toContain('2x');
+      expect(img.srcset).toContain('3x');
+      expect(img.srcset).not.toContain('width=200');
+    });
+
     it('does not create srcset with greater dimensions than source image when using aspect-ratio', () => {
       const data = {height: 300, width: 400};
 
@@ -311,6 +324,12 @@ describe('<Image />', () => {
       render(<Image {...defaultProps} sizes={undefined} width={100} />);
       expect(console.warn).toHaveBeenCalledTimes(0);
     });
+  });
+});
+
+describe('generateImageWidths', () => {
+  it('returns density widths for a unitless string width', () => {
+    expect(generateImageWidths('250', 15, 200, 200)).toEqual([250, 500, 750]);
   });
 });
 

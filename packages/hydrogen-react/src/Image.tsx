@@ -259,12 +259,12 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
      */
     const imageWidths = React.useMemo(() => {
       return generateImageWidths(
-        width,
+        normalizedProps.width,
         intervals,
         startingWidth,
         incrementSize,
       );
-    }, [width, intervals, startingWidth, incrementSize]);
+    }, [normalizedProps.width, intervals, startingWidth, incrementSize]);
 
     const fixedWidth = isFixedWidth(normalizedProps.width);
 
@@ -298,7 +298,6 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
           normalizedProps={normalizedProps}
           passthroughProps={passthroughProps}
           ref={ref}
-          width={width}
           data={data}
         />
       );
@@ -325,6 +324,7 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
 
 type FixedImageExludedProps =
   | 'data'
+  | 'width'
   | 'loader'
   | 'loaderOptions'
   | 'sizes'
@@ -355,13 +355,14 @@ const FixedWidthImage = React.forwardRef<
       loading,
       normalizedProps,
       passthroughProps,
-      width,
       data,
     },
     ref,
   ) => {
     const fixed = React.useMemo(() => {
-      const intWidth: number | undefined = getNormalizedFixedUnit(width);
+      const intWidth: number | undefined = getNormalizedFixedUnit(
+        normalizedProps.width,
+      );
       const intHeight: number | undefined = getNormalizedFixedUnit(height);
 
       /*
@@ -416,16 +417,7 @@ const FixedWidthImage = React.forwardRef<
         srcSet,
         src,
       };
-    }, [
-      aspectRatio,
-      crop,
-      data,
-      height,
-      imageWidths,
-      loader,
-      normalizedProps,
-      width,
-    ]);
+    }, [aspectRatio, crop, data, height, imageWidths, loader, normalizedProps]);
 
     return (
       <img
@@ -636,11 +628,11 @@ function getNormalizedFixedUnit(value?: string | number): number | undefined {
 
 /**
  * This function checks whether a width is fixed or not.
- * @param width - The width of the image, e.g. 100 | '100px' | '100em' | '100rem'
+ * @param width - The width of the image, e.g. 100 | '100' | '100px' | '100em' | '100rem'
  * @returns Whether the width is fixed or not
  */
 function isFixedWidth(width: string | number): boolean {
-  const fixedEndings = /\d(px|em|rem)$/;
+  const fixedEndings = /\d(px|em|rem)?$/;
   return typeof width === 'number' || fixedEndings.test(width);
 }
 
