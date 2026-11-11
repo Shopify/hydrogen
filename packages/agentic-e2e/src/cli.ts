@@ -195,5 +195,8 @@ function indeterminate(reason: string): RunResult {
 }
 
 if (process.argv[1] !== undefined && path.resolve(process.argv[1]) === import.meta.filename) {
-  process.exitCode = await main(process.argv.slice(2));
+  const code = await main(process.argv.slice(2));
+  // Exit explicitly: after an interrupt, Stagehand can keep a model request or a timer open,
+  // and the process would not end. Flush the result line to stdout first.
+  process.stdout.write("", () => process.exit(code));
 }

@@ -1,14 +1,17 @@
-import { execFileSync } from "node:child_process";
+import assert from "node:assert/strict";
+import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { Stagehand } from "@browserbasehq/stagehand";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MAX_STEPS } from "./agent/stagehand-agent.ts";
+import { within } from "./async.ts";
 import { createBrowserSession } from "./browser/session.ts";
 import { main } from "./cli.ts";
 
@@ -20,8 +23,15 @@ vi.setConfig({ testTimeout: 60_000, hookTimeout: 30_000 });
 
 const DUMMY_KEY = "sk-dummy-agentic-e2e-test-key";
 const fake = vi.hoisted(() => ({ modelOrigin: "" }));
+const CLI = fileURLToPath(new URL("cli.ts", import.meta.url));
+const FAKE_MODEL_HOOKS = fileURLToPath(
+  new URL("test-fixtures/fake-model-hooks.ts", import.meta.url),
+);
+/** A CLI process must exit within this. Browser and Stagehand cleanup take a few seconds. */
+const CLI_EXIT_LIMIT_MS = 15_000;
 
-// The one code seam: point the model config at the local fake endpoint.
+// The one code seam: point the model config at the local fake endpoint. The CLI process tests
+// replace it the same way with `test-fixtures/fake-model-hooks.ts`.
 vi.mock("./agent/model-config.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("./agent/model-config.ts")>();
   return {
@@ -48,6 +58,7 @@ let reply: Reply;
 let held: ServerResponse[];
 /** For each Stagehand CDP socket close: whether the browser was still running at that time. */
 let stagehandCloses: Array<{ browserRunning: boolean }>;
+let children: ChildProcess[];
 
 beforeAll(async () => {
   store = createServer((request, response) => {
@@ -85,6 +96,7 @@ beforeEach(async () => {
   modelRequests = [];
   held = [];
   stagehandCloses = [];
+  children = [];
   reply = () => undefined;
   vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
     stdout.push(String(chunk));
@@ -103,6 +115,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  for (const child of children) child.kill("SIGKILL");
   for (const response of held) response.destroy();
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
@@ -263,6 +276,65 @@ describe("main with the agent", () => {
   });
 });
 
+// The CLI entrypoint in a fresh Node process. A test-only module hook points the model config at
+// the local fake endpoint. Stagehand is imported only by the CLI, after the environment is set.
+describe("the CLI process", () => {
+  it("prints the result and exits 2 promptly on SIGINT while a model request is open", async () => {
+    const { promise: requested, resolve } = Promise.withResolvers<void>();
+    // A text reply makes Stagehand force a final assessment, which is held open.
+    reply = ({ tools }) => {
+      if (!isFinalAssessment(tools)) return text("I scrolled down once.");
+      resolve();
+      return undefined;
+    };
+    // Stagehand writes unredacted flow logs to stderr when this is set.
+    const cli = spawnCli(`${origin}/home`, { BROWSERBASE_FLOW_LOGS: "1" });
+
+    await requested;
+    cli.child.kill("SIGINT");
+
+    await expect(
+      within(cli.exited, CLI_EXIT_LIMIT_MS, "The CLI did not exit after SIGINT."),
+    ).resolves.toEqual({
+      code: 2,
+      signal: null,
+      stdout: `${JSON.stringify({ status: "indeterminate", reason: "Interrupted by SIGINT." })}\n`,
+      stderr: [
+        `Opening ${origin}/home`,
+        "Running the agent task.",
+        "Received SIGINT. Stopping the run.",
+        "Indeterminate: Interrupted by SIGINT.",
+        "",
+      ].join("\n"),
+    });
+    expect(modelRequests.map((request) => isFinalAssessment(request.tools))).toEqual([false, true]);
+    // The process exit closed the held model request.
+    const [response] = held;
+    assert(response, "The final assessment request was not held.");
+    await vi.waitFor(() => expect(response.closed).toBe(true), { timeout: 1_000 });
+  });
+
+  it("writes no Stagehand logs when the log variables are set before the CLI starts", async () => {
+    // This catches a static Stagehand import or a missing `BROWSERBASE_CONFIG_DIR` removal:
+    // Stagehand creates its session log directory when it attaches. The run ends before any
+    // agent step, so it does not prove `BROWSERBASE_FLOW_LOGS` alone. The SIGINT test does.
+    const logDir = await mkdtemp(join(workDir, "stagehand-logs-"));
+    const cli = spawnCli(`${origin}/broken`, {
+      BROWSERBASE_CONFIG_DIR: logDir,
+      BROWSERBASE_FLOW_LOGS: "1",
+    });
+
+    await expect(within(cli.exited, CLI_EXIT_LIMIT_MS, "The CLI did not exit.")).resolves.toEqual({
+      code: 2,
+      signal: null,
+      stdout: `${JSON.stringify({ status: "indeterminate", reason: "HTTP 500" })}\n`,
+      stderr: `Opening ${origin}/broken\nIndeterminate: HTTP 500\n`,
+    });
+    expect(await readdir(logDir)).toEqual([]);
+    expect(modelRequests).toEqual([]);
+  });
+});
+
 describe("createBrowserSession", () => {
   it("closes safely twice", async () => {
     const session = await createBrowserSession();
@@ -355,6 +427,38 @@ function results(): unknown[] {
     .trim()
     .split("\n")
     .map((line) => JSON.parse(line) as unknown);
+}
+
+type CliExit = {
+  code: number | null;
+  signal: NodeJS.Signals | null;
+  stdout: string;
+  stderr: string;
+};
+
+/**
+ * Starts the CLI in a fresh Node process with the test environment (TMPDIR and the dummy key)
+ * plus `env`. `exited` resolves when the process ended and its output closed. `afterEach` kills
+ * a process that is still running.
+ */
+function spawnCli(url: string, env: NodeJS.ProcessEnv) {
+  const child = spawn(process.execPath, ["--import", FAKE_MODEL_HOOKS, CLI, url], {
+    env: {
+      ...process.env,
+      BROWSERBASE_CONFIG_DIR: undefined,
+      BROWSERBASE_FLOW_LOGS: undefined,
+      AGENTIC_E2E_TEST_MODEL_BASE_URL: `${fake.modelOrigin}/v1`,
+      ...env,
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  children.push(child);
+  const output = { stdout: "", stderr: "" };
+  child.stdout.on("data", (chunk: Buffer) => (output.stdout += chunk.toString()));
+  child.stderr.on("data", (chunk: Buffer) => (output.stderr += chunk.toString()));
+  const { promise: exited, resolve } = Promise.withResolvers<CliExit>();
+  child.once("close", (code, signal) => resolve({ code, signal, ...output }));
+  return { child, exited };
 }
 
 /** Command lines of running processes that use a profile under this test's TMPDIR. */
