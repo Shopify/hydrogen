@@ -3,9 +3,9 @@ name: hydrogen-markets
 description: >
   Guide for implementing Shopify Markets with Hydrogen. Use when adding
   market routing, country/language localization, Shopify Markets, subdomains,
-  per-market domains, path-prefixed markets, defineShopifyI18n, locale switchers,
-  hreflang links, the <html lang> attribute, Next.js App Router market routing, or
-  Storefront API @inContext wiring.
+  per-market domains, path-prefixed markets, defineShopifyI18n, LocaleProvider,
+  locale switchers, hreflang links, the <html lang> attribute, Next.js App Router
+  market routing, or Storefront API @inContext wiring.
 ---
 
 # Markets
@@ -133,6 +133,48 @@ export const i18n = defineShopifyI18n({
 
 ---
 
+## Browser Requests And Links
+
+The server resolves the locale from each request's URL, so under pathname routing every request and link from the browser has to carry the page's `pathPrefix`. A cart request to plain `/api/cart` from a `/fr-ca` page reads and writes the cart in the default market.
+
+With the React or Vue bindings, pass the request's locale through loader data and wrap the app in `LocaleProvider`, above the cart and predictive search providers:
+
+```tsx
+// root loader
+return { locale: requestContext.locale, cartData };
+
+// root component
+import { LocaleProvider } from "@shopify/hydrogen/react"; // or "@shopify/hydrogen/vue"
+
+<LocaleProvider locale={loaderData.locale}>
+  <CartProvider initialData={loaderData.cartData}>
+    <Outlet />
+  </CartProvider>
+</LocaleProvider>;
+```
+
+- Inside the provider, the cart provider sends its requests to `{pathPrefix}/api/cart` and cart and product forms post there. `PredictiveSearchProvider` requests `{pathPrefix}/api/predictive-search` and its form submits to `{pathPrefix}/search`. A custom cart endpoint, `predictiveSearchEndpoint`, or `searchAction` that starts with `/` gets the prefix too, so pass those without one. Absolute URLs are used as they are.
+- `useLocale()` returns the same `{ language, country, pathPrefix }` (a ref in Vue). Build the app's own links and requests with it: `` `${pathPrefix}/collections` `` for a link, `` `${pathPrefix}/api/cart/metafields` `` for a request to an app-owned route, and `getPredictiveSearchItemUrl(item, { routes, term, pathPrefix })` for a search result. For the home link use `pathPrefix || "/"`.
+- Menu item URLs from the Storefront API can carry the Online Store's own locale prefix for the query's language, such as `/fr/collections`. Remove that prefix before adding the app's `pathPrefix`.
+- The prefixed requests have to reach their handlers. `handleShopifyRoutes` matches registered handlers with the prefix stripped; a cart or search route the app serves itself has to exist under each prefix.
+- A storefront with one locale, or with domain routing, has an empty `pathPrefix` and needs none of this.
+
+Without those bindings, add the prefix yourself. Configure the cart in the browser only, because the endpoint is shared by every request on the server:
+
+```ts
+configureCartEndpoint(`${locale.pathPrefix}/api/cart`);
+
+const search = createPredictiveSearchStore({
+  predictiveSearchEndpoint: `${locale.pathPrefix}/api/predictive-search`,
+});
+```
+
+Render cart and search forms with the same prefixed `action`.
+
+**One locale per page load.** `ShopifyScripts` reads the locale once, when the document loads, and the cart is priced for that market. Change locale with a full page load (a plain `<a href>`, or `reloadDocument` on a React Router `Link`), and keep every other link under the current prefix. In development, Hydrogen logs a warning when a page under a prefix has no `LocaleProvider`, when `LocaleProvider` and `ShopifyScripts` hold different locales, and when a client-side navigation leaves the page's prefix.
+
+---
+
 ## Per-Market Domains And Subdomains
 
 Use `type: "domain"` when each locale has its own hostname: `example.com`, `example.ca`, `fr.example.com`.
@@ -196,7 +238,7 @@ function toHreflang({ language, country }: ShopifyLocale): string {
 - `matchLocale(request | url, i18n)` exposes the same resolution the request context uses, for sitemaps or tests that hold a URL but no request context.
 - `resolveSupportedLocale(locale, i18n)` resolves a locale the app already chose (a selector value, a stored preference) to its `pathPrefix`/`hostname`, throwing when it is not in the definition. Use it to validate user input before redirecting.
 
-Persist an explicit buyer choice by redirecting to `getLocalizedHref(...)`; do not resolve the locale from a cookie on the server.
+Persist an explicit buyer choice by redirecting to `getLocalizedHref(...)`; do not resolve the locale from a cookie on the server. Render switcher links as full page loads, not client-side navigations (see "Browser Requests And Links").
 
 ---
 
@@ -216,7 +258,7 @@ Read the relevant reference before applying the generic `Request` examples in fr
 - **Read the resolved locale from `requestContext.locale`, never from `requestContext.i18n`.** `i18n` is a deprecated alias kept for apps that still pass a fixed `{language, country, pathPrefix}`; it is removed in the next major release.
 - **Use market-contextualized queries.** The Storefront client injects `country` and `language` variable values when the document declares `$country` and `$language`; it does not rewrite query text. Market-sensitive queries still need `@inContext(country: $country, language: $language)` or equivalent Storefront API context in the document.
 - **Do not calculate currency locally.** Render `amount` and `currencyCode` returned by Shopify and format them with the local `hydrogen-money` skill's `formatMoney()` guidance.
-- **Keep ShopifyScripts in the same locale.** Pass `requestContext.locale` (plus optional `currency`) as the `ShopifyScripts` `i18n` prop so Shopify globals match Storefront API context.
+- **Keep the browser in the same locale.** Pass `requestContext.locale` (plus optional `currency`) as the `ShopifyScripts` `i18n` prop so Shopify globals match Storefront API context, and pass the same locale to `LocaleProvider` so cart and predictive search requests carry its `pathPrefix`.
 - **Set `<html lang>` with `getHtmlLang(locale.language)`.** It converts Shopify language codes to BCP 47 (`PT_BR` → `pt-BR`, `ZH_TW` → `zh-Hant`). Do not lowercase the enum or append the market country: `<html lang>` names the content language, while `hreflang` names the targeted region.
 - **Keep route templates prefix-free.** Hydrogen applies `requestContext.locale.pathPrefix`; do not bake prefixes such as `/en-ca` into template values.
 - **Keep translations separate.** Shopify Markets context localizes Shopify data. Application UI strings still need the app's translation system.
@@ -255,3 +297,5 @@ describe("i18n", () => {
 ```
 
 Also test at least one Storefront API call through a mocked fetch and assert the GraphQL variables include the expected `country` and `language` when the query declares them.
+
+Under pathname routing, also check the browser: on a page under a locale prefix, add to cart and confirm the request goes to `{pathPrefix}/api/cart` and the cart shows that market's currency.

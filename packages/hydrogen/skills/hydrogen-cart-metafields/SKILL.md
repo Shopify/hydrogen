@@ -94,6 +94,7 @@ async function handleCartMetafieldsPost({ request, storefrontClient }) {
 - **Existing cart** → `cartMetafieldsSet` with `ownerId` = the cart id from `getCartId(request)`.
 - **No cart** → reject with a `missing_cart` error. Do **not** call `cartCreate` here: two concurrent empty-cart writes would each create a cart and race on the cookie, orphaning one and dropping its write. Require callers to add a line first.
 - **Delete** → a single key via `cartMetafieldDelete`. The Storefront API deletes one metafield per call, so keep the contract single-key.
+- **Path-prefixed locales** → post to the route under the page's prefix, `` `${useLocale().pathPrefix}/api/cart/metafields` ``, so the mutation runs in the same locale as the cart. `handleShopifyRoutes` matches the handler with the prefix stripped; see the local `hydrogen-markets` skill.
 
 ## Re-syncing the store
 

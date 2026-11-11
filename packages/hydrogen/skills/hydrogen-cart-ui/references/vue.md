@@ -46,6 +46,8 @@ import { CartProvider } from "~/lib/cart";
 
 If the framework can fetch cart data on the server, pass the full cart handler data envelope (`{cart, errors?}`) into `<CartProvider initialData>`. Do not unwrap to only `data.cart`: `{cart: null}` tells the client the server already checked and found no usable cart, while omitted `initialData` tells the client to fetch `/api/cart` after mount. The cart server handlers log returned cart errors on the server, so do not throw just to force a route error. If there is no server cart fetch yet, still wrap with `<CartProvider>`; it will fetch `/api/cart` after mount. Register `createCartServerHandlers()` in the app's central `handleShopifyRoutes` wiring; use the `hydrogen-request-handlers` skill for the full framework-specific setup.
 
+When the storefront serves locales under a path prefix (`/fr-ca`), render `<LocaleProvider>` above `<CartProvider>` so cart requests and form actions carry the prefix; use the local `hydrogen-markets` skill.
+
 ## Custom Cart Fields
 
 If the cart needs extra fields, pass `fragment` with a fragment named `CartFragment` to `createCartServerHandlers()` and derive typed Vue bindings from the handlers:
