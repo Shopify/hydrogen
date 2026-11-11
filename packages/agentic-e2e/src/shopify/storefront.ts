@@ -6,7 +6,6 @@ import {
   createShopifyRequestContext,
   createStorefrontClient,
   defineShopifyI18n,
-  type ShopifyLanguageCode,
 } from "@shopify/hydrogen";
 import type { CountryCode, LanguageCode } from "@shopify/hydrogen/storefront-api-types";
 import type { z } from "zod";
@@ -22,16 +21,16 @@ const LOCALIZATION_QUERY = `query AgenticE2ELocalization {
   localization { language { isoCode } country { isoCode } }
 }`;
 
-// Inert: the request context needs a locale, but the query declares no `$country` or
-// `$language`, so the client sends neither.
-const BOOTSTRAP_LOCALE: StorefrontContext = { country: "US", language: "EN" };
+// Inert: the request context needs a locale, but no query declares `$country` or `$language`,
+// so the client sends neither. `satisfies` keeps the `"EN"` literal, which Hydrogen's locale accepts.
+const BOOTSTRAP_LOCALE = { country: "US", language: "EN" } satisfies StorefrontContext;
 
 /** Asks the Storefront API at the URL's origin which country and language are active. */
 export async function discoverContext(
   storefrontUrl: URL,
   signal: AbortSignal,
 ): Promise<StorefrontContext> {
-  const client = publicStorefrontClient(storefrontUrl, BOOTSTRAP_LOCALE);
+  const client = publicStorefrontClient(storefrontUrl);
   const result = await client.graphql(LOCALIZATION_QUERY, { signal });
   throwOnGraphQLErrors(result.errors);
   const localization = result.data?.localization;
@@ -49,24 +48,16 @@ function required<T>(value: T | null | undefined, path: string): T {
 }
 
 /**
- * A client for the Storefront API at the URL's origin, with Hydrogen's default API version. It
- * fills the variables that a query declares as `$country: CountryCode` and
- * `$language: LanguageCode` from `locale`.
+ * A client for the Storefront API at the URL's origin, with Hydrogen's default API version. Its
+ * locale is always `BOOTSTRAP_LOCALE`. A query that needs a context declares its own variables
+ * under other names, such as `$storefrontCountry` and `$storefrontLanguage`, and passes them.
  */
-export function publicStorefrontClient(storefrontUrl: URL, locale: StorefrontContext) {
+export function publicStorefrontClient(storefrontUrl: URL) {
   return createStorefrontClient({
     type: "public",
     requestContext: createShopifyRequestContext({
       request: { headers: new Headers() },
-      i18n: defineShopifyI18n({
-        defaultLocale: {
-          country: locale.country,
-          // `ShopifyLanguageCode` also fits the Customer Account API. This client sends only
-          // Storefront API requests, where every Storefront API language code is valid.
-          // oxlint-disable-next-line typescript/consistent-type-assertions -- see above.
-          language: locale.language as ShopifyLanguageCode,
-        },
-      }),
+      i18n: defineShopifyI18n({ defaultLocale: BOOTSTRAP_LOCALE }),
     }),
     config: { storeDomain: storefrontUrl.origin, defaultTimeoutInMs: REQUEST_DEADLINE_MS },
   });
