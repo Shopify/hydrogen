@@ -25,7 +25,7 @@ The result goes to stdout. Diagnostics go to stderr.
 | ---- | ------------------------------------------------------------------------------- |
 | 0    | `opened`                                                                        |
 | 2    | `indeterminate`                                                                 |
-| 64   | Usage error: no URL, more than one argument, a URL that is not http(s), or a URL with credentials. No browser starts. |
+| 64   | Usage error: no URL, more than one argument, an unknown flag, an invalid URL, a URL that is not http(s), or a URL with credentials. No browser starts. |
 
 ## Development
 
