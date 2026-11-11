@@ -1,47 +1,12 @@
-type Token = { value: string; start: number; end: number };
+import { tokenize, type Token } from "./tokens";
 
 /**
- * A top-level definition of a GraphQL text. A fragment is keyed by its name, any other definition
- * by its canonical form. `canonical` joins the definition's tokens with single spaces, so two copies
- * that differ only in whitespace, commas, or comments compare equal. `text` is the definition as written.
+ * A top-level definition of a GraphQL text. A fragment is keyed by its name, any other
+ * definition by its canonical form. `canonical` joins the definition's tokens with single
+ * spaces, so two copies that differ only in whitespace, commas, or comments compare equal.
+ * `text` is the definition as written.
  */
 type Definition = { key: string; canonical: string; text: string };
-
-// GraphQL ignores whitespace, line terminators, commas, the byte order mark, and `#` comments between tokens.
-const IGNORED_RE = /[\s,\uFEFF]+|#[^\n\r]*/y;
-const BLOCK_STRING_RE = /"""(?:\\"""|(?!""")[^])*"""/y;
-const STRING_RE = /"(?:\\.|[^"\\\n\r])*"/y;
-const WORD_RE = /[_0-9A-Za-z]+/y;
-
-function matchAt(pattern: RegExp, text: string, index: number): string | undefined {
-  pattern.lastIndex = index;
-  return pattern.exec(text)?.[0];
-}
-
-function tokenAt(text: string, index: number): string | undefined {
-  if (text.startsWith('"""', index)) return matchAt(BLOCK_STRING_RE, text, index);
-  if (text[index] === '"') return matchAt(STRING_RE, text, index);
-  return matchAt(WORD_RE, text, index) ?? text[index];
-}
-
-/** The tokens of a GraphQL text, or `undefined` when a string never closes. */
-function tokenize(text: string): Token[] | undefined {
-  const tokens: Token[] = [];
-  let index = 0;
-  while (index < text.length) {
-    const ignored = matchAt(IGNORED_RE, text, index);
-    if (ignored) {
-      index += ignored.length;
-      continue;
-    }
-
-    const value = tokenAt(text, index);
-    if (value === undefined) return undefined;
-    tokens.push({ value, start: index, end: index + value.length });
-    index += value.length;
-  }
-  return tokens;
-}
 
 /** `tokens` runs from a definition's first token to the brace that closes it. */
 function definitionOf(text: string, tokens: readonly Token[]): Definition {
@@ -52,12 +17,16 @@ function definitionOf(text: string, tokens: readonly Token[]): Definition {
   return { key, canonical, text: text.slice(first.start, last.end) };
 }
 
-/** Splits a text at each closing brace that returns to the top level. */
+/**
+ * Splits a text at each closing brace that returns to the top level. Returns `undefined` when the
+ * text has an unclosed string or brace, a stray `}`, or tokens after its last definition.
+ */
 function splitDefinitions(text: string, tokens: readonly Token[]): Definition[] | undefined {
   const definitions: Definition[] = [];
   let first = 0;
   let depth = 0;
   for (const [index, token] of tokens.entries()) {
+    if (token.value === '"') return undefined;
     if (token.value === "{") depth += 1;
     if (token.value !== "}") continue;
 
@@ -74,10 +43,11 @@ function splitDefinitions(text: string, tokens: readonly Token[]): Definition[] 
 }
 
 function definitionsOf(text: string): Definition[] {
-  const tokens = tokenize(text);
   // `gql` doesn't check syntax, so a text that doesn't split into definitions is kept whole, as
   // written, and the API reports the syntax error when the document runs.
-  return (tokens && splitDefinitions(text, tokens)) ?? [{ key: text, canonical: text, text }];
+  return (
+    splitDefinitions(text, Array.from(tokenize(text))) ?? [{ key: text, canonical: text, text }]
+  );
 }
 
 /**
@@ -88,8 +58,9 @@ function definitionsOf(text: string): Definition[] {
  * A fragment text whose definitions are all new is appended whole. A text that repeats a known
  * definition contributes only its new definitions.
  *
- * Two definitions that share a name but differ in canonical form are a programming error: the API would
- * reject the document, and skipping one would silently change which fields the spread selects.
+ * Two definitions that share a name but differ in canonical form are a programming error: the
+ * API would reject the document, and skipping one would silently change which fields the
+ * spread selects.
  */
 export function appendFragments(source: string, fragments: readonly string[]): string {
   const canonicalByKey = new Map<string, string>();
