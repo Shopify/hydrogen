@@ -57,6 +57,8 @@ const PINNED = {
   selectedOptions: [{ name: "Size", value: "Medium" }],
 };
 const NO_ADD = "No add Standard Event was recorded by the time Stagehand was disconnected.";
+const CLAIMED_ADD =
+  "The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.";
 /** The `agent` field of a run that the first add event stopped. */
 const STOPPED = { completed: false, reason: "Stopped by the command after the add event." };
 
@@ -285,28 +287,47 @@ describe("main with the agent", () => {
     expectStagehandDetached();
   });
 
-  it("reports indeterminate when the storefront dispatches no Standard Events", async () => {
+  it("fails with exit 1 when the storefront dispatches no Standard Events and the agent reports done", async () => {
     mode.addEvent = "none";
     reply = clickAdd();
 
-    await expect(main([origin])).resolves.toBe(2);
+    await expect(main([origin])).resolves.toBe(1);
 
     expect(results()).toEqual([
       {
-        status: "indeterminate",
-        reason: NO_ADD,
+        status: "fail",
+        reason: CLAIMED_ADD,
         context: CONTEXT,
         pinned: PINNED,
         // Nothing stopped the agent: it clicked Add and reported done by itself.
         agent: { completed: true, summary: "Added 1 unit." },
       },
     ]);
-    // The add happened, but without an add event the command cannot decide.
+    // The add happened, but the storefront dispatched no add event.
     expect(storeLog).toEqual(["add"]);
     expectStagehandDetached();
   });
 
-  it("reports indeterminate with the step limit in the agent field when no add event came", async () => {
+  it("fails with exit 1 when the agent reports done without any add", async () => {
+    reply = () => done(true);
+
+    await expect(main([origin])).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        status: "fail",
+        reason: CLAIMED_ADD,
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: { completed: true, summary: expect.stringContaining("Added 1 unit.") },
+      },
+    ]);
+    expect(modelRequests).toHaveLength(1);
+    expect(storeLog).toEqual([]);
+    expectStagehandDetached();
+  });
+
+  it("reports indeterminate with the step limit and the final message in the agent field when no add event came", async () => {
     reply = ({ tools }) => (isFinalAssessment(tools) ? done(true) : scroll());
 
     await expect(main([origin])).resolves.toBe(2);
@@ -317,7 +338,11 @@ describe("main with the agent", () => {
         reason: NO_ADD,
         context: CONTEXT,
         pinned: PINNED,
-        agent: { completed: false, reason: `The agent reached the ${MAX_STEPS}-step limit.` },
+        agent: {
+          completed: false,
+          reason: `The agent reached the ${MAX_STEPS}-step limit.`,
+          message: expect.any(String),
+        },
       },
     ]);
     expect(modelRequests.filter((request) => !isFinalAssessment(request.tools))).toHaveLength(
@@ -326,19 +351,19 @@ describe("main with the agent", () => {
     expectStagehandDetached();
   });
 
-  it("reports the agent completed when it calls done on the last step", async () => {
+  it("fails when the agent calls done on the last step without an add event", async () => {
     let turns = 0;
     reply = () => {
       turns += 1;
       return turns < MAX_STEPS ? scroll() : done(true);
     };
 
-    await expect(main([origin])).resolves.toBe(2);
+    await expect(main([origin])).resolves.toBe(1);
 
     expect(results()).toEqual([
       {
-        status: "indeterminate",
-        reason: NO_ADD,
+        status: "fail",
+        reason: CLAIMED_ADD,
         context: CONTEXT,
         pinned: PINNED,
         agent: { completed: true, summary: expect.stringContaining("Added 1 unit.") },
@@ -387,7 +412,12 @@ describe("main with the agent", () => {
         reason: NO_ADD,
         context: CONTEXT,
         pinned: PINNED,
-        agent: { completed: false, reason: expect.stringMatching(/^The agent failed: /) },
+        agent: {
+          completed: false,
+          reason: expect.stringMatching(/^The agent failed: /),
+          // Stagehand returned the failure as a result, so its final message is kept, redacted.
+          message: "Failed to execute task: invalid x-api-key: [redacted]",
+        },
       },
     ]);
     expect(stdout.join("")).toContain("[redacted]");

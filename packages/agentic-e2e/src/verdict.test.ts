@@ -8,6 +8,8 @@ const GIFT = "gid://shopify/ProductVariant/99";
 const PASS =
   "Every add event held exactly 1 unit of the pinned variant and resolved without cart user errors.";
 const NO_ADD = "No add Standard Event was recorded by the time Stagehand was disconnected.";
+const CLAIMED_ADD =
+  "The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.";
 const WRONG_ITEM = "An add event did not hold exactly 1 unit of the pinned variant.";
 const NO_PROMISE = "An add event had no promise, so its outcome is unknown.";
 const REJECTED = "An add event promise was rejected.";
@@ -45,9 +47,19 @@ function push(events: AddEvent[], message: Message): void {
 /** The 5-second wait returns at once: as if the limit passed with nothing new. */
 const noWait = async (): Promise<void> => undefined;
 
-/** The agent started at order 0. */
-async function verify(events: AddEvent[], wait: (done: () => boolean) => Promise<void> = noWait) {
-  return verifyAdd({ events, agentStart: 0, variantId: VARIANT, waitForOutcomes: wait });
+/** The agent started at order 0 and did not confirm completion. */
+async function verify(
+  events: AddEvent[],
+  wait: (done: () => boolean) => Promise<void> = noWait,
+  agentCompleted = false,
+) {
+  return verifyAdd({
+    events,
+    agentStart: 0,
+    variantId: VARIANT,
+    agentCompleted,
+    waitForOutcomes: wait,
+  });
 }
 
 describe("verifyAdd", () => {
@@ -137,12 +149,32 @@ describe("verifyAdd", () => {
     await expect(verify(events, wait)).resolves.toEqual({ status: "fail", reason: WRONG_ITEM });
   });
 
-  it("is indeterminate when no add event was recorded", async () => {
+  it("is indeterminate when no add event was recorded and the agent did not confirm completion", async () => {
     const update = { ...add("a"), action: "update" } as Message;
 
     await expect(verify(log(update, settled("a")))).resolves.toEqual({
       status: "indeterminate",
       reason: NO_ADD,
+    });
+  });
+
+  it("fails when no add event was recorded but the agent confirmed completion", async () => {
+    const update = { ...add("a"), action: "update" } as Message;
+
+    await expect(verify(log(update, settled("a")), noWait, true)).resolves.toEqual({
+      status: "fail",
+      reason: CLAIMED_ADD,
+    });
+  });
+
+  it("decides from the add events, not the agent's completion, when an add event was recorded", async () => {
+    await expect(verify(log(add("a"), settled("a")), noWait, true)).resolves.toEqual({
+      status: "pass",
+      reason: PASS,
+    });
+    await expect(verify(log(add("a"), failed("a")), noWait, true)).resolves.toEqual({
+      status: "fail",
+      reason: REJECTED,
     });
   });
 
@@ -153,6 +185,7 @@ describe("verifyAdd", () => {
       events,
       agentStart: 1,
       variantId: VARIANT,
+      agentCompleted: false,
       waitForOutcomes: noWait,
     });
 

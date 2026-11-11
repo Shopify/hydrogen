@@ -31,7 +31,15 @@ export const STOPPED_AT_ADD = "Stopped by the command after the add event.";
 /** What the agent run reports. It feeds the `agent` field of the result, never the verdict. */
 export type AgentOutcome =
   | { completed: true; summary: string }
-  | { completed: false; reason: string };
+  | {
+      completed: false;
+      reason: string;
+      /**
+       * The final message that Stagehand returned, redacted. Present only when Stagehand returned
+       * a result: not for a thrown error, the deadline, or {@link STOPPED_AT_ADD}.
+       */
+      message?: string;
+    };
 
 export type AgentRunInput = {
   /** The page the agent works on. */
@@ -142,18 +150,19 @@ async function runTask(
     }
     return notCompleted(redact(`The agent failed: ${errorMessage(error)}`));
   }
+  const message = redact(result.message);
   // The loop was cut off while the agent still wanted to act.
   if (steps >= MAX_STEPS && lastStepCutOff) {
-    return notCompleted(`The agent reached the ${MAX_STEPS}-step limit.`);
+    return notCompleted(`The agent reached the ${MAX_STEPS}-step limit.`, message);
   }
   if (result.message.startsWith(FAILURE_PREFIX)) {
     const cause = errorMessage(result.message.slice(FAILURE_PREFIX.length));
-    return notCompleted(redact(`The agent failed: ${cause}`));
+    return notCompleted(redact(`The agent failed: ${cause}`), message);
   }
   if (!confirmsCompletion(result)) {
-    return notCompleted("The agent did not confirm that it completed the task.");
+    return notCompleted("The agent did not confirm that it completed the task.", message);
   }
-  return { completed: true, summary: redact(result.message) };
+  return { completed: true, summary: message };
 }
 
 /**
@@ -182,6 +191,9 @@ async function detach(stagehand: Stagehand): Promise<void> {
   await within(stagehand.close(), DETACH_TIMEOUT_MS, "").catch(() => undefined);
 }
 
-function notCompleted(reason: string): AgentOutcome {
-  return { completed: false, reason };
+/** `message` is the redacted final message of a result that Stagehand returned. */
+function notCompleted(reason: string, message?: string): AgentOutcome {
+  return message === undefined
+    ? { completed: false, reason }
+    : { completed: false, reason, message };
 }
