@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { applyPrivateResponseCacheHeaders, extractHeaders } from "./headers";
+import { applyPrivateResponseCacheHeaders, extractHeaders, getSetCookieValues } from "./headers";
 
 describe("extractHeaders", () => {
   it("extracts present headers and skips missing ones", () => {
@@ -50,5 +50,35 @@ describe("applyPrivateResponseCacheHeaders", () => {
       ["cache-control", "private, no-store, max-age=0, must-revalidate"],
       ["content-type", "text/html"],
     ]);
+  });
+});
+
+describe("getSetCookieValues", () => {
+  it("uses Headers.getSetCookie when available", () => {
+    const headers = new Headers();
+    headers.append("set-cookie", "a=1; Path=/");
+    headers.append("set-cookie", "b=2; Path=/");
+
+    expect(getSetCookieValues(headers)).toEqual(["a=1; Path=/", "b=2; Path=/"]);
+  });
+
+  it("falls back to get('set-cookie') when getSetCookie is missing", () => {
+    const headers = {
+      get(name: string) {
+        return name.toLowerCase() === "set-cookie" ? "session=1; Path=/" : null;
+      },
+    } as Headers;
+
+    expect(getSetCookieValues(headers)).toEqual(["session=1; Path=/"]);
+  });
+
+  it("returns an empty array when getSetCookie is missing and no set-cookie header exists", () => {
+    const headers = {
+      get() {
+        return null;
+      },
+    } as Headers;
+
+    expect(getSetCookieValues(headers)).toEqual([]);
   });
 });
