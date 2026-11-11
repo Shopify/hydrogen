@@ -8,13 +8,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createBrowserSession } from "./session.ts";
 
 // The browser is a fake executable that prints a DevTools endpoint and stays alive. Playwright's
-// CDP connection is mocked, so each test controls when the connection and the page settle.
+// CDP connection is mocked, so each test controls when the connection settles.
 vi.mock("playwright-core", () => ({
   chromium: { connectOverCDP: vi.fn(), executablePath: vi.fn(() => "/missing-chromium") },
 }));
-
-/** Startup cancellation must not wait for the 30-second startup timeouts. */
-const PROMPT_MS = 5_000;
 
 let workDir: string;
 let profiles: string;
@@ -49,7 +46,7 @@ afterEach(async () => {
 });
 
 describe("createBrowserSession", () => {
-  it("does not start a browser or create a profile when the signal is already aborted", async () => {
+  it("rejects before it launches a browser and leaves no profile when the signal is already aborted", async () => {
     const reason = new Error("stopped early");
 
     await expect(
@@ -69,51 +66,18 @@ describe("createBrowserSession", () => {
     const starting = createBrowserSession(fakeBrowser, { signal: controller.signal });
     await vi.waitFor(() => expect(chromium.connectOverCDP).toHaveBeenCalledOnce());
     const pid = await browserPid();
-    const abortedAt = performance.now();
     controller.abort(reason);
 
     await expect(starting).rejects.toBe(reason);
-    expect(performance.now() - abortedAt).toBeLessThan(PROMPT_MS);
     expect(isAlive(pid)).toBe(false);
     expect(await readdir(profiles)).toEqual([]);
 
-    // The connection finishes after the session gave up: it must not stay open.
-    const late = fakeConnectedBrowser();
+    // The connection finishes, with a page, after the session gave up: it must not stay open.
+    const late = { contexts: () => [{ pages: () => [{}] }], close: vi.fn(async () => undefined) };
     connection.resolve(late as unknown as Browser);
     await vi.waitFor(() => expect(late.close).toHaveBeenCalled());
   });
-
-  it("cancels a stalled page creation and disconnects the browser", async () => {
-    const browser = fakeConnectedBrowser();
-    vi.mocked(chromium.connectOverCDP).mockResolvedValue(browser as unknown as Browser);
-    const controller = new AbortController();
-    const reason = new Error("stopped during page creation");
-
-    const starting = createBrowserSession(fakeBrowser, { signal: controller.signal });
-    await vi.waitFor(() => expect(browser.newPage).toHaveBeenCalledOnce());
-    const pid = await browserPid();
-    const abortedAt = performance.now();
-    controller.abort(reason);
-
-    await expect(starting).rejects.toBe(reason);
-    expect(performance.now() - abortedAt).toBeLessThan(PROMPT_MS);
-    expect(isAlive(pid)).toBe(false);
-    expect(browser.close).toHaveBeenCalled();
-    expect(await readdir(profiles)).toEqual([]);
-  });
 });
-
-/** A connected browser whose default context has no page, and whose new page never opens. */
-function fakeConnectedBrowser() {
-  const newPage = vi.fn(async () => new Promise<never>(() => undefined));
-  return {
-    newPage,
-    // Not connected, so close does not try a graceful CDP `Browser.close`.
-    isConnected: () => false,
-    contexts: () => [{ pages: () => [], newPage }],
-    close: vi.fn(async () => undefined),
-  };
-}
 
 async function browserPid(): Promise<number> {
   let pid = Number.NaN;

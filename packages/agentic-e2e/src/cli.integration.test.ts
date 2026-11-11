@@ -90,9 +90,9 @@ describe("main", () => {
     ]);
   });
 
-  it("stops on SIGINT while the browser starts and removes the browser and profile", async () => {
+  it("waits for browser and profile cleanup after SIGINT soon after the browser process appears", async () => {
     const run = main([`${origin}/hang`]);
-    // Interrupt as soon as the browser process exists: during launch or CDP connection setup.
+    // Interrupt as soon as the browser process exists. The startup phase it hits is not fixed.
     await vi.waitFor(() => expect(browserProcesses()).not.toEqual([]), {
       timeout: 10_000,
       interval: 5,

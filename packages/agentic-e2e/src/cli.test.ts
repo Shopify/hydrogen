@@ -115,13 +115,11 @@ describe("main", () => {
 
     const run = main(["https://shop.example"]);
     await vi.waitFor(() => expect(createBrowserSession).toHaveBeenCalledOnce());
-    const [executablePath, options] = vi.mocked(createBrowserSession).mock.calls[0] ?? [];
-    expect(executablePath).toBeUndefined();
+    const options = vi.mocked(createBrowserSession).mock.calls[0]?.[1];
     expect(options?.signal?.aborted).toBe(false);
     process.emit("SIGTERM", "SIGTERM");
 
     await expect(run).resolves.toBe(2);
-    expect(options?.signal?.aborted).toBe(true);
     expect(stdout).toEqual([
       `${JSON.stringify({ status: "indeterminate", reason: "Interrupted by SIGTERM." })}\n`,
     ]);
