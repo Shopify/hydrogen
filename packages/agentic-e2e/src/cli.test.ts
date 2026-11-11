@@ -39,7 +39,7 @@ beforeEach(() => {
   });
   vi.mocked(pinVariant).mockImplementation(async () => {
     calls.push("pin");
-    return { status: "found", pinned: PINNED };
+    return { status: "pinned", pinned: PINNED };
   });
   vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
     stdout.push(String(chunk));

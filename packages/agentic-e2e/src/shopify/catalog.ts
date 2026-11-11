@@ -13,7 +13,7 @@ export type PinnedVariant = {
 };
 
 export type CatalogPin =
-  | { status: "found"; pinned: PinnedVariant }
+  | { status: "pinned"; pinned: PinnedVariant }
   | { status: "skipped"; reason: string };
 
 // The client fills `$country` and `$language` from the discovered context.
@@ -67,7 +67,7 @@ export async function pinVariant(
     const result = await client.graphql(CATALOG_QUERY, { variables, signal });
     const { products } = readData(result, catalogPageSchema);
     const pinned = products.nodes.map(eligibleVariant).find((variant) => variant !== undefined);
-    if (pinned !== undefined) return { status: "found", pinned };
+    if (pinned !== undefined) return { status: "pinned", pinned };
     if (!products.pageInfo.hasNextPage) {
       return {
         status: "skipped",

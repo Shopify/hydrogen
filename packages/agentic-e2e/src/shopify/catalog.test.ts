@@ -76,7 +76,7 @@ describe("pinVariant", () => {
     ]);
 
     await expect(pinVariant(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
-      status: "found",
+      status: "pinned",
       pinned: {
         productHandle: "first",
         productTitle: "Title first",
@@ -97,7 +97,7 @@ describe("pinVariant", () => {
 
     const pin = await pinVariant(STOREFRONT_URL, CA_FR, signal);
 
-    expect(pin.status === "found" && pin.pinned.productHandle).toBe("later");
+    expect(pin.status === "pinned" && pin.pinned.productHandle).toBe("later");
     expect(requests.map((request) => request.variables.after)).toEqual([null, "cursor-1"]);
   });
 
