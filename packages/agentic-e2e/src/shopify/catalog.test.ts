@@ -55,12 +55,14 @@ describe("pinVariant", () => {
     await pinVariant(STOREFRONT_URL, CA_FR, signal);
 
     expect(requests[0]?.url).toMatch(/^https:\/\/shop\.example\/api\/[^/]+\/graphql\.json$/);
-    expect(requests[0]?.query).toContain("@inContext(country: $country, language: $language)");
+    expect(requests[0]?.query).toContain(
+      "@inContext(country: $storefrontCountry, language: $storefrontLanguage)",
+    );
     expect(requests[0]?.variables).toEqual({
       first: 50,
       after: null,
-      country: "CA",
-      language: "FR",
+      storefrontCountry: "CA",
+      storefrontLanguage: "FR",
     });
   });
 
@@ -70,8 +72,15 @@ describe("pinVariant", () => {
 
     await pinVariant(STOREFRONT_URL, { country: "CA", language }, signal);
 
-    expect(requests[0]?.query).toContain("@inContext(country: $country, language: $language)");
-    expect(requests[0]?.variables).toEqual({ first: 50, after: null, country: "CA", language });
+    expect(requests[0]?.query).toContain(
+      "@inContext(country: $storefrontCountry, language: $storefrontLanguage)",
+    );
+    expect(requests[0]?.variables).toEqual({
+      first: 50,
+      after: null,
+      storefrontCountry: "CA",
+      storefrontLanguage: language,
+    });
   });
 
   it("pins the first eligible product and passes over ineligible ones", async () => {
@@ -109,8 +118,8 @@ describe("pinVariant", () => {
 
     expect(pin.status === "pinned" && pin.pinned.productHandle).toBe("later");
     expect(requests.map((request) => request.variables)).toEqual([
-      { first: 50, after: null, country: "CA", language: "LA" },
-      { first: 50, after: "cursor-1", country: "CA", language: "LA" },
+      { first: 50, after: null, storefrontCountry: "CA", storefrontLanguage: "LA" },
+      { first: 50, after: "cursor-1", storefrontCountry: "CA", storefrontLanguage: "LA" },
     ]);
   });
 

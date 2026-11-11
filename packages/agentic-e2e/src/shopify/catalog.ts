@@ -16,8 +16,9 @@ export type CatalogPin =
   | { status: "pinned"; pinned: PinnedVariant }
   | { status: "skipped"; reason: string };
 
-// The client fills `$country` and `$language` from the discovered context.
-const CATALOG_QUERY = `query AgenticE2ECatalog($first: Int!, $after: String, $country: CountryCode!, $language: LanguageCode!) @inContext(country: $country, language: $language) {
+// Not `$country` or `$language`: the client would fill those from its locale. `pinVariant` passes
+// the discovered context explicitly.
+const CATALOG_QUERY = `query AgenticE2ECatalog($first: Int!, $after: String, $storefrontCountry: CountryCode!, $storefrontLanguage: LanguageCode!) @inContext(country: $storefrontCountry, language: $storefrontLanguage) {
   products(first: $first, after: $after, sortKey: ID, query: "available_for_sale:true") {
     pageInfo { hasNextPage endCursor }
     nodes {
@@ -59,11 +60,21 @@ export async function pinVariant(
   context: StorefrontContext,
   signal: AbortSignal,
 ): Promise<CatalogPin> {
-  const client = publicStorefrontClient(storefrontUrl, context);
+  const client = publicStorefrontClient(storefrontUrl);
   let after: string | null = null;
   for (let page = 1; page <= PAGE_LIMIT; page++) {
     // Annotated: `after` is reassigned below, which makes inference circular.
-    const variables: { first: number; after: string | null } = { first: PRODUCTS_PER_PAGE, after };
+    const variables: {
+      first: number;
+      after: string | null;
+      storefrontCountry: StorefrontContext["country"];
+      storefrontLanguage: StorefrontContext["language"];
+    } = {
+      first: PRODUCTS_PER_PAGE,
+      after,
+      storefrontCountry: context.country,
+      storefrontLanguage: context.language,
+    };
     const result = await client.graphql(CATALOG_QUERY, { variables, signal });
     const { products } = readData(result, catalogPageSchema);
     const pinned = products.nodes.map(eligibleVariant).find((variant) => variant !== undefined);
