@@ -5887,7 +5887,7 @@
         "name": "Promise<boolean | void>",
         "value": "Promise<boolean | void>"
       },
-      "value": "export function initializeShopifyScripts({\n  consent,\n  navigate,\n  routes,\n  webMcp = true,\n}: InitializeShopifyScriptsOptions): Promise<boolean | void> {\n  configureShopifyRouting({ navigate, routes });\n  initializeShopifyPageViewEvents();\n\n  if (consent?.mode === \"custom-banner\") {\n    if (typeof consent.setup !== \"function\") {\n      log.warn(\n        \"custom-banner requires a consent.setup callback; analytics delivery remains blocked until setup completes\",\n      );\n    } else {\n      try {\n        initializeCustomConsent(consent.setup);\n      } catch (error) {\n        log.error(\"custom consent initialization failed\", { error });\n      }\n    }\n  }\n\n  if (!webMcp) return Promise.resolve();\n\n  return loadShopifyWebMcpTools();\n}"
+      "value": "export function initializeShopifyScripts({\n  consent,\n  navigate,\n  routes,\n  webMcp = true,\n}: InitializeShopifyScriptsOptions): Promise<boolean | void> {\n  configureShopifyRouting({ navigate, routes });\n  initializeShopifyPageViewEvents();\n  if (__DEV__) observeNavigation(warnOnLocaleChangingNavigation);\n\n  if (consent?.mode === \"custom-banner\") {\n    if (typeof consent.setup !== \"function\") {\n      log.warn(\n        \"custom-banner requires a consent.setup callback; analytics delivery remains blocked until setup completes\",\n      );\n    } else {\n      try {\n        initializeCustomConsent(consent.setup);\n      } catch (error) {\n        log.error(\"custom consent initialization failed\", { error });\n      }\n    }\n  }\n\n  if (!webMcp) return Promise.resolve();\n\n  return loadShopifyWebMcpTools();\n}"
     }
   },
   "GetShopifyScriptTagsGeneratedType": {
@@ -6546,7 +6546,7 @@
     "src/core/cart/cart.ts": {
       "filePath": "src/core/cart/cart.ts",
       "name": "ConfigureCartEndpointGeneratedType",
-      "description": "Sends every cart load and cart change on the page to your cart endpoint. Without an endpoint, Standard Actions handles cart requests with its default handler.\n\nCall the function before you connect a cart store. The first cart load then goes to your endpoint. A later call with a different endpoint replaces the first endpoint and logs a warning. In React, `CartProvider` sets the endpoint to `/api/cart` when the provider mounts.",
+      "description": "Sends every cart load and cart change on the page to your cart endpoint. Without an endpoint, Standard Actions handles cart requests with its default handler.\n\nCall the function before you connect a cart store. The first cart load then goes to your endpoint. A later call with a different endpoint replaces the first endpoint and logs a warning.\n\nThe React and Vue cart providers use `/api/cart` unless you set an endpoint first. They render the endpoint as the cart form action and put a path that starts with `/` under the locale path prefix from `LocaleProvider`. With those providers, pass the path without a locale prefix, and call the function at module scope in code that runs on the server and in the browser, so the server-rendered form action matches.\n\nWithout those providers, call the function in the browser only and include the page's locale path prefix in the endpoint, such as `/fr-ca/api/cart`.",
       "isPublicDocs": true,
       "params": [
         {
@@ -11795,7 +11795,7 @@
     "src/react/cart.tsx": {
       "filePath": "src/react/cart.tsx",
       "name": "CreateCartComponentsGeneratedType",
-      "description": "Returns a cart provider and cart hooks typed to the cart fragment in your cart server handlers. Pass `typeof cartServerHandlers` as the `THandlers` type argument. Every hook's cart state then includes your custom cart fields.\n\nOn mount, the provider sends cart requests to `/api/cart` and connects the store. Every hook except `useOptionalCart` throws when you call it outside the provider.",
+      "description": "Returns a cart provider and cart hooks typed to the cart fragment in your cart server handlers. Pass `typeof cartServerHandlers` as the `THandlers` type argument. Every hook's cart state then includes your custom cart fields.\n\nOn mount, the provider connects the store and sends cart requests to `/api/cart`, or to the endpoint from `configureCartEndpoint`. Inside `LocaleProvider`, the requests go under the locale's path prefix. Every hook except `useOptionalCart` throws when you call it outside the provider.",
       "isPublicDocs": true,
       "params": [],
       "returns": {
@@ -11877,7 +11877,7 @@
       "filePath": "src/react/cart.tsx",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "TypedCartProviderProps",
-      "value": "{\n  /**\n   * The `data` property of the cart GET handler's result, or a promise of that data. Without initial data, the store loads the cart from `/api/cart` after the provider mounts, and the server-rendered page shows an empty cart. The provider creates its store from the first value and ignores later changes.\n   */\n  initialData?: CartInitialData<TData>;\n  /** Content that can read the cart through the cart hooks. */\n  children?: ReactNode;\n}",
+      "value": "{\n  /**\n   * The `data` property of the cart GET handler's result, or a promise of that data. Without initial data, the store loads the cart from the cart endpoint after the provider mounts, and the server-rendered page shows an empty cart. The provider creates its store from the first value and ignores later changes.\n   */\n  initialData?: CartInitialData<TData>;\n  /** Content that can read the cart through the cart hooks. */\n  children?: ReactNode;\n}",
       "description": "Props for the cart provider that `createCartComponents` returns.",
       "members": [
         {
@@ -11893,7 +11893,7 @@
           "syntaxKind": "PropertySignature",
           "name": "initialData",
           "value": "CartInitialData<TData>",
-          "description": "The `data` property of the cart GET handler's result, or a promise of that data. Without initial data, the store loads the cart from `/api/cart` after the provider mounts, and the server-rendered page shows an empty cart. The provider creates its store from the first value and ignores later changes.",
+          "description": "The `data` property of the cart GET handler's result, or a promise of that data. Without initial data, the store loads the cart from the cart endpoint after the provider mounts, and the server-rendered page shows an empty cart. The provider creates its store from the first value and ignores later changes.",
           "isOptional": true
         }
       ]
@@ -12038,7 +12038,7 @@
     "src/react/cart.tsx": {
       "filePath": "src/react/cart.tsx",
       "name": "CartProviderGeneratedType",
-      "description": "Creates a cart store and shares the store with the cart hooks inside the provider.\n\nRender every cart hook inside the provider. On mount, the provider sends cart requests to `/api/cart` and connects the store. On unmount, the provider destroys the store. The provider creates its store from the first initial data and ignores later changes.",
+      "description": "Creates a cart store and shares the store with the cart hooks inside the provider.\n\nRender every cart hook inside the provider. On mount, the provider connects the store and sends cart requests to `/api/cart`, or to the endpoint from `configureCartEndpoint`. Inside `LocaleProvider`, the requests go under the locale's path prefix. On unmount, the provider destroys the store. The provider creates its store from the first initial data and ignores later changes.",
       "isPublicDocs": true,
       "params": [
         {
@@ -12054,7 +12054,7 @@
         "name": "",
         "value": ""
       },
-      "value": "export function CartProvider({\n  initialData,\n  children,\n}: {\n  initialData?: CartInitialData;\n  children?: ReactNode;\n}) {\n  const context = useMemo(() => {\n    const store = createCartStore({ initialData });\n    // Plain consumers must hydrate from the state used for SSR, even if the live store settles first.\n    return { store, hydrationSnapshot: store.getState() };\n    // oxlint-disable-next-line react-hooks/exhaustive-deps -- provider initialData seeds one store for its lifetime\n  }, []);\n  const { store } = context;\n\n  useEffect(() => {\n    configureCoreCartEndpoint(cartEndpoint);\n    store.connect();\n    return () => {\n      store.destroy();\n    };\n  }, [store]);\n\n  return <CartContext.Provider value={context}>{children}</CartContext.Provider>;\n}",
+      "value": "export function CartProvider({\n  initialData,\n  children,\n}: {\n  initialData?: CartInitialData;\n  children?: ReactNode;\n}) {\n  const pathPrefix = useLocalePathPrefix();\n  const endpoint = getCartEndpoint(pathPrefix);\n  const storeContext = useMemo(() => {\n    const store = createCartStore({ initialData });\n    // Plain consumers must hydrate from the state used for SSR, even if the live store settles first.\n    return { store, hydrationSnapshot: store.getState() };\n    // oxlint-disable-next-line react-hooks/exhaustive-deps -- provider initialData seeds one store for its lifetime\n  }, []);\n  const { store } = storeContext;\n  const context = useMemo(() => ({ ...storeContext, endpoint }), [storeContext, endpoint]);\n\n  // A child can load the cart in its own mount effect, and child effects run before this\n  // provider's. Insertion effects run before every layout and passive effect in the commit, so\n  // that first request already goes under the locale path prefix.\n  useInsertionEffect(() => {\n    configureCartRequests(pathPrefix);\n  }, [pathPrefix]);\n\n  useEffect(() => {\n    store.connect();\n    return () => {\n      store.destroy();\n    };\n  }, [store]);\n\n  return <CartContext.Provider value={context}>{children}</CartContext.Provider>;\n}",
       "examples": [
         {
           "title": "Example",
@@ -12222,7 +12222,7 @@
         "name": "CartFormBindings",
         "value": "CartFormBindings"
       },
-      "value": "export function useCartForm(): CartFormBindings {\n  const store = useCartStore(\"useCartForm\");\n  const coreRegister = useMemo(() => createCartFormRegister(), []);\n\n  const register = useMemo(() => {\n    type Register = typeof coreRegister;\n    const wrapped = ((...args: Parameters<Register>) => {\n      const result = (coreRegister as Function)(...args);\n      const [field, opts] = args as [string, { interactive?: boolean }?];\n\n      if (field === \"quantity\" && opts?.interactive) {\n        let cleanup: (() => void) | null = null;\n        const ref: RefCallback<HTMLInputElement> = (el) => {\n          cleanup?.();\n          cleanup = null;\n          if (el) {\n            const form = el.closest(\"form\");\n            if (form) cleanup = attachQuantityInput(el, form);\n          }\n        };\n        const { value: _, ...rest } = result;\n        return { ...rest, defaultValue: result.value, ref };\n      }\n\n      return result;\n    }) as Register;\n    return wrapped;\n  }, [coreRegister]);\n\n  const formProps = (opts?: CartFormPropsOptions): FormHTMLAttributes<HTMLFormElement> => ({\n    onSubmit: (e: SubmitEvent<HTMLFormElement>) => {\n      opts?.beforeSubmit?.(e);\n      if (e.defaultPrevented) return;\n      e.preventDefault();\n      store.handleFormSubmit(e.nativeEvent).catch(() => {});\n      opts?.afterSubmit?.(e);\n    },\n    method: \"post\",\n    action: cartEndpoint,\n  });\n\n  return { formProps, register };\n}",
+      "value": "export function useCartForm(): CartFormBindings {\n  const { store, endpoint } = useCartContext(\"useCartForm\");\n  const coreRegister = useMemo(() => createCartFormRegister(), []);\n\n  const register = useMemo(() => {\n    type Register = typeof coreRegister;\n    const wrapped = ((...args: Parameters<Register>) => {\n      const result = (coreRegister as Function)(...args);\n      const [field, opts] = args as [string, { interactive?: boolean }?];\n\n      if (field === \"quantity\" && opts?.interactive) {\n        let cleanup: (() => void) | null = null;\n        const ref: RefCallback<HTMLInputElement> = (el) => {\n          cleanup?.();\n          cleanup = null;\n          if (el) {\n            const form = el.closest(\"form\");\n            if (form) cleanup = attachQuantityInput(el, form);\n          }\n        };\n        const { value: _, ...rest } = result;\n        return { ...rest, defaultValue: result.value, ref };\n      }\n\n      return result;\n    }) as Register;\n    return wrapped;\n  }, [coreRegister]);\n\n  const formProps = (opts?: CartFormPropsOptions): FormHTMLAttributes<HTMLFormElement> => ({\n    onSubmit: (e: SubmitEvent<HTMLFormElement>) => {\n      opts?.beforeSubmit?.(e);\n      if (e.defaultPrevented) return;\n      e.preventDefault();\n      store.handleFormSubmit(e.nativeEvent).catch(() => {});\n      opts?.afterSubmit?.(e);\n    },\n    method: \"post\",\n    action: endpoint,\n  });\n\n  return { formProps, register };\n}",
       "examples": [
         {
           "title": "Example",
@@ -12458,11 +12458,99 @@
       ]
     }
   },
+  "LocaleProviderGeneratedType": {
+    "src/react/locale.tsx": {
+      "filePath": "src/react/locale.tsx",
+      "name": "LocaleProviderGeneratedType",
+      "description": "Shares the request's locale with your app, so requests from the browser stay in the customer's locale.\n\nInside the provider, `useLocale` returns the locale. `CartProvider` and `PredictiveSearchProvider` send their requests under the locale's path prefix, such as `/fr-ca/api/cart`, and cart and search forms post under the same prefix. Render the provider above both, and pass the same locale to `ShopifyScripts`. A storefront with one locale doesn't need the provider.\n\nHydrogen keeps one locale per page load. Change locale with a full page load, such as a plain link built with `getLocalizedHref`, so Shopify's scripts and the cart start again in the new locale.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "input1",
+          "description": "The request's locale and the content that reads the locale.",
+          "value": "LocaleProviderProps",
+          "filePath": "src/react/locale.tsx"
+        }
+      ],
+      "returns": {
+        "filePath": "src/react/locale.tsx",
+        "description": "A provider for `useLocale` and for the cart and predictive search providers.",
+        "name": "",
+        "value": ""
+      },
+      "value": "export function LocaleProvider({ locale, children }: LocaleProviderProps) {\n  if (__DEV__) warnOnLocalePathPrefixMismatch(locale.pathPrefix);\n\n  return createElement(LocaleContext.Provider, { value: locale }, children);\n}",
+      "examples": [
+        {
+          "title": "Example",
+          "description": "",
+          "tabs": [
+            {
+              "code": "<LocaleProvider locale={loaderData.locale}>\n  <CartProvider initialData={loaderData.cartData}>\n    <App />\n  </CartProvider>\n</LocaleProvider>",
+              "title": "In your root layout, with `locale: requestContext.locale` in the loader data"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "LocaleProviderProps": {
+    "src/react/locale.tsx": {
+      "filePath": "src/react/locale.tsx",
+      "name": "LocaleProviderProps",
+      "description": "Props for `LocaleProvider`.",
+      "members": [
+        {
+          "filePath": "src/react/locale.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "children",
+          "value": "ReactNode",
+          "description": "Content that reads the locale, including the cart and predictive search providers.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/react/locale.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "locale",
+          "value": "ShopifyMatchedLocale",
+          "description": "The locale that the server resolved for the request. Pass `requestContext.locale` through your loader data."
+        }
+      ],
+      "value": "export interface LocaleProviderProps {\n  /** The locale that the server resolved for the request. Pass `requestContext.locale` through your loader data. */\n  locale: ShopifyMatchedLocale;\n  /** Content that reads the locale, including the cart and predictive search providers. */\n  children?: ReactNode;\n}"
+    }
+  },
+  "UseLocaleGeneratedType": {
+    "src/react/locale.tsx": {
+      "filePath": "src/react/locale.tsx",
+      "name": "UseLocaleGeneratedType",
+      "description": "Returns the locale that the server resolved for the request: the language, the country, and the path prefix.\n\nAdd the path prefix to your own links and requests to keep them in the customer's locale. The prefix is empty for the default locale and for locales with their own domain. The hook throws outside `LocaleProvider`.",
+      "isPublicDocs": true,
+      "params": [],
+      "returns": {
+        "filePath": "src/react/locale.tsx",
+        "description": "The locale from `LocaleProvider`.",
+        "name": "ShopifyMatchedLocale",
+        "value": "ShopifyMatchedLocale"
+      },
+      "value": "export function useLocale(): ShopifyMatchedLocale {\n  const locale = useContext(LocaleContext);\n  if (!locale) throw new Error(\"useLocale must be used inside <LocaleProvider>.\");\n  return locale;\n}",
+      "examples": [
+        {
+          "title": "Example",
+          "description": "",
+          "tabs": [
+            {
+              "code": "function CollectionsLink() {\n  const { pathPrefix } = useLocale();\n  return <a href={`${pathPrefix}/collections`}>Collections</a>;\n}",
+              "title": "Example"
+            }
+          ]
+        }
+      ]
+    }
+  },
   "PredictiveSearchProviderGeneratedType": {
     "src/react/predictive-search.tsx": {
       "filePath": "src/react/predictive-search.tsx",
       "name": "PredictiveSearchProviderGeneratedType",
-      "description": "Runs predictive search for the components inside the provider. Wrap your search UI in the provider. Inside the provider, `usePredictiveSearch` reads the results, `usePredictiveSearchActions` searches and clears, and `usePredictiveSearchForm` builds the search form.\n\nThe provider throws an error when you omit the `fetch` prop in a runtime without a global `fetch`.",
+      "description": "Runs predictive search for the components inside the provider. Wrap your search UI in the provider. Inside the provider, `usePredictiveSearch` reads the results, `usePredictiveSearchActions` searches and clears, and `usePredictiveSearchForm` builds the search form.\n\nInside `LocaleProvider`, the provider puts the endpoint and the search page path under the locale's path prefix when they start with `/`, so results and the search page stay in the customer's locale.\n\nThe provider throws an error when you omit the `fetch` prop in a runtime without a global `fetch`.",
       "isPublicDocs": true,
       "params": [
         {
@@ -12478,7 +12566,7 @@
         "name": "",
         "value": ""
       },
-      "value": "export function PredictiveSearchProvider({\n  children,\n  predictiveSearchEndpoint,\n  searchAction,\n  debounceInMs,\n  minTermLength,\n  fetch,\n  limit,\n  limitScope,\n  types,\n  searchableFields,\n  unavailableProducts,\n}: PredictiveSearchProviderProps) {\n  const typesKey = getArrayKey(types);\n  const searchableFieldsKey = getArrayKey(searchableFields);\n\n  const store = useMemo(\n    () =>\n      createPredictiveSearchStore({\n        predictiveSearchEndpoint,\n        debounceInMs,\n        minTermLength,\n        fetch,\n        limit,\n        limitScope,\n        types,\n        searchableFields,\n        unavailableProducts,\n      }),\n    // oxlint-disable-next-line react-hooks/exhaustive-deps -- array keys are the semantic dependencies\n    [\n      predictiveSearchEndpoint,\n      debounceInMs,\n      minTermLength,\n      fetch,\n      limit,\n      limitScope,\n      typesKey,\n      searchableFieldsKey,\n      unavailableProducts,\n    ],\n  );\n\n  const storeRef = useRef(store);\n  // Actions outlive store swaps by reading the committed store at call time. Only an insertion\n  // effect is both commit-only and early enough: a render-phase write can point actions at a\n  // store from a render React never commits, and layout and passive effects run child-first,\n  // so a child effect searching in the same commit would still see the old store.\n  useInsertionEffect(() => {\n    storeRef.current = store;\n  }, [store]);\n  const actions = useMemo<PredictiveSearchActions>(\n    () => ({\n      search: (term) => storeRef.current.search(term),\n      clear: () => storeRef.current.clear(),\n    }),\n    [],\n  );\n\n  useEffect(() => {\n    store.connect();\n    return () => store.destroy();\n  }, [store]);\n\n  const contextValue = useMemo(\n    () => ({ store, actions, searchAction }),\n    [store, actions, searchAction],\n  );\n\n  return createElement(PredictiveSearchContext.Provider, { value: contextValue }, children);\n}"
+      "value": "export function PredictiveSearchProvider({\n  children,\n  predictiveSearchEndpoint = PREDICTIVE_SEARCH_API_PATH,\n  searchAction,\n  debounceInMs,\n  minTermLength,\n  fetch,\n  limit,\n  limitScope,\n  types,\n  searchableFields,\n  unavailableProducts,\n}: PredictiveSearchProviderProps) {\n  const typesKey = getArrayKey(types);\n  const searchableFieldsKey = getArrayKey(searchableFields);\n  const pathPrefix = useLocalePathPrefix();\n  const localizedEndpoint = applyI18nPathPrefix(predictiveSearchEndpoint, pathPrefix);\n  // `getPredictiveSearchFormAttributes` owns the default search page path.\n  const localizedSearchAction = applyI18nPathPrefix(\n    getPredictiveSearchFormAttributes(searchAction).action,\n    pathPrefix,\n  );\n\n  const store = useMemo(\n    () =>\n      createPredictiveSearchStore({\n        predictiveSearchEndpoint: localizedEndpoint,\n        debounceInMs,\n        minTermLength,\n        fetch,\n        limit,\n        limitScope,\n        types,\n        searchableFields,\n        unavailableProducts,\n      }),\n    // oxlint-disable-next-line react-hooks/exhaustive-deps -- array keys are the semantic dependencies\n    [\n      localizedEndpoint,\n      debounceInMs,\n      minTermLength,\n      fetch,\n      limit,\n      limitScope,\n      typesKey,\n      searchableFieldsKey,\n      unavailableProducts,\n    ],\n  );\n\n  const storeRef = useRef(store);\n  // Actions outlive store swaps by reading the committed store at call time. Only an insertion\n  // effect is both commit-only and early enough: a render-phase write can point actions at a\n  // store from a render React never commits, and layout and passive effects run child-first,\n  // so a child effect searching in the same commit would still see the old store.\n  useInsertionEffect(() => {\n    storeRef.current = store;\n  }, [store]);\n  const actions = useMemo<PredictiveSearchActions>(\n    () => ({\n      search: (term) => storeRef.current.search(term),\n      clear: () => storeRef.current.clear(),\n    }),\n    [],\n  );\n\n  useEffect(() => {\n    store.connect();\n    return () => store.destroy();\n  }, [store]);\n\n  const contextValue = useMemo(\n    () => ({ store, actions, searchAction: localizedSearchAction }),\n    [store, actions, localizedSearchAction],\n  );\n\n  return createElement(PredictiveSearchContext.Provider, { value: contextValue }, children);\n}"
     }
   },
   "PredictiveSearchProviderProps": {
@@ -12556,7 +12644,7 @@
           "syntaxKind": "PropertySignature",
           "name": "searchAction",
           "value": "string",
-          "description": "Search page path that forms from `usePredictiveSearchForm` submit to. Defaults to `/search`.",
+          "description": "Search page path that forms from `usePredictiveSearchForm` submit to. Defaults to `/search`. Inside `LocaleProvider`, the form submits under the locale's path prefix.",
           "isOptional": true
         },
         {
@@ -12576,7 +12664,7 @@
           "isOptional": true
         }
       ],
-      "value": "export interface PredictiveSearchProviderProps extends CreatePredictiveSearchStoreOptions {\n  /** Content that uses the predictive search hooks. */\n  children?: ReactNode;\n  /** Search page path that forms from `usePredictiveSearchForm` submit to. Defaults to `/search`. */\n  searchAction?: string;\n}"
+      "value": "export interface PredictiveSearchProviderProps extends CreatePredictiveSearchStoreOptions {\n  /** Content that uses the predictive search hooks. */\n  children?: ReactNode;\n  /** Search page path that forms from `usePredictiveSearchForm` submit to. Defaults to `/search`. Inside `LocaleProvider`, the form submits under the locale's path prefix. */\n  searchAction?: string;\n}"
     }
   },
   "UsePredictiveSearchGeneratedType": {
@@ -12812,7 +12900,7 @@
         "name": "export interface UseProductFormResult<TProduct extends ProductInput> {\n  /** Each product option and its values, with the selection, existence, and availability of each value. */\n  options: ProductFormOptions<TProduct>;\n  /** Variant that matches the current selection, or `null` when the selection is partial or your query didn't load that variant. */\n  selectedVariant: ProductVariantFrom<TProduct> | null;\n  /** Returns the props for a product form field. Spread the props on the matching input or button. */\n  register: ProductFormRegister;\n  /**\n   * Returns props for the product form element. Submitting the form adds the selected variant to the cart, and the form posts to the cart endpoint before JavaScript loads.\n   * Call `preventDefault()` in `beforeSubmit` to cancel the submission. The `afterSubmit` callback runs after the cart store handles the submission. Cart errors appear in the errors field. When the cart store throws an error, the hook logs the error and skips `afterSubmit`.\n   */\n  formProps: (opts?: {\n    beforeSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;\n    afterSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;\n  }) => FormHTMLAttributes<HTMLFormElement>;\n  /** Cart errors and warnings to show near the add-to-cart button. */\n  errors: ProductFormErrors;\n  /** First cart line that holds the selected variant, or `null` when no cart line holds the variant. */\n  matchedLineItem: CartLine | null;\n  /**\n   * Whether the cart is handling a form submission. Disable the add-to-cart button while the value is `true`.\n   */\n  pending: boolean;\n  /** Selects an option value and returns the result. Resolved and unresolved selections run the `onSelect` callback. */\n  selectOption: (\n    name: string,\n    value: string,\n  ) => VariantSelectionResult<ProductVariantFrom<TProduct>>;\n}",
         "value": "export interface UseProductFormResult<TProduct extends ProductInput> {\n  /** Each product option and its values, with the selection, existence, and availability of each value. */\n  options: ProductFormOptions<TProduct>;\n  /** Variant that matches the current selection, or `null` when the selection is partial or your query didn't load that variant. */\n  selectedVariant: ProductVariantFrom<TProduct> | null;\n  /** Returns the props for a product form field. Spread the props on the matching input or button. */\n  register: ProductFormRegister;\n  /**\n   * Returns props for the product form element. Submitting the form adds the selected variant to the cart, and the form posts to the cart endpoint before JavaScript loads.\n   * Call `preventDefault()` in `beforeSubmit` to cancel the submission. The `afterSubmit` callback runs after the cart store handles the submission. Cart errors appear in the errors field. When the cart store throws an error, the hook logs the error and skips `afterSubmit`.\n   */\n  formProps: (opts?: {\n    beforeSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;\n    afterSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;\n  }) => FormHTMLAttributes<HTMLFormElement>;\n  /** Cart errors and warnings to show near the add-to-cart button. */\n  errors: ProductFormErrors;\n  /** First cart line that holds the selected variant, or `null` when no cart line holds the variant. */\n  matchedLineItem: CartLine | null;\n  /**\n   * Whether the cart is handling a form submission. Disable the add-to-cart button while the value is `true`.\n   */\n  pending: boolean;\n  /** Selects an option value and returns the result. Resolved and unresolved selections run the `onSelect` callback. */\n  selectOption: (\n    name: string,\n    value: string,\n  ) => VariantSelectionResult<ProductVariantFrom<TProduct>>;\n}"
       },
-      "value": "export function useProductForm<TProduct extends ProductInput>(\n  store: ProductFormStore<TProduct>,\n  options?: UseProductFormOptions<TProduct>,\n): UseProductFormResult<TProduct> {\n  const onSelectRef = useRef(options?.onSelect);\n  onSelectRef.current = options?.onSelect;\n\n  const state = useSyncExternalStore(store.subscribe, store.getState, store.getState);\n  const [pending, setPending] = useState(false);\n\n  const selectOption = useCallback(\n    (name: string, value: string) => {\n      const result = store.selectOption(name, value);\n      if (result.status !== \"invalid\") {\n        onSelectRef.current?.(result);\n      }\n      return result;\n    },\n    [store],\n  );\n\n  // oxlint-disable-next-line react-hooks/exhaustive-deps -- state is the full reactive snapshot; selectOption is stable\n  const register = useMemo(\n    () => createProductFormRegister(state.selectedVariant, selectOption),\n    [state, selectOption],\n  );\n\n  const formProps = useCallback(\n    (opts?: {\n      beforeSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;\n      afterSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;\n    }): FormHTMLAttributes<HTMLFormElement> => ({\n      onSubmit: (e: SubmitEvent<HTMLFormElement>) => {\n        opts?.beforeSubmit?.(e);\n        if (e.defaultPrevented) return;\n        e.preventDefault();\n        setPending(true);\n        store\n          .handleFormSubmit(e.nativeEvent)\n          .then(\n            () => opts?.afterSubmit?.(e),\n            (error: unknown) => {\n              // Cart user/network errors are surfaced via the reactive `errors`\n              // state. Thrown exceptions (missing Shopify script, invalid form\n              // target) are programming errors — log them for dev visibility.\n              log.error(\"form submission error\", { error });\n            },\n          )\n          .finally(() => setPending(false));\n      },\n      method: \"post\",\n      action: getCartEndpoint(),\n    }),\n    [store],\n  );\n\n  return {\n    options: state.options,\n    selectedVariant: state.selectedVariant,\n    register,\n    formProps,\n    errors: state.errors,\n    matchedLineItem: state.matchedLineItem,\n    pending,\n    selectOption,\n  };\n}"
+      "value": "export function useProductForm<TProduct extends ProductInput>(\n  store: ProductFormStore<TProduct>,\n  options?: UseProductFormOptions<TProduct>,\n): UseProductFormResult<TProduct> {\n  const onSelectRef = useRef(options?.onSelect);\n  onSelectRef.current = options?.onSelect;\n\n  const state = useSyncExternalStore(store.subscribe, store.getState, store.getState);\n  const [pending, setPending] = useState(false);\n  const cartEndpoint = useCartEndpoint();\n\n  const selectOption = useCallback(\n    (name: string, value: string) => {\n      const result = store.selectOption(name, value);\n      if (result.status !== \"invalid\") {\n        onSelectRef.current?.(result);\n      }\n      return result;\n    },\n    [store],\n  );\n\n  // oxlint-disable-next-line react-hooks/exhaustive-deps -- state is the full reactive snapshot; selectOption is stable\n  const register = useMemo(\n    () => createProductFormRegister(state.selectedVariant, selectOption),\n    [state, selectOption],\n  );\n\n  const formProps = useCallback(\n    (opts?: {\n      beforeSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;\n      afterSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;\n    }): FormHTMLAttributes<HTMLFormElement> => ({\n      onSubmit: (e: SubmitEvent<HTMLFormElement>) => {\n        opts?.beforeSubmit?.(e);\n        if (e.defaultPrevented) return;\n        e.preventDefault();\n        setPending(true);\n        store\n          .handleFormSubmit(e.nativeEvent)\n          .then(\n            () => opts?.afterSubmit?.(e),\n            (error: unknown) => {\n              // Cart user/network errors are surfaced via the reactive `errors`\n              // state. Thrown exceptions (missing Shopify script, invalid form\n              // target) are programming errors — log them for dev visibility.\n              log.error(\"form submission error\", { error });\n            },\n          )\n          .finally(() => setPending(false));\n      },\n      method: \"post\",\n      action: cartEndpoint,\n    }),\n    [store, cartEndpoint],\n  );\n\n  return {\n    options: state.options,\n    selectedVariant: state.selectedVariant,\n    register,\n    formProps,\n    errors: state.errors,\n    matchedLineItem: state.matchedLineItem,\n    pending,\n    selectOption,\n  };\n}"
     }
   },
   "UseProductFormOptions": {

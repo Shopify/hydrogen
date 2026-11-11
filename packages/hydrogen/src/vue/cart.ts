@@ -3,11 +3,13 @@ import {
   defineComponent,
   h,
   inject,
+  onBeforeMount,
   onMounted,
   onScopeDispose,
   onUnmounted,
   provide,
   shallowRef,
+  watch,
   type ComputedRef,
   type InjectionKey,
   type PropType,
@@ -16,8 +18,9 @@ import {
 
 import { trackCartAnalytics } from "../core/analytics/cart-tracker";
 import {
-  configureCartEndpoint as configureCoreCartEndpoint,
+  configureCartRequests,
   createCartStore,
+  getCartEndpoint,
   type CreateCartStoreOptions,
   type CartActions,
   type CartStore,
@@ -25,20 +28,17 @@ import {
 import { createCartFormRegister, type CartFormRegister } from "../core/cart/form";
 import type { CartDataFromHandlers } from "../core/cart/server-handlers";
 import type { CartData, CartState } from "../core/cart/state";
-
-const DEFAULT_CART_ENDPOINT = "/api/cart";
-
-let cartEndpoint = DEFAULT_CART_ENDPOINT;
+import { useLocalePathPrefix } from "./locale";
 
 const CartStoreKey: InjectionKey<CartStore> = Symbol("CartStore");
+const CartEndpointKey: InjectionKey<ComputedRef<string>> = Symbol("CartEndpoint");
 
-export function configureCartEndpoint(endpoint: string): void {
-  cartEndpoint = endpoint;
-  configureCoreCartEndpoint(endpoint);
-}
-
-export function getCartEndpoint(): string {
-  return cartEndpoint;
+/**
+ * The URL that a cart form posts to: the endpoint of the cart provider above the form, which is
+ * where that provider sends cart requests. Outside a provider, the configured endpoint.
+ */
+export function useCartEndpoint(): ComputedRef<string> {
+  return inject(CartEndpointKey, null) ?? computed(() => getCartEndpoint(undefined));
 }
 
 type TypedUseCart<TData extends CartData> = {
@@ -110,6 +110,8 @@ function useOptionalCartStore(): CartStore | null {
  *
  * The provider connects the store on mount and destroys the store on unmount. Render every cart composable inside the provider. The provider creates its store once from the first initial data and ignores later changes.
  *
+ * The provider sends cart requests to `/api/cart`, or to the endpoint from `configureCartEndpoint`. Below a locale provider, the requests go under the locale's path prefix.
+ *
  * @example
  * ```vue
  * <CartProvider :initialData="{ cart: loaderData.cart }">
@@ -128,10 +130,20 @@ export const CartProvider = defineComponent({
   },
   setup(props, { slots }) {
     const store = createCartStore({ initialData: props.initialData });
+    const pathPrefix = useLocalePathPrefix();
     provide(CartStoreKey, store);
+    provide(
+      CartEndpointKey,
+      computed(() => getCartEndpoint(pathPrefix.value)),
+    );
+
+    // A child can load the cart when it mounts, and children mount before this provider. This
+    // hook runs before any child mounts, so that first request already goes under the locale
+    // path prefix.
+    onBeforeMount(() => configureCartRequests(pathPrefix.value));
+    watch(pathPrefix, (prefix) => configureCartRequests(prefix));
 
     onMounted(() => {
-      configureCoreCartEndpoint(cartEndpoint);
       store.connect();
     });
 
@@ -313,6 +325,7 @@ export function useCartForm(): {
   };
 } {
   const store = useCartStore("useCartForm");
+  const endpoint = useCartEndpoint();
   const loading = useCart((s) => s.loading);
   const pendingLines = useCart((s) => s.pending.lines);
   const register = createCartFormRegister();
@@ -329,7 +342,7 @@ export function useCartForm(): {
       opts?.afterSubmit?.(e);
     },
     method: "post",
-    action: cartEndpoint,
+    action: endpoint.value,
   });
 
   const isPending = {
@@ -345,7 +358,7 @@ export function useCartForm(): {
  * Returns a cart provider and composables typed to the cart query in your cart server handlers.
  * Pass the type of your cart server handlers as the `THandlers` type argument. Every composable's cart state then includes your custom cart fields.
  *
- * On mount, the provider points cart requests at `/api/cart` and connects the store. Every composable except the optional cart composable throws when you call it outside the provider.
+ * On mount, the provider connects the store and sends cart requests to `/api/cart`, or to the endpoint from `configureCartEndpoint`. Below a locale provider, the requests go under the locale's path prefix. Every composable except the optional cart composable throws when you call it outside the provider.
  *
  * @returns The typed cart provider, the cart state composables, and the cart actions and form composables.
  *

@@ -11,6 +11,7 @@ import {
 import { assert, createTestLogger } from "../test-utils";
 import {
   configureCartEndpoint,
+  configureCartRequests,
   getShopifyStandardActions,
   resetStandardActionsForTests,
   STANDARD_ACTION_TIMEOUT_IN_MS,
@@ -6856,5 +6857,96 @@ describe("configureCartEndpoint", () => {
     mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ cart: null }), { status: 200 }));
     await handler(vi.fn(), { lines: [{ id: "x", quantity: 1 }] });
     expect(mockFetch).toHaveBeenCalledWith("/custom/cart", expect.anything());
+  });
+
+  describe("under a locale path prefix", () => {
+    const PREFIXED_CART_ENDPOINT = "/fr-ca/api/cart";
+    const cart = makeCartState({
+      checkoutUrl: "https://example.com/checkouts/1",
+      totalQuantity: 1,
+      lines: [makeLine({ id: "line-1", quantity: 1 })],
+    });
+
+    beforeEach(() => {
+      mockFetch.mockImplementation(async () => Response.json({ cart }));
+    });
+
+    async function expectRequestTo(endpoint: string, method = "GET") {
+      await vi.waitFor(() => expect(mockFetch).toHaveBeenCalled());
+      for (const [url, init] of mockFetch.mock.calls) {
+        expect(url).toBe(endpoint);
+        expect(init.method ?? "GET").toBe(method);
+      }
+    }
+
+    it("loads a new store's cart from the prefixed endpoint", async () => {
+      configureCartRequests("/fr-ca");
+      const localStore = createCartStore();
+      localStore.connect();
+
+      await expectRequestTo(PREFIXED_CART_ENDPOINT);
+      localStore.destroy();
+    });
+
+    it("fetches the cart from the prefixed endpoint", async () => {
+      configureCartRequests("/fr-ca");
+
+      await store.fetch();
+
+      await expectRequestTo(PREFIXED_CART_ENDPOINT);
+    });
+
+    it("refreshes the cart from the prefixed endpoint", async () => {
+      configureCartRequests("/fr-ca");
+      store.hydrate(cart);
+
+      store.refresh();
+
+      await expectRequestTo(PREFIXED_CART_ENDPOINT);
+    });
+
+    it("refreshes the checkout URL from the prefixed endpoint when consent loads", async () => {
+      configureCartRequests("/fr-ca");
+      store.hydrate(cart);
+
+      document.dispatchEvent(new CustomEvent(CONSENT_TRACKING_API_LOADED_EVENT));
+
+      await expectRequestTo(PREFIXED_CART_ENDPOINT);
+    });
+
+    it("posts cart changes to the prefixed endpoint", async () => {
+      configureCartRequests("/fr-ca");
+      const handler = extractConfiguredHandler();
+
+      await handler(vi.fn(), { lines: [{ id: "line-1", quantity: 2 }] });
+
+      await expectRequestTo(PREFIXED_CART_ENDPOINT, "POST");
+    });
+
+    it("keeps an endpoint that the app configured, without a warning", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      configureCartEndpoint("/storefront/cart");
+      configureCartRequests("/fr-ca");
+
+      await store.fetch();
+
+      await expectRequestTo("/fr-ca/storefront/cart");
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it("updates quantity inputs in forms that post to the prefixed endpoint", () => {
+      configureCartRequests("/fr-ca");
+      const form = document.createElement("form");
+      form.setAttribute("action", PREFIXED_CART_ENDPOINT);
+      form.innerHTML =
+        '<input type="hidden" name="lineId" value="line-1" /><input name="quantity" value="1" />';
+      document.body.append(form);
+
+      store.hydrate(makeCartState({ lines: [makeLine({ id: "line-1", quantity: 3 })] }));
+
+      expect(form.querySelector<HTMLInputElement>('input[name="quantity"]')?.value).toBe("3");
+      form.remove();
+    });
   });
 });

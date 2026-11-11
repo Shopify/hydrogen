@@ -25,7 +25,7 @@ import {
   type ValidProductSelectionResult,
   type VariantSelectionResult,
 } from "../core/product";
-import { getCartEndpoint, useCartStore } from "./cart";
+import { useCartEndpoint, useCartStore } from "./cart";
 
 const log = getLogger("product");
 
@@ -93,6 +93,7 @@ function useProductFormImpl<TProduct extends ProductInput>(
 ): UseProductFormResult<TProduct> {
   const state = shallowRef(store.getState());
   const pending = shallowRef(false);
+  const cartEndpoint = useCartEndpoint();
 
   const unsubscribe = store.subscribe(() => {
     state.value = store.getState();
@@ -133,7 +134,7 @@ function useProductFormImpl<TProduct extends ProductInput>(
           });
       },
       method: "post",
-      action: getCartEndpoint(),
+      action: cartEndpoint.value,
     };
   }
 
