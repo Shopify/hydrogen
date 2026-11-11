@@ -367,6 +367,8 @@ function buildTargetOptionMap<TVariant extends ProductVariantInput>({
 
   const nextOptionMap = { ...selectedOptionMap, [optionName]: valueName };
   if (currentProductOptionValues.size === 0) return nextOptionMap;
+  // filterOptionMap drops values no loaded variant carries. Keep the evaluated value so the
+  // encoded lookup checks this exact combination instead of only the other selections.
   return {
     ...filterOptionMap(nextOptionMap, currentProductOptionValues),
     [optionName]: valueName,
