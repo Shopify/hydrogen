@@ -131,6 +131,8 @@ describe("main with the agent", () => {
     // that the SDK never read them.
     vi.stubEnv("BROWSERBASE_FLOW_LOGS", "1");
     vi.stubEnv("BROWSERBASE_CONFIG_DIR", join(workDir, "stagehand-logs"));
+    // Makes Stagehand offer `search`, so only the exclusion keeps it out.
+    vi.stubEnv("BRAVE_API_KEY", "dummy-brave-key");
 
     await expect(main([`${origin}/start`])).resolves.toBe(0);
 
