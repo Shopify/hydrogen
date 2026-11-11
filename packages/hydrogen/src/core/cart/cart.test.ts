@@ -40,6 +40,8 @@ function makeLine(overrides: Partial<CartLine> & { id: string }): CartLine {
   };
 }
 
+const usd = (amount: string) => ({ amount, currencyCode: "USD" });
+
 function makePending(overrides: Partial<CartPending> = {}): CartPending {
   return { ...createEmptyPending(), ...overrides };
 }
@@ -996,6 +998,55 @@ describe("CartStore.handleFormSubmit — line mutations", () => {
       { lines: [{ id: "line-1", quantity: 0 }] },
       expect.anything(),
     );
+  });
+
+  it("uses the server response to refresh other line costs after a removal", async () => {
+    const discountedCost = {
+      totalAmount: usd("90"),
+      subtotalAmount: usd("100"),
+      amountPerQuantity: usd("100"),
+      compareAtAmountPerQuantity: null,
+    };
+    const cartId = "gid://shopify/Cart/discount-reprice";
+    const lineA = makeLine({ id: "line-a", cost: discountedCost });
+    const lineB = makeLine({ id: "line-b", cost: discountedCost });
+    store.hydrate(
+      makeCartState({
+        id: cartId,
+        lines: [lineA, lineB],
+        totalQuantity: 2,
+        cost: {
+          subtotalAmount: usd("200"),
+          totalAmount: usd("180"),
+          checkoutChargeAmount: usd("180"),
+        },
+      }),
+    );
+
+    const promise = store.handleFormSubmit(submitForm({ lineId: "line-a" }, "intent", "remove"));
+    await nextTick();
+
+    const serverLineB = { ...lineB, cost: { ...discountedCost, totalAmount: usd("100") } };
+    resolveUpdate(0, {
+      cart: {
+        id: cartId,
+        totalQuantity: 1,
+        cost: {
+          subtotalAmount: usd("100"),
+          totalAmount: usd("100"),
+          checkoutChargeAmount: usd("100"),
+        },
+        lines: [serverLineB],
+        discountCodes: [],
+      },
+    });
+    await promise;
+
+    expect(getCartLines(store.getState().data).map((line) => line.id)).toEqual(["line-b"]);
+    const remainingLine = getCartLines(store.getState().data).find((line) => line.id === "line-b");
+    assert(remainingLine, "expected the remaining cart line");
+    expect(remainingLine.cost.totalAmount).toEqual(usd("100"));
+    expect(store.getState().data.cost.totalAmount).toEqual(usd("100"));
   });
 
   it("set: uses explicit quantity from FormData", async () => {
@@ -3626,6 +3677,52 @@ describe("event-driven sync", () => {
     expect(getCartLines(store.getState().data)[0].quantity).toBe(5);
     expect(store.getState().data.cost.totalAmount.amount).toBe("50");
     expect(store.getState().pending.lines).not.toContain("line-1");
+  });
+
+  it("uses the server response to refresh other line costs after a multi-line update", async () => {
+    const cartId = "gid://shopify/Cart/multi-line-reprice";
+    const discountedCost = {
+      totalAmount: usd("90"),
+      subtotalAmount: usd("100"),
+      amountPerQuantity: usd("100"),
+      compareAtAmountPerQuantity: null,
+    };
+    const lineA = makeLine({ id: "line-a" });
+    const lineB = makeLine({ id: "line-b", cost: discountedCost });
+    const lineC = makeLine({ id: "line-c" });
+    store.hydrate(
+      makeCartState({
+        id: cartId,
+        lines: [lineA, lineB, lineC],
+        totalQuantity: 3,
+        cost: { subtotalAmount: usd("300"), totalAmount: usd("270") },
+      }),
+    );
+
+    const externalPromise = mockUpdateCart({
+      lines: [
+        { id: "line-a", quantity: 2 },
+        { id: "line-c", quantity: 2 },
+      ],
+    });
+    const serverLineB = {
+      ...lineB,
+      cost: { ...discountedCost, totalAmount: usd("100") },
+    };
+    resolveUpdate(0, {
+      cart: {
+        id: cartId,
+        totalQuantity: 5,
+        cost: { subtotalAmount: usd("400"), totalAmount: usd("400") },
+        lines: [{ ...lineA, quantity: 2 }, serverLineB, { ...lineC, quantity: 2 }],
+        discountCodes: [],
+      },
+    });
+    await externalPromise;
+
+    expect(getCartLines(store.getState().data).find((line) => line.id === "line-b")?.cost).toEqual(
+      serverLineB.cost,
+    );
   });
 
   it("does not consume a matching external event as a delayed internal event", async () => {

@@ -1358,7 +1358,7 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       // A response can return the line under another ID (a variant swap, or a canonicalized GID),
       // so a missing line only means removal for a removal. With no overlapping work the response
       // is the whole cart; otherwise keep the line until the scheduled revalidation replaces it.
-      if (!matching && payload.quantity > 0 && options.mergeServerCart) {
+      if (options.mergeServerCart) {
         return { ...state, data: adoptServerLines(state.data, cart) };
       }
       const previous = getLines(state.data);
@@ -1389,7 +1389,13 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       payload.lines
         .filter(({ lineId }) => ownsKey(lineKey(lineId)))
         .reduce(projectLineQuantity, state),
-    projectPromise: (state, result, payload, addError, { ownsKey, requestRevalidation }) => {
+    projectPromise: (
+      state,
+      result,
+      payload,
+      addError,
+      { mergeServerCart, ownsKey, requestRevalidation },
+    ) => {
       const owned = payload.lines.filter(({ lineId }) => ownsKey(lineKey(lineId)));
       if (hasProjectedErrors(result)) {
         addOwnedLineErrors(
@@ -1401,7 +1407,15 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       }
       if (!result.cart) return state;
 
-      const serverLines = getLines(cartResponseFromStandardEvent(result.cart));
+      const cart = cartResponseFromStandardEvent(result.cart);
+      const serverLines = getLines(cart);
+      const hasUnmatchedUpdatedLine = owned.some(
+        ({ lineId, quantity }) => quantity > 0 && !serverLines.some((line) => line.id === lineId),
+      );
+      if (mergeServerCart && !hasUnmatchedUpdatedLine) {
+        return { ...state, data: adoptServerLines(state.data, cart) };
+      }
+
       return owned.reduce(
         (current, line) => settleLineQuantity(current, serverLines, line, requestRevalidation),
         state,
