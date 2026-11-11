@@ -1,7 +1,7 @@
 import {Mock, vi, describe, expect, it} from 'vitest';
 import {render, screen} from '@testing-library/react';
 import {faker} from '@faker-js/faker';
-import {Image} from './Image.js';
+import {Image, generateImageWidths} from './Image.js';
 
 const defaultProps = {
   sizes: '100vw',
@@ -324,6 +324,12 @@ describe('<Image />', () => {
       render(<Image {...defaultProps} sizes={undefined} width={100} />);
       expect(console.warn).toHaveBeenCalledTimes(0);
     });
+  });
+});
+
+describe('generateImageWidths', () => {
+  it('returns density widths for a unitless string width', () => {
+    expect(generateImageWidths('250', 15, 200, 200)).toEqual([250, 500, 750]);
   });
 });
 
