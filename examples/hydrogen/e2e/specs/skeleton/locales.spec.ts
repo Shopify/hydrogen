@@ -55,6 +55,16 @@ test.describe("Locale path prefix", () => {
     expect(requestsOutsideLocale).toEqual([]);
   });
 
+  test("points the product page's canonical link at the page's locale", async ({ page }) => {
+    await page.goto(`${LOCALE_PREFIX}/products/${KNOWN_PRODUCT.handle}`);
+
+    // Head metadata has no accessible role to select by.
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      `${LOCALE_PREFIX}/products/${KNOWN_PRODUCT.handle}`,
+    );
+  });
+
   test("keeps a discount link in the page's locale", async ({ request }) => {
     const getRedirect = async (redirect: string) => {
       const response = await request.get(`${LOCALE_PREFIX}/discount/E2E-REDIRECT`, {

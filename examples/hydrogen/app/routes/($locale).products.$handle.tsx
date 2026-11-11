@@ -20,6 +20,9 @@ export const meta: Route.MetaFunction = ({ data, params }) => {
   return [
     { title: `Hydrogen | ${data?.product.title ?? ""}` },
     {
+      // Without `tagName`, React Router renders the descriptor as a `<meta>` element, which
+      // search engines don't read as a canonical URL.
+      tagName: "link",
       rel: "canonical",
       // Each locale serves its own page, so the canonical URL keeps the locale's path prefix.
       href: localizePath(
