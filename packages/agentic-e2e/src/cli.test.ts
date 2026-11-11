@@ -3,11 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { attachStagehand, type AgentOutcome, type AgentRunInput } from "./agent/stagehand-agent.ts";
 import { createBrowserSession } from "./browser/session.ts";
 import { main, parseCliArgs, USAGE } from "./cli.ts";
+import { ADD_EVENT_NAME, AddEventLog, observeAddEvents } from "./shopify/add-events.ts";
 import { pinVariant, type PinnedVariant } from "./shopify/catalog.ts";
 import { discoverContext, type StorefrontContext } from "./shopify/storefront.ts";
 
 vi.mock("./browser/session.ts", () => ({ createBrowserSession: vi.fn() }));
 vi.mock("./agent/stagehand-agent.ts", () => ({ attachStagehand: vi.fn() }));
+vi.mock("./shopify/add-events.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./shopify/add-events.ts")>()),
+  observeAddEvents: vi.fn(),
+}));
 vi.mock("./shopify/storefront.ts", () => ({ discoverContext: vi.fn() }));
 vi.mock("./shopify/catalog.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./shopify/catalog.ts")>()),
@@ -28,16 +33,29 @@ const PINNED: PinnedVariant = {
   variantId: "gid://shopify/ProductVariant/1",
   selectedOptions: [{ name: "Size", value: "M" }],
 };
+const PASS_REASON =
+  "Every add event held exactly 1 unit of the pinned variant and resolved without cart user errors.";
+const NO_ADD = "No add Standard Event was recorded by the time Stagehand was disconnected.";
+/** The `agent` field of a run that the first add event stopped. */
+const STOPPED: AgentOutcome = {
+  completed: false,
+  reason: "Stopped by the command after the add event.",
+};
 
 let stdout: string[];
 let stderr: string[];
 /** Calls in order, to check the order of work. */
 let calls: string[];
+/** The add event log of the current run. */
+let log: AddEventLog;
+/** The arguments of each call of the log's wait. */
+let waits: Array<{ ms: number; signal: AbortSignal }>;
 
 beforeEach(() => {
   stdout = [];
   stderr = [];
   calls = [];
+  waits = [];
   vi.stubEnv("SHOPIFY_PROXY_KEY", KEY);
   vi.mocked(discoverContext).mockImplementation(async () => {
     calls.push("context");
@@ -46,6 +64,11 @@ beforeEach(() => {
   vi.mocked(pinVariant).mockImplementation(async () => {
     calls.push("pin");
     return { status: "pinned", pinned: PINNED };
+  });
+  vi.mocked(observeAddEvents).mockImplementation(async () => {
+    calls.push("observe");
+    log = new AddEventLog();
+    return log;
   });
   vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
     stdout.push(String(chunk));
@@ -64,6 +87,7 @@ afterEach(() => {
   vi.mocked(attachStagehand).mockReset();
   vi.mocked(discoverContext).mockReset();
   vi.mocked(pinVariant).mockReset();
+  vi.mocked(observeAddEvents).mockReset();
 });
 
 describe("parseCliArgs", () => {
@@ -137,36 +161,40 @@ describe("main", () => {
     expect(createBrowserSession).not.toHaveBeenCalled();
   });
 
-  it("pins a variant, attaches before navigation, opens the product page, runs the add task, and reports agent-completed", async () => {
-    const { session, agent } = fakes();
+  it("stops the agent at the first add event, then detaches, waits for the outcome, and passes", async () => {
+    const { session, agent } = fakes({ settle: "in-wait" });
 
     await expect(main(["https://shop.example/?x=1#top"])).resolves.toBe(0);
 
     expect(results()).toEqual([
       {
-        status: "agent-completed",
-        url: "https://shop.example/",
-        title: "Home",
-        summary: "Added.",
+        status: "pass",
+        reason: PASS_REASON,
         context: CONTEXT,
         pinned: PINNED,
+        agent: STOPPED,
       },
     ]);
     expect(calls).toEqual([
       "context",
       "pin",
+      "observe",
       "attach",
       "goto",
       "ready",
       "run",
+      "add",
+      "stop",
       "detach",
-      "title",
+      "wait",
+      "settled",
       "detach",
       "close",
     ]);
     const storefrontUrl = new URL("https://shop.example/?x=1#top");
     expect(discoverContext).toHaveBeenCalledWith(storefrontUrl, expect.any(AbortSignal));
     expect(pinVariant).toHaveBeenCalledWith(storefrontUrl, CONTEXT, expect.any(AbortSignal));
+    expect(observeAddEvents).toHaveBeenCalledWith(session.page);
     expect(session.page.goto).toHaveBeenCalledWith(
       "https://shop.example/products/board",
       expect.anything(),
@@ -179,6 +207,7 @@ describe("main", () => {
         apiKey: KEY,
       }),
       interrupt: expect.any(AbortSignal),
+      stop: expect.any(AbortSignal),
     });
     // The task names the run's market from the Storefront API context.
     expect(agent.run).toHaveBeenCalledWith(
@@ -188,7 +217,95 @@ describe("main", () => {
         ),
       }),
     );
+    // The stop signal is not the interrupt.
+    const { interrupt, stop } = agent.run.mock.calls[0]?.[0] ?? {};
+    expect(stop?.aborted).toBe(true);
+    expect(interrupt?.aborted).toBe(false);
+    // The wait has the 5000 ms limit and ends on the interrupt.
+    expect(waits).toEqual([{ ms: 5_000, signal: interrupt }]);
     expect(stdout.join("") + stderr.join("")).not.toContain(KEY);
+  });
+
+  it("fails with exit 1 when the add promise was rejected", async () => {
+    fakes({ settle: "rejected" });
+
+    await expect(main(["https://shop.example"])).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        status: "fail",
+        reason: "An add event promise was rejected.",
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: STOPPED,
+      },
+    ]);
+  });
+
+  it.each<AgentOutcome>([
+    { completed: true, summary: "Added." },
+    { completed: false, reason: "The agent reached the 20-step limit." },
+  ])("is indeterminate when the agent ends with no add event: %j", async (outcome) => {
+    const { agent } = fakes({ adds: false, outcome });
+
+    await expect(main(["https://shop.example"])).resolves.toBe(2);
+
+    expect(results()).toEqual([
+      {
+        status: "indeterminate",
+        reason: NO_ADD,
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: outcome,
+      },
+    ]);
+    expect(agent.detach).toHaveBeenCalled();
+  });
+
+  it("evaluates an add that reaches Node after the agent ended by itself, before the detach", async () => {
+    const { agent } = fakes({ adds: false });
+    // `run` already returned. The add input and its rejected outcome arrive during the detach.
+    agent.detach.mockImplementationOnce(async () => {
+      calls.push("detach");
+      recordAdd();
+      recordOutcome("failed");
+    });
+
+    await expect(main(["https://shop.example"])).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        status: "fail",
+        reason: "An add event promise was rejected.",
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: { completed: true, summary: "Added." },
+      },
+    ]);
+  });
+
+  it("ignores a settled add recorded before the agent started", async () => {
+    fakes({ adds: false });
+    vi.mocked(observeAddEvents).mockImplementation(async () => {
+      log = new AddEventLog();
+      // Recorded before `agent.run` is called. Nothing is recorded after it.
+      recordAdd();
+      recordOutcome("settled");
+      return log;
+    });
+
+    await expect(main(["https://shop.example"])).resolves.toBe(2);
+
+    expect(results()).toEqual([
+      {
+        status: "indeterminate",
+        reason: NO_ADD,
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: { completed: true, summary: "Added." },
+      },
+    ]);
+    expect(log.events).toHaveLength(2);
   });
 
   it("reports a missing SHOPIFY_PROXY_KEY before the browser starts", async () => {
@@ -276,19 +393,10 @@ describe("main", () => {
 
     await expect(main(["https://shop.example"])).resolves.toBe(2);
 
-    expect(results()).toEqual([{ status: "indeterminate", reason }]);
+    expect(results()).toEqual([
+      { status: "indeterminate", reason, context: CONTEXT, pinned: PINNED },
+    ]);
     expect(agent.run).not.toHaveBeenCalled();
-    expect(agent.detach).toHaveBeenCalled();
-    expect(session.close).toHaveBeenCalledOnce();
-  });
-
-  it("reports an agent outcome that is not completed as indeterminate", async () => {
-    const reason = "The agent reached the 20-step limit.";
-    const { session, agent } = fakes({ outcome: { status: "indeterminate", reason } });
-
-    await expect(main(["https://shop.example"])).resolves.toBe(2);
-
-    expect(results()).toEqual([{ status: "indeterminate", reason }]);
     expect(agent.detach).toHaveBeenCalled();
     expect(session.close).toHaveBeenCalledOnce();
   });
@@ -302,13 +410,18 @@ describe("main", () => {
     await expect(main(["https://shop.example"])).resolves.toBe(2);
 
     expect(results()).toEqual([
-      { status: "indeterminate", reason: "Failed to attach Stagehand: no connection in 15000 ms" },
+      {
+        status: "indeterminate",
+        reason: "Failed to attach Stagehand: no connection in 15000 ms",
+        context: CONTEXT,
+        pinned: PINNED,
+      },
     ]);
     expect(session.page.goto).not.toHaveBeenCalled();
     expect(session.close).toHaveBeenCalledOnce();
   });
 
-  it("reports indeterminate when the Stagehand release is not confirmed", async () => {
+  it("reports indeterminate without a verdict when the release after an add is not confirmed", async () => {
     const { session, agent } = fakes();
     agent.detach.mockRejectedValue(
       new Error("Stagehand did not release the browser: no confirmation in 2000 ms"),
@@ -320,33 +433,70 @@ describe("main", () => {
       {
         status: "indeterminate",
         reason: "Stagehand did not release the browser: no confirmation in 2000 ms",
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: STOPPED,
       },
     ]);
+    // No evaluation without a confirmed release.
+    expect(calls).not.toContain("wait");
     expect(session.close).toHaveBeenCalledOnce();
   });
 
-  it("stops on SIGINT during the agent run, detaches, closes, and reports indeterminate", async () => {
-    const { promise: running, resolve: runStarted } = Promise.withResolvers<void>();
-    const { session, agent } = fakes();
-    // A run that only ends through its signal, like the real agent module.
-    agent.run.mockImplementation(async ({ interrupt }) => {
-      runStarted();
-      return new Promise((_resolve, reject) => {
-        interrupt.addEventListener("abort", () => reject(interrupt.reason));
-      });
+  it("stops on SIGINT during the detach after a settled add, with no wait", async () => {
+    const { agent, session } = fakes();
+    agent.detach.mockImplementationOnce(async () => {
+      calls.push("detach");
+      process.emit("SIGINT", "SIGINT");
     });
-    const listenersBefore = process.listenerCount("SIGINT");
 
-    const run = main(["https://shop.example"]);
-    await running;
-    process.emit("SIGINT", "SIGINT");
+    await expect(main(["https://shop.example"])).resolves.toBe(2);
 
-    await expect(run).resolves.toBe(2);
-    expect(results()).toEqual([{ status: "indeterminate", reason: "Interrupted by SIGINT." }]);
-    expect(agent.detach).toHaveBeenCalled();
+    expect(results()).toEqual([
+      {
+        status: "indeterminate",
+        reason: "Interrupted by SIGINT.",
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: STOPPED,
+      },
+    ]);
+    expect(calls).not.toContain("wait");
     expect(session.close).toHaveBeenCalledOnce();
-    expect(process.listenerCount("SIGINT")).toBe(listenersBefore);
   });
+
+  it.each<NodeJS.Signals>(["SIGINT", "SIGTERM", "SIGHUP"])(
+    "stops on %s during the agent run, detaches, closes, and reports indeterminate",
+    async (signal) => {
+      const { promise: running, resolve: runStarted } = Promise.withResolvers<void>();
+      const { session, agent } = fakes();
+      // A run that only ends through its signal, like the real agent module.
+      agent.run.mockImplementation(async ({ interrupt }) => {
+        runStarted();
+        return new Promise((_resolve, reject) => {
+          interrupt.addEventListener("abort", () => reject(interrupt.reason));
+        });
+      });
+      const listenersBefore = process.listenerCount(signal);
+
+      const run = main(["https://shop.example"]);
+      await running;
+      process.emit(signal, signal);
+
+      await expect(run).resolves.toBe(2);
+      expect(results()).toEqual([
+        {
+          status: "indeterminate",
+          reason: `Interrupted by ${signal}.`,
+          context: CONTEXT,
+          pinned: PINNED,
+        },
+      ]);
+      expect(agent.detach).toHaveBeenCalled();
+      expect(session.close).toHaveBeenCalledOnce();
+      expect(process.listenerCount(signal)).toBe(listenersBefore);
+    },
+  );
 
   it("stops on SIGINT during navigation and closes the browser", async () => {
     const { promise: navigating, resolve: gotoStarted } = Promise.withResolvers<void>();
@@ -364,35 +514,14 @@ describe("main", () => {
     process.emit("SIGINT", "SIGINT");
 
     await expect(run).resolves.toBe(2);
-    expect(results()).toEqual([{ status: "indeterminate", reason: "Interrupted by SIGINT." }]);
-    expect(session.close).toHaveBeenCalledOnce();
-  });
-
-  it("reports indeterminate when the page title is not read in 5 seconds", async () => {
-    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-    const { promise: reading, resolve: titleStarted } = Promise.withResolvers<void>();
-    const { session, agent } = fakes({
-      page: {
-        title: async () => {
-          titleStarted();
-          return new Promise(() => undefined);
-        },
-      },
-    });
-
-    try {
-      const run = main(["https://shop.example"]);
-      await reading;
-      await vi.advanceTimersByTimeAsync(5_000);
-
-      await expect(run).resolves.toBe(2);
-    } finally {
-      vi.useRealTimers();
-    }
     expect(results()).toEqual([
-      { status: "indeterminate", reason: "Page title not read in 5000 ms." },
+      {
+        status: "indeterminate",
+        reason: "Interrupted by SIGINT.",
+        context: CONTEXT,
+        pinned: PINNED,
+      },
     ]);
-    expect(agent.detach).toHaveBeenCalled();
     expect(session.close).toHaveBeenCalledOnce();
   });
 
@@ -426,15 +555,27 @@ describe("main", () => {
 
     await expect(main(["https://shop.example"])).resolves.toBe(0);
 
-    expect(results()).toEqual([expect.objectContaining({ status: "agent-completed" })]);
+    expect(results()).toEqual([expect.objectContaining({ status: "pass" })]);
     expect(stderr.join("")).toContain("Cleanup failed: profile is busy");
   });
 });
 
+/**
+ * Fake browser session and agent. With `adds`, the agent run records one 1-unit add of the
+ * pinned variant, as the page would; the command's stop then ends the run with the fixed outcome,
+ * like the real agent module. `settle` tells when and how the add's promise ends.
+ */
 function fakes({
   page: pageOverrides = {},
-  outcome = { status: "completed", summary: "Added." },
-}: { page?: Record<string, unknown>; outcome?: AgentOutcome } = {}) {
+  outcome = { completed: true, summary: "Added." },
+  adds = true,
+  settle = "in-run",
+}: {
+  page?: Record<string, unknown>;
+  outcome?: AgentOutcome;
+  adds?: boolean;
+  settle?: "in-run" | "in-wait" | "rejected";
+} = {}) {
   const track =
     <T>(name: string, value: T) =>
     async () => {
@@ -444,8 +585,6 @@ function fakes({
   const page = {
     goto: vi.fn(track("goto", { status: () => 200 })),
     waitForFunction: vi.fn(track("ready", undefined)),
-    title: vi.fn(track("title", "Home")),
-    url: () => "https://shop.example/",
   };
   for (const [name, implementation] of Object.entries(pageOverrides)) {
     (page as Record<string, unknown>)[name] = vi.fn(implementation as () => unknown);
@@ -455,8 +594,28 @@ function fakes({
     cdpUrl: "ws://browser",
     close: vi.fn(track("close", undefined)),
   };
+  vi.mocked(observeAddEvents).mockImplementation(async () => {
+    calls.push("observe");
+    log = new AddEventLog();
+    const waitFor = log.waitFor.bind(log);
+    log.waitFor = async (done, ms, signal) => {
+      calls.push("wait");
+      waits.push({ ms, signal });
+      if (settle === "in-wait") recordOutcome("settled");
+      return waitFor(done, ms, signal);
+    };
+    return log;
+  });
   const agent = {
-    run: vi.fn<(input: AgentRunInput) => Promise<AgentOutcome>>(track("run", outcome)),
+    run: vi.fn<(input: AgentRunInput) => Promise<AgentOutcome>>(async ({ stop }) => {
+      calls.push("run");
+      if (!adds) return outcome;
+      stop.addEventListener("abort", () => calls.push("stop"), { once: true });
+      recordAdd();
+      if (settle === "in-run") recordOutcome("settled");
+      if (settle === "rejected") recordOutcome("failed");
+      return stop.aborted ? STOPPED : outcome;
+    }),
     detach: vi.fn(track("detach", undefined)),
   };
   vi.mocked(createBrowserSession).mockResolvedValue(
@@ -467,6 +626,27 @@ function fakes({
     return agent as unknown as Awaited<ReturnType<typeof attachStagehand>>;
   });
   return { session, agent };
+}
+
+/** Records one 1-unit add input of the pinned variant in the current log, as the page would. */
+function recordAdd(): void {
+  calls.push("add");
+  const lines = [{ merchandiseId: PINNED.variantId, quantity: 1 }];
+  log.receive(
+    JSON.stringify({
+      name: ADD_EVENT_NAME,
+      id: "a-1",
+      phase: "input",
+      action: "add",
+      lines,
+      hasPromise: true,
+    }),
+  );
+}
+
+function recordOutcome(phase: "settled" | "failed"): void {
+  calls.push(phase);
+  log.receive(JSON.stringify({ name: ADD_EVENT_NAME, id: "a-1", phase, userErrors: 0 }));
 }
 
 function results(): unknown[] {
