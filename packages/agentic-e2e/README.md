@@ -17,7 +17,7 @@ The result goes to stdout. Diagnostics go to stderr.
 {"status":"indeterminate","reason":"HTTP 500"}
 ```
 
-`indeterminate` means a navigation error, an HTTP status of 400 or higher, the 30-second navigation deadline, or an interrupt (SIGINT, SIGTERM, or SIGHUP).
+`indeterminate` means a browser that failed to start (for example, Chromium is not installed), a navigation error, an HTTP status of 400 or higher, the 30-second navigation deadline, or an interrupt (SIGINT, SIGTERM, or SIGHUP).
 
 ## Exit codes
 
