@@ -57,13 +57,16 @@ type PartsOf<Doc> = Doc extends {
     : Parts
   : readonly [SourceOf<Doc>];
 
+/** The parts of every fragment in order. A fragment array of unknown length has unknown parts. */
 type FlattenParts<Fragments extends readonly AnyStorefrontQueryString[]> =
-  Fragments extends readonly [
-    infer First extends AnyStorefrontQueryString,
-    ...infer Rest extends readonly AnyStorefrontQueryString[],
-  ]
-    ? readonly [...PartsOf<First>, ...FlattenParts<Rest>]
-    : readonly [];
+  number extends Fragments["length"]
+    ? readonly string[]
+    : Fragments extends readonly [
+          infer First extends AnyStorefrontQueryString,
+          ...infer Rest extends readonly AnyStorefrontQueryString[],
+        ]
+      ? readonly [...PartsOf<First>, ...FlattenParts<Rest>]
+      : readonly [];
 
 /** The operation text of a document followed by every distinct fragment text from its fragments, nested fragments included. */
 type ComposedParts<
@@ -80,7 +83,7 @@ export type FragmentSources<Fragments extends readonly AnyStorefrontQueryString[
 export type ComposedSource<
   Source extends string,
   Fragments extends readonly AnyStorefrontQueryString[],
-> = string[] extends Fragments ? string : JoinParts<ComposedParts<Source, Fragments>>;
+> = JoinParts<ComposedParts<Source, Fragments>>;
 
 type QueryStringFromParts<
   Parts extends readonly string[],

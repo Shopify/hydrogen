@@ -11,7 +11,7 @@ import {
   CUSTOMER_ACCOUNT_REFRESH_PATH,
 } from "./index";
 import type * as CustomerAccountExports from "./index";
-import type { CustomerAccountDocument } from "./index";
+import type { CustomerAccountDocument, SourceOf } from "./index";
 
 const storefront = createStorefrontClient({
   type: "public",
@@ -51,6 +51,11 @@ const ORDER_FIELDS_FRAGMENT = customerAccountGql(
 const ORDERS_WITH_SHARED_SUB_FRAGMENT_QUERY = customerAccountGql(
   `query Orders { customer { orders(first: 1) { nodes { ...OrderFields lineItems(first: 1) { nodes { ...LineItem } } } } } }`,
   [LINE_ITEM_FRAGMENT, ORDER_FIELDS_FRAGMENT],
+);
+const MONEY_FRAGMENT_LIST: (typeof MONEY_FRAGMENT)[] = [MONEY_FRAGMENT];
+const ORDER_TOTAL_WITH_FRAGMENT_LIST_QUERY = customerAccountGql(
+  `query OrderTotal { customer { orders(first: 1) { nodes { totalPrice { ...Money } } } } }`,
+  MONEY_FRAGMENT_LIST,
 );
 
 describe("Customer Account API type boundary", () => {
@@ -93,6 +98,10 @@ describe("Customer Account API type boundary", () => {
 
     expectTypeOf<Order["totalPrice"]>().toHaveProperty("amount");
     expectTypeOf<NonNullable<LineItem["price"]>>().toHaveProperty("currencyCode");
+  });
+
+  it("widens the source to string when the fragment array is not a tuple", () => {
+    expectTypeOf<SourceOf<typeof ORDER_TOTAL_WITH_FRAGMENT_LIST_QUERY>>().toEqualTypeOf<string>();
   });
 
   it("requires per-call access tokens", () => {

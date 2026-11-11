@@ -134,21 +134,26 @@ type Includes<Items extends readonly string[], Item extends string> = Items exte
     : Includes<Rest, Item>
   : false;
 
-/** Each part of a document once, in first-seen order, compared as exact text. */
+/**
+ * Each part of a document once, in first-seen order, compared as exact text. A list of unknown
+ * length, such as `string[]`, stays as it is.
+ */
 export type Dedupe<
   Items extends readonly string[],
   Seen extends readonly string[] = readonly [],
-> = Items extends readonly [infer First extends string, ...infer Rest extends readonly string[]]
-  ? Includes<Seen, First> extends true
-    ? Dedupe<Rest, Seen>
-    : readonly [First, ...Dedupe<Rest, readonly [...Seen, First]>]
-  : readonly [];
+> = number extends Items["length"]
+  ? Items
+  : Items extends readonly [infer First extends string, ...infer Rest extends readonly string[]]
+    ? Includes<Seen, First> extends true
+      ? Dedupe<Rest, Seen>
+      : readonly [First, ...Dedupe<Rest, readonly [...Seen, First]>]
+    : readonly [];
 
-/** The parts of a document joined with newlines. */
-export type JoinParts<Parts extends readonly string[]> = Parts extends readonly [
-  infer Only extends string,
-]
-  ? Only
-  : Parts extends readonly [infer First extends string, ...infer Rest extends readonly string[]]
-    ? `${First}\n${JoinParts<Rest>}`
-    : "";
+/** The parts of a document joined with newlines. A list of unknown length joins to `string`. */
+export type JoinParts<Parts extends readonly string[]> = number extends Parts["length"]
+  ? string
+  : Parts extends readonly [infer Only extends string]
+    ? Only
+    : Parts extends readonly [infer First extends string, ...infer Rest extends readonly string[]]
+      ? `${First}\n${JoinParts<Rest>}`
+      : "";

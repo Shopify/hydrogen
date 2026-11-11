@@ -46,13 +46,16 @@ type PartsOf<Doc> = Doc extends { readonly parts?: infer Parts extends readonly 
     : Parts
   : readonly [SourceOf<Doc>];
 
+/** The parts of every fragment in order. A fragment array of unknown length has unknown parts. */
 type FlattenParts<Fragments extends readonly AnyCustomerAccountDocument[]> =
-  Fragments extends readonly [
-    infer First extends AnyCustomerAccountDocument,
-    ...infer Rest extends readonly AnyCustomerAccountDocument[],
-  ]
-    ? readonly [...PartsOf<First>, ...FlattenParts<Rest>]
-    : readonly [];
+  number extends Fragments["length"]
+    ? readonly string[]
+    : Fragments extends readonly [
+          infer First extends AnyCustomerAccountDocument,
+          ...infer Rest extends readonly AnyCustomerAccountDocument[],
+        ]
+      ? readonly [...PartsOf<First>, ...FlattenParts<Rest>]
+      : readonly [];
 
 /** The operation text of a document followed by every distinct fragment text from its fragments, nested fragments included. */
 type ComposedParts<
@@ -75,7 +78,7 @@ export type FragmentSources<Fragments extends readonly AnyCustomerAccountDocumen
 export type ComposedSource<
   Source extends string,
   Fragments extends readonly AnyCustomerAccountDocument[],
-> = string[] extends Fragments ? string : JoinParts<ComposedParts<Source, Fragments>>;
+> = JoinParts<ComposedParts<Source, Fragments>>;
 
 type CustomerAccountDocumentValue = AnyCustomerAccountDocument & {
   readonly variableNames: ReadonlySet<string>;
