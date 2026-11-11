@@ -1,6 +1,6 @@
 import type { DocumentDecoration, initGraphQLTada as InitGraphQLTada } from "gql.tada";
 
-import { appendFragments } from "./fragments";
+import { appendFragments, type Dedupe, type JoinParts } from "./fragments";
 import type { introspection } from "./generated/graphql-env";
 import type { StorefrontScalars } from "./scalars";
 import type { InferResult, InferVariables } from "./type-resolver";
@@ -57,26 +57,6 @@ type PartsOf<Doc> = Doc extends {
     : Parts
   : readonly [SourceOf<Doc>];
 
-type Includes<Items extends readonly string[], Item extends string> = Items extends readonly [
-  infer First,
-  ...infer Rest extends readonly string[],
-]
-  ? [First] extends [Item]
-    ? [Item] extends [First]
-      ? true
-      : Includes<Rest, Item>
-    : Includes<Rest, Item>
-  : false;
-
-type Dedupe<
-  Items extends readonly string[],
-  Seen extends readonly string[] = readonly [],
-> = Items extends readonly [infer First extends string, ...infer Rest extends readonly string[]]
-  ? Includes<Seen, First> extends true
-    ? Dedupe<Rest, Seen>
-    : readonly [First, ...Dedupe<Rest, readonly [...Seen, First]>]
-  : readonly [];
-
 type FlattenParts<Fragments extends readonly AnyStorefrontQueryString[]> =
   Fragments extends readonly [
     infer First extends AnyStorefrontQueryString,
@@ -84,12 +64,6 @@ type FlattenParts<Fragments extends readonly AnyStorefrontQueryString[]> =
   ]
     ? readonly [...PartsOf<First>, ...FlattenParts<Rest>]
     : readonly [];
-
-type JoinParts<Parts extends readonly string[]> = Parts extends readonly [infer Only extends string]
-  ? Only
-  : Parts extends readonly [infer First extends string, ...infer Rest extends readonly string[]]
-    ? `${First}\n${JoinParts<Rest>}`
-    : "";
 
 /** The operation text of a document followed by every distinct fragment text from its fragments, nested fragments included. */
 type ComposedParts<

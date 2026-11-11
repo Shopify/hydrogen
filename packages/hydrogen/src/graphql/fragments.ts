@@ -80,3 +80,33 @@ export function appendFragments(source: string, fragments: readonly string[]): s
 
   return query;
 }
+
+type Includes<Items extends readonly string[], Item extends string> = Items extends readonly [
+  infer First,
+  ...infer Rest extends readonly string[],
+]
+  ? [First] extends [Item]
+    ? [Item] extends [First]
+      ? true
+      : Includes<Rest, Item>
+    : Includes<Rest, Item>
+  : false;
+
+/** Each part of a document once, in first-seen order, compared as exact text. */
+export type Dedupe<
+  Items extends readonly string[],
+  Seen extends readonly string[] = readonly [],
+> = Items extends readonly [infer First extends string, ...infer Rest extends readonly string[]]
+  ? Includes<Seen, First> extends true
+    ? Dedupe<Rest, Seen>
+    : readonly [First, ...Dedupe<Rest, readonly [...Seen, First]>]
+  : readonly [];
+
+/** The parts of a document joined with newlines. */
+export type JoinParts<Parts extends readonly string[]> = Parts extends readonly [
+  infer Only extends string,
+]
+  ? Only
+  : Parts extends readonly [infer First extends string, ...infer Rest extends readonly string[]]
+    ? `${First}\n${JoinParts<Rest>}`
+    : "";

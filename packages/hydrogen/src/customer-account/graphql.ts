@@ -1,7 +1,7 @@
 import type { DocumentDecoration, initGraphQLTada as InitGraphQLTada } from "gql.tada";
 
 import { isObjectRecord } from "../core/utils/record";
-import { appendFragments } from "../graphql/fragments";
+import { appendFragments, type Dedupe, type JoinParts } from "../graphql/fragments";
 import type { introspection } from "../graphql/generated/customer-account-graphql-env";
 import type { CustomerAccountScalars } from "../graphql/scalars";
 import type { InferResult, InferVariables } from "./type-resolver";
@@ -46,26 +46,6 @@ type PartsOf<Doc> = Doc extends { readonly parts?: infer Parts extends readonly 
     : Parts
   : readonly [SourceOf<Doc>];
 
-type Includes<Items extends readonly string[], Item extends string> = Items extends readonly [
-  infer First,
-  ...infer Rest extends readonly string[],
-]
-  ? [First] extends [Item]
-    ? [Item] extends [First]
-      ? true
-      : Includes<Rest, Item>
-    : Includes<Rest, Item>
-  : false;
-
-type Dedupe<
-  Items extends readonly string[],
-  Seen extends readonly string[] = readonly [],
-> = Items extends readonly [infer First extends string, ...infer Rest extends readonly string[]]
-  ? Includes<Seen, First> extends true
-    ? Dedupe<Rest, Seen>
-    : readonly [First, ...Dedupe<Rest, readonly [...Seen, First]>]
-  : readonly [];
-
 type FlattenParts<Fragments extends readonly AnyCustomerAccountDocument[]> =
   Fragments extends readonly [
     infer First extends AnyCustomerAccountDocument,
@@ -73,12 +53,6 @@ type FlattenParts<Fragments extends readonly AnyCustomerAccountDocument[]> =
   ]
     ? readonly [...PartsOf<First>, ...FlattenParts<Rest>]
     : readonly [];
-
-type JoinParts<Parts extends readonly string[]> = Parts extends readonly [infer Only extends string]
-  ? Only
-  : Parts extends readonly [infer First extends string, ...infer Rest extends readonly string[]]
-    ? `${First}\n${JoinParts<Rest>}`
-    : "";
 
 /** The operation text of a document followed by every distinct fragment text from its fragments, nested fragments included. */
 type ComposedParts<
