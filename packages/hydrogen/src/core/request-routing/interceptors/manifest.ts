@@ -57,7 +57,7 @@ export const handleHydrogenManifest: HydrogenRouteInterceptor = (
   // Built inside the promise so a failure rejects, as handleShopifyRoutes documents.
   return Promise.resolve().then(() => {
     const manifest = buildHydrogenManifest(routeTemplates, requestContext.i18nDefinition);
-    return new Response(request.method === "HEAD" ? null : JSON.stringify(manifest), {
+    return new Response(request.method === "HEAD" ? null : JSON.stringify(manifest, null, 2), {
       headers: {
         "content-type": "application/json",
         "cache-control": MANIFEST_CACHE_CONTROL,
