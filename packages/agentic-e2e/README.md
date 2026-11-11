@@ -26,7 +26,7 @@ Run `pnpm --filter @shopify/agentic-e2e run browser:install` once before the fir
 
 ## Storefront API
 
-Both queries go to the Storefront API at the origin of the URL (`<origin>/api/<version>/graphql.json`), with the default API version of `@shopify/hydrogen`. They use Hydrogen's public Storefront API client. The command sends no access token, no cookies, and no buyer-IP header. A proxy at the storefront origin can add its own buyer-IP header, so the answer can depend on where the command runs. Each request has a 10-second deadline. An interrupt (SIGINT, SIGTERM, or SIGHUP) also stops a request.
+Both queries go to the Storefront API at the origin of the URL (`<origin>/api/<version>/graphql.json`), with the default API version of `@shopify/hydrogen`. They use Hydrogen's public Storefront API client. Pass the final storefront origin: the command does not follow redirects, the same as Hydrogen's Storefront client, so an origin that redirects gives `indeterminate`. The command sends no access token, no cookies, and no buyer-IP header. A proxy at the storefront origin can add its own buyer-IP header, so the answer can depend on where the command runs. Each request has a 10-second deadline. An interrupt (SIGINT, SIGTERM, or SIGHUP) also stops a request.
 
 ### Country and language
 
