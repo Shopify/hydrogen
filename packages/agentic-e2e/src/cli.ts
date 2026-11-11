@@ -15,7 +15,7 @@ const NAVIGATION_DEADLINE_MS = 30_000;
 const READY_TIMEOUT_MS = 15_000;
 const TITLE_TIMEOUT_MS = 5_000;
 
-export const EXIT_CODES = { agentCompleted: 0, skipped: 0, indeterminate: 2, usage: 64 } as const;
+export const EXIT_CODES = { agentCompleted: 0, indeterminate: 2, skipped: 3, usage: 64 } as const;
 
 export const USAGE = `Usage: pnpm agentic-e2e <url>
 
@@ -23,10 +23,13 @@ Asks the Storefront API at the origin of <url> for the active country and langua
 eligible variant, opens its product page in a headless browser, runs one fixed AI agent task
 (scroll down once), and prints one JSON result line. Requires SHOPIFY_PROXY_KEY.
 
+<url> must be the storefront root URL, such as https://your-storefront.example/. A path such
+as /en-ca is not supported.
+
 Options:
   -h, --help  Show this help.
 
-Exit codes: 0 agent-completed or skipped, 2 indeterminate, 64 usage error.`;
+Exit codes: 0 agent-completed, 2 indeterminate, 3 skipped, 64 usage error.`;
 
 export type CliArgs =
   | { kind: "run"; url: URL }
@@ -89,6 +92,12 @@ function parseUrl(input: string): CliArgs {
   }
   if (url.username !== "" || url.password !== "") {
     return { kind: "error", message: "URL must not contain credentials." };
+  }
+  if (url.pathname !== "/") {
+    return {
+      kind: "error",
+      message: `URL must be the storefront root URL, such as https://your-storefront.example/, received path ${url.pathname}`,
+    };
   }
   return { kind: "run", url };
 }

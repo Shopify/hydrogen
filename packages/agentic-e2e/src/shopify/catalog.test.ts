@@ -5,7 +5,7 @@ import { fakeFetch } from "./fake-fetch.ts";
 import type { StorefrontContext } from "./storefront.ts";
 
 // Every test runs the real Hydrogen public client. Only `fetch` is fake.
-const STOREFRONT_URL = new URL("https://shop.example/en-ca");
+const STOREFRONT_URL = new URL("https://shop.example/");
 const CA_FR: StorefrontContext = { country: "CA", language: "FR" };
 const signal = new AbortController().signal;
 
@@ -153,8 +153,7 @@ describe("pinVariant", () => {
 describe("productUrl", () => {
   it.each([
     ["https://shop.example/?q=1#top", "https://shop.example/products/board"],
-    ["https://shop.example/en-ca", "https://shop.example/en-ca/products/board"],
-    ["https://shop.example/en-ca/?q=1#top", "https://shop.example/en-ca/products/board"],
+    ["http://127.0.0.1:3000", "http://127.0.0.1:3000/products/board"],
   ])("builds the product URL for %s", (input, expected) => {
     expect(productUrl(new URL(input), "board").href).toBe(expected);
   });

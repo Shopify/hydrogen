@@ -5,7 +5,7 @@ import { fakeFetch } from "./fake-fetch.ts";
 import { discoverContext, REQUEST_DEADLINE_MS } from "./storefront.ts";
 
 // Every test runs the real Hydrogen public client. Only `fetch` is fake.
-const URL_WITH_BASE_PATH = new URL("https://shop.example/en-ca?x=1#top");
+const STOREFRONT_URL = new URL("https://shop.example/?x=1#top");
 const signal = new AbortController().signal;
 
 function localization(country: unknown, language: unknown) {
@@ -29,7 +29,7 @@ describe("discoverContext", () => {
   it("asks the API at the URL origin, without a context, token, cookie, or buyer-IP header", async () => {
     const requests = stubFetch([{ body: localization("CA", "FR") }]);
 
-    await expect(discoverContext(URL_WITH_BASE_PATH, signal)).resolves.toEqual({
+    await expect(discoverContext(STOREFRONT_URL, signal)).resolves.toEqual({
       country: "CA",
       language: "FR",
     });
@@ -49,7 +49,7 @@ describe("discoverContext", () => {
   it("accepts a language code with a region", async () => {
     stubFetch([{ body: localization("BR", "PT_BR") }]);
 
-    await expect(discoverContext(URL_WITH_BASE_PATH, signal)).resolves.toEqual({
+    await expect(discoverContext(STOREFRONT_URL, signal)).resolves.toEqual({
       country: "BR",
       language: "PT_BR",
     });
@@ -58,7 +58,7 @@ describe("discoverContext", () => {
   it("rejects GraphQL errors, even with partial data", async () => {
     stubFetch([{ body: { ...localization("CA", "FR"), errors: [{ message: "Throttled" }] } }]);
 
-    await expect(discoverContext(URL_WITH_BASE_PATH, signal)).rejects.toThrow(
+    await expect(discoverContext(STOREFRONT_URL, signal)).rejects.toThrow(
       "GraphQL errors: Throttled",
     );
   });
@@ -66,7 +66,7 @@ describe("discoverContext", () => {
   it("rejects a missing field", async () => {
     stubFetch([{ body: { data: { localization: { language: { isoCode: "EN" } } } } }]);
 
-    await expect(discoverContext(URL_WITH_BASE_PATH, signal)).rejects.toThrow(
+    await expect(discoverContext(STOREFRONT_URL, signal)).rejects.toThrow(
       /^Invalid response data: localization\.country: /,
     );
   });
@@ -77,7 +77,7 @@ describe("discoverContext", () => {
   ])("rejects the malformed code at $path", async ({ country, language, path }) => {
     stubFetch([{ body: localization(country, language) }]);
 
-    await expect(discoverContext(URL_WITH_BASE_PATH, signal)).rejects.toThrow(
+    await expect(discoverContext(STOREFRONT_URL, signal)).rejects.toThrow(
       `Invalid response data: ${path}: `,
     );
   });
@@ -85,7 +85,7 @@ describe("discoverContext", () => {
   it("keeps Hydrogen's error for an HTTP error status", async () => {
     stubFetch([{ status: 500, body: "down" }]);
 
-    await expect(discoverContext(URL_WITH_BASE_PATH, signal)).rejects.toSatisfy(
+    await expect(discoverContext(STOREFRONT_URL, signal)).rejects.toSatisfy(
       (error) => error instanceof StorefrontApiError && error.status === 500,
     );
   });
@@ -102,7 +102,7 @@ describe("discoverContext", () => {
       });
     });
 
-    const pending = discoverContext(URL_WITH_BASE_PATH, signal);
+    const pending = discoverContext(STOREFRONT_URL, signal);
     await started;
     deadline.abort(new DOMException("The operation timed out.", "TimeoutError"));
 

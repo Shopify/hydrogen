@@ -96,11 +96,7 @@ function eligibleVariant(product: CatalogProduct): PinnedVariant | undefined {
   };
 }
 
-/** `<URL path>/products/<handle>` on the URL's origin. The URL path is a base path such as `/en-ca`. */
+/** `/products/<handle>` on the URL's origin. */
 export function productUrl(storefrontUrl: URL, handle: string): URL {
-  const base = new URL(storefrontUrl.href);
-  base.search = "";
-  base.hash = "";
-  if (!base.pathname.endsWith("/")) base.pathname = `${base.pathname}/`;
-  return new URL(`products/${encodeURIComponent(handle)}`, base);
+  return new URL(`/products/${encodeURIComponent(handle)}`, storefrontUrl.origin);
 }

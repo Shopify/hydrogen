@@ -61,8 +61,12 @@ afterEach(() => {
 });
 
 describe("parseCliArgs", () => {
-  it("accepts one http or https URL", () => {
-    for (const input of ["https://shop.example/en-ca?x=1", "http://127.0.0.1:3000/"]) {
+  it("accepts one http or https root URL, with or without a query or hash", () => {
+    for (const input of [
+      "https://shop.example",
+      "https://shop.example/?x=1#top",
+      "http://127.0.0.1:3000/",
+    ]) {
       const parsed = parseCliArgs([input]);
       expect(parsed.kind).toBe("run");
       expect(parsed.kind === "run" && parsed.url.href).toBe(new URL(input).href);
@@ -86,6 +90,16 @@ describe("parseCliArgs", () => {
     expect(parseCliArgs(argv)).toEqual({ kind: "error", message });
   });
 
+  it.each(["/en-ca", "/en-ca/", "/collections/all", "/products/x"])(
+    "rejects the non-root path %s",
+    (path) => {
+      expect(parseCliArgs([`https://shop.example${path}?x=1`])).toEqual({
+        kind: "error",
+        message: `URL must be the storefront root URL, such as https://your-storefront.example/, received path ${path}`,
+      });
+    },
+  );
+
   it("rejects unknown flags", () => {
     expect(parseCliArgs(["https://shop.example", "--model", "x"]).kind).toBe("error");
   });
@@ -107,10 +121,20 @@ describe("main", () => {
     expect(createBrowserSession).not.toHaveBeenCalled();
   });
 
+  it("exits 64 for a non-root URL before any Storefront API request or browser", async () => {
+    await expect(main(["https://shop.example/en-ca"])).resolves.toBe(64);
+
+    expect(stdout).toEqual([]);
+    expect(stderr.join("")).toContain("URL must be the storefront root URL");
+    expect(discoverContext).not.toHaveBeenCalled();
+    expect(pinVariant).not.toHaveBeenCalled();
+    expect(createBrowserSession).not.toHaveBeenCalled();
+  });
+
   it("pins a variant, attaches before navigation, opens the product page, and reports agent-completed", async () => {
     const { session, agent } = fakes();
 
-    await expect(main(["https://shop.example/en-ca?x=1"])).resolves.toBe(0);
+    await expect(main(["https://shop.example/?x=1#top"])).resolves.toBe(0);
 
     expect(results()).toEqual([
       {
@@ -134,11 +158,11 @@ describe("main", () => {
       "detach",
       "close",
     ]);
-    const storefrontUrl = new URL("https://shop.example/en-ca?x=1");
+    const storefrontUrl = new URL("https://shop.example/?x=1#top");
     expect(discoverContext).toHaveBeenCalledWith(storefrontUrl, expect.any(AbortSignal));
     expect(pinVariant).toHaveBeenCalledWith(storefrontUrl, CONTEXT, expect.any(AbortSignal));
     expect(session.page.goto).toHaveBeenCalledWith(
-      "https://shop.example/en-ca/products/board",
+      "https://shop.example/products/board",
       expect.anything(),
     );
     expect(attachStagehand).toHaveBeenCalledWith("ws://browser");
@@ -164,11 +188,11 @@ describe("main", () => {
     expect(createBrowserSession).not.toHaveBeenCalled();
   });
 
-  it("reports skipped with the context and starts no browser when no variant is eligible", async () => {
+  it("reports skipped with the context, exits 3, and starts no browser when no variant is eligible", async () => {
     const reason = "No eligible variant: the catalog was searched to the end.";
     vi.mocked(pinVariant).mockResolvedValue({ status: "skipped", reason });
 
-    await expect(main(["https://shop.example"])).resolves.toBe(0);
+    await expect(main(["https://shop.example"])).resolves.toBe(3);
 
     expect(results()).toEqual([{ status: "skipped", reason, context: CONTEXT }]);
     expect(createBrowserSession).not.toHaveBeenCalled();

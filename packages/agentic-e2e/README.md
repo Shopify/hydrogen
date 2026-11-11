@@ -7,6 +7,8 @@ pnpm build:pkgs   # once: the command imports the built output of @shopify/hydro
 SHOPIFY_PROXY_KEY=... pnpm agentic-e2e https://your-storefront.example
 ```
 
+The URL must be the storefront root URL. A URL with a path, such as `/en-ca`, is a usage error.
+
 **This is not a storefront test.** `agent-completed` means only that the agent says it finished its task. Nothing checks the storefront, the product page, or the page state.
 
 Run `pnpm --filter @shopify/agentic-e2e run browser:install` once before the first run. It downloads the Chromium build that matches this package's Playwright version (about 340 MB) into Playwright's shared cache. To use another Chromium-based browser, set `AGENTIC_E2E_BROWSER_PATH` to its executable.
@@ -47,7 +49,7 @@ Limits:
 - Only one variant per product is examined. A product whose first available variant is not eligible is passed over, even when another of its variants is eligible.
 - A catalog with no eligible variant in the first 5 pages gives `skipped`.
 
-The product page is `<URL path>/products/<handle>` on the origin of the URL. The URL path is a base path such as `/en-ca`. The query and the hash of the URL are removed.
+The product page is `/products/<handle>` on the origin of the URL. The query and the hash of the URL are removed.
 
 ## Model
 
@@ -75,9 +77,10 @@ The result goes to stdout. Diagnostics go to stderr.
 
 | Code | Meaning                                                                                                              |
 | ---- | -------------------------------------------------------------------------------------------------------------------- |
-| 0    | `agent-completed` or `skipped`                                                                                       |
+| 0    | `agent-completed`                                                                                                    |
 | 2    | `indeterminate`                                                                                                      |
-| 64   | Usage error: no URL, more than one argument, an unknown flag, an invalid URL, a URL that is not http(s), or a URL with credentials. No browser starts. |
+| 3    | `skipped`                                                                                                            |
+| 64   | Usage error: no URL, more than one argument, an unknown flag, an invalid URL, a URL that is not http(s), a URL with credentials, or a URL with a path other than `/`. No browser starts. |
 
 ## Development
 

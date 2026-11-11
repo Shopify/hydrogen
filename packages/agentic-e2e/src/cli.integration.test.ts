@@ -156,12 +156,12 @@ describe("main with the agent", () => {
     // Makes Stagehand offer `search`, so only the exclusion keeps it out.
     vi.stubEnv("BRAVE_API_KEY", "dummy-brave-key");
 
-    await expect(main([`${origin}/en-ca?ref=1`])).resolves.toBe(0);
+    await expect(main([`${origin}/?ref=1#top`])).resolves.toBe(0);
 
     expect(results()).toEqual([
       {
         status: "agent-completed",
-        url: `${origin}/en-ca/products/fixture-board`,
+        url: `${origin}/products/fixture-board`,
         title: "Fixture Board",
         summary: "Scrolled down once.",
         context: CONTEXT,
@@ -271,10 +271,10 @@ describe("main with the agent", () => {
     expectStagehandDetached();
   });
 
-  it("reports skipped for an empty catalog and starts no browser", async () => {
+  it("reports skipped for an empty catalog, exits 3, and starts no browser", async () => {
     catalog = { products: [] };
 
-    await expect(main([origin])).resolves.toBe(0);
+    await expect(main([origin])).resolves.toBe(3);
 
     expect(results()).toEqual([
       {
