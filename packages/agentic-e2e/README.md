@@ -16,12 +16,12 @@ Run `pnpm --filter @shopify/agentic-e2e run browser:install` once before the fir
 ## What it does
 
 1. Checks that `SHOPIFY_PROXY_KEY` is set. If not, it stops before any Storefront API request and before the browser starts.
-2. Sends one Storefront API query for the active country and language (see [Country and language](#country-and-language)).
+2. Sends one Storefront API query for the active country, language, and currency (see [Country and language](#country-and-language)).
 3. Pins one variant in that country and language (see [Pinned variant](#pinned-variant)). If no variant is eligible, the result is `skipped` and no browser starts.
 4. Starts Chromium with a fresh temporary profile.
 5. Attaches one [Stagehand](https://github.com/browserbase/stagehand) agent to the browser, before the first navigation.
 6. Loads the product page of the pinned variant and waits until the page has visible content.
-7. Gives the agent one task: select the variant options of the pinned variant (store strings are JSON-quoted and labelled as data), add exactly 1 unit to the cart, stop as soon as it is added, not open the cart or go to checkout, and not enter personal, shipping, or payment information. A short guest-shopper system prompt tells it how to handle cookie banners and dialogs. The agent has at most 20 steps and 180 seconds. The URL navigation and web search tools are removed.
+7. Gives the agent one task: shop in the country and currency of the run (see [Country and language](#country-and-language)), select the variant options of the pinned variant (store strings are JSON-quoted and labelled as data), add exactly 1 unit to the cart, stop as soon as it is added, not open the cart or go to checkout, and not enter personal, shipping, or payment information. A short guest-shopper system prompt tells it how to handle cookie banners and dialogs, and to keep the country, language, and currency of the store unless the task asks for a change. The agent has at most 20 steps and 180 seconds. The URL navigation and web search tools are removed.
 8. Disconnects Stagehand from the browser, then removes the browser process and the profile.
 
 **Checkout and account pages are not blocked at this stage.** The agent is only told not to go there. Nothing stops it if it does not obey.
@@ -32,13 +32,15 @@ Both queries go to the Storefront API at the origin of the URL (`<origin>/api/<v
 
 ### Country and language
 
-The country and language come from this query, sent without `@inContext`:
+The country, language, country name, and currency come from this query, sent without `@inContext`:
 
 ```graphql
-localization { language { isoCode } country { isoCode } }
+localization { language { isoCode } country { isoCode name currency { isoCode } } }
 ```
 
-This is the context that the Storefront API makes active for this request. It is not the locale of the browser or of the page. The command does not check them against the browser, and it does not verify the market that the browser shows. When the query fails, the result is `indeterminate`. There is no default country or language.
+Without `@inContext`, the Storefront API answers with the primary market of the shop. This is the market of the run. When the query fails or a field is missing, the result is `indeterminate`. There is no default country or language.
+
+The browser can show another market, for example because the storefront selects the market from the geo-IP of the browser. The command sets no cookie and does not change the page. Instead, the task tells the agent to shop in the store of the country name, with prices in the currency, and to switch to that country through the country selector of the store if the store shows another country or currency. The country name and the currency are JSON-quoted as store data. A store without a country selector cannot be switched: the run then most likely ends without a confirmed completion. The command does not verify the market that the browser shows.
 
 ### Pinned variant
 
@@ -62,8 +64,8 @@ The command does not print or store the key. It turns off Stagehand's own logs, 
 The result goes to stdout. Diagnostics go to stderr.
 
 ```json
-{"status":"agent-completed","url":"https://your-storefront.example/products/snowboard","title":"Snowboard","summary":"I added 1 unit to the cart.","context":{"country":"US","language":"EN"},"pinned":{"productHandle":"snowboard","productTitle":"Snowboard","variantId":"gid://shopify/ProductVariant/1","selectedOptions":[{"name":"Title","value":"Default Title"}]}}
-{"status":"skipped","reason":"No eligible variant: the catalog was searched to the end.","context":{"country":"US","language":"EN"}}
+{"status":"agent-completed","url":"https://your-storefront.example/products/snowboard","title":"Snowboard","summary":"I added 1 unit to the cart.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"productHandle":"snowboard","productTitle":"Snowboard","variantId":"gid://shopify/ProductVariant/1","selectedOptions":[{"name":"Title","value":"Default Title"}]}}
+{"status":"skipped","reason":"No eligible variant: the catalog was searched to the end.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"}}
 {"status":"indeterminate","reason":"HTTP 500"}
 ```
 

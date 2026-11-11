@@ -49,7 +49,7 @@ vi.mock("./browser/session.ts", async (importOriginal) => {
   return { createBrowserSession: vi.fn(original.createBrowserSession) };
 });
 
-const CONTEXT = { country: "CA", language: "FR" };
+const CONTEXT = { country: "CA", language: "FR", countryName: "Canada", currency: "CAD" };
 const PINNED = {
   productHandle: "fixture-board",
   productTitle: "Fixture Board",
@@ -196,6 +196,11 @@ describe("main with the agent", () => {
     const [planning] = modelRequests;
     expect(planning?.body).toContain("Add exactly 1 unit of that variant to the cart.");
     expect(planning?.body).toContain("guest shopper");
+    // The objective names the run's market, and the system prompt keeps it.
+    expect(planning?.body).toContain(
+      String.raw`Shop in the \"Canada\" store (prices in \"CAD\"): if the store shows another country or currency, switch to \"Canada\".`,
+    );
+    expect(planning?.body).toContain("Keep the store's country, language and currency");
     expect(planning?.tools).toContain("act");
     expect(planning?.tools).not.toContain("goto");
     expect(planning?.tools).not.toContain("search");
@@ -472,7 +477,12 @@ function onApiRequest(request: IncomingMessage, response: ServerResponse) {
       return;
     }
     const data = body.query.includes("localization")
-      ? { localization: { language: { isoCode: "FR" }, country: { isoCode: "CA" } } }
+      ? {
+          localization: {
+            language: { isoCode: "FR" },
+            country: { isoCode: "CA", name: "Canada", currency: { isoCode: "CAD" } },
+          },
+        }
       : {
           products: {
             pageInfo: { hasNextPage: false, endCursor: null },
@@ -558,6 +568,10 @@ function scroll() {
   return message([
     { type: "tool_use", id: "toolu_scroll", name: "scroll", input: { direction: "down" } },
   ]);
+}
+
+function text(value: string) {
+  return message([{ type: "text", text: value }]);
 }
 
 function done(taskComplete: boolean) {

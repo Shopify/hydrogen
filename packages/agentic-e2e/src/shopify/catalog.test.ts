@@ -2,11 +2,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { PAGE_LIMIT, pinVariant, productUrl } from "./catalog.ts";
 import { fakeFetch } from "./fake-fetch.ts";
-import type { StorefrontContext } from "./storefront.ts";
+import type { StorefrontLocale } from "./storefront.ts";
 
 // Every test runs the real Hydrogen public client. Only `fetch` is fake.
 const STOREFRONT_URL = new URL("https://shop.example/");
-const CA_FR: StorefrontContext = { country: "CA", language: "FR" };
+const CA_FR: StorefrontLocale = { country: "CA", language: "FR" };
 const signal = new AbortController().signal;
 
 type Variant = { id: string; availableForSale: boolean } | null;
