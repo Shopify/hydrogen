@@ -3,6 +3,7 @@ import { Link, useLoaderData } from "react-router";
 
 import { Image } from "~/components/Image";
 import { PaginatedResourceSection } from "~/components/PaginatedResourceSection";
+import { useLocalizedPath } from "~/lib/locale-path";
 import { getPaginationVariables } from "~/lib/pagination";
 import { redirectIfHandleIsLocalized } from "~/lib/redirect";
 
@@ -94,9 +95,10 @@ function ArticleItem({
     month: "long",
     day: "numeric",
   }).format(new Date(article.publishedAt));
+  const localizedPath = useLocalizedPath();
   return (
     <div className="blog-article" key={article.id}>
-      <Link to={`/blogs/${article.blog.handle}/${article.handle}`}>
+      <Link to={localizedPath(`/blogs/${article.blog.handle}/${article.handle}`)}>
         {article.image && (
           <div className="blog-article-image">
             <Image

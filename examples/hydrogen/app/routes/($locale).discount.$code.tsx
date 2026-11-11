@@ -1,5 +1,8 @@
-import { cartQueries, createCartCookie, getCartId } from "@shopify/hydrogen";
+import { cartQueries, createCartCookie, getCartId, matchLocale } from "@shopify/hydrogen";
 import { redirect } from "react-router";
+
+import { i18n } from "~/lib/i18n";
+import { localizePath } from "~/lib/locale-path";
 
 import type { Route } from "./+types/($locale).discount.$code";
 
@@ -29,7 +32,11 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
   searchParams.delete("return_to");
   for (const [name, value] of searchParams) redirectTarget.searchParams.append(name, value);
 
-  const redirectUrl = `${redirectTarget.pathname}${redirectTarget.search}${redirectTarget.hash}`;
+  // A target without a locale stays in the request's locale. A target that names one keeps it.
+  const redirectPath = matchLocale(redirectTarget, i18n).pathPrefix
+    ? redirectTarget.pathname
+    : localizePath(redirectTarget.pathname, storefront.locale.pathPrefix);
+  const redirectUrl = `${redirectPath}${redirectTarget.search}${redirectTarget.hash}`;
 
   if (!code) {
     return redirect(redirectUrl);

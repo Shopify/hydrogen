@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 
 import { useCart, useCartActions } from "~/lib/cart";
 import { CART_METAFIELDS_PATH } from "~/lib/cart-metafields-path";
+import { useLocalizedPath } from "~/lib/locale-path";
 
 // Cart metafields are server-only: the Storefront cart ajax API (Standard
 // Actions) does not support them, so this form posts JSON directly to the
@@ -60,6 +61,7 @@ export function CartDeliveryInstructions() {
       )?.value ?? "",
   );
   const { refresh } = useCartActions();
+  const localizedPath = useLocalizedPath();
   const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
   const headingId = useId();
   const instructionsId = useId();
@@ -68,7 +70,8 @@ export function CartDeliveryInstructions() {
   async function submitToCartMetafields(body: Record<string, unknown>) {
     setSaveState({ status: "saving" });
     try {
-      const response = await fetch(CART_METAFIELDS_PATH, {
+      // The route resolves the locale from the URL, like every other request to this app.
+      const response = await fetch(localizedPath(CART_METAFIELDS_PATH), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),

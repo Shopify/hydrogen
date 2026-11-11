@@ -3,6 +3,7 @@ import { useLoaderData, Link } from "react-router";
 
 import { Image } from "~/components/Image";
 import { PaginatedResourceSection } from "~/components/PaginatedResourceSection";
+import { useLocalizedPath } from "~/lib/locale-path";
 import { getPaginationVariables } from "~/lib/pagination";
 
 import type { Route } from "./+types/($locale).collections._index";
@@ -62,11 +63,12 @@ export default function Collections() {
 }
 
 function CollectionItem({ collection, index }: { collection: CollectionFragment; index: number }) {
+  const localizedPath = useLocalizedPath();
   return (
     <Link
       className="collection-item"
       key={collection.id}
-      to={`/collections/${collection.handle}`}
+      to={localizedPath(`/collections/${collection.handle}`)}
       prefetch="intent"
     >
       {collection?.image && (

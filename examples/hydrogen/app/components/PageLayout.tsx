@@ -8,13 +8,13 @@ import { Header, HeaderMenu } from "~/components/Header";
 import { getSearchPageUrl, SearchFormPredictive } from "~/components/SearchFormPredictive";
 import { SearchResultsPredictive } from "~/components/SearchResultsPredictive";
 import type { FooterQuery, HeaderQuery } from "~/lib/fragments";
+import { useLocalizedPath } from "~/lib/locale-path";
 
 const PREDICTIVE_SEARCH_LIMIT = 5;
 
 interface PageLayoutProps {
   footer: Promise<FooterQuery | null>;
   header: HeaderQuery;
-  i18n: { pathPrefix: string };
   isLoggedIn: Promise<boolean>;
   publicStoreDomain: string;
   children?: React.ReactNode;
@@ -24,7 +24,6 @@ export function PageLayout({
   children = null,
   footer,
   header,
-  i18n,
   isLoggedIn,
   publicStoreDomain,
 }: PageLayoutProps) {
@@ -34,12 +33,7 @@ export function PageLayout({
       <SearchAside />
       <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
       {header && (
-        <Header
-          header={header}
-          isLoggedIn={isLoggedIn}
-          pathPrefix={i18n.pathPrefix}
-          publicStoreDomain={publicStoreDomain}
-        />
+        <Header header={header} isLoggedIn={isLoggedIn} publicStoreDomain={publicStoreDomain} />
       )}
       <main>{children}</main>
       <Footer footer={footer} header={header} publicStoreDomain={publicStoreDomain} />
@@ -56,6 +50,8 @@ function CartAside() {
 }
 
 function SearchAside() {
+  const localizedPath = useLocalizedPath();
+
   return (
     <Aside type="search" heading="SEARCH">
       <PredictiveSearchProvider limit={PREDICTIVE_SEARCH_LIMIT}>
@@ -119,7 +115,7 @@ function SearchAside() {
                     term={term}
                   />
                   {term.current && total ? (
-                    <Link onClick={closeSearch} to={getSearchPageUrl(term.current)}>
+                    <Link onClick={closeSearch} to={localizedPath(getSearchPageUrl(term.current))}>
                       <p>
                         View all results for <q>{term.current}</q>
                         &nbsp; →
