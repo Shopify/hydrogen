@@ -83,8 +83,12 @@ describe("sanitizeQuantity", () => {
       },
     );
 
-    it("falls back to min for Infinity", () => {
+    it("falls back to min for Infinity when there is no max", () => {
       expect(sanitizeQuantity(Infinity)).toBe(DEFAULT_MINIMUM_QUANTITY);
+    });
+
+    it.each([Infinity, "1e400"])("clamps %s to max when max is set", (raw) => {
+      expect(sanitizeQuantity(raw, { max: 4 })).toBe(4);
     });
   });
 

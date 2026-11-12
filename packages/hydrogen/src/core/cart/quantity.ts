@@ -15,7 +15,7 @@ export const NO_QUANTITY_LIMIT = Infinity;
 /**
  * Turns a raw value, such as text from a quantity input, into a whole-number quantity between a minimum and a maximum.
  *
- * The function parses strings and rounds decimals. Input that the function can't parse, or that isn't finite, returns the minimum. When `max` is below `min`, `min` wins.
+ * The function parses strings and rounds decimals. Input that the function can't parse returns the minimum, and so does a result that isn't finite, such as `Infinity` with no `max`. When `max` is below `min`, `min` wins.
  *
  * @param raw The value to turn into a quantity.
  * @param options The lower and upper bounds. The `min` option defaults to `1`, and `max` defaults to no limit. To stop at available stock, pass the variant's available quantity as `max` when it's positive.
@@ -35,8 +35,8 @@ export function sanitizeQuantity(raw: unknown, options?: { min?: number; max?: n
   const max = options?.max ?? NO_QUANTITY_LIMIT;
 
   const parsed = Number(String(raw).trim());
-  if (!Number.isFinite(parsed)) return min;
+  if (Number.isNaN(parsed)) return min;
 
-  const rounded = Math.round(parsed);
-  return Math.max(Math.min(rounded, max), min);
+  const clamped = Math.max(Math.min(Math.round(parsed), max), min);
+  return Number.isFinite(clamped) ? clamped : min;
 }
