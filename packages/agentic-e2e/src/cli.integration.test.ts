@@ -63,6 +63,18 @@ const PINNED = {
   variantId: "gid://shopify/ProductVariant/7",
   selectedOptions: [{ name: "Size", value: "Medium" }],
 };
+/** The variant that the tee page selects first: the API default. */
+const TEE_DEFAULT = {
+  id: "gid://shopify/ProductVariant/21",
+  selectedOptions: [{ name: "Size", value: "Medium" }],
+};
+/** The variant that choose-a-variant pins on the tee: available, and not the default. */
+const TEE_PINNED = {
+  productHandle: "fixture-tee",
+  productTitle: "Fixture Tee",
+  variantId: "gid://shopify/ProductVariant/22",
+  selectedOptions: [{ name: "Size", value: "Large" }],
+};
 const NO_ADD = "No add Standard Event was recorded by the time Stagehand was disconnected.";
 const CLAIMED_ADD =
   "The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.";
@@ -111,6 +123,10 @@ let apiRequests: ApiRequest[];
 let mode: StoreMode;
 /** Store events in order: adds and releases. */
 let storeLog: string[];
+/** The variant ID of each add request that reached the store. */
+let addedVariants: string[];
+/** The path of each product page request. */
+let productPageRequests: string[];
 let stderr: string[];
 let heldAdds: Array<() => void>;
 /** For each Stagehand CDP socket close: whether the browser was still running at that time. */
@@ -144,6 +160,8 @@ beforeEach(async () => {
   apiRequests = [];
   mode = { addEvent: "with-promise", addStatus: 200, holdAdd: false };
   storeLog = [];
+  addedVariants = [];
+  productPageRequests = [];
   heldAdds = [];
   vi.mocked(createBrowserSession).mockClear();
   vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
@@ -200,6 +218,7 @@ describe("main with the agent", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "pass",
         reason:
           "One add event held exactly 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings.",
@@ -254,7 +273,9 @@ describe("main with the agent", () => {
 
     await expect(main([origin])).resolves.toBe(0);
 
-    expect(results()).toEqual([expect.objectContaining({ status: "pass", agent: STOPPED })]);
+    expect(results()).toEqual([
+      expect.objectContaining({ test: "add-to-cart", status: "pass", agent: STOPPED }),
+    ]);
     // The add was answered only after Stagehand detached.
     expect(storeLog).toEqual(["add", "add answered"]);
     expectStagehandDetached();
@@ -268,6 +289,7 @@ describe("main with the agent", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "fail",
         reason: "An add event promise was rejected.",
         context: CONTEXT,
@@ -287,6 +309,7 @@ describe("main with the agent", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "fail",
         reason: "An add event had no promise, so its outcome is unknown.",
         context: CONTEXT,
@@ -305,6 +328,7 @@ describe("main with the agent", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "fail",
         reason: CLAIMED_ADD,
         context: CONTEXT,
@@ -325,6 +349,7 @@ describe("main with the agent", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "fail",
         reason: CLAIMED_ADD,
         context: CONTEXT,
@@ -344,6 +369,7 @@ describe("main with the agent", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "indeterminate",
         reason: NO_ADD,
         context: CONTEXT,
@@ -372,6 +398,7 @@ describe("main with the agent", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "fail",
         reason: CLAIMED_ADD,
         context: CONTEXT,
@@ -398,6 +425,7 @@ describe("main with the agent", () => {
     await expect(run).resolves.toBe(2);
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "indeterminate",
         reason: "Interrupted by SIGINT.",
         context: CONTEXT,
@@ -418,6 +446,7 @@ describe("main with the agent", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "indeterminate",
         reason: NO_ADD,
         context: CONTEXT,
@@ -443,6 +472,7 @@ describe("main with the agent", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "indeterminate",
         reason: "HTTP 500",
         context: CONTEXT,
@@ -460,11 +490,78 @@ describe("main with the agent", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "skipped",
         reason: "No eligible variant: the catalog was searched to the end.",
         context: CONTEXT,
       },
     ]);
+    expectNoBrowser();
+  });
+
+  it("passes choose-a-variant when the agent selects the pinned variant and adds it", async () => {
+    catalog = { products: [teeProduct()] };
+    reply = click("button: Large", "button: Add to cart");
+
+    await expect(main([origin, "--test", "choose-a-variant"])).resolves.toBe(0);
+
+    expect(results()).toEqual([
+      {
+        test: "choose-a-variant",
+        status: "pass",
+        reason:
+          "One add event held exactly 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings.",
+        context: CONTEXT,
+        pinned: TEE_PINNED,
+        agent: STOPPED,
+      },
+    ]);
+    // The page opened with no variant in the URL, and the add held the selected variant.
+    expect(productPageRequests).toEqual(["/products/fixture-tee"]);
+    expect(stderr).toContain(`Opening ${origin}/products/fixture-tee\n`);
+    expect(addedVariants).toEqual([TEE_PINNED.variantId]);
+    expect(apiRequests[1]?.query).toContain("query AgenticE2EVariantChoice(");
+    expect(apiRequests[1]?.variables).toMatchObject({ variants: 10 });
+    // The task names the options of the pinned variant.
+    expect(modelRequests[0]?.body).toContain(String.raw`[{\"name\":\"Size\",\"value\":\"Large\"}]`);
+    expectStagehandDetached();
+  });
+
+  it("fails choose-a-variant when the agent adds the default variant without a selection", async () => {
+    catalog = { products: [teeProduct()] };
+    reply = clickAdd();
+
+    await expect(main([origin, "--test", "choose-a-variant"])).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        test: "choose-a-variant",
+        status: "fail",
+        reason: "An add event did not hold exactly 1 unit of the pinned variant.",
+        context: CONTEXT,
+        pinned: TEE_PINNED,
+        agent: STOPPED,
+      },
+    ]);
+    expect(addedVariants).toEqual([TEE_DEFAULT.id]);
+    expectStagehandDetached();
+  });
+
+  it("skips choose-a-variant when no product has 2 available variants, and opens no page", async () => {
+    catalog = { products: [teeProduct({ onlyDefault: true })] };
+
+    await expect(main([origin, "--test", "choose-a-variant"])).resolves.toBe(3);
+
+    expect(results()).toEqual([
+      {
+        test: "choose-a-variant",
+        status: "skipped",
+        reason:
+          "No product with at least 2 variants available for sale: the catalog was searched to the end.",
+        context: CONTEXT,
+      },
+    ]);
+    expect(productPageRequests).toEqual([]);
     expectNoBrowser();
   });
 
@@ -475,6 +572,7 @@ describe("main with the agent", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "indeterminate",
         reason: "Storefront API localization failed: SFAPI responded with 500: down",
       },
@@ -487,6 +585,7 @@ describe("main with the agent", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "indeterminate",
         reason: "Storefront API localization failed: SFAPI request failed",
       },
@@ -509,6 +608,7 @@ describe("main with the agent", () => {
     expect(performance.now() - interruptedAt).toBeLessThan(5_000);
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "indeterminate",
         reason: "Interrupted by SIGINT.",
         context: CONTEXT,
@@ -540,10 +640,10 @@ describe("the CLI process", () => {
     ).resolves.toEqual({
       code: 2,
       signal: null,
-      stdout: `${JSON.stringify({ status: "indeterminate", reason: "Interrupted by SIGINT.", context: CONTEXT, pinned: PINNED })}\n`,
+      stdout: `${JSON.stringify({ test: "add-to-cart", status: "indeterminate", reason: "Interrupted by SIGINT.", context: CONTEXT, pinned: PINNED })}\n`,
       stderr: [
         "Storefront API context: CA FR",
-        `Pinned variant ${PINNED.variantId} of fixture-board`,
+        `Pinned variant ${PINNED.variantId} of fixture-board for add-to-cart`,
         `Opening ${origin}/products/fixture-board`,
         "Running the agent task.",
         "Received SIGINT. Stopping the run.",
@@ -572,10 +672,10 @@ describe("the CLI process", () => {
     await expect(within(cli.exited, CLI_EXIT_LIMIT_MS, "The CLI did not exit.")).resolves.toEqual({
       code: 2,
       signal: null,
-      stdout: `${JSON.stringify({ status: "indeterminate", reason: "HTTP 500", context: CONTEXT, pinned: { ...PINNED, productHandle: "broken" } })}\n`,
+      stdout: `${JSON.stringify({ test: "add-to-cart", status: "indeterminate", reason: "HTTP 500", context: CONTEXT, pinned: { ...PINNED, productHandle: "broken" } })}\n`,
       stderr: [
         "Storefront API context: CA FR",
-        `Pinned variant ${PINNED.variantId} of broken`,
+        `Pinned variant ${PINNED.variantId} of broken for add-to-cart`,
         `Opening ${origin}/products/broken`,
         "Indeterminate: HTTP 500",
         "",
@@ -605,14 +705,38 @@ describe("createBrowserSession", () => {
 
 function onStoreRequest(request: IncomingMessage, response: ServerResponse) {
   const path = new URL(request.url ?? "/", "http://fixture").pathname;
+  if (path.startsWith("/products/")) productPageRequests.push(path);
   if (/^\/api\/[^/]+\/graphql\.json$/.test(path)) {
     onApiRequest(request, response);
   } else if (path.endsWith("/products/hang")) {
     // Never answers, so a run cannot finish before the interrupt.
   } else if (path.endsWith("/products/fixture-board")) {
-    response.writeHead(200, { "content-type": "text/html" }).end(productPage());
+    const variants = [{ id: PINNED.variantId, size: "Medium" }];
+    response
+      .writeHead(200, { "content-type": "text/html" })
+      .end(productPage(PINNED.productTitle, variants));
+  } else if (path.endsWith("/products/fixture-tee")) {
+    // The default variant first: the page selects it before any choice.
+    const variants = [
+      { id: TEE_DEFAULT.id, size: "Medium" },
+      { id: TEE_PINNED.variantId, size: "Large" },
+    ];
+    response
+      .writeHead(200, { "content-type": "text/html" })
+      .end(productPage(TEE_PINNED.productTitle, variants));
   } else if (path === "/cart/add" && request.method === "POST") {
-    request.resume();
+    onAddRequest(request, response);
+  } else {
+    response.writeHead(500, { "content-type": "text/html" }).end("<title>Broken</title>");
+  }
+}
+
+function onAddRequest(request: IncomingMessage, response: ServerResponse) {
+  const chunks: Buffer[] = [];
+  request.on("data", (chunk: Buffer) => chunks.push(chunk));
+  request.on("end", () => {
+    const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as { merchandiseId: string };
+    addedVariants.push(body.merchandiseId);
     if (mode.addStatus !== 200) {
       storeLog.push("add rejected");
       response.writeHead(mode.addStatus, { "content-type": "text/plain" }).end("down");
@@ -631,33 +755,55 @@ function onStoreRequest(request: IncomingMessage, response: ServerResponse) {
       storeLog.push("add answered");
       answer();
     });
-  } else {
-    response.writeHead(500, { "content-type": "text/html" }).end("<title>Broken</title>");
-  }
+  });
 }
 
 /**
- * A product page with an Add to cart button. The add posts to `/cart/add`. By default the click
- * dispatches `shopify:cart:lines-update` on the document with the add promise, like a Hydrogen
- * storefront. The promise rejects on an HTTP error.
+ * A product page with an Add to cart button. The page first selects the first variant. With more
+ * than one variant, a button for each size selects that variant. The add posts the selected
+ * variant to `/cart/add`. By default the click dispatches `shopify:cart:lines-update` on the
+ * document with the add promise and the selected variant, like a Hydrogen storefront. The promise
+ * rejects on an HTTP error.
  */
-function productPage(): string {
+function productPage(title: string, variants: Array<{ id: string; size: string }>): string {
+  const [first] = variants;
+  assert(first, "A product page needs a variant.");
   const promise = mode.addEvent === "with-promise" ? ", promise" : "";
   const dispatch =
     mode.addEvent === "none"
       ? ""
-      : `document.dispatchEvent(Object.assign(new Event("shopify:cart:lines-update", { bubbles: true, cancelable: true }), { action: "add", context: "standard-action", lines: [{ merchandiseId: ${JSON.stringify(PINNED.variantId)}, quantity: 1 }]${promise} }));`;
-  return `<!doctype html><title>Fixture Board</title>
-<h1>Fixture Board</h1>
-<p>Size: Medium</p>
+      : `document.dispatchEvent(Object.assign(new Event("shopify:cart:lines-update", { bubbles: true, cancelable: true }), { action: "add", context: "standard-action", lines: [{ merchandiseId: variantId, quantity: 1 }]${promise} }));`;
+  const sizeButtons =
+    variants.length < 2
+      ? ""
+      : `<div role="group" aria-label="Size">${variants
+          .map(
+            (variant) =>
+              `<button type="button" data-variant=${JSON.stringify(variant.id)} data-size=${JSON.stringify(variant.size)} aria-pressed="${variant === first}">${variant.size}</button>`,
+          )
+          .join("")}</div>`;
+  return `<!doctype html><title>${title}</title>
+<h1>${title}</h1>
+<p id="size">Size: ${first.size}</p>
+${sizeButtons}
 <button id="add" type="button">Add to cart</button>
 <p id="status"></p>
 <script>
+let variantId = ${JSON.stringify(first.id)};
+for (const button of document.querySelectorAll("[data-variant]")) {
+  button.addEventListener("click", () => {
+    variantId = button.dataset.variant;
+    document.getElementById("size").textContent = "Size: " + button.dataset.size;
+    for (const other of document.querySelectorAll("[data-variant]")) {
+      other.setAttribute("aria-pressed", String(other === button));
+    }
+  });
+}
 document.getElementById("add").addEventListener("click", () => {
   const promise = fetch("/cart/add", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ merchandiseId: ${JSON.stringify(PINNED.variantId)}, quantity: 1 }),
+    body: JSON.stringify({ merchandiseId: variantId, quantity: 1 }),
   }).then((response) => {
     if (!response.ok) throw new Error("The add failed.");
     return response.json();
@@ -693,6 +839,29 @@ function onApiRequest(request: IncomingMessage, response: ServerResponse) {
         };
     response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ data }));
   });
+}
+
+/**
+ * The tee for the variant choice query: the default (Medium) and the pinned variant (Large) are
+ * available. With `onlyDefault`, Large is not available.
+ */
+function teeProduct({ onlyDefault = false } = {}) {
+  return {
+    title: TEE_PINNED.productTitle,
+    handle: TEE_PINNED.productHandle,
+    requiresSellingPlan: false,
+    selectedOrFirstAvailableVariant: { id: TEE_DEFAULT.id },
+    variants: {
+      nodes: [
+        { ...TEE_DEFAULT, availableForSale: true },
+        {
+          id: TEE_PINNED.variantId,
+          availableForSale: !onlyDefault,
+          selectedOptions: TEE_PINNED.selectedOptions,
+        },
+      ],
+    },
+  };
 }
 
 function eligibleProduct(handle: string) {
@@ -732,13 +901,17 @@ function onModelRequest(request: IncomingMessage, response: ServerResponse) {
   });
 }
 
-/**
- * The agent clicks Add to cart (then each target in `more`) through Stagehand's `act` tool, then
- * calls `done`. The `act` tool sends its own model request, which picks the target by its element
- * ID in the page snapshot.
- */
+/** The agent clicks Add to cart, then each target in `more` (see `click`). */
 function clickAdd(...more: string[]): Reply {
-  const targets = ["button: Add to cart", ...more];
+  return click("button: Add to cart", ...more);
+}
+
+/**
+ * The agent clicks each target in order through Stagehand's `act` tool, then calls `done`. The
+ * `act` tool sends its own model request, which picks the target by its element ID in the page
+ * snapshot.
+ */
+function click(...targets: string[]): Reply {
   let planningTurns = 0;
   return ({ tools, body }) => {
     if (!tools.includes("act") && !isFinalAssessment(tools)) {

@@ -4,7 +4,7 @@ import { attachStagehand, type AgentOutcome, type AgentRunInput } from "./agent/
 import { createBrowserSession } from "./browser/session.ts";
 import { main, parseCliArgs, USAGE } from "./cli.ts";
 import { ADD_EVENT_NAME, AddEventLog, observeAddEvents } from "./shopify/add-events.ts";
-import { pinVariant, type PinnedVariant } from "./shopify/catalog.ts";
+import { pinNonDefaultVariant, pinVariant, type PinnedVariant } from "./shopify/catalog.ts";
 import { discoverContext, type StorefrontContext } from "./shopify/storefront.ts";
 
 vi.mock("./browser/session.ts", () => ({ createBrowserSession: vi.fn() }));
@@ -17,6 +17,7 @@ vi.mock("./shopify/storefront.ts", () => ({ discoverContext: vi.fn() }));
 vi.mock("./shopify/catalog.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./shopify/catalog.ts")>()),
   pinVariant: vi.fn(),
+  pinNonDefaultVariant: vi.fn(),
 }));
 
 const KEY = "sk-secret-proxy-key-123";
@@ -35,6 +36,7 @@ const PINNED: PinnedVariant = {
 };
 const PASS_REASON =
   "One add event held exactly 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings.";
+const VALID_TESTS = "Valid tests: add-to-cart, choose-a-variant.";
 const NO_ADD = "No add Standard Event was recorded by the time Stagehand was disconnected.";
 const CLAIMED_ADD =
   "The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.";
@@ -67,6 +69,10 @@ beforeEach(() => {
     calls.push("pin");
     return { status: "pinned", pinned: PINNED };
   });
+  vi.mocked(pinNonDefaultVariant).mockImplementation(async () => {
+    calls.push("pin non-default");
+    return { status: "pinned", pinned: PINNED };
+  });
   vi.mocked(observeAddEvents).mockImplementation(async () => {
     calls.push("observe");
     log = new AddEventLog();
@@ -89,6 +95,7 @@ afterEach(() => {
   vi.mocked(attachStagehand).mockReset();
   vi.mocked(discoverContext).mockReset();
   vi.mocked(pinVariant).mockReset();
+  vi.mocked(pinNonDefaultVariant).mockReset();
   vi.mocked(observeAddEvents).mockReset();
 });
 
@@ -103,6 +110,52 @@ describe("parseCliArgs", () => {
       expect(parsed.kind).toBe("run");
       expect(parsed.kind === "run" && parsed.url.href).toBe(new URL(input).href);
     }
+  });
+
+  it("runs the add-to-cart test when --test is absent", () => {
+    expect(parseCliArgs(["https://shop.example"])).toEqual({
+      kind: "run",
+      url: new URL("https://shop.example"),
+      test: "add-to-cart",
+    });
+  });
+
+  it.each([
+    ["https://shop.example", "--test", "choose-a-variant"],
+    ["--test", "choose-a-variant", "https://shop.example"],
+    ["https://shop.example", "--test=choose-a-variant"],
+  ])("accepts the test name in %j", (...argv) => {
+    expect(parseCliArgs(argv)).toEqual({
+      kind: "run",
+      url: new URL("https://shop.example"),
+      test: "choose-a-variant",
+    });
+  });
+
+  it("accepts --test add-to-cart", () => {
+    const parsed = parseCliArgs(["https://shop.example", "--test", "add-to-cart"]);
+    expect(parsed.kind === "run" && parsed.test).toBe("add-to-cart");
+  });
+
+  it.each([
+    {
+      argv: ["https://shop.example", "--test", "checkout"],
+      message: `Unknown test: "checkout". ${VALID_TESTS}`,
+    },
+    { argv: ["https://shop.example", "--test="], message: `Unknown test: "". ${VALID_TESTS}` },
+  ])("rejects the test in $argv", ({ argv, message }) => {
+    expect(parseCliArgs(argv)).toEqual({ kind: "error", message });
+  });
+
+  it.each([
+    ["https://shop.example", "--test"],
+    ["--test", "--help", "https://shop.example"],
+  ])("rejects --test without a value in %j", (...argv) => {
+    // The message is Node's own text for a missing option value.
+    expect(parseCliArgs(argv)).toEqual({
+      kind: "error",
+      message: expect.stringContaining("--test"),
+    });
   });
 
   it("returns help for -h and --help, even with a URL", () => {
@@ -153,6 +206,28 @@ describe("main", () => {
     expect(createBrowserSession).not.toHaveBeenCalled();
   });
 
+  it.each([
+    {
+      argv: ["https://shop.example", "--test", "checkout"],
+      message: `Unknown test: "checkout". ${VALID_TESTS}\n`,
+    },
+    // Node's own text for a missing option value.
+    { argv: ["https://shop.example", "--test"], message: "--test" },
+  ])(
+    "exits 64 for $argv with usage, before any Storefront API request",
+    async ({ argv, message }) => {
+      await expect(main(argv)).resolves.toBe(64);
+
+      expect(stdout).toEqual([]);
+      expect(stderr.join("")).toContain(message);
+      expect(stderr.join("")).toContain(`\n\n${USAGE}\n`);
+      expect(discoverContext).not.toHaveBeenCalled();
+      expect(pinVariant).not.toHaveBeenCalled();
+      expect(pinNonDefaultVariant).not.toHaveBeenCalled();
+      expect(createBrowserSession).not.toHaveBeenCalled();
+    },
+  );
+
   it("exits 64 for a non-root URL before any Storefront API request or browser", async () => {
     await expect(main(["https://shop.example/en-ca"])).resolves.toBe(64);
 
@@ -170,6 +245,7 @@ describe("main", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "pass",
         reason: PASS_REASON,
         context: CONTEXT,
@@ -196,6 +272,7 @@ describe("main", () => {
     const storefrontUrl = new URL("https://shop.example/?x=1#top");
     expect(discoverContext).toHaveBeenCalledWith(storefrontUrl, expect.any(AbortSignal));
     expect(pinVariant).toHaveBeenCalledWith(storefrontUrl, CONTEXT, expect.any(AbortSignal));
+    expect(pinNonDefaultVariant).not.toHaveBeenCalled();
     expect(observeAddEvents).toHaveBeenCalledWith(session.page);
     expect(session.page.goto).toHaveBeenCalledWith(
       "https://shop.example/products/board",
@@ -228,6 +305,53 @@ describe("main", () => {
     expect(stdout.join("") + stderr.join("")).not.toContain(KEY);
   });
 
+  it("pins with pinNonDefaultVariant for --test choose-a-variant and prints test first", async () => {
+    const { agent } = fakes();
+
+    await expect(main(["https://shop.example", "--test", "choose-a-variant"])).resolves.toBe(0);
+
+    expect(results()).toEqual([
+      {
+        test: "choose-a-variant",
+        status: "pass",
+        reason: PASS_REASON,
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: STOPPED,
+      },
+    ]);
+    expect(stdout.join("")).toMatch(/^\{"test":"choose-a-variant","status":"pass",/);
+    expect(calls.slice(0, 2)).toEqual(["context", "pin non-default"]);
+    expect(pinNonDefaultVariant).toHaveBeenCalledWith(
+      new URL("https://shop.example"),
+      CONTEXT,
+      expect.any(AbortSignal),
+    );
+    expect(pinVariant).not.toHaveBeenCalled();
+    expect(stderr).toContain(`Pinned variant ${PINNED.variantId} of board for choose-a-variant\n`);
+    // The same add task as add-to-cart, with the pinned variant's options.
+    expect(agent.run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        task: expect.stringContaining(
+          `Select the variant with these options (JSON data): ${JSON.stringify(PINNED.selectedOptions)}.`,
+        ),
+      }),
+    );
+  });
+
+  it("reports skipped with the test name for choose-a-variant and starts no browser", async () => {
+    const reason =
+      "No product with at least 2 variants available for sale: the catalog was searched to the end.";
+    vi.mocked(pinNonDefaultVariant).mockResolvedValue({ status: "skipped", reason });
+
+    await expect(main(["https://shop.example", "--test", "choose-a-variant"])).resolves.toBe(3);
+
+    expect(results()).toEqual([
+      { test: "choose-a-variant", status: "skipped", reason, context: CONTEXT },
+    ]);
+    expect(createBrowserSession).not.toHaveBeenCalled();
+  });
+
   it("fails with exit 1 when the add promise was rejected", async () => {
     fakes({ settle: "rejected" });
 
@@ -235,6 +359,7 @@ describe("main", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "fail",
         reason: "An add event promise was rejected.",
         context: CONTEXT,
@@ -251,6 +376,7 @@ describe("main", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "fail",
         reason: CLAIMED_ADD,
         context: CONTEXT,
@@ -273,6 +399,7 @@ describe("main", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "indeterminate",
         reason: NO_ADD,
         context: CONTEXT,
@@ -300,6 +427,7 @@ describe("main", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "fail",
         reason: "An add event promise was rejected.",
         context: CONTEXT,
@@ -324,6 +452,7 @@ describe("main", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "fail",
         reason: CLAIMED_ADD,
         context: CONTEXT,
@@ -334,13 +463,24 @@ describe("main", () => {
     expect(log.events).toHaveLength(2);
   });
 
+  it("reports a missing SHOPIFY_PROXY_KEY with the test name for choose-a-variant", async () => {
+    vi.stubEnv("SHOPIFY_PROXY_KEY", undefined);
+
+    await expect(main(["https://shop.example", "--test", "choose-a-variant"])).resolves.toBe(2);
+
+    expect(stdout).toEqual([
+      `${JSON.stringify({ test: "choose-a-variant", status: "indeterminate", reason: "SHOPIFY_PROXY_KEY is not set." })}\n`,
+    ]);
+    expect(pinNonDefaultVariant).not.toHaveBeenCalled();
+  });
+
   it("reports a missing SHOPIFY_PROXY_KEY before the browser starts", async () => {
     vi.stubEnv("SHOPIFY_PROXY_KEY", undefined);
 
     await expect(main(["https://shop.example"])).resolves.toBe(2);
 
-    expect(results()).toEqual([
-      { status: "indeterminate", reason: "SHOPIFY_PROXY_KEY is not set." },
+    expect(stdout).toEqual([
+      `${JSON.stringify({ test: "add-to-cart", status: "indeterminate", reason: "SHOPIFY_PROXY_KEY is not set." })}\n`,
     ]);
     expect(discoverContext).not.toHaveBeenCalled();
     expect(createBrowserSession).not.toHaveBeenCalled();
@@ -352,7 +492,9 @@ describe("main", () => {
 
     await expect(main(["https://shop.example"])).resolves.toBe(3);
 
-    expect(results()).toEqual([{ status: "skipped", reason, context: CONTEXT }]);
+    expect(results()).toEqual([
+      { test: "add-to-cart", status: "skipped", reason, context: CONTEXT },
+    ]);
     expect(createBrowserSession).not.toHaveBeenCalled();
   });
 
@@ -373,7 +515,7 @@ describe("main", () => {
 
     await expect(main(["https://shop.example"])).resolves.toBe(2);
 
-    expect(results()).toEqual([{ status: "indeterminate", reason }]);
+    expect(results()).toEqual([{ test: "add-to-cart", status: "indeterminate", reason }]);
     expect(createBrowserSession).not.toHaveBeenCalled();
   });
 
@@ -391,7 +533,9 @@ describe("main", () => {
     process.emit("SIGINT", "SIGINT");
 
     await expect(run).resolves.toBe(2);
-    expect(results()).toEqual([{ status: "indeterminate", reason: "Interrupted by SIGINT." }]);
+    expect(results()).toEqual([
+      { test: "add-to-cart", status: "indeterminate", reason: "Interrupted by SIGINT." },
+    ]);
     // The request in flight receives the interrupt.
     expect(requestSignal?.aborted).toBe(true);
     expect(pinVariant).not.toHaveBeenCalled();
@@ -420,7 +564,7 @@ describe("main", () => {
     await expect(main(["https://shop.example"])).resolves.toBe(2);
 
     expect(results()).toEqual([
-      { status: "indeterminate", reason, context: CONTEXT, pinned: PINNED },
+      { test: "add-to-cart", status: "indeterminate", reason, context: CONTEXT, pinned: PINNED },
     ]);
     expect(agent.run).not.toHaveBeenCalled();
     expect(agent.detach).toHaveBeenCalled();
@@ -437,6 +581,7 @@ describe("main", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "indeterminate",
         reason: "Failed to attach Stagehand: no connection in 15000 ms",
         context: CONTEXT,
@@ -457,6 +602,7 @@ describe("main", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "indeterminate",
         reason: "Stagehand did not release the browser: no confirmation in 2000 ms",
         context: CONTEXT,
@@ -480,6 +626,7 @@ describe("main", () => {
 
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "indeterminate",
         reason: "Interrupted by SIGINT.",
         context: CONTEXT,
@@ -512,6 +659,7 @@ describe("main", () => {
       await expect(run).resolves.toBe(2);
       expect(results()).toEqual([
         {
+          test: "add-to-cart",
           status: "indeterminate",
           reason: `Interrupted by ${signal}.`,
           context: CONTEXT,
@@ -542,6 +690,7 @@ describe("main", () => {
     await expect(run).resolves.toBe(2);
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "indeterminate",
         reason: "Interrupted by SIGINT.",
         context: CONTEXT,
@@ -571,6 +720,7 @@ describe("main", () => {
     await expect(run).resolves.toBe(2);
     expect(results()).toEqual([
       {
+        test: "add-to-cart",
         status: "indeterminate",
         reason: "Interrupted by SIGTERM.",
         context: CONTEXT,
@@ -586,7 +736,7 @@ describe("main", () => {
 
     await expect(main(["https://shop.example"])).resolves.toBe(0);
 
-    expect(results()).toEqual([expect.objectContaining({ status: "pass" })]);
+    expect(results()).toEqual([expect.objectContaining({ test: "add-to-cart", status: "pass" })]);
     expect(stderr.join("")).toContain("Cleanup failed: profile is busy");
   });
 });
