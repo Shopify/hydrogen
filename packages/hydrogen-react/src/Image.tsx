@@ -407,8 +407,6 @@ const FixedWidthImage = React.forwardRef<
         src: normalizedProps.src,
         width: intWidth,
         height: fixedHeight,
-        // Match the srcset 1x candidate. fixedHeight can come from aspectRatio,
-        // and without crop the CDN fits instead of cropping to that ratio.
         crop,
       });
 
