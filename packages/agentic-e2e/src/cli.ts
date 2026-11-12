@@ -31,33 +31,48 @@ export const EXIT_CODES = { pass: 0, fail: 1, indeterminate: 2, skipped: 3, usag
 
 export const TEST_NAMES = ["add-to-cart", "choose-a-variant"] as const;
 export type TestName = (typeof TEST_NAMES)[number];
-const DEFAULT_TEST: TestName = "add-to-cart";
 
-export const USAGE = `Usage: pnpm agentic-e2e <url> [--test <name>]
+export const USAGE = `Usage: pnpm agentic-e2e <url> [--test <name>] [--json]
 
-Asks the Storefront API at the origin of <url> for the active country and language, pins one
-eligible variant, opens its product page in a headless browser, asks an AI agent to add exactly
-1 unit of that variant to the cart, checks the add Standard Events in code (it does not read the
-cart), and prints one JSON result line. Requires SHOPIFY_PROXY_KEY.
+Runs every test in the list below, in order, one at a time. With --test, runs only that test.
+Each test asks the Storefront API at the origin of <url> for the active country and language,
+pins one eligible variant, opens its product page in a new headless browser session, asks an AI
+agent to add exactly 1 unit of that variant to the cart, checks the add Standard Events in code
+(it does not read the cart), and prints one result line when it ends. Each test is one agent run
+(one paid model run). Requires SHOPIFY_PROXY_KEY.
+
+Output: one table line for each test, with the status, the test name, and the reason when the
+status is not pass:
+
+  pass           add-to-cart
+  fail           choose-a-variant   An add event did not hold exactly 1 unit of the pinned variant.
+
+With --json, one JSON result line for each test on stdout instead (with the context, the pinned
+variant, and the agent outcome), and the progress lines on stderr.
 
 <url> must be the storefront root URL, such as https://your-storefront.example/. A path such
 as /en-ca is not supported.
 
 Tests:
-  add-to-cart       Pins the API default variant, selectedOrFirstAvailableVariant (default).
+  add-to-cart       Pins the API default variant, selectedOrFirstAvailableVariant.
   choose-a-variant  Pins an available variant that is not the API default. The command does not
                     check which variant the page selects first, so a pass does not prove that
                     the agent changed the selection.
 
 Options:
-  --test <name>  The test to run: add-to-cart or choose-a-variant. Default: add-to-cart.
+  --test <name>  Run only this test: add-to-cart or choose-a-variant. Default: every test.
+  --json         Print JSON result lines and the progress lines, for scripts and triage.
   -h, --help     Show this help.
 
-Exit codes: 0 pass, 1 fail, 2 indeterminate, 3 skipped, 64 usage error.
-Use pnpm -s to print only the JSON line on stdout. Without -s, pnpm adds its own lines.`;
+Exit codes: 1 if a test failed; else 2 if a test was indeterminate; else 3 if every test was
+skipped; else 0 (at least one pass). 64 usage error. An interrupt ends the test that is running
+as indeterminate and runs no later test. When an interrupt stops the run before every test ran,
+the exit code is 2, or 1 when a test failed, also when the test that was running already had its
+result.
+Use pnpm -s to print only the result lines on stdout. Without -s, pnpm adds its own lines.`;
 
 export type CliArgs =
-  | { kind: "run"; url: URL; test: TestName }
+  | { kind: "run"; url: URL; tests: readonly TestName[]; json: boolean }
   | { kind: "help" }
   | { kind: "error"; message: string };
 
@@ -78,7 +93,10 @@ type StorefrontPin =
   | { status: "skipped"; reason: string; context: StorefrontContext }
   | Indeterminate;
 
-/** The result of a run. The printed result line adds the test name as its first key. */
+/** Writes one progress line. A no-op without `--json`. */
+type Log = (line: string) => void;
+
+/** The result of one test. The JSON result line adds the test name as its first key. */
 export type RunResult =
   | {
       status: "pass" | "fail";
@@ -93,39 +111,46 @@ export type RunResult =
 export function parseCliArgs(argv: readonly string[]): CliArgs {
   let positionals: string[];
   let testValue: string | undefined;
+  let json: boolean;
   try {
     const parsed = parseArgs({
       args: [...argv],
       allowPositionals: true,
       strict: true,
-      options: { help: { type: "boolean", short: "h" }, test: { type: "string" } },
+      options: {
+        help: { type: "boolean", short: "h" },
+        test: { type: "string" },
+        json: { type: "boolean" },
+      },
     });
     if (parsed.values.help === true) return { kind: "help" };
     positionals = parsed.positionals;
     testValue = parsed.values.test;
+    json = parsed.values.json === true;
   } catch (error) {
     return { kind: "error", message: errorMessage(error) };
   }
-  const test = parseTestName(testValue);
-  if (test === undefined) {
+  const tests = parseTests(testValue);
+  if (tests === undefined) {
     return { kind: "error", message: `Unknown test: ${JSON.stringify(testValue)}. ${VALID_TESTS}` };
   }
   const [input, ...extra] = positionals;
   if (input === undefined || extra.length > 0) {
     return { kind: "error", message: "Expected exactly one URL." };
   }
-  return parseUrl(input, test);
+  return parseUrl(input, tests, json);
 }
 
 const VALID_TESTS = `Valid tests: ${TEST_NAMES.join(", ")}.`;
 
-/** The default when the flag is absent. `undefined` for a name that is not a test. */
-function parseTestName(value: string | undefined): TestName | undefined {
-  if (value === undefined) return DEFAULT_TEST;
-  return TEST_NAMES.find((name) => name === value);
+/** Every test when the flag is absent. `undefined` for a name that is not a test. */
+function parseTests(value: string | undefined): readonly TestName[] | undefined {
+  if (value === undefined) return TEST_NAMES;
+  const test = TEST_NAMES.find((name) => name === value);
+  return test === undefined ? undefined : [test];
 }
 
-function parseUrl(input: string, test: TestName): CliArgs {
+function parseUrl(input: string, tests: readonly TestName[], json: boolean): CliArgs {
   let url: URL;
   try {
     url = new URL(input);
@@ -144,7 +169,7 @@ function parseUrl(input: string, test: TestName): CliArgs {
       message: `URL must be the storefront root URL, such as https://your-storefront.example/, received path ${url.pathname}`,
     };
   }
-  return { kind: "run", url, test };
+  return { kind: "run", url, tests, json };
 }
 
 export async function main(argv: readonly string[]): Promise<number> {
@@ -157,30 +182,96 @@ export async function main(argv: readonly string[]): Promise<number> {
     process.stderr.write(`${args.message}\n\n${USAGE}\n`);
     return EXIT_CODES.usage;
   }
-  const result = await runOnce(args.url, args.test);
-  // `test` is the first key of every result line.
-  process.stdout.write(`${JSON.stringify({ test: args.test, ...result })}\n`);
-  return EXIT_CODES[result.status];
+  return runTests(args.url, args.tests, args.json);
 }
 
-async function runOnce(url: URL, test: TestName): Promise<RunResult> {
+const STATUS_WIDTH = 15;
+/** Fixed for every run, also with `--test`, so the reason column does not move. */
+const NAME_WIDTH = Math.max(...TEST_NAMES.map((name) => name.length)) + 3;
+
+/**
+ * One table line of a result, without the line break: the status, the test name, and the reason
+ * for every status except `pass`. Each whitespace run in the reason becomes one space. No
+ * trailing spaces.
+ */
+export function formatResultLine(
+  test: TestName,
+  result: Pick<RunResult, "status" | "reason">,
+): string {
+  const status = `  ${result.status.padEnd(STATUS_WIDTH)}`;
+  const reason = result.reason.replaceAll(/\s+/g, " ").trim();
+  if (result.status === "pass" || reason === "") return `${status}${test}`;
+  return `${status}${test.padEnd(NAME_WIDTH)}${reason}`;
+}
+
+/**
+ * The exit code of a run of one or more tests: any `fail` is 1, else any `indeterminate` is 2,
+ * else every `skipped` is 3, else 0. No result decides nothing: 2.
+ */
+export function suiteExitCode(statuses: readonly RunResult["status"][]): number {
+  if (statuses.includes("fail")) return EXIT_CODES.fail;
+  if (statuses.includes("indeterminate")) return EXIT_CODES.indeterminate;
+  if (statuses.includes("pass")) return EXIT_CODES.pass;
+  return statuses.length > 0 ? EXIT_CODES.skipped : EXIT_CODES.indeterminate;
+}
+
+/**
+ * Runs `tests` in order, one at a time, and prints the result line of each test when it ends. A
+ * result of any status does not stop the later tests. An interrupt does: the test that is running
+ * ends `indeterminate` (or keeps a verdict it already had), the later tests do not run and print
+ * no line, and the exit is 2, or 1 when a result is `fail`.
+ */
+async function runTests(url: URL, tests: readonly TestName[], json: boolean): Promise<number> {
+  const statuses: RunResult["status"][] = [];
+  // Progress lines only with `--json`. Warnings (interrupt, cleanup) are written in both modes.
+  const progress: Log = json ? (line) => process.stderr.write(`${line}\n`) : () => undefined;
+  const print = (test: TestName, result: RunResult): void => {
+    // `test` is the first key of every JSON result line.
+    const line = json ? JSON.stringify({ test, ...result }) : formatResultLine(test, result);
+    process.stdout.write(`${line}\n`);
+    statuses.push(result.status);
+  };
   let model: ModelConfig;
   try {
-    // Checked before any Storefront API request or browser.
+    // Checked once, before any Storefront API request or browser.
     model = shopifyProxyModel(process.env);
   } catch (error) {
-    return indeterminate(errorMessage(error));
+    const reason = errorMessage(error);
+    for (const test of tests) print(test, indeterminate(reason, progress));
+    return suiteExitCode(statuses);
   }
-  return withInterruptSignals(async (interrupt) => {
-    const storefront = await pinFromStorefront(url, test, interrupt);
-    if (storefront.status !== "pinned") return storefront;
-    const { context, pinned } = storefront;
-    const run = await runAddToCart(url, context, pinned, model, interrupt);
-    if (run.status === "indeterminate") {
-      return { status: run.status, reason: run.reason, context, pinned, ...agentField(run.agent) };
+  await withInterruptSignals(async (interrupt) => {
+    // Kept only after a successful read: after a failed read, the next test reads again.
+    let context: StorefrontContext | undefined;
+    const readContext = async (): Promise<StorefrontContext> =>
+      (context ??= await discoverContext(url, interrupt));
+    for (const test of tests) {
+      if (interrupt.aborted) return;
+      progress(`Running test ${test}`);
+      print(test, await runTest(url, test, model, readContext, interrupt, progress));
     }
-    return { status: run.status, reason: run.reason, context, pinned, agent: run.agent };
   });
+  // Fewer results than tests: the interrupt stopped the run. The tests that did not run print no
+  // line, but count as one `indeterminate`, so the exit is never 0 or 3.
+  return suiteExitCode(statuses.length < tests.length ? [...statuses, "indeterminate"] : statuses);
+}
+
+async function runTest(
+  url: URL,
+  test: TestName,
+  model: ModelConfig,
+  readContext: () => Promise<StorefrontContext>,
+  interrupt: AbortSignal,
+  progress: Log,
+): Promise<RunResult> {
+  const storefront = await pinFromStorefront(url, test, readContext, interrupt, progress);
+  if (storefront.status !== "pinned") return storefront;
+  const { context, pinned } = storefront;
+  const run = await runAddToCart(url, context, pinned, model, interrupt, progress);
+  if (run.status === "indeterminate") {
+    return { status: run.status, reason: run.reason, context, pinned, ...agentField(run.agent) };
+  }
+  return { status: run.status, reason: run.reason, context, pinned, agent: run.agent };
 }
 
 /**
@@ -190,25 +281,25 @@ async function runOnce(url: URL, test: TestName): Promise<RunResult> {
 async function pinFromStorefront(
   url: URL,
   test: TestName,
+  readContext: () => Promise<StorefrontContext>,
   interrupt: AbortSignal,
+  progress: Log,
 ): Promise<StorefrontPin> {
   let step = "Storefront API localization";
   try {
-    const context = await untilAborted(discoverContext(url, interrupt), interrupt);
-    process.stderr.write(`Storefront API context: ${context.country} ${context.language}\n`);
+    const context = await untilAborted(readContext(), interrupt);
+    progress(`Storefront API context: ${context.country} ${context.language}`);
     step = "Storefront API catalog pin";
     const pin = await untilAborted(pinForTest(test, url, context, interrupt), interrupt);
     if (pin.status === "skipped") {
-      process.stderr.write(`Skipped: ${pin.reason}\n`);
+      progress(`Skipped: ${pin.reason}`);
       return { status: "skipped", reason: pin.reason, context };
     }
-    process.stderr.write(
-      `Pinned variant ${pin.pinned.variantId} of ${pin.pinned.productHandle} for ${test}\n`,
-    );
+    progress(`Pinned variant ${pin.pinned.variantId} of ${pin.pinned.productHandle} for ${test}`);
     return { status: "pinned", context, pinned: pin.pinned };
   } catch (error) {
-    if (interrupt.aborted) return indeterminate(errorMessage(interrupt.reason));
-    return indeterminate(`${step} failed: ${errorMessage(error)}`);
+    if (interrupt.aborted) return indeterminate(errorMessage(interrupt.reason), progress);
+    return indeterminate(`${step} failed: ${errorMessage(error)}`, progress);
   }
 }
 
@@ -241,9 +332,10 @@ async function runAddToCart(
   pinned: PinnedVariant,
   model: ModelConfig,
   interrupt: AbortSignal,
+  progress: Log,
 ): Promise<AddRun> {
   const url = productUrl(storefrontUrl, pinned.productHandle);
-  process.stderr.write(`Opening ${url.href}\n`);
+  progress(`Opening ${url.href}`);
   const starting = createBrowserSession(undefined, { signal: interrupt });
   let attaching: Promise<StagehandAgent> | undefined;
   let agentOutcome: AgentOutcome | undefined;
@@ -253,7 +345,7 @@ async function runAddToCart(
     attaching = attachStagehand(session.cdpUrl);
     const agent = await untilAborted(attaching, interrupt);
     await openPage(session.page, url, interrupt);
-    process.stderr.write("Running the agent task.\n");
+    progress("Running the agent task.");
     // Only events received from now on count.
     const agentStart = log.events.length;
     // The first add event stops the agent. This is separate from the interrupt.
@@ -267,10 +359,8 @@ async function runAddToCart(
       interrupt,
       stop: stop.signal,
     });
-    process.stderr.write(
-      agentOutcome.completed
-        ? "The agent completed.\n"
-        : `The agent ended: ${agentOutcome.reason}\n`,
+    progress(
+      agentOutcome.completed ? "The agent completed." : `The agent ended: ${agentOutcome.reason}`,
     );
     // Rejects when the release is not confirmed: the result is then indeterminate.
     await agent.detach();
@@ -288,11 +378,11 @@ async function runAddToCart(
       interrupt,
     );
     if (verdict.status === "indeterminate") {
-      return { ...indeterminate(verdict.reason), agent: agentOutcome };
+      return { ...indeterminate(verdict.reason, progress), agent: agentOutcome };
     }
     return { ...verdict, agent: agentOutcome };
   } catch (error) {
-    return { ...indeterminate(errorMessage(error)), ...agentField(agentOutcome) };
+    return { ...indeterminate(errorMessage(error), progress), ...agentField(agentOutcome) };
   } finally {
     // A failed cleanup is reported, but it must not replace the result.
     await attaching
@@ -353,8 +443,8 @@ function isPageObservable(): boolean {
   return style.display !== "none" && style.visibility !== "hidden" && Number(style.opacity) > 0;
 }
 
-function indeterminate(reason: string): Indeterminate {
-  process.stderr.write(`Indeterminate: ${reason}\n`);
+function indeterminate(reason: string, progress: Log): Indeterminate {
+  progress(`Indeterminate: ${reason}`);
   return { status: "indeterminate", reason };
 }
 

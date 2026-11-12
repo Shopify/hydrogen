@@ -1,32 +1,41 @@
 # Agentic E2E
 
-`agentic-e2e` checks that an AI agent can add one product to the cart of a storefront through its UI. Each run executes one test (see [Tests](#tests)). It pins one product variant through the Storefront API, opens the product page of that variant in a headless browser that it owns, and asks one AI agent to add exactly 1 unit of that variant to the cart. Code, not the agent, then decides the result from Shopify Standard Events. Only when there is no add event, the code also uses whether the agent confirmed that it completed the task. **The command does not read the cart:** `pass` means that the storefront's one add event resolved with a cart and without cart user errors or stock or availability warnings, not that the cart was checked. The command prints one JSON result line and closes the browser.
+`agentic-e2e` checks that an AI agent can add one product to the cart of a storefront through its UI. Without `--test`, the command runs every test (see [Tests](#tests)), in order, one at a time. With `--test <name>`, it runs only that test. Each test pins one product variant through the Storefront API, opens the product page of that variant in a new headless browser session that it owns, and asks one AI agent to add exactly 1 unit of that variant to the cart. Code, not the agent, then decides the result from Shopify Standard Events. Only when there is no add event, the code also uses whether the agent confirmed that it completed the task. **The command does not read the cart:** `pass` means that the storefront's one add event resolved with a cart and without cart user errors or stock or availability warnings, not that the cart was checked. Each test prints one result line when it ends and closes its browser.
 
 **Supported storefronts:** only storefronts that dispatch the `shopify:cart:lines-update` Standard Event with a `promise` (Hydrogen storefronts do). A storefront that does not dispatch it, for example a Liquid theme without Standard Events, is out of scope: the result is `fail` when the agent reports that it added the item, and `indeterminate` when it does not, even when the item reaches the cart.
 
 ```sh
 pnpm build:pkgs   # once: the command imports the built output of @shopify/hydrogen
-SHOPIFY_PROXY_KEY=... pnpm agentic-e2e https://your-storefront.example
-SHOPIFY_PROXY_KEY=... pnpm agentic-e2e https://your-storefront.example --test choose-a-variant
+SHOPIFY_PROXY_KEY=... pnpm agentic-e2e https://your-storefront.example                          # every test
+SHOPIFY_PROXY_KEY=... pnpm agentic-e2e https://your-storefront.example --test choose-a-variant   # one test
 ```
 
 The URL must be the storefront root URL. A URL with a path, such as `/en-ca`, is a usage error.
 
 Run `pnpm --filter @shopify/agentic-e2e run browser:install` once before the first run. It downloads the Chromium build that matches this package's Playwright version (about 340 MB) into Playwright's shared cache. To use another Chromium-based browser, set `AGENTIC_E2E_BROWSER_PATH` to its executable.
 
-`--test <name>` selects the test: `add-to-cart` or `choose-a-variant`. Without `--test`, the command runs `add-to-cart`. Each run executes one test. `--help` shows the usage.
+Without `--test`, the command runs every test in this order: `add-to-cart`, then `choose-a-variant`. `--test <name>` runs only that test. A `fail`, `indeterminate`, or `skipped` test does not stop the later tests. Each test is one agent run (one paid model run), so a run without `--test` costs one agent run for each test. `--help` shows the usage.
 
-The command writes one JSON result line to stdout and diagnostics to stderr. pnpm adds its own lines (a script banner on stdout, and error lines on a non-zero exit) unless it runs with `-s`. When the output is parsed, use:
+By default, the command writes one table line to stdout for each test, when that test ends: the status, the test name, and the reason when the status is not `pass`. There is no header and no summary line.
+
+```text
+  pass           add-to-cart
+  fail           choose-a-variant   An add event did not hold exactly 1 unit of the pinned variant.
+```
+
+With `--json`, the command writes one JSON result line to stdout for each test instead (see [Results and exit codes](#results-and-exit-codes)), and progress lines to stderr. Use it for scripts and for triage: the JSON line has the context, the pinned variant, and the agent outcome and message. In both modes, stderr gets the usage error, the interrupt lines, and `Cleanup failed: …`.
+
+pnpm adds its own lines (a script banner on stdout, and error lines on a non-zero exit) unless it runs with `-s`. When the output is parsed, use:
 
 ```sh
-SHOPIFY_PROXY_KEY=... pnpm -s agentic-e2e https://your-storefront.example
+SHOPIFY_PROXY_KEY=... pnpm -s agentic-e2e https://your-storefront.example --json
 ```
 
 ## Tests
 
-Both tests use the same browser, agent task, and checks. Only the pinned variant is different.
+Both tests use the same browser, agent task, and checks. Only the pinned variant is different. Each test starts a new browser session and pins its own variant. One run reads the country and language once and uses them for every test. If that read fails, the test is `indeterminate`, and the next test reads again.
 
-### `add-to-cart` (default)
+### `add-to-cart`
 
 - **Condition:** a product that does not require a selling plan and whose `selectedOrFirstAvailableVariant` is available for sale. Else `skipped`.
 - **Arrange:** the command pins that `selectedOrFirstAvailableVariant`. The product page opens with no variant in the URL. The page normally shows this variant first, so the agent rarely has to select options.
@@ -44,13 +53,28 @@ This test asks the agent to add a variant that is not the API default (`selected
 
 ## Results and exit codes
 
-| Status          | Exit | Meaning                                                                                                                   |
-| --------------- | ---- | ------------------------------------------------------------------------------------------------------------------------- |
-| `pass`          | 0    | One add event held 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings. The cart is not read. |
-| `fail`          | 1    | No single clean add event for exactly 1 unit of the pinned variant, or the agent reports an add with no add event (see below). |
-| `indeterminate` | 2    | The command could not decide (see below).                                                                                 |
-| `skipped`       | 3    | No eligible variant was found for the test. No browser starts.                                                            |
-| usage error     | 64   | No URL, more than one argument, an unknown flag, an unknown test name, `--test` without a value, an invalid URL, a URL that is not http(s), a URL with credentials, or a URL with a path other than `/`. No browser starts. |
+| Status          | Meaning                                                                                                                 |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `pass`          | One add event held 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings. The cart is not read. |
+| `fail`          | No single clean add event for exactly 1 unit of the pinned variant, or the agent reports an add with no add event (see below). |
+| `indeterminate` | The command could not decide (see below).                                                                               |
+| `skipped`       | No eligible variant was found for the test. No browser starts for that test.                                            |
+
+The exit code uses the results of all the tests that ran:
+
+| Exit | When                                                                                                                                                                                                                   |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | A result is `fail`.                                                                                                                                                                                                    |
+| 2    | No result is `fail`, and a result is `indeterminate`.                                                                                                                                                                  |
+| 3    | Every result is `skipped`.                                                                                                                                                                                             |
+| 0    | At least one result is `pass`, and every other result is `pass` or `skipped`.                                                                                                                                          |
+| 64   | Usage error: no URL, more than one argument, an unknown flag, an unknown test name, `--test` without a value, an invalid URL, a URL that is not http(s), a URL with credentials, or a URL with a path other than `/`. No result line. No browser starts. |
+
+With `--test`, there is one result: 0 for `pass`, 1 for `fail`, 2 for `indeterminate`, 3 for `skipped`.
+
+An interrupt (SIGINT, SIGTERM, or SIGHUP) ends the test that is running as `indeterminate`, and that test prints its line. A test that already had its result when the interrupt came (for example during its browser cleanup) keeps that result. The later tests do not run and print no line. When an interrupt stops the run before every test ran, the exit code is 2, or 1 when a test failed, also when the test that was running already had its result. When every selected test ran (for example with `--test`), the exit code follows the table.
+
+The `--json` result lines:
 
 ```json
 {"test":"add-to-cart","status":"pass","reason":"One add event held exactly 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings.","context":{"country":"US","language":"EN","countryName":"United States","languageName":"English","currency":"USD"},"pinned":{"productHandle":"snowboard","productTitle":"Snowboard","variantId":"gid://shopify/ProductVariant/1","selectedOptions":[{"name":"Title","value":"Default Title"}]},"agent":{"completed":false,"reason":"Stopped by the command after the add event."}}
@@ -63,7 +87,7 @@ This test asks the agent to add a variant that is not the API default (`selected
 {"test":"add-to-cart","status":"indeterminate","reason":"HTTP 500","context":{"country":"US","language":"EN","countryName":"United States","languageName":"English","currency":"USD"},"pinned":{"…":"…"}}
 ```
 
-`test` is the name of the test that ran. It is the first key of every result line. A usage error prints no result line.
+`test` is the name of the test of the line. It is the first key of every JSON result line. A usage error prints no result line.
 
 `agent` tells what the agent reported: `{"completed":false,"reason":"Stopped by the command after the add event."}` when the command stopped it; `{"completed":true,"summary":…}` when it ended by itself with a `done` action with `taskCompleted: true`; else `{"completed":false,"reason":…}` (step limit, deadline, agent or model error, or no confirmed completion). `message` is the final message that Stagehand returned, with the key redacted. It is present only when Stagehand returned a result: at the step limit, for a failure result, or with no confirmed completion. It is not present after a thrown error, the deadline, or a stop by the command. `summary` and `message` are for triage only: the status never uses the text of the agent. The status uses `completed` only when no add event was recorded (see [How the result is decided](#how-the-result-is-decided)). An `indeterminate` result has `context`, `pinned`, and `agent` when they exist.
 
@@ -71,7 +95,7 @@ This test asks the agent to add a variant that is not the API default (`selected
 
 `indeterminate` means one of these:
 
-- Before the agent: `SHOPIFY_PROXY_KEY` is not set or is not one line; a Storefront API error, invalid response, or deadline; the browser did not start; the event recorder could not be installed; a navigation error or an HTTP status of 400 or higher on the product page; a page that does not show content; Stagehand did not attach.
+- Before the agent: `SHOPIFY_PROXY_KEY` is not set or is not one line (the command checks it once, before any request or browser, and then prints one `indeterminate` line for each test); a Storefront API error, invalid response, or deadline; the browser did not start; the event recorder could not be installed; a navigation error or an HTTP status of 400 or higher on the product page; a page that does not show content; Stagehand did not attach.
 - No add event was recorded by the time Stagehand was disconnected, and the agent did not confirm that it completed the task (it hit the step limit, the deadline, or an error, or it ended without a confirmed `done`). `agent.message` shows the final message of the agent when Stagehand returned one.
 - Tool-side problems, also after an add event: an interrupt (SIGINT, SIGTERM, or SIGHUP); the Stagehand release was not confirmed.
 
@@ -90,7 +114,7 @@ An add event is a `shopify:cart:lines-update` Standard Event with `action: "add"
 
 ## Storefront API
 
-Each run sends two queries to `<origin>/api/<version>/graphql.json` with the default API version of `@shopify/hydrogen` and its public client: the country and language query, and the pin query of its test (one request for each catalog page). Pass the final storefront origin: the command does not follow redirects, the same as Hydrogen's Storefront client, so an origin that redirects gives `indeterminate`. They send no access token, no cookies, and no buyer-IP header. Each request has a 10-second deadline.
+The command sends its queries to `<origin>/api/<version>/graphql.json` with the default API version of `@shopify/hydrogen` and its public client: the country and language query, once for each run (the next test sends it again only when the read failed), and the pin query of each test (one request for each catalog page). Pass the final storefront origin: the command does not follow redirects, the same as Hydrogen's Storefront client, so an origin that redirects gives `indeterminate`. They send no access token, no cookies, and no buyer-IP header. Each request has a 10-second deadline.
 
 - **Country and language**: `localization { language { isoCode endonymName } country { isoCode name currency { isoCode } } }`, sent without `@inContext`. Without `@inContext`, the API answers with the context that it makes active by default. This is the market of the run. A missing field gives `indeterminate`. A proxy at the storefront origin can add its own buyer-IP header, so the answer can depend on where the command runs.
 - **Language name**: `endonymName` is the name of the language in that language, such as `Français` for `FR`. The agent task uses the country name and the language name. The catalog query uses the country code and the language code. The result has all of them.
@@ -105,6 +129,8 @@ Known locale gaps are listed in [TECH_DEBT.md](./TECH_DEBT.md).
 ## Agent and model
 
 One [Stagehand](https://github.com/browserbase/stagehand) agent attaches to the browser before the first navigation. Its task is to shop in the country, language, and currency of the run (see [Storefront API](#storefront-api)), select the variant options (store strings are JSON-quoted and labelled as data), add exactly 1 unit, stop as soon as it is added, not open the cart or go to checkout, and not enter personal, shipping, or payment information. A short guest-shopper system prompt tells it how to handle cookie banners and dialogs, and to keep the country, language, and currency of the store unless the task asks for a change. It has at most 20 steps and 180 seconds. The URL navigation and web search tools are removed.
+
+Each test is one agent run, so one paid model run. A run without `--test` makes one agent run for each test.
 
 There is one model path: `anthropic/claude-haiku-5-5` through the Shopify AI proxy (`https://proxy.shopify.ai/apis/anthropic/v1`), with the key from `SHOPIFY_PROXY_KEY` and the header `Shopify-Usage-Tag: agentic-e2e`. The command does not print or store the key. It turns off Stagehand's logs and removes `BROWSERBASE_CONFIG_DIR` and `BROWSERBASE_FLOW_LOGS` from its environment.
 
@@ -122,7 +148,7 @@ There is one model path: `anthropic/claude-haiku-5-5` through the Shopify AI pro
 - The script observes `event.promise` with a rejection handler. This marks a native promise as handled, so the storefront may not get an `unhandledrejection` for it.
 - `pnpm build:pkgs` (or `pnpm --filter @shopify/hydrogen build`) is needed first.
 - There is one model path.
-- Use `pnpm -s` to get only the JSON line on stdout.
+- Use `pnpm -s` to get only the result lines on stdout: one line for each test.
 
 ## Development
 

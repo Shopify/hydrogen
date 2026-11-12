@@ -127,6 +127,10 @@ let storeLog: string[];
 let addedVariants: string[];
 /** The path of each product page request. */
 let productPageRequests: string[];
+/** The `cookie` header of each product page and add request, in order. */
+let storeCookies: Array<{ path: string; cookie: string | undefined }>;
+/** Each product page sets a new session cookie with this count. */
+let sessionCookies: number;
 let stderr: string[];
 let heldAdds: Array<() => void>;
 /** For each Stagehand CDP socket close: whether the browser was still running at that time. */
@@ -162,6 +166,8 @@ beforeEach(async () => {
   storeLog = [];
   addedVariants = [];
   productPageRequests = [];
+  storeCookies = [];
+  sessionCookies = 0;
   heldAdds = [];
   vi.mocked(createBrowserSession).mockClear();
   vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
@@ -214,7 +220,9 @@ describe("main with the agent", () => {
     // Makes Stagehand offer `search`, so only the exclusion keeps it out.
     vi.stubEnv("BRAVE_API_KEY", "dummy-brave-key");
 
-    await expect(main([`${origin}/?ref=1#top`])).resolves.toBe(0);
+    await expect(main([`${origin}/?ref=1#top`, "--test", "add-to-cart", "--json"])).resolves.toBe(
+      0,
+    );
 
     expect(results()).toEqual([
       {
@@ -271,7 +279,7 @@ describe("main with the agent", () => {
     mode.holdAdd = true;
     reply = clickAdd();
 
-    await expect(main([origin])).resolves.toBe(0);
+    await expect(main([origin, "--test", "add-to-cart", "--json"])).resolves.toBe(0);
 
     expect(results()).toEqual([
       expect.objectContaining({ test: "add-to-cart", status: "pass", agent: STOPPED }),
@@ -285,7 +293,7 @@ describe("main with the agent", () => {
     mode.addStatus = 500;
     reply = clickAdd();
 
-    await expect(main([origin])).resolves.toBe(1);
+    await expect(main([origin, "--test", "add-to-cart", "--json"])).resolves.toBe(1);
 
     expect(results()).toEqual([
       {
@@ -305,7 +313,7 @@ describe("main with the agent", () => {
     mode.addEvent = "without-promise";
     reply = clickAdd();
 
-    await expect(main([origin])).resolves.toBe(1);
+    await expect(main([origin, "--test", "add-to-cart", "--json"])).resolves.toBe(1);
 
     expect(results()).toEqual([
       {
@@ -324,7 +332,7 @@ describe("main with the agent", () => {
     mode.addEvent = "none";
     reply = clickAdd();
 
-    await expect(main([origin])).resolves.toBe(1);
+    await expect(main([origin, "--test", "add-to-cart", "--json"])).resolves.toBe(1);
 
     expect(results()).toEqual([
       {
@@ -345,7 +353,7 @@ describe("main with the agent", () => {
   it("fails with exit 1 when the agent reports done without any add", async () => {
     reply = () => done(true);
 
-    await expect(main([origin])).resolves.toBe(1);
+    await expect(main([origin, "--test", "add-to-cart", "--json"])).resolves.toBe(1);
 
     expect(results()).toEqual([
       {
@@ -365,7 +373,7 @@ describe("main with the agent", () => {
   it("reports indeterminate with the step limit and the final message in the agent field when no add event came", async () => {
     reply = ({ tools }) => (isFinalAssessment(tools) ? done(true) : scroll());
 
-    await expect(main([origin])).resolves.toBe(2);
+    await expect(main([origin, "--test", "add-to-cart", "--json"])).resolves.toBe(2);
 
     expect(results()).toEqual([
       {
@@ -394,7 +402,7 @@ describe("main with the agent", () => {
       return turns < MAX_STEPS ? scroll() : done(true);
     };
 
-    await expect(main([origin])).resolves.toBe(1);
+    await expect(main([origin, "--test", "add-to-cart", "--json"])).resolves.toBe(1);
 
     expect(results()).toEqual([
       {
@@ -418,7 +426,7 @@ describe("main with the agent", () => {
       return undefined;
     };
 
-    const run = main([origin]);
+    const run = main([origin, "--test", "add-to-cart", "--json"]);
     await requested;
     process.emit("SIGINT", "SIGINT");
 
@@ -442,7 +450,7 @@ describe("main with the agent", () => {
       error: { type: "authentication_error", message: `invalid x-api-key: ${DUMMY_KEY}` },
     });
 
-    await expect(main([origin])).resolves.toBe(2);
+    await expect(main([origin, "--test", "add-to-cart", "--json"])).resolves.toBe(2);
 
     expect(results()).toEqual([
       {
@@ -468,7 +476,7 @@ describe("main with the agent", () => {
   it("reports a product page with an HTTP error as indeterminate without a model call", async () => {
     catalog = { products: [eligibleProduct("broken-board")] };
 
-    await expect(main([origin])).resolves.toBe(2);
+    await expect(main([origin, "--test", "add-to-cart", "--json"])).resolves.toBe(2);
 
     expect(results()).toEqual([
       {
@@ -486,7 +494,7 @@ describe("main with the agent", () => {
   it("reports skipped for an empty catalog, exits 3, and starts no browser", async () => {
     catalog = { products: [] };
 
-    await expect(main([origin])).resolves.toBe(3);
+    await expect(main([origin, "--test", "add-to-cart", "--json"])).resolves.toBe(3);
 
     expect(results()).toEqual([
       {
@@ -503,7 +511,7 @@ describe("main with the agent", () => {
     catalog = { products: [teeProduct()] };
     reply = click("button: Large", "button: Add to cart");
 
-    await expect(main([origin, "--test", "choose-a-variant"])).resolves.toBe(0);
+    await expect(main([origin, "--test", "choose-a-variant", "--json"])).resolves.toBe(0);
 
     expect(results()).toEqual([
       {
@@ -531,7 +539,7 @@ describe("main with the agent", () => {
     catalog = { products: [teeProduct()] };
     reply = clickAdd();
 
-    await expect(main([origin, "--test", "choose-a-variant"])).resolves.toBe(1);
+    await expect(main([origin, "--test", "choose-a-variant", "--json"])).resolves.toBe(1);
 
     expect(results()).toEqual([
       {
@@ -550,7 +558,7 @@ describe("main with the agent", () => {
   it("skips choose-a-variant when no product has 2 available variants, and opens no page", async () => {
     catalog = { products: [teeProduct({ onlyDefault: true })] };
 
-    await expect(main([origin, "--test", "choose-a-variant"])).resolves.toBe(3);
+    await expect(main([origin, "--test", "choose-a-variant", "--json"])).resolves.toBe(3);
 
     expect(results()).toEqual([
       {
@@ -568,7 +576,7 @@ describe("main with the agent", () => {
   it("reports a Storefront API 500 as indeterminate and starts no browser", async () => {
     catalog = { status: 500 };
 
-    await expect(main([origin])).resolves.toBe(2);
+    await expect(main([origin, "--test", "add-to-cart", "--json"])).resolves.toBe(2);
 
     expect(results()).toEqual([
       {
@@ -581,7 +589,9 @@ describe("main with the agent", () => {
   });
 
   it("reports an unreachable Storefront API as indeterminate and starts no browser", async () => {
-    await expect(main([`${closedPortOrigin}/`])).resolves.toBe(2);
+    await expect(main([`${closedPortOrigin}/`, "--test", "add-to-cart", "--json"])).resolves.toBe(
+      2,
+    );
 
     expect(results()).toEqual([
       {
@@ -595,7 +605,7 @@ describe("main with the agent", () => {
 
   it("waits for browser and profile cleanup after SIGINT soon after the browser process appears", async () => {
     catalog = { products: [eligibleProduct("hang")] };
-    const run = main([`${origin}/`]);
+    const run = main([`${origin}/`, "--test", "add-to-cart", "--json"]);
     // Interrupt as soon as the browser process exists. The startup phase it hits is not fixed.
     await vi.waitFor(() => expect(browserProcesses()).not.toEqual([]), {
       timeout: 10_000,
@@ -618,6 +628,92 @@ describe("main with the agent", () => {
   });
 });
 
+describe("main with every test", () => {
+  it("runs every test in list order, each in a new browser session, and exits 0", async () => {
+    catalog = suiteCatalog();
+    reply = perRun(clickAdd(), click("button: Large", "button: Add to cart"));
+
+    await expect(main([origin, "--json"])).resolves.toBe(0);
+
+    const reason =
+      "One add event held exactly 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings.";
+    expect(results()).toEqual([
+      {
+        test: "add-to-cart",
+        status: "pass",
+        reason,
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: STOPPED,
+      },
+      {
+        test: "choose-a-variant",
+        status: "pass",
+        reason,
+        context: CONTEXT,
+        pinned: TEE_PINNED,
+        agent: STOPPED,
+      },
+    ]);
+    expect(stderr.filter((line) => line.startsWith("Running test "))).toEqual([
+      "Running test add-to-cart\n",
+      "Running test choose-a-variant\n",
+    ]);
+    // One context read, then the pin query of each test.
+    expect(apiRequests.map(({ query }) => /^query (\w+)/.exec(query)?.[1])).toEqual([
+      "AgenticE2ELocalization",
+      "AgenticE2ECatalog",
+      "AgenticE2EVariantChoice",
+    ]);
+    expect(addedVariants).toEqual([PINNED.variantId, TEE_PINNED.variantId]);
+    // Each test starts from an empty session: its product page request has no cookie, and its add
+    // sends only the cookie that its own page set.
+    expect(storeCookies).toEqual([
+      { path: "/products/fixture-board", cookie: undefined },
+      { path: "/cart/add", cookie: "fixture-session=1" },
+      { path: "/products/fixture-tee", cookie: undefined },
+      { path: "/cart/add", cookie: "fixture-session=2" },
+    ]);
+    expect(createBrowserSession).toHaveBeenCalledTimes(2);
+    // Each test attached Stagehand once and detached it before its browser closed.
+    expect(Stagehand.prototype.init).toHaveBeenCalledTimes(2);
+    expect(stagehandCloses).toEqual([{ browserRunning: true }, { browserRunning: true }]);
+  });
+
+  it("prints the table without --json, with no progress lines, and exits 1 for a fail", async () => {
+    catalog = suiteCatalog();
+    // choose-a-variant: the agent adds the default variant without a selection.
+    reply = perRun(clickAdd(), clickAdd());
+
+    await expect(main([origin])).resolves.toBe(1);
+
+    expect(stdout.join("")).toBe(
+      [
+        "  pass           add-to-cart",
+        "  fail           choose-a-variant   An add event did not hold exactly 1 unit of the pinned variant.",
+        "",
+      ].join("\n"),
+    );
+    expect(stderr).toEqual([]);
+    expect(addedVariants).toEqual([PINNED.variantId, TEE_DEFAULT.id]);
+    expect(createBrowserSession).toHaveBeenCalledTimes(2);
+    expect(stagehandCloses).toEqual([{ browserRunning: true }, { browserRunning: true }]);
+  });
+
+  it("prints one skipped line for each test, exits 3, and starts no browser", async () => {
+    catalog = { products: [] };
+
+    await expect(main([origin, "--json"])).resolves.toBe(3);
+
+    expect(results()).toEqual([
+      expect.objectContaining({ test: "add-to-cart", status: "skipped", context: CONTEXT }),
+      expect.objectContaining({ test: "choose-a-variant", status: "skipped", context: CONTEXT }),
+    ]);
+    expect(apiRequests).toHaveLength(3);
+    expectNoBrowser();
+  });
+});
+
 // The CLI entrypoint in a fresh Node process. A test-only module hook points the model config at
 // the local fake endpoint. Stagehand is imported only by the CLI, after the environment is set.
 describe("the CLI process", () => {
@@ -630,7 +726,9 @@ describe("the CLI process", () => {
       return undefined;
     };
     // Stagehand writes unredacted flow logs to stderr when this is set.
-    const cli = spawnCli(`${origin}/`, { BROWSERBASE_FLOW_LOGS: "1" });
+    const cli = spawnCli([`${origin}/`, "--test", "add-to-cart", "--json"], {
+      BROWSERBASE_FLOW_LOGS: "1",
+    });
 
     await requested;
     cli.child.kill("SIGINT");
@@ -642,6 +740,7 @@ describe("the CLI process", () => {
       signal: null,
       stdout: `${JSON.stringify({ test: "add-to-cart", status: "indeterminate", reason: "Interrupted by SIGINT.", context: CONTEXT, pinned: PINNED })}\n`,
       stderr: [
+        "Running test add-to-cart",
         "Storefront API context: CA FR",
         `Pinned variant ${PINNED.variantId} of fixture-board for add-to-cart`,
         `Opening ${origin}/products/fixture-board`,
@@ -664,7 +763,7 @@ describe("the CLI process", () => {
     // agent step, so it does not prove `BROWSERBASE_FLOW_LOGS` alone. The SIGINT test does.
     const logDir = await mkdtemp(join(workDir, "stagehand-logs-"));
     catalog = { products: [eligibleProduct("broken")] };
-    const cli = spawnCli(`${origin}/`, {
+    const cli = spawnCli([`${origin}/`, "--test", "add-to-cart", "--json"], {
       BROWSERBASE_CONFIG_DIR: logDir,
       BROWSERBASE_FLOW_LOGS: "1",
     });
@@ -674,6 +773,7 @@ describe("the CLI process", () => {
       signal: null,
       stdout: `${JSON.stringify({ test: "add-to-cart", status: "indeterminate", reason: "HTTP 500", context: CONTEXT, pinned: { ...PINNED, productHandle: "broken" } })}\n`,
       stderr: [
+        "Running test add-to-cart",
         "Storefront API context: CA FR",
         `Pinned variant ${PINNED.variantId} of broken for add-to-cart`,
         `Opening ${origin}/products/broken`,
@@ -706,15 +806,16 @@ describe("createBrowserSession", () => {
 function onStoreRequest(request: IncomingMessage, response: ServerResponse) {
   const path = new URL(request.url ?? "/", "http://fixture").pathname;
   if (path.startsWith("/products/")) productPageRequests.push(path);
+  if (path.startsWith("/products/") || path === "/cart/add") {
+    storeCookies.push({ path, cookie: request.headers.cookie });
+  }
   if (/^\/api\/[^/]+\/graphql\.json$/.test(path)) {
     onApiRequest(request, response);
   } else if (path.endsWith("/products/hang")) {
     // Never answers, so a run cannot finish before the interrupt.
   } else if (path.endsWith("/products/fixture-board")) {
     const variants = [{ id: PINNED.variantId, size: "Medium" }];
-    response
-      .writeHead(200, { "content-type": "text/html" })
-      .end(productPage(PINNED.productTitle, variants));
+    response.writeHead(200, productPageHeaders()).end(productPage(PINNED.productTitle, variants));
   } else if (path.endsWith("/products/fixture-tee")) {
     // The default variant first: the page selects it before any choice.
     const variants = [
@@ -722,13 +823,22 @@ function onStoreRequest(request: IncomingMessage, response: ServerResponse) {
       { id: TEE_PINNED.variantId, size: "Large" },
     ];
     response
-      .writeHead(200, { "content-type": "text/html" })
+      .writeHead(200, productPageHeaders())
       .end(productPage(TEE_PINNED.productTitle, variants));
   } else if (path === "/cart/add" && request.method === "POST") {
     onAddRequest(request, response);
   } else {
     response.writeHead(500, { "content-type": "text/html" }).end("<title>Broken</title>");
   }
+}
+
+/** A new session cookie on each product page: a later request in the same browser sends it. */
+function productPageHeaders() {
+  sessionCookies += 1;
+  return {
+    "content-type": "text/html",
+    "set-cookie": `fixture-session=${sessionCookies}; Path=/`,
+  };
 }
 
 function onAddRequest(request: IncomingMessage, response: ServerResponse) {
@@ -864,6 +974,26 @@ function teeProduct({ onlyDefault = false } = {}) {
   };
 }
 
+/**
+ * A catalog that both pin queries can read. add-to-cart pins the board, the first product.
+ * choose-a-variant skips the board (one variant) and pins the tee's Large.
+ */
+function suiteCatalog(): Catalog {
+  const board = {
+    ...eligibleProduct(PINNED.productHandle),
+    variants: {
+      nodes: [
+        { id: PINNED.variantId, availableForSale: true, selectedOptions: PINNED.selectedOptions },
+      ],
+    },
+  };
+  const tee = {
+    ...teeProduct(),
+    selectedOrFirstAvailableVariant: { ...TEE_DEFAULT, availableForSale: true },
+  };
+  return { products: [board, tee] };
+}
+
 function eligibleProduct(handle: string) {
   return {
     title: PINNED.productTitle,
@@ -899,6 +1029,19 @@ function onModelRequest(request: IncomingMessage, response: ServerResponse) {
     const status = answer.type === "error" ? 401 : 200;
     response.writeHead(status, { "content-type": "application/json" }).end(JSON.stringify(answer));
   });
+}
+
+/**
+ * Answers the model requests of the nth agent run with the nth reply. Each test attaches
+ * Stagehand once, so the attach count is the number of the agent run.
+ */
+function perRun(...replies: Reply[]): Reply {
+  return (request) => {
+    const run = vi.mocked(Stagehand.prototype.init).mock.calls.length;
+    const runReply = replies[run - 1];
+    if (runReply === undefined) throw new Error(`No reply for agent run ${run}.`);
+    return runReply(request);
+  };
 }
 
 /** The agent clicks Add to cart, then each target in `more` (see `click`). */
@@ -1004,12 +1147,12 @@ type CliExit = {
 };
 
 /**
- * Starts the CLI in a fresh Node process with the test environment (TMPDIR and the dummy key)
- * plus `env`. `exited` resolves when the process ended and its output closed. `afterEach` kills
- * a process that is still running.
+ * Starts the CLI with `args` in a fresh Node process with the test environment (TMPDIR and the
+ * dummy key) plus `env`. `exited` resolves when the process ended and its output closed.
+ * `afterEach` kills a process that is still running.
  */
-function spawnCli(url: string, env: NodeJS.ProcessEnv) {
-  const child = spawn(process.execPath, ["--import", FAKE_MODEL_HOOKS, CLI, url], {
+function spawnCli(args: string[], env: NodeJS.ProcessEnv) {
+  const child = spawn(process.execPath, ["--import", FAKE_MODEL_HOOKS, CLI, ...args], {
     env: {
       ...process.env,
       BROWSERBASE_CONFIG_DIR: undefined,
