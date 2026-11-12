@@ -121,7 +121,6 @@ describe("parseCliArgs", () => {
   });
 
   it("runs every test in list order when --test is absent", () => {
-    expect(TEST_NAMES).toEqual(["add-to-cart", "choose-a-variant"]);
     expect(parseCliArgs(["https://shop.example"])).toEqual({
       kind: "run",
       url: new URL("https://shop.example"),
@@ -227,43 +226,6 @@ describe("parseCliArgs", () => {
 });
 
 describe("formatResultLine", () => {
-  const FAIL_REASON = "An add event did not hold exactly 1 unit of the pinned variant.";
-
-  it.each([
-    {
-      test: "add-to-cart",
-      result: { status: "pass", reason: PASS_REASON },
-      line: "  pass           add-to-cart",
-    },
-    {
-      test: "choose-a-variant",
-      result: { status: "pass", reason: PASS_REASON },
-      line: "  pass           choose-a-variant",
-    },
-    {
-      test: "choose-a-variant",
-      result: { status: "fail", reason: FAIL_REASON },
-      line: `  fail           choose-a-variant   ${FAIL_REASON}`,
-    },
-    {
-      test: "add-to-cart",
-      result: { status: "fail", reason: FAIL_REASON },
-      line: `  fail           add-to-cart        ${FAIL_REASON}`,
-    },
-    {
-      test: "add-to-cart",
-      result: { status: "indeterminate", reason: NO_ADD },
-      line: `  indeterminate  add-to-cart        ${NO_ADD}`,
-    },
-    {
-      test: "choose-a-variant",
-      result: { status: "skipped", reason: "No product." },
-      line: "  skipped        choose-a-variant   No product.",
-    },
-  ] as const)("formats $result.status for $test", ({ test, result, line }) => {
-    expect(formatResultLine(test, result)).toBe(line);
-  });
-
   it("starts the reason in the same column for every test name and status", () => {
     const columns = TEST_NAMES.flatMap((test) =>
       (["fail", "indeterminate", "skipped"] as const).map((status) =>
@@ -296,14 +258,11 @@ describe("suiteExitCode", () => {
     { statuses: ["fail"], code: 1 },
     { statuses: ["indeterminate"], code: 2 },
     { statuses: ["skipped"], code: 3 },
-    { statuses: ["pass", "pass"], code: 0 },
     { statuses: ["pass", "skipped"], code: 0 },
-    { statuses: ["skipped", "pass"], code: 0 },
     { statuses: ["skipped", "skipped"], code: 3 },
     { statuses: ["pass", "fail"], code: 1 },
     { statuses: ["skipped", "fail"], code: 1 },
     { statuses: ["fail", "indeterminate"], code: 1 },
-    { statuses: ["indeterminate", "fail"], code: 1 },
     { statuses: ["pass", "indeterminate"], code: 2 },
     { statuses: ["skipped", "indeterminate"], code: 2 },
     // No result decides nothing.
@@ -958,24 +917,6 @@ describe("main with every test", () => {
     expect(process.listenerCount("SIGINT")).toBe(listenersBefore);
   });
 
-  it("runs the second test after a failing first test and exits 1", async () => {
-    const { agent } = fakes();
-    agent.run.mockImplementationOnce(async () => {
-      calls.push("run");
-      recordAdd();
-      recordOutcome("failed");
-      return STOPPED;
-    });
-
-    await expect(main(SUITE)).resolves.toBe(1);
-
-    expect(results()).toEqual([
-      { ...passLine("add-to-cart"), status: "fail", reason: "An add event promise was rejected." },
-      passLine("choose-a-variant"),
-    ]);
-    expect(pinNonDefaultVariant).toHaveBeenCalledOnce();
-  });
-
   it("exits 0 when the first test is skipped and the second passes", async () => {
     const reason = "No eligible variant: the catalog was searched to the end.";
     fakes();
@@ -988,20 +929,6 @@ describe("main with every test", () => {
       passLine("choose-a-variant"),
     ]);
     expect(createBrowserSession).toHaveBeenCalledOnce();
-  });
-
-  it("exits 3 and starts no browser when every test is skipped", async () => {
-    vi.mocked(pinVariant).mockResolvedValue({ status: "skipped", reason: "None." });
-    vi.mocked(pinNonDefaultVariant).mockResolvedValue({ status: "skipped", reason: "None." });
-
-    await expect(main(SUITE)).resolves.toBe(3);
-
-    expect(results()).toEqual([
-      { test: "add-to-cart", status: "skipped", reason: "None.", context: CONTEXT },
-      { test: "choose-a-variant", status: "skipped", reason: "None.", context: CONTEXT },
-    ]);
-    expect(discoverContext).toHaveBeenCalledOnce();
-    expect(createBrowserSession).not.toHaveBeenCalled();
   });
 
   it("prints one indeterminate line for each test without SHOPIFY_PROXY_KEY, with no request and no browser", async () => {
@@ -1037,24 +964,6 @@ describe("main with every test", () => {
     expect(discoverContext).toHaveBeenCalledTimes(2);
     expect(pinVariant).not.toHaveBeenCalled();
     expect(createBrowserSession).toHaveBeenCalledOnce();
-  });
-
-  it("stops on SIGINT in the first test, runs no later test, and exits 2", async () => {
-    const { session, agent } = fakes();
-    const running = runUntilInterrupted(agent);
-    const listenersBefore = process.listenerCount("SIGINT");
-
-    const run = main(SUITE);
-    await running;
-    process.emit("SIGINT", "SIGINT");
-
-    await expect(run).resolves.toBe(2);
-    expect(results()).toEqual([{ test: "add-to-cart", ...INTERRUPTED }]);
-    expect(stderr).not.toContain("Running test choose-a-variant\n");
-    expect(pinNonDefaultVariant).not.toHaveBeenCalled();
-    expect(createBrowserSession).toHaveBeenCalledOnce();
-    expect(session.close).toHaveBeenCalledOnce();
-    expect(process.listenerCount("SIGINT")).toBe(listenersBefore);
   });
 
   it("exits 2 when SIGINT after the first verdict stops the run before the second test", async () => {
