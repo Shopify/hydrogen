@@ -2192,7 +2192,9 @@ function connectCartStore(store: CartStoreContext, handlers: CartEventHandlers):
   document.addEventListener("shopify:cart:discount-update", handlers.discount);
   document.addEventListener("shopify:cart:note-update", handlers.note);
   document.addEventListener("shopify:cart:attributes-update", handlers.attributes);
-  void getShopifyStandardActions().catch(() => {});
+  void getShopifyStandardActions().catch((error: unknown) =>
+    log.error("standard actions setup failed", { error }),
+  );
   if (store.revalidateOnConnect) {
     store.revalidateOnConnect = false;
     refreshCartInStore(store);

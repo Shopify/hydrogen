@@ -6670,6 +6670,26 @@ describe("getShopifyStandardActions", () => {
     expect(updateCart.configure).toHaveBeenCalledTimes(1);
   });
 
+  it("logs when a connected store cannot set up Standard Actions", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    setShopify({});
+    resetStandardActionsForTests();
+    const localStore = createCartStore();
+    onTestFinished(() => localStore.destroy());
+
+    localStore.connect();
+
+    await vi.waitFor(() =>
+      expect(logger.error).toHaveBeenCalledWith("standard actions setup failed", {
+        scope: "cart",
+        error: expect.objectContaining({
+          message: expect.stringContaining(`include ${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}`),
+        }),
+      }),
+    );
+  });
+
   describe("while the document is interactive", () => {
     beforeEach(() => {
       Object.defineProperty(document, "readyState", { value: "interactive", configurable: true });
