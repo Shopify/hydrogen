@@ -35,10 +35,10 @@ Both tests use the same browser, agent task, and checks. Only the pinned variant
 
 ### `choose-a-variant`
 
-This test checks that a buyer can switch variants: the variant that the page selects first must not be the variant that goes into the cart.
+This test asks the agent to add a variant that is not the API default (`selectedOrFirstAvailableVariant`). The command does not check which variant the page selects first. `pass` means that the add event held the pinned variant. It does not prove that the agent changed the selection.
 
 - **Condition:** a product that does not require a selling plan and has at least 2 variants available for sale. Else `skipped`.
-- **Arrange:** the command pins the first variant that is available for sale and is not `selectedOrFirstAvailableVariant`. The product page opens with no variant in the URL, so the agent must change at least one option.
+- **Arrange:** the command pins the first variant that is available for sale and is not `selectedOrFirstAvailableVariant`. The product page opens with no variant in the URL. When the page first selects the API default, the agent must change at least one option.
 - **Act:** the agent selects the options and adds 1 unit. The command stops it at the first add event.
 - **Assert:** the same add event rules. An add event that holds another variant, such as the default one, is `fail`.
 
@@ -109,7 +109,7 @@ There is one model path: `anthropic/claude-haiku-5-5` through the Shopify AI pro
 - **Only storefronts that dispatch Standard Events are supported:** `shopify:cart:lines-update` with a `promise`. A storefront that does not dispatch the event, for example a Liquid theme without Standard Events, ends `fail` when the agent reports that it added the item, and `indeterminate` when it does not, even when the item reaches the cart. An add event without a `promise` is `fail`.
 - **A wrong agent claim gives a false `fail`.** When the agent reports completion but did not add the item, and no add event comes, the result is `fail`. `agent.summary` (or `agent.message`, when the agent did not complete) helps to find the cause.
 - **Checkout and account pages are not blocked.** The agent is only told not to go there, and its run is stopped at the first add event. Nothing stops it before that if it does not obey, and a tool call already in progress at the stop can finish before the disconnect is confirmed.
-- **`choose-a-variant` proves a switch only when the page first selects the API default.** The default is `selectedOrFirstAvailableVariant`. A page that first selects another variant could open on the pinned variant. The test then passes with no switch.
+- **`choose-a-variant` does not prove a switch.** It pins a variant that is not the API default (`selectedOrFirstAvailableVariant`), but it does not check which variant the page selects first. A page that first selects another variant can open on the pinned variant. The test can then pass with no switch, also when the variant selector is broken.
 - **`choose-a-variant` examines only the first 10 variants of each product.** A product whose other available variants come later is not used.
 - **A wrong agent selection gives `fail`.** In `choose-a-variant`, when the agent adds another variant, the result is `fail`. Code cannot tell this from a broken variant selector.
 - **The cart is not read.** `pass` trusts the add event's `promise` and its cart `userErrors`. It does not prove that the cart holds the item.
