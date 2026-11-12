@@ -278,6 +278,57 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     }
   });
 
+  it("selects shared CSP defaults through the development package condition", () => {
+    const script = `
+      import { createContentSecurityPolicy, getShopifyCspDirectives } from "@shopify/hydrogen";
+      process.stdout.write(JSON.stringify({
+        header: createContentSecurityPolicy({ nonce: false }).header,
+        extendedHeader: createContentSecurityPolicy({
+          nonce: false,
+          directives: { connectSrc: ["https://analytics.example"] },
+        }).header,
+        defaults: getShopifyCspDirectives(),
+      }));
+    `;
+    const readPolicy = (
+      conditions: string[],
+      nodeEnv: string,
+    ): {
+      header: string;
+      extendedHeader: string;
+      defaults: { connectSrc: string[]; scriptSrc: string[]; styleSrc: string[] };
+    } =>
+      JSON.parse(
+        execFileSync(process.execPath, [...conditions, "--input-type=module", "-e", script], {
+          cwd: PACKAGE_ROOT,
+          encoding: "utf8",
+          env: { ...process.env, NODE_ENV: nodeEnv, NODE_OPTIONS: undefined },
+        }),
+      );
+
+    // The package condition, not NODE_ENV, selects the compiled CSP behavior.
+    const production = readPolicy([], "development");
+    const development = readPolicy(["--conditions=development"], "production");
+    for (const host of ["localhost", "127.0.0.1", "tryhydrogen.dev"]) {
+      expect(production.header).not.toContain(host);
+      expect(development.header).toContain(host);
+      expect(production.extendedHeader).not.toContain(host);
+      expect(development.extendedHeader).toContain(host);
+      expect(production.defaults.connectSrc.some((source) => source.includes(host))).toBe(false);
+      expect(development.defaults.connectSrc.some((source) => source.includes(host))).toBe(true);
+    }
+    expect(production.extendedHeader).toContain("https://analytics.example");
+    expect(development.extendedHeader).toContain("https://analytics.example");
+    expect(development.header).toContain("wss://*.tryhydrogen.dev:*");
+    expect(development.defaults.scriptSrc).toEqual(production.defaults.scriptSrc);
+    expect(development.defaults.styleSrc).toEqual(production.defaults.styleSrc);
+    const scriptSrc = development.header
+      .split(";")
+      .find((part) => part.trim().startsWith("script-src "));
+    assert(scriptSrc, "expected the development script-src directive");
+    expect(scriptSrc).not.toMatch(/unsafe-inline|unsafe-eval/);
+  });
+
   it("only includes the standard events inspector in the development build", () => {
     const productionShopifyScripts = readFileSync(
       resolve(PACKAGE_ROOT, "dist/core/shopify-scripts/index.mjs"),

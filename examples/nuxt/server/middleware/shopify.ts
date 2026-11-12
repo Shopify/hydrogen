@@ -1,5 +1,5 @@
 import { getBuyerIp } from "@shared/buyer-ip";
-import { defaultI18n } from "@shared/config";
+import { i18n } from "@shared/config";
 import { createRequestSessionManager } from "@shared/request-session";
 import {
   createShopifyRequestContext,
@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
 });
 
 function createMockStorefront(request: Request, storeDomain: string) {
-  const requestContext = createShopifyRequestContext({ request, i18n: defaultI18n });
+  const requestContext = createShopifyRequestContext({ request, i18n });
   const storefrontClient = createStorefrontClient({
     type: "public",
     requestContext,
@@ -79,7 +79,7 @@ function createPrivateStorefront(
 ) {
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: defaultI18n,
+    i18n,
     buyerIp: getBuyerIp(request.headers),
   });
   const storefrontClient = createStorefrontClient({

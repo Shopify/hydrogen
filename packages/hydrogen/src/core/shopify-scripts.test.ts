@@ -5,7 +5,6 @@ import { SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT } from "./shopify-s
 import {
   getShopifyScriptTags,
   getShopifyGlobal,
-  getShopifyGlobalBootstrapScript,
   initializeShopifyScripts,
   renderShopifyScriptTag,
   renderShopifyScriptTags,
@@ -21,7 +20,8 @@ import {
   SHOPIFY_STOREFRONT_WEBMCP_SCRIPT,
 } from "./shopify-scripts/index";
 import { getPerfKitScript } from "./shopify-scripts/perfkit";
-import { createShopifyRouteTemplates } from "./standard-routes/index";
+import type { ShopifyScriptTagsOptions } from "./shopify-scripts/types";
+import { defineShopifyRouteTemplates } from "./standard-routes/index";
 import { assert } from "./test-utils";
 import { loadScript } from "./utils/load-script";
 
@@ -31,6 +31,27 @@ vi.mock("./utils/load-script", () => ({
 
 function getShopifyRoutesRoot() {
   return (window.Shopify?.routes as { root?: string } | undefined)?.root;
+}
+
+function getGlobalBootstrapElement(options: ShopifyScriptTagsOptions) {
+  const { scripts } = getShopifyScriptTags(options);
+  const bootstrap = scripts.find((script) => script.attributes?.id === "shopify-global-bootstrap");
+  assert(bootstrap, "Expected the global bootstrap descriptor");
+  const parsed = new DOMParser().parseFromString(renderShopifyScriptTag(bootstrap), "text/html");
+  const script = parsed.querySelector("script");
+  assert(script, "Expected the rendered global bootstrap element");
+  return script;
+}
+
+function runGlobalBootstrap(options: ShopifyScriptTagsOptions) {
+  const script = getGlobalBootstrapElement(options);
+  const currentScript = vi.spyOn(document, "currentScript", "get").mockReturnValue(script);
+  try {
+    // oxlint-disable-next-line no-eval -- Execute the serialized bootstrap with its rendered attributes.
+    (0, eval)(script.textContent);
+  } finally {
+    currentScript.mockRestore();
+  }
 }
 
 const TEST_SHOP_GID = "gid://shopify/Shop/42";
@@ -45,13 +66,14 @@ const TEST_SHOP = {
 };
 
 describe("shopify scripts", () => {
-  const emptyRouteTemplates = createShopifyRouteTemplates({});
+  const emptyRouteTemplates = defineShopifyRouteTemplates({});
 
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.mocked(loadScript).mockResolvedValue(true);
     vi.unstubAllGlobals();
     delete (window as any).Shopify;
+    Reflect.deleteProperty(window, Symbol.for("shopify.hydrogen.global.initialized"));
     delete (document as any).modelContext;
     delete (navigator as any).modelContext;
     Reflect.deleteProperty(window, Symbol.for("shopify.webmcp.registered"));
@@ -135,7 +157,7 @@ describe("shopify scripts", () => {
 
   it("falls back to native navigation when a navigator is omitted", async () => {
     const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
 
@@ -161,7 +183,7 @@ describe("shopify scripts", () => {
 
   it("resolves Shopify standard routes before navigating", async () => {
     const navigate = vi.fn();
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
     (window as any).Shopify = {
@@ -247,7 +269,7 @@ describe("shopify scripts", () => {
   it("keeps the cart page SPA-navigable and resolves its custom route", async () => {
     const navigate = vi.fn();
     const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
-    const routeTemplates = createShopifyRouteTemplates({ cart: "/bag" });
+    const routeTemplates = defineShopifyRouteTemplates({ cart: "/bag" });
 
     await initializeShopifyScripts({ navigate, routes: routeTemplates, webMcp: false });
 
@@ -258,7 +280,7 @@ describe("shopify scripts", () => {
   });
 
   it("sets Shopify standard route resolver from route templates", async () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
     (window as any).Shopify = {
@@ -289,7 +311,7 @@ describe("shopify scripts", () => {
 
   it("initializes routing and WebMCP loading for custom framework integrations", async () => {
     const navigate = vi.fn();
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
     (window as any).Shopify = {
@@ -313,7 +335,7 @@ describe("shopify scripts", () => {
 
   it("initializes routing without WebMCP when disabled", async () => {
     const navigate = vi.fn();
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
     (window as any).Shopify = {
@@ -333,7 +355,7 @@ describe("shopify scripts", () => {
   });
 
   it("builds a bootstrap script for i18n globals", () => {
-    const script = getShopifyGlobalBootstrapScript({
+    runGlobalBootstrap({
       i18n: { country: "CA", language: "FR", pathPrefix: "/fr-ca", currency: "cad" },
       shop: {
         shopId: TEST_SHOP_ID,
@@ -342,12 +364,11 @@ describe("shopify scripts", () => {
       },
     });
 
-    (0, eval)(script);
-
     expect(window.Shopify?.country).toBe("CA");
     expect(window.Shopify?.currency).toEqual({ active: "CAD" });
     expect(window.Shopify?.locale).toBe("fr");
     expect(window.Shopify?.shop).toBe(TEST_MYSHOPIFY_DOMAIN);
+    expect(window.Shopify?.application).toEqual({ name: "hydrogen", version: "0.0.0-test" });
     expect(window.Shopify?.components.config).toEqual({
       storeDomain: window.location.origin,
       country: "CA",
@@ -366,9 +387,7 @@ describe("shopify scripts", () => {
         },
       },
     };
-    const script = getShopifyGlobalBootstrapScript({ shop: TEST_SHOP });
-
-    (0, eval)(script);
+    runGlobalBootstrap({ shop: TEST_SHOP });
 
     expect(window.Shopify?.components.config).toEqual({
       storeDomain: window.location.origin,
@@ -378,9 +397,7 @@ describe("shopify scripts", () => {
   });
 
   it("falls back to US country, en locale, and root route", () => {
-    const script = getShopifyGlobalBootstrapScript({ shop: TEST_SHOP });
-
-    (0, eval)(script);
+    runGlobalBootstrap({ shop: TEST_SHOP });
 
     expect(window.Shopify?.country).toBe("US");
     expect(window.Shopify?.currency).toBeUndefined();
@@ -389,27 +406,27 @@ describe("shopify scripts", () => {
   });
 
   it("normalizes the permanent shop domain", () => {
-    const script = getShopifyGlobalBootstrapScript({
+    runGlobalBootstrap({
       shop: {
         ...TEST_SHOP,
         myshopifyDomain: ` https://${TEST_MYSHOPIFY_DOMAIN}/// `,
       },
     });
 
-    (0, eval)(script);
-
     expect(window.Shopify?.shop).toBe(TEST_MYSHOPIFY_DOMAIN);
   });
 
-  it("escapes serialized data for inline script safety", () => {
-    const script = getShopifyGlobalBootstrapScript({
+  it("keeps runtime configuration out of the inline script body", () => {
+    const country = '"></script><script>throw new Error("injected")</script>';
+    const script = getGlobalBootstrapElement({
       // @ts-expect-error Intentionally validates unsafe runtime input serialization.
-      i18n: { country: "</script>", language: "EN" },
+      i18n: { country, language: "EN" },
       shop: TEST_SHOP,
     });
 
-    expect(script).not.toContain("</script>");
-    expect(script).toContain("\\u003c/script>");
+    expect(script.ownerDocument.querySelectorAll("script")).toHaveLength(1);
+    expect(script.textContent).not.toContain("injected");
+    expect(JSON.parse(script.dataset.config ?? "{}").country).toBe(country);
   });
 
   it("builds script tag descriptors for the Shopify runtime", () => {
@@ -446,8 +463,12 @@ describe("shopify scripts", () => {
       },
       {
         tagName: "script",
-        attributes: { id: "shopify-global-bootstrap", nonce: "test-nonce" },
-        innerHTML: expect.stringContaining('"country":"US"'),
+        attributes: {
+          id: "shopify-global-bootstrap",
+          nonce: "test-nonce",
+          "data-config": expect.stringContaining('"country":"US"'),
+        },
+        innerHTML: expect.stringContaining("document.currentScript"),
       },
       {
         tagName: "script",
@@ -471,7 +492,11 @@ describe("shopify scripts", () => {
       },
       {
         tagName: "script",
-        attributes: { id: "shopify-analytics-bus", nonce: "test-nonce" },
+        attributes: {
+          id: "shopify-analytics-bus",
+          nonce: "test-nonce",
+          "data-config": expect.any(String),
+        },
         innerHTML: expect.stringContaining("Analytics bus already initialized"),
       },
       {
@@ -538,8 +563,12 @@ describe("shopify scripts", () => {
     expect(descriptors.scripts).toEqual([
       {
         tagName: "script",
-        attributes: { id: "shopify-global-bootstrap", nonce: "test-nonce" },
-        innerHTML: expect.stringContaining('"country":"US"'),
+        attributes: {
+          id: "shopify-global-bootstrap",
+          nonce: "test-nonce",
+          "data-config": expect.stringContaining('"country":"US"'),
+        },
+        innerHTML: expect.stringContaining("document.currentScript"),
       },
       {
         tagName: "script",
@@ -563,7 +592,11 @@ describe("shopify scripts", () => {
       },
       {
         tagName: "script",
-        attributes: { id: "shopify-analytics-bus", nonce: "test-nonce" },
+        attributes: {
+          id: "shopify-analytics-bus",
+          nonce: "test-nonce",
+          "data-config": expect.any(String),
+        },
         innerHTML: expect.stringContaining("Analytics bus already initialized"),
       },
       {
@@ -875,11 +908,13 @@ describe("shopify scripts", () => {
     const html = htmlTags.join("\n");
 
     expect(htmlTags).toHaveLength(10);
-    expect(html).toContain('<script id="shopify-global-bootstrap" nonce="test-nonce">');
-    expect(html).toContain('"country":"US"');
-    expect(html).toContain('"locale":"en"');
-    expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
-    expect(html).not.toContain('"templates"');
+    expect(html).toContain('<script id="shopify-global-bootstrap" nonce="test-nonce" data-config=');
+    expect(html).toContain("&quot;country&quot;:&quot;US&quot;");
+    expect(html).toContain("&quot;locale&quot;:&quot;en&quot;");
+    expect(html).toContain(
+      "&quot;routes&quot;:{&quot;root&quot;:&quot;/&quot;,&quot;apiProxyPrefix&quot;:&quot;/__shopify&quot;}",
+    );
+    expect(html).not.toContain("&quot;templates&quot;");
     expect(html).toContain(`<link rel="preconnect" href="${SHOPIFY_CDN_ORIGIN}">`);
     expect(html).toContain(`<link rel="preconnect" href="${SHOPIFY_SHOP_APP_ORIGIN}">`);
     expect(html).toContain(

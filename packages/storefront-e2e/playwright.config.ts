@@ -40,7 +40,9 @@ export default defineConfig({
   use: {
     actionTimeout: ACTION_TIMEOUT_MS,
     baseURL: getStorefrontBaseUrl(),
-    channel: process.env.PLAYWRIGHT_BROWSER_CHANNEL,
+    // Installed Google Chrome auto-updates, while Playwright's bundled Chromium can trail
+    // Chrome security releases. Set PLAYWRIGHT_BROWSER_CHANNEL=chromium for the bundled build.
+    channel: process.env.PLAYWRIGHT_BROWSER_CHANNEL || "chrome",
     navigationTimeout: NAVIGATION_TIMEOUT_MS,
     screenshot: "only-on-failure",
     trace: "retain-on-failure",

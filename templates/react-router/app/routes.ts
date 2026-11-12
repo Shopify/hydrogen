@@ -8,5 +8,6 @@ export default [
   route("cart", "routes/cart.tsx"),
   route("search", "routes/search.tsx"),
   route("account", "routes/account.tsx"),
+  route("robots.txt", "routes/robots.ts"),
   route("*", "routes/catchall.tsx"),
 ] satisfies RouteConfig;

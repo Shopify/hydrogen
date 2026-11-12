@@ -30,9 +30,11 @@ export type StandardHeaderName =
   | "content-length"
   | "content-type"
   | "cookie"
+  | "forwarded"
   | "host"
   | "keep-alive"
   | "origin"
+  | "oxygen-buyer-ip"
   | "proxy-authenticate"
   | "proxy-authorization"
   | "referer"
@@ -41,9 +43,19 @@ export type StandardHeaderName =
   | "te"
   | "trailer"
   | "transfer-encoding"
+  | "true-client-ip"
   | "upgrade"
   | "user-agent"
-  | "x-requested-with";
+  | "x-client-ip"
+  | "x-forwarded-for"
+  | "x-forwarded-host"
+  | "x-forwarded-port"
+  | "x-forwarded-proto"
+  | "x-forwarded-scheme"
+  | "x-forwarded-ssl"
+  | "x-real-ip"
+  | "x-requested-with"
+  | "x-shopify-client-ip";
 
 export type ShopifyHeaderName =
   | typeof CONSENT_MANAGEMENT_HEADER
@@ -130,16 +142,30 @@ export const AJAX_API_REQUEST_HEADER_ALLOWLIST = defineHeaderList(
 // Hop-by-hop headers must not be forwarded by proxies. `host` and
 // `content-length` are also removed so fetch can derive them for the upstream
 // request. See https://www.rfc-editor.org/rfc/rfc9110.html#section-7.6.1
+// Client IP and forwarding headers are removed because the caller controls them.
 export const PROXY_REQUEST_HEADER_DENYLIST = defineHeaderList(
   "cf-connecting-ip",
   "connection",
   "content-length",
+  "forwarded",
   "host",
   "keep-alive",
+  "oxygen-buyer-ip",
   "proxy-authenticate",
   "proxy-authorization",
+  STOREFRONT_BUYER_IP_HEADER,
   "te",
   "trailer",
   "transfer-encoding",
+  "true-client-ip",
   "upgrade",
+  "x-client-ip",
+  "x-forwarded-for",
+  "x-forwarded-host",
+  "x-forwarded-port",
+  "x-forwarded-proto",
+  "x-forwarded-scheme",
+  "x-forwarded-ssl",
+  "x-real-ip",
+  "x-shopify-client-ip",
 );

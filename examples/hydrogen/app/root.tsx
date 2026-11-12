@@ -1,4 +1,4 @@
-import { Cache, type ConsentConfig } from "@shopify/hydrogen";
+import { Cache, type ConsentConfig, getHtmlLang } from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
 import { useState } from "react";
 import {
@@ -80,9 +80,9 @@ export async function loader(args: Route.LoaderArgs) {
     myshopifyDomain: env.PUBLIC_STORE_DOMAIN,
   };
   const i18n = {
-    country: storefront.i18n.country,
-    language: storefront.i18n.language,
-    pathPrefix: storefront.i18n.pathPrefix,
+    country: storefront.locale.country,
+    language: storefront.locale.language,
+    pathPrefix: storefront.locale.pathPrefix,
     ...(analyticsCurrency ? { currency: analyticsCurrency } : {}),
   };
 
@@ -165,7 +165,7 @@ export function Layout({ children }: { children?: React.ReactNode }) {
   const usesCustomBanner = consentMode === "custom-banner";
 
   return (
-    <html lang={toHtmlLang(data?.i18n)}>
+    <html lang={data ? getHtmlLang(data.i18n.language) : "en"}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -197,13 +197,6 @@ export function Layout({ children }: { children?: React.ReactNode }) {
       </body>
     </html>
   );
-}
-
-function toHtmlLang(i18n: { country?: string; language?: string } | null | undefined) {
-  if (!i18n?.language) return "en";
-  const language = i18n.language.toLowerCase();
-  const country = i18n.country ? `-${i18n.country.toUpperCase()}` : "";
-  return `${language}${country}`;
 }
 
 export default function App() {

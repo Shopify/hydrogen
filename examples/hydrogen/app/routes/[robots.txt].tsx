@@ -25,6 +25,7 @@ ${generalDisallowRules({ sitemapUrl })}
 User-agent: adsbot-google
 Disallow: /cart
 Disallow: /account
+Disallow: /checkout
 Disallow: /search
 Allow: /search/
 Disallow: /search/?*
@@ -53,8 +54,13 @@ Crawl-delay: 1
  * Online Store has as defaults for their robots.txt
  */
 function generalDisallowRules({ sitemapUrl }: { sitemapUrl?: string }) {
-  return `Disallow: /cart
+  return `Disallow: /admin
+Disallow: /cart
 Disallow: /account
+Disallow: /checkout
+Disallow: /buy/
+Disallow: /api/
+Disallow: /__shopify
 Disallow: /collections/*sort_by*
 Disallow: /*/collections/*sort_by*
 Disallow: /collections/*+*
@@ -63,6 +69,7 @@ Disallow: /collections/*%2b*
 Disallow: /*/collections/*+*
 Disallow: /*/collections/*%2B*
 Disallow: /*/collections/*%2b*
+Disallow: /collections/*filter*&*filter*
 Disallow: /*/collections/*filter*&*filter*
 Disallow: /blogs/*+*
 Disallow: /blogs/*%2B*

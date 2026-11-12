@@ -108,6 +108,10 @@ describe('MiniOxygen Worker Runtime', () => {
         await expect(response.json()).resolves.toMatchObject({
           'request-id': expect.stringMatching(/^[a-z0-9-]{36}$/),
           'oxygen-buyer-ip': '127.0.0.1',
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          traceparent: expect.stringMatching(
+            /^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/,
+          ),
         });
       },
     );

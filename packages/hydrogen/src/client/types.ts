@@ -101,7 +101,10 @@ type CommonOptions = {
   defaultTimeoutInMs?: number;
   /**
    * The cache that stores query results. The client caches only queries that pass a `cache`
-   * strategy. The client never caches mutations or results with GraphQL errors.
+   * strategy. The client never caches mutations, results with GraphQL errors, or responses whose
+   * `Cache-Control` header contains `private` or `no-store`. A response with either directive also
+   * makes the final response private when you call `applyResponseHeaders()`, whether or not the
+   * query passes a `cache` strategy.
    */
   // Mirrored by the `cache?: CacheConfig` inference hole in
   // CreateStorefrontClientArgs — keep the key and type in sync.
@@ -298,7 +301,12 @@ export type StorefrontClient<
 > = {
   /** The client type that you passed to `createStorefrontClient`. */
   type: Type;
-  /** The country and language that the client sends for `$country` and `$language` variables. */
+  /** The locale resolved for this request. The client sends its country and language for `$country` and `$language` variables. */
+  locale: RequestContext["locale"];
+  /**
+   * The locale resolved for this request.
+   * @deprecated Use `locale` instead. Removed in the next major release.
+   */
   i18n: RequestContext["i18n"];
   /**
    * Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a

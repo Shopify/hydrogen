@@ -2,6 +2,7 @@ import { handleProductVariantId } from "../product/accept-variant-id";
 import { handleAjaxApi } from "./interceptors/ajax-api";
 import { handleShopifyApiProxy } from "./interceptors/api-proxy";
 import { handleBuyPermalinkRedirect, handleCheckoutRedirect } from "./interceptors/checkout";
+import { handleHydrogenManifest } from "./interceptors/manifest";
 import { handleMcpProxy } from "./interceptors/mcp-proxy";
 import { handleSfapiProxy } from "./interceptors/sfapi-proxy";
 import { handleUcpMcpProxy } from "./interceptors/ucp-mcp-proxy";
@@ -16,6 +17,7 @@ import type {
 import { safeApplyResponseHeaders } from "./safe-apply-response-headers";
 
 const SHOPIFY_ROUTE_INTERCEPTORS = [
+  handleHydrogenManifest,
   handleShopifyApiProxy,
   handleSfapiProxy,
   handleProductVariantId,
@@ -62,9 +64,11 @@ export const handleShopifyRoutes: HydrogenRouteHandler = (options) => {
  *
  * When a route matches, the function returns a promise for the response. Return that response as is, because the response already carries the request context's headers. When no route matches, the function returns `null` synchronously, and your framework's router handles the request. The function throws when `requestContext` differs from the Storefront API client's request context. When a route handler throws, the returned promise rejects. Inside a `try` block, use `return await` on the result.
  *
- * The function checks these routes in order and returns the first match: the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, the UCP business profile at `/.well-known/ucp`, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.
+ * The function checks these routes in order and returns the first match: the Hydrogen manifest at `/__shopify/hydrogen/manifest.json`, the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, the UCP business profile at `/.well-known/ucp`, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.
  *
- * Some routes answer unsupported methods with a `405` response. A registered handler path returns `405` for any method that no handler on that path registers. Checkout and cart permalinks accept only `GET` and `HEAD`. Buy permalinks accept only `GET`, and the UCP MCP proxy accepts only `POST`.
+ * The Hydrogen manifest is always on. It describes your app's route templates and the locales of the `defineShopifyI18n` definition in the request context, so Shopify services can build URLs for your storefront. Its `routes` field is `null` when you don't pass `routeTemplates`, and its `i18n` field is `null` when the request context has no definition.
+ *
+ * Some routes answer unsupported methods with a `405` response. A registered handler path returns `405` for any method that no handler on that path registers. The Hydrogen manifest, checkout permalinks, and cart permalinks accept only `GET` and `HEAD`. Buy permalinks accept only `GET`, and the UCP MCP proxy accepts only `POST`.
  *
  * When your bundler resolves the package's `development` export condition, the function also serves the GraphiQL explorer at `/graphiql` for GET requests that match no other route, and accepts a `graphiql` option. Set `graphiql.customerAccount` to an object with `apiUrl`, `accessToken`, and `schemaUrl` to add a Customer Account API tab. The explorer skips the tab when it can't fetch the schema.
  *
