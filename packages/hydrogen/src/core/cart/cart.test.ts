@@ -1172,6 +1172,53 @@ describe("CartStore.handleFormSubmit — line mutations", () => {
     );
   });
 
+  it.each([0, -2])(
+    "set: a positive quantity is sent as-is when quantityAvailable is %i (untracked or oversold inventory is not a cap)",
+    async (quantityAvailable) => {
+      const currentQuantity = 2;
+      const requestedQuantity = 3;
+
+      store.destroy();
+      store = createCartStore();
+      mockGetCart.mockResolvedValue({ cart: null });
+      store.connect();
+
+      const line = {
+        ...makeLine({ id: "line-1", quantity: currentQuantity }),
+        merchandise: {
+          id: "gid://shopify/ProductVariant/1",
+          title: "Small",
+          product: { title: "T-Shirt" },
+          quantityAvailable,
+        },
+      };
+      store.hydrate(makeCartState({ lines: [line], totalQuantity: currentQuantity }));
+
+      const event = submitForm(
+        { lineId: "line-1", quantity: String(requestedQuantity) },
+        "intent",
+        "set",
+      );
+      const promise = store.handleFormSubmit(event);
+      await nextTick();
+
+      const optimisticLines = getCartLines(store.getState().data);
+      expect(optimisticLines.map((l) => ({ id: l.id, quantity: l.quantity }))).toEqual([
+        { id: "line-1", quantity: requestedQuantity },
+      ]);
+      expect(mockUpdateCart).toHaveBeenCalledWith(
+        { lines: [{ id: "line-1", quantity: requestedQuantity }] },
+        expect.anything(),
+      );
+
+      resolveUpdate(
+        0,
+        serverCart(requestedQuantity, [{ id: "line-1", quantity: requestedQuantity }]),
+      );
+      await promise;
+    },
+  );
+
   it("set: quantity 0 routes to remove", async () => {
     const event = submitForm({ lineId: "line-1", quantity: "0" }, "intent", "set");
     const promise = store.handleFormSubmit(event);

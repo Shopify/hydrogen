@@ -3659,7 +3659,7 @@
           "syntaxKind": "PropertySignature",
           "name": "quantityAvailable",
           "value": "number | null",
-          "description": "Units available for sale. When your cart fragment selects the field, the store caps the quantity of a `set` submission at this number.",
+          "description": "Units available for sale. When your cart fragment selects the field and the value is positive, the store caps the quantity of a `set` submission at this number. Zero and negative values (untracked or oversold inventory) set no cap.",
           "isOptional": true
         },
         {
@@ -3679,7 +3679,7 @@
           "isOptional": true
         }
       ],
-      "value": "export interface CartLineMerchandise {\n  /** Storefront API GID of the product variant. */\n  id: string;\n  /** The variant title, such as `\"Small / Black\"`. */\n  title?: string;\n  /** The variant's selected options as name and value pairs. */\n  selectedOptions?: Array<{ name: string; value: string }>;\n  /** The product that the variant belongs to. */\n  product: {\n    title: string;\n    handle?: string;\n    [key: string]: unknown;\n  };\n  /** The variant image that the cart query selects. */\n  image?: {\n    id?: string | null;\n    url: string;\n    altText?: string | null;\n    width?: number | null;\n    height?: number | null;\n    [key: string]: unknown;\n  } | null;\n  /** Units available for sale. When your cart fragment selects the field, the store caps the quantity of a `set` submission at this number. */\n  quantityAvailable?: number | null;\n  /** Extra variant fields from your custom cart fragment, unchanged. */\n  [key: string]: unknown;\n}"
+      "value": "export interface CartLineMerchandise {\n  /** Storefront API GID of the product variant. */\n  id: string;\n  /** The variant title, such as `\"Small / Black\"`. */\n  title?: string;\n  /** The variant's selected options as name and value pairs. */\n  selectedOptions?: Array<{ name: string; value: string }>;\n  /** The product that the variant belongs to. */\n  product: {\n    title: string;\n    handle?: string;\n    [key: string]: unknown;\n  };\n  /** The variant image that the cart query selects. */\n  image?: {\n    id?: string | null;\n    url: string;\n    altText?: string | null;\n    width?: number | null;\n    height?: number | null;\n    [key: string]: unknown;\n  } | null;\n  /** Units available for sale. When your cart fragment selects the field and the value is positive, the store caps the quantity of a `set` submission at this number. Zero and negative values (untracked or oversold inventory) set no cap. */\n  quantityAvailable?: number | null;\n  /** Extra variant fields from your custom cart fragment, unchanged. */\n  [key: string]: unknown;\n}"
     }
   },
   "CartResult": {
@@ -6231,7 +6231,7 @@
     "src/core/cart/quantity.ts": {
       "filePath": "src/core/cart/quantity.ts",
       "name": "SanitizeQuantityGeneratedType",
-      "description": "Turns a raw value, such as text from a quantity input, into a whole-number quantity between a minimum and a maximum.\n\nThe function parses strings and rounds decimals. Input that the function can't parse returns the minimum.",
+      "description": "Turns a raw value, such as text from a quantity input, into a whole-number quantity between a minimum and a maximum.\n\nThe function parses strings and rounds decimals. Input that the function can't parse returns the minimum, and so does a result that isn't finite, such as `Infinity` with no `max`. When `max` is below `min`, `min` wins.",
       "isPublicDocs": true,
       "params": [
         {
@@ -6242,7 +6242,7 @@
         },
         {
           "name": "options",
-          "description": "The lower and upper bounds. The `min` option defaults to `1`, and `max` defaults to no limit. To stop at available stock, pass the variant's available quantity as `max`.",
+          "description": "The lower and upper bounds. The `min` option defaults to `1`, and `max` defaults to no limit. To stop at available stock, pass the variant's available quantity as `max` when it's positive.",
           "value": "{ min?: number; max?: number; }",
           "isOptional": true,
           "filePath": "src/core/cart/quantity.ts"
@@ -6254,7 +6254,7 @@
         "name": "number",
         "value": "number"
       },
-      "value": "export function sanitizeQuantity(raw: unknown, options?: { min?: number; max?: number }): number {\n  const min = options?.min ?? DEFAULT_MINIMUM_QUANTITY;\n  const max = options?.max ?? NO_QUANTITY_LIMIT;\n\n  const parsed = Number(String(raw).trim());\n  if (Number.isNaN(parsed)) return min;\n\n  const rounded = Math.round(parsed);\n  return Math.min(Math.max(rounded, min), max);\n}",
+      "value": "export function sanitizeQuantity(raw: unknown, options?: { min?: number; max?: number }): number {\n  const min = options?.min ?? DEFAULT_MINIMUM_QUANTITY;\n  const max = options?.max ?? NO_QUANTITY_LIMIT;\n\n  const parsed = Number(String(raw).trim());\n  if (Number.isNaN(parsed)) return min;\n\n  const clamped = Math.max(Math.min(Math.round(parsed), max), min);\n  return Number.isFinite(clamped) ? clamped : min;\n}",
       "examples": [
         {
           "title": "Example",

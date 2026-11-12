@@ -2504,7 +2504,9 @@ function getLineQuantityPayload(
   const rawQuantity = Number(formData.get("quantity"));
   const explicitQuantity = Number.isNaN(rawQuantity) ? DEFAULT_MINIMUM_QUANTITY : rawQuantity;
   if (explicitQuantity <= 0) return { lineId, quantity: 0 };
-  const maxQuantity = line?.merchandise?.quantityAvailable ?? undefined;
+  const quantityAvailable = line?.merchandise?.quantityAvailable;
+  const maxQuantity =
+    typeof quantityAvailable === "number" && quantityAvailable > 0 ? quantityAvailable : undefined;
   return {
     lineId,
     quantity: sanitizeQuantity(explicitQuantity, {
