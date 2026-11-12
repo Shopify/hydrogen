@@ -2,6 +2,7 @@ import { gql, type StorefrontApi } from "@shopify/hydrogen";
 import { Link, useLoaderData } from "react-router";
 
 import { PaginatedResourceSection } from "~/components/PaginatedResourceSection";
+import { useLocalizedPath } from "~/lib/locale-path";
 import { getPaginationVariables } from "~/lib/pagination";
 
 import type { Route } from "./+types/($locale).blogs._index";
@@ -51,6 +52,7 @@ function loadDeferredData() {
 
 export default function Blogs() {
   const { blogs } = useLoaderData<typeof loader>();
+  const localizedPath = useLocalizedPath();
 
   return (
     <div className="blogs">
@@ -58,7 +60,12 @@ export default function Blogs() {
       <div className="blogs-grid">
         <PaginatedResourceSection<BlogNode> connection={blogs}>
           {({ node: blog }) => (
-            <Link className="blog" key={blog.handle} prefetch="intent" to={`/blogs/${blog.handle}`}>
+            <Link
+              className="blog"
+              key={blog.handle}
+              prefetch="intent"
+              to={localizedPath(`/blogs/${blog.handle}`)}
+            >
               <h2>{blog.title}</h2>
             </Link>
           )}

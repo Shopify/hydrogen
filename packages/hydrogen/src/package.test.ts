@@ -343,6 +343,18 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     expect(developmentShopifyScripts).toContain(STANDARD_EVENTS_INSPECTOR_ID);
   });
 
+  it("only includes the locale checks in the development build", () => {
+    // One unguarded call to a check is enough for the production build to emit their module.
+    const localeCheckModules = readdirSync(resolve(PACKAGE_ROOT, "dist"), {
+      encoding: "utf8",
+      recursive: true,
+    }).filter((file) => file.endsWith("locale-checks.mjs"));
+
+    expect(localeCheckModules).toEqual([
+      join("development", "core", "shopify-scripts", "locale-checks.mjs"),
+    ]);
+  });
+
   it("tells consumer bundlers to leave URL imports to the browser", () => {
     const distDirectory = resolve(PACKAGE_ROOT, "dist");
     const urlImports = readdirSync(distDirectory, { encoding: "utf8", recursive: true })

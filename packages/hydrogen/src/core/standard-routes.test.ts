@@ -6,7 +6,11 @@ import {
   matchStandardRouteUrl,
   resolveStandardRouteUrl,
 } from "./standard-routes/index";
-import { normalizePathPrefix, prependPathPrefix } from "./standard-routes/path";
+import {
+  applyI18nPathPrefix,
+  normalizePathPrefix,
+  prependPathPrefix,
+} from "./standard-routes/path";
 
 describe("standard routes", () => {
   it("builds default Shopify standard routes", () => {
@@ -343,6 +347,28 @@ describe("standard routes", () => {
     expect(normalizePathPrefix(undefined)).toBe("");
     expect(prependPathPrefix("/products", " /fr-ca/ ")).toBe("/fr-ca/products");
   });
+
+  it.each([
+    { url: "/api/cart", pathPrefix: "/fr-ca", expected: "/fr-ca/api/cart" },
+    { url: "/api/cart?step=1", pathPrefix: " /fr-ca/ ", expected: "/fr-ca/api/cart?step=1" },
+    { url: "/api/cart", pathPrefix: "", expected: "/api/cart" },
+    { url: "/api/cart", pathPrefix: undefined, expected: "/api/cart" },
+    { url: "/fr-ca/api/cart", pathPrefix: "/fr-ca", expected: "/fr-ca/api/cart" },
+    { url: "/fr-ca?step=1", pathPrefix: "/fr-ca", expected: "/fr-ca/?step=1" },
+    { url: "/fr-ca#top", pathPrefix: "/fr-ca", expected: "/fr-ca/#top" },
+    {
+      url: "https://cart.example/api/cart",
+      pathPrefix: "/fr-ca",
+      expected: "https://cart.example/api/cart",
+    },
+    { url: "//cart.example/api/cart", pathPrefix: "/fr-ca", expected: "//cart.example/api/cart" },
+    { url: "api/cart", pathPrefix: "/fr-ca", expected: "api/cart" },
+  ])(
+    "puts the request URL $url under the locale path prefix $pathPrefix as $expected",
+    ({ url, pathPrefix, expected }) => {
+      expect(applyI18nPathPrefix(url, pathPrefix)).toBe(expected);
+    },
+  );
 
   it("does not match external or unknown URLs", () => {
     const routeTemplates = defineShopifyRouteTemplates({

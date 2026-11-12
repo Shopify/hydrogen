@@ -76,3 +76,23 @@ export function stripI18nPathPrefix(pathname: string, pathPrefix: string | undef
 
   return pathname.slice(normalizedPathPrefix.length) || "/";
 }
+
+/**
+ * Puts a URL that the browser requests, such as `/api/cart`, under the locale path prefix.
+ *
+ * Only a path that starts with `/` lives under the storefront's locale prefix, so absolute and
+ * protocol-relative URLs are returned unchanged. A path that already carries the prefix is not
+ * prefixed twice, so callers can pass either form.
+ */
+export function applyI18nPathPrefix(url: string, pathPrefix: string | undefined): string {
+  if (!url.startsWith("/") || url.startsWith("//")) return url;
+
+  const queryOrHashStart = url.search(/[?#]/);
+  const pathname = queryOrHashStart < 0 ? url : url.slice(0, queryOrHashStart);
+  const localizedPathname = prependPathPrefix(
+    stripI18nPathPrefix(pathname, pathPrefix),
+    pathPrefix,
+  );
+
+  return `${localizedPathname}${url.slice(pathname.length)}`;
+}

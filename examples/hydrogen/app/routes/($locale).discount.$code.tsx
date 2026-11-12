@@ -1,5 +1,8 @@
-import { cartQueries, createCartCookie, getCartId } from "@shopify/hydrogen";
+import { cartQueries, createCartCookie, getCartId, matchLocale } from "@shopify/hydrogen";
 import { redirect } from "react-router";
+
+import { i18n } from "~/lib/i18n";
+import { localizePath } from "~/lib/locale-path";
 
 import type { Route } from "./+types/($locale).discount.$code";
 
@@ -20,17 +23,20 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);
-  let redirectParam = searchParams.get("redirect") || searchParams.get("return_to") || "/";
-
-  if (redirectParam.includes("//")) {
-    // Avoid redirecting to external URLs to prevent phishing attacks
-    redirectParam = "/";
-  }
+  const redirectTarget = getRedirectTarget(
+    searchParams.get("redirect") || searchParams.get("return_to") || "/",
+    url.origin,
+  );
 
   searchParams.delete("redirect");
   searchParams.delete("return_to");
+  for (const [name, value] of searchParams) redirectTarget.searchParams.append(name, value);
 
-  const redirectUrl = `${redirectParam}?${searchParams}`;
+  // A target without a locale stays in the request's locale. A target that names one keeps it.
+  const redirectPath = matchLocale(redirectTarget, i18n).pathPrefix
+    ? redirectTarget.pathname
+    : localizePath(redirectTarget.pathname, storefront.locale.pathPrefix);
+  const redirectUrl = `${redirectPath}${redirectTarget.search}${redirectTarget.hash}`;
 
   if (!code) {
     return redirect(redirectUrl);
@@ -59,4 +65,20 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
     status: 303,
     headers,
   });
+}
+
+/**
+ * Returns the redirect target as a URL on this site, or the home page when the target leaves the
+ * site, to prevent phishing attacks. Redirect to the parsed path, never to the raw value:
+ * browsers read `/\host` and `/x/..//host` as another host, so a raw value that looks like a path
+ * can still leave the site.
+ */
+function getRedirectTarget(target: string, origin: string): URL {
+  const home = new URL("/", origin);
+  if (!URL.canParse(target, origin)) return home;
+
+  const url = new URL(target, origin);
+  // Compare the URL itself and not `url.origin`: a `blob:` URL reports the origin of the URL it
+  // wraps, and its path is that whole URL.
+  return url.href.startsWith(`${origin}/`) && !url.pathname.startsWith("//") ? url : home;
 }

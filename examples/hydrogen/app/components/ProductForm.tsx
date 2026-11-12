@@ -1,4 +1,5 @@
 import { canAddToCart } from "@shopify/hydrogen";
+import { useLocale } from "@shopify/hydrogen/react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
 
@@ -13,7 +14,8 @@ type ProductOptionValueSwatch = NonNullable<
 
 export function ProductForm({ product }: { product: ProductData }) {
   const { options, selectedVariant, register, formProps, errors, pending } = useProductForm();
-  const { pathname, search } = useLocation();
+  const { search } = useLocation();
+  const { pathPrefix } = useLocale();
   const { open } = useAside();
   const [isHydrated, setIsHydrated] = useState(false);
   const addable = canAddToCart(product, options);
@@ -47,7 +49,7 @@ export function ProductForm({ product }: { product: ProductData }) {
                       to={getVariantUrl({
                         handle: value.handle,
                         optionNames: product.options.map((productOption) => productOption.name),
-                        pathname,
+                        pathPrefix,
                         searchParams: new URLSearchParams(search),
                         selectedOptions: value.selectedOptions,
                       })}

@@ -1,5 +1,5 @@
-import { Cache, type ConsentConfig, getHtmlLang } from "@shopify/hydrogen";
-import { ShopifyScripts } from "@shopify/hydrogen/react";
+import { Cache, type ConsentConfig, getHtmlLang, matchLocale } from "@shopify/hydrogen";
+import { LocaleProvider, ShopifyScripts } from "@shopify/hydrogen/react";
 import { useState } from "react";
 import {
   Outlet,
@@ -20,6 +20,7 @@ import { CartProvider } from "~/lib/cart";
 import { cartHandlers } from "~/lib/cart-handlers";
 import { useNonce } from "~/lib/csp";
 import { FOOTER_QUERY, HEADER_QUERY, type HeaderQuery } from "~/lib/fragments";
+import { i18n } from "~/lib/i18n";
 import { routeTemplates } from "~/lib/route-templates";
 
 import type { Route } from "./+types/root";
@@ -43,6 +44,13 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({ formMethod, current
 
   // revalidate when manually revalidating via useRevalidator
   if (currentUrl.toString() === nextUrl.toString()) return true;
+
+  // The root data (locale, menus, cart) belongs to one locale. Locale changes are full page
+  // loads, so this only keeps that data from going stale if a client-side navigation crosses
+  // locales by mistake.
+  if (matchLocale(currentUrl, i18n).pathPrefix !== matchLocale(nextUrl, i18n).pathPrefix) {
+    return true;
+  }
 
   // Defaulting to no revalidation for root loader data to improve performance.
   // When using this feature, you risk your UI getting out of sync with your server.
@@ -79,7 +87,7 @@ export async function loader(args: Route.LoaderArgs) {
     storefrontId: env.PUBLIC_STOREFRONT_ID || FALLBACK_STOREFRONT_ID,
     myshopifyDomain: env.PUBLIC_STORE_DOMAIN,
   };
-  const i18n = {
+  const locale = {
     country: storefront.locale.country,
     language: storefront.locale.language,
     pathPrefix: storefront.locale.pathPrefix,
@@ -89,7 +97,7 @@ export async function loader(args: Route.LoaderArgs) {
   return {
     ...deferredData,
     ...criticalData,
-    i18n,
+    locale,
     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
     shop,
     consent: {
@@ -165,7 +173,7 @@ export function Layout({ children }: { children?: React.ReactNode }) {
   const usesCustomBanner = consentMode === "custom-banner";
 
   return (
-    <html lang={data ? getHtmlLang(data.i18n.language) : "en"}>
+    <html lang={data ? getHtmlLang(data.locale.language) : "en"}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -177,7 +185,7 @@ export function Layout({ children }: { children?: React.ReactNode }) {
         {data ? (
           <ShopifyScripts
             nonce={nonce}
-            i18n={data.i18n}
+            i18n={data.locale}
             routes={routeTemplates}
             shop={data.shop}
             consent={
@@ -208,12 +216,14 @@ export default function App() {
 
   return (
     <HydrogenAnalyticsProvider>
-      <CartProvider initialData={data.cartData}>
-        <CartAnalyticsSync />
-        <PageLayout {...data}>
-          <Outlet />
-        </PageLayout>
-      </CartProvider>
+      <LocaleProvider locale={data.locale}>
+        <CartProvider initialData={data.cartData}>
+          <CartAnalyticsSync />
+          <PageLayout {...data}>
+            <Outlet />
+          </PageLayout>
+        </CartProvider>
+      </LocaleProvider>
     </HydrogenAnalyticsProvider>
   );
 }

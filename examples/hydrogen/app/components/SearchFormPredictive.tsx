@@ -6,6 +6,8 @@ import {
 import React, { useRef, useEffect } from "react";
 import { useNavigate, type FormProps } from "react-router";
 
+import { useLocalizedPath } from "~/lib/locale-path";
+
 import { useAside } from "./Aside";
 
 type PredictiveSearchInputEvent =
@@ -35,9 +37,10 @@ export function SearchFormPredictive({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
   const aside = useAside();
+  const localizedPath = useLocalizedPath();
 
   function goToSearch(term = inputRef.current?.value ?? "") {
-    void navigate(getSearchPageUrl(term));
+    void navigate(localizedPath(getSearchPageUrl(term)));
     clear();
     aside.close();
   }

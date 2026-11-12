@@ -1,6 +1,8 @@
 import { cartQueries, createCartCookie } from "@shopify/hydrogen";
 import { redirect } from "react-router";
 
+import { localizePath } from "~/lib/locale-path";
+
 import type { Route } from "./+types/($locale).cart.$lines";
 
 /**
@@ -24,7 +26,7 @@ import type { Route } from "./+types/($locale).cart.$lines";
 export async function loader({ request, context, params }: Route.LoaderArgs) {
   const { storefront } = context;
   const { lines } = params;
-  if (!lines) return redirect("/cart");
+  if (!lines) return redirect(localizePath("/cart", storefront.locale.pathPrefix));
   const linesMap = lines.split(",").map((line: string) => {
     const lineDetails = line.split(":");
     const variantId = lineDetails[0];

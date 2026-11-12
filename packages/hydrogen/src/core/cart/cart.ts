@@ -23,6 +23,7 @@ import {
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "../shopify-scripts/index";
+import { applyI18nPathPrefix } from "../standard-routes/path";
 import { getCartAttributeFormEntries } from "./form";
 import { DEFAULT_MINIMUM_QUANTITY, sanitizeQuantity } from "./quantity";
 import type {
@@ -86,6 +87,7 @@ const FNV1A_OFFSET_BASIS = 0x811c9dc5;
 const FNV1A_PRIME = 0x01000193;
 const CART_REVALIDATION_ERROR_MESSAGE =
   "Something went wrong refreshing your cart. Please try again.";
+const DEFAULT_CART_ENDPOINT = "/api/cart";
 
 /** The timeout in milliseconds for cart loads and mutations. */
 export const STANDARD_ACTION_TIMEOUT_IN_MS = 30_000;
@@ -413,7 +415,14 @@ type CartEventHandlers = {
   attributes: EventListener;
 };
 
+// The cart route as the app configured it: without a locale prefix under the framework cart
+// providers, already prefixed without them. Requests go to `getCartRequestUrl()`.
 let configuredCartEndpoint: string | null = null;
+// The locale path prefix of the document. The framework cart providers set it in the browser
+// only, so server renders for different locales never share it. A document has one cart
+// provider, as it has one Standard Actions `updateCart` handler: the last provider to mount
+// decides where the document's cart requests go.
+let cartPathPrefix: string | undefined;
 let hasConfiguredUpdateCart = false;
 let standardActionsPromise: Promise<ShopifyStandardActions> | null = null;
 const connectedCartStores = new Set<CartStoreContext>();
@@ -663,13 +672,16 @@ function projectVisibleState(store: CartStoreContext): CartState {
 function publishVisibleState(store: CartStoreContext): void {
   const previous = store.observable.state;
   const next = reuseVisibleReferences(previous, projectVisibleState(store));
-  if (configuredCartEndpoint && previous !== next) {
+  // The server publishes state too, when streamed initial data resolves, and has no inputs to sync.
+  const cartRequestUrl =
+    previous === next || typeof document === "undefined" ? null : getCartRequestUrl();
+  if (cartRequestUrl) {
     const previousLines = new Map(getLines(previous.data).map((line) => [line.id, line]));
     const changedQuantities = getLines(next.data)
       .filter((line) => previousLines.get(line.id)?.quantity !== line.quantity)
       .map((line) => ({ id: line.id, quantity: line.quantity }));
     if (changedQuantities.length > 0) {
-      syncQuantityInputs(changedQuantities, configuredCartEndpoint);
+      syncQuantityInputs(changedQuantities, cartRequestUrl);
     }
   }
   store.observable.setState(next);
@@ -2638,7 +2650,11 @@ async function handleFormSubmitInStore(
 /**
  * Sends every cart load and cart change on the page to your cart endpoint. Without an endpoint, Standard Actions handles cart requests with its default handler.
  *
- * Call the function before you connect a cart store. The first cart load then goes to your endpoint. A later call with a different endpoint replaces the first endpoint and logs a warning. In React, `CartProvider` sets the endpoint to `/api/cart` when the provider mounts.
+ * Call the function before you connect a cart store. The first cart load then goes to your endpoint. A later call with a different endpoint replaces the first endpoint and logs a warning.
+ *
+ * The React and Vue cart providers use `/api/cart` unless you set an endpoint first. They render the endpoint as the cart form action and put a path that starts with `/` under the locale path prefix from `LocaleProvider`. With those providers, pass the path without a locale prefix, and call the function at module scope in code that runs on the server and in the browser, so the server-rendered form action matches.
+ *
+ * Without those providers, call the function in the browser only and include the page's locale path prefix in the endpoint, such as `/fr-ca/api/cart`.
  *
  * @param endpoint The URL path of your cart route.
  * @returns Nothing. Later cart loads and changes on the page go to the endpoint.
@@ -2656,6 +2672,28 @@ export function configureCartEndpoint(endpoint: string): void {
     );
   }
   configuredCartEndpoint = endpoint;
+}
+
+/**
+ * The URL that cart forms post to under a locale path prefix: the configured endpoint, or
+ * `/api/cart`. The framework cart providers render it as the form action.
+ */
+export function getCartEndpoint(pathPrefix: string | undefined): string {
+  return applyI18nPathPrefix(configuredCartEndpoint ?? DEFAULT_CART_ENDPOINT, pathPrefix);
+}
+
+/**
+ * Sends the document's cart requests to the cart route under its locale path prefix. The
+ * framework cart providers call it when they mount, which also moves cart requests from the
+ * Standard Actions default handler to `/api/cart` unless the app configured an endpoint.
+ */
+export function configureCartRequests(pathPrefix: string | undefined): void {
+  configuredCartEndpoint ??= DEFAULT_CART_ENDPOINT;
+  cartPathPrefix = pathPrefix;
+}
+
+function getCartRequestUrl(): string | null {
+  return configuredCartEndpoint === null ? null : getCartEndpoint(cartPathPrefix);
 }
 
 async function postCartUpdateToEndpoint(
@@ -2680,8 +2718,9 @@ function configureUpdateCartOnce(actions: ShopifyStandardActions): void {
   const configured = actions.updateCart.configure({
     eventTarget: () => document,
     handler: (defaultHandler, payload, options) => {
-      if (!configuredCartEndpoint || !payload) return defaultHandler();
-      return postCartUpdateToEndpoint(configuredCartEndpoint, payload, options);
+      const cartRequestUrl = getCartRequestUrl();
+      if (!cartRequestUrl || !payload) return defaultHandler();
+      return postCartUpdateToEndpoint(cartRequestUrl, payload, options);
     },
   });
   if (configured === false) {
@@ -2728,6 +2767,7 @@ export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
 /** @internal */
 export function resetStandardActionsForTests(): void {
   configuredCartEndpoint = null;
+  cartPathPrefix = undefined;
   hasConfiguredUpdateCart = false;
   standardActionsPromise = null;
 }
@@ -2742,8 +2782,9 @@ async function fetchCart(
 ): Promise<{ cart: CartResponse | null }> {
   const timeoutSignal = AbortSignal.timeout(STANDARD_ACTION_TIMEOUT_IN_MS);
   const signal = callerSignal ? AbortSignal.any([callerSignal, timeoutSignal]) : timeoutSignal;
-  if (configuredCartEndpoint) {
-    const response = await fetch(configuredCartEndpoint, {
+  const cartRequestUrl = getCartRequestUrl();
+  if (cartRequestUrl) {
+    const response = await fetch(cartRequestUrl, {
       cache: "no-store",
       signal,
     });

@@ -29,13 +29,16 @@ import {
   type PredictiveSearchState,
   type PredictiveSearchStore,
 } from "../core/predictive-search";
+import { PREDICTIVE_SEARCH_API_PATH } from "../core/predictive-search/constants";
+import { applyI18nPathPrefix } from "../core/standard-routes/path";
+import { useLocalePathPrefix } from "./locale";
 
 const CONFIG_ARRAY_SEPARATOR = "\u0000";
 
 type PredictiveSearchContextValue = {
   store: PredictiveSearchStore;
   actions: PredictiveSearchActions;
-  searchAction?: string;
+  searchAction: string;
 };
 
 const PredictiveSearchContext = createContext<PredictiveSearchContextValue | null>(null);
@@ -48,7 +51,7 @@ const PredictiveSearchContext = createContext<PredictiveSearchContextValue | nul
 export interface PredictiveSearchProviderProps extends CreatePredictiveSearchStoreOptions {
   /** Content that uses the predictive search hooks. */
   children?: ReactNode;
-  /** Search page path that forms from `usePredictiveSearchForm` submit to. Defaults to `/search`. */
+  /** Search page path that forms from `usePredictiveSearchForm` submit to. Defaults to `/search`. Inside `LocaleProvider`, the form submits under the locale's path prefix. */
   searchAction?: string;
 }
 
@@ -118,6 +121,8 @@ export type PredictiveSearchFormResult = {
 /**
  * Runs predictive search for the components inside the provider. Wrap your search UI in the provider. Inside the provider, `usePredictiveSearch` reads the results, `usePredictiveSearchActions` searches and clears, and `usePredictiveSearchForm` builds the search form.
  *
+ * Inside `LocaleProvider`, the provider puts the endpoint and the search page path under the locale's path prefix when they start with `/`, so results and the search page stay in the customer's locale.
+ *
  * The provider throws an error when you omit the `fetch` prop in a runtime without a global `fetch`.
  *
  * @param props - The store options, the search page path, and the content that uses the predictive search hooks.
@@ -127,7 +132,7 @@ export type PredictiveSearchFormResult = {
  */
 export function PredictiveSearchProvider({
   children,
-  predictiveSearchEndpoint,
+  predictiveSearchEndpoint = PREDICTIVE_SEARCH_API_PATH,
   searchAction,
   debounceInMs,
   minTermLength,
@@ -140,11 +145,18 @@ export function PredictiveSearchProvider({
 }: PredictiveSearchProviderProps) {
   const typesKey = getArrayKey(types);
   const searchableFieldsKey = getArrayKey(searchableFields);
+  const pathPrefix = useLocalePathPrefix();
+  const localizedEndpoint = applyI18nPathPrefix(predictiveSearchEndpoint, pathPrefix);
+  // `getPredictiveSearchFormAttributes` owns the default search page path.
+  const localizedSearchAction = applyI18nPathPrefix(
+    getPredictiveSearchFormAttributes(searchAction).action,
+    pathPrefix,
+  );
 
   const store = useMemo(
     () =>
       createPredictiveSearchStore({
-        predictiveSearchEndpoint,
+        predictiveSearchEndpoint: localizedEndpoint,
         debounceInMs,
         minTermLength,
         fetch,
@@ -156,7 +168,7 @@ export function PredictiveSearchProvider({
       }),
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- array keys are the semantic dependencies
     [
-      predictiveSearchEndpoint,
+      localizedEndpoint,
       debounceInMs,
       minTermLength,
       fetch,
@@ -190,8 +202,8 @@ export function PredictiveSearchProvider({
   }, [store]);
 
   const contextValue = useMemo(
-    () => ({ store, actions, searchAction }),
-    [store, actions, searchAction],
+    () => ({ store, actions, searchAction: localizedSearchAction }),
+    [store, actions, localizedSearchAction],
   );
 
   return createElement(PredictiveSearchContext.Provider, { value: contextValue }, children);

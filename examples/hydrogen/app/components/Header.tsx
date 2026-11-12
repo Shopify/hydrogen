@@ -6,21 +6,22 @@ import { useAside } from "~/components/Aside";
 import { toAnalyticsCart, useAnalytics } from "~/lib/analytics";
 import { useCart } from "~/lib/cart";
 import type { HeaderQuery } from "~/lib/fragments";
+import { useLocalizedMenuPath, useLocalizedPath } from "~/lib/locale-path";
 
 interface HeaderProps {
   header: HeaderQuery;
   isLoggedIn: Promise<boolean>;
-  pathPrefix: string;
   publicStoreDomain: string;
 }
 
 type Viewport = "desktop" | "mobile";
 
-export function Header({ header, isLoggedIn, pathPrefix, publicStoreDomain }: HeaderProps) {
+export function Header({ header, isLoggedIn, publicStoreDomain }: HeaderProps) {
   const { shop, menu } = header;
+  const localizedPath = useLocalizedPath();
   return (
     <header className="header">
-      <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
+      <NavLink prefetch="intent" to={localizedPath("/")} style={activeLinkStyle} end>
         <strong>{shop.name}</strong>
       </NavLink>
       <HeaderMenu
@@ -29,7 +30,7 @@ export function Header({ header, isLoggedIn, pathPrefix, publicStoreDomain }: He
         primaryDomainUrl={header.shop.primaryDomain.url}
         publicStoreDomain={publicStoreDomain}
       />
-      <HeaderCtas isLoggedIn={isLoggedIn} pathPrefix={pathPrefix} />
+      <HeaderCtas isLoggedIn={isLoggedIn} />
     </header>
   );
 }
@@ -47,11 +48,19 @@ export function HeaderMenu({
 }) {
   const className = `header-menu-${viewport}`;
   const { close } = useAside();
+  const localizedPath = useLocalizedPath();
+  const localizedMenuPath = useLocalizedMenuPath();
 
   return (
     <nav className={className} role="navigation">
       {viewport === "mobile" && (
-        <NavLink end onClick={close} prefetch="intent" style={activeLinkStyle} to="/">
+        <NavLink
+          end
+          onClick={close}
+          prefetch="intent"
+          style={activeLinkStyle}
+          to={localizedPath("/")}
+        >
           Home
         </NavLink>
       )}
@@ -73,7 +82,7 @@ export function HeaderMenu({
             onClick={close}
             prefetch="intent"
             style={activeLinkStyle}
-            to={url}
+            to={localizedMenuPath(url)}
           >
             {item.title}
           </NavLink>
@@ -83,8 +92,8 @@ export function HeaderMenu({
   );
 }
 
-function HeaderCtas({ isLoggedIn, pathPrefix }: Pick<HeaderProps, "isLoggedIn" | "pathPrefix">) {
-  const accountPath = `${pathPrefix}/account`;
+function HeaderCtas({ isLoggedIn }: Pick<HeaderProps, "isLoggedIn">) {
+  const accountPath = useLocalizedPath()("/account");
   const loginPath = `/account/login?return_to=${encodeURIComponent(accountPath)}`;
 
   return (
@@ -138,10 +147,11 @@ function CartBadge({
 }) {
   const { open } = useAside();
   const analytics = useAnalytics();
+  const localizedPath = useLocalizedPath();
 
   return (
     <a
-      href="/cart"
+      href={localizedPath("/cart")}
       onClick={(e) => {
         e.preventDefault();
         open("cart");

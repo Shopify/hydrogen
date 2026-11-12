@@ -27,6 +27,6 @@ function PredictiveResults() {
 }
 ```
 
-Use `usePredictiveSearchActions()` for manual search/clear calls, or `usePredictiveSearchForm()` for headless form props and `register("query")` input props. `formProps()` defaults to native `GET /search` submission; override the provider's `searchAction` when the full search page lives elsewhere. Predictive search JSON requests use `predictiveSearchEndpoint` separately.
+Use `usePredictiveSearchActions()` for manual search/clear calls, or `usePredictiveSearchForm()` for headless form props and `register("query")` input props. `formProps()` defaults to native `GET /search` submission; override the provider's `searchAction` when the full search page lives elsewhere. Predictive search JSON requests use `predictiveSearchEndpoint` separately. Inside `LocaleProvider`, the provider puts both under the locale's path prefix, so pass them without one.
 
 Clear the store when closing an autocomplete overlay or navigating away from predictive results so stale suggestions do not reappear on reopen.

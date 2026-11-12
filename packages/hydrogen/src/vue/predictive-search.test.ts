@@ -7,6 +7,7 @@ import type * as PredictiveSearchModule from "../core/predictive-search";
 import type { PredictiveSearchState, PredictiveSearchStore } from "../core/predictive-search";
 import { createPredictiveSearchStore } from "../core/predictive-search";
 import { getEmptyPredictiveSearchResult } from "../core/predictive-search/search";
+import { LocaleProvider } from "./locale";
 import {
   PredictiveSearchProvider,
   usePredictiveSearch,
@@ -106,6 +107,59 @@ function mountWithConsumer<T>(
 // ---------------------------------------------------------------------------
 // PredictiveSearchProvider
 // ---------------------------------------------------------------------------
+
+describe("PredictiveSearchProvider inside LocaleProvider", () => {
+  const FR_CA = { language: "FR", country: "CA", pathPrefix: "/fr-ca" } as const;
+
+  async function mountSearch(providerProps: Record<string, unknown> = {}) {
+    const actual = await vi.importActual<typeof PredictiveSearchModule>(
+      "../core/predictive-search",
+    );
+    vi.mocked(createPredictiveSearchStore).mockImplementation(actual.createPredictiveSearchStore);
+    const fetch = vi.fn(async () => Response.json(getEmptyPredictiveSearchResult("snow")));
+    const SearchForm = defineComponent({
+      setup() {
+        const { formProps, register } = usePredictiveSearchForm();
+        return () => h("form", formProps(), [h("input", register("query"))]);
+      },
+    });
+    const wrapper = mount(LocaleProvider, {
+      props: { locale: FR_CA },
+      slots: {
+        default: () =>
+          h(PredictiveSearchProvider, { fetch, debounceInMs: 0, ...providerProps }, () =>
+            h(SearchForm),
+          ),
+      },
+    });
+    return { fetch, form: wrapper.get("form"), input: wrapper.get("input") };
+  }
+
+  it("searches the endpoint and submits to the search page under the locale path prefix", async () => {
+    const { fetch, form, input } = await mountSearch();
+
+    await input.setValue("snow");
+
+    await vi.waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith("/fr-ca/api/predictive-search?q=snow", expect.anything()),
+    );
+    expect(form.attributes("action")).toBe("/fr-ca/search");
+  });
+
+  it("puts a custom endpoint and search action under the locale path prefix", async () => {
+    const { fetch, form, input } = await mountSearch({
+      predictiveSearchEndpoint: "/storefront/suggest",
+      searchAction: "/find",
+    });
+
+    await input.setValue("snow");
+
+    await vi.waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith("/fr-ca/storefront/suggest?q=snow", expect.anything()),
+    );
+    expect(form.attributes("action")).toBe("/fr-ca/find");
+  });
+});
 
 describe("PredictiveSearchProvider", () => {
   it("creates a store with default options", () => {

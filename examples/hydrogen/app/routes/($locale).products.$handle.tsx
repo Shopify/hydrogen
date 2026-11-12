@@ -1,11 +1,13 @@
 import { getSelectedProductOptions } from "@shopify/hydrogen";
 import { gql } from "@shopify/hydrogen";
+import { useLocale } from "@shopify/hydrogen/react";
 import { redirect, useLoaderData, useLocation, useNavigate } from "react-router";
 
 import { ProductForm } from "~/components/ProductForm";
 import { ProductImage } from "~/components/ProductImage";
 import { ProductPrice } from "~/components/ProductPrice";
 import { ProductView } from "~/lib/analytics";
+import { localizePath } from "~/lib/locale-path";
 import { ProductProvider, useProductForm } from "~/lib/product";
 import { redirectIfHandleIsLocalized } from "~/lib/redirect";
 import { getVariantUrl } from "~/lib/variants";
@@ -14,12 +16,19 @@ import type { Route } from "./+types/($locale).products.$handle";
 
 type ProductData = Awaited<ReturnType<typeof loader>>["product"];
 
-export const meta: Route.MetaFunction = ({ data }) => {
+export const meta: Route.MetaFunction = ({ data, params }) => {
   return [
     { title: `Hydrogen | ${data?.product.title ?? ""}` },
     {
+      // Without `tagName`, React Router renders the descriptor as a `<meta>` element, which
+      // search engines don't read as a canonical URL.
+      tagName: "link",
       rel: "canonical",
-      href: `/products/${data?.product.handle}`,
+      // Each locale serves its own page, so the canonical URL keeps the locale's path prefix.
+      href: localizePath(
+        `/products/${data?.product.handle}`,
+        params.locale ? `/${params.locale.toLowerCase()}` : "",
+      ),
     },
   ];
 };
@@ -86,6 +95,7 @@ export default function Product() {
   const { product } = useLoaderData<typeof loader>();
   const location = useLocation();
   const navigate = useNavigate();
+  const { pathPrefix } = useLocale();
 
   return (
     <ProductProvider
@@ -97,7 +107,7 @@ export default function Product() {
             optionNames: product.options.map(
               (option: ProductData["options"][number]) => option.name,
             ),
-            pathname: location.pathname,
+            pathPrefix,
             searchParams: new URLSearchParams(location.search),
             selectedOptions: result.selectedOptions,
           }),

@@ -16,6 +16,8 @@ export {
   useCollectionForm,
 } from "./collection";
 export type { CollectionActions, CollectionProviderProps, CollectionData } from "./collection";
+export { LocaleProvider, useLocale } from "./locale";
+export type { LocaleProviderProps } from "./locale";
 export {
   PredictiveSearchProvider,
   usePredictiveSearch,
