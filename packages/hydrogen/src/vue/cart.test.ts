@@ -99,6 +99,7 @@ function createMockStore(initialState: MockInitialData = { ...EMPTY_CART_STATE }
     }),
     fetch: vi.fn(() => Promise.resolve()),
     refresh: vi.fn(),
+    addLines: vi.fn(async () => undefined),
     reset: vi.fn(),
     handleFormSubmit: vi.fn(() => Promise.resolve()),
     setState(next: CartState) {
@@ -146,6 +147,8 @@ describe("useCartActions", () => {
     }));
 
     actions.refresh();
+    void actions.addLines([{ merchandiseId: "variant", quantity: 1 }]);
+    expect(latestStore.addLines).toHaveBeenCalledWith([{ merchandiseId: "variant", quantity: 1 }]);
 
     expect(latestStore.refresh).toHaveBeenCalledTimes(1);
   });
@@ -202,6 +205,11 @@ describe("useCartAnalytics", () => {
 });
 
 describe("CartProvider", () => {
+  it("passes a custom transport to the store", () => {
+    const transport = { getCart: vi.fn(), updateCart: vi.fn() };
+    mount(CartProvider, { props: { transport } });
+    expect(createCartStore).toHaveBeenCalledWith({ initialData: undefined, transport });
+  });
   it("creates cart store with initialData", () => {
     const data = makeCartData({ totalQuantity: 5 });
 

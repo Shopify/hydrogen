@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-import type { CartActionError } from "../../../vendor/standard-actions";
+import type { UpdateCartResult, CartActionError } from "../../../vendor/standard-actions";
 import { configureLogging } from "../logging";
 import {
   CONSENT_TRACKING_API_LOADED_EVENT,
@@ -609,25 +609,16 @@ describe("createCartStore", () => {
     localStore.destroy();
   });
 
-  it("starts omitted initialData fetch only once across reconnects", async () => {
+  it("restarts omitted initialData fetch after an interrupted reconnect", async () => {
     const deferred = createDeferred<{ cart: CartData }>();
     const localStore = createCartStore();
     mockGetCart.mockReturnValue(deferred.promise);
-
     localStore.connect();
     localStore.destroy();
     localStore.connect();
-
-    await vi.waitFor(() => {
-      expect(mockGetCart).toHaveBeenCalledTimes(1);
-    });
-
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(2));
     deferred.resolve({ cart: makeCartState({ totalQuantity: 3 }) });
-    await vi.waitFor(() => {
-      expect(localStore.getState().data.totalQuantity).toBe(3);
-    });
-    expect(mockGetCart).toHaveBeenCalledTimes(1);
-
+    await vi.waitFor(() => expect(localStore.getState().data.totalQuantity).toBe(3));
     localStore.destroy();
   });
 
@@ -817,7 +808,7 @@ describe("CartStore lifecycle", () => {
     expect(observedReadyPromise).toBe(readyPromise);
 
     localStore.destroy();
-    expect(localStore.getState().readyPromise).toBe(readyPromise);
+    expect(localStore.getState().readyPromise).toBeUndefined();
 
     deferred.resolve({ cart: makeCartState({ totalQuantity: 3 }) });
     await readyPromise;
@@ -876,6 +867,388 @@ describe("CartStore lifecycle", () => {
     expect(discountSignal.aborted).toBe(true);
     await expect(linePromise).resolves.toBeUndefined();
     await expect(discountPromise).resolves.toBeUndefined();
+  });
+});
+
+describe("custom cart transport mutations", () => {
+  it("restarts an aborted initial load on reconnect", async () => {
+    const requests: Array<{
+      signal?: AbortSignal;
+      deferred: Deferred<{ cart: CartData & { id: string } }>;
+    }> = [];
+    const custom = createCartStore({
+      transport: {
+        getCart: ({ signal }) => {
+          const deferred = createDeferred<{ cart: CartData & { id: string } }>();
+          requests.push({ signal, deferred });
+          return deferred.promise;
+        },
+        updateCart: vi.fn(),
+      },
+    });
+    custom.connect();
+    custom.destroy();
+    custom.connect();
+    expect(requests).toHaveLength(2);
+    expect(requests[0].signal?.aborted).toBe(true);
+    requests[0].deferred.resolve({ cart: { ...makeCartState({ totalQuantity: 99 }), id: "cart" } });
+    requests[1].deferred.resolve({ cart: { ...makeCartState({ totalQuantity: 3 }), id: "cart" } });
+    await custom.fetch();
+    expect(custom.getState().data.totalQuantity).toBe(3);
+    custom.destroy();
+    custom.connect();
+    expect(requests).toHaveLength(2);
+    custom.destroy();
+  });
+
+  it.each([false, true])(
+    "projects new merchandise only with metadata: %s",
+    async (withMetadata) => {
+      const deferred = createDeferred<UpdateCartResult>();
+      const custom = createCartStore({
+        initialData: { cart: null },
+        transport: { getCart: async () => ({ cart: null }), updateCart: () => deferred.promise },
+      });
+      const mutation = custom.addLines(
+        [{ merchandiseId: "variant", quantity: 1 }],
+        withMetadata
+          ? {
+              products: [
+                {
+                  id: "variant",
+                  title: "Blue",
+                  product: { title: "Shirt", handle: "shirt" },
+                  price: { amount: "10", currencyCode: "USD" },
+                },
+              ],
+            }
+          : undefined,
+      );
+      await nextTick();
+      expect(custom.getState().data.lines.nodes).toHaveLength(withMetadata ? 1 : 0);
+      if (withMetadata)
+        expect(custom.getState().data.lines.nodes[0].merchandise?.product?.title).toBe("Shirt");
+      deferred.resolve({ cart: makeCartState() } as unknown as UpdateCartResult);
+      await mutation;
+      custom.destroy();
+    },
+  );
+  it("ignores empty programmatic line changes", async () => {
+    const updateCart = vi.fn();
+    const custom = createCartStore({ transport: { getCart: vi.fn(), updateCart } });
+    expect(await custom.addLines([])).toBeUndefined();
+    expect(await custom.updateLines([])).toBeUndefined();
+    expect(await custom.removeLines([])).toBeUndefined();
+    expect(updateCart).not.toHaveBeenCalled();
+    custom.destroy();
+  });
+
+  it("adopts swapped line IDs and projects single-line errors", async () => {
+    const result = {
+      cart: makeCartState({ lines: [makeLine({ id: "replacement", quantity: 2 })] }),
+      userErrors: [{ message: "Adjusted", code: "INVALID", field: ["lines", "0"] }],
+    } as unknown as UpdateCartResult;
+    const custom = createCartStore({
+      initialData: { cart: makeCartState({ lines: [makeLine({ id: "original", quantity: 1 })] }) },
+      transport: { getCart: async () => ({ cart: null }), updateCart: async () => result },
+    });
+    await custom.updateLines([{ id: "original", quantity: 2 }]);
+    expect(custom.getState().data.lines.nodes.map((line) => line.id)).toEqual(["replacement"]);
+    expect(custom.getState().errors.lines.get("original")?.userErrors).toEqual(result.userErrors);
+    custom.destroy();
+  });
+
+  it("routes note, discount and attribute actions", async () => {
+    const updateCart = vi.fn(
+      async () => ({ cart: makeCartState() }) as unknown as UpdateCartResult,
+    );
+    const custom = createCartStore({
+      initialData: { cart: null },
+      transport: { getCart: async () => ({ cart: null }), updateCart },
+    });
+    await custom.setNote("gift");
+    await custom.setDiscountCodes(["SAVE"]);
+    await custom.setAttributes([{ key: "gift", value: "yes" }]);
+    expect(updateCart).toHaveBeenNthCalledWith(1, { note: "gift" }, expect.anything());
+    expect(updateCart).toHaveBeenNthCalledWith(2, { discountCodes: ["SAVE"] }, expect.anything());
+    expect(updateCart).toHaveBeenNthCalledWith(
+      3,
+      { attributes: [{ key: "gift", value: "yes" }] },
+      expect.anything(),
+    );
+    custom.destroy();
+  });
+
+  it("resolves cancelled calls and records transport failures", async () => {
+    const custom = createCartStore({
+      initialData: { cart: null },
+      transport: {
+        getCart: async () => ({ cart: null }),
+        updateCart: (_payload, options) =>
+          new Promise((_resolve, reject) =>
+            options?.signal?.addEventListener("abort", () =>
+              reject(new DOMException("Aborted", "AbortError")),
+            ),
+          ),
+      },
+    });
+    const mutation = custom.setNote("gift");
+    await nextTick();
+    custom.destroy();
+    expect(await mutation).toBeUndefined();
+    const error = new CartNetworkError(503);
+    const failing = createCartStore({
+      initialData: { cart: null },
+      transport: {
+        getCart: async () => ({ cart: null }),
+        updateCart: async () => {
+          throw error;
+        },
+      },
+    });
+    await expect(failing.setNote("gift")).rejects.toBe(error);
+    expect(failing.getState().errors.network).not.toHaveLength(0);
+    failing.destroy();
+  });
+  it("submits a form from an iframe document", async () => {
+    const iframe = document.createElement("iframe");
+    document.body.append(iframe);
+    const frameDocument = iframe.contentDocument;
+    assert(frameDocument, "iframe has a document");
+    const form = frameDocument.createElement("form");
+    form.innerHTML =
+      '<input name="merchandiseId" value="variant"><button name="intent" value="add">Add</button>';
+    frameDocument.body.append(form);
+    const button = form.querySelector("button");
+    assert(button, "form has a submitter");
+    const custom = createCartStore({
+      initialData: { cart: null },
+      transport: {
+        getCart: async () => ({ cart: null }),
+        updateCart: vi.fn(async () => ({ cart: makeCartState() }) as unknown as UpdateCartResult),
+      },
+    });
+    let submission: Promise<void> | undefined;
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      submission = custom.handleFormSubmit(event as SubmitEvent);
+    });
+    try {
+      form.dispatchEvent(new SubmitEvent("submit", { submitter: button }));
+      assert(submission, "form submitted");
+      await submission;
+    } finally {
+      custom.destroy();
+      iframe.remove();
+    }
+  });
+
+  it("routes programmatic add, update and remove through a transport", async () => {
+    const result = { cart: makeCartState() } as unknown as UpdateCartResult;
+    const updateCart = vi.fn(async () => result);
+    const custom = createCartStore({
+      initialData: { cart: null },
+      transport: { getCart: async () => ({ cart: null }), updateCart },
+    });
+    try {
+      expect(await custom.addLines([{ merchandiseId: "variant", quantity: 1 }])).toBe(result);
+      expect(await custom.updateLines([{ id: "line", quantity: 2 }])).toBe(result);
+      expect(await custom.removeLines(["line"])).toBe(result);
+      expect(updateCart).toHaveBeenNthCalledWith(
+        2,
+        { lines: [{ id: "line", quantity: 2 }] },
+        expect.anything(),
+      );
+      expect(updateCart).toHaveBeenNthCalledWith(
+        3,
+        { lines: [{ id: "line", quantity: 0 }] },
+        expect.anything(),
+      );
+    } finally {
+      custom.destroy();
+    }
+  });
+
+  it("routes programmatic updates through Standard Actions", async () => {
+    const listener = vi.fn();
+    document.addEventListener("shopify:cart:lines-update", listener);
+    store.hydrate(makeCartState({ lines: [makeLine({ id: "line", quantity: 1 })] }));
+    const mutation = store.updateLines([{ id: "line", quantity: 2 }]);
+    await nextTick();
+    expect(mockUpdateCart).toHaveBeenCalledWith(
+      { lines: [{ id: "line", quantity: 2 }] },
+      expect.anything(),
+    );
+    resolveUpdate(0, { cart: makeCartState() });
+    await mutation;
+    expect(listener).toHaveBeenCalledOnce();
+    document.removeEventListener("shopify:cart:lines-update", listener);
+  });
+  it("isolates transport events from another store, including an active reservation", async () => {
+    const deferred = createDeferred<UpdateCartResult>();
+    const custom = createCartStore({
+      initialData: { cart: makeCartState({ lines: [makeLine({ id: "custom", quantity: 1 })] }) },
+      transport: { getCart: async () => ({ cart: null }), updateCart: () => deferred.promise },
+    });
+    store.hydrate(makeCartState({ lines: [makeLine({ id: "standard", quantity: 2 })] }));
+    store.connect();
+    custom.connect();
+    let transportEvent: Event | undefined;
+    const capture = (event: Event) => {
+      transportEvent = event;
+    };
+    document.addEventListener("shopify:cart:lines-update", capture);
+    const customMutation = custom.handleFormSubmit(
+      submitForm({ lineId: "custom" }, "intent", "increase"),
+    );
+    await nextTick();
+    const standardMutation = store.handleFormSubmit(
+      submitForm({ lineId: "standard" }, "intent", "increase"),
+    );
+    await nextTick();
+    const snapshot = store.getState();
+    deferred.resolve({ cart: makeCartState() } as unknown as UpdateCartResult);
+    await customMutation;
+    expect(store.getState()).toBe(snapshot);
+    assert(transportEvent, "transport emitted a result event");
+    const event = transportEvent;
+    const original = mockUpdateCart.getMockImplementation();
+    assert(original, "Standard Actions mock has an implementation");
+    mockUpdateCart.mockImplementationOnce((...args) => {
+      const before = store.getState();
+      document.dispatchEvent(event);
+      expect(store.getState()).toBe(before);
+      return original(...args);
+    });
+    const nextMutation = store.handleFormSubmit(
+      submitForm({ lineId: "standard" }, "intent", "increase"),
+    );
+    await nextTick();
+    expect(store.getState().pending.lines).toContain("standard");
+    resolveUpdate(0, { cart: makeCartState() });
+    resolveUpdate(1, { cart: makeCartState() });
+    await Promise.all([standardMutation, nextMutation]);
+    document.removeEventListener("shopify:cart:lines-update", capture);
+    custom.destroy();
+  });
+
+  it("publishes mixed line payloads separately by kind", async () => {
+    const actions: string[] = [];
+    const capture = (event: Event) => actions.push((event as Event & { action: string }).action);
+    document.addEventListener("shopify:cart:lines-update", capture);
+    const custom = createCartStore({
+      initialData: { cart: null },
+      transport: {
+        getCart: async () => ({ cart: null }),
+        updateCart: async (payload) => {
+          // Exercise the mixed protocol payload before the result events are emitted.
+          payload.lines?.push({ id: "existing", quantity: 2 }, { id: "removed", quantity: 0 });
+          return { cart: makeCartState() } as unknown as UpdateCartResult;
+        },
+      },
+    });
+    try {
+      await custom.handleFormSubmit(
+        submitForm({ merchandiseId: "gid://shopify/ProductVariant/1" }, "intent", "add"),
+      );
+      expect(actions).toEqual(["add", "remove", "update"]);
+    } finally {
+      custom.destroy();
+      document.removeEventListener("shopify:cart:lines-update", capture);
+    }
+  });
+  it("publishes lines results without Standard Actions metadata", async () => {
+    const listener = vi.fn();
+    document.addEventListener("shopify:cart:lines-update", listener);
+    const updateCart = vi.fn(
+      async () => ({ cart: makeCartState() }) as unknown as UpdateCartResult,
+    );
+    const localStore = createCartStore({
+      initialData: { cart: null },
+      transport: { getCart: async () => ({ cart: null }), updateCart },
+    });
+    const descriptor = Object.getOwnPropertyDescriptor(window, "Shopify");
+    Object.defineProperty(window, "Shopify", {
+      configurable: true,
+      value: {
+        get actions() {
+          throw new Error("Standard Actions accessed");
+        },
+      },
+    });
+    try {
+      await localStore.handleFormSubmit(
+        submitForm({ merchandiseId: "gid://shopify/ProductVariant/1" }, "intent", "add"),
+      );
+      expect(listener).toHaveBeenCalledOnce();
+      expect(updateCart.mock.calls[0]).toBeDefined();
+    } finally {
+      localStore.destroy();
+      document.removeEventListener("shopify:cart:lines-update", listener);
+      if (descriptor) Object.defineProperty(window, "Shopify", descriptor);
+      else Reflect.deleteProperty(window, "Shopify");
+    }
+  });
+
+  it("rejects mutation transport failures", async () => {
+    const error = new CartNetworkError(503);
+    const localStore = createCartStore({
+      initialData: { cart: null },
+      transport: {
+        getCart: async () => ({ cart: null }),
+        updateCart: async () => {
+          throw error;
+        },
+      },
+    });
+    await expect(
+      localStore.handleFormSubmit(
+        submitForm({ merchandiseId: "gid://shopify/ProductVariant/1" }, "intent", "add"),
+      ),
+    ).rejects.toBe(error);
+    localStore.destroy();
+  });
+  it("routes initial adds and user errors through a transport", async () => {
+    const updateCart = vi.fn(
+      async () =>
+        ({
+          cart: makeCartState(),
+          userErrors: [{ message: "Unavailable", code: "INVALID" }],
+          warnings: [{ message: "Adjusted", code: "MERCHANDISE_NOT_ENOUGH_STOCK" }],
+        }) as unknown as UpdateCartResult,
+    );
+    const localStore = createCartStore({
+      initialData: { cart: null },
+      transport: { getCart: async () => ({ cart: null }), updateCart },
+    });
+    await localStore.handleFormSubmit(
+      submitForm({ merchandiseId: "gid://shopify/ProductVariant/1" }, "intent", "add"),
+    );
+    expect(updateCart).toHaveBeenCalledOnce();
+    expect(localStore.getState().errors.cart.userErrors).toEqual([
+      { message: "Unavailable", code: "INVALID" },
+    ]);
+    expect(localStore.getState().errors.cart.warnings).toEqual([
+      { message: "Adjusted", code: "MERCHANDISE_NOT_ENOUGH_STOCK" },
+    ]);
+    localStore.destroy();
+  });
+  it.each(["increase", "remove"])("routes %s through the transport", async (intent) => {
+    const updateCart = vi.fn(
+      async () => ({ cart: makeCartState() }) as unknown as UpdateCartResult,
+    );
+    const localStore = createCartStore({
+      initialData: {
+        cart: makeCartState({ lines: [makeLine({ id: "line-1", quantity: 3 })], totalQuantity: 3 }),
+      },
+      transport: { getCart: async () => ({ cart: null }), updateCart },
+    });
+    await localStore.handleFormSubmit(submitForm({ lineId: "line-1" }, "intent", intent));
+    expect(updateCart).toHaveBeenCalledWith(
+      { lines: [{ id: "line-1", quantity: intent === "remove" ? 0 : 4 }] },
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
+    localStore.destroy();
   });
 });
 
