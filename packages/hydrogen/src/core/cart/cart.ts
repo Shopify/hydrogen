@@ -2697,10 +2697,14 @@ function hasShopifyStandardActionsScript(): boolean {
   );
 }
 
+function getStandardActionsGlobal(): ShopifyStandardActions | undefined {
+  return typeof window === "undefined" ? undefined : window.Shopify?.actions;
+}
+
 export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
   return (standardActionsPromise ??= new Promise<ShopifyStandardActions>((resolve, reject) => {
     const configure = () => {
-      const actions = typeof window === "undefined" ? undefined : window.Shopify?.actions;
+      const actions = getStandardActionsGlobal();
       if (actions?.updateCart) {
         configureUpdateCartOnce(actions);
         resolve(actions);
@@ -2712,10 +2716,21 @@ export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
       reject(new Error(message));
     };
 
-    if (typeof document !== "undefined" && document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", configure, {
-        once: true,
-      });
+    // The script is a deferred module, so it may not have run yet while the document is
+    // "interactive". DOMContentLoaded fires right after deferred scripts run; if it already
+    // fired, window load is the next point where the script is known to have run or failed.
+    if (
+      typeof document !== "undefined" &&
+      (document.readyState === "loading" ||
+        (document.readyState === "interactive" && !getStandardActionsGlobal()?.updateCart))
+    ) {
+      const listeners = new AbortController();
+      const onReady = () => {
+        listeners.abort();
+        configure();
+      };
+      document.addEventListener("DOMContentLoaded", onReady, { signal: listeners.signal });
+      window.addEventListener("load", onReady, { signal: listeners.signal });
       return;
     }
     configure();
