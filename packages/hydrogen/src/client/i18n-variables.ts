@@ -1,3 +1,5 @@
+import { tokenize } from "../graphql/tokens";
+
 /**
  * Variables the client fills from `requestContext.locale`, with the named type
  * each must be declared as. Same-named variables of any other type belong to
@@ -10,10 +12,6 @@ export const I18N_VARIABLE_TYPES = {
 
 export type I18nVariableName = keyof typeof I18N_VARIABLE_TYPES;
 
-// Significant GraphQL tokens plus comments, which are dropped. Matching whole
-// strings keeps their contents from being read as declarations.
-const TOKEN_RE =
-  /"""(?:\\"""|[^])*?"""|"(?:\\.|[^"\\\n\r])*"|#[^\n\r]*|[_A-Za-z][_0-9A-Za-z]*|[^\s,]/g;
 const NAME_RE = /^[_A-Za-z]/;
 const OPERATION_TYPES = new Set(["query", "mutation", "subscription"]);
 const OPENING = new Set(["(", "[", "{"]);
@@ -38,7 +36,7 @@ export function getVariableNamesDeclaredAs<Types extends Readonly<Record<string,
   types: Types,
 ): Array<keyof Types & string> {
   const names: Array<keyof Types & string> = [];
-  for (const [name, colon, ...rest] of readFirstOperationVariables(tokenize(source))) {
+  for (const [name, colon, ...rest] of readFirstOperationVariables(tokenValues(source))) {
     if (colon !== ":" || !isKeyOf(types, name)) continue;
     const typeEnd = rest.findIndex((token) => token === "=" || token === "@");
     const type = rest.slice(0, typeEnd === -1 ? undefined : typeEnd).join("");
@@ -55,10 +53,8 @@ function isKeyOf<Types extends object>(
   return name !== undefined && Object.hasOwn(types, name);
 }
 
-function* tokenize(source: string): Generator<string> {
-  for (const [token] of source.matchAll(TOKEN_RE)) {
-    if (token[0] !== "#") yield token;
-  }
+function* tokenValues(source: string): Generator<string> {
+  for (const token of tokenize(source)) yield token.value;
 }
 
 function readFirstOperationVariables(tokens: Generator<string>): string[][] {
