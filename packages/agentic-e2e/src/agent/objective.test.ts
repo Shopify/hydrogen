@@ -40,18 +40,30 @@ describe("buildObjective", () => {
     const objective = buildObjective({ pinned: PINNED, context: CONTEXT });
 
     expect(objective).toContain(
-      ' Shop in the "United States" store (prices in "USD"): if the store shows another country or currency, switch to "United States". ',
+      ' Shop in the "United States" store (language "EN", prices in "USD"): if the store shows another country, language, or currency, switch to "United States" with language "EN". ',
     );
   });
 
-  it("JSON-quotes the country name and the currency as store data", () => {
+  it("asks for the run's language, not a fixed one", () => {
+    const objective = buildObjective({
+      pinned: PINNED,
+      context: { country: "CA", language: "FR", countryName: "Canada", currency: "CAD" },
+    });
+
+    expect(objective).toContain(
+      'Shop in the "Canada" store (language "FR", prices in "CAD"): if the store shows another country, language, or currency, switch to "Canada" with language "FR".',
+    );
+    expect(objective).not.toContain('"EN"');
+  });
+
+  it("JSON-quotes the country name, the language, and the currency as store data", () => {
     const objective = buildObjective({
       pinned: PINNED,
       context: { ...CONTEXT, countryName: 'Côte d"Ivoire', currency: "XOF" },
     });
 
     expect(objective).toContain(
-      'Shop in the "Côte d\\"Ivoire" store (prices in "XOF"): if the store shows another country or currency, switch to "Côte d\\"Ivoire".',
+      'Shop in the "Côte d\\"Ivoire" store (language "EN", prices in "XOF"): if the store shows another country, language, or currency, switch to "Côte d\\"Ivoire" with language "EN".',
     );
   });
 
