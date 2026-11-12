@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { applyPrivateResponseCacheHeaders, extractHeaders } from "./headers";
+import { applyPrivateResponseCacheHeaders, extractHeaders, getSetCookieValues } from "./headers";
 
 describe("extractHeaders", () => {
   it("extracts present headers and skips missing ones", () => {
@@ -51,4 +51,34 @@ describe("applyPrivateResponseCacheHeaders", () => {
       ["content-type", "text/html"],
     ]);
   });
+});
+
+describe("getSetCookieValues", () => {
+  const cookies = [
+    "first=1; Expires=Wed, 21 Oct 2037 07:28:00 GMT; Path=/",
+    'second="a,b"; Path=/',
+    "third=3; Path=/",
+  ];
+
+  it("preserves separate cookies from native getSetCookie", () => {
+    const headers = new Headers();
+    for (const cookie of cookies) headers.append("set-cookie", cookie);
+    expect(getSetCookieValues(headers)).toEqual(cookies);
+  });
+
+  it("separates combined cookies without splitting expires or quoted commas", () => {
+    const headers = new Headers();
+    for (const cookie of cookies) headers.append("set-cookie", cookie);
+    Object.defineProperty(headers, "getSetCookie", { value: undefined });
+    expect(getSetCookieValues(headers)).toEqual(cookies);
+  });
+
+  it.each([null, "single=1; Path=/", "malformed, trailing"])(
+    "handles an absent, single, or malformed fallback header: %s",
+    (value) => {
+      const headers = new Headers(value === null ? {} : { "set-cookie": value });
+      Object.defineProperty(headers, "getSetCookie", { value: undefined });
+      expect(getSetCookieValues(headers)).toEqual(value === null ? [] : [value]);
+    },
+  );
 });

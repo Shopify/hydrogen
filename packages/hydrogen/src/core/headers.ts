@@ -1,3 +1,5 @@
+import { splitSetCookieString } from "cookie-es";
+
 export const CACHE_CONTROL_HEADER = "Cache-Control";
 export const CONSENT_MANAGEMENT_HEADER = "Shopify-Storefront-Consent-Management";
 export const HYDROGEN_VERSION_HEADER = "X-Hydrogen-Version";
@@ -92,6 +94,12 @@ export function extractHeaders(
     if (value != null) acc.push([key, value]);
     return acc;
   }, []);
+}
+
+export function getSetCookieValues(headers: Headers): string[] {
+  if (typeof headers.getSetCookie === "function") return headers.getSetCookie();
+  const value = headers.get("set-cookie");
+  return value === null ? [] : splitSetCookieString(value);
 }
 
 export function applyPrivateResponseCacheHeaders(headers: Headers): void {

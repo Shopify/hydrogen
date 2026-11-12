@@ -6,7 +6,7 @@ import type {
 } from "../../customer-account/session";
 import { getCustomerSessionRefreshResult } from "../../customer-account/session";
 import type { AnyStorefrontQueryString } from "../../graphql";
-import { applyPrivateResponseCacheHeaders } from "../headers";
+import { applyPrivateResponseCacheHeaders, getSetCookieValues } from "../headers";
 import { getLogger } from "../logging";
 import type { ShopifyRequestContext } from "../request-context";
 import { createProxyResponseHeaders } from "../request-routing/interceptors/proxy";
@@ -518,7 +518,7 @@ function appendHeaders(headers: Headers, headersToAppend: Headers | undefined) {
   for (const [key, value] of headersToAppend) {
     if (key !== "set-cookie") headers.append(key, value);
   }
-  for (const setCookie of headersToAppend.getSetCookie()) {
+  for (const setCookie of getSetCookieValues(headersToAppend)) {
     headers.append("set-cookie", setCookie);
   }
 }
