@@ -44,9 +44,10 @@ cart), and prints one JSON result line. Requires SHOPIFY_PROXY_KEY.
 as /en-ca is not supported.
 
 Tests:
-  add-to-cart       Pins the variant that the product page selects first (default).
-  choose-a-variant  Pins an available variant that is not the one the page selects first, so
-                    the agent must change at least one option.
+  add-to-cart       Pins the API default variant, selectedOrFirstAvailableVariant (default).
+  choose-a-variant  Pins an available variant that is not the API default. The command does not
+                    check which variant the page selects first, so a pass does not prove that
+                    the agent changed the selection.
 
 Options:
   --test <name>  The test to run: add-to-cart or choose-a-variant. Default: add-to-cart.
