@@ -126,3 +126,54 @@ describe("@shopify/hydrogen/react cart exports", () => {
     expectTypeOf<CartExports>().toEqualTypeOf<"createCartComponents" | "useCartAnalytics">();
   });
 });
+
+describe("seller carts", () => {
+  it("accepts an isEqual function or seller options on useCart", () => {
+    function Consumer() {
+      const quantity = typedCart.useCart(
+        (state) => state.data.totalQuantity,
+        (a, b) => a === b,
+      );
+      const sellerAvailability = typedCart.useCart(
+        (state) => state.data.lines.nodes[0]?.merchandise?.availableForSale ?? false,
+        { seller: "acme", isEqual: (a, b) => a === b },
+      );
+
+      expectTypeOf(quantity).toEqualTypeOf<number>();
+      expectTypeOf(sellerAvailability).toEqualTypeOf<boolean>();
+    }
+
+    void Consumer;
+  });
+
+  it("types every cart in useCarts", () => {
+    function Consumer() {
+      const carts = typedCart.useCarts((value) => value);
+      const sellerAvailability = typedCart.useCarts(({ sellers }) =>
+        sellers.map(({ state }) => state.data.lines.nodes[0]?.merchandise?.availableForSale),
+      );
+
+      expectTypeOf<(typeof carts)["sellers"][number]["seller"]>().toEqualTypeOf<string>();
+      expectTypeOf<(typeof sellerAvailability)[number]>().toExtend<boolean | undefined>();
+      expectTypeOf<(typeof carts)["home"]["data"]["totalQuantity"]>().toEqualTypeOf<number>();
+    }
+
+    void Consumer;
+  });
+
+  it("takes a seller on the form and actions hooks", () => {
+    expectTypeOf(typedCart.useCartForm).toBeCallableWith({ seller: "acme" });
+    expectTypeOf(typedCart.useCartForm).toBeCallableWith();
+    expectTypeOf(typedCart.useCartActions).toBeCallableWith({ seller: "acme" });
+  });
+
+  it("accepts seller carts in provider initial data", () => {
+    type Props = Parameters<typeof typedCart.CartProvider>[0];
+    type InitialData = NonNullable<Awaited<NonNullable<Props["initialData"]>>>;
+
+    expectTypeOf<NonNullable<InitialData["sellers"]>[number]>().toEqualTypeOf<{
+      seller: string;
+      cart: CartData;
+    }>();
+  });
+});

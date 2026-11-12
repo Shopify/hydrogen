@@ -16,23 +16,32 @@ import {
 import { trackCartAnalytics } from "../core/analytics/cart-tracker";
 import { attachQuantityInput } from "../core/cart/attach-quantity-input";
 import {
+  assertSellerHandle,
   configureCartEndpoint as configureCoreCartEndpoint,
   createCartStore,
+  getSellerCartEndpoint,
   type CreateCartStoreOptions,
   type CartActions,
   type CartStore,
 } from "../core/cart/cart";
 import { createCartFormRegister, type CartFormRegister } from "../core/cart/form";
+import { createSellerCarts, type CartsState, type SellerCarts } from "../core/cart/seller-carts";
 import type { CartDataFromHandlers } from "../core/cart/server-handlers";
 import { type CartData, type CartState } from "../core/cart/state";
 
 const DEFAULT_CART_ENDPOINT = "/api/cart";
+const NOOP = () => {};
+
+function isPromiseLike<T>(value: T | PromiseLike<T>): value is PromiseLike<T> {
+  return typeof (value as { then?: unknown } | null | undefined)?.then === "function";
+}
 
 let cartEndpoint = DEFAULT_CART_ENDPOINT;
 
 interface CartContextValue {
   store: CartStore;
   hydrationSnapshot: CartState;
+  sellers: SellerCarts;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -61,7 +70,40 @@ type TypedCartProviderProps<TData extends CartData> = {
 type CartInitialData<TData extends CartData = CartData> =
   CreateCartStoreOptions<TData>["initialData"];
 
-export type { CartActions };
+export type { CartActions, CartsState };
+
+/** Picks a seller's cart instead of your own store's cart. */
+type SellerOptions = {
+  /** The seller's handle, such as `my-shop` for `my-shop.myshopify.com`. Without a seller, the hook uses your own store's cart. */
+  seller?: string;
+};
+
+/** Options for reading a cart with `useCart`. */
+type CartSelectorOptions<S> = SellerOptions & {
+  /** Compares the previous and next selected values. Return `true` to skip the re-render. Without the function, the hook compares the values by reference. */
+  isEqual?: (a: S, b: S) => boolean;
+};
+
+/** A hook that returns the slice of your store's cart, or a seller's cart, that your selector picks. */
+type CartHook<TData extends CartData> =
+  /**
+   * @param selector - Picks the value to return from the cart state.
+   * @param isEqualOrOptions - The `isEqual` function, or options with the `seller` whose cart to read and the `isEqual` function. Return `true` from `isEqual` to skip the re-render. Without the function, the hook compares the values by reference.
+   * @returns The selected value.
+   */
+  <S>(
+    selector: (state: CartState<TData>) => S,
+    isEqualOrOptions?: ((a: S, b: S) => boolean) | CartSelectorOptions<S>,
+  ) => S;
+
+/** A hook that returns the slice of every cart on the page that your selector picks. */
+type CartsHook<TData extends CartData> =
+  /**
+   * @param selector - Picks the value to return from your store's cart and the seller carts.
+   * @param isEqual - Compares the previous and next selected values. Return `true` to skip the re-render. Without the function, the hook compares the values by reference.
+   * @returns The selected value.
+   */
+  <S>(selector: (carts: CartsState<TData>) => S, isEqual?: (a: S, b: S) => boolean) => S;
 
 /** A hook that returns the slice of cart state that your selector picks. */
 type CartStateHook<TData extends CartData> =
@@ -104,18 +146,20 @@ type TypedCartComponents<TData extends CartData> = {
   /** Creates the cart store and shares the store with the cart hooks inside the provider. The provider connects the store on mount and destroys the store on unmount. */
   CartProvider: (props: TypedCartProviderProps<TData>) => ReactNode;
   /**
-   * Returns the slice of cart state that the selector picks. The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update.
+   * Returns the slice of cart state that the selector picks. Pass `{ seller }` to read a seller's cart, which is empty until the seller's cart appears. The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update.
    */
-  useCart: CartStateHook<TData>;
+  useCart: CartHook<TData>;
+  /** Returns the slice of your store's cart and every seller cart that the selector picks. The component re-renders when a seller cart appears or a cart changes. */
+  useCarts: CartsHook<TData>;
   /** Suspends while the full cart loads, then returns the slice of cart state that the selector picks. Wrap the component in a `Suspense` boundary. */
   useSuspenseCart: CartStateHook<TData>;
   /**
    * Returns the slice of cart state that the selector picks, or `undefined` outside the provider. Use the hook in a component that also renders above the provider, such as a cart badge on an error page.
    */
   useOptionalCart: OptionalCartStateHook<TData>;
-  /** Returns the `refresh()` action. Call `refresh()` after a server-side cart change that skips cart forms. */
+  /** Returns the `refresh()` action for your store's cart, or for a seller's cart with `{ seller }`. Call `refresh()` after a server-side cart change that skips cart forms. */
   useCartActions: typeof useCartActions;
-  /** Returns form props and a register function for cart forms. */
+  /** Returns form props and a register function for cart forms. Pass `{ seller }` to change a seller's cart. */
   useCartForm: typeof useCartForm;
 };
 
@@ -134,6 +178,7 @@ type TypedCartComponents<TData extends CartData> = {
  * const {
  *   CartProvider,
  *   useCart,
+ *   useCarts,
  *   useSuspenseCart,
  *   useOptionalCart,
  *   useCartActions,
@@ -157,9 +202,16 @@ export function createCartComponents<THandlers>(): TypedCartComponents<
 
   function useTypedCart<S>(
     selector: (state: CartState<TData>) => S,
+    isEqualOrOptions?: ((a: S, b: S) => boolean) | CartSelectorOptions<S>,
+  ): S {
+    return useCart<CartData, S>((state) => selector(state as CartState<TData>), isEqualOrOptions);
+  }
+
+  function useTypedCarts<S>(
+    selector: (carts: CartsState<TData>) => S,
     isEqual?: (a: S, b: S) => boolean,
   ): S {
-    return useCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);
+    return useCarts<CartData, S>((carts) => selector(carts as CartsState<TData>), isEqual);
   }
 
   function useTypedOptionalCart<S>(
@@ -179,6 +231,7 @@ export function createCartComponents<THandlers>(): TypedCartComponents<
   return {
     CartProvider: TypedCartProvider,
     useCart: useTypedCart,
+    useCarts: useTypedCarts,
     useSuspenseCart,
     useOptionalCart: useTypedOptionalCart,
     useCartActions,
@@ -205,6 +258,8 @@ function useOptionalCartContext(): CartContextValue | null {
  *
  * Render every cart hook inside the provider. On mount, the provider sends cart requests to `/api/cart` and connects the store. On unmount, the provider destroys the store. The provider creates its store from the first initial data and ignores later changes.
  *
+ * The provider also holds one store per seller. It creates seller stores from the `sellers` in the initial data, and when a seller's cart form submits or a seller's `refresh()` runs for the first time.
+ *
  * @example
  * ```tsx
  * // In your root layout
@@ -226,18 +281,26 @@ export function CartProvider({
   const context = useMemo(() => {
     const store = createCartStore({ initialData });
     // Plain consumers must hydrate from the state used for SSR, even if the live store settles first.
-    return { store, hydrationSnapshot: store.getState() };
+    const hydrationSnapshot = store.getState();
+    const syncSellers = isPromiseLike(initialData) ? undefined : initialData?.sellers;
+    const sellers = createSellerCarts({ store, hydrationSnapshot }, syncSellers);
+    if (isPromiseLike(initialData)) {
+      Promise.resolve(initialData).then((data) => sellers.seed(data.sellers), NOOP);
+    }
+    return { store, hydrationSnapshot, sellers };
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- provider initialData seeds one store for its lifetime
   }, []);
-  const { store } = context;
+  const { store, sellers } = context;
 
   useEffect(() => {
     configureCoreCartEndpoint(cartEndpoint);
     store.connect();
+    sellers.connect();
     return () => {
       store.destroy();
+      sellers.destroy();
     };
-  }, [store]);
+  }, [store, sellers]);
 
   return <CartContext.Provider value={context}>{children}</CartContext.Provider>;
 }
@@ -247,8 +310,10 @@ export function CartProvider({
  *
  * The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update.
  *
+ * Pass `{ seller }` to read a seller's cart. Until the seller's cart appears on the page, the selector receives an empty cart that isn't loading.
+ *
  * @param selector The function that picks a value from the cart state.
- * @param isEqual The function that compares the previous and next selected values. Return `true` to skip the re-render.
+ * @param isEqualOrOptions The function that compares the previous and next selected values, or options with the `seller` and the `isEqual` function. Return `true` from `isEqual` to skip the re-render.
  * @returns The selected value.
  *
  * @example
@@ -264,22 +329,68 @@ export function CartProvider({
  *   (state) => state.data.cost.totalAmount,
  *   (a, b) => a.amount === b.amount,
  * );
+ *
+ * // Select a seller's cart lines
+ * const sellerLines = useCart((state) => state.data.lines.nodes, { seller: "my-shop" });
  * ```
  * @publicDocs
  */
 export function useCart<TData extends CartData = CartData, S = unknown>(
   selector: (state: CartState<TData>) => S,
+  isEqualOrOptions?: ((a: S, b: S) => boolean) | CartSelectorOptions<S>,
+): S {
+  const { store, hydrationSnapshot, sellers } = useCartContext();
+  const { seller, isEqual } =
+    typeof isEqualOrOptions === "function"
+      ? { seller: undefined, isEqual: isEqualOrOptions }
+      : (isEqualOrOptions ?? {});
+  const source = useMemo(
+    () => (seller === undefined ? store : sellers.source(seller)),
+    [store, sellers, seller],
+  );
+  const snapshot = seller === undefined ? hydrationSnapshot : sellers.getHydrationSnapshot(seller);
+  return useCartSelector(source, snapshot, selector, isEqual) as S;
+}
+
+/**
+ * Returns the slice of every cart on the page that the selector picks: your store's cart and one cart per seller.
+ *
+ * Sellers keep the order in which their carts first appeared. The component re-renders when a seller cart appears, or when the selected value changes by reference or your `isEqual` function reports a change. Never add money across carts: each seller has its own checkout and currency.
+ *
+ * @param selector The function that picks a value from the carts.
+ * @param isEqual The function that compares the previous and next selected values. Return `true` to skip the re-render.
+ * @returns The selected value.
+ *
+ * @example
+ * ```tsx
+ * // Count items across every cart
+ * const count = useCarts(
+ *   ({ home, sellers }) =>
+ *     sellers.reduce((total, { state }) => total + state.data.totalQuantity, home.data.totalQuantity),
+ * );
+ * ```
+ * @publicDocs
+ */
+export function useCarts<TData extends CartData = CartData, S = unknown>(
+  selector: (carts: CartsState<TData>) => S,
   isEqual?: (a: S, b: S) => boolean,
 ): S {
-  const { store, hydrationSnapshot } = useCartContext();
-  return useCartSelector(store, hydrationSnapshot, selector, isEqual) as S;
+  const { sellers } = useCartContext("useCarts");
+  return useSnapshotSelector(
+    sellers.subscribe,
+    sellers.getState as () => CartsState<TData>,
+    sellers.getHydrationState() as CartsState<TData>,
+    selector,
+    isEqual,
+  );
 }
 
 /**
  * Returns the cart action that reloads the cart after a cart change outside cart forms.
  *
- * Call `refresh()` after a server-side cart change that skips cart forms, such as a server action that creates the cart.
+ * Call `refresh()` after a server-side cart change that skips cart forms, such as a server action that creates the cart. Pass `{ seller }` to refresh a seller's cart.
  *
+ * @param options The `seller` whose cart to refresh. Without a seller, the action refreshes your own store's cart.
  * @returns The `refresh()` action.
  *
  * @example
@@ -293,10 +404,17 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
  * ```
  * @publicDocs
  */
-export function useCartActions(): CartActions {
-  const store = useCartStore("useCartActions");
+export function useCartActions({ seller }: SellerOptions = {}): CartActions {
+  const { store, sellers } = useCartContext("useCartActions");
+  if (seller !== undefined) assertSellerHandle(seller);
 
-  return useMemo(() => ({ refresh: store.refresh }), [store]);
+  return useMemo(
+    () =>
+      seller === undefined
+        ? { refresh: store.refresh }
+        : { refresh: () => sellers.getOrCreate(seller).store.refresh() },
+    [store, sellers, seller],
+  );
 }
 
 /**
@@ -353,20 +471,35 @@ export function useOptionalCart<TData extends CartData = CartData, S = unknown>(
 }
 
 function useCartSelector<TData extends CartData = CartData, S = unknown>(
-  store: CartStore,
+  store: { subscribe(listener: () => void): () => void; getState(): CartState },
   hydrationSnapshot: CartState,
   selector: (state: CartState<TData>) => S,
+  isEqual?: (a: S, b: S) => boolean,
+): S {
+  return useSnapshotSelector(
+    store.subscribe,
+    store.getState as () => CartState<TData>,
+    hydrationSnapshot as CartState<TData>,
+    selector,
+    isEqual,
+  );
+}
+
+function useSnapshotSelector<T, S>(
+  subscribe: (listener: () => void) => () => void,
+  getState: () => T,
+  hydrationState: T,
+  selector: (state: T) => S,
   isEqual?: (a: S, b: S) => boolean,
 ): S {
   const liveCacheRef = useRef<SelectorCache<S> | null>(null);
   const hydrationCacheRef = useRef<SelectorCache<S> | null>(null);
 
-  const getSnapshot = () =>
-    selectCartSnapshot(store.getState() as CartState<TData>, selector, isEqual, liveCacheRef);
+  const getSnapshot = () => selectCartSnapshot(getState(), selector, isEqual, liveCacheRef);
   const getServerSnapshot = () =>
-    selectCartSnapshot(hydrationSnapshot as CartState<TData>, selector, isEqual, hydrationCacheRef);
+    selectCartSnapshot(hydrationState, selector, isEqual, hydrationCacheRef);
 
-  return useSyncExternalStore(store.subscribe, getSnapshot, getServerSnapshot);
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 interface SelectorCache<S> {
@@ -375,9 +508,9 @@ interface SelectorCache<S> {
   value: S;
 }
 
-function selectCartSnapshot<TData extends CartData, S>(
-  state: CartState<TData>,
-  selector: (state: CartState<TData>) => S,
+function selectCartSnapshot<T, S>(
+  state: T,
+  selector: (state: T) => S,
   isEqual: ((a: S, b: S) => boolean) | undefined,
   cacheRef: { current: SelectorCache<S> | null },
 ): S {
@@ -455,6 +588,9 @@ function useSuspenseCartSelector<TData extends CartData, S>(
  *
  * Register the quantity field with `interactive: true` to submit the form when the quantity changes. The interactive input takes the quantity as a default value and stays uncontrolled.
  *
+ * Pass `{ seller }` to change a seller's cart. The form then posts to the cart endpoint with a `?seller=` query, and the first submission creates the seller's store.
+ *
+ * @param options The `seller` whose cart the form changes. Without a seller, the form changes your own store's cart.
  * @returns The form props function and the register function.
  *
  * @example
@@ -476,8 +612,9 @@ function useSuspenseCartSelector<TData extends CartData, S>(
  * ```
  * @publicDocs
  */
-export function useCartForm(): CartFormBindings {
-  const store = useCartStore("useCartForm");
+export function useCartForm({ seller }: SellerOptions = {}): CartFormBindings {
+  const { store, sellers } = useCartContext("useCartForm");
+  const action = seller === undefined ? cartEndpoint : getSellerCartEndpoint(seller, cartEndpoint);
   const coreRegister = useMemo(() => createCartFormRegister(), []);
 
   const register = useMemo(() => {
@@ -510,11 +647,12 @@ export function useCartForm(): CartFormBindings {
       opts?.beforeSubmit?.(e);
       if (e.defaultPrevented) return;
       e.preventDefault();
-      store.handleFormSubmit(e.nativeEvent).catch(() => {});
+      const target = seller === undefined ? store : sellers.getOrCreate(seller).store;
+      target.handleFormSubmit(e.nativeEvent).catch(() => {});
       opts?.afterSubmit?.(e);
     },
     method: "post",
-    action: cartEndpoint,
+    action,
   });
 
   return { formProps, register };

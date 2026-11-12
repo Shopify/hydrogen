@@ -2,14 +2,14 @@ import { ShopPayButton } from "@shopify/hydrogen/react";
 import { useEffect, useMemo, useState, type SubmitEvent } from "react";
 import { Link } from "react-router";
 
-import { useCart, useCartForm } from "~/lib/cart";
+import { useCart, useCartForm, useCarts } from "~/lib/cart";
 import { closeCartDrawer, configureOpenCartAction, CART_DRAWER_ID } from "~/lib/cart-drawer";
 import { formatPrice } from "~/lib/money";
 
 import { publishCartViewed } from "./AnalyticsTrackers";
 
-function CartErrorBanner() {
-  const errors = useCart((state) => state.errors);
+function CartErrorBanner({ seller }: { seller?: string }) {
+  const errors = useCart((state) => state.errors, { seller });
   const [dismissedAt, setDismissedAt] = useState(0);
   const messages = useMemo(() => {
     const lines = [...errors.lines.values()].flatMap((group) => group.userErrors);
@@ -80,13 +80,16 @@ type CartLineView = {
 export function CartLineItem({
   line,
   emptyCartFocusId,
+  seller,
 }: {
   line: CartLineView;
   emptyCartFocusId: string;
+  /** The seller whose cart holds the line. Without it, the line is in your own store's cart. */
+  seller?: string;
 }) {
-  const { formProps, register } = useCartForm();
-  const pendingLines = useCart((state) => state.pending.lines);
-  const lineError = useCart((state) => state.errors.lines.get(line.id));
+  const { formProps, register } = useCartForm({ seller });
+  const pendingLines = useCart((state) => state.pending.lines, { seller });
+  const lineError = useCart((state) => state.errors.lines.get(line.id), { seller });
   const merchandise = line.merchandise;
   const product = merchandise?.product;
   const pending = pendingLines.has(line.id);
@@ -134,7 +137,7 @@ export function CartLineItem({
       </div>
       <div className="min-w-0 flex-1">
         <p className="type-body-sm text-on-surface font-medium">
-          {product?.handle ? (
+          {product?.handle && seller === undefined ? (
             <Link to={`/products/${product.handle}`} className="text-on-surface no-underline">
               {product.title ?? merchandise?.title ?? "Product"}
             </Link>
@@ -203,13 +206,111 @@ export function CartLineItem({
   );
 }
 
+/** The item count across your store's cart and every seller cart. Never add money across carts. */
+export function useTotalQuantity(): number {
+  return useCarts(({ home, sellers }) =>
+    sellers.reduce((total, { state }) => total + state.data.totalQuantity, home.data.totalQuantity),
+  );
+}
+
+export function useHasSellerLines(): boolean {
+  return useCarts(({ sellers }) => sellers.some(({ state }) => state.data.lines.nodes.length > 0));
+}
+
+function SellerCartSection({
+  seller,
+  emptyCartFocusId,
+  headingLevel,
+}: {
+  seller: string;
+  emptyCartFocusId: string;
+  headingLevel: "h2" | "h3";
+}) {
+  const cart = useCart((state) => state.data, { seller });
+  const pending = useCart((state) => state.pending, { seller });
+  const lines = cart.lines.nodes;
+  const Heading = headingLevel;
+  const headingId = `seller-cart-${seller}-heading`;
+  const sellerLabel = seller;
+  const isPending = hasPendingCost(pending);
+
+  if (lines.length === 0) return null;
+
+  return (
+    <section
+      className="border-border mt-6 border-t pt-4"
+      aria-labelledby={headingId}
+      data-testid="seller-cart"
+    >
+      <Heading id={headingId} className="text-on-surface text-base font-medium">
+        From {sellerLabel}
+      </Heading>
+      <CartErrorBanner seller={seller} />
+      <ul role="list" className="divide-border divide-y">
+        {lines.map((line) => (
+          <CartLineItem
+            key={line.id}
+            line={line}
+            emptyCartFocusId={emptyCartFocusId}
+            seller={seller}
+          />
+        ))}
+      </ul>
+      <div className="flex flex-col gap-3 pt-2">
+        <div className="flex items-center justify-between" aria-busy={isPending}>
+          <span className="text-on-surface text-sm font-medium">
+            Estimated total
+            {isPending ? <span aria-hidden="true"> (updating)</span> : null}
+          </span>
+          <span
+            className={`text-on-surface text-base font-medium ${isPending ? "text-on-surface-secondary" : ""}`}
+          >
+            {formatPrice(cart.cost.totalAmount)}
+          </span>
+        </div>
+        {cart.checkoutUrl ? (
+          <a
+            href={cart.checkoutUrl}
+            className="rounded-button button-secondary focus-visible:outline-accent inline-flex h-11 w-full items-center justify-center gap-2 px-4 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
+          >
+            Checkout at {sellerLabel}
+          </a>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+/** One section per seller cart, each with its own lines, estimated total, and checkout. */
+export function SellerCartSections({
+  emptyCartFocusId,
+  headingLevel,
+}: {
+  emptyCartFocusId: string;
+  headingLevel: "h2" | "h3";
+}) {
+  const sellerCarts = useCarts((carts) => carts.sellers);
+
+  return sellerCarts.map(({ seller }) => (
+    <SellerCartSection
+      key={seller}
+      seller={seller}
+      emptyCartFocusId={emptyCartFocusId}
+      headingLevel={headingLevel}
+    />
+  ));
+}
+
 function CartLines() {
   const loading = useCart((state) => state.loading);
   const lines = useCart((state) => state.data.lines.nodes);
+  const hasSellerLines = useHasSellerLines();
 
   if (loading) {
     return <p className="text-on-surface-secondary type-body-sm">Loading cart…</p>;
   }
+
+  if (lines.length === 0 && hasSellerLines) return null;
 
   if (lines.length === 0) {
     return (
@@ -274,7 +375,7 @@ function CartFooter() {
 }
 
 export function CartDrawer() {
-  const totalQuantity = useCart((state) => state.data.totalQuantity);
+  const totalQuantity = useTotalQuantity();
   const cart = useCart((state) => state.data);
   const statusMessage = useCartStatusMessage();
 
@@ -333,6 +434,7 @@ export function CartDrawer() {
           <CartErrorBanner />
           <div className="flex-1 overflow-y-auto p-4">
             <CartLines />
+            <SellerCartSections emptyCartFocusId="cart-drawer-title" headingLevel="h3" />
           </div>
           <CartFooter />
         </div>

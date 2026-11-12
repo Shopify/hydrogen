@@ -138,6 +138,8 @@ export type {
   CartResult,
   CartServerHandlers,
   CartServerHandlersWithCustomerSession,
+  CartServerHandlersWithTransport,
+  CartTransportGetHandler,
   CartServerTransport,
   CreateCartServerHandlersOptions,
 } from "./cart";

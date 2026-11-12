@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router";
 
-import { useCart } from "~/lib/cart";
 import { CART_DRAWER_ID, SEARCH_DRAWER_ID, openDialogFromLinkClick } from "~/lib/cart-drawer";
 import type { StorefrontShop } from "~/lib/storefront-shop";
 
+import { useTotalQuantity } from "./CartDrawer";
 import { MobileNav, MobileNavTrigger } from "./MobileNav";
 
 function cartCountLabel(count: number) {
@@ -20,7 +20,7 @@ function displayCount(count: number) {
 }
 
 export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
-  const totalQuantity = useCart((state) => state.data.totalQuantity);
+  const totalQuantity = useTotalQuantity();
   const [failedLogoUrl, setFailedLogoUrl] = useState<string | null>(null);
   const logo = shopInfo.logo;
 

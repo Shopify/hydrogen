@@ -26,8 +26,15 @@ function toAnalyticsCart(cart: CartData): AnalyticsCart | null {
       nodes: cart.lines.nodes.flatMap((line) => {
         const merchandise = line.merchandise;
         const product = merchandise?.product;
-        // Optimistic lines may not have product details yet.
-        if (!merchandise?.id || !product?.id || !product.title || !product.vendor) {
+        // Optimistic lines may not have product details yet, and a transport's cart
+        // fields beyond the base cart type are untyped.
+        if (
+          !merchandise?.id ||
+          typeof product?.id !== "string" ||
+          !product.title ||
+          typeof product.vendor !== "string" ||
+          !product.vendor
+        ) {
           return [];
         }
         return [
@@ -37,13 +44,14 @@ function toAnalyticsCart(cart: CartData): AnalyticsCart | null {
             merchandise: {
               id: merchandise.id,
               title: merchandise.title ?? product.title,
-              sku: merchandise.sku,
+              sku: typeof merchandise.sku === "string" ? merchandise.sku : null,
               price: line.cost.amountPerQuantity,
               product: {
                 id: product.id,
                 title: product.title,
                 vendor: product.vendor,
-                productType: product.productType,
+                productType:
+                  typeof product.productType === "string" ? product.productType : undefined,
                 handle: product.handle,
               },
             },

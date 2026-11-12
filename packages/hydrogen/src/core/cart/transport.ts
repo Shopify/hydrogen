@@ -5,24 +5,34 @@ import type { CartData, CartUserError, CartWarning } from "./state";
 export type CartTransportContext = {
   storefrontClient: StorefrontClient;
   customerAccessToken?: string;
+  /** The handle of the seller whose cart to use, such as `raycon` for `raycon.myshopify.com`. The handlers validate it before they set it, and only for transports with `sellers: true`. Absent for the home store's cart. */
+  seller?: string;
 };
 
 export type CartReadResult = {
+  /** `null` means the cart doesn't exist, or couldn't be read when `errors` is set. It never means "unchanged". */
   cart: CartData | null;
   errors?: Array<{ message: string }>;
   headers: Headers;
+  /** When the cart expires, as an ISO 8601 date-time, when the backend reports it. */
+  expiresAt?: string;
 };
 
 export type CartWriteResult = {
+  /** `null` means the cart doesn't exist. It never means "unchanged": a change that fails on an existing cart returns that cart with `userErrors`. */
   cart: CartData | null;
   userErrors: Array<Omit<CartUserError, "field"> & { field?: string[] | null }>;
   warnings: CartWarning[];
   headers: Headers;
+  /** When the cart expires, as an ISO 8601 date-time, when the backend reports it. */
+  expiresAt?: string;
 };
 
 export interface CartTransport {
   /** `sequential` tells the browser store to send one cart change at a time, for backends that replace the whole cart on each write. */
   readonly ordering: "concurrent" | "sequential";
+  /** `true` when the transport can keep one cart per seller, selected with `CartTransportContext.seller`. */
+  readonly sellers: boolean;
   getCart(payload: Required<GetCartPayload>, ctx: CartTransportContext): Promise<CartReadResult>;
   /** Creates a cart from the payload when it has no `cartId`. */
   updateCart(payload: UpdateCartPayload, ctx: CartTransportContext): Promise<CartWriteResult>;
@@ -68,6 +78,8 @@ function isCartTransport(value: unknown): value is CartTransport {
     "updateCart" in value &&
     typeof value.updateCart === "function" &&
     "ordering" in value &&
-    (value.ordering === "concurrent" || value.ordering === "sequential")
+    (value.ordering === "concurrent" || value.ordering === "sequential") &&
+    "sellers" in value &&
+    typeof value.sellers === "boolean"
   );
 }

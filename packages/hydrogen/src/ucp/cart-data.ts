@@ -22,6 +22,7 @@ export type UcpCart = UcpResponse & {
   // Automatic discounts have a title but no code.
   discounts?: { codes?: string[]; applied?: Array<{ code?: string }> };
   continue_url?: string;
+  expires_at?: string;
 };
 
 type UcpCatalogVariant = {
@@ -48,6 +49,7 @@ export function isUcpCart(value: unknown): value is UcpCart {
     value.line_items.every(isUcpLineItem) &&
     isOptionalTotals(value.totals) &&
     isOptionalDiscounts(value.discounts) &&
+    (value.expires_at === undefined || typeof value.expires_at === "string") &&
     isUcpResponse(value)
   );
 }

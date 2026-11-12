@@ -1,4 +1,5 @@
 import type { StorefrontClient } from "../client";
+import { isSellerHandle } from "../core/cart/cookie";
 import { DEFAULT_TIMEOUT_IN_MS, HYDROGEN_USER_AGENT } from "../core/constants";
 
 const UCP_MCP_PATH = "/api/ucp/mcp";
@@ -43,8 +44,9 @@ export type UcpToolCaller = <T extends UcpResponse>(
 export function createUcpToolCaller(
   profile: string,
   storefrontClient: Pick<StorefrontClient, "storeUrl" | "requestContext">,
+  seller?: string,
 ): UcpToolCaller {
-  const endpoint = new URL(UCP_MCP_PATH, storefrontClient.storeUrl);
+  const endpoint = ucpEndpoint(storefrontClient.storeUrl, seller);
   const requestSignal = storefrontClient.requestContext.signal;
 
   return async (tool, args, isResult) => {
@@ -72,6 +74,15 @@ export function createUcpToolCaller(
     }
     return readToolResult(tool, response.status, await response.json(), isResult);
   };
+}
+
+function ucpEndpoint(storeUrl: string, seller: string | undefined): URL {
+  if (seller === undefined) return new URL(UCP_MCP_PATH, storeUrl);
+  const host = `${seller}.myshopify.com`;
+  const endpoint = new URL(`https://${host}${UCP_MCP_PATH}`);
+  if (!isSellerHandle(seller) || endpoint.hostname !== host)
+    throw new TypeError(`Invalid seller handle: ${seller}`);
+  return endpoint;
 }
 
 function requestMeta(tool: string, profile: string) {

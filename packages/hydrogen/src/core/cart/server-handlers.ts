@@ -26,7 +26,17 @@ import {
   type CartBuyerIdentitySync,
   type CartBuyerIdentitySyncContext,
 } from "./buyer-identity-sync";
-import { getCartIdFromCookie, createCartCookie, createExpiredCartCookie } from "./cookie";
+import {
+  createCartCookie,
+  createExpiredCartCookie,
+  createExpiredSellerCartCookie,
+  createSellerCartCookie,
+  getCartIdFromCookie,
+  getSellerCartIdFromCookie,
+  getSellerCartsFromCookie,
+  isSellerHandle,
+  planSellerCookieEvictions,
+} from "./cookie";
 import { getCartId, type CartDataFromQuery } from "./get-cart";
 import type { cartQueries, CartDataForOptions, CartQueriesForOptions } from "./queries";
 import { runCartAction } from "./run-cart-action";
@@ -43,6 +53,7 @@ import {
 const log = getLogger("cart-api");
 
 const CART_API_PATH = "/api/cart" as const;
+const SELLER_SEARCH_PARAM = "seller";
 const CART_GET_METHOD = "GET" as const;
 const CART_POST_METHOD = "POST" as const;
 const CART_MUTATION_FAILED_STATUS = 500;
@@ -61,6 +72,10 @@ export type CartGetData<TCart = CartData> = {
   errors?: Array<{ message: string }>;
   /** `sequential` when the handlers' `transport` needs the cart store to send one cart change at a time. Absent for the default Storefront API cart. */
   ordering?: "sequential";
+  /**
+   * The seller carts from the request's `hydrogen-cart.<seller>` cookies, when you pass `includeSellers: true` to handlers whose `transport` supports sellers. The handler reads the carts in parallel and leaves out carts that fail to load, no longer exist, or have no lines. Absent otherwise.
+   */
+  sellers?: Array<{ seller: string; cart: TCart }>;
 };
 
 /**
@@ -71,9 +86,16 @@ export type CartGetData<TCart = CartData> = {
 export type CartGetResult<TCart = CartData> = ShopifyRouteJsonResult<CartGetData<TCart>>;
 
 /**
- * Error codes that the cart POST handler returns. The handler returns `invalid_cart_request` when it can't parse a JSON request, and `missing_cart` when a JSON request changes the cart but has no cart ID. With `customerSession`, the handler returns `cart_mutation_failed` when a mutation fails after the handler refreshes the customer's access token.
+ * Error codes that the cart handlers return. The POST handler returns `invalid_cart_request` when it can't parse a JSON request, and `missing_cart` when a JSON request changes the cart but has no cart ID. With `customerSession`, the POST handler returns `cart_mutation_failed` when a mutation fails after the handler refreshes the customer's access token.
+ *
+ * For a `?seller=<handle>` request, the handlers return `invalid_seller` when the handle isn't a valid myshopify.com handle, and the POST handler returns `seller_not_supported` when the handlers' cart backend has no seller carts, such as the default Storefront API cart.
  */
-export type CartErrorCode = "invalid_cart_request" | "missing_cart" | "cart_mutation_failed";
+export type CartErrorCode =
+  | "invalid_cart_request"
+  | "missing_cart"
+  | "cart_mutation_failed"
+  | "invalid_seller"
+  | "seller_not_supported";
 
 /**
  * An error that the cart POST handler returns, with a code that identifies the failure.
@@ -113,6 +135,10 @@ type CartGetHandlerContext = {
   storefrontClient: StorefrontClient;
   /** The incoming request. Omit the request to read the cart ID from the Storefront API client's request context. */
   request?: Request;
+  /**
+   * Pass `true` from a page loader to add every seller cart to the response's `sellers` field. The handler then ignores the URL's `seller` search parameter and returns the home cart as `cart`. Only handlers whose `transport` supports sellers add `sellers`.
+   */
+  includeSellers?: boolean;
 };
 
 /** The context that you pass to the cart POST handler. */
@@ -152,6 +178,18 @@ export type CartGetHandler<
   typeof CART_API_PATH,
   typeof CART_GET_METHOD
 >;
+
+/**
+ * Handles GET requests to `/api/cart` for cart server handlers created with `transport`.
+ *
+ * A request with a `seller` search parameter returns that seller's cart from its `hydrogen-cart.<seller>` cookie, or an `invalid_seller` error when the handle isn't valid. Pass `includeSellers: true` to return the home cart with every seller cart in `sellers` instead, which never returns an error result.
+ */
+export type CartTransportGetHandler = {
+  (context: CartGetHandlerContext & { includeSellers: true }): Promise<CartGetResult>;
+  (context: CartGetHandlerContext): Promise<CartGetResult | ShopifyRouteErrorResult<CartError>>;
+  readonly pathname: typeof CART_API_PATH;
+  readonly method: typeof CART_GET_METHOD;
+};
 
 /** Handles POST requests to `/api/cart` and runs the cart change that the request body describes. */
 export type CartPostHandler<TContext extends CartPostHandlerContext = CartPostHandlerContext> =
@@ -234,6 +272,22 @@ export type CartDataFromHandlers<THandlers> = CartDataFromHandlerResult<
   CartGetHandlerResult<THandlers>
 >;
 
+/**
+ * The cart route handlers that `createCartServerHandlers` returns when you pass `transport`.
+ *
+ * With a transport that supports sellers, such as `createUcpCartTransport()`, the handlers keep one cart per seller. `/api/cart?seller=<handle>` reads and changes the cart of the store at `<handle>.myshopify.com`, kept in a `hydrogen-cart.<handle>` cookie. Each seller cart has its own checkout.
+ */
+export type CartServerHandlersWithTransport = {
+  /** The cart query document that the handlers run. Always `undefined`, because the transport reads carts. */
+  readonly [cartServerHandlersCartQuery]: undefined;
+  /** Returns the home cart, one seller's cart, or the home cart with every seller cart. */
+  get: CartTransportGetHandler;
+  /**
+   * Runs the cart change that the request describes, like the POST handler in `CartServerHandlers`. With `?seller=<handle>`, the change runs on that seller's cart. The handler sets the seller's `hydrogen-cart.<handle>` cookie (`HttpOnly`, with `Max-Age` from the cart's expiry), expires it when the cart no longer exists, and expires the least recently written seller cookies when there are more than 10 or they exceed 2,048 bytes.
+   */
+  post: CartPostHandler;
+};
+
 /** The cart fragment option for cart server handlers. */
 interface CartServerHandlersBaseOptions<
   TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
@@ -288,7 +342,7 @@ export type CreateCartServerHandlersOptions<
 type CartServerHandlersForOptions<TOptions> = TOptions extends {
   readonly transport: CartServerTransport;
 }
-  ? CartServerHandlers<typeof cartQueries.cart, CartData>
+  ? CartServerHandlersWithTransport
   : TOptions extends {
         readonly customerSession: CartCustomerSession;
       }
@@ -305,7 +359,7 @@ type CartServerHandlersForOptions<TOptions> = TOptions extends {
  *
  * Pass `customerSession` to connect carts to the logged-in customer. The handlers then need `sessionManager` and `requestContext` in their context.
  *
- * Pass `transport` to keep carts in another backend, such as `createUcpCartTransport()` from `@shopify/hydrogen/ucp`.
+ * Pass `transport` to keep carts in another backend, such as `createUcpCartTransport()` from `@shopify/hydrogen/ucp`. A transport that supports sellers also keeps one cart per seller at `/api/cart?seller=<handle>`. Pass `includeSellers: true` to the GET handler from your root loader to get every seller cart in `sellers`.
  *
  * @example
  * ```ts
@@ -339,10 +393,7 @@ export function createCartServerHandlers<const TOptions extends CreateCartServer
  */
 export function createCartServerHandlers(
   options?: CreateCartServerHandlersOptions,
-):
-  | CartServerHandlers
-  | CartServerHandlers<typeof cartQueries.cart, CartData>
-  | CartServerHandlersWithCustomerSession {
+): CartServerHandlers | CartServerHandlersWithTransport | CartServerHandlersWithCustomerSession {
   if (options?.transport !== undefined) return createTransportHandlers(options);
 
   const transport = storefrontCartTransport({ fragment: options?.fragment });
@@ -376,7 +427,7 @@ export function createCartServerHandlers(
 
 function createTransportHandlers(
   options: CreateCartServerHandlersOptions,
-): CartServerHandlers<typeof cartQueries.cart, CartData> {
+): CartServerHandlersWithTransport {
   if (options.fragment !== undefined || options.customerSession !== undefined) {
     throw new TypeError(
       "createCartServerHandlers can't combine transport with fragment or customerSession.",
@@ -387,7 +438,7 @@ function createTransportHandlers(
     get: createCallableRouteHandler(
       CART_API_PATH,
       CART_GET_METHOD,
-      (context: CartGetHandlerContext) => handleGet(context, transport),
+      (context: CartGetHandlerContext) => handleTransportGet(context, transport),
     ),
     post: createCallableRouteHandler(
       CART_API_PATH,
@@ -396,7 +447,7 @@ function createTransportHandlers(
     ),
   };
   Object.defineProperty(handlers, cartServerHandlersCartQuery, { value: undefined });
-  return handlers as CartServerHandlers<typeof cartQueries.cart, CartData>;
+  return handlers as CartServerHandlersWithTransport;
 }
 
 function createCartBuyerIdentitySync(transport: StorefrontCartTransport): CartBuyerIdentitySync {
@@ -413,31 +464,122 @@ function createCartBuyerIdentitySync(transport: StorefrontCartTransport): CartBu
   };
 }
 
+async function handleTransportGet(
+  context: CartGetHandlerContext,
+  transport: CartTransport,
+): Promise<CartGetResult | ShopifyRouteErrorResult<CartError>> {
+  if (context.includeSellers) return handleGet(context, transport);
+  const seller = getSellerParam(cartSource(context).url);
+  if (seller === null) return handleGet(context, transport);
+  return getSellerError(seller, transport) ?? handleSellerGet(context, transport, seller);
+}
+
 async function handleGet(
   context: CartGetHandlerContext & Partial<CartCustomerSessionReadContext>,
   transport: CartTransport,
   customerSession?: CartCustomerSession,
 ): Promise<CartGetResult> {
-  const { request, storefrontClient } = context;
-  const cartId = getCartId(request ?? storefrontClient.requestContext);
-  const result: CartReadResult = cartId
-    ? await transport.getCart({ cartId }, { storefrontClient })
-    : { cart: null, headers: new Headers() };
+  const { storefrontClient } = context;
+  const source = cartSource(context);
+  const cartId = getCartId(source);
+  const [result, sellers] = await Promise.all([
+    readCart(transport, cartId, { storefrontClient }),
+    context.includeSellers && transport.sellers
+      ? readSellerCarts(transport, source, storefrontClient)
+      : undefined,
+  ]);
   logCartErrors(result.errors);
   const cart = await addLoggedInCheckoutParam(result.cart, context, customerSession);
-  const data: CartGetData = {
-    cart,
-    ...(result.errors && { errors: result.errors }),
-    ...orderingField(transport),
-  };
-  const headers = createProxyResponseHeaders(result.headers);
-  applyPrivateResponseCacheHeaders(headers);
+  return cartGetResult(
+    {
+      cart,
+      ...(result.errors && { errors: result.errors }),
+      ...orderingField(transport),
+      ...(sellers && { sellers }),
+    },
+    result.headers,
+  );
+}
 
-  return {
-    type: "json",
-    data,
-    headers,
-  };
+async function handleSellerGet(
+  context: CartGetHandlerContext,
+  transport: CartTransport,
+  seller: string,
+): Promise<CartGetResult> {
+  const { storefrontClient } = context;
+  const cartId = getSellerCartIdFromCookie(cartSource(context), seller);
+  const result = await readCart(transport, cartId, { storefrontClient, seller });
+  logCartErrors(result.errors);
+  return cartGetResult(
+    {
+      cart: result.cart,
+      ...(result.errors && { errors: result.errors }),
+      ...orderingField(transport),
+    },
+    result.headers,
+  );
+}
+
+function cartGetResult(data: CartGetData, transportHeaders: Headers): CartGetResult {
+  const headers = createProxyResponseHeaders(transportHeaders);
+  applyPrivateResponseCacheHeaders(headers);
+  return { type: "json", data, headers };
+}
+
+function cartSource({ request, storefrontClient }: CartGetHandlerContext) {
+  return request ?? storefrontClient.requestContext;
+}
+
+async function readCart(
+  transport: CartTransport,
+  cartId: string | null,
+  ctx: CartTransportContext,
+): Promise<CartReadResult> {
+  if (!cartId) return { cart: null, headers: new Headers() };
+  return transport.getCart({ cartId }, ctx);
+}
+
+async function readSellerCarts(
+  transport: CartTransport,
+  source: Request | { cookie?: string },
+  storefrontClient: StorefrontClient,
+): Promise<NonNullable<CartGetData["sellers"]>> {
+  const results = await Promise.all(
+    getSellerCartsFromCookie(source).map(async ({ seller, cartId }) => {
+      try {
+        const { cart, errors } = await transport.getCart({ cartId }, { storefrontClient, seller });
+        logCartErrors(errors);
+        return cart && cart.lines.nodes.length > 0 ? [{ seller, cart }] : [];
+      } catch (error) {
+        log.warn("seller cart read failed, so the response leaves the seller out", {
+          seller,
+          error,
+        });
+        return [];
+      }
+    }),
+  );
+  return results.flat();
+}
+
+function getSellerParam(url: string | undefined): string | null {
+  if (!url) return null;
+  return new URL(url, "https://hydrogen.local").searchParams.get(SELLER_SEARCH_PARAM);
+}
+
+function getSellerError(
+  seller: string,
+  transport: CartTransport,
+): ShopifyRouteErrorResult<CartError> | undefined {
+  if (!isSellerHandle(seller)) {
+    return errorResult(
+      "invalid_seller",
+      "The seller must be a myshopify.com handle, such as raycon for raycon.myshopify.com.",
+    );
+  }
+  if (!transport.sellers) {
+    return errorResult("seller_not_supported", "This cart backend doesn't support seller carts.");
+  }
 }
 
 function logCartErrors(errors: CartGetData["errors"]): void {
@@ -450,8 +592,18 @@ async function handlePost(
   transport: CartTransport,
   customerSession?: CartCustomerSession,
 ): Promise<CartPostResult> {
+  const seller = getSellerParam(context.request.url);
+  if (seller !== null) return handleSellerPost(context, transport, seller);
+  return handleHomePost(context, transport, customerSession);
+}
+
+async function handleHomePost(
+  context: CartPostHandlerContext & Partial<CartCustomerSessionWriteContext>,
+  transport: CartTransport,
+  customerSession?: CartCustomerSession,
+): Promise<CartPostResult> {
   const { request, storefrontClient } = context;
-  const isFormRequest = !request.headers.get("content-type")?.includes("application/json");
+  const isFormRequest = isFormCartRequest(request);
   const redirectTarget = safeRedirectTarget(request);
 
   const parsedCartRequest = await parseCartAction(request, isFormRequest, redirectTarget);
@@ -495,6 +647,59 @@ async function handlePost(
   if (isFormRequest) return redirectResult(redirectTarget, headers);
   const { cart, userErrors, warnings } = result;
   return jsonResult({ cart, userErrors, warnings, ...orderingField(transport) }, headers);
+}
+
+async function handleSellerPost(
+  { request, storefrontClient }: CartPostHandlerContext,
+  transport: CartTransport,
+  seller: string,
+): Promise<CartPostResult> {
+  const isFormRequest = isFormCartRequest(request);
+  const redirectTarget = safeRedirectTarget(request);
+  const sellerError = getSellerError(seller, transport);
+  if (sellerError) return isFormRequest ? redirectResult(redirectTarget) : sellerError;
+
+  const parsedCartRequest = await parseCartAction(request, isFormRequest, redirectTarget);
+  if (parsedCartRequest.type === "response") return parsedCartRequest.response;
+  const { action, bodyCartId } = parsedCartRequest;
+  const cookieCartId = getSellerCartIdFromCookie(request, seller);
+  const cartId = bodyCartId ?? cookieCartId;
+  const missingCartResponse = getMissingCartResponse(action, cartId, isFormRequest, redirectTarget);
+  if (missingCartResponse) return missingCartResponse;
+
+  const result = await runCartAction(transport, cartId, action, { storefrontClient, seller });
+  const headers = createProxyResponseHeaders(result.headers);
+  if (cartId === cookieCartId) {
+    for (const cookie of sellerCookieUpdates(request, seller, cookieCartId, result)) {
+      headers.append("set-cookie", cookie);
+    }
+  }
+
+  if (isFormRequest) return redirectResult(redirectTarget, headers);
+  const { cart, userErrors, warnings } = result;
+  return jsonResult({ cart, userErrors, warnings, ...orderingField(transport) }, headers);
+}
+
+// Only a missing cart expires the cookie. An emptied cart keeps it, so the browser's next read
+// still finds the cart.
+function sellerCookieUpdates(
+  request: Request,
+  seller: string,
+  cookieCartId: string | null,
+  { cart, expiresAt }: CartWriteResult,
+): string[] {
+  const secure = new URL(request.url).protocol === "https:";
+  if (cart === null) {
+    return cookieCartId ? [createExpiredSellerCartCookie(seller, { secure })] : [];
+  }
+  if (typeof cart.id !== "string") return [];
+  const now = Date.now();
+  return [
+    createSellerCartCookie(seller, cart.id, { expiresAt, secure, now }),
+    ...planSellerCookieEvictions(request, seller, cart.id, now).map((evicted) =>
+      createExpiredSellerCartCookie(evicted, { secure }),
+    ),
+  ];
 }
 
 function orderingField(transport: CartTransport): Pick<CartGetData, "ordering"> {
@@ -586,6 +791,10 @@ function appendHeaders(headers: Headers, headersToAppend: Headers | undefined) {
   for (const setCookie of headersToAppend.getSetCookie()) {
     headers.append("set-cookie", setCookie);
   }
+}
+
+function isFormCartRequest(request: Request): boolean {
+  return !request.headers.get("content-type")?.includes("application/json");
 }
 
 function safeRedirectTarget(request: Request): string {

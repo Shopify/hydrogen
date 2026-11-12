@@ -59,6 +59,8 @@ export type {
   CartPostResult,
   CartServerHandlers,
   CartServerHandlersWithCustomerSession,
+  CartServerHandlersWithTransport,
+  CartTransportGetHandler,
   CreateCartServerHandlersOptions,
 } from "./server-handlers";
 export type { CartServerTransport } from "./transport";

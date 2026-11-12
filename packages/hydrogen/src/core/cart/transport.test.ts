@@ -10,9 +10,10 @@ import { createCartServerTransport, getCartTransport, type CartTransport } from 
 const CART_ID = "gid://shopify/Cart/abc?key=1";
 const CART = { ...EMPTY_CART_DATA, id: CART_ID };
 
-function createTransport(ordering: CartTransport["ordering"] = "sequential") {
+function createTransport(ordering: CartTransport["ordering"] = "sequential", sellers = false) {
   const transport = {
     ordering,
+    sellers,
     getCart: vi.fn().mockResolvedValue({ cart: CART, headers: new Headers() }),
     updateCart: vi.fn().mockResolvedValue({
       cart: CART,
@@ -35,6 +36,13 @@ function jsonPost(body: unknown, cookie?: string): Request {
     headers: { "content-type": "application/json", ...(cookie && { cookie }) },
     body: JSON.stringify(body),
   });
+}
+
+function jsonData<TData>(result: { type: "json"; data: TData } | { type: string }): TData {
+  if (result.type !== "json" || !("data" in result)) {
+    throw new Error(`expected a json result, got ${result.type}`);
+  }
+  return result.data as TData;
 }
 
 describe("getCartTransport", () => {
@@ -91,7 +99,7 @@ describe("createCartServerHandlers with transport", () => {
     const result = await handlers.get({ request, storefrontClient });
 
     expect(transport.getCart).toHaveBeenCalledWith({ cartId: CART_ID }, { storefrontClient });
-    expect(result.data).toEqual({ cart: CART, ordering: "sequential" });
+    expect(jsonData(result)).toEqual({ cart: CART, ordering: "sequential" });
   });
 
   it("adds sequential ordering to GET data without a cart ID", async () => {
@@ -104,7 +112,7 @@ describe("createCartServerHandlers with transport", () => {
     });
 
     expect(transport.getCart).not.toHaveBeenCalled();
-    expect(result.data).toEqual({ cart: null, ordering: "sequential" });
+    expect(jsonData(result)).toEqual({ cart: null, ordering: "sequential" });
   });
 
   it("applies through the transport and adds sequential ordering to POST JSON", async () => {
@@ -145,7 +153,7 @@ describe("createCartServerHandlers with transport", () => {
       storefrontClient,
     });
 
-    expect(get.data).toEqual({ cart: null });
+    expect(jsonData(get)).toEqual({ cart: null });
     if (post.type !== "json") throw new Error("expected json result");
     expect(post.data).not.toHaveProperty("ordering");
   });

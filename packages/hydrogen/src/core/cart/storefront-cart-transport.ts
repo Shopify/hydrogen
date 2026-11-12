@@ -37,6 +37,7 @@ export function storefrontCartTransport(
 
   return {
     ordering: "concurrent",
+    sellers: false,
     cartQuery: queries.cart,
     getCart: ({ cartId }, { storefrontClient }) => getCart(cartId, storefrontClient, queries.cart),
     updateCart: ({ cartId, ...changes }, { storefrontClient, customerAccessToken }) =>
