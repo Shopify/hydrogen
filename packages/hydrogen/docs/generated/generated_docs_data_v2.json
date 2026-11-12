@@ -990,6 +990,175 @@
       "description": ""
     }
   },
+  "StorefrontApiError": {
+    "src/client/errors.ts": {
+      "filePath": "src/client/errors.ts",
+      "name": "StorefrontApiError",
+      "description": "Signals that a Storefront API request failed. The client throws the error for an HTTP error status, a network failure, or a response body that isn't a JSON object.\n\nGraphQL errors, including `THROTTLED`, don't throw. Read GraphQL errors from the result's `errors` field.\n\nWhen the request context's signal or the call's `signal` aborts before the call, the client throws the abort reason and sends no request. An `AbortError` during the request reaches your code unchanged. Other abort reasons during the request throw a `StorefrontApiError`.",
+      "isPublicDocs": true,
+      "members": [
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "requestId",
+          "value": "string",
+          "description": "The `x-request-id` header of the Storefront API response, when the response has one. Include the ID in support requests."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "status",
+          "value": "number",
+          "description": "The HTTP status code of the response, when the request reached the server."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "retryAfter",
+          "value": "string",
+          "description": "The raw `retry-after` header on a non-OK response. Validate the value before you send it as a header; `withStorefrontRateLimit` does this for you."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "queryText",
+          "value": "string",
+          "description": "The GraphQL query that failed. Hydrogen sets the value only in development builds."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "variables",
+          "value": "Record<string, unknown>",
+          "description": "The variables that the client sent with the request. Hydrogen sets the value only in development builds."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "name",
+          "value": "string",
+          "description": "`StorefrontApiError`. `StorefrontTimeoutError` sets its own class name."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "message",
+          "value": "string",
+          "description": "Describes the failure, such as the HTTP status that the API returned."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "stack",
+          "value": "string",
+          "description": "The stack trace, when the JavaScript runtime records one."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "MethodDeclaration",
+          "name": "toJSON",
+          "value": "() => { name: string; message: string; requestId?: string; status?: number; retryAfter?: string; }",
+          "description": "Returns the error name, message, request ID, status, and retry-after value for logging. The output leaves out the query text, variables, cause, and stack."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "GetAccessor",
+          "name": "__@toStringTag",
+          "value": "string",
+          "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
+        }
+      ],
+      "value": "export class StorefrontApiError extends Error {\n  /** The `x-request-id` header of the Storefront API response, when the response has one. Include the ID in support requests. */\n  readonly requestId?: string;\n  /** The HTTP status code of the response, when the request reached the server. */\n  readonly status?: number;\n  /** The raw `retry-after` header on a non-OK response. Validate the value before you send it as a header; `withStorefrontRateLimit` does this for you. */\n  readonly retryAfter?: string;\n  /** The GraphQL query that failed. Hydrogen sets the value only in development builds. */\n  readonly queryText?: string;\n  /** The variables that the client sent with the request. Hydrogen sets the value only in development builds. */\n  readonly variables?: Record<string, unknown>;\n\n  /** `StorefrontApiError`. `StorefrontTimeoutError` sets its own class name. */\n  declare name: string;\n  /** Describes the failure, such as the HTTP status that the API returned. */\n  declare message: string;\n  /** The stack trace, when the JavaScript runtime records one. */\n  declare stack?: string;\n\n  constructor(message: string, options?: StorefrontApiErrorOptions) {\n    super(message, options?.cause ? { cause: options.cause } : undefined);\n    this.name = \"StorefrontApiError\";\n    this.requestId = options?.requestId;\n    this.status = options?.status;\n    this.retryAfter = options?.retryAfter;\n\n    if (__DEV__) {\n      this.queryText = options?.queryText;\n      this.variables = options?.variables;\n    }\n  }\n\n  /** Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`. */\n  get [Symbol.toStringTag]() {\n    return this.name;\n  }\n\n  /** Returns the error name, message, request ID, status, and retry-after value for logging. The output leaves out the query text, variables, cause, and stack. */\n  toJSON(): {\n    name: string;\n    message: string;\n    requestId?: string;\n    status?: number;\n    retryAfter?: string;\n  } {\n    return {\n      name: this.name,\n      message: this.message,\n      ...(this.requestId != null && { requestId: this.requestId }),\n      ...(this.status != null && { status: this.status }),\n      ...(this.retryAfter != null && { retryAfter: this.retryAfter }),\n    };\n  }\n}"
+    }
+  },
+  "StorefrontTimeoutError": {
+    "src/client/errors.ts": {
+      "filePath": "src/client/errors.ts",
+      "name": "StorefrontTimeoutError",
+      "description": "Signals that a Storefront API request ran longer than the client's `defaultTimeoutInMs` setting. Aborts from the request context or the call's `signal` throw other errors.\n\n`StorefrontTimeoutError` extends `StorefrontApiError`. Check for `StorefrontTimeoutError` first when you handle both errors.",
+      "isPublicDocs": true,
+      "members": [
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "timeoutInMs",
+          "value": "number",
+          "description": "The timeout that the request exceeded, in milliseconds."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "name",
+          "value": "string",
+          "description": "Always `StorefrontTimeoutError`."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "message",
+          "value": "string",
+          "description": "States the timeout, such as `\"Storefront API request timed out after 30000ms\"`."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "stack",
+          "value": "string",
+          "description": "The stack trace, when the JavaScript runtime records one."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "requestId",
+          "value": "string",
+          "description": "The `x-request-id` header of the Storefront API response, when the response has one. Include the ID in support requests."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "status",
+          "value": "number",
+          "description": "The HTTP status code of the response, when the request reached the server."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "retryAfter",
+          "value": "string",
+          "description": "The raw `retry-after` header on a non-OK response. Validate the value before you send it as a header; `withStorefrontRateLimit` does this for you."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "queryText",
+          "value": "string",
+          "description": "The GraphQL query that failed. Hydrogen sets the value only in development builds."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "PropertyDeclaration",
+          "name": "variables",
+          "value": "Record<string, unknown>",
+          "description": "The variables that the client sent with the request. Hydrogen sets the value only in development builds."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "MethodDeclaration",
+          "name": "toJSON",
+          "value": "() => { name: string; message: string; requestId?: string; status?: number; retryAfter?: string; }",
+          "description": "Returns the error name, message, request ID, status, and retry-after value for logging. The output leaves out the query text, variables, cause, and stack."
+        },
+        {
+          "filePath": "src/client/errors.ts",
+          "syntaxKind": "GetAccessor",
+          "name": "__@toStringTag",
+          "value": "string",
+          "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
+        }
+      ],
+      "value": "export class StorefrontTimeoutError extends StorefrontApiError {\n  /** The timeout that the request exceeded, in milliseconds. */\n  readonly timeoutInMs: number;\n\n  /** Always `StorefrontTimeoutError`. */\n  declare name: string;\n  /** States the timeout, such as `\"Storefront API request timed out after 30000ms\"`. */\n  declare message: string;\n  /** The stack trace, when the JavaScript runtime records one. */\n  declare stack?: string;\n\n  constructor(timeoutInMs: number, options?: Omit<StorefrontApiErrorOptions, \"cause\">) {\n    super(`Storefront API request timed out after ${timeoutInMs}ms`, options);\n    this.name = \"StorefrontTimeoutError\";\n    this.timeoutInMs = timeoutInMs;\n  }\n}"
+    }
+  },
   "CreateShopifyRequestContextGeneratedType": {
     "src/core/request-context.ts": {
       "filePath": "src/core/request-context.ts",
@@ -1010,7 +1179,7 @@
         "name": "ShopifyRequestContext<const TI18n extends ShopifyI18n>",
         "value": "ShopifyRequestContext<const TI18n extends ShopifyI18n>"
       },
-      "value": "export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(\n  input: (ShopifyRequestContextInputBase<TI18n> | LegacyShopifyRequestContextInput<I18nConfig>) & {\n    buyerIp?: string;\n  },\n): ShopifyRequestContext<TI18n> {\n  const { request } = input;\n\n  if (input.buyerIp !== undefined && !input.buyerIp) {\n    throw new Error(\"buyerIp must be non-empty when provided\");\n  }\n\n  const requestMethod = request.method?.toUpperCase();\n  const cookieHeader = request.headers.get(\"cookie\") || undefined;\n  const inboundCookies = parseCookieHeader(cookieHeader);\n  const hasEssentialCookie = inboundCookies.has(SHOPIFY_ESSENTIAL_COOKIE);\n  const isConsentManagementRequest = request.headers.get(CONSENT_MANAGEMENT_HEADER) === \"1\";\n  const url = request.url ?? request.headers.get(STOREFRONT_URL_HEADER) ?? undefined;\n  const storefrontOrigin = getUrlOrigin(url);\n  const locale = resolveRequestLocale(input, url);\n  const context = {\n    ...(cookieHeader && { cookie: cookieHeader }),\n    globalPrivacyControl: request.headers.get(SEC_GPC_HEADER) ?? undefined,\n    locale,\n    i18n: locale,\n    ...(isI18nDefinition(input.i18n) && { i18nDefinition: input.i18n }),\n    ...(url && { url }),\n    ...(storefrontOrigin && { storefrontOrigin }),\n    ...(input.buyerIp && { buyerIp: input.buyerIp }),\n    requestGroupId:\n      request.headers.get(REQUEST_GROUP_ID_HEADER) ??\n      request.headers.get(\"x-request-id\") ??\n      request.headers.get(\"request-id\") ??\n      crypto.randomUUID(),\n    ...(isDocumentRequest(request) && { documentRequest: true }),\n    ...(request.signal && { signal: request.signal }),\n  } as Context<ShopifyI18n | I18nConfig>;\n  const advertisesUcpProfile = isUcpProfileHost(url);\n\n  let capturedCookies: string[] | undefined;\n  let personalizedResponseReason: string | undefined;\n  let sessionEstablishingReason: string | undefined;\n\n  const captureSubrequestHeaders = (headers: Headers): void => {\n    // Capture the first fresh response cookies to increase the\n    // chance of returning them from the main server response. The main response\n    // needs headers set at send time, while the body can stream later, so this\n    // may not be used if subrequests finish after the main response is sent.\n    const cookies = headers.getSetCookie();\n    if (cookies.length > 0) capturedCookies ??= cookies;\n  };\n\n  return {\n    ...context,\n    getForwardedRequestHeaders() {\n      const headers = new Headers(request.headers);\n      applyStorefrontRequestHeaders(context, headers);\n      if (context.url) headers.set(STOREFRONT_URL_HEADER, context.url);\n      return headers;\n    },\n    applyStorefrontRequestHeaders(headers) {\n      applyStorefrontRequestHeaders(context, headers);\n    },\n    captureSubrequestHeaders,\n    consumeStorefrontResponseHeaders(headers) {\n      captureSubrequestHeaders(headers);\n      headers.delete(\"set-cookie\");\n    },\n    markResponseAsPersonalized(reason) {\n      personalizedResponseReason ??= reason;\n    },\n    markResponseAsSessionEstablishing(reason) {\n      sessionEstablishingReason ??= reason;\n    },\n    applyResponseHeaders(headers) {\n      headers.set(\"powered-by\", \"Shopify, Hydrogen\");\n\n      if (advertisesUcpProfile) applyUcpProfileLink(headers);\n\n      // Documents may be shared or streamed, so they must not carry buyer-specific state.\n      const isDocumentResponse =\n        context.documentRequest || (headers.get(\"content-type\")?.startsWith(\"text/html\") ?? false);\n\n      // Keep GET and HEAD responses cacheable, and fail closed when the request method is unknown.\n      // Cold sessions may only be established by the explicitly marked consent request.\n      const mayReturnShopifyState =\n        requestMethod !== undefined &&\n        requestMethod !== \"GET\" &&\n        requestMethod !== \"HEAD\" &&\n        !isDocumentResponse &&\n        (hasEssentialCookie ||\n          isConsentManagementRequest ||\n          sessionEstablishingReason !== undefined);\n\n      // Replay cookies captured from fresh SFAPI and proxy responses when allowed.\n      if (capturedCookies && mayReturnShopifyState) {\n        const existingSetCookies = new Set(headers.getSetCookie());\n        for (const value of capturedCookies) {\n          if (existingSetCookies.has(value)) continue;\n          headers.append(\"set-cookie\", value);\n          existingSetCookies.add(value);\n        }\n      }\n\n      // Consent/session responses can contain private state in the body without setting cookies.\n      if (\n        personalizedResponseReason ||\n        isConsentManagementRequest ||\n        sessionEstablishingReason !== undefined ||\n        headers.has(\"set-cookie\")\n      ) {\n        applyPrivateResponseCacheHeaders(headers);\n      }\n    },\n  } as ShopifyRequestContext<TI18n>;\n}"
+      "value": "export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(\n  input: (ShopifyRequestContextInputBase<TI18n> | LegacyShopifyRequestContextInput<I18nConfig>) & {\n    buyerIp?: string;\n  },\n): ShopifyRequestContext<TI18n> {\n  const { request } = input;\n\n  if (input.buyerIp !== undefined && !input.buyerIp) {\n    throw new Error(\"buyerIp must be non-empty when provided\");\n  }\n\n  const requestMethod = request.method?.toUpperCase();\n  const cookieHeader = request.headers.get(\"cookie\") || undefined;\n  const inboundCookies = parseCookieHeader(cookieHeader);\n  const hasEssentialCookie = inboundCookies.has(SHOPIFY_ESSENTIAL_COOKIE);\n  const isConsentManagementRequest = request.headers.get(CONSENT_MANAGEMENT_HEADER) === \"1\";\n  const url = request.url ?? request.headers.get(STOREFRONT_URL_HEADER) ?? undefined;\n  const storefrontOrigin = getUrlOrigin(url);\n  const locale = resolveRequestLocale(input, url);\n  const context = {\n    ...(cookieHeader && { cookie: cookieHeader }),\n    globalPrivacyControl: request.headers.get(SEC_GPC_HEADER) ?? undefined,\n    locale,\n    i18n: locale,\n    ...(isI18nDefinition(input.i18n) && { i18nDefinition: input.i18n }),\n    ...(url && { url }),\n    ...(storefrontOrigin && { storefrontOrigin }),\n    ...(input.buyerIp && { buyerIp: input.buyerIp }),\n    requestGroupId:\n      request.headers.get(REQUEST_GROUP_ID_HEADER) ??\n      request.headers.get(\"x-request-id\") ??\n      request.headers.get(\"request-id\") ??\n      crypto.randomUUID(),\n    ...(isDocumentRequest(request) && { documentRequest: true }),\n    ...(request.signal && { signal: request.signal }),\n  } as Context<ShopifyI18n | I18nConfig>;\n  const advertisesUcpProfile = isUcpProfileHost(url);\n\n  let capturedCookies: string[] | undefined;\n  let personalizedResponseReason: string | undefined;\n  let sessionEstablishingReason: string | undefined;\n  let storefrontRateLimited = false;\n  let storefrontRetryDeadline: bigint | undefined;\n  let warnedMissingStatus = false;\n\n  const captureSubrequestHeaders = (headers: Headers): void => {\n    // Capture the first fresh response cookies to increase the\n    // chance of returning them from the main server response. The main response\n    // needs headers set at send time, while the body can stream later, so this\n    // may not be used if subrequests finish after the main response is sent.\n    const cookies = headers.getSetCookie();\n    if (cookies.length > 0) capturedCookies ??= cookies;\n  };\n\n  return {\n    ...context,\n    getForwardedRequestHeaders() {\n      const headers = new Headers(request.headers);\n      applyStorefrontRequestHeaders(context, headers);\n      if (context.url) headers.set(STOREFRONT_URL_HEADER, context.url);\n      return headers;\n    },\n    applyStorefrontRequestHeaders(headers) {\n      applyStorefrontRequestHeaders(context, headers);\n    },\n    captureSubrequestHeaders,\n    consumeStorefrontResponseHeaders(headers) {\n      captureSubrequestHeaders(headers);\n      headers.delete(\"set-cookie\");\n    },\n    captureStorefrontRateLimit(retryAfter) {\n      storefrontRateLimited = true;\n      const value = getSafeRetryAfterValue(retryAfter);\n      if (value === undefined) return;\n\n      const deadline = getRetryDeadline(value);\n      if (storefrontRetryDeadline === undefined || deadline > storefrontRetryDeadline) {\n        storefrontRetryDeadline = deadline;\n      }\n    },\n    markResponseAsPersonalized(reason) {\n      personalizedResponseReason ??= reason;\n    },\n    markResponseAsSessionEstablishing(reason) {\n      sessionEstablishingReason ??= reason;\n    },\n    applyResponseHeaders(headers, status) {\n      headers.set(\"powered-by\", \"Shopify, Hydrogen\");\n\n      // Without the status, the method cannot tell a `429` from a recovered page, and a framework\n      // can drop the rate-limit headers silently. Warn once so the omission is visible.\n      if (status === undefined && storefrontRateLimited && !warnedMissingStatus) {\n        warnedMissingStatus = true;\n        log.warn(\n          \"storefront api rate limited this request; pass response.status to applyResponseHeaders to keep rate-limit headers on a 429\",\n        );\n      }\n\n      // A framework can drop the headers of a thrown `429` response, as React Router does, so add\n      // them here. Only a `429` changes: a page that recovered from the rate limit keeps its cache\n      // headers.\n      if (status === RATE_LIMITED_STATUS && storefrontRateLimited) {\n        applyNoStoreResponseCacheHeaders(headers);\n        // The retry advice is the later of the response's own valid header and the latest captured\n        // deadline, so one rule applies whichever path produced the `429`.\n        const existing = getSafeRetryAfterValue(headers.get(\"retry-after\"));\n        let deadline = storefrontRetryDeadline;\n        if (existing !== undefined) {\n          const existingDeadline = getRetryDeadline(existing);\n          if (deadline === undefined || existingDeadline > deadline) deadline = existingDeadline;\n        }\n        if (deadline !== undefined) {\n          const remaining = deadline - BigInt(Date.now());\n          const seconds = remaining > 0n ? (remaining + 999n) / 1000n : 0n;\n          headers.set(\"Retry-After\", seconds.toString());\n        }\n      }\n      if (advertisesUcpProfile) applyUcpProfileLink(headers);\n\n      // Documents may be shared or streamed, so they must not carry buyer-specific state.\n      const isDocumentResponse =\n        context.documentRequest || (headers.get(\"content-type\")?.startsWith(\"text/html\") ?? false);\n\n      // Keep GET and HEAD responses cacheable, and fail closed when the request method is unknown.\n      // Cold sessions may only be established by the explicitly marked consent request.\n      const mayReturnShopifyState =\n        requestMethod !== undefined &&\n        requestMethod !== \"GET\" &&\n        requestMethod !== \"HEAD\" &&\n        !isDocumentResponse &&\n        (hasEssentialCookie ||\n          isConsentManagementRequest ||\n          sessionEstablishingReason !== undefined);\n\n      // Replay cookies captured from fresh SFAPI and proxy responses when allowed.\n      if (capturedCookies && mayReturnShopifyState) {\n        const existingSetCookies = new Set(headers.getSetCookie());\n        for (const value of capturedCookies) {\n          if (existingSetCookies.has(value)) continue;\n          headers.append(\"set-cookie\", value);\n          existingSetCookies.add(value);\n        }\n      }\n\n      // Consent/session responses can contain private state in the body without setting cookies.\n      if (\n        personalizedResponseReason ||\n        isConsentManagementRequest ||\n        sessionEstablishingReason !== undefined ||\n        headers.has(\"set-cookie\")\n      ) {\n        applyPrivateResponseCacheHeaders(headers);\n      }\n    },\n  } as ShopifyRequestContext<TI18n>;\n}"
     }
   },
   "ShopifyRequestContextInputBase": {
@@ -1169,7 +1338,7 @@
       "filePath": "src/core/request-context.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyRequestContextBase",
-      "value": "{\n  // -- Private fields --\n  /**\n   * A type-only marker. Create request contexts only with `createShopifyRequestContext`.\n   * @internal\n   */\n  readonly __hydrogenShopifyRequestContextBrand: never;\n  /**\n   * The incoming request's `Cookie` header. Hydrogen forwards the header to the Storefront API.\n   * @internal\n   */\n  cookie?: string;\n  /**\n   * The customer's trusted IP address. Private Storefront API clients require it.\n   * @internal\n   */\n  readonly buyerIp?: string;\n  /**\n   * The i18n definition the context matched its locale against. Absent for the deprecated fixed-locale input.\n   * @internal\n   */\n  readonly i18nDefinition?: ShopifyI18n;\n  /**\n   * The ID that groups this request's Shopify API calls. Hydrogen reads the ID from the request headers or generates one.\n   * @internal\n   */\n  requestGroupId: string;\n  /**\n   * The incoming request's abort signal. Hydrogen's API clients stop their requests when the signal aborts.\n   * @internal\n   */\n  signal?: AbortSignal;\n  /**\n   * The incoming request's URL.\n   * @internal\n   */\n  url?: string;\n  /**\n   * The origin of the incoming request's URL. Hydrogen forwards the origin to the Storefront API.\n   * @internal\n   */\n  storefrontOrigin?: string;\n  /**\n   * Adds the Hydrogen SDK headers and the customer's cookie, privacy, and origin headers to a\n   * Storefront API request. The Storefront API client and the API proxies call the method for you.\n   * @internal\n   */\n  applyStorefrontRequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from the first Storefront API response that sets cookies. The Storefront API\n   * client calls the method for you, and `applyResponseHeaders()` can add the cookies to your response.\n   * @internal\n   */\n  captureSubrequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from a proxied Storefront API response and removes the `set-cookie` header\n   * from that response. The API proxies in `handleShopifyRoutes` call the method for you.\n   * @internal\n   */\n  consumeStorefrontResponseHeaders(headers: Headers): void;\n  /**\n   * Lets the final response set Shopify cookies before the customer has a Shopify session, and\n   * marks the response as private and uncacheable. The UCP MCP proxy calls the method for you.\n   * @internal\n   */\n  markResponseAsSessionEstablishing(reason: string): void;\n\n  // -- Public fields --\n  /** Returns the incoming request's headers with Shopify's request headers added. Pass the headers when you forward the request to a proxy or another origin. */\n  getForwardedRequestHeaders(): Headers;\n  /**\n   * Marks the final response as private and uncacheable because the response holds customer data, such as a server-rendered cart. `applyResponseHeaders()` then sets `Cache-Control: private, no-store, max-age=0, must-revalidate` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. Call the method before `applyResponseHeaders()`, and only on requests whose response holds customer data, so other responses stay cacheable. Pass a short `reason` that names the customer data. The Customer Account API client and the customer session call the method for you.\n   */\n  markResponseAsPersonalized(reason: string): void;\n  /**\n   * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.\n   *\n   * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses marked with `markResponseAsPersonalized()` private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.\n   */\n  applyResponseHeaders(headers: Headers): void;\n}",
+      "value": "{\n  // -- Private fields --\n  /**\n   * A type-only marker. Create request contexts only with `createShopifyRequestContext`.\n   * @internal\n   */\n  readonly __hydrogenShopifyRequestContextBrand: never;\n  /**\n   * The incoming request's `Cookie` header. Hydrogen forwards the header to the Storefront API.\n   * @internal\n   */\n  cookie?: string;\n  /**\n   * The customer's trusted IP address. Private Storefront API clients require it.\n   * @internal\n   */\n  readonly buyerIp?: string;\n  /**\n   * The i18n definition the context matched its locale against. Absent for the deprecated fixed-locale input.\n   * @internal\n   */\n  readonly i18nDefinition?: ShopifyI18n;\n  /**\n   * The ID that groups this request's Shopify API calls. Hydrogen reads the ID from the request headers or generates one.\n   * @internal\n   */\n  requestGroupId: string;\n  /**\n   * The incoming request's abort signal. Hydrogen's API clients stop their requests when the signal aborts.\n   * @internal\n   */\n  signal?: AbortSignal;\n  /**\n   * The incoming request's URL.\n   * @internal\n   */\n  url?: string;\n  /**\n   * The origin of the incoming request's URL. Hydrogen forwards the origin to the Storefront API.\n   * @internal\n   */\n  storefrontOrigin?: string;\n  /**\n   * Adds the Hydrogen SDK headers and the customer's cookie, privacy, and origin headers to a\n   * Storefront API request. The Storefront API client and the API proxies call the method for you.\n   * @internal\n   */\n  applyStorefrontRequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from the first Storefront API response that sets cookies. The Storefront API\n   * client calls the method for you, and `applyResponseHeaders()` can add the cookies to your response.\n   * @internal\n   */\n  captureSubrequestHeaders(headers: Headers): void;\n  /**\n   * Saves the cookies from a proxied Storefront API response and removes the `set-cookie` header\n   * from that response. The API proxies in `handleShopifyRoutes` call the method for you.\n   * @internal\n   */\n  consumeStorefrontResponseHeaders(headers: Headers): void;\n  /**\n   * Tracks Storefront API `429` responses and the latest valid retry deadline, independent of\n   * completion order. Delay-seconds start at capture time; HTTP dates specify absolute deadlines.\n   * Invalid values do not replace valid advice. The Storefront API client calls the method for you.\n   * @internal\n   */\n  captureStorefrontRateLimit?(retryAfter: string | undefined): void;\n  /**\n   * Lets the final response set Shopify cookies before the customer has a Shopify session, and\n   * marks the response as private and uncacheable. The UCP MCP proxy calls the method for you.\n   * @internal\n   */\n  markResponseAsSessionEstablishing(reason: string): void;\n\n  // -- Public fields --\n  /** Returns the incoming request's headers with Shopify's request headers added. Pass the headers when you forward the request to a proxy or another origin. */\n  getForwardedRequestHeaders(): Headers;\n  /**\n   * Marks the final response as private and uncacheable because the response holds customer data, such as a server-rendered cart. `applyResponseHeaders()` then sets `Cache-Control: private, no-store, max-age=0, must-revalidate` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. Call the method before `applyResponseHeaders()`, and only on requests whose response holds customer data, so other responses stay cacheable. Pass a short `reason` that names the customer data. The Customer Account API client and the customer session call the method for you.\n   */\n  markResponseAsPersonalized(reason: string): void;\n  /**\n   * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.\n   *\n   * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses marked with `markResponseAsPersonalized()` private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.\n   *\n   * Pass the response's `status` as well. When the status is `429` and the Storefront API rate limited a request that used this context, the method sets `Cache-Control: no-store` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. It also sets `Retry-After` to the later of the response's own valid `Retry-After` value and the latest valid retry deadline from all Storefront API `429` responses on this context, including recovered errors. Delay-seconds and IMF-fixdates are accepted. The value is the remaining delay-seconds, rounded up and never negative. React Router doesn't copy the headers of a thrown response, so this keeps the headers of a `429` from `withStorefrontRateLimit`. Responses with other statuses keep their cache headers.\n   *\n   * When you omit `status` after a Storefront API rate limit, the method logs one warning and adds no rate-limit headers.  The `429` response can then lose `Retry-After` and `Cache-Control: no-store`.\n   */\n  applyResponseHeaders(headers: Headers, status?: number): void;\n}",
       "description": "The fields and methods on every request context.",
       "members": [
         {
@@ -1183,8 +1352,8 @@
           "filePath": "src/core/request-context.ts",
           "syntaxKind": "MethodSignature",
           "name": "applyResponseHeaders",
-          "value": "(headers: Headers) => void",
-          "description": "Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.\n\nAppend your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses marked with `markResponseAsPersonalized()` private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`."
+          "value": "(headers: Headers, status?: number) => void",
+          "description": "Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.\n\nAppend your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses marked with `markResponseAsPersonalized()` private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.\n\nPass the response's `status` as well. When the status is `429` and the Storefront API rate limited a request that used this context, the method sets `Cache-Control: no-store` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. It also sets `Retry-After` to the later of the response's own valid `Retry-After` value and the latest valid retry deadline from all Storefront API `429` responses on this context, including recovered errors. Delay-seconds and IMF-fixdates are accepted. The value is the remaining delay-seconds, rounded up and never negative. React Router doesn't copy the headers of a thrown response, so this keeps the headers of a `429` from `withStorefrontRateLimit`. Responses with other statuses keep their cache headers.\n\nWhen you omit `status` after a Storefront API rate limit, the method logs one warning and adds no rate-limit headers.  The `429` response can then lose `Retry-After` and `Cache-Control: no-store`."
         },
         {
           "filePath": "src/core/request-context.ts",
@@ -1199,6 +1368,14 @@
           "name": "buyerIp",
           "value": "string",
           "description": "The customer's trusted IP address. Private Storefront API clients require it.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/request-context.ts",
+          "syntaxKind": "MethodSignature",
+          "name": "captureStorefrontRateLimit",
+          "value": "(retryAfter: string) => void",
+          "description": "Tracks Storefront API `429` responses and the latest valid retry deadline, independent of completion order. Delay-seconds start at capture time; HTTP dates specify absolute deadlines. Invalid values do not replace valid advice. The Storefront API client calls the method for you.",
           "isOptional": true
         },
         {
@@ -1493,161 +1670,6 @@
           "isOptional": true
         }
       ]
-    }
-  },
-  "StorefrontApiError": {
-    "src/client/errors.ts": {
-      "filePath": "src/client/errors.ts",
-      "name": "StorefrontApiError",
-      "description": "Signals that a Storefront API request failed. The client throws the error for an HTTP error status, a network failure, or a response body that isn't a JSON object.\n\nGraphQL errors, including `THROTTLED`, don't throw. Read GraphQL errors from the result's `errors` field.\n\nWhen the request context's signal or the call's `signal` aborts before the call, the client throws the abort reason and sends no request. An `AbortError` during the request reaches your code unchanged. Other abort reasons during the request throw a `StorefrontApiError`.",
-      "isPublicDocs": true,
-      "members": [
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertyDeclaration",
-          "name": "requestId",
-          "value": "string",
-          "description": "The `x-request-id` header of the Storefront API response, when the response has one. Include the ID in support requests."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertyDeclaration",
-          "name": "status",
-          "value": "number",
-          "description": "The HTTP status code of the response, when the request reached the server."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertyDeclaration",
-          "name": "queryText",
-          "value": "string",
-          "description": "The GraphQL query that failed. Hydrogen sets the value only in development builds."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertyDeclaration",
-          "name": "variables",
-          "value": "Record<string, unknown>",
-          "description": "The variables that the client sent with the request. Hydrogen sets the value only in development builds."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertyDeclaration",
-          "name": "name",
-          "value": "string",
-          "description": "`StorefrontApiError`. `StorefrontTimeoutError` sets its own class name."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertyDeclaration",
-          "name": "message",
-          "value": "string",
-          "description": "Describes the failure, such as the HTTP status that the API returned."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertyDeclaration",
-          "name": "stack",
-          "value": "string",
-          "description": "The stack trace, when the JavaScript runtime records one."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "MethodDeclaration",
-          "name": "toJSON",
-          "value": "() => { name: string; message: string; requestId?: string; status?: number; }",
-          "description": "Returns the error name, message, request ID, and status for logging. The output leaves out the query text, variables, cause, and stack."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag",
-          "value": "string",
-          "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
-        }
-      ],
-      "value": "export class StorefrontApiError extends Error {\n  /** The `x-request-id` header of the Storefront API response, when the response has one. Include the ID in support requests. */\n  readonly requestId?: string;\n  /** The HTTP status code of the response, when the request reached the server. */\n  readonly status?: number;\n  /** The GraphQL query that failed. Hydrogen sets the value only in development builds. */\n  readonly queryText?: string;\n  /** The variables that the client sent with the request. Hydrogen sets the value only in development builds. */\n  readonly variables?: Record<string, unknown>;\n\n  /** `StorefrontApiError`. `StorefrontTimeoutError` sets its own class name. */\n  declare name: string;\n  /** Describes the failure, such as the HTTP status that the API returned. */\n  declare message: string;\n  /** The stack trace, when the JavaScript runtime records one. */\n  declare stack?: string;\n\n  constructor(message: string, options?: StorefrontApiErrorOptions) {\n    super(message, options?.cause ? { cause: options.cause } : undefined);\n    this.name = \"StorefrontApiError\";\n    this.requestId = options?.requestId;\n    this.status = options?.status;\n\n    if (__DEV__) {\n      this.queryText = options?.queryText;\n      this.variables = options?.variables;\n    }\n  }\n\n  /** Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`. */\n  get [Symbol.toStringTag]() {\n    return this.name;\n  }\n\n  /** Returns the error name, message, request ID, and status for logging. The output leaves out the query text, variables, cause, and stack. */\n  toJSON(): { name: string; message: string; requestId?: string; status?: number } {\n    return {\n      name: this.name,\n      message: this.message,\n      ...(this.requestId != null && { requestId: this.requestId }),\n      ...(this.status != null && { status: this.status }),\n    };\n  }\n}"
-    }
-  },
-  "StorefrontTimeoutError": {
-    "src/client/errors.ts": {
-      "filePath": "src/client/errors.ts",
-      "name": "StorefrontTimeoutError",
-      "description": "Signals that a Storefront API request ran longer than the client's `defaultTimeoutInMs` setting. Aborts from the request context or the call's `signal` throw other errors.\n\n`StorefrontTimeoutError` extends `StorefrontApiError`. Check for `StorefrontTimeoutError` first when you handle both errors.",
-      "isPublicDocs": true,
-      "members": [
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertyDeclaration",
-          "name": "timeoutInMs",
-          "value": "number",
-          "description": "The timeout that the request exceeded, in milliseconds."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertyDeclaration",
-          "name": "name",
-          "value": "string",
-          "description": "Always `StorefrontTimeoutError`."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertyDeclaration",
-          "name": "message",
-          "value": "string",
-          "description": "States the timeout, such as `\"Storefront API request timed out after 30000ms\"`."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertyDeclaration",
-          "name": "stack",
-          "value": "string",
-          "description": "The stack trace, when the JavaScript runtime records one."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertyDeclaration",
-          "name": "requestId",
-          "value": "string",
-          "description": "The `x-request-id` header of the Storefront API response, when the response has one. Include the ID in support requests."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertyDeclaration",
-          "name": "status",
-          "value": "number",
-          "description": "The HTTP status code of the response, when the request reached the server."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertyDeclaration",
-          "name": "queryText",
-          "value": "string",
-          "description": "The GraphQL query that failed. Hydrogen sets the value only in development builds."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "PropertyDeclaration",
-          "name": "variables",
-          "value": "Record<string, unknown>",
-          "description": "The variables that the client sent with the request. Hydrogen sets the value only in development builds."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "MethodDeclaration",
-          "name": "toJSON",
-          "value": "() => { name: string; message: string; requestId?: string; status?: number; }",
-          "description": "Returns the error name, message, request ID, and status for logging. The output leaves out the query text, variables, cause, and stack."
-        },
-        {
-          "filePath": "src/client/errors.ts",
-          "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag",
-          "value": "string",
-          "description": "Makes `Object.prototype.toString` report the error name, such as `[object StorefrontApiError]`."
-        }
-      ],
-      "value": "export class StorefrontTimeoutError extends StorefrontApiError {\n  /** The timeout that the request exceeded, in milliseconds. */\n  readonly timeoutInMs: number;\n\n  /** Always `StorefrontTimeoutError`. */\n  declare name: string;\n  /** States the timeout, such as `\"Storefront API request timed out after 30000ms\"`. */\n  declare message: string;\n  /** The stack trace, when the JavaScript runtime records one. */\n  declare stack?: string;\n\n  constructor(timeoutInMs: number, options?: Omit<StorefrontApiErrorOptions, \"cause\">) {\n    super(`Storefront API request timed out after ${timeoutInMs}ms`, options);\n    this.name = \"StorefrontTimeoutError\";\n    this.timeoutInMs = timeoutInMs;\n  }\n}"
     }
   },
   "StorefrontClientOptions": {
@@ -2413,7 +2435,7 @@
         "name": "StorefrontClient",
         "value": "StorefrontClient"
       },
-      "value": "export function createStorefrontClient(args: CreateStorefrontClientArgs): StorefrontClient {\n  const { config, requestContext, type: clientType } = args;\n\n  if (!config.storeDomain) {\n    throw new Error(\"storeDomain is required and must be non-empty\");\n  }\n\n  const storeUrl = normalizeStoreDomain(config.storeDomain);\n  const apiVersion = config.apiVersion ?? STOREFRONT_API_VERSION;\n  const apiUrl = `${storeUrl}/api/${apiVersion}/graphql.json`;\n\n  const originFetch = config.fetch ?? globalThis.fetch;\n  if (typeof originFetch !== \"function\") {\n    throw new Error(\n      \"No fetch function available. Pass a fetch option or ensure globalThis.fetch exists.\",\n    );\n  }\n  const resolvedFetch = config.cache\n    ? createFetchWithCache({\n        cache: config.cache,\n        waitUntil: config.waitUntil,\n        fetch: originFetch as typeof globalThis.fetch,\n      })\n    : originFetch;\n\n  const timeoutInMs = config.defaultTimeoutInMs ?? DEFAULT_TIMEOUT_IN_MS;\n  if (timeoutInMs < 0 || Number.isNaN(timeoutInMs)) {\n    throw new Error(\"defaultTimeoutInMs must be a non-negative number\");\n  }\n\n  const staticHeaders: Record<string, string> = {\n    \"content-type\": \"application/json\",\n  };\n  // Browsers drop a script-set User-Agent or send a CORS preflight for it.\n  if (typeof document === \"undefined\") {\n    staticHeaders[\"user-agent\"] = HYDROGEN_USER_AGENT;\n  }\n  if (config.storefrontId) {\n    staticHeaders[STOREFRONT_ID_HEADER] = config.storefrontId;\n  }\n\n  switch (clientType) {\n    case \"private\":\n    case \"private_no_buyer_context\":\n      if (typeof document !== \"undefined\") {\n        throw new Error(\n          \"private storefront tokens cannot be used in a browser context. Use a publicStorefrontToken instead.\",\n        );\n      }\n      if (!config.privateStorefrontToken) {\n        throw new Error(\"privateStorefrontToken is required\");\n      }\n      staticHeaders[STOREFRONT_PRIVATE_TOKEN_HEADER] = config.privateStorefrontToken;\n      break;\n    case \"public\":\n      if (config.publicStorefrontToken !== undefined && !config.publicStorefrontToken) {\n        throw new Error(\"publicStorefrontToken must be non-empty when provided\");\n      }\n      if (config.publicStorefrontToken) {\n        staticHeaders[STOREFRONT_ACCESS_TOKEN_HEADER] = config.publicStorefrontToken;\n      }\n      break;\n    default:\n      clientType satisfies never;\n      throw new Error(`Unsupported client type: ${clientType}`);\n  }\n\n  const locale = requestContext.locale;\n  const requestHeaders = new Headers(staticHeaders);\n  requestContext.applyStorefrontRequestHeaders(requestHeaders);\n\n  if (clientType === \"private\") {\n    const { buyerIp } = requestContext;\n    if (!buyerIp) {\n      throw new TypeError(\"requestContext.buyerIp is required for private Storefront API clients\");\n    }\n    requestHeaders.set(STOREFRONT_BUYER_IP_HEADER, buyerIp);\n  }\n\n  async function graphql(\n    doc: DocLike | string,\n    ...rest: [options?: Record<string, unknown>]\n  ): Promise<StorefrontGraphqlResult<DocLike>> {\n    const opts = (rest[0] ?? {}) as {\n      variables?: Record<string, unknown>;\n      signal?: AbortSignal;\n      cache?: CachingStrategy;\n      [SHOULD_CACHE_RESULT]?: ShouldCacheResult;\n    };\n\n    const queryText = typeof doc === \"string\" ? doc : (doc as unknown as string);\n    if (typeof queryText !== \"string\") {\n      throw new StorefrontApiError(\n        \"Expected gql() to return a string at runtime. Check gql.tada version compatibility.\",\n      );\n    }\n\n    if (opts.cache && !config.cache) {\n      throw new StorefrontCacheConfigError(\n        \"Storefront API cache options require a cache configured in createStorefrontClient().\",\n      );\n    }\n\n    if (opts.cache?.mode === \"private\") {\n      throw new StorefrontCacheConfigError(\n        \"Storefront API cache mode 'private' is not supported yet. Use Cache() without private mode, or cache buyer-specific work with createRunWithCache() and an explicit private key.\",\n      );\n    }\n\n    const variables = buildVariables(queryText, opts.variables, locale);\n    const externalSignals = [requestContext.signal, opts.signal].filter(\n      (signal): signal is AbortSignal => Boolean(signal),\n    );\n\n    const earlyAbortSignal = externalSignals.find((signal) => signal.aborted);\n    if (earlyAbortSignal) {\n      throw (\n        earlyAbortSignal.reason ??\n        new DOMException(\"signal is aborted without reason\", \"AbortError\")\n      );\n    }\n\n    let requestId: string | undefined;\n    let responseHeaders: Headers;\n    let responseText: string;\n    let status: number;\n    let timeoutSignal: AbortSignal | undefined;\n\n    if (timeoutInMs > 0) {\n      timeoutSignal = AbortSignal.timeout(timeoutInMs);\n      externalSignals.push(timeoutSignal);\n    }\n\n    try {\n      const init: PlainRequestInit = {\n        method: \"POST\",\n        headers: new Headers(requestHeaders),\n        body: JSON.stringify({ query: queryText, variables }),\n        // Never follow redirects: runtimes forward custom Shopify credential headers across\n        // origins, so a 3xx fails closed through the redirect check below.\n        redirect: \"manual\",\n        signal: externalSignals.length > 0 ? AbortSignal.any(externalSignals) : undefined,\n      };\n\n      const cacheOptions = createStorefrontCacheOptions(\n        apiUrl,\n        init,\n        queryText,\n        opts.cache,\n        opts[SHOULD_CACHE_RESULT],\n        timeoutInMs > 0 ? timeoutInMs : DEFAULT_TIMEOUT_IN_MS,\n      );\n      const response = await (resolvedFetch as ResolvedStorefrontFetch)(apiUrl, init, cacheOptions);\n\n      responseHeaders = response.headers;\n      requestId = responseHeaders.get(\"x-request-id\") ?? undefined;\n      status = response.status;\n\n      // Reject redirects before capturing headers so a rejected response can't set cookies.\n      // Browsers hide a manual redirect's status behind an opaque response, so leave it out.\n      const isOpaqueRedirect = response.type === \"opaqueredirect\";\n      if (isOpaqueRedirect || REDIRECT_STATUSES.has(status)) {\n        // Don't await: a cancel waits on any unread clone (tee) a custom fetch kept.\n        void response.body?.cancel().catch(() => {});\n        // Name only the target origin, which diagnoses a misconfigured `storeDomain` (e.g. an\n        // `http://` domain redirected to https) without logging the target's path or query.\n        const locationOrigin = getLocationOrigin(responseHeaders.get(\"location\"), apiUrl);\n        throw new StorefrontApiError(\n          isOpaqueRedirect\n            ? \"SFAPI responded with a redirect; redirects are not followed\"\n            : `SFAPI responded with a redirect (${status}${locationOrigin ? ` to ${locationOrigin}` : \"\"}); redirects are not followed`,\n          { status: isOpaqueRedirect ? undefined : status, requestId, queryText, variables },\n        );\n      }\n\n      const hydrogenCacheStatus = getHydrogenCacheStatus(responseHeaders);\n      if (hydrogenCacheStatus !== \"hit\") {\n        requestContext.captureSubrequestHeaders(responseHeaders);\n      }\n      if (isPrivateResponse(responseHeaders)) {\n        requestContext.markResponseAsPersonalized(\n          STOREFRONT_PRIVATE_RESPONSE_PERSONALIZATION_REASON,\n        );\n      }\n\n      if (!response.ok) {\n        const bodyHint = await response.text().catch(() => \"\");\n        throw new StorefrontApiError(\n          `SFAPI responded with ${status}${bodyHint ? `: ${bodyHint.slice(0, 200)}` : \"\"}`,\n          { status, requestId, queryText, variables },\n        );\n      }\n\n      responseText = await response.text();\n    } catch (error) {\n      if (error instanceof StorefrontApiError) throw error;\n      if (error instanceof StorefrontTimeoutError) throw error;\n      if (error instanceof StorefrontCacheConfigError) throw error;\n      if (\n        error instanceof DOMException &&\n        error.name === \"TimeoutError\" &&\n        timeoutSignal?.aborted\n      ) {\n        throw new StorefrontTimeoutError(timeoutInMs);\n      }\n      if (error instanceof DOMException && error.name === \"AbortError\") {\n        throw error;\n      }\n      throw new StorefrontApiError(\"SFAPI request failed\", { cause: error });\n    }\n\n    let json: unknown;\n    try {\n      json = JSON.parse(responseText);\n    } catch (cause) {\n      throw new StorefrontApiError(\n        `Failed to parse SFAPI response as JSON (${apiUrl}, status ${status})` +\n          (responseText ? `: ${responseText.slice(0, 200)}` : \"\"),\n        { status, requestId, cause, queryText, variables },\n      );\n    }\n\n    if (typeof json !== \"object\" || json === null || Array.isArray(json)) {\n      throw new StorefrontApiError(\n        `SFAPI returned unexpected JSON type: ${Array.isArray(json) ? \"array\" : typeof json}`,\n        { status, requestId, queryText, variables },\n      );\n    }\n\n    const body = json as { data?: unknown; errors?: GraphQLFormattedError[] };\n    // Branch to populate the two arms of the StorefrontGraphqlResult union: callers\n    // narrowing on `errors` get a non-null `data` only when no errors are present.\n    if (body.errors) {\n      return {\n        data: body.data ?? null,\n        errors: body.errors,\n        headers: responseHeaders,\n      };\n    }\n    return {\n      data: body.data,\n      headers: responseHeaders,\n    };\n  }\n\n  const client: StorefrontClient = {\n    type: clientType,\n    i18n: locale,\n    locale,\n    graphql: graphql as StorefrontClient[\"graphql\"],\n    apiUrl,\n    storeUrl,\n    storefrontId: config.storefrontId,\n    requestContext,\n  };\n\n  if (config.cache) CACHE_ENABLED_GRAPHQL_CLIENTS.add(client.graphql);\n\n  return client;\n}"
+      "value": "export function createStorefrontClient(args: CreateStorefrontClientArgs): StorefrontClient {\n  const { config, requestContext, type: clientType } = args;\n\n  if (!config.storeDomain) {\n    throw new Error(\"storeDomain is required and must be non-empty\");\n  }\n\n  const storeUrl = normalizeStoreDomain(config.storeDomain);\n  const apiVersion = config.apiVersion ?? STOREFRONT_API_VERSION;\n  const apiUrl = `${storeUrl}/api/${apiVersion}/graphql.json`;\n\n  const originFetch = config.fetch ?? globalThis.fetch;\n  if (typeof originFetch !== \"function\") {\n    throw new Error(\n      \"No fetch function available. Pass a fetch option or ensure globalThis.fetch exists.\",\n    );\n  }\n  const resolvedFetch = config.cache\n    ? createFetchWithCache({\n        cache: config.cache,\n        waitUntil: config.waitUntil,\n        fetch: originFetch as typeof globalThis.fetch,\n      })\n    : originFetch;\n\n  const timeoutInMs = config.defaultTimeoutInMs ?? DEFAULT_TIMEOUT_IN_MS;\n  if (timeoutInMs < 0 || Number.isNaN(timeoutInMs)) {\n    throw new Error(\"defaultTimeoutInMs must be a non-negative number\");\n  }\n\n  const staticHeaders: Record<string, string> = {\n    \"content-type\": \"application/json\",\n  };\n  // Browsers drop a script-set User-Agent or send a CORS preflight for it.\n  if (typeof document === \"undefined\") {\n    staticHeaders[\"user-agent\"] = HYDROGEN_USER_AGENT;\n  }\n  if (config.storefrontId) {\n    staticHeaders[STOREFRONT_ID_HEADER] = config.storefrontId;\n  }\n\n  switch (clientType) {\n    case \"private\":\n    case \"private_no_buyer_context\":\n      if (typeof document !== \"undefined\") {\n        throw new Error(\n          \"private storefront tokens cannot be used in a browser context. Use a publicStorefrontToken instead.\",\n        );\n      }\n      if (!config.privateStorefrontToken) {\n        throw new Error(\"privateStorefrontToken is required\");\n      }\n      staticHeaders[STOREFRONT_PRIVATE_TOKEN_HEADER] = config.privateStorefrontToken;\n      break;\n    case \"public\":\n      if (config.publicStorefrontToken !== undefined && !config.publicStorefrontToken) {\n        throw new Error(\"publicStorefrontToken must be non-empty when provided\");\n      }\n      if (config.publicStorefrontToken) {\n        staticHeaders[STOREFRONT_ACCESS_TOKEN_HEADER] = config.publicStorefrontToken;\n      }\n      break;\n    default:\n      clientType satisfies never;\n      throw new Error(`Unsupported client type: ${clientType}`);\n  }\n\n  const locale = requestContext.locale;\n  const requestHeaders = new Headers(staticHeaders);\n  requestContext.applyStorefrontRequestHeaders(requestHeaders);\n\n  if (clientType === \"private\") {\n    const { buyerIp } = requestContext;\n    if (!buyerIp) {\n      throw new TypeError(\"requestContext.buyerIp is required for private Storefront API clients\");\n    }\n    requestHeaders.set(STOREFRONT_BUYER_IP_HEADER, buyerIp);\n  }\n\n  async function graphql(\n    doc: DocLike | string,\n    ...rest: [options?: Record<string, unknown>]\n  ): Promise<StorefrontGraphqlResult<DocLike>> {\n    const opts = (rest[0] ?? {}) as {\n      variables?: Record<string, unknown>;\n      signal?: AbortSignal;\n      cache?: CachingStrategy;\n      [SHOULD_CACHE_RESULT]?: ShouldCacheResult;\n    };\n\n    const queryText = typeof doc === \"string\" ? doc : (doc as unknown as string);\n    if (typeof queryText !== \"string\") {\n      throw new StorefrontApiError(\n        \"Expected gql() to return a string at runtime. Check gql.tada version compatibility.\",\n      );\n    }\n\n    if (opts.cache && !config.cache) {\n      throw new StorefrontCacheConfigError(\n        \"Storefront API cache options require a cache configured in createStorefrontClient().\",\n      );\n    }\n\n    if (opts.cache?.mode === \"private\") {\n      throw new StorefrontCacheConfigError(\n        \"Storefront API cache mode 'private' is not supported yet. Use Cache() without private mode, or cache buyer-specific work with createRunWithCache() and an explicit private key.\",\n      );\n    }\n\n    const variables = buildVariables(queryText, opts.variables, locale);\n    const externalSignals = [requestContext.signal, opts.signal].filter(\n      (signal): signal is AbortSignal => Boolean(signal),\n    );\n\n    const earlyAbortSignal = externalSignals.find((signal) => signal.aborted);\n    if (earlyAbortSignal) {\n      throw (\n        earlyAbortSignal.reason ??\n        new DOMException(\"signal is aborted without reason\", \"AbortError\")\n      );\n    }\n\n    let requestId: string | undefined;\n    let responseHeaders: Headers;\n    let responseText: string;\n    let status: number;\n    let timeoutSignal: AbortSignal | undefined;\n\n    if (timeoutInMs > 0) {\n      timeoutSignal = AbortSignal.timeout(timeoutInMs);\n      externalSignals.push(timeoutSignal);\n    }\n\n    try {\n      const init: PlainRequestInit = {\n        method: \"POST\",\n        headers: new Headers(requestHeaders),\n        body: JSON.stringify({ query: queryText, variables }),\n        // Never follow redirects: runtimes forward custom Shopify credential headers across\n        // origins, so a 3xx fails closed through the redirect check below.\n        redirect: \"manual\",\n        signal: externalSignals.length > 0 ? AbortSignal.any(externalSignals) : undefined,\n      };\n\n      const cacheOptions = createStorefrontCacheOptions(\n        apiUrl,\n        init,\n        queryText,\n        opts.cache,\n        opts[SHOULD_CACHE_RESULT],\n        timeoutInMs > 0 ? timeoutInMs : DEFAULT_TIMEOUT_IN_MS,\n      );\n      const response = await (resolvedFetch as ResolvedStorefrontFetch)(apiUrl, init, cacheOptions);\n\n      responseHeaders = response.headers;\n      requestId = responseHeaders.get(\"x-request-id\") ?? undefined;\n      status = response.status;\n\n      // Reject redirects before capturing headers so a rejected response can't set cookies.\n      // Browsers hide a manual redirect's status behind an opaque response, so leave it out.\n      const isOpaqueRedirect = response.type === \"opaqueredirect\";\n      if (isOpaqueRedirect || REDIRECT_STATUSES.has(status)) {\n        // Don't await: a cancel waits on any unread clone (tee) a custom fetch kept.\n        void response.body?.cancel().catch(() => {});\n        // Name only the target origin, which diagnoses a misconfigured `storeDomain` (e.g. an\n        // `http://` domain redirected to https) without logging the target's path or query.\n        const locationOrigin = getLocationOrigin(responseHeaders.get(\"location\"), apiUrl);\n        throw new StorefrontApiError(\n          isOpaqueRedirect\n            ? \"SFAPI responded with a redirect; redirects are not followed\"\n            : `SFAPI responded with a redirect (${status}${locationOrigin ? ` to ${locationOrigin}` : \"\"}); redirects are not followed`,\n          { status: isOpaqueRedirect ? undefined : status, requestId, queryText, variables },\n        );\n      }\n\n      const hydrogenCacheStatus = getHydrogenCacheStatus(responseHeaders);\n      if (hydrogenCacheStatus !== \"hit\") {\n        requestContext.captureSubrequestHeaders(responseHeaders);\n      }\n      if (isPrivateResponse(responseHeaders)) {\n        requestContext.markResponseAsPersonalized(\n          STOREFRONT_PRIVATE_RESPONSE_PERSONALIZATION_REASON,\n        );\n      }\n\n      if (!response.ok) {\n        const retryAfter = responseHeaders.get(\"retry-after\") ?? undefined;\n        // `applyResponseHeaders()` adds the value when the app answers this error with a `429`.\n        if (status === RATE_LIMITED_STATUS) requestContext.captureStorefrontRateLimit?.(retryAfter);\n        const bodyHint = await response.text().catch(() => \"\");\n        throw new StorefrontApiError(\n          `SFAPI responded with ${status}${bodyHint ? `: ${bodyHint.slice(0, 200)}` : \"\"}`,\n          { status, requestId, retryAfter, queryText, variables },\n        );\n      }\n\n      responseText = await response.text();\n    } catch (error) {\n      if (error instanceof StorefrontApiError) throw error;\n      if (error instanceof StorefrontTimeoutError) throw error;\n      if (error instanceof StorefrontCacheConfigError) throw error;\n      if (\n        error instanceof DOMException &&\n        error.name === \"TimeoutError\" &&\n        timeoutSignal?.aborted\n      ) {\n        throw new StorefrontTimeoutError(timeoutInMs);\n      }\n      if (error instanceof DOMException && error.name === \"AbortError\") {\n        throw error;\n      }\n      throw new StorefrontApiError(\"SFAPI request failed\", { cause: error });\n    }\n\n    let json: unknown;\n    try {\n      json = JSON.parse(responseText);\n    } catch (cause) {\n      throw new StorefrontApiError(\n        `Failed to parse SFAPI response as JSON (${apiUrl}, status ${status})` +\n          (responseText ? `: ${responseText.slice(0, 200)}` : \"\"),\n        { status, requestId, cause, queryText, variables },\n      );\n    }\n\n    if (typeof json !== \"object\" || json === null || Array.isArray(json)) {\n      throw new StorefrontApiError(\n        `SFAPI returned unexpected JSON type: ${Array.isArray(json) ? \"array\" : typeof json}`,\n        { status, requestId, queryText, variables },\n      );\n    }\n\n    const body = json as { data?: unknown; errors?: GraphQLFormattedError[] };\n    // Branch to populate the two arms of the StorefrontGraphqlResult union: callers\n    // narrowing on `errors` get a non-null `data` only when no errors are present.\n    if (body.errors) {\n      return {\n        data: body.data ?? null,\n        errors: body.errors,\n        headers: responseHeaders,\n      };\n    }\n    return {\n      data: body.data,\n      headers: responseHeaders,\n    };\n  }\n\n  const client: StorefrontClient = {\n    type: clientType,\n    i18n: locale,\n    locale,\n    graphql: graphql as StorefrontClient[\"graphql\"],\n    apiUrl,\n    storeUrl,\n    storefrontId: config.storefrontId,\n    requestContext,\n  };\n\n  if (config.cache) CACHE_ENABLED_GRAPHQL_CLIENTS.add(client.graphql);\n\n  return client;\n}"
     }
   },
   "CreateStorefrontClientArgs": {
@@ -3041,7 +3063,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CartErrorCode",
       "value": "\"invalid_cart_request\" | \"missing_cart\" | \"cart_mutation_failed\"",
-      "description": "Error codes that the cart POST handler returns. The handler returns `invalid_cart_request` when it can't parse a JSON request, and `missing_cart` when a JSON request changes the cart but has no cart ID. With `customerSession`, the handler returns `cart_mutation_failed` when a mutation fails after the handler refreshes the customer's access token."
+      "description": "Error codes that the cart POST handler returns. Invalid JSON requests return `invalid_cart_request`; changes without a cart ID return `missing_cart`. With `customerSession`, a mutation failure after a token refresh returns `cart_mutation_failed`. With `rateLimitHandling: \"response\"`, Storefront API rate limits also return `cart_mutation_failed`, with status `429`."
     }
   },
   "CartWarning": {
@@ -3878,7 +3900,7 @@
     "src/core/request-routing/registered-routes.ts": {
       "filePath": "src/core/request-routing/registered-routes.ts",
       "name": "CreateShopifyRouteHandlerGeneratedType",
-      "description": "Creates a custom endpoint in your app for one pathname and HTTP method. Collect handlers in an object, and pass an array of handler objects to `handleShopifyRoutes` in its `handlers` option.\n\nUse paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, or error result from the handler. Hydrogen sends a JSON result with status `200`, an error result with status `400` by default, and a redirect result with status `303` by default. When a redirect result uses a status other than `301`, `302`, `303`, 307, or 308, the promise from `handleShopifyRoutes` rejects.\n\nAnnotate the handler's context parameter with only the fields the handler reads, for example `Omit<ShopifyRouteHandlerContext, \"sessionManager\">`, so apps without a session manager can register it. Hydrogen infers the context only from an annotated parameter. A handler with no parameter, or with an unannotated destructured parameter, gets the full context, so `handleShopifyRoutes` still requires `sessionManager` for it.\n\nMarking `sessionManager` optional in the annotation doesn't make it optional at runtime. It still makes `sessionManager` required, and when an untyped caller omits it, Hydrogen passes a stand-in that throws when the handler uses it. A check such as `if (sessionManager)` is always true, so don't use it as a fallback.",
+      "description": "Creates a custom endpoint in your app for one pathname and HTTP method. Collect handlers in an object, and pass an array of handler objects to `handleShopifyRoutes` in its `handlers` option.\n\nUse paths other than `/api/cart`, which the cart server handlers use. Return a JSON, redirect, or error result from the handler. Hydrogen sends a JSON result with status `200`, an error result with status `400` by default, and a redirect result with status `303` by default. An error result is JSON unless it sets `format: \"text\"`. When a redirect result uses a status other than `301`, `302`, `303`, 307, or 308, the promise from `handleShopifyRoutes` rejects. With `rateLimitHandling: \"response\"` on `handleShopifyRoutes`, a thrown `StorefrontApiError` with status `429` becomes a `429` error response (`code: \"rate_limited\"`) with a validated `Retry-After` header. Other errors still propagate.\n\nAnnotate the handler's context parameter with only the fields the handler reads, for example `Omit<ShopifyRouteHandlerContext, \"sessionManager\">`, so apps without a session manager can register it. Hydrogen infers the context only from an annotated parameter. A handler with no parameter, or with an unannotated destructured parameter, gets the full context, so `handleShopifyRoutes` still requires `sessionManager` for it.\n\nMarking `sessionManager` optional in the annotation doesn't make it optional at runtime. It still makes `sessionManager` required, and when an untyped caller omits it, Hydrogen passes a stand-in that throws when the handler uses it. A check such as `if (sessionManager)` is always true, so don't use it as a fallback.",
       "isPublicDocs": true,
       "params": [
         {
@@ -4006,8 +4028,8 @@
       "filePath": "src/core/request-routing/route-types.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyRouteErrorResult",
-      "value": "{\n  /** Set to `error` for an error response. */\n  type: \"error\";\n  /** The error that Hydrogen serializes as the response body's `error` field. */\n  error: TError;\n  /** The HTTP status for the error response. Defaults to `400`. */\n  status?: number;\n  /** Extra headers for the error response. Hydrogen sets `content-type` to `application/json` and overrides any value you pass. */\n  headers?: HeadersInit;\n}",
-      "description": "A route handler result that Hydrogen sends as a JSON error response.",
+      "value": "{\n  /** Set to `error` for an error response. */\n  type: \"error\";\n  /** The error that Hydrogen serializes as the response body's `error` field. */\n  error: TError;\n  /** The HTTP status for the error response. Defaults to `400`. */\n  status?: number;\n  /** Extra headers for the error response. Hydrogen sets `content-type` for the body format and overrides any value you pass. */\n  headers?: HeadersInit;\n  /**\n   * The body format. `json`, the default, sends `{error: {code, message}}` as `application/json`. `text` sends only `error.message` as `text/plain`. Use `text` for a native form submission, because the browser shows the response as a page.\n   */\n  format?: \"json\" | \"text\";\n}",
+      "description": "A route handler result that Hydrogen sends as a JSON or plain-text error response.",
       "members": [
         {
           "filePath": "src/core/request-routing/route-types.ts",
@@ -4019,9 +4041,17 @@
         {
           "filePath": "src/core/request-routing/route-types.ts",
           "syntaxKind": "PropertySignature",
+          "name": "format",
+          "value": "'json' | 'text'",
+          "description": "The body format. `json`, the default, sends `{error: {code, message}}` as `application/json`. `text` sends only `error.message` as `text/plain`. Use `text` for a native form submission, because the browser shows the response as a page.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/request-routing/route-types.ts",
+          "syntaxKind": "PropertySignature",
           "name": "headers",
           "value": "HeadersInit",
-          "description": "Extra headers for the error response. Hydrogen sets `content-type` to `application/json` and overrides any value you pass.",
+          "description": "Extra headers for the error response. Hydrogen sets `content-type` for the body format and overrides any value you pass.",
           "isOptional": true
         },
         {
@@ -4150,7 +4180,7 @@
     "src/core/request-routing/handle-shopify-routes.ts": {
       "filePath": "src/core/request-routing/handle-shopify-routes.ts",
       "name": "HandleShopifyRoutesForDocs",
-      "description": "Serves Shopify's storefront endpoints and your custom route handlers from your app. Call the function at the start of request handling, before your framework's router.\n\nWhen a route matches, the function returns a promise for the response. Return that response as is, because the response already carries the request context's headers. When no route matches, the function returns `null` synchronously, and your framework's router handles the request. The function throws when `requestContext` differs from the Storefront API client's request context. When a route handler throws, the returned promise rejects. Inside a `try` block, use `return await` on the result.\n\nThe function checks these routes in order and returns the first match: the Hydrogen manifest at `/__shopify/hydrogen/manifest.json`, the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, the UCP business profile at `/.well-known/ucp`, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.\n\nThe Hydrogen manifest is always on. It describes your app's route templates and the locales of the `defineShopifyI18n` definition in the request context, so Shopify services can build URLs for your storefront. Its `routes` field is `null` when you don't pass `routeTemplates`, and its `i18n` field is `null` when the request context has no definition.\n\nSome routes answer unsupported methods with a `405` response. A registered handler path returns `405` for any method that no handler on that path registers. The Hydrogen manifest, checkout permalinks, and cart permalinks accept only `GET` and `HEAD`. Buy permalinks accept only `GET`, and the UCP MCP proxy accepts only `POST`.\n\nWhen your bundler resolves the package's `development` export condition, the function also serves the GraphiQL explorer at `/graphiql` for GET requests that match no other route, and accepts a `graphiql` option. Set `graphiql.customerAccount` to an object with `apiUrl`, `accessToken`, and `schemaUrl` to add a Customer Account API tab. The explorer skips the tab when it can't fetch the schema.",
+      "description": "Serves Shopify's storefront endpoints and your custom route handlers from your app. Call the function at the start of request handling, before your framework's router.\n\nWhen a route matches, the function returns a promise for the response. Return that response as is, because the response already carries the request context's headers. When no route matches, the function returns `null` synchronously, and your framework's router handles the request. The function throws when `requestContext` differs from the Storefront API client's request context. When a route handler throws, the returned promise rejects. With `rateLimitHandling: \"response\"`, a thrown `StorefrontApiError` with status `429` resolves to a JSON `429` response with the error code `rate_limited`, a constant message, `Cache-Control: no-store`, and a validated `Retry-After` header. Inside a `try` block, use `return await` on the result.\n\nThe function checks these routes in order and returns the first match: the Hydrogen manifest at `/__shopify/hydrogen/manifest.json`, the Shopify API proxy at `/__shopify`, the Storefront API proxy at `/api/{version}/graphql.json`, Liquid-style `?variant=` product URLs, registered handler groups, UCP buy permalinks at `/buy/...`, checkout and cart permalinks, the UCP business profile at `/.well-known/ucp`, allowlisted `.well-known` resources, the UCP MCP proxy at `/api/ucp/mcp`, the MCP proxy at `/api/mcp`, and AJAX cart URLs.\n\nThe Hydrogen manifest is always on. It describes your app's route templates and the locales of the `defineShopifyI18n` definition in the request context, so Shopify services can build URLs for your storefront. Its `routes` field is `null` when you don't pass `routeTemplates`, and its `i18n` field is `null` when the request context has no definition.\n\nSome routes answer unsupported methods with a `405` response. A registered handler path returns `405` for any method that no handler on that path registers. The Hydrogen manifest, checkout permalinks, and cart permalinks accept only `GET` and `HEAD`. Buy permalinks accept only `GET`, and the UCP MCP proxy accepts only `POST`.\n\nWhen your bundler resolves the package's `development` export condition, the function also serves the GraphiQL explorer at `/graphiql` for GET requests that match no other route, and accepts a `graphiql` option. Set `graphiql.customerAccount` to an object with `apiUrl`, `accessToken`, and `schemaUrl` to add a Customer Account API tab. The explorer skips the tab when it can't fetch the schema.",
       "isPublicDocs": true,
       "params": [
         {
@@ -4557,6 +4587,29 @@
         "value": ""
       },
       "value": "export function getShopifyCspDirectives(\n  shop: ContentSecurityPolicyShop = {},\n  { hashes = false }: { hashes?: boolean } = {},\n) {\n  const shopOrigins = [shop.storeDomain, shop.checkoutDomain || undefined]\n    .filter((domain) => domain !== undefined)\n    .map(normalizeStoreDomain);\n\n  return {\n    defaultSrc: [\"'self'\"],\n    baseUri: [\"'self'\"],\n    objectSrc: [\"'none'\"],\n    frameAncestors: [\"'none'\"],\n    scriptSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN, ...(hashes ? getShopifyScriptHashes() : [])],\n    scriptSrcAttr: [\"'none'\"],\n    styleSrc: [\"'self'\", \"'unsafe-inline'\", SHOPIFY_CDN_ORIGIN],\n    imgSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN, \"data:\"],\n    fontSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN],\n    mediaSrc: [\"'self'\", SHOPIFY_CDN_ORIGIN],\n    frameSrc: [\n      \"'self'\",\n      SHOPIFY_ORIGIN,\n      SHOPIFY_SHOP_APP_ORIGIN,\n      SHOPIFY_SHOP_COM_ORIGIN,\n      ...shopOrigins,\n    ],\n    connectSrc: [\n      \"'self'\",\n      SHOPIFY_CDN_ORIGIN,\n      SHOPIFY_SHOP_APP_ORIGIN,\n      SHOPIFY_SHOP_COM_ORIGIN,\n      SHOPIFY_ORIGIN,\n      \"https://*.shopifysvc.com\",\n      ...shopOrigins,\n      ...(__DEV__\n        ? [\n            \"http://localhost:*\",\n            \"https://localhost:*\",\n            \"ws://localhost:*\",\n            \"wss://localhost:*\",\n            \"http://127.0.0.1:*\",\n            \"https://127.0.0.1:*\",\n            \"ws://127.0.0.1:*\",\n            \"wss://127.0.0.1:*\",\n            \"ws://*.tryhydrogen.dev:*\",\n            \"wss://*.tryhydrogen.dev:*\",\n          ]\n        : []),\n    ],\n  } satisfies ContentSecurityPolicyDirectives;\n}"
+    }
+  },
+  "WithStorefrontRateLimitGeneratedType": {
+    "src/core/storefront-rate-limit.ts": {
+      "filePath": "src/core/storefront-rate-limit.ts",
+      "name": "WithStorefrontRateLimitGeneratedType",
+      "description": "Wraps a React Router loader or action so that a Storefront API rate limit returns HTTP `429` instead of `500`.\n\nWhen the wrapped function throws a `StorefrontApiError` with status `429`, the wrapper logs the error at `error` level through Hydrogen's logger, then throws a `429` `Response`. The response has a fixed body, `Cache-Control: no-store`, and the Storefront API's `Retry-After` value when the value is delay-seconds or an HTTP date. The wrapper never retries the request, and it never copies the upstream body or other upstream headers. All other errors reach your framework unchanged, including other HTTP statuses, network failures, timeouts, and thrown responses.\n\nReact Router doesn't copy the headers of a thrown response to the page response. Pass the response status to `requestContext.applyResponseHeaders()` in your root middleware, and call the method on the request context of the Storefront API client that the loader uses. The method then adds `Cache-Control: no-store` and the `Retry-After` value to page and data responses.\n\nOnly work that the wrapped function awaits can change the status. A deferred promise that rejects after streaming starts keeps the `200` status.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "loader",
+          "description": "The loader or action to wrap.",
+          "value": "(...args: Args) => Result",
+          "filePath": "src/core/storefront-rate-limit.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/storefront-rate-limit.ts",
+        "description": "A function that takes the same arguments and resolves to the result of `loader`.",
+        "name": "(...args: Args) => Promise<Awaited<Result>>",
+        "value": "(...args: Args) => Promise<Awaited<Result>>"
+      },
+      "value": "export function withStorefrontRateLimit<Args extends unknown[], Result>(\n  loader: (...args: Args) => Result,\n): (...args: Args) => Promise<Awaited<Result>> {\n  return async (...args): Promise<Awaited<Result>> => {\n    try {\n      return await loader(...args);\n    } catch (error) {\n      if (!isStorefrontRateLimitError(error)) throw error;\n\n      // React Router doesn't pass a thrown `Response` to `handleError`, so report the cause here.\n      log.error(\"storefront api rate limited the request\", { error });\n\n      throw new Response(TOO_MANY_REQUESTS_BODY, {\n        status: RATE_LIMITED_STATUS,\n        headers: createRateLimitResponseHeaders(error),\n      });\n    }\n  };\n}"
     }
   },
   "ShopifyScriptsOptions": {
@@ -7822,7 +7875,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CartPostResult",
       "value": "ShopifyRouteJsonResult<Record<string, unknown>> | ShopifyRouteRedirectResult | ShopifyRouteErrorResult<CartError>",
-      "description": "The route result that the cart POST handler returns. Check `type` to tell the results apart:\n- `json` answers a JSON request. The result's `data` holds the mutation's `cart`, `userErrors`, and `warnings`.\n- `redirect` answers a form submission with a `303` redirect to the referring page.\n- `error` holds a cart error with a code that identifies the failure.",
+      "description": "The route result that the cart POST handler returns. Check `type` to tell the results apart:\n- `json` answers a JSON request. The result's `data` holds the mutation's `cart`, `userErrors`, and `warnings`.\n- `redirect` answers a form submission with a `303` redirect to the referring page.\n- `error` holds a cart error with a code that identifies the failure. A rate-limited form submission gets an error result with `format: \"text\"`, so the browser shows the message and the `429` status.",
       "isPublicDocs": true
     }
   },
@@ -7830,12 +7883,12 @@
     "src/core/cart/server-handlers.ts": {
       "filePath": "src/core/cart/server-handlers.ts",
       "name": "CreateCartServerHandlersGeneratedType",
-      "description": "Creates the handlers for the `/api/cart` route, which loads and changes the customer's cart.\n\nThe handlers read the cart ID from the `cart` cookie and set the cookie when they create a cart. A JSON request gets a JSON response, and a form submission gets a `303` redirect to the referring page.\n\nPass `customerSession` to connect carts to the logged-in customer. The handlers then need `sessionManager` and `requestContext` in their context.",
+      "description": "Creates the handlers for the `/api/cart` route, which loads and changes the customer's cart.\n\nThe handlers read the cart ID from the `cart` cookie and set the cookie when they create a cart. A JSON request gets a JSON response, and a form submission gets a `303` redirect to the referring page. With `rateLimitHandling: \"response\"`, a Storefront API rate limit returns `cart_mutation_failed` with status `429`, `Cache-Control: no-store`, and a valid `Retry-After` header. The body is a JSON error for a JSON request. For a form submission, the body is a plain-text message, because the browser shows that response as a page.\n\nPass `customerSession` to connect carts to the logged-in customer. The handlers then need `sessionManager` and `requestContext` in their context.",
       "isPublicDocs": true,
       "params": [
         {
           "name": "options",
-          "description": "A custom cart fragment and the customer session.",
+          "description": "A custom cart fragment, the customer session, and opt-in rate-limit handling.",
           "value": "CreateCartServerHandlersOptions<AnyStorefrontQueryString>",
           "isOptional": true,
           "filePath": "src/core/cart/server-handlers.ts"
@@ -7847,7 +7900,7 @@
         "name": "CartServerHandlers | CartServerHandlersWithCustomerSession",
         "value": "CartServerHandlers | CartServerHandlersWithCustomerSession"
       },
-      "value": "export function createCartServerHandlers(\n  options?: CreateCartServerHandlersOptions,\n): CartServerHandlers | CartServerHandlersWithCustomerSession {\n  const queries = options?.fragment\n    ? makeCartQueries({ fragment: options.fragment } as CreateCartQueriesOptions)\n    : cartQueries;\n  const runtimeQueries = queries as RuntimeCartQueries;\n  const customerSession = options?.customerSession;\n\n  const handlers = {\n    get: createCallableRouteHandler(\n      CART_API_PATH,\n      CART_GET_METHOD,\n      (context: CartGetHandlerContext & Partial<CartCustomerSessionReadContext>) =>\n        handleGet(context, runtimeQueries, customerSession),\n    ),\n    post: createCallableRouteHandler(\n      CART_API_PATH,\n      CART_POST_METHOD,\n      (context: CartPostHandlerContext & Partial<CartCustomerSessionWriteContext>) =>\n        handlePost(context, runtimeQueries, customerSession),\n    ),\n  };\n\n  Object.defineProperty(handlers, cartServerHandlersCartQuery, { value: queries.cart });\n  if (customerSession) {\n    // Symbol-keyed and non-enumerable so the capability never registers as a\n    // route in handleShopifyRoutes and stays uncallable outside Hydrogen wiring.\n    Object.defineProperty(handlers, cartBuyerIdentitySync, {\n      value: createCartBuyerIdentitySync(),\n    });\n  }\n  return handlers as CartServerHandlers | CartServerHandlersWithCustomerSession;\n}",
+      "value": "export function createCartServerHandlers(\n  options?: CreateCartServerHandlersOptions,\n): CartServerHandlers | CartServerHandlersWithCustomerSession {\n  const queries = options?.fragment\n    ? makeCartQueries({ fragment: options.fragment } as CreateCartQueriesOptions)\n    : cartQueries;\n  const runtimeQueries = queries as RuntimeCartQueries;\n  const customerSession = options?.customerSession;\n\n  const handlers = {\n    get: createCallableRouteHandler(\n      CART_API_PATH,\n      CART_GET_METHOD,\n      (context: CartGetHandlerContext & Partial<CartCustomerSessionReadContext>) =>\n        handleGet(context, runtimeQueries, customerSession),\n    ),\n    post: createCallableRouteHandler(\n      CART_API_PATH,\n      CART_POST_METHOD,\n      (context: CartPostHandlerContext & Partial<CartCustomerSessionWriteContext>) =>\n        handlePost(context, runtimeQueries, customerSession, options?.rateLimitHandling),\n    ),\n  };\n\n  Object.defineProperty(handlers, cartServerHandlersCartQuery, { value: queries.cart });\n  if (customerSession) {\n    // Symbol-keyed and non-enumerable so the capability never registers as a\n    // route in handleShopifyRoutes and stays uncallable outside Hydrogen wiring.\n    Object.defineProperty(handlers, cartBuyerIdentitySync, {\n      value: createCartBuyerIdentitySync(),\n    });\n  }\n  return handlers as CartServerHandlers | CartServerHandlersWithCustomerSession;\n}",
       "examples": [
         {
           "title": "Example",
@@ -7890,6 +7943,14 @@
           "name": "fragment",
           "value": "TCartFragment",
           "description": "A cart fragment that adds fields to the cart in every cart query and mutation response. Name the fragment `CartFragment` on the `Cart` type.\n\n`createCartServerHandlers` throws for any other fragment name or type.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/cart/server-handlers.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "rateLimitHandling",
+          "value": "'response'",
+          "description": "Return Storefront API rate limits on cart mutations as `429` errors with safe `Retry-After` headers. Omit to keep throwing, except for failures after a customer session refresh.\n\nThe option covers mutations only. Cart reads (`get`) still throw. When you set only `rateLimitHandling` on `handleShopifyRoutes`, the router maps a thrown rate limit to a JSON error with the code `rate_limited`, also for a native form submission, which then shows a raw JSON page. Set this option as well to keep `cart_mutation_failed` and the plain-text form response.",
           "isOptional": true
         }
       ],
@@ -7970,6 +8031,14 @@
           "value": "TCartFragment",
           "description": "A cart fragment that adds fields to the cart in every cart query and mutation response. Name the fragment `CartFragment` on the `Cart` type.\n\n`createCartServerHandlers` throws for any other fragment name or type.",
           "isOptional": true
+        },
+        {
+          "filePath": "src/core/cart/server-handlers.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "rateLimitHandling",
+          "value": "'response'",
+          "description": "Return Storefront API rate limits on cart mutations as `429` errors with safe `Retry-After` headers. Omit to keep throwing, except for failures after a customer session refresh.\n\nThe option covers mutations only. Cart reads (`get`) still throw. When you set only `rateLimitHandling` on `handleShopifyRoutes`, the router maps a thrown rate limit to a JSON error with the code `rate_limited`, also for a native form submission, which then shows a raw JSON page. Set this option as well to keep `cart_mutation_failed` and the plain-text form response.",
+          "isOptional": true
         }
       ],
       "value": "interface CartServerHandlersOptionsWithoutCustomerSession<\n  TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,\n> extends CartServerHandlersBaseOptions<TCartFragment> {\n  /** Leave the option out to create carts without a customer. */\n  readonly customerSession?: undefined;\n}"
@@ -7980,7 +8049,7 @@
       "filePath": "src/core/cart/server-handlers.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CartServerHandlers",
-      "value": "{\n  /** The cart query document that the handlers run. */\n  readonly [cartServerHandlersCartQuery]: TCartQuery | undefined;\n  /**\n   * Returns the current cart. The handler reads the cart ID from the request's `cartId` search parameter or `cart` cookie. Without a request, the handler reads the cart ID from the Storefront API client's request context.\n   *\n   * GraphQL errors return a `null` cart with the errors in the response body. The handler throws when the Storefront API request fails.\n   */\n  get: CartGetHandler<TCart>;\n  /**\n   * Runs the cart change that the request describes and returns the updated cart. An add without a cart creates a cart and sets the `cart` cookie. Other changes without a cart return a `missing_cart` error for a JSON request and a redirect for a form submission.\n   *\n   * When a JSON body names a cart other than the cookie's cart, the handler leaves the cookie unchanged. The handler throws GraphQL and network errors from the mutation.\n   */\n  post: CartPostHandler;\n}",
+      "value": "{\n  /** The cart query document that the handlers run. */\n  readonly [cartServerHandlersCartQuery]: TCartQuery | undefined;\n  /**\n   * Returns the current cart. The handler reads the cart ID from the request's `cartId` search parameter or `cart` cookie. Without a request, the handler reads the cart ID from the Storefront API client's request context.\n   *\n   * GraphQL errors return a `null` cart with the errors in the response body. The handler throws when the Storefront API request fails.\n   */\n  get: CartGetHandler<TCart>;\n  /**\n   * Runs the cart change that the request describes and returns the updated cart. An add without a cart creates a cart and sets the `cart` cookie. Other changes without a cart return a `missing_cart` error for a JSON request and a redirect for a form submission.\n   *\n   * When a JSON body names a cart other than the cookie's cart, the handler leaves the cookie unchanged. The handler throws GraphQL and network errors from the mutation. With `rateLimitHandling: \"response\"`, Storefront API rate limits return a `cart_mutation_failed` error with status `429`: JSON for a JSON request, and plain text for a form submission.\n   */\n  post: CartPostHandler;\n}",
       "description": "The cart route handlers that `createCartServerHandlers` returns.\n\nRegister the handlers with `handleShopifyRoutes` to serve the `/api/cart` route that the cart store calls.",
       "members": [
         {
@@ -8002,7 +8071,7 @@
           "syntaxKind": "PropertySignature",
           "name": "post",
           "value": "CartPostHandler",
-          "description": "Runs the cart change that the request describes and returns the updated cart. An add without a cart creates a cart and sets the `cart` cookie. Other changes without a cart return a `missing_cart` error for a JSON request and a redirect for a form submission.\n\nWhen a JSON body names a cart other than the cookie's cart, the handler leaves the cookie unchanged. The handler throws GraphQL and network errors from the mutation."
+          "description": "Runs the cart change that the request describes and returns the updated cart. An add without a cart creates a cart and sets the `cart` cookie. Other changes without a cart return a `missing_cart` error for a JSON request and a redirect for a form submission.\n\nWhen a JSON body names a cart other than the cookie's cart, the handler leaves the cookie unchanged. The handler throws GraphQL and network errors from the mutation. With `rateLimitHandling: \"response\"`, Storefront API rate limits return a `cart_mutation_failed` error with status `429`: JSON for a JSON request, and plain text for a form submission."
         }
       ]
     }
@@ -8030,7 +8099,7 @@
       "filePath": "src/core/cart/server-handlers.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CartServerHandlersWithCustomerSession",
-      "value": "{\n  /** The cart query document that the handlers run. */\n  readonly [cartServerHandlersCartQuery]: TCartQuery | undefined;\n  readonly [cartBuyerIdentitySync]: CartBuyerIdentitySync;\n  /** Returns the cart like the GET handler in `CartServerHandlers`. For a logged-in customer, the handler adds `logged_in=true` to the checkout URL. */\n  get: CartGetHandler<TCart, CartGetHandlerContext & CartCustomerSessionReadContext>;\n  /**\n   * Runs cart changes like the POST handler in `CartServerHandlers`. When an add creates a cart for a logged-in customer, the handler attaches the customer to the new cart. When the handler refreshes the customer's access token and the mutation then fails, the handler returns a `cart_mutation_failed` error with status `500`.\n   */\n  post: CartPostHandler<CartPostHandlerContext & CartCustomerSessionWriteContext>;\n}",
+      "value": "{\n  /** The cart query document that the handlers run. */\n  readonly [cartServerHandlersCartQuery]: TCartQuery | undefined;\n  readonly [cartBuyerIdentitySync]: CartBuyerIdentitySync;\n  /** Returns the cart like the GET handler in `CartServerHandlers`. For a logged-in customer, the handler adds `logged_in=true` to the checkout URL. */\n  get: CartGetHandler<TCart, CartGetHandlerContext & CartCustomerSessionReadContext>;\n  /**\n   * Runs cart changes like the POST handler in `CartServerHandlers`. When an add creates a cart for a logged-in customer, the handler attaches the customer to the new cart. When the handler refreshes the customer's access token and the mutation then fails, it returns `cart_mutation_failed` with status `500`. With `rateLimitHandling: \"response\"`, Storefront API rate limits return that code with status `429` instead.\n   */\n  post: CartPostHandler<CartPostHandlerContext & CartCustomerSessionWriteContext>;\n}",
       "description": "The cart route handlers that `createCartServerHandlers` returns when you pass `customerSession`. The handlers connect carts to the logged-in customer.\n\nPass `sessionManager` and `requestContext` in each handler's context. A handler throws when it reads the customer session and either value is missing.",
       "members": [
         {
@@ -8059,7 +8128,7 @@
           "syntaxKind": "PropertySignature",
           "name": "post",
           "value": "CartPostHandler<CartPostHandlerContext & CartCustomerSessionWriteContext>",
-          "description": "Runs cart changes like the POST handler in `CartServerHandlers`. When an add creates a cart for a logged-in customer, the handler attaches the customer to the new cart. When the handler refreshes the customer's access token and the mutation then fails, the handler returns a `cart_mutation_failed` error with status `500`."
+          "description": "Runs cart changes like the POST handler in `CartServerHandlers`. When an add creates a cart for a logged-in customer, the handler attaches the customer to the new cart. When the handler refreshes the customer's access token and the mutation then fails, it returns `cart_mutation_failed` with status `500`. With `rateLimitHandling: \"response\"`, Storefront API rate limits return that code with status `429` instead."
         }
       ]
     }
@@ -10601,12 +10670,12 @@
     "src/core/predictive-search/server-handlers.ts": {
       "filePath": "src/core/predictive-search/server-handlers.ts",
       "name": "CreatePredictiveSearchServerHandlersGeneratedType",
-      "description": "Creates the route that answers predictive search requests from the browser. Register the handlers with `handleShopifyRoutes`. The default route path matches the default endpoint of `createPredictiveSearchStore` and `PredictiveSearchProvider`.\n\nThe route reads the search term from the `q` URL parameter. A URL parameter with the same name as a search setting overrides the setting's default.\n\nAn invalid setting value or a failed Storefront API query returns HTTP status `400` with a JSON body of `{error: {code, message}}`. The `code` value is `invalid_predictive_search_request`. A successful response forwards the Storefront API response headers except the content encoding, content length, and server timing headers.",
+      "description": "Creates the route that answers predictive search requests from the browser. Register the handlers with `handleShopifyRoutes`. The default route path matches the default endpoint of `createPredictiveSearchStore` and `PredictiveSearchProvider`.\n\nThe route reads the search term from the `q` URL parameter. A URL parameter with the same name as a search setting overrides the setting's default.\n\nAn invalid setting value or a failed Storefront API query returns HTTP status `400` with a JSON body of `{error: {code, message}}`. The `code` value is `invalid_predictive_search_request`. With `rateLimitHandling: \"response\"`, Storefront API rate limits return status `429` with the same error code, `Cache-Control: no-store`, and a valid `Retry-After` header. The body never includes the upstream response. The route logs the original error of a failed Storefront API query once, at `error` level through Hydrogen's logger. An invalid setting value isn't logged. A successful response forwards the Storefront API response headers except the content encoding, content length, and server timing headers.",
       "isPublicDocs": true,
       "params": [
         {
           "name": "options",
-          "description": "Route path, custom fragments, and default search settings for the route.",
+          "description": "Route path, custom fragments, default search settings, and opt-in rate-limit handling.",
           "value": "CreatePredictiveSearchServerHandlersOptions",
           "isOptional": true,
           "defaultValue": "{}",
@@ -10663,6 +10732,14 @@
         {
           "filePath": "src/core/predictive-search/server-handlers.ts",
           "syntaxKind": "PropertySignature",
+          "name": "rateLimitHandling",
+          "value": "'response'",
+          "description": "Return Storefront API rate limits with status `429` and safe `Retry-After` headers. Omit to keep the default `400` error response.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/predictive-search/server-handlers.ts",
+          "syntaxKind": "PropertySignature",
           "name": "searchableFields",
           "value": "SearchableField[]",
           "description": "Default fields to search. A request can set `searchableFields` to a comma-separated list.",
@@ -10685,7 +10762,7 @@
           "isOptional": true
         }
       ],
-      "value": "export interface CreatePredictiveSearchServerHandlersOptions extends CreatePredictiveSearchQueriesOptions {\n  /** Route path that the GET handler serves. Defaults to `/api/predictive-search`. */\n  path?: string;\n  /** Default maximum number of results, from 1 to 10. Applies when a request has no numeric `limit` parameter. Predictive search clamps other values to that range. Defaults to `5`. */\n  limit?: number;\n  /** Default limit scope. Defaults to `EACH`. */\n  limitScope?: PredictiveSearchLimitScope;\n  /** Default result types. A request can set `types` to a comma-separated list. */\n  types?: PredictiveSearchType[];\n  /** Default fields to search. A request can set `searchableFields` to a comma-separated list. */\n  searchableFields?: SearchableField[];\n  /** Default handling of unavailable products. Defaults to `HIDE`. */\n  unavailableProducts?: SearchUnavailableProductsType;\n}"
+      "value": "export interface CreatePredictiveSearchServerHandlersOptions extends CreatePredictiveSearchQueriesOptions {\n  /** Route path that the GET handler serves. Defaults to `/api/predictive-search`. */\n  path?: string;\n  /** Return Storefront API rate limits with status `429` and safe `Retry-After` headers. Omit to keep the default `400` error response. */\n  rateLimitHandling?: \"response\";\n  /** Default maximum number of results, from 1 to 10. Applies when a request has no numeric `limit` parameter. Predictive search clamps other values to that range. Defaults to `5`. */\n  limit?: number;\n  /** Default limit scope. Defaults to `EACH`. */\n  limitScope?: PredictiveSearchLimitScope;\n  /** Default result types. A request can set `types` to a comma-separated list. */\n  types?: PredictiveSearchType[];\n  /** Default fields to search. A request can set `searchableFields` to a comma-separated list. */\n  searchableFields?: SearchableField[];\n  /** Default handling of unavailable products. Defaults to `HIDE`. */\n  unavailableProducts?: SearchUnavailableProductsType;\n}"
     }
   },
   "PredictiveSearchServerHandlers": {

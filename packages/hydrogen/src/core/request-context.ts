@@ -1,5 +1,6 @@
 import { STOREFRONT_API_VERSION } from "./constants";
 import {
+  applyNoStoreResponseCacheHeaders,
   applyPrivateResponseCacheHeaders,
   CONSENT_MANAGEMENT_HEADER,
   HYDROGEN_VERSION_HEADER,
@@ -19,10 +20,13 @@ import type {
   ShopifyLocale,
   ShopifyMatchedLocale,
 } from "./i18n/types";
+import { getLogger } from "./logging";
+import { getSafeRetryAfterValue, RATE_LIMITED_STATUS } from "./request-routing/rate-limit";
 import { normalizePathPrefix } from "./standard-routes/path";
 
 export type { ShopifyCountryCode, ShopifyLanguageCode } from "./i18n/types";
 
+const log = getLogger("rate-limit");
 // UCP discovery (Web Linking): every response links to the shop's UCP profile on the storefront
 // origin, matching Liquid storefronts and Oxygen. Omitting `version` selects the latest stable
 // profile. This exact form matches Oxygen's own rel pattern, so Oxygen recognizes this link and
@@ -163,6 +167,13 @@ type ShopifyRequestContextBase = {
    */
   consumeStorefrontResponseHeaders(headers: Headers): void;
   /**
+   * Tracks Storefront API `429` responses and the latest valid retry deadline, independent of
+   * completion order. Delay-seconds start at capture time; HTTP dates specify absolute deadlines.
+   * Invalid values do not replace valid advice. The Storefront API client calls the method for you.
+   * @internal
+   */
+  captureStorefrontRateLimit?(retryAfter: string | undefined): void;
+  /**
    * Lets the final response set Shopify cookies before the customer has a Shopify session, and
    * marks the response as private and uncacheable. The UCP MCP proxy calls the method for you.
    * @internal
@@ -180,8 +191,12 @@ type ShopifyRequestContextBase = {
    * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.
    *
    * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses marked with `markResponseAsPersonalized()` private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.
+   *
+   * Pass the response's `status` as well. When the status is `429` and the Storefront API rate limited a request that used this context, the method sets `Cache-Control: no-store` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. It also sets `Retry-After` to the later of the response's own valid `Retry-After` value and the latest valid retry deadline from all Storefront API `429` responses on this context, including recovered errors. Delay-seconds and IMF-fixdates are accepted. The value is the remaining delay-seconds, rounded up and never negative. React Router doesn't copy the headers of a thrown response, so this keeps the headers of a `429` from `withStorefrontRateLimit`. Responses with other statuses keep their cache headers.
+   *
+   * When you omit `status` after a Storefront API rate limit, the method logs one warning and adds no rate-limit headers.  The `429` response can then lose `Retry-After` and `Cache-Control: no-store`.
    */
-  applyResponseHeaders(headers: Headers): void;
+  applyResponseHeaders(headers: Headers, status?: number): void;
 };
 
 /** The context for one request. Pass the context to Hydrogen's API clients and route handlers for that request. */
@@ -299,6 +314,9 @@ export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
   let capturedCookies: string[] | undefined;
   let personalizedResponseReason: string | undefined;
   let sessionEstablishingReason: string | undefined;
+  let storefrontRateLimited = false;
+  let storefrontRetryDeadline: bigint | undefined;
+  let warnedMissingStatus = false;
 
   const captureSubrequestHeaders = (headers: Headers): void => {
     // Capture the first fresh response cookies to increase the
@@ -325,15 +343,53 @@ export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
       captureSubrequestHeaders(headers);
       headers.delete("set-cookie");
     },
+    captureStorefrontRateLimit(retryAfter) {
+      storefrontRateLimited = true;
+      const value = getSafeRetryAfterValue(retryAfter);
+      if (value === undefined) return;
+
+      const deadline = getRetryDeadline(value);
+      if (storefrontRetryDeadline === undefined || deadline > storefrontRetryDeadline) {
+        storefrontRetryDeadline = deadline;
+      }
+    },
     markResponseAsPersonalized(reason) {
       personalizedResponseReason ??= reason;
     },
     markResponseAsSessionEstablishing(reason) {
       sessionEstablishingReason ??= reason;
     },
-    applyResponseHeaders(headers) {
+    applyResponseHeaders(headers, status) {
       headers.set("powered-by", "Shopify, Hydrogen");
 
+      // Without the status, the method cannot tell a `429` from a recovered page, and a framework
+      // can drop the rate-limit headers silently. Warn once so the omission is visible.
+      if (status === undefined && storefrontRateLimited && !warnedMissingStatus) {
+        warnedMissingStatus = true;
+        log.warn(
+          "storefront api rate limited this request; pass response.status to applyResponseHeaders to keep rate-limit headers on a 429",
+        );
+      }
+
+      // A framework can drop the headers of a thrown `429` response, as React Router does, so add
+      // them here. Only a `429` changes: a page that recovered from the rate limit keeps its cache
+      // headers.
+      if (status === RATE_LIMITED_STATUS && storefrontRateLimited) {
+        applyNoStoreResponseCacheHeaders(headers);
+        // The retry advice is the later of the response's own valid header and the latest captured
+        // deadline, so one rule applies whichever path produced the `429`.
+        const existing = getSafeRetryAfterValue(headers.get("retry-after"));
+        let deadline = storefrontRetryDeadline;
+        if (existing !== undefined) {
+          const existingDeadline = getRetryDeadline(existing);
+          if (deadline === undefined || existingDeadline > deadline) deadline = existingDeadline;
+        }
+        if (deadline !== undefined) {
+          const remaining = deadline - BigInt(Date.now());
+          const seconds = remaining > 0n ? (remaining + 999n) / 1000n : 0n;
+          headers.set("Retry-After", seconds.toString());
+        }
+      }
       if (advertisesUcpProfile) applyUcpProfileLink(headers);
 
       // Documents may be shared or streamed, so they must not carry buyer-specific state.
@@ -372,6 +428,14 @@ export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
       }
     },
   } as ShopifyRequestContext<TI18n>;
+}
+
+// BigInt preserves valid delays without rounding or overflow, including very large values.
+// `value` must come from `getSafeRetryAfterValue`.
+function getRetryDeadline(value: string): bigint {
+  return value.endsWith("GMT")
+    ? BigInt(Date.parse(value))
+    : BigInt(Date.now()) + BigInt(value) * 1000n;
 }
 
 function resolveRequestLocale(

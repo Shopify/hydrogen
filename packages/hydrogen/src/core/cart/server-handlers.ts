@@ -10,6 +10,11 @@ import { applyPrivateResponseCacheHeaders } from "../headers";
 import { getLogger } from "../logging";
 import type { ShopifyRequestContext } from "../request-context";
 import { createProxyResponseHeaders } from "../request-routing/interceptors/proxy";
+import {
+  RATE_LIMITED_STATUS,
+  createRateLimitResponseHeaders,
+  isStorefrontRateLimitError,
+} from "../request-routing/rate-limit";
 import type {
   CallableRouteHandler,
   ShopifyRouteError,
@@ -44,6 +49,7 @@ const CART_GET_METHOD = "GET" as const;
 const CART_POST_METHOD = "POST" as const;
 const CART_MUTATION_FAILED_STATUS = 500;
 const CART_MUTATION_FAILED_MESSAGE = "Cart mutation failed. Please try again.";
+const CART_RATE_LIMITED_MESSAGE = "Cart mutation is rate limited. Please try again later.";
 const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
 
 /**
@@ -66,7 +72,7 @@ export type CartGetData<TCart = CartData> = {
 export type CartGetResult<TCart = CartData> = ShopifyRouteJsonResult<CartGetData<TCart>>;
 
 /**
- * Error codes that the cart POST handler returns. The handler returns `invalid_cart_request` when it can't parse a JSON request, and `missing_cart` when a JSON request changes the cart but has no cart ID. With `customerSession`, the handler returns `cart_mutation_failed` when a mutation fails after the handler refreshes the customer's access token.
+ * Error codes that the cart POST handler returns. Invalid JSON requests return `invalid_cart_request`; changes without a cart ID return `missing_cart`. With `customerSession`, a mutation failure after a token refresh returns `cart_mutation_failed`. With `rateLimitHandling: "response"`, Storefront API rate limits also return `cart_mutation_failed`, with status `429`.
  */
 export type CartErrorCode = "invalid_cart_request" | "missing_cart" | "cart_mutation_failed";
 
@@ -84,7 +90,7 @@ export interface CartError extends ShopifyRouteError {
  * The route result that the cart POST handler returns. Check `type` to tell the results apart:
  * - `json` answers a JSON request. The result's `data` holds the mutation's `cart`, `userErrors`, and `warnings`.
  * - `redirect` answers a form submission with a `303` redirect to the referring page.
- * - `error` holds a cart error with a code that identifies the failure.
+ * - `error` holds a cart error with a code that identifies the failure. A rate-limited form submission gets an error result with `format: "text"`, so the browser shows the message and the `429` status.
  *
  * @publicDocs
  */
@@ -172,7 +178,7 @@ export type CartServerHandlers<
   /**
    * Runs the cart change that the request describes and returns the updated cart. An add without a cart creates a cart and sets the `cart` cookie. Other changes without a cart return a `missing_cart` error for a JSON request and a redirect for a form submission.
    *
-   * When a JSON body names a cart other than the cookie's cart, the handler leaves the cookie unchanged. The handler throws GraphQL and network errors from the mutation.
+   * When a JSON body names a cart other than the cookie's cart, the handler leaves the cookie unchanged. The handler throws GraphQL and network errors from the mutation. With `rateLimitHandling: "response"`, Storefront API rate limits return a `cart_mutation_failed` error with status `429`: JSON for a JSON request, and plain text for a form submission.
    */
   post: CartPostHandler;
 };
@@ -192,7 +198,7 @@ export type CartServerHandlersWithCustomerSession<
   /** Returns the cart like the GET handler in `CartServerHandlers`. For a logged-in customer, the handler adds `logged_in=true` to the checkout URL. */
   get: CartGetHandler<TCart, CartGetHandlerContext & CartCustomerSessionReadContext>;
   /**
-   * Runs cart changes like the POST handler in `CartServerHandlers`. When an add creates a cart for a logged-in customer, the handler attaches the customer to the new cart. When the handler refreshes the customer's access token and the mutation then fails, the handler returns a `cart_mutation_failed` error with status `500`.
+   * Runs cart changes like the POST handler in `CartServerHandlers`. When an add creates a cart for a logged-in customer, the handler attaches the customer to the new cart. When the handler refreshes the customer's access token and the mutation then fails, it returns `cart_mutation_failed` with status `500`. With `rateLimitHandling: "response"`, Storefront API rate limits return that code with status `429` instead.
    */
   post: CartPostHandler<CartPostHandlerContext & CartCustomerSessionWriteContext>;
 };
@@ -240,6 +246,12 @@ interface CartServerHandlersBaseOptions<
    * `createCartServerHandlers` throws for any other fragment name or type.
    */
   readonly fragment?: TCartFragment;
+  /**
+   * Return Storefront API rate limits on cart mutations as `429` errors with safe `Retry-After` headers. Omit to keep throwing, except for failures after a customer session refresh.
+   *
+   * The option covers mutations only. Cart reads (`get`) still throw. When you set only `rateLimitHandling` on `handleShopifyRoutes`, the router maps a thrown rate limit to a JSON error with the code `rate_limited`, also for a native form submission, which then shows a raw JSON page. Set this option as well to keep `cart_mutation_failed` and the plain-text form response.
+   */
+  readonly rateLimitHandling?: "response";
 }
 
 /** Options for cart server handlers that attach the logged-in customer to new carts. */
@@ -277,7 +289,7 @@ type CartServerHandlersForOptions<TOptions> = TOptions extends {
 /**
  * Creates the handlers for the `/api/cart` route, which loads and changes the customer's cart.
  *
- * The handlers read the cart ID from the `cart` cookie and set the cookie when they create a cart. A JSON request gets a JSON response, and a form submission gets a `303` redirect to the referring page.
+ * The handlers read the cart ID from the `cart` cookie and set the cookie when they create a cart. A JSON request gets a JSON response, and a form submission gets a `303` redirect to the referring page. With `rateLimitHandling: "response"`, a Storefront API rate limit returns `cart_mutation_failed` with status `429`, `Cache-Control: no-store`, and a valid `Retry-After` header. The body is a JSON error for a JSON request. For a form submission, the body is a plain-text message, because the browser shows that response as a page.
  *
  * Pass `customerSession` to connect carts to the logged-in customer. The handlers then need `sessionManager` and `requestContext` in their context.
  *
@@ -303,7 +315,7 @@ export function createCartServerHandlers<const TOptions extends CreateCartServer
   options: TOptions,
 ): CartServerHandlersForOptions<TOptions>;
 /**
- * @param options A custom cart fragment and the customer session.
+ * @param options A custom cart fragment, the customer session, and opt-in rate-limit handling.
  * @returns The GET and POST handlers to register with `handleShopifyRoutes`.
  */
 export function createCartServerHandlers(
@@ -326,7 +338,7 @@ export function createCartServerHandlers(
       CART_API_PATH,
       CART_POST_METHOD,
       (context: CartPostHandlerContext & Partial<CartCustomerSessionWriteContext>) =>
-        handlePost(context, runtimeQueries, customerSession),
+        handlePost(context, runtimeQueries, customerSession, options?.rateLimitHandling),
     ),
   };
 
@@ -396,6 +408,7 @@ async function handlePost(
   context: CartPostHandlerContext & Partial<CartCustomerSessionWriteContext>,
   queries: RuntimeCartQueries,
   customerSession?: CartCustomerSession,
+  rateLimitHandling?: "response",
 ): Promise<CartPostResult> {
   const { request, storefrontClient } = context;
   const isFormRequest = !request.headers.get("content-type")?.includes("application/json");
@@ -431,6 +444,8 @@ async function handlePost(
     queries,
     customerAccess.accessToken,
     customerSessionHeaders,
+    isFormRequest,
+    rateLimitHandling,
   );
   if (result.type !== "mutation") return result.response;
 
@@ -481,6 +496,8 @@ async function executeCartMutation(
   queries: RuntimeCartQueries,
   customerAccessToken: string | undefined,
   customerSessionHeaders: Headers | undefined,
+  isFormRequest: boolean,
+  rateLimitHandling: "response" | undefined,
 ): Promise<
   ({ type: "mutation" } & MutationResult) | { type: "response"; response: CartPostResult }
 > {
@@ -490,6 +507,21 @@ async function executeCartMutation(
       ...(await executeMutation(action, cartId, storefrontClient, queries, customerAccessToken)),
     };
   } catch (error) {
+    if (rateLimitHandling === "response" && isStorefrontRateLimitError(error)) {
+      log.error("storefront api rate limited the cart mutation", { error });
+      const response = errorResult(
+        "cart_mutation_failed",
+        CART_RATE_LIMITED_MESSAGE,
+        createRateLimitResponseHeaders(error, customerSessionHeaders),
+        RATE_LIMITED_STATUS,
+      );
+      // The browser shows the response to a native form submission as a page. A redirect would
+      // hide the `429`, so send the message as plain text.
+      return {
+        type: "response",
+        response: isFormRequest ? { ...response, format: "text" } : response,
+      };
+    }
     if (!customerSessionHeaders) throw error;
     log.error("cart mutation failed", { error });
     return {

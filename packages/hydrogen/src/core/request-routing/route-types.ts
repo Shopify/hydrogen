@@ -68,7 +68,7 @@ export type ShopifyRouteError = {
   message: string;
 };
 
-/** A route handler result that Hydrogen sends as a JSON error response. */
+/** A route handler result that Hydrogen sends as a JSON or plain-text error response. */
 export type ShopifyRouteErrorResult<TError extends ShopifyRouteError = ShopifyRouteError> = {
   /** Set to `error` for an error response. */
   type: "error";
@@ -76,8 +76,12 @@ export type ShopifyRouteErrorResult<TError extends ShopifyRouteError = ShopifyRo
   error: TError;
   /** The HTTP status for the error response. Defaults to `400`. */
   status?: number;
-  /** Extra headers for the error response. Hydrogen sets `content-type` to `application/json` and overrides any value you pass. */
+  /** Extra headers for the error response. Hydrogen sets `content-type` for the body format and overrides any value you pass. */
   headers?: HeadersInit;
+  /**
+   * The body format. `json`, the default, sends `{error: {code, message}}` as `application/json`. `text` sends only `error.message` as `text/plain`. Use `text` for a native form submission, because the browser shows the response as a page.
+   */
+  format?: "json" | "text";
 };
 
 /** The JSON, redirect, or error result that a route handler returns. */
@@ -142,6 +146,12 @@ type HydrogenRoutesBaseOptions = Omit<ShopifyRouteHandlerContext, "sessionManage
    * Your app's route templates. Hydrogen redirects Liquid-style `?variant=` URLs on your product paths and on Shopify's default product paths.
    */
   routeTemplates?: ShopifyRouteTemplates;
+  /**
+   * Map thrown Storefront API `429` errors from registered handlers to JSON responses with the code `rate_limited`. Omit to let the rejection propagate.
+   *
+   * The option is independent of the same option on the cart and predictive search handlers, which return their own `429` results before the router sees an error. For a cart mutation that throws, the router response is always JSON, also for a native form submission.
+   */
+  rateLimitHandling?: "response";
 };
 
 /** The request, its context, the Storefront API client, your route templates, your handler groups, and the session when a handler needs it. */
