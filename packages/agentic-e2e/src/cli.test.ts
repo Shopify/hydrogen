@@ -42,6 +42,13 @@ const PINNED: PinnedVariant = {
   variantId: "gid://shopify/ProductVariant/1",
   selectedOptions: [{ name: "Size", value: "M" }],
 };
+/** A second pin, different in every field, for the second test of a suite run. */
+const OTHER_PINNED: PinnedVariant = {
+  productHandle: "tee",
+  productTitle: "Tee",
+  variantId: "gid://shopify/ProductVariant/2",
+  selectedOptions: [{ name: "Color", value: "Red" }],
+};
 const PASS_REASON =
   "One add event held exactly 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings.";
 const VALID_TESTS = "Valid tests: add-to-cart, choose-a-variant.";
@@ -860,17 +867,18 @@ describe("main", () => {
 describe("main with every test", () => {
   const SUITE = ["https://shop.example", "--json"];
   /** The pass line of `test` with the fake pin and agent. */
-  const passLine = (test: string) => ({
+  const passLine = (test: string, pinned = PINNED) => ({
     test,
     status: "pass",
     reason: PASS_REASON,
     context: CONTEXT,
-    pinned: PINNED,
+    pinned,
     agent: STOPPED,
   });
 
   it("runs every test in list order, each with its own pin and browser session, and reads the context once", async () => {
-    const { session, agent } = fakes();
+    // Each run adds its own pinned variant, as the page of that pin would.
+    const { session, agent } = fakes({ addedVariants: [PINNED.variantId, OTHER_PINNED.variantId] });
     const listenersBefore = process.listenerCount("SIGINT");
     const listenersInRun: number[] = [];
     let printedBeforeSecondPin: unknown[] = [];
@@ -883,12 +891,33 @@ describe("main with every test", () => {
       calls.push("pin non-default");
       listenersInRun.push(process.listenerCount("SIGINT"));
       printedBeforeSecondPin = results();
-      return { status: "pinned", pinned: PINNED };
+      return { status: "pinned", pinned: OTHER_PINNED };
     });
 
     await expect(main(SUITE)).resolves.toBe(0);
 
-    expect(results()).toEqual([passLine("add-to-cart"), passLine("choose-a-variant")]);
+    // Each test uses its own pin end to end: the result line, the product page, and the task.
+    expect(results()).toEqual([
+      passLine("add-to-cart"),
+      passLine("choose-a-variant", OTHER_PINNED),
+    ]);
+    expect(session.page.goto).toHaveBeenCalledTimes(2);
+    expect(session.page.goto).toHaveBeenNthCalledWith(
+      1,
+      "https://shop.example/products/board",
+      expect.anything(),
+    );
+    expect(session.page.goto).toHaveBeenNthCalledWith(
+      2,
+      "https://shop.example/products/tee",
+      expect.anything(),
+    );
+    const [firstTask, secondTask] = agent.run.mock.calls.map(([input]) => input.task);
+    expect(firstTask).toContain('the product titled "Board"');
+    expect(firstTask).not.toContain('the product titled "Tee"');
+    expect(secondTask).toContain('the product titled "Tee"');
+    expect(secondTask).not.toContain('the product titled "Board"');
+    expect(secondTask).toContain(JSON.stringify(OTHER_PINNED.selectedOptions));
     expect(stdout.join("")).toMatch(
       /^\{"test":"add-to-cart","status":"pass",.*\n\{"test":"choose-a-variant","status":"pass",.*\n$/,
     );
@@ -1117,18 +1146,22 @@ async function runUntilInterrupted(agent: ReturnType<typeof fakes>["agent"]): Pr
  * Fake browser session and agent. With `adds`, the agent run records one 1-unit add of the
  * pinned variant, as the page would; the command's stop then ends the run with the fixed outcome,
  * like the real agent module. `settle` tells when and how the add's promise ends.
+ * `addedVariants` is the variant that each run adds, in run order. Default: `PINNED`.
  */
 function fakes({
   page: pageOverrides = {},
   outcome = { completed: true, summary: "Added." },
   adds = true,
   settle = "in-run",
+  addedVariants = [],
 }: {
   page?: Record<string, unknown>;
   outcome?: AgentOutcome;
   adds?: boolean;
   settle?: "in-run" | "in-wait" | "rejected";
+  addedVariants?: string[];
 } = {}) {
+  let runs = 0;
   const track =
     <T>(name: string, value: T) =>
     async () => {
@@ -1164,7 +1197,7 @@ function fakes({
       calls.push("run");
       if (!adds) return outcome;
       stop.addEventListener("abort", () => calls.push("stop"), { once: true });
-      recordAdd();
+      recordAdd(addedVariants[runs++] ?? PINNED.variantId);
       if (settle === "in-run") recordOutcome("settled");
       if (settle === "rejected") recordOutcome("failed");
       return stop.aborted ? STOPPED : outcome;
@@ -1181,10 +1214,10 @@ function fakes({
   return { session, agent };
 }
 
-/** Records one 1-unit add input of the pinned variant in the current log, as the page would. */
-function recordAdd(): void {
+/** Records one 1-unit add input of `variantId` in the current log, as the page would. */
+function recordAdd(variantId = PINNED.variantId): void {
   calls.push("add");
-  const lines = [{ merchandiseId: PINNED.variantId, quantity: 1 }];
+  const lines = [{ merchandiseId: variantId, quantity: 1 }];
   log.receive(
     JSON.stringify({
       name: ADD_EVENT_NAME,
