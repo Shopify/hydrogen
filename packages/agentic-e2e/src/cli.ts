@@ -14,7 +14,13 @@ import { errorMessage, untilAborted } from "./async.ts";
 import { createBrowserSession } from "./browser/session.ts";
 import { withInterruptSignals } from "./interrupt.ts";
 import { observeAddEvents } from "./shopify/add-events.ts";
-import { pinVariant, productUrl, type PinnedVariant } from "./shopify/catalog.ts";
+import {
+  pinNonDefaultVariant,
+  pinVariant,
+  productUrl,
+  type CatalogPin,
+  type PinnedVariant,
+} from "./shopify/catalog.ts";
 import { discoverContext, type StorefrontContext } from "./shopify/storefront.ts";
 import { ADD_WAIT_MS, verifyAdd } from "./verdict.ts";
 
@@ -23,7 +29,11 @@ const READY_TIMEOUT_MS = 15_000;
 
 export const EXIT_CODES = { pass: 0, fail: 1, indeterminate: 2, skipped: 3, usage: 64 } as const;
 
-export const USAGE = `Usage: pnpm agentic-e2e <url>
+export const TEST_NAMES = ["add-to-cart", "choose-a-variant"] as const;
+export type TestName = (typeof TEST_NAMES)[number];
+const DEFAULT_TEST: TestName = "add-to-cart";
+
+export const USAGE = `Usage: pnpm agentic-e2e <url> [--test <name>]
 
 Asks the Storefront API at the origin of <url> for the active country and language, pins one
 eligible variant, opens its product page in a headless browser, asks an AI agent to add exactly
@@ -33,14 +43,21 @@ cart), and prints one JSON result line. Requires SHOPIFY_PROXY_KEY.
 <url> must be the storefront root URL, such as https://your-storefront.example/. A path such
 as /en-ca is not supported.
 
+Tests:
+  add-to-cart       Pins the API default variant, selectedOrFirstAvailableVariant (default).
+  choose-a-variant  Pins an available variant that is not the API default. The command does not
+                    check which variant the page selects first, so a pass does not prove that
+                    the agent changed the selection.
+
 Options:
-  -h, --help  Show this help.
+  --test <name>  The test to run: add-to-cart or choose-a-variant. Default: add-to-cart.
+  -h, --help     Show this help.
 
 Exit codes: 0 pass, 1 fail, 2 indeterminate, 3 skipped, 64 usage error.
 Use pnpm -s to print only the JSON line on stdout. Without -s, pnpm adds its own lines.`;
 
 export type CliArgs =
-  | { kind: "run"; url: URL }
+  | { kind: "run"; url: URL; test: TestName }
   | { kind: "help" }
   | { kind: "error"; message: string };
 
@@ -61,6 +78,7 @@ type StorefrontPin =
   | { status: "skipped"; reason: string; context: StorefrontContext }
   | Indeterminate;
 
+/** The result of a run. The printed result line adds the test name as its first key. */
 export type RunResult =
   | {
       status: "pass" | "fail";
@@ -74,26 +92,40 @@ export type RunResult =
 
 export function parseCliArgs(argv: readonly string[]): CliArgs {
   let positionals: string[];
+  let testValue: string | undefined;
   try {
     const parsed = parseArgs({
       args: [...argv],
       allowPositionals: true,
       strict: true,
-      options: { help: { type: "boolean", short: "h" } },
+      options: { help: { type: "boolean", short: "h" }, test: { type: "string" } },
     });
     if (parsed.values.help === true) return { kind: "help" };
     positionals = parsed.positionals;
+    testValue = parsed.values.test;
   } catch (error) {
     return { kind: "error", message: errorMessage(error) };
+  }
+  const test = parseTestName(testValue);
+  if (test === undefined) {
+    return { kind: "error", message: `Unknown test: ${JSON.stringify(testValue)}. ${VALID_TESTS}` };
   }
   const [input, ...extra] = positionals;
   if (input === undefined || extra.length > 0) {
     return { kind: "error", message: "Expected exactly one URL." };
   }
-  return parseUrl(input);
+  return parseUrl(input, test);
 }
 
-function parseUrl(input: string): CliArgs {
+const VALID_TESTS = `Valid tests: ${TEST_NAMES.join(", ")}.`;
+
+/** The default when the flag is absent. `undefined` for a name that is not a test. */
+function parseTestName(value: string | undefined): TestName | undefined {
+  if (value === undefined) return DEFAULT_TEST;
+  return TEST_NAMES.find((name) => name === value);
+}
+
+function parseUrl(input: string, test: TestName): CliArgs {
   let url: URL;
   try {
     url = new URL(input);
@@ -112,7 +144,7 @@ function parseUrl(input: string): CliArgs {
       message: `URL must be the storefront root URL, such as https://your-storefront.example/, received path ${url.pathname}`,
     };
   }
-  return { kind: "run", url };
+  return { kind: "run", url, test };
 }
 
 export async function main(argv: readonly string[]): Promise<number> {
@@ -125,12 +157,13 @@ export async function main(argv: readonly string[]): Promise<number> {
     process.stderr.write(`${args.message}\n\n${USAGE}\n`);
     return EXIT_CODES.usage;
   }
-  const result = await runOnce(args.url);
-  process.stdout.write(`${JSON.stringify(result)}\n`);
+  const result = await runOnce(args.url, args.test);
+  // `test` is the first key of every result line.
+  process.stdout.write(`${JSON.stringify({ test: args.test, ...result })}\n`);
   return EXIT_CODES[result.status];
 }
 
-async function runOnce(url: URL): Promise<RunResult> {
+async function runOnce(url: URL, test: TestName): Promise<RunResult> {
   let model: ModelConfig;
   try {
     // Checked before any Storefront API request or browser.
@@ -139,7 +172,7 @@ async function runOnce(url: URL): Promise<RunResult> {
     return indeterminate(errorMessage(error));
   }
   return withInterruptSignals(async (interrupt) => {
-    const storefront = await pinFromStorefront(url, interrupt);
+    const storefront = await pinFromStorefront(url, test, interrupt);
     if (storefront.status !== "pinned") return storefront;
     const { context, pinned } = storefront;
     const run = await runAddToCart(url, context, pinned, model, interrupt);
@@ -151,25 +184,46 @@ async function runOnce(url: URL): Promise<RunResult> {
 }
 
 /**
- * Reads the active context, then pins one variant in it. No browser runs here. Each request has
- * Hydrogen's client deadline, and the interrupt cancels the request in flight.
+ * Reads the active context, then pins one variant in it for `test`. No browser runs here. Each
+ * request has Hydrogen's client deadline, and the interrupt cancels the request in flight.
  */
-async function pinFromStorefront(url: URL, interrupt: AbortSignal): Promise<StorefrontPin> {
+async function pinFromStorefront(
+  url: URL,
+  test: TestName,
+  interrupt: AbortSignal,
+): Promise<StorefrontPin> {
   let step = "Storefront API localization";
   try {
     const context = await untilAborted(discoverContext(url, interrupt), interrupt);
     process.stderr.write(`Storefront API context: ${context.country} ${context.language}\n`);
     step = "Storefront API catalog pin";
-    const pin = await untilAborted(pinVariant(url, context, interrupt), interrupt);
+    const pin = await untilAborted(pinForTest(test, url, context, interrupt), interrupt);
     if (pin.status === "skipped") {
       process.stderr.write(`Skipped: ${pin.reason}\n`);
       return { status: "skipped", reason: pin.reason, context };
     }
-    process.stderr.write(`Pinned variant ${pin.pinned.variantId} of ${pin.pinned.productHandle}\n`);
+    process.stderr.write(
+      `Pinned variant ${pin.pinned.variantId} of ${pin.pinned.productHandle} for ${test}\n`,
+    );
     return { status: "pinned", context, pinned: pin.pinned };
   } catch (error) {
     if (interrupt.aborted) return indeterminate(errorMessage(interrupt.reason));
     return indeterminate(`${step} failed: ${errorMessage(error)}`);
+  }
+}
+
+/** The pin of each test. The browser, agent, and verdict steps are the same for every test. */
+async function pinForTest(
+  test: TestName,
+  url: URL,
+  context: StorefrontContext,
+  signal: AbortSignal,
+): Promise<CatalogPin> {
+  switch (test) {
+    case "add-to-cart":
+      return pinVariant(url, context, signal);
+    case "choose-a-variant":
+      return pinNonDefaultVariant(url, context, signal);
   }
 }
 
