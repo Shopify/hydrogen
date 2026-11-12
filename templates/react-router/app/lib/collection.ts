@@ -15,10 +15,14 @@ export const COLLECTION_QUERY = gql(
       $sortKey: ProductCollectionSortKeys
       $reverse: Boolean
       $filters: [ProductFilter!]
-    ) {
-      shop {
-        paymentSettings {
-          currencyCode
+      $country: CountryCode
+      $language: LanguageCode
+    ) @inContext(country: $country, language: $language) {
+      localization {
+        country {
+          currency {
+            isoCode
+          }
         }
       }
       collection(handle: $handle) {
@@ -108,7 +112,7 @@ export async function loadCollectionPage({
     products: data.collection.products.nodes,
     availableFilters: data.collection.products.filters,
     pageInfo: data.collection.products.pageInfo,
-    currencyCode: data.shop.paymentSettings.currencyCode,
+    currencyCode: data.localization.country.currency.isoCode,
     dataSearch: url.searchParams.toString(),
     origin: url.origin,
   };
