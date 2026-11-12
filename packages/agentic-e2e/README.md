@@ -1,25 +1,46 @@
 # Agentic E2E
 
-`agentic-e2e` checks that an AI agent can add one product to the cart of a storefront through its UI. It pins one product variant through the Storefront API, opens the product page of that variant in a headless browser that it owns, and asks one AI agent to add exactly 1 unit of that variant to the cart. Code, not the agent, then decides the result from Shopify Standard Events. Only when there is no add event, the code also uses whether the agent confirmed that it completed the task. **The command does not read the cart yet:** `pass` means that the storefront's add event resolved without cart user errors, not that the cart was checked. The command prints one JSON result line and closes the browser.
+`agentic-e2e` checks that an AI agent can add one product to the cart of a storefront through its UI. Each run executes one test (see [Tests](#tests)). It pins one product variant through the Storefront API, opens the product page of that variant in a headless browser that it owns, and asks one AI agent to add exactly 1 unit of that variant to the cart. Code, not the agent, then decides the result from Shopify Standard Events. Only when there is no add event, the code also uses whether the agent confirmed that it completed the task. **The command does not read the cart yet:** `pass` means that the storefront's add event resolved without cart user errors, not that the cart was checked. The command prints one JSON result line and closes the browser.
 
 **Supported storefronts:** only storefronts that dispatch the `shopify:cart:lines-update` Standard Event with a `promise` (Hydrogen storefronts do). A storefront that does not dispatch it, for example a Liquid theme without Standard Events, is out of scope: the result is `fail` when the agent reports that it added the item, and `indeterminate` when it does not, even when the item reaches the cart.
 
 ```sh
 pnpm build:pkgs   # once: the command imports the built output of @shopify/hydrogen
 SHOPIFY_PROXY_KEY=... pnpm agentic-e2e https://your-storefront.example
+SHOPIFY_PROXY_KEY=... pnpm agentic-e2e https://your-storefront.example --test choose-a-variant
 ```
 
 The URL must be the storefront root URL. A URL with a path, such as `/en-ca`, is a usage error.
 
 Run `pnpm --filter @shopify/agentic-e2e run browser:install` once before the first run. It downloads the Chromium build that matches this package's Playwright version (about 340 MB) into Playwright's shared cache. To use another Chromium-based browser, set `AGENTIC_E2E_BROWSER_PATH` to its executable.
 
-The URL is the only argument. There are no flags other than `--help`.
+`--test <name>` selects the test: `add-to-cart` or `choose-a-variant`. Without `--test`, the command runs `add-to-cart`. Each run executes one test. `--help` shows the usage.
 
 The command writes one JSON result line to stdout and diagnostics to stderr. pnpm adds its own lines (a script banner on stdout, and error lines on a non-zero exit) unless it runs with `-s`. When the output is parsed, use:
 
 ```sh
 SHOPIFY_PROXY_KEY=... pnpm -s agentic-e2e https://your-storefront.example
 ```
+
+## Tests
+
+Both tests use the same browser, agent task, and checks. Only the pinned variant is different.
+
+### `add-to-cart` (default)
+
+- **Condition:** a product that does not require a selling plan and whose `selectedOrFirstAvailableVariant` is available for sale. Else `skipped`.
+- **Arrange:** the command pins that `selectedOrFirstAvailableVariant`. The product page opens with no variant in the URL. The page normally shows this variant first, so the agent rarely has to select options.
+- **Act:** the agent selects the options and adds 1 unit. The command stops it at the first add event.
+- **Assert:** the add event rules in [How the result is decided](#how-the-result-is-decided).
+
+### `choose-a-variant`
+
+This test checks that a buyer can switch variants: the variant that the page selects first must not be the variant that goes into the cart.
+
+- **Condition:** a product that does not require a selling plan and has at least 2 variants available for sale. Else `skipped`.
+- **Arrange:** the command pins the first variant that is available for sale and is not `selectedOrFirstAvailableVariant`. The product page opens with no variant in the URL, so the agent must change at least one option.
+- **Act:** the agent selects the options and adds 1 unit. The command stops it at the first add event.
+- **Assert:** the same add event rules. An add event that holds another variant, such as the default one, is `fail`.
 
 ## Results and exit codes
 
@@ -28,17 +49,21 @@ SHOPIFY_PROXY_KEY=... pnpm -s agentic-e2e https://your-storefront.example
 | `pass`          | 0    | Every add event held 1 unit of the pinned variant and resolved without cart user errors. The cart is not read.            |
 | `fail`          | 1    | No clean add event for exactly 1 unit of the pinned variant, or the agent reports an add with no add event (see below).   |
 | `indeterminate` | 2    | The command could not decide (see below).                                                                                 |
-| `skipped`       | 3    | No eligible variant was found. No browser starts.                                                                         |
-| usage error     | 64   | No URL, more than one argument, an unknown flag, an invalid URL, a URL that is not http(s), a URL with credentials, or a URL with a path other than `/`. No browser starts. |
+| `skipped`       | 3    | No eligible variant was found for the test. No browser starts.                                                            |
+| usage error     | 64   | No URL, more than one argument, an unknown flag, an unknown test name, `--test` without a value, an invalid URL, a URL that is not http(s), a URL with credentials, or a URL with a path other than `/`. No browser starts. |
 
 ```json
-{"status":"pass","reason":"Every add event held exactly 1 unit of the pinned variant and resolved without cart user errors.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"productHandle":"snowboard","productTitle":"Snowboard","variantId":"gid://shopify/ProductVariant/1","selectedOptions":[{"name":"Title","value":"Default Title"}]},"agent":{"completed":false,"reason":"Stopped by the command after the add event."}}
-{"status":"fail","reason":"An add event promise was rejected.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"…":"…"},"agent":{"completed":false,"reason":"Stopped by the command after the add event."}}
-{"status":"fail","reason":"The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"…":"…"},"agent":{"completed":true,"summary":"I added 1 unit to the cart."}}
-{"status":"skipped","reason":"No eligible variant: the catalog was searched to the end.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"}}
-{"status":"indeterminate","reason":"No add Standard Event was recorded by the time Stagehand was disconnected.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"…":"…"},"agent":{"completed":false,"reason":"The agent reached the 20-step limit.","message":"I could not find the Add to cart button."}}
-{"status":"indeterminate","reason":"HTTP 500","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"…":"…"}}
+{"test":"add-to-cart","status":"pass","reason":"Every add event held exactly 1 unit of the pinned variant and resolved without cart user errors.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"productHandle":"snowboard","productTitle":"Snowboard","variantId":"gid://shopify/ProductVariant/1","selectedOptions":[{"name":"Title","value":"Default Title"}]},"agent":{"completed":false,"reason":"Stopped by the command after the add event."}}
+{"test":"add-to-cart","status":"fail","reason":"An add event promise was rejected.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"…":"…"},"agent":{"completed":false,"reason":"Stopped by the command after the add event."}}
+{"test":"add-to-cart","status":"fail","reason":"The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"…":"…"},"agent":{"completed":true,"summary":"I added 1 unit to the cart."}}
+{"test":"add-to-cart","status":"skipped","reason":"No eligible variant: the catalog was searched to the end.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"}}
+{"test":"choose-a-variant","status":"fail","reason":"An add event did not hold exactly 1 unit of the pinned variant.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"productHandle":"t-shirt","productTitle":"T-shirt","variantId":"gid://shopify/ProductVariant/2","selectedOptions":[{"name":"Size","value":"Large"}]},"agent":{"completed":false,"reason":"Stopped by the command after the add event."}}
+{"test":"choose-a-variant","status":"skipped","reason":"No product with at least 2 variants available for sale: the catalog was searched to the end.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"}}
+{"test":"add-to-cart","status":"indeterminate","reason":"No add Standard Event was recorded by the time Stagehand was disconnected.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"…":"…"},"agent":{"completed":false,"reason":"The agent reached the 20-step limit.","message":"I could not find the Add to cart button."}}
+{"test":"add-to-cart","status":"indeterminate","reason":"HTTP 500","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"…":"…"}}
 ```
+
+`test` is the name of the test that ran. It is the first key of every result line. A usage error prints no result line.
 
 `agent` tells what the agent reported: `{"completed":false,"reason":"Stopped by the command after the add event."}` when the command stopped it; `{"completed":true,"summary":…}` when it ended by itself with a `done` action with `taskCompleted: true`; else `{"completed":false,"reason":…}` (step limit, deadline, agent or model error, or no confirmed completion). `message` is the final message that Stagehand returned, with the key redacted. It is present only when Stagehand returned a result: at the step limit, for a failure result, or with no confirmed completion. It is not present after a thrown error, the deadline, or a stop by the command. `summary` and `message` are for triage only: the status never uses the text of the agent. The status uses `completed` only when no add event was recorded (see [How the result is decided](#how-the-result-is-decided)). An `indeterminate` result has `context`, `pinned`, and `agent` when they exist.
 
@@ -64,11 +89,12 @@ An add event is a `shopify:cart:lines-update` Standard Event with `action: "add"
 
 ## Storefront API
 
-Two queries go to `<origin>/api/<version>/graphql.json` with the default API version of `@shopify/hydrogen` and its public client. Pass the final storefront origin: the command does not follow redirects, the same as Hydrogen's Storefront client, so an origin that redirects gives `indeterminate`. They send no access token, no cookies, and no buyer-IP header. Each request has a 10-second deadline.
+Each run sends two queries to `<origin>/api/<version>/graphql.json` with the default API version of `@shopify/hydrogen` and its public client: the country and language query, and the pin query of its test (one request for each catalog page). Pass the final storefront origin: the command does not follow redirects, the same as Hydrogen's Storefront client, so an origin that redirects gives `indeterminate`. They send no access token, no cookies, and no buyer-IP header. Each request has a 10-second deadline.
 
 - **Country and language**: `localization { language { isoCode } country { isoCode name currency { isoCode } } }`, sent without `@inContext`. Without `@inContext`, the API answers with the primary market of the shop. This is the market of the run. A missing field gives `indeterminate`. A proxy at the storefront origin can add its own buyer-IP header, so the answer can depend on where the command runs.
 - **Market in the browser**: the browser can show another market, for example because the storefront selects the market from the geo-IP of the browser. The command sets no cookie and does not change the page. Instead, the task tells the agent to shop in the store of the country name, with prices in the currency, and to switch to that country through the country selector of the store if the store shows another country or currency. The country name and the currency are JSON-quoted as store data. A store without a country selector cannot be switched: the run then most likely ends without a confirmed completion. The command does not verify the market that the browser shows.
-- **Pinned variant**: with the discovered context in `@inContext`, products that are available for sale, in product ID order, 50 per page, for at most 5 pages. For each product only `selectedOrFirstAvailableVariant` is examined. The pinned variant is the first one that is available for sale and whose product does not require a selling plan. No eligible variant gives `skipped`.
+- **Pinned variant for `add-to-cart`**: with the discovered context in `@inContext`, products that are available for sale, in product ID order, 50 per page, for at most 5 pages. For each product only `selectedOrFirstAvailableVariant` is examined. The pinned variant is the first one that is available for sale and whose product does not require a selling plan. No eligible variant gives `skipped`.
+- **Pinned variant for `choose-a-variant`**: the same products, order, page size, and page limit. For each product the query reads `selectedOrFirstAvailableVariant { id }` (the default variant) and the first 10 variants with `availableForSale` and `selectedOptions`. The product must not require a selling plan, must have a default variant, and must have at least 2 of those variants available for sale. The pinned variant is the first one of those variants, in API order, that is available for sale and is not the default variant. The first eligible product is used. No eligible product gives `skipped`.
 
 The product page is `/products/<handle>` on the origin of the URL. The query and the hash of the URL are removed.
 
@@ -83,6 +109,9 @@ There is one model path: `anthropic/claude-haiku-5-5` through the Shopify AI pro
 - **Only storefronts that dispatch Standard Events are supported:** `shopify:cart:lines-update` with a `promise`. A storefront that does not dispatch the event, for example a Liquid theme without Standard Events, ends `fail` when the agent reports that it added the item, and `indeterminate` when it does not, even when the item reaches the cart. An add event without a `promise` is `fail`.
 - **A wrong agent claim gives a false `fail`.** When the agent reports completion but did not add the item, and no add event comes, the result is `fail`. `agent.summary` (or `agent.message`, when the agent did not complete) helps to find the cause.
 - **Checkout and account pages are not blocked.** The agent is only told not to go there, and its run is stopped at the first add event. Nothing stops it before that if it does not obey, and a tool call already in progress at the stop can finish before the disconnect is confirmed.
+- **`choose-a-variant` proves a switch only when the page first selects the API default.** The default is `selectedOrFirstAvailableVariant`. A page that first selects another variant could open on the pinned variant. The test then passes with no switch.
+- **`choose-a-variant` examines only the first 10 variants of each product.** A product whose other available variants come later is not used.
+- **A wrong agent selection gives `fail`.** In `choose-a-variant`, when the agent adds another variant, the result is `fail`. Code cannot tell this from a broken variant selector.
 - **The cart is not read.** `pass` trusts the add event's `promise` and its cart `userErrors`. It does not prove that the cart holds the item.
 - One main page only. Events in popups or frames are not recorded.
 - The script observes `event.promise` with a rejection handler. This marks a native promise as handled, so the storefront may not get an `unhandledrejection` for it.
