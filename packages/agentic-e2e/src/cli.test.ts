@@ -4,7 +4,13 @@ import { attachStagehand, type AgentOutcome, type AgentRunInput } from "./agent/
 import { createBrowserSession } from "./browser/session.ts";
 import { main, parseCliArgs, USAGE } from "./cli.ts";
 import { ADD_EVENT_NAME, AddEventLog, observeAddEvents } from "./shopify/add-events.ts";
-import { pinNonDefaultVariant, pinVariant, type PinnedVariant } from "./shopify/catalog.ts";
+import {
+  findVariantChoice,
+  pinVariant,
+  type PinnedVariant,
+  type VariantChoice,
+} from "./shopify/catalog.ts";
+import { readVariantFields, type VariantField } from "./shopify/selected-variant.ts";
 import { discoverContext, type StorefrontContext } from "./shopify/storefront.ts";
 
 vi.mock("./browser/session.ts", () => ({ createBrowserSession: vi.fn() }));
@@ -17,7 +23,7 @@ vi.mock("./shopify/storefront.ts", () => ({ discoverContext: vi.fn() }));
 vi.mock("./shopify/catalog.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./shopify/catalog.ts")>()),
   pinVariant: vi.fn(),
-  pinNonDefaultVariant: vi.fn(),
+  findVariantChoice: vi.fn(),
 }));
 
 const KEY = "sk-secret-proxy-key-123";
@@ -32,6 +38,18 @@ const PINNED: PinnedVariant = {
   productTitle: "Board",
   variantId: "gid://shopify/ProductVariant/1",
   selectedOptions: [{ name: "Size", value: "M" }],
+};
+const MEDIUM = "gid://shopify/ProductVariant/21";
+const LARGE = "gid://shopify/ProductVariant/22";
+/** A product for choose-a-variant: Medium, then Large, both available. */
+const TEE: VariantChoice = {
+  productHandle: "tee",
+  productTitle: "Tee",
+  variantIds: [MEDIUM, LARGE],
+  candidates: [
+    { id: MEDIUM, selectedOptions: [{ name: "Size", value: "Medium" }] },
+    { id: LARGE, selectedOptions: [{ name: "Size", value: "Large" }] },
+  ],
 };
 const PASS_REASON =
   "Every add event held exactly 1 unit of the pinned variant and resolved without cart user errors.";
@@ -68,9 +86,9 @@ beforeEach(() => {
     calls.push("pin");
     return { status: "pinned", pinned: PINNED };
   });
-  vi.mocked(pinNonDefaultVariant).mockImplementation(async () => {
-    calls.push("pin non-default");
-    return { status: "pinned", pinned: PINNED };
+  vi.mocked(findVariantChoice).mockImplementation(async () => {
+    calls.push("find choice");
+    return { status: "found", product: TEE };
   });
   vi.mocked(observeAddEvents).mockImplementation(async () => {
     calls.push("observe");
@@ -94,7 +112,7 @@ afterEach(() => {
   vi.mocked(attachStagehand).mockReset();
   vi.mocked(discoverContext).mockReset();
   vi.mocked(pinVariant).mockReset();
-  vi.mocked(pinNonDefaultVariant).mockReset();
+  vi.mocked(findVariantChoice).mockReset();
   vi.mocked(observeAddEvents).mockReset();
 });
 
@@ -222,7 +240,7 @@ describe("main", () => {
       expect(stderr.join("")).toContain(`\n\n${USAGE}\n`);
       expect(discoverContext).not.toHaveBeenCalled();
       expect(pinVariant).not.toHaveBeenCalled();
-      expect(pinNonDefaultVariant).not.toHaveBeenCalled();
+      expect(findVariantChoice).not.toHaveBeenCalled();
       expect(createBrowserSession).not.toHaveBeenCalled();
     },
   );
@@ -271,7 +289,7 @@ describe("main", () => {
     const storefrontUrl = new URL("https://shop.example/?x=1#top");
     expect(discoverContext).toHaveBeenCalledWith(storefrontUrl, expect.any(AbortSignal));
     expect(pinVariant).toHaveBeenCalledWith(storefrontUrl, CONTEXT, expect.any(AbortSignal));
-    expect(pinNonDefaultVariant).not.toHaveBeenCalled();
+    expect(findVariantChoice).not.toHaveBeenCalled();
     expect(observeAddEvents).toHaveBeenCalledWith(session.page);
     expect(session.page.goto).toHaveBeenCalledWith(
       "https://shop.example/products/board",
@@ -302,44 +320,163 @@ describe("main", () => {
     expect(stdout.join("") + stderr.join("")).not.toContain(KEY);
   });
 
-  it("pins with pinNonDefaultVariant for --test choose-a-variant and prints test first", async () => {
-    const { agent } = fakes();
+  it.each([
+    { selected: MEDIUM, pinned: LARGE, size: "Large" },
+    // The page does not select the first variant: the pin is not the variant it selects.
+    { selected: LARGE, pinned: MEDIUM, size: "Medium" },
+  ])(
+    "for choose-a-variant, pins $size after the page selects the other variant, and prints test first",
+    async ({ selected, pinned, size }) => {
+      const { agent, session } = fakes({
+        fields: [{ name: "merchandiseId", value: selected }],
+        added: pinned,
+      });
 
-    await expect(main(["https://shop.example", "--test", "choose-a-variant"])).resolves.toBe(0);
+      await expect(main(["https://shop.example", "--test", "choose-a-variant"])).resolves.toBe(0);
 
+      const final = {
+        productHandle: "tee",
+        productTitle: "Tee",
+        variantId: pinned,
+        selectedOptions: [{ name: "Size", value: size }],
+      };
+      expect(results()).toEqual([
+        {
+          test: "choose-a-variant",
+          status: "pass",
+          reason: PASS_REASON,
+          context: CONTEXT,
+          pinned: final,
+          agent: STOPPED,
+        },
+      ]);
+      expect(stdout.join("")).toMatch(/^\{"test":"choose-a-variant","status":"pass",/);
+      // The pin comes after the page opened, and before the agent.
+      expect(calls.slice(0, 8)).toEqual([
+        "context",
+        "find choice",
+        "observe",
+        "attach",
+        "goto",
+        "ready",
+        "selection",
+        "run",
+      ]);
+      expect(findVariantChoice).toHaveBeenCalledWith(
+        new URL("https://shop.example"),
+        CONTEXT,
+        expect.any(AbortSignal),
+      );
+      expect(pinVariant).not.toHaveBeenCalled();
+      expect(session.page.goto).toHaveBeenCalledWith(
+        "https://shop.example/products/tee",
+        expect.anything(),
+      );
+      expect(stderr).toContain("Found 2 variants available for sale of tee for choose-a-variant\n");
+      expect(stderr).toContain(
+        `The page selects variant ${selected} first. Pinned variant ${pinned} of tee for choose-a-variant\n`,
+      );
+      // The task names the final pin's options.
+      expect(agent.run).toHaveBeenCalledWith(
+        expect.objectContaining({
+          task: expect.stringContaining(
+            `Select the variant with these options (JSON data): ${JSON.stringify(final.selectedOptions)}.`,
+          ),
+        }),
+      );
+    },
+  );
+
+  it("fails choose-a-variant when the add holds the variant that the page selected first", async () => {
+    fakes({ fields: [{ name: "id", value: "21" }], added: MEDIUM });
+
+    await expect(main(["https://shop.example", "--test", "choose-a-variant"])).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      expect.objectContaining({
+        status: "fail",
+        reason: "An add event did not hold exactly 1 unit of the pinned variant.",
+        pinned: expect.objectContaining({ variantId: LARGE }),
+      }),
+    ]);
+  });
+
+  it.each([
+    {
+      case: "conflicting variants",
+      fields: [
+        { name: "merchandiseId", value: MEDIUM },
+        { name: "id", value: "22" },
+      ] satisfies VariantField[],
+      reason: `The selected variant is unknown: Product forms hold different variants of the product: ${MEDIUM}, ${LARGE}.`,
+    },
+    {
+      case: "an unknown variant",
+      fields: [
+        { name: "merchandiseId", value: "gid://shopify/ProductVariant/99" },
+      ] satisfies VariantField[],
+      reason:
+        "The selected variant is unknown: No product form holds the ID of an examined variant of the product.",
+    },
+    {
+      case: "a malformed value",
+      fields: [{ name: "merchandiseId", value: "" }] satisfies VariantField[],
+      reason:
+        'The selected variant is unknown: A product form merchandiseId field holds "", which is not a variant ID.',
+    },
+    {
+      case: "no recognized field",
+      fields: null,
+      reason:
+        "The selected variant is unknown: No product form variant field was found in 10000 ms.",
+    },
+  ])(
+    "reports $case on the page as indeterminate for choose-a-variant, without a pin or the agent",
+    async ({ fields, reason }) => {
+      const { agent, session } = fakes({ fields });
+
+      await expect(main(["https://shop.example", "--test", "choose-a-variant"])).resolves.toBe(2);
+
+      expect(results()).toEqual([
+        { test: "choose-a-variant", status: "indeterminate", reason, context: CONTEXT },
+      ]);
+      expect(agent.run).not.toHaveBeenCalled();
+      expect(agent.detach).toHaveBeenCalled();
+      expect(session.close).toHaveBeenCalledOnce();
+      expect(stderr.join("")).not.toContain("Pinned variant");
+    },
+  );
+
+  it("stops on SIGINT while it reads the page selection for choose-a-variant", async () => {
+    const { promise: reading, resolve: readStarted } = Promise.withResolvers<void>();
+    const { agent, session } = fakes();
+    session.page.waitForFunction.mockImplementation(async (fn: unknown) => {
+      if (fn !== readVariantFields) return undefined;
+      readStarted();
+      return new Promise(() => undefined);
+    });
+
+    const run = main(["https://shop.example", "--test", "choose-a-variant"]);
+    await reading;
+    process.emit("SIGINT", "SIGINT");
+
+    await expect(run).resolves.toBe(2);
     expect(results()).toEqual([
       {
         test: "choose-a-variant",
-        status: "pass",
-        reason: PASS_REASON,
+        status: "indeterminate",
+        reason: "Interrupted by SIGINT.",
         context: CONTEXT,
-        pinned: PINNED,
-        agent: STOPPED,
       },
     ]);
-    expect(stdout.join("")).toMatch(/^\{"test":"choose-a-variant","status":"pass",/);
-    expect(calls.slice(0, 2)).toEqual(["context", "pin non-default"]);
-    expect(pinNonDefaultVariant).toHaveBeenCalledWith(
-      new URL("https://shop.example"),
-      CONTEXT,
-      expect.any(AbortSignal),
-    );
-    expect(pinVariant).not.toHaveBeenCalled();
-    expect(stderr).toContain(`Pinned variant ${PINNED.variantId} of board for choose-a-variant\n`);
-    // The same add task as add-to-cart, with the pinned variant's options.
-    expect(agent.run).toHaveBeenCalledWith(
-      expect.objectContaining({
-        task: expect.stringContaining(
-          `Select the variant with these options (JSON data): ${JSON.stringify(PINNED.selectedOptions)}.`,
-        ),
-      }),
-    );
+    expect(agent.run).not.toHaveBeenCalled();
+    expect(session.close).toHaveBeenCalledOnce();
   });
 
   it("reports skipped with the test name for choose-a-variant and starts no browser", async () => {
     const reason =
       "No product with at least 2 variants available for sale: the catalog was searched to the end.";
-    vi.mocked(pinNonDefaultVariant).mockResolvedValue({ status: "skipped", reason });
+    vi.mocked(findVariantChoice).mockResolvedValue({ status: "skipped", reason });
 
     await expect(main(["https://shop.example", "--test", "choose-a-variant"])).resolves.toBe(3);
 
@@ -347,6 +484,7 @@ describe("main", () => {
       { test: "choose-a-variant", status: "skipped", reason, context: CONTEXT },
     ]);
     expect(createBrowserSession).not.toHaveBeenCalled();
+    expect(stderr).toContain(`Skipped: ${reason}\n`);
   });
 
   it("fails with exit 1 when the add promise was rejected", async () => {
@@ -468,7 +606,7 @@ describe("main", () => {
     expect(stdout).toEqual([
       `${JSON.stringify({ test: "choose-a-variant", status: "indeterminate", reason: "SHOPIFY_PROXY_KEY is not set." })}\n`,
     ]);
-    expect(pinNonDefaultVariant).not.toHaveBeenCalled();
+    expect(findVariantChoice).not.toHaveBeenCalled();
   });
 
   it("reports a missing SHOPIFY_PROXY_KEY before the browser starts", async () => {
@@ -739,20 +877,25 @@ describe("main", () => {
 });
 
 /**
- * Fake browser session and agent. With `adds`, the agent run records one 1-unit add of the
- * pinned variant, as the page would; the command's stop then ends the run with the fixed outcome,
- * like the real agent module. `settle` tells when and how the add's promise ends.
+ * Fake browser session and agent. With `adds`, the agent run records one 1-unit add of `added`,
+ * as the page would; the command's stop then ends the run with the fixed outcome, like the real
+ * agent module. `settle` tells when and how the add's promise ends. `fields` are the product form
+ * variant fields that the page shows (`null`: none, so the wait times out).
  */
 function fakes({
   page: pageOverrides = {},
   outcome = { completed: true, summary: "Added." },
   adds = true,
   settle = "in-run",
+  fields = [{ name: "merchandiseId", value: MEDIUM }],
+  added = PINNED.variantId,
 }: {
   page?: Record<string, unknown>;
   outcome?: AgentOutcome;
   adds?: boolean;
   settle?: "in-run" | "in-wait" | "rejected";
+  fields?: VariantField[] | null;
+  added?: string;
 } = {}) {
   const track =
     <T>(name: string, value: T) =>
@@ -762,7 +905,13 @@ function fakes({
     };
   const page = {
     goto: vi.fn(track("goto", { status: () => 200 })),
-    waitForFunction: vi.fn(track("ready", undefined)),
+    // `readVariantFields` resolves to a handle of the fields. The page readiness check resolves.
+    waitForFunction: vi.fn(async (fn: unknown) => {
+      if (fn !== readVariantFields) return track("ready", undefined)();
+      calls.push("selection");
+      if (fields === null) throw new Error("page.waitForFunction: Timeout 10000ms exceeded.");
+      return { jsonValue: async () => fields, dispose: async () => undefined };
+    }),
   };
   for (const [name, implementation] of Object.entries(pageOverrides)) {
     (page as Record<string, unknown>)[name] = vi.fn(implementation as () => unknown);
@@ -789,7 +938,7 @@ function fakes({
       calls.push("run");
       if (!adds) return outcome;
       stop.addEventListener("abort", () => calls.push("stop"), { once: true });
-      recordAdd();
+      recordAdd(added);
       if (settle === "in-run") recordOutcome("settled");
       if (settle === "rejected") recordOutcome("failed");
       return stop.aborted ? STOPPED : outcome;
@@ -806,10 +955,10 @@ function fakes({
   return { session, agent };
 }
 
-/** Records one 1-unit add input of the pinned variant in the current log, as the page would. */
-function recordAdd(): void {
+/** Records one 1-unit add input of `variantId` in the current log, as the page would. */
+function recordAdd(variantId = PINNED.variantId): void {
   calls.push("add");
-  const lines = [{ merchandiseId: PINNED.variantId, quantity: 1 }];
+  const lines = [{ merchandiseId: variantId, quantity: 1 }];
   log.receive(
     JSON.stringify({
       name: ADD_EVENT_NAME,
