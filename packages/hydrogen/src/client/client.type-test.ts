@@ -18,6 +18,7 @@ import type {
   ShopifyI18n,
   ShopifyRequestContext,
 } from '../core';
+import type {SourceOf} from '../graphql';
 import type * as StorefrontExports from './index';
 import type {ResultOf, VariablesOf} from 'gql.tada';
 
@@ -63,6 +64,28 @@ const SHOP_WITH_BRANDED_COMPOSED_FRAGMENT_QUERY = gql(
 const SHOP_WITH_COMMA_SEPARATED_BRANDED_COMPOSED_FRAGMENT_QUERY = gql(
   gql(`query { shop { name, ...ShopFields } }`),
   [SHOP_FIELDS_FRAGMENT],
+);
+const IMAGE_FRAGMENT = gql(`fragment Image on Image { url altText }`);
+const PRODUCT_CARD_WITH_IMAGE_FRAGMENT = gql(
+  `fragment ProductCardWithImage on Product { handle featuredImage { ...Image } }`,
+  [IMAGE_FRAGMENT],
+);
+const COLLECTION_CARD_WITH_IMAGE_FRAGMENT = gql(
+  `fragment CollectionCardWithImage on Collection { handle image { ...Image } }`,
+  [IMAGE_FRAGMENT],
+);
+const HOME_WITH_SHARED_SUB_FRAGMENT_QUERY = gql(
+  `query HomeWithSharedSubFragment { collections(first: 1) { nodes { ...CollectionCardWithImage } } products(first: 1) { nodes { ...ProductCardWithImage } } }`,
+  [PRODUCT_CARD_WITH_IMAGE_FRAGMENT, COLLECTION_CARD_WITH_IMAGE_FRAGMENT],
+);
+const SHOP_FIELDS_FRAGMENT_LIST: (typeof SHOP_FIELDS_FRAGMENT)[] = [SHOP_FIELDS_FRAGMENT];
+const SHOP_WITH_FRAGMENT_LIST_QUERY = gql(
+  `query ShopWithFragmentList { shop { name ...ShopFields } }`,
+  SHOP_FIELDS_FRAGMENT_LIST,
+);
+const SHOP_WITH_BRANDED_FRAGMENT_LIST_QUERY = gql(
+  gql(`query ShopWithBrandedFragmentList { shop { name ...ShopFields } }`),
+  SHOP_FIELDS_FRAGMENT_LIST,
 );
 const PRODUCT_WITH_FRAGMENT_FIRST_QUERY = gql(
   `fragment ProductSummary on Product { title handle }
@@ -760,6 +783,23 @@ describe('type tests', () => {
       expectTypeOf<Shop>().not.toBeAny();
       expectTypeOf<Shop>().toHaveProperty('name');
       expectTypeOf<Shop>().toHaveProperty('description');
+    });
+
+    it('ResultOf includes fields when two composed fragments share a sub-fragment', () => {
+      type R = ResultOf<typeof HOME_WITH_SHARED_SUB_FRAGMENT_QUERY>;
+      type Product = R['products']['nodes'][number];
+      type Collection = R['collections']['nodes'][number];
+
+      expectTypeOf<Product>().not.toBeAny();
+      expectTypeOf<NonNullable<Product['featuredImage']>>().toHaveProperty('url');
+      expectTypeOf<NonNullable<Collection['image']>>().toHaveProperty('altText');
+    });
+
+    it('widens the source to string when the fragment array is not a tuple', () => {
+      expectTypeOf<SourceOf<typeof SHOP_WITH_FRAGMENT_LIST_QUERY>>().toEqualTypeOf<string>();
+      expectTypeOf<
+        SourceOf<typeof SHOP_WITH_BRANDED_FRAGMENT_LIST_QUERY>
+      >().toEqualTypeOf<string>();
     });
 
     it('ResultOf uses the operation when a document starts with a fragment', () => {

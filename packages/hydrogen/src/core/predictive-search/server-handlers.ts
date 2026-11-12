@@ -1,4 +1,5 @@
 import { StorefrontApiError } from "../../client/errors";
+import type { AnyStorefrontQueryString } from "../../graphql";
 import type {
   PredictiveSearchLimitScope,
   PredictiveSearchType,
@@ -24,7 +25,6 @@ import {
   makePredictiveSearchQueries,
   predictiveSearchQueries,
   type CreatePredictiveSearchQueriesOptions,
-  type PredictiveSearchQueriesForOptions,
 } from "./queries";
 import {
   DEFAULT_PREDICTIVE_SEARCH_LIMIT,
@@ -186,7 +186,7 @@ export function createPredictiveSearchServerHandlers(
 async function handleGet(
   { request, storefrontClient }: PredictiveSearchHandlerContext,
   options: CreatePredictiveSearchServerHandlersOptions,
-  queries: PredictiveSearchQueriesForOptions<CreatePredictiveSearchServerHandlersOptions>,
+  queries: { readonly predictiveSearch: AnyStorefrontQueryString },
 ): Promise<PredictiveSearchGetResult> {
   let searchOptions: ParsedPredictiveSearchRequest;
   try {

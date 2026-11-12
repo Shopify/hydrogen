@@ -1595,17 +1595,8 @@
       "filePath": "src/graphql/graphql.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ComposedSource",
-      "value": "FragmentSources<Fragments> extends \"\" ? Source : `${Source}\\n${FragmentSources<Fragments>}`",
+      "value": "ComposedSource<Source, Fragments>",
       "description": "The combined query text of a document and its fragments, which keeps the inferred types of composed documents."
-    }
-  },
-  "FragmentSources": {
-    "unknown": {
-      "description": "",
-      "name": "FragmentSources",
-      "value": "FragmentSources",
-      "members": [],
-      "override": "The query text of a list of fragment documents, joined with line breaks."
     }
   },
   "StorefrontGqlForDocs": {
@@ -1652,7 +1643,7 @@
       "filePath": "src/graphql/graphql.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "StorefrontQueryMetadata",
-      "value": "{\n  /** Marks a string that `gql` returns. The property exists only in types. */\n  readonly __hydrogenQueryBrand: true;\n  /** The document's query text, which TypeScript reads to infer types. The property exists only in types. */\n  readonly __hydrogenQuerySource?: Source;\n}",
+      "value": "{\n  /** Marks a string that `gql` returns. The property exists only in types. */\n  readonly __hydrogenQueryBrand: true;\n  /** The document's query text, which TypeScript reads to infer types. The property exists only in types. */\n  readonly __hydrogenQuerySource?: Source;\n  /** The operation text followed by each distinct fragment text the document appends. The property exists only in types. */\n  readonly __hydrogenQueryParts?: Parts;\n}",
       "description": "Type-only properties that mark a string as a `gql` document.",
       "members": [
         {
@@ -1661,6 +1652,14 @@
           "name": "__hydrogenQueryBrand",
           "value": "true",
           "description": "Marks a string that `gql` returns. The property exists only in types."
+        },
+        {
+          "filePath": "src/graphql/graphql.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "__hydrogenQueryParts",
+          "value": "Parts",
+          "description": "The operation text followed by each distinct fragment text the document appends. The property exists only in types.",
+          "isOptional": true
         },
         {
           "filePath": "src/graphql/graphql.ts",
@@ -11502,7 +11501,7 @@
       "filePath": "src/customer-account/graphql.ts",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CustomerAccountDocument",
-      "value": "DocumentDecoration<Result, Variables> & {\n  readonly [CUSTOMER_ACCOUNT_DOCUMENT]: true;\n  readonly source: Source;\n}",
+      "value": "DocumentDecoration<Result, Variables> & {\n  readonly [CUSTOMER_ACCOUNT_DOCUMENT]: true;\n  readonly source: Source;\n  /** The operation text followed by each distinct fragment text the document appends. The property exists only in types. */\n  readonly parts?: Parts;\n}",
       "description": "A Customer Account API query or mutation that `gql` from `@shopify/hydrogen/customer-account` returns. TypeScript infers the result and variables types from the document's GraphQL source.\n\nCreate documents only with the Customer Account `gql` function. The client throws a `TypeError` for any other object."
     }
   },
@@ -11697,6 +11696,38 @@
       "name": "DeclaredNameOfType",
       "value": "Definition extends {\n  variable: { name: { value: infer Name extends keyof Types } };\n  type: infer Type;\n}\n  ? (Type extends { kind: \"NonNullType\"; type: infer Inner } ? Inner : Type) extends {\n      kind: \"NamedType\";\n      name: { value: Types[Name] };\n    }\n    ? Name\n    : never\n  : never",
       "description": ""
+    }
+  },
+  "Definition": {
+    "src/graphql/fragments.ts": {
+      "filePath": "src/graphql/fragments.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "Definition",
+      "value": "{ key: string; canonical: string; text: string }",
+      "description": "A top-level definition of a GraphQL text. A fragment is keyed by its name, any other definition by its canonical form. `canonical` joins the definition's tokens with single spaces, so two copies that differ only in whitespace, commas, or comments compare equal. `text` is the definition as written.",
+      "members": [
+        {
+          "filePath": "src/graphql/fragments.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "canonical",
+          "value": "string",
+          "description": ""
+        },
+        {
+          "filePath": "src/graphql/fragments.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "key",
+          "value": "string",
+          "description": ""
+        },
+        {
+          "filePath": "src/graphql/fragments.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "text",
+          "value": "string",
+          "description": ""
+        }
+      ]
     }
   },
   "I18nVariableTypes": {
