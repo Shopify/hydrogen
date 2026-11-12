@@ -60,8 +60,6 @@ function SuspenseCartSummary() {
   return createElement("span", { "data-testid": "cart-summary" }, quantity);
 }
 
-// Hydrogen's own logs (e.g. Standard Actions missing in happy-dom) go to a test logger, so the
-// console.error spies below only catch React hydration errors.
 beforeEach(() => {
   configureLogging({ logger: createTestLogger() });
 });
