@@ -22,7 +22,11 @@ function createTransport(read: Partial<CartReadResult> = {}) {
     ...read,
   }));
   const updateCart = vi.fn<CartTransport["updateCart"]>(async () => WRITE_RESULT);
-  return { getCart, updateCart, transport: { getCart, updateCart } };
+  return {
+    getCart,
+    updateCart,
+    transport: { ordering: "concurrent" as const, getCart, updateCart },
+  };
 }
 
 function cartWithCodes(...codes: string[]): CartReadResult["cart"] {

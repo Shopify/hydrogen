@@ -1,0 +1,622 @@
+{
+  "createCart": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "isError": false,
+      "structuredContent": {
+        "ucp": {
+          "capabilities": {
+            "dev.ucp.shopping.checkout": [],
+            "dev.ucp.shopping.fulfillment": [],
+            "dev.ucp.shopping.buyer_consent": [],
+            "dev.ucp.shopping.discount": [],
+            "dev.ucp.shopping.cart": [],
+            "dev.ucp.shopping.order": [],
+            "dev.ucp.shopping.catalog.search": [],
+            "dev.ucp.shopping.catalog.lookup": [],
+            "dev.shopify.catalog": []
+          }
+        },
+        "id": "gid://shopify/Cart/fixture-cart-token?key=fixture-cart-key",
+        "line_items": [
+          {
+            "id": "gid://shopify/CartLine/b9a8b418-bda5-4591-8bb5-5df64a68c6f0?cart=fixture-cart-token",
+            "item": {
+              "id": "gid://shopify/ProductVariant/51604076265528",
+              "title": "Example product",
+              "price": 14400,
+              "image_url": "https://cdn.shopify.com/s/files/1/0879/7759/0840/files/home-decor-products-2.jpg?v=1769464769"
+            },
+            "quantity": 2,
+            "totals": [
+              {
+                "type": "subtotal",
+                "amount": 28800,
+                "display_text": "Subtotal"
+              },
+              {
+                "type": "total",
+                "amount": 28800,
+                "display_text": "Total"
+              }
+            ]
+          },
+          {
+            "id": "gid://shopify/CartLine/0676ac35-238a-4032-9ce4-9687f0b142c2?cart=fixture-cart-token",
+            "item": {
+              "id": "gid://shopify/ProductVariant/51604076232760",
+              "title": "Default Title",
+              "price": 14400,
+              "image_url": "https://cdn.shopify.com/s/files/1/0879/7759/0840/files/home-decor-products-1.jpg?v=1769464767"
+            },
+            "quantity": 1,
+            "totals": [
+              {
+                "type": "subtotal",
+                "amount": 14400,
+                "display_text": "Subtotal"
+              },
+              {
+                "type": "total",
+                "amount": 14400,
+                "display_text": "Total"
+              }
+            ]
+          }
+        ],
+        "currency": "CAD",
+        "discounts": {
+          "codes": [],
+          "applied": []
+        },
+        "totals": [
+          {
+            "type": "subtotal",
+            "amount": 43200,
+            "display_text": "Subtotal"
+          },
+          {
+            "type": "tax",
+            "amount": 0,
+            "display_text": "Tax"
+          },
+          {
+            "type": "duty",
+            "amount": 0,
+            "display_text": "Duty"
+          },
+          {
+            "type": "total",
+            "amount": 43200,
+            "display_text": "Total"
+          }
+        ],
+        "messages": [],
+        "continue_url": "https://at8f0s-qu.myshopify.com/cart/c/fixture-cart-token?key=fixture-checkout-key"
+      }
+    }
+  },
+  "getCart": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "isError": false,
+      "structuredContent": {
+        "ucp": {
+          "capabilities": {
+            "dev.ucp.shopping.checkout": [],
+            "dev.ucp.shopping.fulfillment": [],
+            "dev.ucp.shopping.buyer_consent": [],
+            "dev.ucp.shopping.discount": [],
+            "dev.ucp.shopping.cart": [],
+            "dev.ucp.shopping.order": [],
+            "dev.ucp.shopping.catalog.search": [],
+            "dev.ucp.shopping.catalog.lookup": [],
+            "dev.shopify.catalog": []
+          }
+        },
+        "id": "gid://shopify/Cart/fixture-cart-token?key=fixture-cart-key",
+        "line_items": [
+          {
+            "id": "gid://shopify/CartLine/b9a8b418-bda5-4591-8bb5-5df64a68c6f0?cart=fixture-cart-token",
+            "item": {
+              "id": "gid://shopify/ProductVariant/51604076265528",
+              "title": "Example product",
+              "price": 14400,
+              "image_url": "https://cdn.shopify.com/s/files/1/0879/7759/0840/files/home-decor-products-2.jpg?v=1769464769"
+            },
+            "quantity": 2,
+            "totals": [
+              {
+                "type": "subtotal",
+                "amount": 28800,
+                "display_text": "Subtotal"
+              },
+              {
+                "type": "total",
+                "amount": 28800,
+                "display_text": "Total"
+              }
+            ]
+          },
+          {
+            "id": "gid://shopify/CartLine/0676ac35-238a-4032-9ce4-9687f0b142c2?cart=fixture-cart-token",
+            "item": {
+              "id": "gid://shopify/ProductVariant/51604076232760",
+              "title": "Default Title",
+              "price": 14400,
+              "image_url": "https://cdn.shopify.com/s/files/1/0879/7759/0840/files/home-decor-products-1.jpg?v=1769464767"
+            },
+            "quantity": 1,
+            "totals": [
+              {
+                "type": "subtotal",
+                "amount": 14400,
+                "display_text": "Subtotal"
+              },
+              {
+                "type": "total",
+                "amount": 14400,
+                "display_text": "Total"
+              }
+            ]
+          }
+        ],
+        "currency": "CAD",
+        "discounts": {
+          "codes": ["NOTACODE", "free-ship"],
+          "applied": [
+            {
+              "code": "free-ship",
+              "title": "free-ship",
+              "amount": 0
+            }
+          ]
+        },
+        "totals": [
+          {
+            "type": "subtotal",
+            "amount": 43200,
+            "display_text": "Subtotal"
+          },
+          {
+            "type": "tax",
+            "amount": 0,
+            "display_text": "Tax"
+          },
+          {
+            "type": "duty",
+            "amount": 0,
+            "display_text": "Duty"
+          },
+          {
+            "type": "total",
+            "amount": 43200,
+            "display_text": "Total"
+          }
+        ],
+        "messages": [],
+        "continue_url": "https://at8f0s-qu.myshopify.com/cart/c/fixture-cart-token?key=fixture-checkout-key"
+      }
+    }
+  },
+  "updateCartDiscount": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "isError": false,
+      "structuredContent": {
+        "ucp": {
+          "capabilities": {
+            "dev.ucp.shopping.checkout": [],
+            "dev.ucp.shopping.fulfillment": [],
+            "dev.ucp.shopping.buyer_consent": [],
+            "dev.ucp.shopping.discount": [],
+            "dev.ucp.shopping.cart": [],
+            "dev.ucp.shopping.order": [],
+            "dev.ucp.shopping.catalog.search": [],
+            "dev.ucp.shopping.catalog.lookup": [],
+            "dev.shopify.catalog": []
+          }
+        },
+        "id": "gid://shopify/Cart/fixture-cart-token?key=fixture-cart-key",
+        "line_items": [
+          {
+            "id": "gid://shopify/CartLine/b9a8b418-bda5-4591-8bb5-5df64a68c6f0?cart=fixture-cart-token",
+            "item": {
+              "id": "gid://shopify/ProductVariant/51604076265528",
+              "title": "Example product",
+              "price": 14400,
+              "image_url": "https://cdn.shopify.com/s/files/1/0879/7759/0840/files/home-decor-products-2.jpg?v=1769464769"
+            },
+            "quantity": 2,
+            "totals": [
+              {
+                "type": "subtotal",
+                "amount": 28800,
+                "display_text": "Subtotal"
+              },
+              {
+                "type": "total",
+                "amount": 28800,
+                "display_text": "Total"
+              }
+            ]
+          },
+          {
+            "id": "gid://shopify/CartLine/0676ac35-238a-4032-9ce4-9687f0b142c2?cart=fixture-cart-token",
+            "item": {
+              "id": "gid://shopify/ProductVariant/51604076232760",
+              "title": "Default Title",
+              "price": 14400,
+              "image_url": "https://cdn.shopify.com/s/files/1/0879/7759/0840/files/home-decor-products-1.jpg?v=1769464767"
+            },
+            "quantity": 1,
+            "totals": [
+              {
+                "type": "subtotal",
+                "amount": 14400,
+                "display_text": "Subtotal"
+              },
+              {
+                "type": "total",
+                "amount": 14400,
+                "display_text": "Total"
+              }
+            ]
+          }
+        ],
+        "currency": "CAD",
+        "discounts": {
+          "codes": ["NOTACODE", "free-ship"],
+          "applied": [
+            {
+              "code": "free-ship",
+              "title": "free-ship",
+              "amount": 0
+            }
+          ]
+        },
+        "totals": [
+          {
+            "type": "subtotal",
+            "amount": 43200,
+            "display_text": "Subtotal"
+          },
+          {
+            "type": "tax",
+            "amount": 0,
+            "display_text": "Tax"
+          },
+          {
+            "type": "duty",
+            "amount": 0,
+            "display_text": "Duty"
+          },
+          {
+            "type": "total",
+            "amount": 43200,
+            "display_text": "Total"
+          }
+        ],
+        "messages": [
+          {
+            "type": "warning",
+            "content_type": "plain",
+            "code": "discount_code_invalid",
+            "content": "Enter a valid discount code"
+          }
+        ],
+        "continue_url": "https://at8f0s-qu.myshopify.com/cart/c/fixture-cart-token?key=fixture-checkout-key"
+      }
+    }
+  },
+  "updateCartMinimalProfileDiscount": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "isError": false,
+      "structuredContent": {
+        "ucp": {
+          "capabilities": {
+            "dev.ucp.shopping.cart": [],
+            "dev.ucp.shopping.checkout": []
+          }
+        },
+        "id": "gid://shopify/Cart/fixture-cart-token?key=fixture-cart-key",
+        "line_items": [
+          {
+            "id": "gid://shopify/CartLine/b9a8b418-bda5-4591-8bb5-5df64a68c6f0?cart=fixture-cart-token",
+            "item": {
+              "id": "gid://shopify/ProductVariant/51604076265528",
+              "title": "Example product",
+              "price": 14400,
+              "image_url": "https://cdn.shopify.com/s/files/1/0879/7759/0840/files/home-decor-products-2.jpg?v=1769464769"
+            },
+            "quantity": 2,
+            "totals": [
+              {
+                "type": "subtotal",
+                "amount": 28800,
+                "display_text": "Subtotal"
+              },
+              {
+                "type": "total",
+                "amount": 28800,
+                "display_text": "Total"
+              }
+            ]
+          },
+          {
+            "id": "gid://shopify/CartLine/0676ac35-238a-4032-9ce4-9687f0b142c2?cart=fixture-cart-token",
+            "item": {
+              "id": "gid://shopify/ProductVariant/51604076232760",
+              "title": "Default Title",
+              "price": 14400,
+              "image_url": "https://cdn.shopify.com/s/files/1/0879/7759/0840/files/home-decor-products-1.jpg?v=1769464767"
+            },
+            "quantity": 1,
+            "totals": [
+              {
+                "type": "subtotal",
+                "amount": 14400,
+                "display_text": "Subtotal"
+              },
+              {
+                "type": "total",
+                "amount": 14400,
+                "display_text": "Total"
+              }
+            ]
+          }
+        ],
+        "currency": "CAD",
+        "totals": [
+          {
+            "type": "subtotal",
+            "amount": 43200,
+            "display_text": "Subtotal"
+          },
+          {
+            "type": "tax",
+            "amount": 0,
+            "display_text": "Tax"
+          },
+          {
+            "type": "duty",
+            "amount": 0,
+            "display_text": "Duty"
+          },
+          {
+            "type": "total",
+            "amount": 43200,
+            "display_text": "Total"
+          }
+        ],
+        "messages": [
+          {
+            "type": "warning",
+            "content_type": "plain",
+            "code": "discount_code_invalid",
+            "content": "Enter a valid discount code"
+          }
+        ],
+        "continue_url": "https://at8f0s-qu.myshopify.com/cart/c/fixture-cart-token?key=fixture-checkout-key"
+      }
+    }
+  },
+  "updateCartBadVariant": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "isError": false,
+      "structuredContent": {
+        "ucp": {
+          "capabilities": {
+            "dev.ucp.shopping.checkout": [],
+            "dev.ucp.shopping.fulfillment": [],
+            "dev.ucp.shopping.buyer_consent": [],
+            "dev.ucp.shopping.discount": [],
+            "dev.ucp.shopping.cart": [],
+            "dev.ucp.shopping.order": [],
+            "dev.ucp.shopping.catalog.search": [],
+            "dev.ucp.shopping.catalog.lookup": [],
+            "dev.shopify.catalog": []
+          }
+        },
+        "id": "gid://shopify/Cart/fixture-cart-token?key=fixture-cart-key",
+        "line_items": [
+          {
+            "id": "gid://shopify/CartLine/b9a8b418-bda5-4591-8bb5-5df64a68c6f0?cart=fixture-cart-token",
+            "item": {
+              "id": "gid://shopify/ProductVariant/51604076265528",
+              "title": "Example product",
+              "price": 14400,
+              "image_url": "https://cdn.shopify.com/s/files/1/0879/7759/0840/files/home-decor-products-2.jpg?v=1769464769"
+            },
+            "quantity": 2,
+            "totals": [
+              {
+                "type": "subtotal",
+                "amount": 28800,
+                "display_text": "Subtotal"
+              },
+              {
+                "type": "total",
+                "amount": 28800,
+                "display_text": "Total"
+              }
+            ]
+          },
+          {
+            "id": "gid://shopify/CartLine/0676ac35-238a-4032-9ce4-9687f0b142c2?cart=fixture-cart-token",
+            "item": {
+              "id": "gid://shopify/ProductVariant/51604076232760",
+              "title": "Default Title",
+              "price": 14400,
+              "image_url": "https://cdn.shopify.com/s/files/1/0879/7759/0840/files/home-decor-products-1.jpg?v=1769464767"
+            },
+            "quantity": 1,
+            "totals": [
+              {
+                "type": "subtotal",
+                "amount": 14400,
+                "display_text": "Subtotal"
+              },
+              {
+                "type": "total",
+                "amount": 14400,
+                "display_text": "Total"
+              }
+            ]
+          }
+        ],
+        "currency": "CAD",
+        "discounts": {
+          "codes": ["NOTACODE", "free-ship"],
+          "applied": [
+            {
+              "code": "free-ship",
+              "title": "free-ship",
+              "amount": 0
+            }
+          ]
+        },
+        "totals": [
+          {
+            "type": "subtotal",
+            "amount": 43200,
+            "display_text": "Subtotal"
+          },
+          {
+            "type": "tax",
+            "amount": 0,
+            "display_text": "Tax"
+          },
+          {
+            "type": "duty",
+            "amount": 0,
+            "display_text": "Duty"
+          },
+          {
+            "type": "total",
+            "amount": 43200,
+            "display_text": "Total"
+          }
+        ],
+        "messages": [
+          {
+            "type": "error",
+            "content_type": "plain",
+            "code": "invalid",
+            "content": "The merchandise with id gid://shopify/ProductVariant/1 does not exist.",
+            "severity": "requires_buyer_input",
+            "path": "$.add_items[0].product_variant_id"
+          }
+        ],
+        "continue_url": "https://at8f0s-qu.myshopify.com/cart/c/fixture-cart-token?key=fixture-checkout-key"
+      }
+    }
+  },
+  "getCartNotFound": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "isError": true,
+      "structuredContent": {
+        "ucp": {
+          "capabilities": {
+            "dev.ucp.shopping.checkout": [],
+            "dev.ucp.shopping.fulfillment": [],
+            "dev.ucp.shopping.buyer_consent": [],
+            "dev.ucp.shopping.discount": [],
+            "dev.ucp.shopping.cart": [],
+            "dev.ucp.shopping.order": [],
+            "dev.ucp.shopping.catalog.search": [],
+            "dev.ucp.shopping.catalog.lookup": [],
+            "dev.shopify.catalog": []
+          }
+        },
+        "messages": [
+          {
+            "type": "error",
+            "content_type": "plain",
+            "code": "cart_not_found",
+            "content": "The requested cart does not exist",
+            "severity": "unrecoverable"
+          }
+        ],
+        "continue_url": "https://at8f0s-qu.myshopify.com/"
+      }
+    }
+  },
+  "lookupCatalog": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "isError": false,
+      "structuredContent": {
+        "ucp": {
+          "capabilities": {
+            "dev.ucp.shopping.checkout": [],
+            "dev.ucp.shopping.fulfillment": [],
+            "dev.ucp.shopping.buyer_consent": [],
+            "dev.ucp.shopping.discount": [],
+            "dev.ucp.shopping.cart": [],
+            "dev.ucp.shopping.order": [],
+            "dev.ucp.shopping.catalog.search": [],
+            "dev.ucp.shopping.catalog.lookup": [],
+            "dev.shopify.catalog": []
+          }
+        },
+        "products": [
+          {
+            "id": "gid://shopify/Product/10589303308344",
+            "title": "Example product",
+            "handle": "home-decor-example-product-1",
+            "variants": [
+              {
+                "id": "gid://shopify/ProductVariant/51604076232760",
+                "title": "Default Title",
+                "options": [
+                  {
+                    "name": "Color",
+                    "label": "White"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "gid://shopify/Product/10589303341112",
+            "title": "Example product",
+            "handle": "home-decor-example-product-2",
+            "variants": [
+              {
+                "id": "gid://shopify/ProductVariant/51604076265528",
+                "title": "Default Title",
+                "options": [
+                  {
+                    "name": "Title",
+                    "label": "Default Title"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "messages": []
+      }
+    }
+  },
+  "lookupCatalogMinimalProfile": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "error": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": "Tool not found: lookup_catalog"
+    }
+  }
+}

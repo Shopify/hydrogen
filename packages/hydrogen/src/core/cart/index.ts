@@ -61,4 +61,5 @@ export type {
   CartServerHandlersWithCustomerSession,
   CreateCartServerHandlersOptions,
 } from "./server-handlers";
+export type { CartServerTransport } from "./transport";
 export { sanitizeQuantity, DEFAULT_MINIMUM_QUANTITY, NO_QUANTITY_LIMIT } from "./quantity";

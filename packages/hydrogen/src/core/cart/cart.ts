@@ -203,6 +203,8 @@ type CartInitialData<TData extends CartData = CartData> = {
   cart: TData | null;
   /** Load errors from the server. The store ignores the errors. */
   errors?: Array<{ message: string }>;
+  /** Set by the cart GET handler when the cart backend needs one cart change at a time. Pass it through unchanged. */
+  ordering?: "sequential";
 };
 
 /** Options for creating a cart store. */
@@ -414,6 +416,8 @@ type CartEventHandlers = {
 };
 
 let configuredCartEndpoint: string | null = null;
+let cartEndpointOrdering: "concurrent" | "sequential" = "concurrent";
+let lastCartEndpointPost: Promise<unknown> = Promise.resolve();
 let hasConfiguredUpdateCart = false;
 let standardActionsPromise: Promise<ShopifyStandardActions> | null = null;
 const connectedCartStores = new Set<CartStoreContext>();
@@ -2432,6 +2436,7 @@ export function createCartStore<TData extends CartData = CartData>(
   const asyncInitialData = isPromiseLike<CartInitialData<TData>>(initialData);
   const syncInitialData = initialData !== undefined && !asyncInitialData;
   const initialCart = syncInitialData ? initialData.cart : null;
+  if (syncInitialData) adoptCartEndpointOrdering(initialData);
   const settled = initialCart
     ? createCartState(initialCart)
     : syncInitialData
@@ -2475,7 +2480,10 @@ export function createCartStore<TData extends CartData = CartData>(
   if (asyncInitialData) {
     loadCartInStore(
       store,
-      Promise.resolve(initialData).then((data) => data.cart),
+      Promise.resolve(initialData).then((data) => {
+        adoptCartEndpointOrdering(data);
+        return data.cart;
+      }),
     ).catch((error: unknown) => log.error("cart initial load failed", { error }));
   }
 
@@ -2654,17 +2662,35 @@ export function configureCartEndpoint(endpoint: string): void {
     log.warn(
       `configureCartEndpoint called with "${endpoint}" but already configured with "${configuredCartEndpoint}".`,
     );
+    cartEndpointOrdering = "concurrent";
   }
   configuredCartEndpoint = endpoint;
 }
 
-async function postCartUpdateToEndpoint(
+function adoptCartEndpointOrdering(body: unknown): void {
+  if (isRecord(body) && body.ordering === "sequential") cartEndpointOrdering = "sequential";
+}
+
+function abortReason(signal: AbortSignal): unknown {
+  return signal.reason ?? new DOMException("The operation was aborted.", "AbortError");
+}
+
+function rejectOnAbort<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(abortReason(signal));
+    if (signal.aborted) onAbort();
+    signal.addEventListener("abort", onAbort, { once: true });
+    void promise.then(resolve, reject).finally(() => signal.removeEventListener("abort", onAbort));
+  });
+}
+
+async function sendCartUpdateToEndpoint(
   endpoint: string,
   payload: UpdateCartPayload,
-  options?: UpdateCartOptions,
+  callerSignal?: AbortSignal,
 ): Promise<UpdateCartResult> {
   const timeoutSignal = AbortSignal.timeout(STANDARD_ACTION_TIMEOUT_IN_MS);
-  const signal = options?.signal ? AbortSignal.any([options.signal, timeoutSignal]) : timeoutSignal;
+  const signal = callerSignal ? AbortSignal.any([callerSignal, timeoutSignal]) : timeoutSignal;
   const response = await fetch(endpoint, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -2672,7 +2698,31 @@ async function postCartUpdateToEndpoint(
     signal,
   });
   if (!response.ok) throw new CartNetworkError(response.status);
-  return response.json();
+  const result: UpdateCartResult = await response.json();
+  adoptCartEndpointOrdering(result);
+  return result;
+}
+
+function postCartUpdateToEndpoint(
+  endpoint: string,
+  payload: UpdateCartPayload,
+  options?: UpdateCartOptions,
+): Promise<UpdateCartResult> {
+  if (cartEndpointOrdering === "concurrent") {
+    const request = sendCartUpdateToEndpoint(endpoint, payload, options?.signal);
+    lastCartEndpointPost = request.catch(() => {});
+    return request;
+  }
+  const callerSignal = options?.signal;
+  // A sequential backend rewrites the whole cart from its own read, so the next change must not
+  // start until the server has finished this one. Aborting the fetch would not stop the server,
+  // so the caller's signal only settles the returned promise.
+  const request = lastCartEndpointPost.then(() => {
+    if (callerSignal?.aborted) throw abortReason(callerSignal);
+    return sendCartUpdateToEndpoint(endpoint, payload);
+  });
+  lastCartEndpointPost = request.catch(() => {});
+  return callerSignal ? rejectOnAbort(request, callerSignal) : request;
 }
 
 function configureUpdateCartOnce(actions: ShopifyStandardActions): void {
@@ -2728,6 +2778,8 @@ export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
 /** @internal */
 export function resetStandardActionsForTests(): void {
   configuredCartEndpoint = null;
+  cartEndpointOrdering = "concurrent";
+  lastCartEndpointPost = Promise.resolve();
   hasConfiguredUpdateCart = false;
   standardActionsPromise = null;
 }
@@ -2749,6 +2801,7 @@ async function fetchCart(
     });
     if (!response.ok) throw new CartNetworkError(response.status);
     const result = (await response.json()) as { cart: CartResponse | null };
+    adoptCartEndpointOrdering(result);
     return { cart: result.cart };
   }
 

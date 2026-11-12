@@ -104,6 +104,8 @@ import {
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
 import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-account";
+// Only for UCP-backed carts: pass the result as `createCartServerHandlers({ transport })`.
+import { createUcpCartTransport } from "@shopify/hydrogen/ucp";
 ```
 
 `define*` exports (`defineShopifyI18n`, `defineShopifyRouteTemplates`) return module-scope, serializable configuration. `create*` exports return stateful objects or handler groups; the request-scoped ones (`createShopifyRequestContext`, `createStorefrontClient`) belong inside the request lifecycle.

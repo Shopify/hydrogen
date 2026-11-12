@@ -54,6 +54,11 @@
       "require": "./dist/ts-plugin/index.cjs",
       "default": "./dist/ts-plugin/index.cjs"
     },
+    "./ucp": {
+      "types": "./dist/ucp/index.d.mts",
+      "import": "./dist/ucp/index.mjs",
+      "default": "./dist/ucp/index.mjs"
+    },
     "./vite": {
       "types": "./dist/vite/index.d.mts",
       "import": "./dist/vite/index.mjs",

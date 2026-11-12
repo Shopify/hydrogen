@@ -32,11 +32,13 @@ import type { cartQueries, CartDataForOptions, CartQueriesForOptions } from "./q
 import { runCartAction } from "./run-cart-action";
 import type { CartData } from "./state";
 import { storefrontCartTransport, type StorefrontCartTransport } from "./storefront-cart-transport";
-import type {
-  CartReadResult,
-  CartTransport,
-  CartTransportContext,
-  CartWriteResult,
+import {
+  getCartTransport,
+  type CartReadResult,
+  type CartServerTransport,
+  type CartTransport,
+  type CartTransportContext,
+  type CartWriteResult,
 } from "./transport";
 const log = getLogger("cart-api");
 
@@ -57,6 +59,8 @@ export type CartGetData<TCart = CartData> = {
   cart: TCart | null;
   /** GraphQL errors from the cart query. The handler also logs the errors on the server. */
   errors?: Array<{ message: string }>;
+  /** `sequential` when the handlers' `transport` needs the cart store to send one cart change at a time. Absent for the default Storefront API cart. */
+  ordering?: "sequential";
 };
 
 /**
@@ -241,6 +245,8 @@ interface CartServerHandlersBaseOptions<
    * `createCartServerHandlers` throws for any other fragment name or type.
    */
   readonly fragment?: TCartFragment;
+  /** Leave the option out to use the Storefront API cart. */
+  readonly transport?: undefined;
 }
 
 /** Options for cart server handlers that attach the logged-in customer to new carts. */
@@ -259,21 +265,38 @@ interface CartServerHandlersOptionsWithoutCustomerSession<
   readonly customerSession?: undefined;
 }
 
+/** Options for cart server handlers that keep the cart in another backend. */
+interface CartServerHandlersOptionsWithTransport {
+  /**
+   * The cart backend that reads and changes carts in place of the Storefront API, such as `createUcpCartTransport()` from `@shopify/hydrogen/ucp`. The handlers return carts in the default `CartData` shape.
+   *
+   * `createCartServerHandlers` throws a `TypeError` when the value doesn't come from a Hydrogen transport factory, or when you combine it with `fragment` or `customerSession`.
+   */
+  readonly transport: CartServerTransport;
+  readonly fragment?: undefined;
+  readonly customerSession?: undefined;
+}
+
 /** Options for creating cart server handlers. */
 export type CreateCartServerHandlersOptions<
   TCartFragment extends AnyStorefrontQueryString = AnyStorefrontQueryString,
 > =
   | CartServerHandlersOptionsWithCustomerSession<TCartFragment>
-  | CartServerHandlersOptionsWithoutCustomerSession<TCartFragment>;
+  | CartServerHandlersOptionsWithoutCustomerSession<TCartFragment>
+  | CartServerHandlersOptionsWithTransport;
 
 type CartServerHandlersForOptions<TOptions> = TOptions extends {
-  readonly customerSession: CartCustomerSession;
+  readonly transport: CartServerTransport;
 }
-  ? CartServerHandlersWithCustomerSession<
-      CartQueriesForOptions<TOptions>["cart"],
-      CartDataForOptions<TOptions>
-    >
-  : CartServerHandlers<CartQueriesForOptions<TOptions>["cart"], CartDataForOptions<TOptions>>;
+  ? CartServerHandlers<typeof cartQueries.cart, CartData>
+  : TOptions extends {
+        readonly customerSession: CartCustomerSession;
+      }
+    ? CartServerHandlersWithCustomerSession<
+        CartQueriesForOptions<TOptions>["cart"],
+        CartDataForOptions<TOptions>
+      >
+    : CartServerHandlers<CartQueriesForOptions<TOptions>["cart"], CartDataForOptions<TOptions>>;
 
 /**
  * Creates the handlers for the `/api/cart` route, which loads and changes the customer's cart.
@@ -281,6 +304,8 @@ type CartServerHandlersForOptions<TOptions> = TOptions extends {
  * The handlers read the cart ID from the `cart` cookie and set the cookie when they create a cart. A JSON request gets a JSON response, and a form submission gets a `303` redirect to the referring page.
  *
  * Pass `customerSession` to connect carts to the logged-in customer. The handlers then need `sessionManager` and `requestContext` in their context.
+ *
+ * Pass `transport` to keep carts in another backend, such as `createUcpCartTransport()` from `@shopify/hydrogen/ucp`.
  *
  * @example
  * ```ts
@@ -296,6 +321,11 @@ type CartServerHandlersForOptions<TOptions> = TOptions extends {
  * const cartHandlers = createCartServerHandlers({
  *   customerSession,
  * });
+ *
+ * // With a cart backend from a Hydrogen transport factory
+ * const cartHandlers = createCartServerHandlers({
+ *   transport: createUcpCartTransport({ agentProfile }),
+ * });
  * ```
  * @publicDocs
  */
@@ -304,12 +334,17 @@ export function createCartServerHandlers<const TOptions extends CreateCartServer
   options: TOptions,
 ): CartServerHandlersForOptions<TOptions>;
 /**
- * @param options A custom cart fragment and the customer session.
+ * @param options A custom cart fragment and the customer session, or a cart transport.
  * @returns The GET and POST handlers to register with `handleShopifyRoutes`.
  */
 export function createCartServerHandlers(
   options?: CreateCartServerHandlersOptions,
-): CartServerHandlers | CartServerHandlersWithCustomerSession {
+):
+  | CartServerHandlers
+  | CartServerHandlers<typeof cartQueries.cart, CartData>
+  | CartServerHandlersWithCustomerSession {
+  if (options?.transport !== undefined) return createTransportHandlers(options);
+
   const transport = storefrontCartTransport({ fragment: options?.fragment });
   const customerSession = options?.customerSession;
 
@@ -339,6 +374,31 @@ export function createCartServerHandlers(
   return handlers as CartServerHandlers | CartServerHandlersWithCustomerSession;
 }
 
+function createTransportHandlers(
+  options: CreateCartServerHandlersOptions,
+): CartServerHandlers<typeof cartQueries.cart, CartData> {
+  if (options.fragment !== undefined || options.customerSession !== undefined) {
+    throw new TypeError(
+      "createCartServerHandlers can't combine transport with fragment or customerSession.",
+    );
+  }
+  const transport = getCartTransport(options.transport);
+  const handlers = {
+    get: createCallableRouteHandler(
+      CART_API_PATH,
+      CART_GET_METHOD,
+      (context: CartGetHandlerContext) => handleGet(context, transport),
+    ),
+    post: createCallableRouteHandler(
+      CART_API_PATH,
+      CART_POST_METHOD,
+      (context: CartPostHandlerContext) => handlePost(context, transport),
+    ),
+  };
+  Object.defineProperty(handlers, cartServerHandlersCartQuery, { value: undefined });
+  return handlers as CartServerHandlers<typeof cartQueries.cart, CartData>;
+}
+
 function createCartBuyerIdentitySync(transport: StorefrontCartTransport): CartBuyerIdentitySync {
   return {
     updateBuyerIdentity: async (
@@ -365,7 +425,11 @@ async function handleGet(
     : { cart: null, headers: new Headers() };
   logCartErrors(result.errors);
   const cart = await addLoggedInCheckoutParam(result.cart, context, customerSession);
-  const data = { cart, ...(result.errors && { errors: result.errors }) };
+  const data: CartGetData = {
+    cart,
+    ...(result.errors && { errors: result.errors }),
+    ...orderingField(transport),
+  };
   const headers = createProxyResponseHeaders(result.headers);
   applyPrivateResponseCacheHeaders(headers);
 
@@ -430,7 +494,11 @@ async function handlePost(
 
   if (isFormRequest) return redirectResult(redirectTarget, headers);
   const { cart, userErrors, warnings } = result;
-  return jsonResult({ cart, userErrors, warnings }, headers);
+  return jsonResult({ cart, userErrors, warnings, ...orderingField(transport) }, headers);
+}
+
+function orderingField(transport: CartTransport): Pick<CartGetData, "ordering"> {
+  return transport.ordering === "sequential" ? { ordering: "sequential" } : {};
 }
 
 function createOwnedCartCookie(
