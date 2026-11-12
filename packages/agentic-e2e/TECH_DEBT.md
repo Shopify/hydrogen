@@ -42,3 +42,19 @@ The language prompt, with the language's own name, is done (PR review: [target l
 - The status to report when the browser locale cannot be confirmed or does not match.
 - Whether a mismatch stops the run before the agent starts.
 - This document adds no new stop rule and no new status guarantee.
+
+## Theme add errors
+
+### Problem
+
+The add check trusts the add event's promise result: `cart`, `userErrors`, and stock or availability `warnings`. On a declined add, Horizon's product form dispatches `shopify:cart:error`, fetches the unchanged cart, and resolves the add promise with that cart and `detail.didError: true`, but with no `userErrors` ([product-form.js](https://github.com/Shopify/horizon/blob/c531fd5bb8904e7f871c308b15c64a7cb0de8e20/assets/product-form.js#L430-L490)). The command then gives a false `pass`. Hydrogen's standard cart flow is not affected, because its result comes from the Storefront API mutation.
+
+### Possible approaches
+
+1. Fail when `shopify:cart:error` is dispatched between the add event and its result. It is a standard event. Risk: an error from another app's cart change during the add gives a false `fail`.
+2. Ask Horizon to report declined adds in `userErrors`, as the [`shopify:cart:lines-update` contract](https://shopify.dev/docs/api/storefront-events-and-actions/events/cart-lines-update) describes.
+3. Read the session cart after the add (the dropped approach of #4351).
+
+### Done when
+
+A decision on whether themes are in scope is recorded here, and either a rule fails this case or the README states that themes that resolve declined adds without `userErrors` are not supported.
