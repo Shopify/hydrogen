@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 import type { Page } from "playwright-core";
 
 import { shopifyProxyModel, type ModelConfig } from "./agent/model-config.ts";
+import { buildObjective } from "./agent/objective.ts";
 import { attachStagehand, type StagehandAgent } from "./agent/stagehand-agent.ts";
 import { errorMessage, untilAborted, within } from "./async.ts";
 import { createBrowserSession } from "./browser/session.ts";
@@ -20,8 +21,9 @@ export const EXIT_CODES = { agentCompleted: 0, indeterminate: 2, skipped: 3, usa
 export const USAGE = `Usage: pnpm agentic-e2e <url>
 
 Asks the Storefront API at the origin of <url> for the active country and language, pins one
-eligible variant, opens its product page in a headless browser, runs one fixed AI agent task
-(scroll down once), and prints one JSON result line. Requires SHOPIFY_PROXY_KEY.
+eligible variant, opens its product page in a headless browser, asks an AI agent to add exactly
+1 unit of that variant to the cart, and prints one JSON result line. Nothing checks the cart.
+Requires SHOPIFY_PROXY_KEY.
 
 <url> must be the storefront root URL, such as https://your-storefront.example/. A path such
 as /en-ca is not supported.
@@ -129,7 +131,7 @@ async function runOnce(url: URL): Promise<RunResult> {
     const storefront = await pinFromStorefront(url, interrupt);
     if (storefront.status !== "pinned") return storefront;
     const { context, pinned } = storefront;
-    const run = await runAgent(productUrl(url, pinned.productHandle), model, interrupt);
+    const run = await runAgent(url, context, pinned, model, interrupt);
     return run.status === "agent-completed" ? { ...run, context, pinned } : run;
   });
 }
@@ -158,10 +160,17 @@ async function pinFromStorefront(url: URL, interrupt: AbortSignal): Promise<Stor
 }
 
 /**
- * Starts the browser, attaches Stagehand before the first navigation, opens the URL, and runs
- * the agent. Always detaches Stagehand and closes the browser before it returns.
+ * Starts the browser, attaches Stagehand before the first navigation, opens the product page,
+ * and runs the add task. Always detaches Stagehand and closes the browser before it returns.
  */
-async function runAgent(url: URL, model: ModelConfig, interrupt: AbortSignal): Promise<AgentRun> {
+async function runAgent(
+  storefrontUrl: URL,
+  context: StorefrontContext,
+  pinned: PinnedVariant,
+  model: ModelConfig,
+  interrupt: AbortSignal,
+): Promise<AgentRun> {
+  const url = productUrl(storefrontUrl, pinned.productHandle);
   process.stderr.write(`Opening ${url.href}\n`);
   const starting = createBrowserSession(undefined, { signal: interrupt });
   let attaching: Promise<StagehandAgent> | undefined;
@@ -171,7 +180,12 @@ async function runAgent(url: URL, model: ModelConfig, interrupt: AbortSignal): P
     const agent = await untilAborted(attaching, interrupt);
     await openPage(session.page, url, interrupt);
     process.stderr.write("Running the agent task.\n");
-    const outcome = await agent.run(session.page, model, interrupt);
+    const outcome = await agent.run({
+      page: session.page,
+      task: buildObjective({ pinned, context }),
+      model,
+      interrupt,
+    });
     if (outcome.status === "indeterminate") return indeterminate(outcome.reason);
     // Rejects when the release is not confirmed: the result is then indeterminate.
     await agent.detach();

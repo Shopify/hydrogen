@@ -20,7 +20,7 @@ import { main } from "./cli.ts";
 // endpoint. The model endpoint is a local fake that speaks the Anthropic Messages API: no real
 // model call, no real key. Uses Playwright's Chromium (install it with `pnpm --filter
 // @shopify/agentic-e2e run browser:install`) or AGENTIC_E2E_BROWSER_PATH.
-vi.setConfig({ testTimeout: 60_000, hookTimeout: 30_000 });
+vi.setConfig({ testTimeout: 90_000, hookTimeout: 30_000 });
 
 const DUMMY_KEY = "sk-dummy-agentic-e2e-test-key";
 const fake = vi.hoisted(() => ({ modelOrigin: "" }));
@@ -49,7 +49,13 @@ vi.mock("./browser/session.ts", async (importOriginal) => {
   return { createBrowserSession: vi.fn(original.createBrowserSession) };
 });
 
-const CONTEXT = { country: "CA", language: "FR" };
+const CONTEXT = {
+  country: "CA",
+  language: "FR",
+  languageName: "Français",
+  countryName: "Canada",
+  currency: "CAD",
+};
 const PINNED = {
   productHandle: "fixture-board",
   productTitle: "Fixture Board",
@@ -61,7 +67,13 @@ type ApiRequest = { query: string; variables: Record<string, unknown> };
 /** The products that the catalog query returns, or an HTTP status for every API request. */
 type Catalog = { products: unknown[] } | { status: number };
 
-type ModelRequest = { path: string; apiKey: unknown; usageTag: unknown; tools: string[] };
+type ModelRequest = {
+  path: string;
+  apiKey: unknown;
+  usageTag: unknown;
+  tools: string[];
+  body: string;
+};
 type Reply = (request: ModelRequest) => Record<string, unknown> | undefined;
 
 let store: Server;
@@ -77,6 +89,8 @@ let reply: Reply;
 let held: ServerResponse[];
 let catalog: Catalog;
 let apiRequests: ApiRequest[];
+/** POST requests to the fixture's add endpoint: the Add to cart clicks. */
+let addClicks: number;
 /** For each Stagehand CDP socket close: whether the browser was still running at that time. */
 let stagehandCloses: Array<{ browserRunning: boolean }>;
 let children: ChildProcess[];
@@ -106,6 +120,7 @@ beforeEach(async () => {
   reply = () => undefined;
   catalog = { products: [eligibleProduct(PINNED.productHandle)] };
   apiRequests = [];
+  addClicks = 0;
   vi.mocked(createBrowserSession).mockClear();
   vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
     stdout.push(String(chunk));
@@ -141,13 +156,8 @@ afterAll(async () => {
 });
 
 describe("main with the agent", () => {
-  it("pins the fixture variant, opens its product page, and reports agent-completed", async () => {
-    let turns = 0;
-    reply = ({ tools }) => {
-      if (isFinalAssessment(tools)) return done(true);
-      turns += 1;
-      return turns === 1 ? scroll() : text("I scrolled down once.");
-    };
+  it("pins the fixture variant, opens its product page, and reports agent-completed after the add task", async () => {
+    reply = clickAdd();
     // Stagehand writes unredacted session logs when these are set. This file imports Stagehand
     // statically, so this test proves only that main() removes them from the environment, not
     // that the SDK never read them.
@@ -163,20 +173,26 @@ describe("main with the agent", () => {
         status: "agent-completed",
         url: `${origin}/products/fixture-board`,
         title: "Fixture Board",
-        summary: "Scrolled down once.",
+        summary: expect.stringContaining("Added 1 unit."),
         context: CONTEXT,
         pinned: PINNED,
       },
     ]);
-    // The bootstrap sends no context. The catalog query carries the discovered context.
+    // The bootstrap sends no context. The catalog query carries the discovered context as codes,
+    // not names.
     expect(apiRequests).toHaveLength(2);
     expect(apiRequests[0]?.query).not.toContain("@inContext");
     expect(apiRequests[0]?.variables).toEqual({});
-    expect(apiRequests[1]?.variables).toMatchObject({
+    expect(apiRequests[1]?.variables).toEqual({
+      first: 50,
+      after: null,
       storefrontCountry: "CA",
       storefrontLanguage: "FR",
     });
+    // Two planning requests (act, then done) and the `act` tool's own request.
     expect(modelRequests).toHaveLength(3);
+    // Exactly one Add to cart POST reached the fixture.
+    expect(addClicks).toBe(1);
     for (const request of modelRequests) {
       expect(request).toMatchObject({
         path: "/v1/messages",
@@ -184,10 +200,19 @@ describe("main with the agent", () => {
         usageTag: "agentic-e2e",
       });
     }
-    // URL navigation and external search are not offered to the model.
-    expect(modelRequests[0]?.tools).toContain("scroll");
-    expect(modelRequests[0]?.tools).not.toContain("goto");
-    expect(modelRequests[0]?.tools).not.toContain("search");
+    // The planning request carries the add objective and the guest-shopper system prompt, and
+    // offers no URL navigation and no external search.
+    const [planning] = modelRequests;
+    expect(planning?.body).toContain("Add exactly 1 unit of that variant to the cart.");
+    expect(planning?.body).toContain("guest shopper");
+    // The objective names the run's market, and the system prompt keeps it.
+    expect(planning?.body).toContain(
+      String.raw`Shop in the \"Canada\" store (language \"Français\", prices in \"CAD\"): if the store shows another country, language, or currency, switch to \"Canada\" with language \"Français\".`,
+    );
+    expect(planning?.body).toContain("Keep the store's country, language and currency");
+    expect(planning?.tools).toContain("act");
+    expect(planning?.tools).not.toContain("goto");
+    expect(planning?.tools).not.toContain("search");
     expect(process.env.BROWSERBASE_FLOW_LOGS).toBeUndefined();
     expect(process.env.BROWSERBASE_CONFIG_DIR).toBeUndefined();
     expectStagehandDetached();
@@ -221,7 +246,7 @@ describe("main with the agent", () => {
         status: "agent-completed",
         url: `${origin}/products/fixture-board`,
         title: "Fixture Board",
-        summary: expect.stringContaining("Scrolled down once."),
+        summary: expect.stringContaining("Added 1 unit."),
         context: CONTEXT,
         pinned: PINNED,
       },
@@ -424,14 +449,30 @@ function onStoreRequest(request: IncomingMessage, response: ServerResponse) {
   } else if (path.endsWith("/products/hang")) {
     // Never answers, so a run cannot finish before the interrupt.
   } else if (path.endsWith("/products/fixture-board")) {
-    response
-      .writeHead(200, { "content-type": "text/html" })
-      .end(
-        `<!doctype html><title>Fixture Board</title><p>Board</p><div style="height:3000px"></div>`,
-      );
+    response.writeHead(200, { "content-type": "text/html" }).end(productPage());
+  } else if (path === "/cart/add" && request.method === "POST") {
+    request.resume();
+    addClicks += 1;
+    response.writeHead(204).end();
   } else {
     response.writeHead(500, { "content-type": "text/html" }).end("<title>Broken</title>");
   }
+}
+
+/** A product page with an Add to cart button. A click posts to `/cart/add`. */
+function productPage(): string {
+  return `<!doctype html><title>Fixture Board</title>
+<h1>Fixture Board</h1>
+<p>Size: Medium</p>
+<button id="add" type="button">Add to cart</button>
+<p id="status"></p>
+<script>
+document.getElementById("add").addEventListener("click", () => {
+  fetch("/cart/add", { method: "POST" }).then(() => {
+    document.getElementById("status").textContent = "Added";
+  });
+});
+</script>`;
 }
 
 function onApiRequest(request: IncomingMessage, response: ServerResponse) {
@@ -445,7 +486,12 @@ function onApiRequest(request: IncomingMessage, response: ServerResponse) {
       return;
     }
     const data = body.query.includes("localization")
-      ? { localization: { language: { isoCode: "FR" }, country: { isoCode: "CA" } } }
+      ? {
+          localization: {
+            language: { isoCode: "FR", endonymName: "Français" },
+            country: { isoCode: "CA", name: "Canada", currency: { isoCode: "CAD" } },
+          },
+        }
       : {
           products: {
             pageInfo: { hasNextPage: false, endCursor: null },
@@ -473,14 +519,14 @@ function onModelRequest(request: IncomingMessage, response: ServerResponse) {
   const chunks: Buffer[] = [];
   request.on("data", (chunk: Buffer) => chunks.push(chunk));
   request.on("end", () => {
-    const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as {
-      tools?: Array<{ name: string }>;
-    };
+    const body = Buffer.concat(chunks).toString("utf8");
+    const parsed = JSON.parse(body) as { tools?: Array<{ name: string }> };
     const entry: ModelRequest = {
       path: new URL(request.url ?? "/", "http://model").pathname,
       apiKey: request.headers["x-api-key"],
       usageTag: request.headers["shopify-usage-tag"],
-      tools: (body.tools ?? []).map((tool) => tool.name),
+      tools: (parsed.tools ?? []).map((tool) => tool.name),
+      body,
     };
     modelRequests.push(entry);
     const answer = reply(entry);
@@ -491,6 +537,35 @@ function onModelRequest(request: IncomingMessage, response: ServerResponse) {
     const status = answer.type === "error" ? 401 : 200;
     response.writeHead(status, { "content-type": "application/json" }).end(JSON.stringify(answer));
   });
+}
+
+/**
+ * The agent clicks Add to cart through Stagehand's `act` tool, then calls `done`. The `act` tool
+ * sends its own model request, which picks the target by its element ID in the page snapshot.
+ */
+function clickAdd(): Reply {
+  const target = "button: Add to cart";
+  let planningTurns = 0;
+  return ({ tools, body }) => {
+    if (!tools.includes("act") && !isFinalAssessment(tools)) {
+      const elementId = new RegExp(`\\[(\\d+-\\d+)\\] ${target}`).exec(body)?.[1];
+      if (elementId === undefined) throw new Error(`No ${target} in the act request.`);
+      return message([
+        {
+          type: "text",
+          text: JSON.stringify({
+            action: { elementId, description: target, method: "click", arguments: [] },
+            twoStep: false,
+          }),
+        },
+      ]);
+    }
+    planningTurns += 1;
+    if (planningTurns > 1) return done(true);
+    return message([
+      { type: "tool_use", id: "toolu_act", name: "act", input: { action: `click the ${target}` } },
+    ]);
+  };
 }
 
 /** Stagehand's forced final call offers only the `done` tool. */
@@ -514,7 +589,7 @@ function done(taskComplete: boolean) {
       type: "tool_use",
       id: "toolu_done",
       name: "done",
-      input: { reasoning: "Scrolled down once.", taskComplete },
+      input: { reasoning: "Added 1 unit.", taskComplete },
     },
   ]);
 }

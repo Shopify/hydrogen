@@ -1,6 +1,6 @@
 # Agentic E2E
 
-At this stage, `agentic-e2e` asks the Storefront API of one storefront which country and language are active, pins one eligible product variant, opens the product page of that variant in a headless browser that it owns, runs one AI agent on the page with one fixed, harmless task, prints one JSON result line, and closes the browser.
+At this stage, `agentic-e2e` asks the Storefront API of one storefront which country and language are active, pins one eligible product variant, opens the product page of that variant in a headless browser that it owns, asks one AI agent to add exactly 1 unit of that variant to the cart, prints one JSON result line, and closes the browser.
 
 ```sh
 pnpm build:pkgs   # once: the command imports the built output of @shopify/hydrogen
@@ -9,22 +9,22 @@ SHOPIFY_PROXY_KEY=... pnpm agentic-e2e https://your-storefront.example
 
 The URL must be the storefront root URL. A URL with a path, such as `/en-ca`, is a usage error.
 
-**This is not a storefront test.** `agent-completed` means only that the agent says it finished its task. Nothing checks the storefront, the product page, or the page state.
+**This is not a storefront test.** `agent-completed` means only that the agent says it added the item. Nothing checks the cart, the storefront, or the page state.
 
 Run `pnpm --filter @shopify/agentic-e2e run browser:install` once before the first run. It downloads the Chromium build that matches this package's Playwright version (about 340 MB) into Playwright's shared cache. To use another Chromium-based browser, set `AGENTIC_E2E_BROWSER_PATH` to its executable.
 
 ## What it does
 
 1. Checks that `SHOPIFY_PROXY_KEY` is set. If not, it stops before any Storefront API request and before the browser starts.
-2. Sends one Storefront API query for the active country and language (see [Country and language](#country-and-language)).
+2. Sends one Storefront API query for the active country, language, and currency (see [Country and language](#country-and-language)).
 3. Pins one variant in that country and language (see [Pinned variant](#pinned-variant)). If no variant is eligible, the result is `skipped` and no browser starts.
 4. Starts Chromium with a fresh temporary profile.
 5. Attaches one [Stagehand](https://github.com/browserbase/stagehand) agent to the browser, before the first navigation.
 6. Loads the product page of the pinned variant and waits until the page has visible content.
-7. Gives the agent one fixed task: scroll the page down once, then report that it is done. It must not click, type, or navigate. The agent has at most 5 steps and 120 seconds. The URL navigation and web search tools are removed.
+7. Gives the agent one task: shop in the country, language, and currency of the run (see [Country and language](#country-and-language)), select the variant options of the pinned variant (store strings are JSON-quoted and labelled as data), add exactly 1 unit to the cart, stop as soon as it is added, not open the cart or go to checkout, and not enter personal, shipping, or payment information. A short guest-shopper system prompt tells it how to handle cookie banners and dialogs, and to keep the country, language, and currency of the store unless the task asks for a change. The agent has at most 20 steps and 180 seconds. The URL navigation and web search tools are removed.
 8. Disconnects Stagehand from the browser, then removes the browser process and the profile.
 
-**Checkout and account pages are not blocked at this stage.** The agent is only told not to click or navigate. Nothing stops it if it does not obey.
+**Checkout and account pages are not blocked at this stage.** The agent is only told not to go there. Nothing stops it if it does not obey.
 
 ## Storefront API
 
@@ -32,13 +32,19 @@ Both queries go to the Storefront API at the origin of the URL (`<origin>/api/<v
 
 ### Country and language
 
-The country and language come from this query, sent without `@inContext`:
+The country, language, country name, language name, and currency come from this query, sent without `@inContext`:
 
 ```graphql
-localization { language { isoCode } country { isoCode } }
+localization { language { isoCode endonymName } country { isoCode name currency { isoCode } } }
 ```
 
-This is the context that the Storefront API makes active for this request. It is not the locale of the browser or of the page. The command does not check them against the browser, and it does not verify the market that the browser shows. When the query fails, the result is `indeterminate`. There is no default country or language.
+The language name is `endonymName`: the name of the language in that language, such as `Français` for `FR`. The agent task uses the country name and the language name. The catalog query uses the country code and the language code. The result has all of them.
+
+Without `@inContext`, the Storefront API answers with the context that it makes active by default. This is the market of the run. When the query fails or a field is missing, the result is `indeterminate`. There is no default country or language.
+
+The browser can show another market, for example because the storefront selects the market from the geo-IP of the browser. The command sets no cookie and does not change the page. Instead, the task tells the agent to shop in the named country and language, with prices in the requested currency, and to switch through the store's selectors if the store shows another country, language, or currency. The country name, the language name, and the currency are JSON-quoted as store data. If the agent cannot switch to the requested country, it may still report completion in another market. The command does not verify the market shown in the browser.
+
+Known locale gaps are listed in [TECH_DEBT.md](./TECH_DEBT.md).
 
 ### Pinned variant
 
@@ -62,12 +68,12 @@ The command does not print or store the key. It turns off Stagehand's own logs, 
 The result goes to stdout. Diagnostics go to stderr.
 
 ```json
-{"status":"agent-completed","url":"https://your-storefront.example/products/snowboard","title":"Snowboard","summary":"I scrolled down once.","context":{"country":"US","language":"EN"},"pinned":{"productHandle":"snowboard","productTitle":"Snowboard","variantId":"gid://shopify/ProductVariant/1","selectedOptions":[{"name":"Title","value":"Default Title"}]}}
-{"status":"skipped","reason":"No eligible variant: the catalog was searched to the end.","context":{"country":"US","language":"EN"}}
+{"status":"agent-completed","url":"https://your-storefront.example/products/snowboard","title":"Snowboard","summary":"I added 1 unit to the cart.","context":{"country":"US","language":"EN","countryName":"United States","languageName":"English","currency":"USD"},"pinned":{"productHandle":"snowboard","productTitle":"Snowboard","variantId":"gid://shopify/ProductVariant/1","selectedOptions":[{"name":"Title","value":"Default Title"}]}}
+{"status":"skipped","reason":"No eligible variant: the catalog was searched to the end.","context":{"country":"US","language":"EN","countryName":"United States","languageName":"English","currency":"USD"}}
 {"status":"indeterminate","reason":"HTTP 500"}
 ```
 
-`agent-completed` requires that the agent recorded a `done` action with `taskCompleted: true`, and that Stagehand released the browser. `url` is the page URL when the agent finished.
+`agent-completed` requires that the agent recorded a `done` action with `taskCompleted: true`, and that Stagehand released the browser. It does not mean that the item is in the cart: nothing checks the cart. `url` is the page URL when the agent finished.
 
 `skipped` means that no eligible variant was found. The reason tells whether the catalog was searched to the end or the 5-page limit was reached. No browser starts.
 
@@ -92,7 +98,7 @@ pnpm --filter @shopify/agentic-e2e test:unit
 pnpm --filter @shopify/agentic-e2e test:integration
 ```
 
-The unit tests run the real Hydrogen client with a fake `fetch`. The integration tests use one local HTTP server for the storefront pages and the Storefront API, and a local fake model endpoint. They make no real model call and need no key.
+The unit tests run the real Hydrogen client with a fake `fetch`. The integration tests use one local HTTP server for the storefront pages and the Storefront API, and a local fake model endpoint that scripts the agent's clicks. They make no real model call and need no key.
 
 The test script of `@shopify/hydrogen` rebuilds its `dist`, so do not run it at the same time as these tests. Turbo runs `@shopify/agentic-e2e#test` after `@shopify/hydrogen#test`.
 
