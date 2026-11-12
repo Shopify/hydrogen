@@ -15,14 +15,12 @@ import { createBrowserSession } from "./browser/session.ts";
 import { withInterruptSignals } from "./interrupt.ts";
 import { observeAddEvents } from "./shopify/add-events.ts";
 import {
-  findVariantChoice,
-  pinOtherVariant,
+  pinNonDefaultVariant,
   pinVariant,
   productUrl,
+  type CatalogPin,
   type PinnedVariant,
-  type VariantChoice,
 } from "./shopify/catalog.ts";
-import { observeSelectedVariant } from "./shopify/selected-variant.ts";
 import { discoverContext, type StorefrontContext } from "./shopify/storefront.ts";
 import { ADD_WAIT_MS, verifyAdd } from "./verdict.ts";
 
@@ -37,23 +35,18 @@ const DEFAULT_TEST: TestName = "add-to-cart";
 
 export const USAGE = `Usage: pnpm agentic-e2e <url> [--test <name>]
 
-Asks the Storefront API at the origin of <url> for the active country and language, finds an
-eligible product, opens its product page in a headless browser, pins one variant, asks an AI
-agent to add exactly 1 unit of that variant to the cart, checks the add Standard Events in code
-(it does not read the cart), and prints one JSON result line. Requires SHOPIFY_PROXY_KEY.
+Asks the Storefront API at the origin of <url> for the active country and language, pins one
+eligible variant, opens its product page in a headless browser, asks an AI agent to add exactly
+1 unit of that variant to the cart, checks the add Standard Events in code (it does not read the
+cart), and prints one JSON result line. Requires SHOPIFY_PROXY_KEY.
 
 <url> must be the storefront root URL, such as https://your-storefront.example/. A path such
 as /en-ca is not supported.
 
 Tests:
-  add-to-cart       Pins the API's selectedOrFirstAvailableVariant before the browser starts
-                    (default).
-  choose-a-variant  Finds a product with at least 2 variants available for sale. After the page
-                    opens, reads the variant that its product form selects (a Hydrogen
-                    merchandiseId field, or a Liquid id field in a form that posts to /cart/add)
-                    one time, and pins another available variant, different from the selection
-                    that was read.
-                    No readable selection: indeterminate, and the agent does not run.
+  add-to-cart       Pins the variant that the product page selects first (default).
+  choose-a-variant  Pins an available variant that is not the one the page selects first, so
+                    the agent must change at least one option.
 
 Options:
   --test <name>  The test to run: add-to-cart or choose-a-variant. Default: add-to-cart.
@@ -76,19 +69,11 @@ type Indeterminate = {
 };
 
 type AddRun =
-  | { status: "pass" | "fail"; reason: string; pinned: PinnedVariant; agent: AgentOutcome }
-  | { status: "indeterminate"; reason: string; pinned?: PinnedVariant; agent?: AgentOutcome };
+  | { status: "pass" | "fail"; reason: string; agent: AgentOutcome }
+  | { status: "indeterminate"; reason: string; agent?: AgentOutcome };
 
-/**
- * What the Storefront API step prepares for the browser step. `pinned`: the variant is pinned.
- * `choice`: the variant is pinned only after the product page shows its first selection.
- */
-type Target =
-  | { kind: "pinned"; pinned: PinnedVariant }
-  | { kind: "choice"; product: VariantChoice };
-
-type StorefrontTarget =
-  | { status: "ready"; context: StorefrontContext; target: Target }
+type StorefrontPin =
+  | { status: "pinned"; context: StorefrontContext; pinned: PinnedVariant }
   | { status: "skipped"; reason: string; context: StorefrontContext }
   | Indeterminate;
 
@@ -186,115 +171,87 @@ async function runOnce(url: URL, test: TestName): Promise<RunResult> {
     return indeterminate(errorMessage(error));
   }
   return withInterruptSignals(async (interrupt) => {
-    const storefront = await targetFromStorefront(url, test, interrupt);
-    if (storefront.status !== "ready") return storefront;
-    const { context, target } = storefront;
-    const run = await runAddToCart(url, context, target, model, interrupt);
+    const storefront = await pinFromStorefront(url, test, interrupt);
+    if (storefront.status !== "pinned") return storefront;
+    const { context, pinned } = storefront;
+    const run = await runAddToCart(url, context, pinned, model, interrupt);
     if (run.status === "indeterminate") {
-      const { status, reason, pinned, agent } = run;
-      return { status, reason, context, ...pinnedField(pinned), ...agentField(agent) };
+      return { status: run.status, reason: run.reason, context, pinned, ...agentField(run.agent) };
     }
-    return {
-      status: run.status,
-      reason: run.reason,
-      context,
-      pinned: run.pinned,
-      agent: run.agent,
-    };
+    return { status: run.status, reason: run.reason, context, pinned, agent: run.agent };
   });
 }
 
 /**
- * Reads the active context, then prepares the target of `test` in it. No browser runs here. Each
+ * Reads the active context, then pins one variant in it for `test`. No browser runs here. Each
  * request has Hydrogen's client deadline, and the interrupt cancels the request in flight.
  */
-async function targetFromStorefront(
+async function pinFromStorefront(
   url: URL,
   test: TestName,
   interrupt: AbortSignal,
-): Promise<StorefrontTarget> {
+): Promise<StorefrontPin> {
   let step = "Storefront API localization";
   try {
     const context = await untilAborted(discoverContext(url, interrupt), interrupt);
     process.stderr.write(`Storefront API context: ${context.country} ${context.language}\n`);
     step = "Storefront API catalog pin";
-    const search = await untilAborted(targetForTest(test, url, context, interrupt), interrupt);
-    if (search.status === "skipped") {
-      process.stderr.write(`Skipped: ${search.reason}\n`);
-      return { status: "skipped", reason: search.reason, context };
+    const pin = await untilAborted(pinForTest(test, url, context, interrupt), interrupt);
+    if (pin.status === "skipped") {
+      process.stderr.write(`Skipped: ${pin.reason}\n`);
+      return { status: "skipped", reason: pin.reason, context };
     }
-    const { target } = search;
     process.stderr.write(
-      target.kind === "pinned"
-        ? `Pinned variant ${target.pinned.variantId} of ${target.pinned.productHandle} for ${test}\n`
-        : `Found ${target.product.candidates.length} variants available for sale of ${target.product.productHandle} for ${test}\n`,
+      `Pinned variant ${pin.pinned.variantId} of ${pin.pinned.productHandle} for ${test}\n`,
     );
-    return { status: "ready", context, target };
+    return { status: "pinned", context, pinned: pin.pinned };
   } catch (error) {
     if (interrupt.aborted) return indeterminate(errorMessage(interrupt.reason));
     return indeterminate(`${step} failed: ${errorMessage(error)}`);
   }
 }
 
-/** The catalog step of each test. The browser, agent, and verdict steps are shared. */
-async function targetForTest(
+/** The pin of each test. The browser, agent, and verdict steps are the same for every test. */
+async function pinForTest(
   test: TestName,
   url: URL,
   context: StorefrontContext,
   signal: AbortSignal,
-): Promise<{ status: "ready"; target: Target } | { status: "skipped"; reason: string }> {
+): Promise<CatalogPin> {
   switch (test) {
-    case "add-to-cart": {
-      const pin = await pinVariant(url, context, signal);
-      return pin.status === "skipped"
-        ? pin
-        : { status: "ready", target: { kind: "pinned", pinned: pin.pinned } };
-    }
-    case "choose-a-variant": {
-      const search = await findVariantChoice(url, context, signal);
-      return search.status === "skipped"
-        ? search
-        : { status: "ready", target: { kind: "choice", product: search.product } };
-    }
+    case "add-to-cart":
+      return pinVariant(url, context, signal);
+    case "choose-a-variant":
+      return pinNonDefaultVariant(url, context, signal);
   }
 }
 
 /**
  * Starts the browser, records add events and attaches Stagehand before the first navigation,
- * opens the product page, pins the variant of a `choice` target from the page's first selection,
- * and runs the add task. A `choice` target whose selection cannot be read ends indeterminate
- * before the agent runs. The first add event stops the agent run. Then it confirms the Stagehand
- * detach: after that the agent cannot act, but a tool call already in progress at the stop can
- * finish before it. Then code decides the verdict from the add events,
+ * opens the product page, and runs the add task. The first add event stops the agent run. Then it
+ * confirms the Stagehand detach: after that the agent cannot act, but a tool call already in
+ * progress at the stop can finish before it. Then code decides the verdict from the add events,
  * and, when there is none, from whether the agent confirmed completion. Always detaches Stagehand
  * and closes the browser before it returns.
  */
 async function runAddToCart(
   storefrontUrl: URL,
   context: StorefrontContext,
-  target: Target,
+  pinned: PinnedVariant,
   model: ModelConfig,
   interrupt: AbortSignal,
 ): Promise<AddRun> {
-  const handle =
-    target.kind === "pinned" ? target.pinned.productHandle : target.product.productHandle;
-  const url = productUrl(storefrontUrl, handle);
+  const url = productUrl(storefrontUrl, pinned.productHandle);
   process.stderr.write(`Opening ${url.href}\n`);
   const starting = createBrowserSession(undefined, { signal: interrupt });
   let attaching: Promise<StagehandAgent> | undefined;
   let agentOutcome: AgentOutcome | undefined;
-  // Known before the browser for a `pinned` target, and after the page opens for a `choice`.
-  let pinned = target.kind === "pinned" ? target.pinned : undefined;
   try {
     const session = await starting;
     const log = await untilAborted(observeAddEvents(session.page), interrupt);
     attaching = attachStagehand(session.cdpUrl);
     const agent = await untilAborted(attaching, interrupt);
     await openPage(session.page, url, interrupt);
-    pinned =
-      target.kind === "pinned"
-        ? target.pinned
-        : await pinOnPage(session.page, target.product, interrupt);
     process.stderr.write("Running the agent task.\n");
     // Only events received from now on count.
     const agentStart = log.events.length;
@@ -330,15 +287,11 @@ async function runAddToCart(
       interrupt,
     );
     if (verdict.status === "indeterminate") {
-      return { ...indeterminate(verdict.reason), pinned, agent: agentOutcome };
+      return { ...indeterminate(verdict.reason), agent: agentOutcome };
     }
-    return { ...verdict, pinned, agent: agentOutcome };
+    return { ...verdict, agent: agentOutcome };
   } catch (error) {
-    return {
-      ...indeterminate(errorMessage(error)),
-      ...pinnedField(pinned),
-      ...agentField(agentOutcome),
-    };
+    return { ...indeterminate(errorMessage(error)), ...agentField(agentOutcome) };
   } finally {
     // A failed cleanup is reported, but it must not replace the result.
     await attaching
@@ -391,24 +344,6 @@ async function openPage(page: Page, url: URL, interrupt: AbortSignal): Promise<v
   }
 }
 
-/**
- * Reads the variant that the open product page selects, then pins another candidate. Throws when
- * the selection cannot be read: the run is then indeterminate, and the agent does not run.
- */
-async function pinOnPage(
-  page: Page,
-  product: VariantChoice,
-  interrupt: AbortSignal,
-): Promise<PinnedVariant> {
-  const selection = await observeSelectedVariant(page, product.variantIds, interrupt);
-  if (selection.status === "unknown") throw new Error(selection.reason);
-  const pinned = pinOtherVariant(product, selection.variantId);
-  process.stderr.write(
-    `The page selects variant ${selection.variantId} first. Pinned variant ${pinned.variantId} of ${pinned.productHandle} for choose-a-variant\n`,
-  );
-  return pinned;
-}
-
 /** Runs in the page: `<body>` exists, is not hidden, and has content. */
 function isPageObservable(): boolean {
   const body = document.body;
@@ -424,10 +359,6 @@ function indeterminate(reason: string): Indeterminate {
 
 function agentField(agent: AgentOutcome | undefined): { agent?: AgentOutcome } {
   return agent === undefined ? {} : { agent };
-}
-
-function pinnedField(pinned: PinnedVariant | undefined): { pinned?: PinnedVariant } {
-  return pinned === undefined ? {} : { pinned };
 }
 
 if (process.argv[1] !== undefined && path.resolve(process.argv[1]) === import.meta.filename) {
