@@ -468,6 +468,21 @@ export function generateSeoTags(seoInput: SeoConfig): CustomHeadTagObject[] {
                 }
               : {};
 
+            // The base `og:${type}` tag is required by consumers such as Slack
+            // and Facebook, and starts a new array entry @see https://ogp.me/#array
+            if (normalizedMedia.url) {
+              tagResults.push(
+                generateTag(
+                  'meta',
+                  {
+                    property: `og:${type}`,
+                    content: normalizedMedia.url,
+                  },
+                  normalizedMedia.url,
+                ),
+              );
+            }
+
             for (const key of Object.keys(normalizedMedia)) {
               if (normalizedMedia[key as keyof typeof normalizedMedia]) {
                 content = normalizedMedia[
