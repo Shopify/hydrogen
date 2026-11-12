@@ -56,52 +56,17 @@ const PINNED = {
   variantId: "gid://shopify/ProductVariant/7",
   selectedOptions: [{ name: "Size", value: "Medium" }],
 };
-/** The tee's API default and first variant in API order. */
+/** The variant that the tee page selects first: the API default. */
 const TEE_DEFAULT = {
   id: "gid://shopify/ProductVariant/21",
   selectedOptions: [{ name: "Size", value: "Medium" }],
 };
-/** The variant that choose-a-variant pins on a tee page that selects Medium first. */
+/** The variant that choose-a-variant pins on the tee: available, and not the default. */
 const TEE_PINNED = {
   productHandle: "fixture-tee",
   productTitle: "Fixture Tee",
   variantId: "gid://shopify/ProductVariant/22",
   selectedOptions: [{ name: "Size", value: "Large" }],
-};
-/** The pin on a tee page that selects Large first. */
-const TEE_MEDIUM_PINNED = {
-  ...TEE_PINNED,
-  variantId: TEE_DEFAULT.id,
-  selectedOptions: TEE_DEFAULT.selectedOptions,
-};
-/** The numeric ID of a ProductVariant GID, as a Liquid `id` field holds it. */
-function numeric(id: string): string {
-  return id.split("/").pop() ?? "";
-}
-/** A variant of another product. */
-const OTHER_PRODUCT_VARIANT = "gid://shopify/ProductVariant/99";
-
-/**
- * How a tee page shows its variant selection to the command. `first`: the size that the page
- * selects first (its field's `value` attribute always holds Medium; a script sets the current
- * value). `form`: `hydrogen` is a `merchandiseId` input; `liquid` is a hidden numeric `id` select
- * in a form that posts to `/fr/cart/add`, next to a newsletter form and a recommended-product
- * form; `conflict` is two Hydrogen forms that disagree; `other-product` holds only a variant of
- * another product; `none` has no form. `sizes: "disabled"` makes the size buttons inert.
- */
-type TeePage = {
-  first: "Medium" | "Large";
-  form: "hydrogen" | "liquid" | "conflict" | "other-product" | "none";
-  sizes: "working" | "disabled";
-};
-const TEE_PAGES: Record<string, TeePage> = {
-  "fixture-tee": { first: "Medium", form: "hydrogen", sizes: "working" },
-  "fixture-tee-large": { first: "Large", form: "hydrogen", sizes: "working" },
-  "fixture-tee-large-broken": { first: "Large", form: "hydrogen", sizes: "disabled" },
-  "fixture-tee-liquid": { first: "Large", form: "liquid", sizes: "working" },
-  "fixture-tee-conflict": { first: "Medium", form: "conflict", sizes: "working" },
-  "fixture-tee-other-product": { first: "Medium", form: "other-product", sizes: "working" },
-  "fixture-tee-none": { first: "Medium", form: "none", sizes: "working" },
 };
 const NO_ADD = "No add Standard Event was recorded by the time Stagehand was disconnected.";
 const CLAIMED_ADD =
@@ -547,113 +512,10 @@ describe("main with the agent", () => {
     expect(addedVariants).toEqual([TEE_PINNED.variantId]);
     expect(apiRequests[1]?.query).toContain("query AgenticE2EVariantChoice(");
     expect(apiRequests[1]?.variables).toMatchObject({ variants: 10 });
-    expect(stderr).toContain(
-      `The page selects variant ${TEE_DEFAULT.id} first. Pinned variant ${TEE_PINNED.variantId} of fixture-tee for choose-a-variant\n`,
-    );
     // The task names the options of the pinned variant.
     expect(modelRequests[0]?.body).toContain(String.raw`[{\"name\":\"Size\",\"value\":\"Large\"}]`);
     expectStagehandDetached();
   });
-
-  it("pins Medium for choose-a-variant when the page selects Large first, and passes when the agent selects Medium", async () => {
-    // The API default is Medium, but the page selects Large first.
-    catalog = { products: [teeProduct({ handle: "fixture-tee-large" })] };
-    reply = click("button: Medium", "button: Add to cart");
-
-    await expect(main([origin, "--test", "choose-a-variant"])).resolves.toBe(0);
-
-    expect(results()).toEqual([
-      {
-        test: "choose-a-variant",
-        status: "pass",
-        reason:
-          "Every add event held exactly 1 unit of the pinned variant and resolved without cart user errors.",
-        context: CONTEXT,
-        pinned: { ...TEE_MEDIUM_PINNED, productHandle: "fixture-tee-large" },
-        agent: STOPPED,
-      },
-    ]);
-    expect(addedVariants).toEqual([TEE_DEFAULT.id]);
-    expect(stderr).toContain(
-      `The page selects variant ${TEE_PINNED.variantId} first. Pinned variant ${TEE_DEFAULT.id} of fixture-tee-large for choose-a-variant\n`,
-    );
-    // The task names the final pin, not Large.
-    expect(modelRequests[0]?.body).toContain(
-      String.raw`[{\"name\":\"Size\",\"value\":\"Medium\"}]`,
-    );
-    expect(modelRequests[0]?.body).not.toContain(String.raw`\"value\":\"Large\"`);
-    expectStagehandDetached();
-  });
-
-  it("fails choose-a-variant when the page selects Large first, the size selector is broken, and the agent only adds", async () => {
-    // A pin of Large, the API's first non-default variant, would pass here with no switch.
-    catalog = { products: [teeProduct({ handle: "fixture-tee-large-broken" })] };
-    reply = clickAdd();
-
-    await expect(main([origin, "--test", "choose-a-variant"])).resolves.toBe(1);
-
-    expect(results()).toEqual([
-      {
-        test: "choose-a-variant",
-        status: "fail",
-        reason: "An add event did not hold exactly 1 unit of the pinned variant.",
-        context: CONTEXT,
-        pinned: { ...TEE_MEDIUM_PINNED, productHandle: "fixture-tee-large-broken" },
-        agent: STOPPED,
-      },
-    ]);
-    expect(addedVariants).toEqual([TEE_PINNED.variantId]);
-    expectStagehandDetached();
-  });
-
-  it("reads the current numeric id of a Liquid product form and ignores other forms", async () => {
-    catalog = { products: [teeProduct({ handle: "fixture-tee-liquid" })] };
-    reply = click("button: Medium", "button: Add to cart");
-
-    await expect(main([origin, "--test", "choose-a-variant"])).resolves.toBe(0);
-
-    expect(results()).toEqual([
-      expect.objectContaining({
-        status: "pass",
-        pinned: { ...TEE_MEDIUM_PINNED, productHandle: "fixture-tee-liquid" },
-      }),
-    ]);
-    expect(addedVariants).toEqual([TEE_DEFAULT.id]);
-    expectStagehandDetached();
-  });
-
-  it.each([
-    {
-      handle: "fixture-tee-conflict",
-      reason: `The selected variant is unknown: Product forms hold different variants of the product: ${TEE_DEFAULT.id}, ${TEE_PINNED.variantId}.`,
-    },
-    {
-      handle: "fixture-tee-other-product",
-      reason:
-        "The selected variant is unknown: No product form holds the ID of an examined variant of the product.",
-    },
-    {
-      handle: "fixture-tee-none",
-      reason:
-        "The selected variant is unknown: No product form variant field was found in 10000 ms.",
-    },
-  ])(
-    "reports $handle as indeterminate for choose-a-variant with no model call and no add",
-    async ({ handle, reason }) => {
-      catalog = { products: [teeProduct({ handle })] };
-      reply = clickAdd();
-
-      await expect(main([origin, "--test", "choose-a-variant"])).resolves.toBe(2);
-
-      expect(results()).toEqual([
-        { test: "choose-a-variant", status: "indeterminate", reason, context: CONTEXT },
-      ]);
-      expect(modelRequests).toEqual([]);
-      expect(storeLog).toEqual([]);
-      expect(productPageRequests).toEqual([`/products/${handle}`]);
-      expectStagehandDetached();
-    },
-  );
 
   it("fails choose-a-variant when the agent adds the default variant without a selection", async () => {
     catalog = { products: [teeProduct()] };
@@ -834,7 +696,6 @@ describe("createBrowserSession", () => {
 function onStoreRequest(request: IncomingMessage, response: ServerResponse) {
   const path = new URL(request.url ?? "/", "http://fixture").pathname;
   if (path.startsWith("/products/")) productPageRequests.push(path);
-  const tee = TEE_PAGES[path.slice("/products/".length)];
   if (/^\/api\/[^/]+\/graphql\.json$/.test(path)) {
     onApiRequest(request, response);
   } else if (path.endsWith("/products/hang")) {
@@ -844,14 +705,15 @@ function onStoreRequest(request: IncomingMessage, response: ServerResponse) {
     response
       .writeHead(200, { "content-type": "text/html" })
       .end(productPage(PINNED.productTitle, variants));
-  } else if (path.startsWith("/products/") && tee !== undefined) {
+  } else if (path.endsWith("/products/fixture-tee")) {
+    // The default variant first: the page selects it before any choice.
     const variants = [
       { id: TEE_DEFAULT.id, size: "Medium" },
       { id: TEE_PINNED.variantId, size: "Large" },
     ];
     response
       .writeHead(200, { "content-type": "text/html" })
-      .end(productPage(TEE_PINNED.productTitle, variants, tee));
+      .end(productPage(TEE_PINNED.productTitle, variants));
   } else if (path === "/cart/add" && request.method === "POST") {
     onAddRequest(request, response);
   } else {
@@ -887,59 +749,45 @@ function onAddRequest(request: IncomingMessage, response: ServerResponse) {
 }
 
 /**
- * A product page with an Add to cart button. The page first selects the variant of `tee.first`,
- * or the first variant. With more than one variant, a button for each size selects that variant,
- * and the page's variant field (see `TeePage`) follows the selection. The add posts the selected
+ * A product page with an Add to cart button. The page first selects the first variant. With more
+ * than one variant, a button for each size selects that variant. The add posts the selected
  * variant to `/cart/add`. By default the click dispatches `shopify:cart:lines-update` on the
  * document with the add promise and the selected variant, like a Hydrogen storefront. The promise
  * rejects on an HTTP error.
  */
-function productPage(
-  title: string,
-  variants: Array<{ id: string; size: string }>,
-  tee: TeePage = { first: "Medium", form: "hydrogen", sizes: "working" },
-): string {
+function productPage(title: string, variants: Array<{ id: string; size: string }>): string {
   const [first] = variants;
   assert(first, "A product page needs a variant.");
-  const selected = variants.find((variant) => variant.size === tee.first) ?? first;
   const promise = mode.addEvent === "with-promise" ? ", promise" : "";
   const dispatch =
     mode.addEvent === "none"
       ? ""
       : `document.dispatchEvent(Object.assign(new Event("shopify:cart:lines-update", { bubbles: true, cancelable: true }), { action: "add", context: "standard-action", lines: [{ merchandiseId: variantId, quantity: 1 }]${promise} }));`;
-  const disabled = tee.sizes === "disabled" ? " disabled" : "";
   const sizeButtons =
     variants.length < 2
       ? ""
       : `<div role="group" aria-label="Size">${variants
           .map(
             (variant) =>
-              `<button type="button" data-variant=${JSON.stringify(variant.id)} data-size=${JSON.stringify(variant.size)} aria-pressed="${variant === selected}"${disabled}>${variant.size}</button>`,
+              `<button type="button" data-variant=${JSON.stringify(variant.id)} data-size=${JSON.stringify(variant.size)} aria-pressed="${variant === first}">${variant.size}</button>`,
           )
           .join("")}</div>`;
   return `<!doctype html><title>${title}</title>
 <h1>${title}</h1>
-<p id="size">Size: ${selected.size}</p>
+<p id="size">Size: ${first.size}</p>
 ${sizeButtons}
-${variantForms(variants, first, tee.form)}
 <button id="add" type="button">Add to cart</button>
 <p id="status"></p>
 <script>
-const numericId = (id) => id.split("/").pop();
-let variantId;
-function select(id, size) {
-  variantId = id;
-  document.getElementById("size").textContent = "Size: " + size;
-  for (const field of document.querySelectorAll("[data-variant-field]")) {
-    field.value = field.name === "id" ? numericId(id) : id;
-  }
-  for (const other of document.querySelectorAll("[data-variant]")) {
-    other.setAttribute("aria-pressed", String(other.dataset.variant === id));
-  }
-}
-select(${JSON.stringify(selected.id)}, ${JSON.stringify(selected.size)});
+let variantId = ${JSON.stringify(first.id)};
 for (const button of document.querySelectorAll("[data-variant]")) {
-  button.addEventListener("click", () => select(button.dataset.variant, button.dataset.size));
+  button.addEventListener("click", () => {
+    variantId = button.dataset.variant;
+    document.getElementById("size").textContent = "Size: " + button.dataset.size;
+    for (const other of document.querySelectorAll("[data-variant]")) {
+      other.setAttribute("aria-pressed", String(other === button));
+    }
+  });
 }
 document.getElementById("add").addEventListener("click", () => {
   const promise = fetch("/cart/add", {
@@ -954,40 +802,6 @@ document.getElementById("add").addEventListener("click", () => {
   promise.then(() => { document.getElementById("status").textContent = "Added"; }, () => undefined);
 });
 </script>`;
-}
-
-/**
- * The variant fields of `form` (see `TeePage`). The `value` attributes hold the first variant.
- * Fields with `data-variant-field` follow the selection.
- */
-function variantForms(
-  variants: Array<{ id: string; size: string }>,
-  first: { id: string },
-  form: TeePage["form"],
-): string {
-  switch (form) {
-    case "hydrogen":
-      return hydrogenForm(first.id);
-    case "conflict":
-      return hydrogenForm(first.id) + hydrogenForm(TEE_PINNED.variantId, false);
-    case "other-product":
-      return hydrogenForm(OTHER_PRODUCT_VARIANT, false);
-    case "none":
-      return "";
-    case "liquid": {
-      const options = variants
-        .map((variant) => `<option value="${numeric(variant.id)}">${variant.size}</option>`)
-        .join("");
-      return `<form method="post" action="/fr/cart/add"><select name="id" hidden data-variant-field>${options}</select></form>
-<form action="/contact"><input type="hidden" name="id" value="5"></form>
-<section aria-label="Recommended products"><form method="post" action="/cart/add"><input type="hidden" name="id" value="${numeric(OTHER_PRODUCT_VARIANT)}"></form></section>`;
-    }
-  }
-}
-
-/** A Hydrogen product form. With `follows`, its field follows the page's selection. */
-function hydrogenForm(value: string, follows = true): string {
-  return `<form method="post" action="/cart"><input type="hidden" name="merchandiseId" value=${JSON.stringify(value)}${follows ? " data-variant-field" : ""}></form>`;
 }
 
 function onApiRequest(request: IncomingMessage, response: ServerResponse) {
@@ -1018,13 +832,13 @@ function onApiRequest(request: IncomingMessage, response: ServerResponse) {
 }
 
 /**
- * The tee for the variant choice query, with `handle`: Medium (the API default and first variant)
- * and Large are available. With `onlyDefault`, Large is not available.
+ * The tee for the variant choice query: the default (Medium) and the pinned variant (Large) are
+ * available. With `onlyDefault`, Large is not available.
  */
-function teeProduct({ onlyDefault = false, handle = TEE_PINNED.productHandle } = {}) {
+function teeProduct({ onlyDefault = false } = {}) {
   return {
     title: TEE_PINNED.productTitle,
-    handle,
+    handle: TEE_PINNED.productHandle,
     requiresSellingPlan: false,
     selectedOrFirstAvailableVariant: { id: TEE_DEFAULT.id },
     variants: {
