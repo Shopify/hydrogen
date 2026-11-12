@@ -1,4 +1,4 @@
-import type { AddEvent } from "./shopify/add-events.ts";
+import { type AddEvent, MAX_LINES } from "./shopify/add-events.ts";
 
 /** How long the check waits for the outcomes of the recorded add events. */
 export const ADD_WAIT_MS = 5_000;
@@ -16,8 +16,12 @@ type Add = {
   pinnedUnits: number;
   hasPromise: boolean;
   outcome: "resolved" | "rejected" | undefined;
-  userErrors: boolean;
+  /** What the promise resolved with, when it resolved. */
+  settled: Extract<AddEvent, { phase: "settled" }> | undefined;
 };
+
+/** Warning code prefixes for stock and availability problems of a line. */
+const BLOCKING_WARNING_PREFIXES = ["MERCHANDISE_", "PRODUCT_"];
 
 export type VerifyAddInput = {
   /** The live list of add event messages. It can grow while `verifyAdd` runs. */
@@ -46,9 +50,14 @@ export type VerifyAddInput = {
  * - Every add event at or after `agentStart` must hold exactly 1 unit of the pinned variant and
  *   have a promise. Then it waits (through `waitForOutcomes`, bounded by the caller to
  *   {@link ADD_WAIT_MS} and ended by the caller on the interrupt) until every add event has an
- *   outcome. A wrong item or quantity, no promise, a rejected promise, a promise that resolved
- *   with cart `userErrors`, or no outcome: fail.
- * - Every add event resolved without cart `userErrors`: pass.
+ *   outcome, or a problem is known. The first problem in this order is the fail reason: a wrong
+ *   item or quantity; no promise; a rejected promise; a promise that resolved with cart
+ *   `userErrors`; with a value that is not an object; with `userErrors` or `warnings` that are
+ *   present but not arrays; without a non-null `cart`; with a warning whose `code` starts with
+ *   `MERCHANDISE_` or `PRODUCT_` (stock and availability); more than one add event. Then no
+ *   outcome: fail.
+ * - Exactly one add event resolved with a cart, without cart `userErrors` and without stock or
+ *   availability warnings: pass. Other warnings, for example `DISCOUNT_*`, do not fail.
  */
 export async function verifyAdd({
   events,
@@ -80,7 +89,7 @@ export async function verifyAdd({
   return {
     status: "pass",
     reason:
-      "Every add event held exactly 1 unit of the pinned variant and resolved without cart user errors.",
+      "One add event held exactly 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings.",
   };
 }
 
@@ -101,14 +110,14 @@ function recordedAdds(events: readonly AddEvent[], agentStart: number, variantId
       pinnedUnits,
       hasPromise: event.hasPromise,
       outcome: undefined,
-      userErrors: false,
+      settled: undefined,
     });
   }
   for (const event of recent) {
     const add = adds.get(event.id);
     if (event.phase === "input" || add === undefined || add.outcome !== undefined) continue;
     add.outcome = event.phase === "settled" ? "resolved" : "rejected";
-    add.userErrors = event.phase === "settled" && event.userErrors > 0;
+    add.settled = event.phase === "settled" ? event : undefined;
   }
   return [...adds.values()];
 }
@@ -124,8 +133,31 @@ function addProblem(adds: Add[]): string | undefined {
   if (adds.some((add) => add.outcome === "rejected")) {
     return "An add event promise was rejected.";
   }
-  if (adds.some((add) => add.userErrors)) {
+  const results = adds.flatMap((add) => (add.settled === undefined ? [] : [add.settled]));
+  if (results.some((result) => (result.userErrors ?? 0) > 0)) {
     return "An add event resolved with cart user errors.";
+  }
+  if (results.some((result) => !result.isObject)) {
+    return "An add event promise resolved with a value that is not an object.";
+  }
+  if (results.some((result) => result.userErrors === null || result.warningCodes === null)) {
+    return "An add event resolved with userErrors or warnings that are not arrays.";
+  }
+  if (results.some((result) => !result.hasCart)) {
+    return "An add event resolved without a cart.";
+  }
+  const blocking = results
+    .flatMap((result) => result.warningCodes ?? [])
+    .filter(
+      (code): code is string =>
+        code !== null && BLOCKING_WARNING_PREFIXES.some((prefix) => code.startsWith(prefix)),
+    );
+  if (blocking.length > 0) {
+    const codes = [...new Set(blocking)].slice(0, MAX_LINES).join(", ");
+    return `An add event resolved with stock or availability warnings: ${codes}.`;
+  }
+  if (adds.length > 1) {
+    return "More than one add event was recorded.";
   }
   return undefined;
 }

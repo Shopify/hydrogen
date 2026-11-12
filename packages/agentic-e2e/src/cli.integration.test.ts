@@ -201,7 +201,7 @@ describe("main with the agent", () => {
       {
         status: "pass",
         reason:
-          "Every add event held exactly 1 unit of the pinned variant and resolved without cart user errors.",
+          "One add event held exactly 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings.",
         context: CONTEXT,
         pinned: PINNED,
         agent: STOPPED,

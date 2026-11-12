@@ -15,9 +15,11 @@ export type ScriptLimits = { binding: string; maxLines: number; maxString: numbe
  * document or on an element in it are seen. Events dispatched directly on `window` are not
  * recorded. For each event it sends one `input` message with a bounded copy of `action` and of
  * each line's `merchandiseId` and `quantity`, and whether `event.promise` is thenable. When it is,
- * it sends one `settled` (with the `userErrors` count) or `failed` message. It does not dispatch
- * events or throw into the page. Its rejection handler marks a native `event.promise` as handled, so the storefront may
- * not get an `unhandledrejection` for it.
+ * it sends one `settled` or `failed` message. `settled` tells whether the resolved value and its
+ * `cart` are non-null objects, the `userErrors` count, and a bounded copy of each warning's `code`.
+ * `userErrors` or `warningCodes` is `null` when that field is present but not an array. It does not
+ * dispatch events or throw into the page. Its rejection handler marks a native `event.promise` as
+ * handled, so the storefront may not get an `unhandledrejection` for it.
  */
 export function recordAddEvents({ binding, maxLines, maxString }: ScriptLimits): void {
   const send: unknown = Reflect.get(globalThis, binding);
@@ -64,13 +66,33 @@ export function recordAddEvents({ binding, maxLines, maxString }: ScriptLimits):
     if (!thenable) return;
     toPromise(promise).then(
       (result) => {
-        const errors = field(result, "userErrors");
-        post({
-          name: event.type,
-          phase: "settled",
-          id,
-          userErrors: isArray(errors) ? errors.length : 0,
-        });
+        try {
+          const errors = field(result, "userErrors");
+          const warnings = field(result, "warnings");
+          const cart = field(result, "cart");
+          // Absent lists count as empty: Standard Actions add them only when there are any.
+          let userErrors: number | null = null;
+          if (errors === undefined) userErrors = 0;
+          else if (isArray(errors)) userErrors = errors.length;
+          let warningCodes: Array<string | null> | null = null;
+          if (warnings === undefined) warningCodes = [];
+          else if (isArray(warnings)) {
+            warningCodes = warnings
+              .slice(0, maxLines)
+              .map((warning: unknown) => text(field(warning, "code")));
+          }
+          post({
+            name: event.type,
+            phase: "settled",
+            id,
+            isObject: typeof result === "object" && result !== null,
+            hasCart: typeof cart === "object" && cart !== null,
+            userErrors,
+            warningCodes,
+          });
+        } catch {
+          // Never throw into the page.
+        }
       },
       () => post({ name: event.type, phase: "failed", id }),
     );
@@ -102,7 +124,15 @@ const messageSchema = z.discriminatedUnion("phase", [
       .max(MAX_LINES),
     hasPromise: z.boolean(),
   }),
-  z.object({ name, phase: z.literal("settled"), id, userErrors: z.int().min(0) }),
+  z.object({
+    name,
+    phase: z.literal("settled"),
+    id,
+    isObject: z.boolean(),
+    hasCart: z.boolean(),
+    userErrors: z.int().min(0).nullable(),
+    warningCodes: z.array(text).max(MAX_LINES).nullable(),
+  }),
   z.object({ name, phase: z.literal("failed"), id }),
 ]);
 

@@ -21,15 +21,23 @@ const input = {
   hasPromise: true,
 };
 
+const settled = {
+  name: ADD_EVENT_NAME,
+  phase: "settled",
+  id: "abc-1",
+  isObject: true,
+  hasCart: true,
+  userErrors: 2,
+  warningCodes: ["MERCHANDISE_OUT_OF_STOCK", null],
+};
+
 describe("parseAddEventMessage", () => {
   it("parses input, settled, and failed messages with the receive order", () => {
     expect(parseAddEventMessage(JSON.stringify(input), 3)).toEqual({ ...input, order: 3 });
+    expect(parseAddEventMessage(JSON.stringify(settled), 4)).toEqual({ ...settled, order: 4 });
     expect(
-      parseAddEventMessage(
-        JSON.stringify({ name: ADD_EVENT_NAME, phase: "settled", id: "abc-1", userErrors: 2 }),
-        4,
-      ),
-    ).toEqual({ name: ADD_EVENT_NAME, phase: "settled", id: "abc-1", userErrors: 2, order: 4 });
+      parseAddEventMessage(JSON.stringify({ ...settled, userErrors: null, warningCodes: null }), 6),
+    ).toEqual({ ...settled, userErrors: null, warningCodes: null, order: 6 });
     expect(
       parseAddEventMessage(JSON.stringify({ name: ADD_EVENT_NAME, phase: "failed", id: "x" }), 5),
     ).toEqual({ name: ADD_EVENT_NAME, phase: "failed", id: "x", order: 5 });
@@ -41,10 +49,13 @@ describe("parseAddEventMessage", () => {
     ["a string quantity", { ...input, lines: [{ merchandiseId: VARIANT, quantity: "1" }] }],
     ["no lines array", { ...input, lines: undefined }],
     ["an empty ID", { ...input, id: "" }],
+    ["a negative user error count", { ...settled, userErrors: -1 }],
+    ["no cart flag", { ...settled, hasCart: undefined }],
     [
-      "a negative user error count",
-      { name: ADD_EVENT_NAME, phase: "settled", id: "a", userErrors: -1 },
+      "too many warning codes",
+      { ...settled, warningCodes: Array.from({ length: MAX_LINES + 1 }, () => "X") },
     ],
+    ["a too long warning code", { ...settled, warningCodes: ["x".repeat(MAX_STRING + 1)] }],
     [
       "too many lines",
       { ...input, lines: Array.from({ length: MAX_LINES + 1 }, () => input.lines[0]) },
@@ -87,9 +98,7 @@ describe("AddEventLog", () => {
 
     // Before `from`, an update, and an outcome do not count.
     log.receive(JSON.stringify({ ...input, id: "u", action: "update" }));
-    log.receive(
-      JSON.stringify({ name: ADD_EVENT_NAME, phase: "settled", id: "abc-1", userErrors: 0 }),
-    );
+    log.receive(JSON.stringify({ ...settled, userErrors: 0 }));
     expect(calls).toEqual([]);
     log.receive(JSON.stringify({ ...input, id: "b" }));
     log.receive(JSON.stringify({ ...input, id: "c" }));
@@ -184,12 +193,16 @@ describe("recordAddEvents", () => {
     target.dispatchEvent(Object.assign(new Event(name), fields));
   }
 
-  it("sends an input message and one settled message with the user error count", async () => {
+  it("sends an input message and one settled message with the result fields", async () => {
     dispatch({
       action: "add",
       context: "standard-action",
       lines: [{ merchandiseId: VARIANT, quantity: 1, attributes: [{ key: "secret" }] }],
-      promise: Promise.resolve({ cart: { id: "secret" }, userErrors: [{ message: "No" }] }),
+      promise: Promise.resolve({
+        cart: { id: "secret" },
+        userErrors: [{ message: "No" }],
+        warnings: [{ code: "MERCHANDISE_OUT_OF_STOCK", message: "secret" }, { message: "secret" }],
+      }),
       detail: { products: [] },
     });
     await flush();
@@ -203,10 +216,78 @@ describe("recordAddEvents", () => {
         lines: [{ merchandiseId: VARIANT, quantity: 1 }],
         hasPromise: true,
       },
-      { name: ADD_EVENT_NAME, phase: "settled", id: expect.any(String), userErrors: 1 },
+      {
+        name: ADD_EVENT_NAME,
+        phase: "settled",
+        id: expect.any(String),
+        isObject: true,
+        hasCart: true,
+        userErrors: 1,
+        warningCodes: ["MERCHANDISE_OUT_OF_STOCK", null],
+      },
     ]);
     const [first, second] = messages as Array<{ id: string }>;
     expect(second?.id).toBe(first?.id);
+  });
+
+  it.each([
+    [
+      "absent userErrors and warnings as empty",
+      { cart: {} },
+      { isObject: true, hasCart: true, userErrors: 0, warningCodes: [] },
+    ],
+    [
+      "a null cart",
+      { cart: null, userErrors: [], warnings: [] },
+      { isObject: true, hasCart: false, userErrors: 0, warningCodes: [] },
+    ],
+    [
+      "userErrors and warnings that are not arrays as null",
+      { cart: {}, userErrors: "No", warnings: { code: "MERCHANDISE_OUT_OF_STOCK" } },
+      { isObject: true, hasCart: true, userErrors: null, warningCodes: null },
+    ],
+    [
+      "an undefined value",
+      undefined,
+      { isObject: false, hasCart: false, userErrors: 0, warningCodes: [] },
+    ],
+    ["a string value", "ok", { isObject: false, hasCart: false, userErrors: 0, warningCodes: [] }],
+  ])("records %s", async (_case, value, fields) => {
+    dispatch({ action: "add", lines: [], promise: Promise.resolve(value) });
+    await flush();
+
+    expect(messages[1]).toEqual({
+      name: ADD_EVENT_NAME,
+      phase: "settled",
+      id: expect.any(String),
+      ...fields,
+    });
+    expect(parseAddEventMessage(JSON.stringify(messages[1]), 0)).toBeDefined();
+  });
+
+  it("bounds the warning count and code length, and the message parses", async () => {
+    const warnings = Array.from({ length: MAX_LINES + 10 }, () => ({
+      code: "c".repeat(MAX_STRING + 50),
+    }));
+    dispatch({ action: "add", lines: [], promise: Promise.resolve({ cart: {}, warnings }) });
+    await flush();
+
+    const [, message] = messages as Array<{ warningCodes: string[] }>;
+    expect(message?.warningCodes).toHaveLength(MAX_LINES);
+    expect(message?.warningCodes[0]).toBe("c".repeat(MAX_STRING));
+    expect(parseAddEventMessage(JSON.stringify(message), 0)).toBeDefined();
+  });
+
+  it("sends no settled message when reading the resolved value throws", async () => {
+    const value = {
+      get cart() {
+        throw new Error("getter");
+      },
+    };
+    dispatch({ action: "add", lines: [], promise: Promise.resolve(value) });
+    await flush();
+
+    expect(messages).toEqual([expect.objectContaining({ phase: "input" })]);
   });
 
   it("sends a failed message for a rejected promise", async () => {

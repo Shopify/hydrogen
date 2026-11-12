@@ -6,7 +6,7 @@ import { verifyAdd } from "./verdict.ts";
 const VARIANT = "gid://shopify/ProductVariant/1";
 const GIFT = "gid://shopify/ProductVariant/99";
 const PASS =
-  "Every add event held exactly 1 unit of the pinned variant and resolved without cart user errors.";
+  "One add event held exactly 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings.";
 const NO_ADD = "No add Standard Event was recorded by the time Stagehand was disconnected.";
 const CLAIMED_ADD =
   "The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.";
@@ -15,6 +15,10 @@ const NO_PROMISE = "An add event had no promise, so its outcome is unknown.";
 const REJECTED = "An add event promise was rejected.";
 const USER_ERRORS = "An add event resolved with cart user errors.";
 const NO_OUTCOME = "An add event had no outcome within 5000 ms.";
+const NOT_OBJECT = "An add event promise resolved with a value that is not an object.";
+const MALFORMED = "An add event resolved with userErrors or warnings that are not arrays.";
+const NO_CART = "An add event resolved without a cart.";
+const MORE_THAN_ONE = "More than one add event was recorded.";
 
 type Message = AddEvent extends infer T ? (T extends AddEvent ? Omit<T, "order"> : never) : never;
 type Line = { merchandiseId: string | null; quantity: number | null };
@@ -27,8 +31,23 @@ function addWithoutPromise(id: string): Message {
   return { ...add(id), hasPromise: false } as Message;
 }
 
-function settled(id: string, userErrors = 0): Message {
-  return { name: ADD_EVENT_NAME, phase: "settled", id, userErrors };
+type Settled = Extract<Message, { phase: "settled" }>;
+
+function settled(
+  id: string,
+  userErrors: number | null = 0,
+  fields: Partial<Pick<Settled, "isObject" | "hasCart" | "warningCodes">> = {},
+): Message {
+  return {
+    name: ADD_EVENT_NAME,
+    phase: "settled",
+    id,
+    isObject: true,
+    hasCart: true,
+    userErrors,
+    warningCodes: [],
+    ...fields,
+  };
 }
 
 function failed(id: string): Message {
@@ -122,8 +141,77 @@ describe("verifyAdd", () => {
       ),
       reason: WRONG_ITEM,
     },
+    {
+      case: "a resolved value that is not an object",
+      events: log(add("a"), settled("a", 0, { isObject: false, hasCart: false })),
+      reason: NOT_OBJECT,
+    },
+    {
+      case: "a resolved value without a cart",
+      events: log(add("a"), settled("a", 0, { hasCart: false })),
+      reason: NO_CART,
+    },
+    {
+      case: "userErrors that are not an array",
+      events: log(add("a"), settled("a", null)),
+      reason: MALFORMED,
+    },
+    {
+      case: "warnings that are not an array",
+      events: log(add("a"), settled("a", 0, { warningCodes: null })),
+      reason: MALFORMED,
+    },
+    {
+      case: "an out-of-stock warning",
+      events: log(
+        add("a"),
+        settled("a", 0, {
+          warningCodes: ["DISCOUNT_CODE_NOT_HONOURED", "MERCHANDISE_OUT_OF_STOCK"],
+        }),
+      ),
+      reason:
+        "An add event resolved with stock or availability warnings: MERCHANDISE_OUT_OF_STOCK.",
+    },
+    {
+      case: "an availability warning and a not-enough-stock warning",
+      events: log(
+        add("a"),
+        settled("a", 0, {
+          warningCodes: [
+            "PRODUCT_UNAVAILABLE_IN_BUYER_LOCATION",
+            "MERCHANDISE_NOT_ENOUGH_STOCK",
+            "MERCHANDISE_NOT_ENOUGH_STOCK",
+          ],
+        }),
+      ),
+      reason:
+        "An add event resolved with stock or availability warnings: PRODUCT_UNAVAILABLE_IN_BUYER_LOCATION, MERCHANDISE_NOT_ENOUGH_STOCK.",
+    },
+    {
+      case: "two clean add events of the pinned variant",
+      events: log(add("a"), settled("a"), add("b"), settled("b")),
+      reason: MORE_THAN_ONE,
+    },
   ])("fails for $case", async ({ events, reason }) => {
     await expect(verify(events)).resolves.toEqual({ status: "fail", reason });
+  });
+
+  it("passes with warnings that are not about stock or availability, or that have no code", async () => {
+    const warningCodes = ["DISCOUNT_NOT_FOUND", "DUPLICATE_DELIVERY_ADDRESS", null];
+
+    await expect(verify(log(add("a"), settled("a", 0, { warningCodes })))).resolves.toEqual({
+      status: "pass",
+      reason: PASS,
+    });
+  });
+
+  it("fails at once for a second add event, without waiting for outcomes", async () => {
+    const events = log(add("a"), add("b"));
+    const wait = vi.fn(async (done: () => boolean) => {
+      expect(done()).toBe(true);
+    });
+
+    await expect(verify(events, wait)).resolves.toEqual({ status: "fail", reason: MORE_THAN_ONE });
   });
 
   it("waits for the outcome, and passes when it resolves during the wait", async () => {

@@ -34,7 +34,7 @@ const PINNED: PinnedVariant = {
   selectedOptions: [{ name: "Size", value: "M" }],
 };
 const PASS_REASON =
-  "Every add event held exactly 1 unit of the pinned variant and resolved without cart user errors.";
+  "One add event held exactly 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings.";
 const NO_ADD = "No add Standard Event was recorded by the time Stagehand was disconnected.";
 const CLAIMED_ADD =
   "The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.";
@@ -677,7 +677,8 @@ function recordAdd(): void {
 
 function recordOutcome(phase: "settled" | "failed"): void {
   calls.push(phase);
-  log.receive(JSON.stringify({ name: ADD_EVENT_NAME, id: "a-1", phase, userErrors: 0 }));
+  const result = { isObject: true, hasCart: true, userErrors: 0, warningCodes: [] };
+  log.receive(JSON.stringify({ name: ADD_EVENT_NAME, id: "a-1", phase, ...result }));
 }
 
 function results(): unknown[] {
