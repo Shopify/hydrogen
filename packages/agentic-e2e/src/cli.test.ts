@@ -3,11 +3,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { attachStagehand, type AgentOutcome } from "./agent/stagehand-agent.ts";
 import { createBrowserSession } from "./browser/session.ts";
 import { main, parseCliArgs, USAGE } from "./cli.ts";
+import { pinVariant, type PinnedVariant } from "./shopify/catalog.ts";
+import { discoverContext, type StorefrontContext } from "./shopify/storefront.ts";
 
 vi.mock("./browser/session.ts", () => ({ createBrowserSession: vi.fn() }));
 vi.mock("./agent/stagehand-agent.ts", () => ({ attachStagehand: vi.fn() }));
+vi.mock("./shopify/storefront.ts", () => ({ discoverContext: vi.fn() }));
+vi.mock("./shopify/catalog.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./shopify/catalog.ts")>()),
+  pinVariant: vi.fn(),
+}));
 
 const KEY = "sk-secret-proxy-key-123";
+const CONTEXT: StorefrontContext = { country: "CA", language: "FR" };
+const PINNED: PinnedVariant = {
+  productHandle: "board",
+  productTitle: "Board",
+  variantId: "gid://shopify/ProductVariant/1",
+  selectedOptions: [{ name: "Size", value: "M" }],
+};
 
 let stdout: string[];
 let stderr: string[];
@@ -19,6 +33,14 @@ beforeEach(() => {
   stderr = [];
   calls = [];
   vi.stubEnv("SHOPIFY_PROXY_KEY", KEY);
+  vi.mocked(discoverContext).mockImplementation(async () => {
+    calls.push("context");
+    return CONTEXT;
+  });
+  vi.mocked(pinVariant).mockImplementation(async () => {
+    calls.push("pin");
+    return { status: "pinned", pinned: PINNED };
+  });
   vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
     stdout.push(String(chunk));
     return true;
@@ -34,11 +56,17 @@ afterEach(() => {
   vi.unstubAllEnvs();
   vi.mocked(createBrowserSession).mockReset();
   vi.mocked(attachStagehand).mockReset();
+  vi.mocked(discoverContext).mockReset();
+  vi.mocked(pinVariant).mockReset();
 });
 
 describe("parseCliArgs", () => {
-  it("accepts one http or https URL", () => {
-    for (const input of ["https://shop.example/en-ca?x=1", "http://127.0.0.1:3000/"]) {
+  it("accepts one http or https root URL, with or without a query or hash", () => {
+    for (const input of [
+      "https://shop.example",
+      "https://shop.example/?x=1#top",
+      "http://127.0.0.1:3000/",
+    ]) {
       const parsed = parseCliArgs([input]);
       expect(parsed.kind).toBe("run");
       expect(parsed.kind === "run" && parsed.url.href).toBe(new URL(input).href);
@@ -62,6 +90,16 @@ describe("parseCliArgs", () => {
     expect(parseCliArgs(argv)).toEqual({ kind: "error", message });
   });
 
+  it.each(["/en-ca", "/en-ca/", "/collections/all", "/products/x"])(
+    "rejects the non-root path %s",
+    (path) => {
+      expect(parseCliArgs([`https://shop.example${path}?x=1`])).toEqual({
+        kind: "error",
+        message: `URL must be the storefront root URL, such as https://your-storefront.example/, received path ${path}`,
+      });
+    },
+  );
+
   it("rejects unknown flags", () => {
     expect(parseCliArgs(["https://shop.example", "--model", "x"]).kind).toBe("error");
   });
@@ -83,10 +121,20 @@ describe("main", () => {
     expect(createBrowserSession).not.toHaveBeenCalled();
   });
 
-  it("attaches before navigation, runs the agent, detaches, then reports agent-completed", async () => {
+  it("exits 64 for a non-root URL before any Storefront API request or browser", async () => {
+    await expect(main(["https://shop.example/en-ca"])).resolves.toBe(64);
+
+    expect(stdout).toEqual([]);
+    expect(stderr.join("")).toContain("URL must be the storefront root URL");
+    expect(discoverContext).not.toHaveBeenCalled();
+    expect(pinVariant).not.toHaveBeenCalled();
+    expect(createBrowserSession).not.toHaveBeenCalled();
+  });
+
+  it("pins a variant, attaches before navigation, opens the product page, and reports agent-completed", async () => {
     const { session, agent } = fakes();
 
-    await expect(main(["https://shop.example"])).resolves.toBe(0);
+    await expect(main(["https://shop.example/?x=1#top"])).resolves.toBe(0);
 
     expect(results()).toEqual([
       {
@@ -94,9 +142,29 @@ describe("main", () => {
         url: "https://shop.example/",
         title: "Home",
         summary: "Scrolled once.",
+        context: CONTEXT,
+        pinned: PINNED,
       },
     ]);
-    expect(calls).toEqual(["attach", "goto", "ready", "run", "detach", "title", "detach", "close"]);
+    expect(calls).toEqual([
+      "context",
+      "pin",
+      "attach",
+      "goto",
+      "ready",
+      "run",
+      "detach",
+      "title",
+      "detach",
+      "close",
+    ]);
+    const storefrontUrl = new URL("https://shop.example/?x=1#top");
+    expect(discoverContext).toHaveBeenCalledWith(storefrontUrl, expect.any(AbortSignal));
+    expect(pinVariant).toHaveBeenCalledWith(storefrontUrl, CONTEXT, expect.any(AbortSignal));
+    expect(session.page.goto).toHaveBeenCalledWith(
+      "https://shop.example/products/board",
+      expect.anything(),
+    );
     expect(attachStagehand).toHaveBeenCalledWith("ws://browser");
     expect(agent.run).toHaveBeenCalledWith(
       session.page,
@@ -116,6 +184,59 @@ describe("main", () => {
     expect(results()).toEqual([
       { status: "indeterminate", reason: "SHOPIFY_PROXY_KEY is not set." },
     ]);
+    expect(discoverContext).not.toHaveBeenCalled();
+    expect(createBrowserSession).not.toHaveBeenCalled();
+  });
+
+  it("reports skipped with the context, exits 3, and starts no browser when no variant is eligible", async () => {
+    const reason = "No eligible variant: the catalog was searched to the end.";
+    vi.mocked(pinVariant).mockResolvedValue({ status: "skipped", reason });
+
+    await expect(main(["https://shop.example"])).resolves.toBe(3);
+
+    expect(results()).toEqual([{ status: "skipped", reason, context: CONTEXT }]);
+    expect(createBrowserSession).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      step: "localization",
+      fail: () => vi.mocked(discoverContext).mockRejectedValue(new Error("GraphQL errors: Down")),
+      reason: "Storefront API localization failed: GraphQL errors: Down",
+    },
+    {
+      step: "catalog pin",
+      fail: () =>
+        vi.mocked(pinVariant).mockRejectedValue(new Error("Invalid response data: products: x")),
+      reason: "Storefront API catalog pin failed: Invalid response data: products: x",
+    },
+  ])("reports a $step error as indeterminate and starts no browser", async ({ fail, reason }) => {
+    fail();
+
+    await expect(main(["https://shop.example"])).resolves.toBe(2);
+
+    expect(results()).toEqual([{ status: "indeterminate", reason }]);
+    expect(createBrowserSession).not.toHaveBeenCalled();
+  });
+
+  it("stops on SIGINT during the Storefront API step and starts no browser", async () => {
+    const { promise: requesting, resolve: requestStarted } = Promise.withResolvers<void>();
+    let requestSignal: AbortSignal | undefined;
+    vi.mocked(discoverContext).mockImplementation(async (_url, signal) => {
+      requestSignal = signal;
+      requestStarted();
+      return new Promise(() => undefined);
+    });
+
+    const run = main(["https://shop.example"]);
+    await requesting;
+    process.emit("SIGINT", "SIGINT");
+
+    await expect(run).resolves.toBe(2);
+    expect(results()).toEqual([{ status: "indeterminate", reason: "Interrupted by SIGINT." }]);
+    // The request in flight receives the interrupt.
+    expect(requestSignal?.aborted).toBe(true);
+    expect(pinVariant).not.toHaveBeenCalled();
     expect(createBrowserSession).not.toHaveBeenCalled();
   });
 
