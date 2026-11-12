@@ -128,6 +128,7 @@ describe("ShopifyScripts", () => {
       props: {
         consent: CONSENT,
         navigate,
+        nonce: "test-nonce",
         routes: routeTemplates,
         shop: TEST_SHOP,
         inbox: true,
@@ -153,6 +154,7 @@ describe("ShopifyScripts", () => {
     expect(initializeShopifyScripts).toHaveBeenCalledWith({
       consent: CONSENT,
       navigate,
+      nonce: "test-nonce",
       routes: routeTemplates,
       webMcp: true,
     });

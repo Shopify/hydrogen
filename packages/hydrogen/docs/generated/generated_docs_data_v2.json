@@ -4809,6 +4809,14 @@
         {
           "filePath": "src/core/shopify-scripts/types.ts",
           "syntaxKind": "PropertySignature",
+          "name": "nonce",
+          "value": "string",
+          "description": "The document's CSP nonce, also used for scripts loaded during browser initialization.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/shopify-scripts/types.ts",
+          "syntaxKind": "PropertySignature",
           "name": "routes",
           "value": "ShopifyRouteTemplates",
           "description": "Your app's custom route templates, which Shopify's scripts use to match and resolve storefront URLs.",
@@ -4823,7 +4831,7 @@
           "isOptional": true
         }
       ],
-      "value": "export interface InitializeShopifyScriptsOptions extends ShopifyRoutesOptions {\n  /** The consent configuration that you passed to the script tags. The bus runs the setup callback once. */\n  consent?: ConsentConfig;\n  /** Loads Shopify WebMCP tools when the browser supports WebMCP. Defaults to `true`. */\n  webMcp?: boolean;\n}"
+      "value": "export interface InitializeShopifyScriptsOptions extends ShopifyRoutesOptions {\n  /** The consent configuration that you passed to the script tags. The bus runs the setup callback once. */\n  consent?: ConsentConfig;\n  /** The document's CSP nonce, also used for scripts loaded during browser initialization. */\n  nonce?: string;\n  /** Loads Shopify WebMCP tools when the browser supports WebMCP. Defaults to `true`. */\n  webMcp?: boolean;\n}"
     }
   },
   "AnalyticsEventGeneratedType": {
@@ -5835,7 +5843,7 @@
         "name": "Promise<boolean | void>",
         "value": "Promise<boolean | void>"
       },
-      "value": "export function initializeShopifyScripts({\n  consent,\n  navigate,\n  routes,\n  webMcp = true,\n}: InitializeShopifyScriptsOptions): Promise<boolean | void> {\n  configureShopifyRouting({ navigate, routes });\n  initializeShopifyPageViewEvents();\n\n  if (consent?.mode === \"custom-banner\") {\n    if (typeof consent.setup !== \"function\") {\n      log.warn(\n        \"custom-banner requires a consent.setup callback; analytics delivery remains blocked until setup completes\",\n      );\n    } else {\n      try {\n        initializeCustomConsent(consent.setup);\n      } catch (error) {\n        log.error(\"custom consent initialization failed\", { error });\n      }\n    }\n  }\n\n  if (!webMcp) return Promise.resolve();\n\n  return loadShopifyWebMcpTools();\n}"
+      "value": "export function initializeShopifyScripts({\n  consent,\n  navigate,\n  nonce,\n  routes,\n  webMcp = true,\n}: InitializeShopifyScriptsOptions): Promise<boolean | void> {\n  configureShopifyRouting({ navigate, routes });\n  initializeShopifyPageViewEvents();\n\n  if (consent?.mode === \"custom-banner\") {\n    if (typeof consent.setup !== \"function\") {\n      log.warn(\n        \"custom-banner requires a consent.setup callback; analytics delivery remains blocked until setup completes\",\n      );\n    } else {\n      try {\n        initializeCustomConsent(consent.setup);\n      } catch (error) {\n        log.error(\"custom consent initialization failed\", { error });\n      }\n    }\n  }\n\n  if (!webMcp) return Promise.resolve();\n\n  return loadShopifyWebMcpTools(nonce);\n}"
     }
   },
   "GetShopifyScriptTagsGeneratedType": {
@@ -13236,7 +13244,7 @@
         "name": "",
         "value": ""
       },
-      "value": "export function ShopifyScripts(options: ShopifyScriptsProps) {\n  const { consent, navigate, routes, webMcp = true, ...scriptOptions } = options;\n\n  useEffect(() => {\n    void initializeShopifyScripts({ consent, navigate, routes, webMcp });\n    // oxlint-disable-next-line react-hooks/exhaustive-deps -- ShopifyScripts browser startup is initialized once from initial props.\n  }, []);\n\n  return createElement(\n    Fragment,\n    null,\n    getShopifyScriptTags({ ...scriptOptions, consent }).tags.map(\n      ({ tagName, attributes, innerHTML }, index) =>\n        createElement(tagName, {\n          key: index,\n          ...getReactAttributes(attributes),\n          ...(innerHTML ? { dangerouslySetInnerHTML: { __html: innerHTML } } : {}),\n        }),\n    ),\n  );\n}"
+      "value": "export function ShopifyScripts(options: ShopifyScriptsProps) {\n  const { consent, navigate, routes, webMcp = true, ...scriptOptions } = options;\n\n  useEffect(() => {\n    void initializeShopifyScripts({\n      consent,\n      navigate,\n      routes,\n      webMcp,\n      nonce: scriptOptions.nonce,\n    });\n    // oxlint-disable-next-line react-hooks/exhaustive-deps -- ShopifyScripts browser startup is initialized once from initial props.\n  }, []);\n\n  return createElement(\n    Fragment,\n    null,\n    getShopifyScriptTags({ ...scriptOptions, consent }).tags.map(\n      ({ tagName, attributes, innerHTML }, index) =>\n        createElement(tagName, {\n          key: index,\n          ...getReactAttributes(attributes),\n          ...(innerHTML ? { dangerouslySetInnerHTML: { __html: innerHTML } } : {}),\n        }),\n    ),\n  );\n}"
     }
   }
 }

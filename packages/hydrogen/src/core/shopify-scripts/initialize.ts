@@ -25,6 +25,7 @@ const log = getLogger("consent");
 export function initializeShopifyScripts({
   consent,
   navigate,
+  nonce,
   routes,
   webMcp = true,
 }: InitializeShopifyScriptsOptions): Promise<boolean | void> {
@@ -47,5 +48,5 @@ export function initializeShopifyScripts({
 
   if (!webMcp) return Promise.resolve();
 
-  return loadShopifyWebMcpTools();
+  return loadShopifyWebMcpTools(nonce);
 }

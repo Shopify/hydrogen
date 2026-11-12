@@ -49,7 +49,13 @@ export function ShopifyScripts(options: ShopifyScriptsProps) {
   const { consent, navigate, routes, webMcp = true, ...scriptOptions } = options;
 
   useEffect(() => {
-    void initializeShopifyScripts({ consent, navigate, routes, webMcp });
+    void initializeShopifyScripts({
+      consent,
+      navigate,
+      routes,
+      webMcp,
+      nonce: scriptOptions.nonce,
+    });
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- ShopifyScripts browser startup is initialized once from initial props.
   }, []);
 

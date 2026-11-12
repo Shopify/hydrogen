@@ -25,6 +25,7 @@ describe("loadScript", () => {
       capturedAttributes = {
         integrity: el.getAttribute("integrity"),
         crossorigin: el.getAttribute("crossorigin"),
+        nonce: el.getAttribute("nonce"),
       };
       return node;
     });
@@ -33,10 +34,12 @@ describe("loadScript", () => {
       attributes: {
         integrity: "sha384-abc123",
         crossorigin: "anonymous",
+        nonce: "explicit-nonce",
       },
     });
 
     expect(capturedAttributes.integrity).toBe("sha384-abc123");
     expect(capturedAttributes.crossorigin).toBe("anonymous");
+    expect(capturedAttributes.nonce).toBe("explicit-nonce");
   });
 });
