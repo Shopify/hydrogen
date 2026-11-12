@@ -40,7 +40,9 @@ localization { language { isoCode } country { isoCode name currency { isoCode } 
 
 Without `@inContext`, the Storefront API answers with the context that it makes active by default. This is the market of the run. When the query fails or a field is missing, the result is `indeterminate`. There is no default country or language.
 
-The browser can show another market, for example because the storefront selects the market from the geo-IP of the browser. The command sets no cookie and does not change the page. Instead, the task tells the agent to shop in the store of the country name, with prices in the currency, and to switch to that country through the country selector of the store if the store shows another country or currency. The country name and the currency are JSON-quoted as store data. A store without a country selector cannot be switched: the run then most likely ends without a confirmed completion. The command does not verify the market that the browser shows.
+The browser can show another market, for example because the storefront selects the market from the geo-IP of the browser. The command sets no cookie and does not change the page. Instead, the task tells the agent to shop in the store of the country name, with prices in the currency, and to switch to that country through the country selector of the store if the store shows another country or currency. The country name and the currency are JSON-quoted as store data. If the agent cannot switch to the requested country, it may still report completion in another market. The command does not verify the market shown in the browser.
+
+Known locale gaps are listed in [TECH_DEBT.md](./TECH_DEBT.md).
 
 ### Pinned variant
 
