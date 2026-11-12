@@ -10,6 +10,7 @@ import {
 } from "./add-events.ts";
 
 const VARIANT = "gid://shopify/ProductVariant/1";
+const LINE = "gid://shopify/CartLine/1?cart=secret-token";
 const BINDING = "__testBinding";
 
 const input = {
@@ -17,10 +18,9 @@ const input = {
   phase: "input",
   id: "abc-1",
   action: "add",
-  lines: [{ merchandiseId: VARIANT, quantity: 1 }],
+  lines: [{ id: null, merchandiseId: VARIANT, quantity: 1 }],
   hasPromise: true,
 };
-
 const settled = {
   name: ADD_EVENT_NAME,
   phase: "settled",
@@ -29,6 +29,7 @@ const settled = {
   hasCart: true,
   userErrors: 2,
   warningCodes: ["MERCHANDISE_OUT_OF_STOCK", null],
+  lines: [{ id: LINE, quantity: 1 }],
 };
 
 describe("parseAddEventMessage", () => {
@@ -46,7 +47,10 @@ describe("parseAddEventMessage", () => {
   it.each([
     ["an unknown event name", { ...input, name: "shopify:cart:view" }],
     ["an unknown phase", { ...input, phase: "unsettled" }],
-    ["a string quantity", { ...input, lines: [{ merchandiseId: VARIANT, quantity: "1" }] }],
+    [
+      "a string quantity",
+      { ...input, lines: [{ id: null, merchandiseId: VARIANT, quantity: "1" }] },
+    ],
     ["no lines array", { ...input, lines: undefined }],
     ["an empty ID", { ...input, id: "" }],
     ["a negative user error count", { ...settled, userErrors: -1 }],
@@ -55,6 +59,23 @@ describe("parseAddEventMessage", () => {
       "too many warning codes",
       { ...settled, warningCodes: Array.from({ length: MAX_LINES + 1 }, () => "X") },
     ],
+    ["a settled message without lines", { ...settled, lines: undefined }],
+    ["a settled line with a string quantity", { ...settled, lines: [{ id: LINE, quantity: "1" }] }],
+    [
+      "too many settled lines",
+      { ...settled, lines: Array.from({ length: MAX_LINES + 1 }, () => settled.lines[0]) },
+    ],
+    [
+      "a too long settled line ID",
+      { ...settled, lines: [{ id: "x".repeat(MAX_STRING + 1), quantity: 1 }] },
+    ],
+    [
+      "a too long input line ID",
+      {
+        ...input,
+        lines: [{ id: "x".repeat(MAX_STRING + 1), merchandiseId: VARIANT, quantity: 1 }],
+      },
+    ],
     ["a too long warning code", { ...settled, warningCodes: ["x".repeat(MAX_STRING + 1)] }],
     [
       "too many lines",
@@ -62,14 +83,14 @@ describe("parseAddEventMessage", () => {
     ],
     [
       "a too long merchandise ID",
-      { ...input, lines: [{ merchandiseId: "x".repeat(MAX_STRING + 1), quantity: 1 }] },
+      { ...input, lines: [{ id: null, merchandiseId: "x".repeat(MAX_STRING + 1), quantity: 1 }] },
     ],
   ])("drops a message with %s", (_case, message) => {
     expect(parseAddEventMessage(JSON.stringify(message), 0)).toBeUndefined();
   });
 
   it("drops an oversized message, invalid JSON, and a non-string message", () => {
-    const padded = JSON.stringify({ ...input, padding: "x".repeat(20_000) });
+    const padded = JSON.stringify({ ...input, padding: "x".repeat(40_000) });
     expect(parseAddEventMessage(padded, 0)).toBeUndefined();
     expect(parseAddEventMessage("{", 0)).toBeUndefined();
     expect(parseAddEventMessage(input, 0)).toBeUndefined();
@@ -207,13 +228,14 @@ describe("recordAddEvents", () => {
     });
     await flush();
 
+    // The result's cart has no `lines` array: `lines` is null.
     expect(messages).toEqual([
       {
         name: ADD_EVENT_NAME,
         phase: "input",
         id: expect.any(String),
         action: "add",
-        lines: [{ merchandiseId: VARIANT, quantity: 1 }],
+        lines: [{ id: null, merchandiseId: VARIANT, quantity: 1 }],
         hasPromise: true,
       },
       {
@@ -224,6 +246,7 @@ describe("recordAddEvents", () => {
         hasCart: true,
         userErrors: 1,
         warningCodes: ["MERCHANDISE_OUT_OF_STOCK", null],
+        lines: null,
       },
     ]);
     const [first, second] = messages as Array<{ id: string }>;
@@ -260,6 +283,7 @@ describe("recordAddEvents", () => {
       name: ADD_EVENT_NAME,
       phase: "settled",
       id: expect.any(String),
+      lines: null,
       ...fields,
     });
     expect(parseAddEventMessage(JSON.stringify(messages[1]), 0)).toBeDefined();
@@ -290,6 +314,89 @@ describe("recordAddEvents", () => {
     expect(messages).toEqual([expect.objectContaining({ phase: "input" })]);
   });
 
+  it("sends the input line ID and the result cart lines of an update, without other fields", async () => {
+    dispatch({
+      action: "update",
+      context: "cart",
+      lines: [{ id: LINE, quantity: 2 }],
+      // Horizon-shaped: no `userErrors` key.
+      promise: Promise.resolve({
+        cart: {
+          id: "secret-cart",
+          checkoutUrl: "secret-url",
+          lines: [{ id: LINE, quantity: 2, cost: {} }],
+        },
+      }),
+    });
+    await flush();
+
+    expect(messages).toEqual([
+      expect.objectContaining({
+        action: "update",
+        lines: [{ id: LINE, merchandiseId: null, quantity: 2 }],
+      }),
+      {
+        name: ADD_EVENT_NAME,
+        phase: "settled",
+        id: expect.any(String),
+        isObject: true,
+        hasCart: true,
+        userErrors: 0,
+        warningCodes: [],
+        lines: [{ id: LINE, quantity: 2 }],
+      },
+    ]);
+    expect(JSON.stringify(messages)).not.toContain("secret-cart");
+    expect(JSON.stringify(messages)).not.toContain("secret-url");
+  });
+
+  it("sends empty result lines for a remove, and null lines for a result without a cart", async () => {
+    dispatch({
+      action: "remove",
+      lines: [{ id: LINE, quantity: 0 }],
+      promise: Promise.resolve({ cart: { lines: [] }, userErrors: [] }),
+    });
+    dispatch({
+      action: "remove",
+      lines: [{ id: LINE, quantity: 0 }],
+      promise: Promise.resolve(null),
+    });
+    dispatch({
+      action: "remove",
+      lines: [{ id: LINE, quantity: 0 }],
+      promise: Promise.resolve({ cart: null }),
+    });
+    await flush();
+
+    expect(
+      (messages as Array<{ phase: string; lines: unknown }>)
+        .filter((message) => message.phase === "settled")
+        .map((message) => message.lines),
+    ).toEqual([[], null, null]);
+  });
+
+  it("does not throw into the page when the result throws on read", async () => {
+    const hostile = {};
+    Object.defineProperty(hostile, "cart", {
+      get() {
+        throw new Error("getter");
+      },
+    });
+    const rejections: unknown[] = [];
+    const onRejection = (reason: unknown) => rejections.push(reason);
+    process.on("unhandledRejection", onRejection);
+    try {
+      dispatch({ action: "update", lines: [], promise: Promise.resolve(hostile) });
+      await flush();
+      await flush();
+    } finally {
+      process.off("unhandledRejection", onRejection);
+    }
+
+    expect(rejections).toEqual([]);
+    expect(messages).toEqual([expect.objectContaining({ phase: "input" })]);
+  });
+
   it("sends a failed message for a rejected promise", async () => {
     dispatch({ action: "add", lines: [], promise: Promise.reject(new Error("down")) });
     await flush();
@@ -308,20 +415,39 @@ describe("recordAddEvents", () => {
   });
 
   it("bounds the line count and string length, and every message parses", async () => {
+    const longLine = "l".repeat(MAX_STRING + 50);
     dispatch({
       action: "a".repeat(MAX_STRING + 50),
       lines: Array.from({ length: MAX_LINES + 10 }, () => ({
+        id: longLine,
         merchandiseId: "m".repeat(MAX_STRING + 50),
         quantity: Number.NaN,
       })),
+      promise: Promise.resolve({
+        cart: {
+          lines: Array.from({ length: MAX_LINES + 10 }, () => ({ id: longLine, quantity: "2" })),
+        },
+      }),
     });
     await flush();
 
-    const [message] = messages as Array<{ action: string; lines: unknown[] }>;
+    const [message, result] = messages as Array<{
+      action: string;
+      lines: Array<{ id: string }>;
+    }>;
     expect(message?.action).toHaveLength(MAX_STRING);
     expect(message?.lines).toHaveLength(MAX_LINES);
-    expect(message?.lines[0]).toEqual({ merchandiseId: "m".repeat(MAX_STRING), quantity: null });
+    expect(message?.lines[0]).toEqual({
+      id: "l".repeat(MAX_STRING),
+      merchandiseId: "m".repeat(MAX_STRING),
+      quantity: null,
+    });
+    expect(result?.lines).toHaveLength(MAX_LINES);
+    expect(result?.lines[0]).toEqual({ id: "l".repeat(MAX_STRING), quantity: null });
+    // The same truncation on both sides: the IDs compare equal.
+    expect(result?.lines[0]?.id).toBe(message?.lines[0]?.id);
     expect(parseAddEventMessage(JSON.stringify(message), 0)).toBeDefined();
+    expect(parseAddEventMessage(JSON.stringify(result), 1)).toBeDefined();
   });
 
   it("ignores other event names and never throws into the page", async () => {

@@ -4,33 +4,51 @@ import { parseArgs } from "node:util";
 import type { Page } from "playwright-core";
 
 import { shopifyProxyModel, type ModelConfig } from "./agent/model-config.ts";
-import { buildObjective } from "./agent/objective.ts";
+import {
+  buildChangeQuantityObjective,
+  buildObjective,
+  type ObjectiveInput,
+} from "./agent/objective.ts";
 import {
   attachStagehand,
+  STOPPED_AFTER_CART_CHANGES,
+  STOPPED_AT_ADD,
   type AgentOutcome,
   type StagehandAgent,
 } from "./agent/stagehand-agent.ts";
 import { errorMessage, untilAborted } from "./async.ts";
 import { createBrowserSession } from "./browser/session.ts";
 import { withInterruptSignals } from "./interrupt.ts";
-import { observeAddEvents } from "./shopify/add-events.ts";
+import { observeAddEvents, type AddEventLog } from "./shopify/add-events.ts";
 import {
   pinNonDefaultVariant,
   pinVariant,
+  pinVariantWithTwoUnits,
   productUrl,
   type CatalogPin,
   type PinnedVariant,
 } from "./shopify/catalog.ts";
 import { discoverContext, type StorefrontContext } from "./shopify/storefront.ts";
 import { canAnimate, createSpinner, SILENT_SPINNER } from "./spinner.ts";
-import { ADD_WAIT_MS, verifyAdd } from "./verdict.ts";
+import {
+  ADD_WAIT_MS,
+  cartLineChangesDecided,
+  verifyAdd,
+  verifyCartLineChanges,
+  type Verdict,
+  type VerifyAddInput,
+} from "./verdict.ts";
 
 const NAVIGATION_DEADLINE_MS = 30_000;
 const READY_TIMEOUT_MS = 15_000;
 
 export const EXIT_CODES = { pass: 0, fail: 1, indeterminate: 2, skipped: 3, usage: 64 } as const;
 
-export const TEST_NAMES = ["add-to-cart", "choose-a-variant"] as const;
+export const TEST_NAMES = [
+  "add-to-cart",
+  "choose-a-variant",
+  "change-quantity-and-remove",
+] as const;
 export type TestName = (typeof TEST_NAMES)[number];
 
 export const USAGE = `Usage: pnpm agentic-e2e <url> [--test <name>] [--json]
@@ -38,15 +56,16 @@ export const USAGE = `Usage: pnpm agentic-e2e <url> [--test <name>] [--json]
 Runs every test in the list below, in order, one at a time. With --test, runs only that test.
 Each test asks the Storefront API at the origin of <url> for the active country and language,
 pins one eligible variant, opens its product page in a new headless browser session, asks an AI
-agent to add exactly 1 unit of that variant to the cart, checks the add Standard Events in code
-(it does not read the cart), and prints one result line when it ends. Each test is one agent run
-(one paid model run). Requires SHOPIFY_PROXY_KEY.
+agent to add exactly 1 unit of that variant to the cart (and, in change-quantity-and-remove, to
+change its quantity and remove it), checks the cart Standard Events in code (it does not read
+the cart), and prints one result line when it ends. Each test is one agent run (one paid model
+run). Requires SHOPIFY_PROXY_KEY.
 
 Output: one table line for each test, with the status, the test name, and the reason when the
 status is not pass:
 
   pass           add-to-cart
-  fail           choose-a-variant   An add event did not hold exactly 1 unit of the pinned variant.
+  fail           choose-a-variant             An add event did not hold exactly 1 unit of the pinned variant.
 
 When stdout and stderr are both an interactive terminal and CI is not set, a spinner line on
 stderr shows the test that is running. Its result line then replaces it. Never with --json.
@@ -58,13 +77,19 @@ variant, and the agent outcome), and the progress lines on stderr.
 as /en-ca is not supported.
 
 Tests:
-  add-to-cart       Pins the API default variant, selectedOrFirstAvailableVariant.
-  choose-a-variant  Pins an available variant that is not the API default. The command does not
-                    check which variant the page selects first, so a pass does not prove that
-                    the agent changed the selection.
+  add-to-cart                 Pins the API default variant, selectedOrFirstAvailableVariant.
+  choose-a-variant            Pins an available variant that is not the API default. The command
+                              does not check which variant the page selects first, so a pass does
+                              not prove that the agent changed the selection.
+  change-quantity-and-remove  Pins the API default variant, selectedOrFirstAvailableVariant, when
+                              a tokenless cartCreate accepts 2 units of it (at most 5 variants are
+                              checked, and each check leaves one unused cart on the shop). The
+                              agent adds 1 unit, changes the quantity to 2 and back to 1 in the
+                              cart, and removes the item.
 
 Options:
-  --test <name>  Run only this test: add-to-cart or choose-a-variant. Default: every test.
+  --test <name>  Run only this test: add-to-cart, choose-a-variant, or change-quantity-and-remove.
+                 Default: every test.
   --json         Print JSON result lines and the progress lines, for scripts and triage.
   -h, --help     Show this help.
 
@@ -294,7 +319,7 @@ async function runTest(
   const storefront = await pinFromStorefront(url, test, readContext, interrupt, progress);
   if (storefront.status !== "pinned") return storefront;
   const { context, pinned } = storefront;
-  const run = await runAddToCart(url, context, pinned, model, interrupt, progress, warn);
+  const run = await runAgent(url, test, context, pinned, model, interrupt, progress, warn);
   if (run.status === "indeterminate") {
     return { status: run.status, reason: run.reason, context, pinned, ...agentField(run.agent) };
   }
@@ -330,7 +355,7 @@ async function pinFromStorefront(
   }
 }
 
-/** The pin of each test. The browser, agent, and verdict steps are the same for every test. */
+/** The pin of each test. The browser and agent steps are the same for every test. */
 async function pinForTest(
   test: TestName,
   url: URL,
@@ -342,19 +367,66 @@ async function pinForTest(
       return pinVariant(url, context, signal);
     case "choose-a-variant":
       return pinNonDefaultVariant(url, context, signal);
+    case "change-quantity-and-remove":
+      return pinVariantWithTwoUnits(url, context, signal);
+  }
+}
+
+/** The task of each test, and the `reason` of the agent outcome when the command stops it. */
+function agentTaskForTest(
+  test: TestName,
+  input: ObjectiveInput,
+): { task: string; stopReason: string } {
+  switch (test) {
+    case "add-to-cart":
+    case "choose-a-variant":
+      return { task: buildObjective(input), stopReason: STOPPED_AT_ADD };
+    case "change-quantity-and-remove":
+      return { task: buildChangeQuantityObjective(input), stopReason: STOPPED_AFTER_CART_CHANGES };
+  }
+}
+
+/** Calls `stop` once, when the events of the agent run decide the test. */
+function stopAgentWhenDecided(
+  test: TestName,
+  log: AddEventLog,
+  agentStart: number,
+  stop: () => void,
+): void {
+  switch (test) {
+    case "add-to-cart":
+    case "choose-a-variant":
+      log.onFirstAdd(agentStart, stop);
+      return;
+    case "change-quantity-and-remove":
+      log.onceWhen(() => cartLineChangesDecided(log.events, agentStart), stop);
+      return;
+  }
+}
+
+/** The verdict of each test. */
+async function verifyForTest(test: TestName, input: VerifyAddInput): Promise<Verdict> {
+  switch (test) {
+    case "add-to-cart":
+    case "choose-a-variant":
+      return verifyAdd(input);
+    case "change-quantity-and-remove":
+      return verifyCartLineChanges(input);
   }
 }
 
 /**
- * Starts the browser, records add events and attaches Stagehand before the first navigation,
- * opens the product page, and runs the add task. The first add event stops the agent run. Then it
+ * Starts the browser, records cart events and attaches Stagehand before the first navigation,
+ * opens the product page, and runs the task of `test`. The stop rule of the test stops the agent
+ * run: the first add event, or, for `change-quantity-and-remove`, the cart line changes. Then it
  * confirms the Stagehand detach: after that the agent cannot act, but a tool call already in
- * progress at the stop can finish before it. Then code decides the verdict from the add events,
- * and, when there is none, from whether the agent confirmed completion. Always detaches Stagehand
- * and closes the browser before it returns.
+ * progress at the stop can finish before it. Then code decides the verdict from the cart events,
+ * and, when they cannot decide alone, from whether the agent confirmed completion. Always detaches
+ * Stagehand and closes the browser before it returns.
  */
-async function runAddToCart(
+async function runAgent(
   storefrontUrl: URL,
+  test: TestName,
   context: StorefrontContext,
   pinned: PinnedVariant,
   model: ModelConfig,
@@ -376,16 +448,18 @@ async function runAddToCart(
     progress("Running the agent task.");
     // Only events received from now on count.
     const agentStart = log.events.length;
-    // The first add event stops the agent. This is separate from the interrupt.
+    // The stop rule of the test stops the agent. This is separate from the interrupt.
     const stop = new AbortController();
-    log.onFirstAdd(agentStart, () => stop.abort());
+    stopAgentWhenDecided(test, log, agentStart, () => stop.abort());
+    const { task, stopReason } = agentTaskForTest(test, { pinned, context });
     // An early end (step limit, deadline, error) still goes to the verdict. An interrupt throws.
     agentOutcome = await agent.run({
       page: session.page,
-      task: buildObjective({ pinned, context }),
+      task,
       model,
       interrupt,
       stop: stop.signal,
+      stopReason,
     });
     progress(
       agentOutcome.completed ? "The agent completed." : `The agent ended: ${agentOutcome.reason}`,
@@ -395,7 +469,7 @@ async function runAddToCart(
     // An interrupt during the detach ends the run here: no wait.
     interrupt.throwIfAborted();
     const verdict = await untilAborted(
-      verifyAdd({
+      verifyForTest(test, {
         events: log.events,
         agentStart,
         variantId: pinned.variantId,
