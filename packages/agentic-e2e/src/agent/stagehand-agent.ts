@@ -25,8 +25,10 @@ const DETACH_TIMEOUT_MS = 2_000;
 /** Stagehand 3.7.3 returns, not throws, runtime failures with this message prefix. */
 const FAILURE_PREFIX = "Failed to execute task:";
 
-/** The `agent` field of a run that the command stopped at the first add event. */
+/** The stop reason of the tests that the command stops at the first add event. */
 export const STOPPED_AT_ADD = "Stopped by the command after the add event.";
+/** The stop reason of `change-quantity-and-remove`: the command stops it after the cart changes. */
+export const STOPPED_AFTER_CART_CHANGES = "Stopped by the command after the cart changes.";
 
 /** What the agent run reports. It feeds the `agent` field of the result, never the verdict. */
 export type AgentOutcome =
@@ -36,7 +38,7 @@ export type AgentOutcome =
       reason: string;
       /**
        * The final message that Stagehand returned, redacted. Present only when Stagehand returned
-       * a result: not for a thrown error, the deadline, or {@link STOPPED_AT_ADD}.
+       * a result: not for a thrown error, the deadline, or a stop by the command.
        */
       message?: string;
     };
@@ -49,8 +51,13 @@ export type AgentRunInput = {
   model: ModelConfig;
   /** When it aborts, `run` rejects with its reason. */
   interrupt: AbortSignal;
-  /** When it aborts, `run` returns at once with {@link STOPPED_AT_ADD} and does not throw. */
+  /** When it aborts, `run` returns at once with `stopReason` and does not throw. */
   stop: AbortSignal;
+  /**
+   * The `reason` of the outcome when `stop` aborts, such as {@link STOPPED_AT_ADD} or
+   * {@link STOPPED_AFTER_CART_CHANGES}.
+   */
+  stopReason: string;
 };
 
 export interface StagehandAgent {
@@ -98,7 +105,7 @@ export async function attachStagehand(cdpUrl: string): Promise<StagehandAgent> {
 
 async function runTask(
   stagehand: Stagehand,
-  { page, task, model, interrupt, stop }: AgentRunInput,
+  { page, task, model, interrupt, stop, stopReason }: AgentRunInput,
 ): Promise<AgentOutcome> {
   const deadline = AbortSignal.timeout(RUN_DEADLINE_MS);
   // Stagehand passes this signal to the model calls of the agent loop. The race below returns at
@@ -144,7 +151,7 @@ async function runTask(
     );
   } catch (error) {
     interrupt.throwIfAborted();
-    if (stop.aborted) return notCompleted(STOPPED_AT_ADD);
+    if (stop.aborted) return notCompleted(stopReason);
     if (deadline.aborted) {
       return notCompleted(`The agent did not finish in ${RUN_DEADLINE_MS} ms.`);
     }
