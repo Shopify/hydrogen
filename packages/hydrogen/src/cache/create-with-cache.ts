@@ -16,6 +16,8 @@ type CreateWithCacheOptions = {
   waitUntil: WaitUntil;
   /** The `request` object is used by the Subrequest profiler, and to access certain headers for debugging */
   request: CrossRuntimeRequest;
+  /** Handle background cache revalidation errors without logging raw exceptions. */
+  onRevalidationError?: (error: unknown) => void;
 };
 
 type WithCacheRunOptions<T> = {
@@ -59,7 +61,7 @@ export type WithCache = {
 export function createWithCache(
   cacheOptions: CreateWithCacheOptions,
 ): WithCache {
-  const {cache, waitUntil, request} = cacheOptions;
+  const {cache, waitUntil, request, onRevalidationError} = cacheOptions;
 
   return {
     run: <T>(
@@ -71,6 +73,7 @@ export function createWithCache(
         strategy: cacheStrategy,
         cacheInstance: cache,
         waitUntil,
+        onRevalidationError,
         debugInfo: {
           ...getDebugHeaders(request),
           stackInfo: getCallerStackLine?.(),
@@ -87,6 +90,7 @@ export function createWithCache(
         waitUntil,
         cacheKey: [url, requestInit],
         cacheInstance: cache,
+        onRevalidationError,
         debugInfo: {
           url,
           ...getDebugHeaders(request),

@@ -53,6 +53,8 @@ type WithCacheOptions<T = unknown> = {
   shouldCacheResult: (value: T) => boolean;
   waitUntil?: WaitUntil;
   debugInfo?: DebugOptions;
+  /** Called when background revalidation fails. If omitted, the error is logged as before. */
+  onRevalidationError?: (error: unknown) => void;
 };
 
 // Lock to prevent revalidating the same sub-request
@@ -75,6 +77,7 @@ export async function runWithCache<T = unknown>(
     shouldCacheResult = () => true,
     waitUntil,
     debugInfo,
+    onRevalidationError,
   }: WithCacheOptions<T>,
 ): Promise<T> {
   const startTime = Date.now();
@@ -193,12 +196,22 @@ export async function runWithCache<T = unknown>(
               overrideStartTime: revalidateStartTime,
             });
           }
-        } catch (error: any) {
-          if (error.message) {
-            error.message = 'SWR in sub-request failed: ' + error.message;
+        } catch (error) {
+          if (onRevalidationError) {
+            try {
+              onRevalidationError(error);
+            } catch {
+              // The stale response and background cleanup must survive a
+              // failing diagnostic hook. Do not log either raw error here.
+              console.error('SWR error handler failed');
+            }
+          } else {
+            // Preserve the existing default logging when no hook is supplied.
+            if (error instanceof Error && error.message) {
+              error.message = 'SWR in sub-request failed: ' + error.message;
+            }
+            console.error(error);
           }
-
-          console.error(error);
         } finally {
           swrLock.delete(key);
         }
