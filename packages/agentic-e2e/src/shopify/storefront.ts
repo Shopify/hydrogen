@@ -17,7 +17,7 @@ export const REQUEST_DEADLINE_MS = 10_000;
 export type StorefrontLocale = { country: CountryCode; language: LanguageCode };
 
 /**
- * The context that the Storefront API reports as active: the shop's primary market. `countryName`
+ * The context that the Storefront API makes active by default without `@inContext`. `countryName`
  * and `currency` are store data for the agent task.
  */
 export type StorefrontContext = StorefrontLocale & { countryName: string; currency: string };
