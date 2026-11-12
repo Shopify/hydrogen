@@ -49,11 +49,12 @@ vi.mock("./browser/session.ts", async (importOriginal) => {
   return { createBrowserSession: vi.fn(original.createBrowserSession) };
 });
 
+// Same key order as `discoverContext`: the CLI process tests compare the printed JSON line.
 const CONTEXT = {
   country: "CA",
   language: "FR",
-  languageName: "Français",
   countryName: "Canada",
+  languageName: "Français",
   currency: "CAD",
 };
 const PINNED = {
