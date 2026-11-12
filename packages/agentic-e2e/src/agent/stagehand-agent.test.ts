@@ -36,66 +36,96 @@ const MODEL: ModelConfig = {
 const PAGE = {} as Page;
 
 /** Starts a run whose SDK call never ends, and resolves once the SDK call started. */
-async function startRun({ interrupt }: { interrupt: AbortSignal }) {
+async function startRun({ interrupt, stop }: { interrupt: AbortSignal; stop: AbortSignal }) {
   const { promise: started, resolve } = Promise.withResolvers<AbortSignal>();
   sdk.execute.mockImplementation(async ({ signal }) => {
     resolve(signal);
     return new Promise(() => undefined);
   });
   const agent = await attachStagehand("ws://browser");
-  const running = agent.run({ page: PAGE, task: "Add it.", model: MODEL, interrupt });
+  const running = agent.run({ page: PAGE, task: "Add it.", model: MODEL, interrupt, stop });
   return { running, sdkSignal: await started };
 }
 
 describe("StagehandAgent.run", () => {
-  it("rejects with the interrupt reason when the interrupt aborts", async () => {
+  it("returns the fixed outcome at once when the stop signal aborts, and does not throw", async () => {
+    const stop = new AbortController();
+    const { running, sdkSignal } = await startRun({
+      interrupt: new AbortController().signal,
+      stop: stop.signal,
+    });
+
+    stop.abort();
+
+    // No `message`: Stagehand returned no result.
+    await expect(running).resolves.toStrictEqual({
+      completed: false,
+      reason: "Stopped by the command after the add event.",
+    });
+    // The SDK receives the stop through its own signal.
+    expect(sdkSignal.aborted).toBe(true);
+  });
+
+  it("still rejects with the interrupt reason when the interrupt aborts", async () => {
     const interrupt = new AbortController();
-    const { running, sdkSignal } = await startRun({ interrupt: interrupt.signal });
+    const { running } = await startRun({
+      interrupt: interrupt.signal,
+      stop: new AbortController().signal,
+    });
 
     interrupt.abort(new Error("Interrupted by SIGINT."));
 
     await expect(running).rejects.toThrow("Interrupted by SIGINT.");
-    // The SDK receives the interrupt through its own signal.
-    expect(sdkSignal.aborted).toBe(true);
   });
 
-  it("reports the step limit when all 20 steps call a tool that is not done", async () => {
+  it("reports the step limit with the final message when all 20 steps call a tool that is not done", async () => {
     sdk.execute.mockImplementation(async ({ callbacks }) => {
       for (let step = 0; step < 20; step += 1) {
         callbacks.onStepFinish({ toolCalls: [{ toolName: "act" }] });
       }
-      return result({});
+      return result({ message: "Still looking for the button." });
     });
-    const agent = await attachStagehand("ws://browser");
 
-    const outcome = await agent.run({
-      page: PAGE,
-      task: "Add it.",
-      model: MODEL,
-      interrupt: new AbortController().signal,
-    });
+    const outcome = await runToEnd();
 
     expect(sdk.execute.mock.lastCall?.[0].maxSteps).toBe(20);
-    expect(outcome).toEqual({
-      status: "indeterminate",
+    expect(outcome).toStrictEqual({
+      completed: false,
       reason: "The agent reached the 20-step limit.",
+      message: "Still looking for the button.",
     });
   });
 
-  it("reports a result without a done action as not confirmed", async () => {
-    sdk.execute.mockResolvedValue(result({ actions: [] }));
-    const agent = await attachStagehand("ws://browser");
+  it("reports a result without a done action as not confirmed, with the redacted final message", async () => {
+    sdk.execute.mockResolvedValue(
+      result({ actions: [], message: `The button is disabled. Key: ${MODEL.apiKey}` }),
+    );
 
-    const outcome = await agent.run({
-      page: PAGE,
-      task: "Add it.",
-      model: MODEL,
-      interrupt: new AbortController().signal,
-    });
-
-    expect(outcome).toEqual({
-      status: "indeterminate",
+    await expect(runToEnd()).resolves.toStrictEqual({
+      completed: false,
       reason: "The agent did not confirm that it completed the task.",
+      message: "The button is disabled. Key: [redacted]",
+    });
+  });
+
+  it("reports a failure result with the redacted final message", async () => {
+    sdk.execute.mockResolvedValue(
+      result({ message: `Failed to execute task: invalid x-api-key: ${MODEL.apiKey}` }),
+    );
+
+    await expect(runToEnd()).resolves.toStrictEqual({
+      completed: false,
+      reason: "The agent failed: invalid x-api-key: [redacted]",
+      message: "Failed to execute task: invalid x-api-key: [redacted]",
+    });
+  });
+
+  it("reports a thrown error without a message", async () => {
+    sdk.execute.mockRejectedValue(new Error(`model down for ${MODEL.apiKey}`));
+
+    await expect(runToEnd()).resolves.toStrictEqual({
+      completed: false,
+      reason: "The agent failed: model down for [redacted]",
     });
   });
 
@@ -103,13 +133,16 @@ describe("StagehandAgent.run", () => {
     const deadline = new AbortController();
     const timeout = vi.spyOn(AbortSignal, "timeout").mockReturnValue(deadline.signal);
     try {
-      const { running } = await startRun({ interrupt: new AbortController().signal });
+      const { running } = await startRun({
+        interrupt: new AbortController().signal,
+        stop: new AbortController().signal,
+      });
       expect(timeout).toHaveBeenCalledWith(180_000);
 
       deadline.abort();
 
-      await expect(running).resolves.toEqual({
-        status: "indeterminate",
+      await expect(running).resolves.toStrictEqual({
+        completed: false,
         reason: "The agent did not finish in 180000 ms.",
       });
     } finally {
@@ -117,6 +150,18 @@ describe("StagehandAgent.run", () => {
     }
   });
 });
+
+/** Runs the task once with signals that never abort. */
+async function runToEnd() {
+  const agent = await attachStagehand("ws://browser");
+  return agent.run({
+    page: PAGE,
+    task: "Add it.",
+    model: MODEL,
+    interrupt: new AbortController().signal,
+    stop: new AbortController().signal,
+  });
+}
 
 function result(overrides: Partial<AgentResult>): AgentResult {
   return { success: true, completed: true, message: "Done.", actions: [], ...overrides };

@@ -5,25 +5,30 @@ import type { Page } from "playwright-core";
 
 import { shopifyProxyModel, type ModelConfig } from "./agent/model-config.ts";
 import { buildObjective } from "./agent/objective.ts";
-import { attachStagehand, type StagehandAgent } from "./agent/stagehand-agent.ts";
-import { errorMessage, untilAborted, within } from "./async.ts";
+import {
+  attachStagehand,
+  type AgentOutcome,
+  type StagehandAgent,
+} from "./agent/stagehand-agent.ts";
+import { errorMessage, untilAborted } from "./async.ts";
 import { createBrowserSession } from "./browser/session.ts";
 import { withInterruptSignals } from "./interrupt.ts";
+import { observeAddEvents } from "./shopify/add-events.ts";
 import { pinVariant, productUrl, type PinnedVariant } from "./shopify/catalog.ts";
 import { discoverContext, type StorefrontContext } from "./shopify/storefront.ts";
+import { ADD_WAIT_MS, verifyAdd } from "./verdict.ts";
 
 const NAVIGATION_DEADLINE_MS = 30_000;
 const READY_TIMEOUT_MS = 15_000;
-const TITLE_TIMEOUT_MS = 5_000;
 
-export const EXIT_CODES = { agentCompleted: 0, indeterminate: 2, skipped: 3, usage: 64 } as const;
+export const EXIT_CODES = { pass: 0, fail: 1, indeterminate: 2, skipped: 3, usage: 64 } as const;
 
 export const USAGE = `Usage: pnpm agentic-e2e <url>
 
 Asks the Storefront API at the origin of <url> for the active country and language, pins one
 eligible variant, opens its product page in a headless browser, asks an AI agent to add exactly
-1 unit of that variant to the cart, and prints one JSON result line. Nothing checks the cart.
-Requires SHOPIFY_PROXY_KEY.
+1 unit of that variant to the cart, checks the add Standard Events in code (it does not read the
+cart), and prints one JSON result line. Requires SHOPIFY_PROXY_KEY.
 
 <url> must be the storefront root URL, such as https://your-storefront.example/. A path such
 as /en-ca is not supported.
@@ -31,18 +36,25 @@ as /en-ca is not supported.
 Options:
   -h, --help  Show this help.
 
-Exit codes: 0 agent-completed, 2 indeterminate, 3 skipped, 64 usage error.`;
+Exit codes: 0 pass, 1 fail, 2 indeterminate, 3 skipped, 64 usage error.
+Use pnpm -s to print only the JSON line on stdout. Without -s, pnpm adds its own lines.`;
 
 export type CliArgs =
   | { kind: "run"; url: URL }
   | { kind: "help" }
   | { kind: "error"; message: string };
 
-type Indeterminate = { status: "indeterminate"; reason: string };
+type Indeterminate = {
+  status: "indeterminate";
+  reason: string;
+  context?: StorefrontContext;
+  pinned?: PinnedVariant;
+  agent?: AgentOutcome;
+};
 
-type AgentRun =
-  | { status: "agent-completed"; url: string; title: string; summary: string }
-  | Indeterminate;
+type AddRun =
+  | { status: "pass" | "fail"; reason: string; agent: AgentOutcome }
+  | { status: "indeterminate"; reason: string; agent?: AgentOutcome };
 
 type StorefrontPin =
   | { status: "pinned"; context: StorefrontContext; pinned: PinnedVariant }
@@ -51,12 +63,11 @@ type StorefrontPin =
 
 export type RunResult =
   | {
-      status: "agent-completed";
-      url: string;
-      title: string;
-      summary: string;
+      status: "pass" | "fail";
+      reason: string;
       context: StorefrontContext;
       pinned: PinnedVariant;
+      agent: AgentOutcome;
     }
   | { status: "skipped"; reason: string; context: StorefrontContext }
   | Indeterminate;
@@ -116,7 +127,7 @@ export async function main(argv: readonly string[]): Promise<number> {
   }
   const result = await runOnce(args.url);
   process.stdout.write(`${JSON.stringify(result)}\n`);
-  return EXIT_CODES[result.status === "agent-completed" ? "agentCompleted" : result.status];
+  return EXIT_CODES[result.status];
 }
 
 async function runOnce(url: URL): Promise<RunResult> {
@@ -131,8 +142,11 @@ async function runOnce(url: URL): Promise<RunResult> {
     const storefront = await pinFromStorefront(url, interrupt);
     if (storefront.status !== "pinned") return storefront;
     const { context, pinned } = storefront;
-    const run = await runAgent(url, context, pinned, model, interrupt);
-    return run.status === "agent-completed" ? { ...run, context, pinned } : run;
+    const run = await runAddToCart(url, context, pinned, model, interrupt);
+    if (run.status === "indeterminate") {
+      return { status: run.status, reason: run.reason, context, pinned, ...agentField(run.agent) };
+    }
+    return { status: run.status, reason: run.reason, context, pinned, agent: run.agent };
   });
 }
 
@@ -160,47 +174,71 @@ async function pinFromStorefront(url: URL, interrupt: AbortSignal): Promise<Stor
 }
 
 /**
- * Starts the browser, attaches Stagehand before the first navigation, opens the product page,
- * and runs the add task. Always detaches Stagehand and closes the browser before it returns.
+ * Starts the browser, records add events and attaches Stagehand before the first navigation,
+ * opens the product page, and runs the add task. The first add event stops the agent run. Then it
+ * confirms the Stagehand detach: after that the agent cannot act, but a tool call already in
+ * progress at the stop can finish before it. Then code decides the verdict from the add events,
+ * and, when there is none, from whether the agent confirmed completion. Always detaches Stagehand
+ * and closes the browser before it returns.
  */
-async function runAgent(
+async function runAddToCart(
   storefrontUrl: URL,
   context: StorefrontContext,
   pinned: PinnedVariant,
   model: ModelConfig,
   interrupt: AbortSignal,
-): Promise<AgentRun> {
+): Promise<AddRun> {
   const url = productUrl(storefrontUrl, pinned.productHandle);
   process.stderr.write(`Opening ${url.href}\n`);
   const starting = createBrowserSession(undefined, { signal: interrupt });
   let attaching: Promise<StagehandAgent> | undefined;
+  let agentOutcome: AgentOutcome | undefined;
   try {
     const session = await starting;
+    const log = await untilAborted(observeAddEvents(session.page), interrupt);
     attaching = attachStagehand(session.cdpUrl);
     const agent = await untilAborted(attaching, interrupt);
     await openPage(session.page, url, interrupt);
     process.stderr.write("Running the agent task.\n");
-    const outcome = await agent.run({
+    // Only events received from now on count.
+    const agentStart = log.events.length;
+    // The first add event stops the agent. This is separate from the interrupt.
+    const stop = new AbortController();
+    log.onFirstAdd(agentStart, () => stop.abort());
+    // An early end (step limit, deadline, error) still goes to the verdict. An interrupt throws.
+    agentOutcome = await agent.run({
       page: session.page,
       task: buildObjective({ pinned, context }),
       model,
       interrupt,
+      stop: stop.signal,
     });
-    if (outcome.status === "indeterminate") return indeterminate(outcome.reason);
+    process.stderr.write(
+      agentOutcome.completed
+        ? "The agent completed.\n"
+        : `The agent ended: ${agentOutcome.reason}\n`,
+    );
     // Rejects when the release is not confirmed: the result is then indeterminate.
     await agent.detach();
-    // Bounded: a navigation the agent started can keep `title()` waiting.
-    const title = await untilAborted(
-      within(
-        session.page.title(),
-        TITLE_TIMEOUT_MS,
-        `Page title not read in ${TITLE_TIMEOUT_MS} ms.`,
-      ),
+    // An interrupt during the detach ends the run here: no wait.
+    interrupt.throwIfAborted();
+    const verdict = await untilAborted(
+      verifyAdd({
+        events: log.events,
+        agentStart,
+        variantId: pinned.variantId,
+        agentCompleted: agentOutcome.completed,
+        // The 5-second limit starts here, after the confirmed detach.
+        waitForOutcomes: async (done) => log.waitFor(done, ADD_WAIT_MS, interrupt),
+      }),
       interrupt,
     );
-    return { status: "agent-completed", url: session.page.url(), title, summary: outcome.summary };
+    if (verdict.status === "indeterminate") {
+      return { ...indeterminate(verdict.reason), agent: agentOutcome };
+    }
+    return { ...verdict, agent: agentOutcome };
   } catch (error) {
-    return indeterminate(errorMessage(error));
+    return { ...indeterminate(errorMessage(error)), ...agentField(agentOutcome) };
   } finally {
     // A failed cleanup is reported, but it must not replace the result.
     await attaching
@@ -264,6 +302,10 @@ function isPageObservable(): boolean {
 function indeterminate(reason: string): Indeterminate {
   process.stderr.write(`Indeterminate: ${reason}\n`);
   return { status: "indeterminate", reason };
+}
+
+function agentField(agent: AgentOutcome | undefined): { agent?: AgentOutcome } {
+  return agent === undefined ? {} : { agent };
 }
 
 if (process.argv[1] !== undefined && path.resolve(process.argv[1]) === import.meta.filename) {

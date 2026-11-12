@@ -16,10 +16,10 @@ import { createBrowserSession } from "./browser/session.ts";
 import { main } from "./cli.ts";
 
 // Real headless Chromium, real Stagehand 3.7.3, and the real Hydrogen Storefront client against
-// local HTTP fixtures. The store fixture serves both the storefront pages and the Storefront API
-// endpoint. The model endpoint is a local fake that speaks the Anthropic Messages API: no real
-// model call, no real key. Uses Playwright's Chromium (install it with `pnpm --filter
-// @shopify/agentic-e2e run browser:install`) or AGENTIC_E2E_BROWSER_PATH.
+// local HTTP fixtures. The store fixture serves the storefront pages, the Storefront API
+// endpoint, and an add endpoint. The model endpoint is a local fake that speaks the Anthropic
+// Messages API: no real model call, no real key. Uses Playwright's Chromium (install it with
+// `pnpm --filter @shopify/agentic-e2e run browser:install`) or AGENTIC_E2E_BROWSER_PATH.
 vi.setConfig({ testTimeout: 90_000, hookTimeout: 30_000 });
 
 const DUMMY_KEY = "sk-dummy-agentic-e2e-test-key";
@@ -49,11 +49,12 @@ vi.mock("./browser/session.ts", async (importOriginal) => {
   return { createBrowserSession: vi.fn(original.createBrowserSession) };
 });
 
+// Same key order as `discoverContext`: the CLI process tests compare the printed JSON line.
 const CONTEXT = {
   country: "CA",
   language: "FR",
-  languageName: "Français",
   countryName: "Canada",
+  languageName: "Français",
   currency: "CAD",
 };
 const PINNED = {
@@ -62,10 +63,28 @@ const PINNED = {
   variantId: "gid://shopify/ProductVariant/7",
   selectedOptions: [{ name: "Size", value: "Medium" }],
 };
+const NO_ADD = "No add Standard Event was recorded by the time Stagehand was disconnected.";
+const CLAIMED_ADD =
+  "The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.";
+/** The `agent` field of a run that the first add event stopped. */
+const STOPPED = { completed: false, reason: "Stopped by the command after the add event." };
 
 type ApiRequest = { query: string; variables: Record<string, unknown> };
 /** The products that the catalog query returns, or an HTTP status for every API request. */
 type Catalog = { products: unknown[] } | { status: number };
+
+/** How the store fixture behaves in one test. */
+type StoreMode = {
+  /**
+   * What the Add click dispatches: `shopify:cart:lines-update` with the add promise, the same
+   * event without a promise, or no Standard Event.
+   */
+  addEvent: "with-promise" | "without-promise" | "none";
+  /** HTTP status of the add endpoint. Not 200: the add promise rejects. */
+  addStatus: number;
+  /** The add endpoint holds its answer until Stagehand detaches. */
+  holdAdd: boolean;
+};
 
 type ModelRequest = {
   path: string;
@@ -89,8 +108,11 @@ let reply: Reply;
 let held: ServerResponse[];
 let catalog: Catalog;
 let apiRequests: ApiRequest[];
-/** POST requests to the fixture's add endpoint: the Add to cart clicks. */
-let addClicks: number;
+let mode: StoreMode;
+/** Store events in order: adds and releases. */
+let storeLog: string[];
+let stderr: string[];
+let heldAdds: Array<() => void>;
 /** For each Stagehand CDP socket close: whether the browser was still running at that time. */
 let stagehandCloses: Array<{ browserRunning: boolean }>;
 let children: ChildProcess[];
@@ -120,21 +142,28 @@ beforeEach(async () => {
   reply = () => undefined;
   catalog = { products: [eligibleProduct(PINNED.productHandle)] };
   apiRequests = [];
-  addClicks = 0;
+  mode = { addEvent: "with-promise", addStatus: 200, holdAdd: false };
+  storeLog = [];
+  heldAdds = [];
   vi.mocked(createBrowserSession).mockClear();
   vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
     stdout.push(String(chunk));
     return true;
   });
-  vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+  stderr = [];
+  vi.spyOn(process.stderr, "write").mockImplementation((chunk) => {
+    stderr.push(String(chunk));
+    return true;
+  });
   // A socket that closes while the browser still runs was released by Stagehand, not by the
-  // browser exit.
+  // browser exit. A held add is answered only then: after the agent was stopped and detached.
   const init = Stagehand.prototype.init;
   vi.spyOn(Stagehand.prototype, "init").mockImplementation(async function (this: Stagehand) {
     await init.call(this);
-    this.context.conn.onTransportClosed(() =>
-      stagehandCloses.push({ browserRunning: browserProcesses().length > 0 }),
-    );
+    this.context.conn.onTransportClosed(() => {
+      stagehandCloses.push({ browserRunning: browserProcesses().length > 0 });
+      for (const release of heldAdds.splice(0)) release();
+    });
   });
 });
 
@@ -156,8 +185,9 @@ afterAll(async () => {
 });
 
 describe("main with the agent", () => {
-  it("pins the fixture variant, opens its product page, and reports agent-completed after the add task", async () => {
-    reply = clickAdd();
+  it("stops the agent at the add, and passes when the add event resolves", async () => {
+    // The script would click Add a second time. The stop at the first add event prevents it.
+    reply = clickAdd("button: Add to cart");
     // Stagehand writes unredacted session logs when these are set. This file imports Stagehand
     // statically, so this test proves only that main() removes them from the environment, not
     // that the SDK never read them.
@@ -170,14 +200,18 @@ describe("main with the agent", () => {
 
     expect(results()).toEqual([
       {
-        status: "agent-completed",
-        url: `${origin}/products/fixture-board`,
-        title: "Fixture Board",
-        summary: expect.stringContaining("Added 1 unit."),
+        status: "pass",
+        reason:
+          "One add event held exactly 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings.",
         context: CONTEXT,
         pinned: PINNED,
+        agent: STOPPED,
       },
     ]);
+    // One planning request and the `act` tool's own request. No step after the add event.
+    expect(modelRequests).toHaveLength(2);
+    // One add only.
+    expect(storeLog).toEqual(["add"]);
     // The bootstrap sends no context. The catalog query carries the discovered context as codes,
     // not names.
     expect(apiRequests).toHaveLength(2);
@@ -189,10 +223,6 @@ describe("main with the agent", () => {
       storefrontCountry: "CA",
       storefrontLanguage: "FR",
     });
-    // Two planning requests (act, then done) and the `act` tool's own request.
-    expect(modelRequests).toHaveLength(3);
-    // Exactly one Add to cart POST reached the fixture.
-    expect(addClicks).toBe(1);
     for (const request of modelRequests) {
       expect(request).toMatchObject({
         path: "/v1/messages",
@@ -218,13 +248,112 @@ describe("main with the agent", () => {
     expectStagehandDetached();
   });
 
-  it("reports the step limit as indeterminate, even when the final assessment says done", async () => {
+  it("waits after the detach for an add that resolves late, then passes", async () => {
+    mode.holdAdd = true;
+    reply = clickAdd();
+
+    await expect(main([origin])).resolves.toBe(0);
+
+    expect(results()).toEqual([expect.objectContaining({ status: "pass", agent: STOPPED })]);
+    // The add was answered only after Stagehand detached.
+    expect(storeLog).toEqual(["add", "add answered"]);
+    expectStagehandDetached();
+  });
+
+  it("fails with exit 1 when the add promise rejects", async () => {
+    mode.addStatus = 500;
+    reply = clickAdd();
+
+    await expect(main([origin])).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        status: "fail",
+        reason: "An add event promise was rejected.",
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: STOPPED,
+      },
+    ]);
+    expect(storeLog).toEqual(["add rejected"]);
+    expectStagehandDetached();
+  });
+
+  it("fails with exit 1 when the add event has no promise", async () => {
+    mode.addEvent = "without-promise";
+    reply = clickAdd();
+
+    await expect(main([origin])).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        status: "fail",
+        reason: "An add event had no promise, so its outcome is unknown.",
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: STOPPED,
+      },
+    ]);
+    expectStagehandDetached();
+  });
+
+  it("fails with exit 1 when the storefront dispatches no Standard Events and the agent reports done", async () => {
+    mode.addEvent = "none";
+    reply = clickAdd();
+
+    await expect(main([origin])).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        status: "fail",
+        reason: CLAIMED_ADD,
+        context: CONTEXT,
+        pinned: PINNED,
+        // Nothing stopped the agent: it clicked Add and reported done by itself.
+        agent: { completed: true, summary: "Added 1 unit." },
+      },
+    ]);
+    // The add happened, but the storefront dispatched no add event.
+    expect(storeLog).toEqual(["add"]);
+    expectStagehandDetached();
+  });
+
+  it("fails with exit 1 when the agent reports done without any add", async () => {
+    reply = () => done(true);
+
+    await expect(main([origin])).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        status: "fail",
+        reason: CLAIMED_ADD,
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: { completed: true, summary: expect.stringContaining("Added 1 unit.") },
+      },
+    ]);
+    expect(modelRequests).toHaveLength(1);
+    expect(storeLog).toEqual([]);
+    expectStagehandDetached();
+  });
+
+  it("reports indeterminate with the step limit and the final message in the agent field when no add event came", async () => {
     reply = ({ tools }) => (isFinalAssessment(tools) ? done(true) : scroll());
 
     await expect(main([origin])).resolves.toBe(2);
 
     expect(results()).toEqual([
-      { status: "indeterminate", reason: `The agent reached the ${MAX_STEPS}-step limit.` },
+      {
+        status: "indeterminate",
+        reason: NO_ADD,
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: {
+          completed: false,
+          reason: `The agent reached the ${MAX_STEPS}-step limit.`,
+          message: expect.any(String),
+        },
+      },
     ]);
     expect(modelRequests.filter((request) => !isFinalAssessment(request.tools))).toHaveLength(
       MAX_STEPS,
@@ -232,23 +361,22 @@ describe("main with the agent", () => {
     expectStagehandDetached();
   });
 
-  it("reports agent-completed when the agent calls done on the last step", async () => {
+  it("fails when the agent calls done on the last step without an add event", async () => {
     let turns = 0;
     reply = () => {
       turns += 1;
       return turns < MAX_STEPS ? scroll() : done(true);
     };
 
-    await expect(main([origin])).resolves.toBe(0);
+    await expect(main([origin])).resolves.toBe(1);
 
     expect(results()).toEqual([
       {
-        status: "agent-completed",
-        url: `${origin}/products/fixture-board`,
-        title: "Fixture Board",
-        summary: expect.stringContaining("Added 1 unit."),
+        status: "fail",
+        reason: CLAIMED_ADD,
         context: CONTEXT,
         pinned: PINNED,
+        agent: { completed: true, summary: expect.stringContaining("Added 1 unit.") },
       },
     ]);
     // Stagehand ended the loop on `done`: no forced final assessment followed.
@@ -268,11 +396,18 @@ describe("main with the agent", () => {
     process.emit("SIGINT", "SIGINT");
 
     await expect(run).resolves.toBe(2);
-    expect(results()).toEqual([{ status: "indeterminate", reason: "Interrupted by SIGINT." }]);
+    expect(results()).toEqual([
+      {
+        status: "indeterminate",
+        reason: "Interrupted by SIGINT.",
+        context: CONTEXT,
+        pinned: PINNED,
+      },
+    ]);
     expectStagehandDetached();
   });
 
-  it("reports a model error as indeterminate without the key in the reason", async () => {
+  it("reports a model error in the agent field without the key", async () => {
     // An error body that echoes the key, the worst case for the reason text.
     reply = () => ({
       type: "error",
@@ -282,10 +417,22 @@ describe("main with the agent", () => {
     await expect(main([origin])).resolves.toBe(2);
 
     expect(results()).toEqual([
-      { status: "indeterminate", reason: expect.stringMatching(/^The agent failed: /) },
+      {
+        status: "indeterminate",
+        reason: NO_ADD,
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: {
+          completed: false,
+          reason: expect.stringMatching(/^The agent failed: /),
+          // Stagehand returned the failure as a result, so its final message is kept, redacted.
+          message: "Failed to execute task: invalid x-api-key: [redacted]",
+        },
+      },
     ]);
     expect(stdout.join("")).toContain("[redacted]");
     expect(stdout.join("")).not.toContain(DUMMY_KEY);
+    expect(stderr.join("")).not.toContain(DUMMY_KEY);
     expectStagehandDetached();
   });
 
@@ -294,7 +441,14 @@ describe("main with the agent", () => {
 
     await expect(main([origin])).resolves.toBe(2);
 
-    expect(results()).toEqual([{ status: "indeterminate", reason: "HTTP 500" }]);
+    expect(results()).toEqual([
+      {
+        status: "indeterminate",
+        reason: "HTTP 500",
+        context: CONTEXT,
+        pinned: { ...PINNED, productHandle: "broken-board" },
+      },
+    ]);
     expect(modelRequests).toEqual([]);
     expectStagehandDetached();
   });
@@ -353,7 +507,14 @@ describe("main with the agent", () => {
 
     await expect(run).resolves.toBe(2);
     expect(performance.now() - interruptedAt).toBeLessThan(5_000);
-    expect(results()).toEqual([{ status: "indeterminate", reason: "Interrupted by SIGINT." }]);
+    expect(results()).toEqual([
+      {
+        status: "indeterminate",
+        reason: "Interrupted by SIGINT.",
+        context: CONTEXT,
+        pinned: { ...PINNED, productHandle: "hang" },
+      },
+    ]);
   });
 });
 
@@ -379,7 +540,7 @@ describe("the CLI process", () => {
     ).resolves.toEqual({
       code: 2,
       signal: null,
-      stdout: `${JSON.stringify({ status: "indeterminate", reason: "Interrupted by SIGINT." })}\n`,
+      stdout: `${JSON.stringify({ status: "indeterminate", reason: "Interrupted by SIGINT.", context: CONTEXT, pinned: PINNED })}\n`,
       stderr: [
         "Storefront API context: CA FR",
         `Pinned variant ${PINNED.variantId} of fixture-board`,
@@ -411,7 +572,7 @@ describe("the CLI process", () => {
     await expect(within(cli.exited, CLI_EXIT_LIMIT_MS, "The CLI did not exit.")).resolves.toEqual({
       code: 2,
       signal: null,
-      stdout: `${JSON.stringify({ status: "indeterminate", reason: "HTTP 500" })}\n`,
+      stdout: `${JSON.stringify({ status: "indeterminate", reason: "HTTP 500", context: CONTEXT, pinned: { ...PINNED, productHandle: "broken" } })}\n`,
       stderr: [
         "Storefront API context: CA FR",
         `Pinned variant ${PINNED.variantId} of broken`,
@@ -452,15 +613,40 @@ function onStoreRequest(request: IncomingMessage, response: ServerResponse) {
     response.writeHead(200, { "content-type": "text/html" }).end(productPage());
   } else if (path === "/cart/add" && request.method === "POST") {
     request.resume();
-    addClicks += 1;
-    response.writeHead(204).end();
+    if (mode.addStatus !== 200) {
+      storeLog.push("add rejected");
+      response.writeHead(mode.addStatus, { "content-type": "text/plain" }).end("down");
+      return;
+    }
+    storeLog.push("add");
+    const answer = () =>
+      response
+        .writeHead(200, { "content-type": "application/json" })
+        .end(JSON.stringify({ cart: { id: "fixture" }, userErrors: [] }));
+    if (!mode.holdAdd) {
+      answer();
+      return;
+    }
+    heldAdds.push(() => {
+      storeLog.push("add answered");
+      answer();
+    });
   } else {
     response.writeHead(500, { "content-type": "text/html" }).end("<title>Broken</title>");
   }
 }
 
-/** A product page with an Add to cart button. A click posts to `/cart/add`. */
+/**
+ * A product page with an Add to cart button. The add posts to `/cart/add`. By default the click
+ * dispatches `shopify:cart:lines-update` on the document with the add promise, like a Hydrogen
+ * storefront. The promise rejects on an HTTP error.
+ */
 function productPage(): string {
+  const promise = mode.addEvent === "with-promise" ? ", promise" : "";
+  const dispatch =
+    mode.addEvent === "none"
+      ? ""
+      : `document.dispatchEvent(Object.assign(new Event("shopify:cart:lines-update", { bubbles: true, cancelable: true }), { action: "add", context: "standard-action", lines: [{ merchandiseId: ${JSON.stringify(PINNED.variantId)}, quantity: 1 }]${promise} }));`;
   return `<!doctype html><title>Fixture Board</title>
 <h1>Fixture Board</h1>
 <p>Size: Medium</p>
@@ -468,9 +654,16 @@ function productPage(): string {
 <p id="status"></p>
 <script>
 document.getElementById("add").addEventListener("click", () => {
-  fetch("/cart/add", { method: "POST" }).then(() => {
-    document.getElementById("status").textContent = "Added";
+  const promise = fetch("/cart/add", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ merchandiseId: ${JSON.stringify(PINNED.variantId)}, quantity: 1 }),
+  }).then((response) => {
+    if (!response.ok) throw new Error("The add failed.");
+    return response.json();
   });
+  ${dispatch}
+  promise.then(() => { document.getElementById("status").textContent = "Added"; }, () => undefined);
 });
 </script>`;
 }
@@ -540,14 +733,16 @@ function onModelRequest(request: IncomingMessage, response: ServerResponse) {
 }
 
 /**
- * The agent clicks Add to cart through Stagehand's `act` tool, then calls `done`. The `act` tool
- * sends its own model request, which picks the target by its element ID in the page snapshot.
+ * The agent clicks Add to cart (then each target in `more`) through Stagehand's `act` tool, then
+ * calls `done`. The `act` tool sends its own model request, which picks the target by its element
+ * ID in the page snapshot.
  */
-function clickAdd(): Reply {
-  const target = "button: Add to cart";
+function clickAdd(...more: string[]): Reply {
+  const targets = ["button: Add to cart", ...more];
   let planningTurns = 0;
   return ({ tools, body }) => {
     if (!tools.includes("act") && !isFinalAssessment(tools)) {
+      const target = targets[planningTurns - 1] ?? "";
       const elementId = new RegExp(`\\[(\\d+-\\d+)\\] ${target}`).exec(body)?.[1];
       if (elementId === undefined) throw new Error(`No ${target} in the act request.`);
       return message([
@@ -561,7 +756,8 @@ function clickAdd(): Reply {
       ]);
     }
     planningTurns += 1;
-    if (planningTurns > 1) return done(true);
+    const target = targets[planningTurns - 1];
+    if (target === undefined) return done(true);
     return message([
       { type: "tool_use", id: "toolu_act", name: "act", input: { action: `click the ${target}` } },
     ]);
