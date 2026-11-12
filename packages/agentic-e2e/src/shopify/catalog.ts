@@ -4,7 +4,7 @@ import { publicStorefrontClient, readData, type StorefrontLocale } from "./store
 
 export const PRODUCTS_PER_PAGE = 50;
 export const PAGE_LIMIT = 5;
-/** `pinNonDefaultVariant` examines at most this many variants of each product. */
+/** `findVariantChoice` examines at most this many variants of each product. */
 export const VARIANTS_PER_PRODUCT = 10;
 
 export type PinnedVariant = {
@@ -14,12 +14,29 @@ export type PinnedVariant = {
   selectedOptions: Array<{ name: string; value: string }>;
 };
 
-export type CatalogPin =
-  | { status: "pinned"; pinned: PinnedVariant }
-  | { status: "skipped"; reason: string };
+type Skipped = { status: "skipped"; reason: string };
 
-// Not `$country` or `$language`: the client would fill those from its locale. The pin functions
-// pass the discovered context explicitly. The same applies to `VARIANT_CHOICE_QUERY`.
+export type CatalogPin = { status: "pinned"; pinned: PinnedVariant } | Skipped;
+
+export type VariantCandidate = { id: string; selectedOptions: PinnedVariant["selectedOptions"] };
+
+/**
+ * A product for `choose-a-variant`. The variant is pinned only after the product page shows which
+ * variant it selects first (see `pinOtherVariant`).
+ */
+export type VariantChoice = {
+  productHandle: string;
+  productTitle: string;
+  /** The IDs of the examined variants, available for sale or not. */
+  variantIds: string[];
+  /** The examined variants that are available for sale, in API order. */
+  candidates: [VariantCandidate, VariantCandidate, ...VariantCandidate[]];
+};
+
+export type VariantChoiceSearch = { status: "found"; product: VariantChoice } | Skipped;
+
+// Not `$country` or `$language`: the client would fill those from its locale. The catalog
+// functions pass the discovered context explicitly. The same applies to `VARIANT_CHOICE_QUERY`.
 const CATALOG_QUERY = `query AgenticE2ECatalog($first: Int!, $after: String, $storefrontCountry: CountryCode!, $storefrontLanguage: LanguageCode!) @inContext(country: $storefrontCountry, language: $storefrontLanguage) {
   products(first: $first, after: $after, sortKey: ID, query: "available_for_sale:true") {
     pageInfo { hasNextPage endCursor }
@@ -35,7 +52,6 @@ const VARIANT_CHOICE_QUERY = `query AgenticE2EVariantChoice($first: Int!, $after
     pageInfo { hasNextPage endCursor }
     nodes {
       title handle requiresSellingPlan
-      selectedOrFirstAvailableVariant { id }
       variants(first: $variants) { nodes { id availableForSale selectedOptions { name value } } }
     }
   }
@@ -75,7 +91,6 @@ const variantChoicePageSchema = catalogPageSchema(
     title: z.string(),
     handle: z.string(),
     requiresSellingPlan: z.boolean(),
-    selectedOrFirstAvailableVariant: z.object({ id: z.string() }).nullable(),
     variants: z.object({
       nodes: z.array(
         z.object({
@@ -102,7 +117,7 @@ export async function pinVariant(
   signal: AbortSignal,
 ): Promise<CatalogPin> {
   const client = publicStorefrontClient(storefrontUrl);
-  return searchCatalog("No eligible variant", async (after) => {
+  const search = await searchCatalog("No eligible variant", async (after) => {
     const variables = {
       first: PRODUCTS_PER_PAGE,
       after,
@@ -111,24 +126,26 @@ export async function pinVariant(
     };
     const result = await client.graphql(CATALOG_QUERY, { variables, signal });
     const { products } = readData(result, defaultVariantPageSchema);
-    return { pageInfo: products.pageInfo, pinned: firstPin(products.nodes, defaultVariant) };
+    return { pageInfo: products.pageInfo, found: firstMatch(products.nodes, defaultVariant) };
   });
+  return search.status === "found" ? { status: "pinned", pinned: search.found } : search;
 }
 
 /**
- * Pins a variant that is not the default one. It takes the first product, in product ID order,
- * that does not require a selling plan, has a `selectedOrFirstAvailableVariant` (the default), and
- * has at least 2 variants available for sale in `context` among its first `VARIANTS_PER_PRODUCT`
- * variants. It pins the first of those, in API order, that is not the default. Reads at most
- * `PAGE_LIMIT` pages. API and response-shape errors throw.
+ * Finds the first product, in product ID order, that does not require a selling plan and has at
+ * least 2 variants available for sale in `context` among its first `VARIANTS_PER_PRODUCT`
+ * variants. It pins no variant: the caller pins one with `pinOtherVariant` after it sees which
+ * variant the product page selects first. Reads at most `PAGE_LIMIT` pages. API and
+ * response-shape errors throw.
  */
-export async function pinNonDefaultVariant(
+export async function findVariantChoice(
   storefrontUrl: URL,
   context: StorefrontLocale,
   signal: AbortSignal,
-): Promise<CatalogPin> {
+): Promise<VariantChoiceSearch> {
   const client = publicStorefrontClient(storefrontUrl);
-  return searchCatalog("No product with at least 2 variants available for sale", async (after) => {
+  const notFound = "No product with at least 2 variants available for sale";
+  const search = await searchCatalog(notFound, async (after) => {
     const variables = {
       first: PRODUCTS_PER_PAGE,
       after,
@@ -138,24 +155,38 @@ export async function pinNonDefaultVariant(
     };
     const result = await client.graphql(VARIANT_CHOICE_QUERY, { variables, signal });
     const { products } = readData(result, variantChoicePageSchema);
-    return { pageInfo: products.pageInfo, pinned: firstPin(products.nodes, nonDefaultVariant) };
+    return { pageInfo: products.pageInfo, found: firstMatch(products.nodes, variantChoice) };
   });
+  return search.status === "found" ? { status: "found", product: search.found } : search;
 }
 
 /**
- * Reads catalog pages with `readPage`, from the first page on, until a page has a pin, the catalog
- * ends, or `PAGE_LIMIT` pages were read. `notFound` starts the skip reason.
+ * Pins the first candidate, in API order, that is not `selectedId`: the variant that the product
+ * page selects first. There are at least 2 candidates, so there is always one.
  */
-async function searchCatalog(
+export function pinOtherVariant(product: VariantChoice, selectedId: string): PinnedVariant {
+  const [first, second] = product.candidates;
+  const variant = first.id === selectedId ? second : first;
+  return {
+    productHandle: product.productHandle,
+    productTitle: product.productTitle,
+    variantId: variant.id,
+    selectedOptions: variant.selectedOptions,
+  };
+}
+
+/**
+ * Reads catalog pages with `readPage`, from the first page on, until a page has a match, the
+ * catalog ends, or `PAGE_LIMIT` pages were read. `notFound` starts the skip reason.
+ */
+async function searchCatalog<T>(
   notFound: string,
-  readPage: (
-    after: string | null,
-  ) => Promise<{ pageInfo: PageInfo; pinned: PinnedVariant | undefined }>,
-): Promise<CatalogPin> {
+  readPage: (after: string | null) => Promise<{ pageInfo: PageInfo; found: T | undefined }>,
+): Promise<{ status: "found"; found: T } | Skipped> {
   let after: string | null = null;
   for (let page = 1; page <= PAGE_LIMIT; page++) {
-    const { pageInfo, pinned } = await readPage(after);
-    if (pinned !== undefined) return { status: "pinned", pinned };
+    const { pageInfo, found } = await readPage(after);
+    if (found !== undefined) return { status: "found", found };
     if (!pageInfo.hasNextPage) {
       return { status: "skipped", reason: `${notFound}: the catalog was searched to the end.` };
     }
@@ -170,37 +201,33 @@ async function searchCatalog(
   };
 }
 
-function firstPin<Product>(
-  products: Product[],
-  pick: (product: Product) => PinnedVariant | undefined,
-): PinnedVariant | undefined {
-  return products.map(pick).find((variant) => variant !== undefined);
+function firstMatch<Product, T>(products: Product[], pick: (product: Product) => T | undefined) {
+  return products.map(pick).find((match) => match !== undefined);
 }
 
 function defaultVariant(product: CatalogProduct): PinnedVariant | undefined {
   const variant = product.selectedOrFirstAvailableVariant;
   if (product.requiresSellingPlan || variant?.availableForSale !== true) return undefined;
-  return pinnedVariant(product, variant);
-}
-
-function nonDefaultVariant(product: VariantChoiceProduct): PinnedVariant | undefined {
-  const defaultId = product.selectedOrFirstAvailableVariant?.id;
-  if (product.requiresSellingPlan || defaultId === undefined) return undefined;
-  const available = product.variants.nodes.filter((variant) => variant.availableForSale);
-  if (available.length < 2) return undefined;
-  const variant = available.find((candidate) => candidate.id !== defaultId);
-  return variant === undefined ? undefined : pinnedVariant(product, variant);
-}
-
-function pinnedVariant(
-  product: { handle: string; title: string },
-  variant: { id: string; selectedOptions: PinnedVariant["selectedOptions"] },
-): PinnedVariant {
   return {
     productHandle: product.handle,
     productTitle: product.title,
     variantId: variant.id,
     selectedOptions: variant.selectedOptions,
+  };
+}
+
+function variantChoice(product: VariantChoiceProduct): VariantChoice | undefined {
+  if (product.requiresSellingPlan) return undefined;
+  const variants = product.variants.nodes;
+  const [first, second, ...rest] = variants
+    .filter((variant) => variant.availableForSale)
+    .map(({ id, selectedOptions }) => ({ id, selectedOptions }));
+  if (first === undefined || second === undefined) return undefined;
+  return {
+    productHandle: product.handle,
+    productTitle: product.title,
+    variantIds: variants.map((variant) => variant.id),
+    candidates: [first, second, ...rest],
   };
 }
 

@@ -1,6 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { PAGE_LIMIT, pinNonDefaultVariant, pinVariant, productUrl } from "./catalog.ts";
+import {
+  findVariantChoice,
+  PAGE_LIMIT,
+  pinOtherVariant,
+  pinVariant,
+  productUrl,
+  type VariantChoice,
+} from "./catalog.ts";
 import { fakeFetch } from "./fake-fetch.ts";
 import type { StorefrontLocale } from "./storefront.ts";
 
@@ -174,18 +181,12 @@ describe("pinVariant", () => {
 
 type ChoiceVariant = { id: string; availableForSale: boolean };
 
-/** A product for the variant choice query. `defaultId` is its `selectedOrFirstAvailableVariant`. */
-function choiceProduct(
-  handle: string,
-  defaultId: string | null,
-  variants: ChoiceVariant[],
-  requiresSellingPlan = false,
-) {
+/** A product for the variant choice query. */
+function choiceProduct(handle: string, variants: ChoiceVariant[], requiresSellingPlan = false) {
   return {
     title: `Title ${handle}`,
     handle,
     requiresSellingPlan,
-    selectedOrFirstAvailableVariant: defaultId === null ? null : { id: defaultId },
     variants: {
       nodes: variants.map((variant) => ({
         ...variant,
@@ -195,19 +196,23 @@ function choiceProduct(
   };
 }
 
-/** Two available variants: `<handle>-default`, the default, then `<handle>-other`. */
+/** Two available variants: `<handle>-1`, then `<handle>-2`. */
 function choosable(handle: string) {
-  return choiceProduct(handle, `${handle}-default`, [
-    { id: `${handle}-default`, availableForSale: true },
-    { id: `${handle}-other`, availableForSale: true },
+  return choiceProduct(handle, [
+    { id: `${handle}-1`, availableForSale: true },
+    { id: `${handle}-2`, availableForSale: true },
   ]);
 }
 
-describe("pinNonDefaultVariant", () => {
+function candidate(id: string) {
+  return { id, selectedOptions: [{ name: "Size", value: `size-${id}` }] };
+}
+
+describe("findVariantChoice", () => {
   it("sends first, after, variants, and the discovered context with an explicit @inContext", async () => {
     const requests = stubFetch([page([choosable("board")])]);
 
-    await pinNonDefaultVariant(STOREFRONT_URL, CA_FR, signal);
+    await findVariantChoice(STOREFRONT_URL, CA_FR, signal);
 
     expect(requests[0]?.url).toMatch(/^https:\/\/shop\.example\/api\/[^/]+\/graphql\.json$/);
     expect(requests[0]?.query).toContain("query AgenticE2EVariantChoice(");
@@ -215,6 +220,8 @@ describe("pinNonDefaultVariant", () => {
       "@inContext(country: $storefrontCountry, language: $storefrontLanguage)",
     );
     expect(requests[0]?.query).toContain("variants(first: $variants)");
+    // The page, not the API default, tells which variant is selected first.
+    expect(requests[0]?.query).not.toContain("selectedOrFirstAvailableVariant");
     expect(requests[0]?.variables).toEqual({
       first: 50,
       after: null,
@@ -224,10 +231,10 @@ describe("pinNonDefaultVariant", () => {
     });
   });
 
-  it("pins the first available variant that is not the default", async () => {
+  it("returns the available variants as candidates, in API order, and every examined ID", async () => {
     stubFetch([
       page([
-        choiceProduct("board", "v1", [
+        choiceProduct("board", [
           { id: "v1", availableForSale: true },
           { id: "v2", availableForSale: false },
           { id: "v3", availableForSale: true },
@@ -236,82 +243,46 @@ describe("pinNonDefaultVariant", () => {
       ]),
     ]);
 
-    await expect(pinNonDefaultVariant(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
-      status: "pinned",
-      pinned: {
+    await expect(findVariantChoice(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
+      status: "found",
+      product: {
         productHandle: "board",
         productTitle: "Title board",
-        variantId: "v3",
-        selectedOptions: [{ name: "Size", value: "size-v3" }],
+        variantIds: ["v1", "v2", "v3", "v4"],
+        candidates: [candidate("v1"), candidate("v3"), candidate("v4")],
       },
     });
   });
 
-  it("does not take the first variant in the list when it is not the default", async () => {
+  it("passes over ineligible products and returns the next eligible one", async () => {
     stubFetch([
       page([
-        choiceProduct("board", "v2", [
-          { id: "v1", availableForSale: true },
-          { id: "v2", availableForSale: true },
-        ]),
-      ]),
-    ]);
-
-    const pin = await pinNonDefaultVariant(STOREFRONT_URL, CA_FR, signal);
-
-    expect(pin.status === "pinned" && pin.pinned.variantId).toBe("v1");
-  });
-
-  it("does not take the default when it is not the first variant in the list", async () => {
-    stubFetch([
-      page([
-        choiceProduct("board", "v2", [
-          { id: "v1", availableForSale: false },
-          { id: "v2", availableForSale: true },
-          { id: "v3", availableForSale: true },
-        ]),
-      ]),
-    ]);
-
-    const pin = await pinNonDefaultVariant(STOREFRONT_URL, CA_FR, signal);
-
-    expect(pin.status === "pinned" && pin.pinned.variantId).toBe("v3");
-  });
-
-  it("passes over ineligible products and pins the next eligible one", async () => {
-    stubFetch([
-      page([
-        choiceProduct("one-available", "a1", [
+        choiceProduct("one-available", [
           { id: "a1", availableForSale: true },
           { id: "a2", availableForSale: false },
         ]),
         choiceProduct(
           "subscription",
-          "s1",
           [
             { id: "s1", availableForSale: true },
             { id: "s2", availableForSale: true },
           ],
           true,
         ),
-        choiceProduct("no-default", null, [
-          { id: "n1", availableForSale: true },
-          { id: "n2", availableForSale: true },
-        ]),
         choosable("first"),
         choosable("second"),
       ]),
     ]);
 
-    const pin = await pinNonDefaultVariant(STOREFRONT_URL, CA_FR, signal);
+    const search = await findVariantChoice(STOREFRONT_URL, CA_FR, signal);
 
-    expect(pin.status === "pinned" && pin.pinned.variantId).toBe("first-other");
+    expect(search.status === "found" && search.product.productHandle).toBe("first");
   });
 
   it.each([
     {
       case: "only one available variant",
-      product: choiceProduct("board", "v1", [
+      product: choiceProduct("board", [
         { id: "v1", availableForSale: true },
         { id: "v2", availableForSale: false },
       ]),
@@ -320,7 +291,6 @@ describe("pinNonDefaultVariant", () => {
       case: "a selling plan requirement",
       product: choiceProduct(
         "board",
-        "v1",
         [
           { id: "v1", availableForSale: true },
           { id: "v2", availableForSale: true },
@@ -328,17 +298,10 @@ describe("pinNonDefaultVariant", () => {
         true,
       ),
     },
-    {
-      case: "a null default",
-      product: choiceProduct("board", null, [
-        { id: "v1", availableForSale: true },
-        { id: "v2", availableForSale: true },
-      ]),
-    },
-  ])("skips a product with $case", async ({ product: candidate }) => {
-    stubFetch([page([candidate])]);
+  ])("skips a product with $case", async ({ product: candidateProduct }) => {
+    stubFetch([page([candidateProduct])]);
 
-    await expect(pinNonDefaultVariant(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
+    await expect(findVariantChoice(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
       status: "skipped",
       reason:
         "No product with at least 2 variants available for sale: the catalog was searched to the end.",
@@ -347,16 +310,16 @@ describe("pinNonDefaultVariant", () => {
 
   it("follows the pagination cursor and keeps the variables on every page", async () => {
     const requests = stubFetch([
-      page([choiceProduct("single", "v1", [{ id: "v1", availableForSale: true }])], {
+      page([choiceProduct("single", [{ id: "v1", availableForSale: true }])], {
         hasNextPage: true,
         endCursor: "cursor-1",
       }),
       page([choosable("later")]),
     ]);
 
-    const pin = await pinNonDefaultVariant(STOREFRONT_URL, CA_FR, signal);
+    const search = await findVariantChoice(STOREFRONT_URL, CA_FR, signal);
 
-    expect(pin.status === "pinned" && pin.pinned.variantId).toBe("later-other");
+    expect(search.status === "found" && search.product.productHandle).toBe("later");
     expect(requests.map((request) => request.variables)).toEqual([
       { first: 50, after: null, variants: 10, storefrontCountry: "CA", storefrontLanguage: "FR" },
       {
@@ -376,7 +339,7 @@ describe("pinNonDefaultVariant", () => {
       ),
     );
 
-    await expect(pinNonDefaultVariant(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
+    await expect(findVariantChoice(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
       status: "skipped",
       reason:
         "No product with at least 2 variants available for sale: the 5-page limit was reached (50 products per page).",
@@ -387,7 +350,7 @@ describe("pinNonDefaultVariant", () => {
   it("throws when pagination returns no cursor", async () => {
     stubFetch([page([], { hasNextPage: true, endCursor: null })]);
 
-    await expect(pinNonDefaultVariant(STOREFRONT_URL, CA_FR, signal)).rejects.toThrow(
+    await expect(findVariantChoice(STOREFRONT_URL, CA_FR, signal)).rejects.toThrow(
       "Catalog pagination returned no cursor after page 1.",
     );
   });
@@ -396,9 +359,33 @@ describe("pinNonDefaultVariant", () => {
     const { variants: _dropped, ...withoutVariants } = choosable("board");
     stubFetch([page([withoutVariants])]);
 
-    await expect(pinNonDefaultVariant(STOREFRONT_URL, CA_FR, signal)).rejects.toThrow(
+    await expect(findVariantChoice(STOREFRONT_URL, CA_FR, signal)).rejects.toThrow(
       "Invalid response data: products.nodes.0.variants: ",
     );
+  });
+});
+
+describe("pinOtherVariant", () => {
+  const board: VariantChoice = {
+    productHandle: "board",
+    productTitle: "Board",
+    variantIds: ["v1", "v2", "v3", "v4"],
+    candidates: [candidate("v1"), candidate("v3"), candidate("v4")],
+  };
+
+  it.each([
+    { selected: "v1", pinned: "v3" },
+    { selected: "v3", pinned: "v1" },
+    { selected: "v4", pinned: "v1" },
+    // An unavailable variant: every candidate differs, so the first one is pinned.
+    { selected: "v2", pinned: "v1" },
+  ])("pins $pinned when the page selects $selected", ({ selected, pinned }) => {
+    expect(pinOtherVariant(board, selected)).toEqual({
+      productHandle: "board",
+      productTitle: "Board",
+      variantId: pinned,
+      selectedOptions: [{ name: "Size", value: `size-${pinned}` }],
+    });
   });
 });
 
