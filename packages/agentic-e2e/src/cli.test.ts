@@ -558,6 +558,47 @@ describe("main", () => {
     expect(stdout.join("") + stderr.join("")).not.toContain("secret-cart-token");
   });
 
+  it.each([
+    {
+      completed: true,
+      code: 1,
+      status: "fail",
+      reason:
+        "The agent reports that it completed the task, but the cart line went only 1, 2. Expected 1, 2, 1, removed.",
+    },
+    {
+      completed: false,
+      code: 2,
+      status: "indeterminate",
+      reason:
+        "The cart line went 1, 2 by the time Stagehand was disconnected. Expected 1, 2, 1, removed.",
+    },
+  ])(
+    "gives $status for change-quantity-and-remove when the agent ends after the plus with completed $completed",
+    async ({ completed, code, status, reason }) => {
+      const outcome: AgentOutcome = completed
+        ? { completed: true, summary: "Done." }
+        : { completed: false, reason: "The agent did not confirm that it completed the task." };
+      fakes({ cartSteps: [2], outcome });
+
+      await expect(
+        main(["https://shop.example", "--test", "change-quantity-and-remove", "--json"]),
+      ).resolves.toBe(code);
+
+      expect(results()).toEqual([
+        {
+          test: "change-quantity-and-remove",
+          status,
+          reason,
+          context: CONTEXT,
+          pinned: PINNED,
+          agent: outcome,
+        },
+      ]);
+      expect(calls).not.toContain("stop");
+    },
+  );
+
   it("fails with exit 1 when the add promise was rejected", async () => {
     fakes({ settle: "rejected" });
 
@@ -1527,7 +1568,8 @@ async function runUntilInterrupted(agent: ReturnType<typeof fakes>["agent"]): Pr
  * pinned variant, as the page would; the command's stop then ends the run with the stop reason of
  * the run input, like the real agent module. `settle` tells when and how the add's promise ends.
  * In a change-quantity-and-remove run (the stop reason tells it), the add resolves with one cart
- * line, then the run records one resolved change of that line to 2, to 1, and its remove.
+ * line, then the run records one resolved change of that line to each quantity in `cartSteps`
+ * (default: 2, 1, then its remove).
  * `addedVariants` is the variant that each run adds, in run order. Default: `PINNED`.
  */
 function fakes({
@@ -1536,12 +1578,14 @@ function fakes({
   adds = true,
   settle = "in-run",
   addedVariants = [],
+  cartSteps = [2, 1, 0],
 }: {
   page?: Record<string, unknown>;
   outcome?: AgentOutcome;
   adds?: boolean;
   settle?: "in-run" | "in-wait" | "rejected";
   addedVariants?: string[];
+  cartSteps?: number[];
 } = {}) {
   let runs = 0;
   const track =
@@ -1582,7 +1626,7 @@ function fakes({
       recordAdd(addedVariants[runs++] ?? PINNED.variantId);
       if (stopReason === STOPPED_AFTER_CART_CHANGES) {
         recordOutcome("settled", [{ id: LINE_ID, quantity: 1 }]);
-        for (const [index, quantity] of [2, 1, 0].entries()) recordChange(`c-${index}`, quantity);
+        for (const [index, quantity] of cartSteps.entries()) recordChange(`c-${index}`, quantity);
       } else {
         if (settle === "in-run") recordOutcome("settled");
         if (settle === "rejected") recordOutcome("failed");
