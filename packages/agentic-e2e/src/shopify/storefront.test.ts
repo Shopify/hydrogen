@@ -8,12 +8,18 @@ import { discoverContext, REQUEST_DEADLINE_MS } from "./storefront.ts";
 const STOREFRONT_URL = new URL("https://shop.example/?x=1#top");
 const signal = new AbortController().signal;
 
-function localization(country: unknown, language: unknown, name = "Canada", currency = "CAD") {
+function localization(
+  country: unknown,
+  language: unknown,
+  name = "Canada",
+  currency = "CAD",
+  endonymName = "Français",
+) {
   return {
     data: {
       localization: {
         country: { isoCode: country, name, currency: { isoCode: currency } },
-        language: { isoCode: language },
+        language: { isoCode: language, endonymName },
       },
     },
   };
@@ -37,6 +43,7 @@ describe("discoverContext", () => {
     await expect(discoverContext(STOREFRONT_URL, signal)).resolves.toEqual({
       country: "CA",
       language: "FR",
+      languageName: "Français",
       countryName: "Canada",
       currency: "CAD",
     });
@@ -45,7 +52,7 @@ describe("discoverContext", () => {
     const [request] = requests;
     expect(request?.url).toMatch(/^https:\/\/shop\.example\/api\/\d{4}-\d{2}\/graphql\.json$/);
     expect(request?.query).toContain(
-      "localization { language { isoCode } country { isoCode name currency { isoCode } } }",
+      "localization { language { isoCode endonymName } country { isoCode name currency { isoCode } } }",
     );
     expect(request?.query).not.toContain("@inContext");
     expect(request?.variables).toEqual({});
@@ -56,11 +63,12 @@ describe("discoverContext", () => {
   });
 
   it("accepts a language code with a region", async () => {
-    stubFetch([{ body: localization("BR", "PT_BR", "Brazil", "BRL") }]);
+    stubFetch([{ body: localization("BR", "PT_BR", "Brazil", "BRL", "Português (Brasil)") }]);
 
     await expect(discoverContext(STOREFRONT_URL, signal)).resolves.toEqual({
       country: "BR",
       language: "PT_BR",
+      languageName: "Português (Brasil)",
       countryName: "Brazil",
       currency: "BRL",
     });
@@ -86,10 +94,28 @@ describe("discoverContext", () => {
     { path: "localization.country.name", country: { isoCode: "CA", currency: { isoCode: "CAD" } } },
     { path: "localization.country.currency.isoCode", country: { isoCode: "CA", name: "Canada" } },
   ])("rejects a missing $path", async ({ path, country }) => {
-    stubFetch([{ body: { data: { localization: { language: { isoCode: "FR" }, country } } } }]);
+    stubFetch([
+      {
+        body: {
+          data: { localization: { language: { isoCode: "FR", endonymName: "Français" }, country } },
+        },
+      },
+    ]);
 
     await expect(discoverContext(STOREFRONT_URL, signal)).rejects.toThrow(
       `Invalid response data: ${path} is missing`,
+    );
+  });
+
+  it.each([
+    ["missing", { isoCode: "FR" }],
+    ["null", { isoCode: "FR", endonymName: null }],
+  ])("rejects a %s localization.language.endonymName", async (_case, language) => {
+    const country = { isoCode: "CA", name: "Canada", currency: { isoCode: "CAD" } };
+    stubFetch([{ body: { data: { localization: { language, country } } } }]);
+
+    await expect(discoverContext(STOREFRONT_URL, signal)).rejects.toThrow(
+      "Invalid response data: localization.language.endonymName is missing",
     );
   });
 
@@ -100,6 +126,7 @@ describe("discoverContext", () => {
     await expect(discoverContext(STOREFRONT_URL, signal)).resolves.toEqual({
       country: "CA",
       language,
+      languageName: "Français",
       countryName: "Canada",
       currency: "CAD",
     });

@@ -16,6 +16,7 @@ const PINNED: PinnedVariant = {
 const CONTEXT: StorefrontContext = {
   country: "US",
   language: "EN",
+  languageName: "English",
   countryName: "United States",
   currency: "USD",
 };
@@ -40,30 +41,42 @@ describe("buildObjective", () => {
     const objective = buildObjective({ pinned: PINNED, context: CONTEXT });
 
     expect(objective).toContain(
-      ' Shop in the "United States" store (language "EN", prices in "USD"): if the store shows another country, language, or currency, switch to "United States" with language "EN". ',
+      ' Shop in the "United States" store (language "English", prices in "USD"): if the store shows another country, language, or currency, switch to "United States" with language "English". ',
     );
   });
 
-  it("asks for the run's language, not a fixed one", () => {
+  it("names the run's language by its own name, not by its code or a fixed one", () => {
     const objective = buildObjective({
       pinned: PINNED,
-      context: { country: "CA", language: "FR", countryName: "Canada", currency: "CAD" },
+      context: {
+        country: "CA",
+        language: "FR",
+        languageName: "Français",
+        countryName: "Canada",
+        currency: "CAD",
+      },
     });
 
     expect(objective).toContain(
-      'Shop in the "Canada" store (language "FR", prices in "CAD"): if the store shows another country, language, or currency, switch to "Canada" with language "FR".',
+      'Shop in the "Canada" store (language "Français", prices in "CAD"): if the store shows another country, language, or currency, switch to "Canada" with language "Français".',
     );
-    expect(objective).not.toContain('"EN"');
+    expect(objective).not.toContain('"FR"');
+    expect(objective).not.toContain("English");
   });
 
-  it("JSON-quotes the country name, the language, and the currency as store data", () => {
+  it("JSON-quotes the country name, the language name, and the currency as store data", () => {
     const objective = buildObjective({
       pinned: PINNED,
-      context: { ...CONTEXT, countryName: 'Côte d"Ivoire', currency: "XOF" },
+      context: {
+        ...CONTEXT,
+        countryName: 'Côte d"Ivoire',
+        languageName: 'Fran"çais',
+        currency: "XOF",
+      },
     });
 
     expect(objective).toContain(
-      'Shop in the "Côte d\\"Ivoire" store (language "EN", prices in "XOF"): if the store shows another country, language, or currency, switch to "Côte d\\"Ivoire" with language "EN".',
+      'Shop in the "Côte d\\"Ivoire" store (language "Fran\\"çais", prices in "XOF"): if the store shows another country, language, or currency, switch to "Côte d\\"Ivoire" with language "Fran\\"çais".',
     );
   });
 

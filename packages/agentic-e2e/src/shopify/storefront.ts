@@ -17,14 +17,19 @@ export const REQUEST_DEADLINE_MS = 10_000;
 export type StorefrontLocale = { country: CountryCode; language: LanguageCode };
 
 /**
- * The context that the Storefront API makes active by default without `@inContext`. `countryName`
- * and `currency` are store data for the agent task.
+ * The context that the Storefront API makes active by default without `@inContext`. `countryName`,
+ * `languageName` (the language's name in that language, such as "Français"), and `currency` are
+ * store data for the agent task. `country` and `language` are the codes for `@inContext`.
  */
-export type StorefrontContext = StorefrontLocale & { countryName: string; currency: string };
+export type StorefrontContext = StorefrontLocale & {
+  countryName: string;
+  languageName: string;
+  currency: string;
+};
 
 // No `@inContext`: the API answers with the context that it makes active by default.
 const LOCALIZATION_QUERY = `query AgenticE2ELocalization {
-  localization { language { isoCode } country { isoCode name currency { isoCode } } }
+  localization { language { isoCode endonymName } country { isoCode name currency { isoCode } } }
 }`;
 
 // Inert: the request context needs a locale, but no query declares `$country` or `$language`,
@@ -32,7 +37,8 @@ const LOCALIZATION_QUERY = `query AgenticE2ELocalization {
 const BOOTSTRAP_LOCALE = { country: "US", language: "EN" } satisfies StorefrontLocale;
 
 /**
- * Asks the Storefront API at the URL's origin which country, language, and currency are active.
+ * Asks the Storefront API at the URL's origin which country, language, and currency are active,
+ * with the country name and the language's own name.
  */
 export async function discoverContext(
   storefrontUrl: URL,
@@ -41,15 +47,14 @@ export async function discoverContext(
   const client = publicStorefrontClient(storefrontUrl);
   const result = await client.graphql(LOCALIZATION_QUERY, { signal });
   throwOnGraphQLErrors(result.errors);
-  const localization = result.data?.localization;
+  const country = result.data?.localization?.country;
+  const language = result.data?.localization?.language;
   return {
-    country: required(localization?.country?.isoCode, "localization.country.isoCode"),
-    language: required(localization?.language?.isoCode, "localization.language.isoCode"),
-    countryName: required(localization?.country?.name, "localization.country.name"),
-    currency: required(
-      localization?.country?.currency?.isoCode,
-      "localization.country.currency.isoCode",
-    ),
+    country: required(country?.isoCode, "localization.country.isoCode"),
+    language: required(language?.isoCode, "localization.language.isoCode"),
+    countryName: required(country?.name, "localization.country.name"),
+    languageName: required(language?.endonymName, "localization.language.endonymName"),
+    currency: required(country?.currency?.isoCode, "localization.country.currency.isoCode"),
   };
 }
 

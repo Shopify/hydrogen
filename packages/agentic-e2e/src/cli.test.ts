@@ -18,6 +18,7 @@ const KEY = "sk-secret-proxy-key-123";
 const CONTEXT: StorefrontContext = {
   country: "CA",
   language: "FR",
+  languageName: "Français",
   countryName: "Canada",
   currency: "CAD",
 };
@@ -182,7 +183,9 @@ describe("main", () => {
     // The task names the run's market from the Storefront API context.
     expect(agent.run).toHaveBeenCalledWith(
       expect.objectContaining({
-        task: expect.stringContaining('Shop in the "Canada" store (prices in "CAD")'),
+        task: expect.stringContaining(
+          'Shop in the "Canada" store (language "Français", prices in "CAD")',
+        ),
       }),
     );
     expect(stdout.join("") + stderr.join("")).not.toContain(KEY);

@@ -21,7 +21,7 @@ Run `pnpm --filter @shopify/agentic-e2e run browser:install` once before the fir
 4. Starts Chromium with a fresh temporary profile.
 5. Attaches one [Stagehand](https://github.com/browserbase/stagehand) agent to the browser, before the first navigation.
 6. Loads the product page of the pinned variant and waits until the page has visible content.
-7. Gives the agent one task: shop in the country and currency of the run (see [Country and language](#country-and-language)), select the variant options of the pinned variant (store strings are JSON-quoted and labelled as data), add exactly 1 unit to the cart, stop as soon as it is added, not open the cart or go to checkout, and not enter personal, shipping, or payment information. A short guest-shopper system prompt tells it how to handle cookie banners and dialogs, and to keep the country, language, and currency of the store unless the task asks for a change. The agent has at most 20 steps and 180 seconds. The URL navigation and web search tools are removed.
+7. Gives the agent one task: shop in the country, language, and currency of the run (see [Country and language](#country-and-language)), select the variant options of the pinned variant (store strings are JSON-quoted and labelled as data), add exactly 1 unit to the cart, stop as soon as it is added, not open the cart or go to checkout, and not enter personal, shipping, or payment information. A short guest-shopper system prompt tells it how to handle cookie banners and dialogs, and to keep the country, language, and currency of the store unless the task asks for a change. The agent has at most 20 steps and 180 seconds. The URL navigation and web search tools are removed.
 8. Disconnects Stagehand from the browser, then removes the browser process and the profile.
 
 **Checkout and account pages are not blocked at this stage.** The agent is only told not to go there. Nothing stops it if it does not obey.
@@ -32,15 +32,17 @@ Both queries go to the Storefront API at the origin of the URL (`<origin>/api/<v
 
 ### Country and language
 
-The country, language, country name, and currency come from this query, sent without `@inContext`:
+The country, language, country name, language name, and currency come from this query, sent without `@inContext`:
 
 ```graphql
-localization { language { isoCode } country { isoCode name currency { isoCode } } }
+localization { language { isoCode endonymName } country { isoCode name currency { isoCode } } }
 ```
+
+The language name is `endonymName`: the name of the language in that language, such as `Français` for `FR`. The agent task uses the country name and the language name. The catalog query uses the country code and the language code. The result has all of them.
 
 Without `@inContext`, the Storefront API answers with the context that it makes active by default. This is the market of the run. When the query fails or a field is missing, the result is `indeterminate`. There is no default country or language.
 
-The browser can show another market, for example because the storefront selects the market from the geo-IP of the browser. The command sets no cookie and does not change the page. Instead, the task tells the agent to shop in the store of the country name, with prices in the currency, and to switch to that country through the country selector of the store if the store shows another country or currency. The country name and the currency are JSON-quoted as store data. If the agent cannot switch to the requested country, it may still report completion in another market. The command does not verify the market shown in the browser.
+The browser can show another market, for example because the storefront selects the market from the geo-IP of the browser. The command sets no cookie and does not change the page. Instead, the task tells the agent to shop in the named country and language, with prices in the requested currency, and to switch through the store's selectors if the store shows another country, language, or currency. The country name, the language name, and the currency are JSON-quoted as store data. If the agent cannot switch to the requested country, it may still report completion in another market. The command does not verify the market shown in the browser.
 
 Known locale gaps are listed in [TECH_DEBT.md](./TECH_DEBT.md).
 
@@ -66,8 +68,8 @@ The command does not print or store the key. It turns off Stagehand's own logs, 
 The result goes to stdout. Diagnostics go to stderr.
 
 ```json
-{"status":"agent-completed","url":"https://your-storefront.example/products/snowboard","title":"Snowboard","summary":"I added 1 unit to the cart.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"},"pinned":{"productHandle":"snowboard","productTitle":"Snowboard","variantId":"gid://shopify/ProductVariant/1","selectedOptions":[{"name":"Title","value":"Default Title"}]}}
-{"status":"skipped","reason":"No eligible variant: the catalog was searched to the end.","context":{"country":"US","language":"EN","countryName":"United States","currency":"USD"}}
+{"status":"agent-completed","url":"https://your-storefront.example/products/snowboard","title":"Snowboard","summary":"I added 1 unit to the cart.","context":{"country":"US","language":"EN","countryName":"United States","languageName":"English","currency":"USD"},"pinned":{"productHandle":"snowboard","productTitle":"Snowboard","variantId":"gid://shopify/ProductVariant/1","selectedOptions":[{"name":"Title","value":"Default Title"}]}}
+{"status":"skipped","reason":"No eligible variant: the catalog was searched to the end.","context":{"country":"US","language":"EN","countryName":"United States","languageName":"English","currency":"USD"}}
 {"status":"indeterminate","reason":"HTTP 500"}
 ```
 

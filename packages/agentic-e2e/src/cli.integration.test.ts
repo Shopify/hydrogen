@@ -49,7 +49,13 @@ vi.mock("./browser/session.ts", async (importOriginal) => {
   return { createBrowserSession: vi.fn(original.createBrowserSession) };
 });
 
-const CONTEXT = { country: "CA", language: "FR", countryName: "Canada", currency: "CAD" };
+const CONTEXT = {
+  country: "CA",
+  language: "FR",
+  languageName: "Français",
+  countryName: "Canada",
+  currency: "CAD",
+};
 const PINNED = {
   productHandle: "fixture-board",
   productTitle: "Fixture Board",
@@ -172,11 +178,14 @@ describe("main with the agent", () => {
         pinned: PINNED,
       },
     ]);
-    // The bootstrap sends no context. The catalog query carries the discovered context.
+    // The bootstrap sends no context. The catalog query carries the discovered context as codes,
+    // not names.
     expect(apiRequests).toHaveLength(2);
     expect(apiRequests[0]?.query).not.toContain("@inContext");
     expect(apiRequests[0]?.variables).toEqual({});
-    expect(apiRequests[1]?.variables).toMatchObject({
+    expect(apiRequests[1]?.variables).toEqual({
+      first: 50,
+      after: null,
       storefrontCountry: "CA",
       storefrontLanguage: "FR",
     });
@@ -198,7 +207,7 @@ describe("main with the agent", () => {
     expect(planning?.body).toContain("guest shopper");
     // The objective names the run's market, and the system prompt keeps it.
     expect(planning?.body).toContain(
-      String.raw`Shop in the \"Canada\" store (prices in \"CAD\"): if the store shows another country or currency, switch to \"Canada\".`,
+      String.raw`Shop in the \"Canada\" store (language \"Français\", prices in \"CAD\"): if the store shows another country, language, or currency, switch to \"Canada\" with language \"Français\".`,
     );
     expect(planning?.body).toContain("Keep the store's country, language and currency");
     expect(planning?.tools).toContain("act");
@@ -479,7 +488,7 @@ function onApiRequest(request: IncomingMessage, response: ServerResponse) {
     const data = body.query.includes("localization")
       ? {
           localization: {
-            language: { isoCode: "FR" },
+            language: { isoCode: "FR", endonymName: "Français" },
             country: { isoCode: "CA", name: "Canada", currency: { isoCode: "CAD" } },
           },
         }
