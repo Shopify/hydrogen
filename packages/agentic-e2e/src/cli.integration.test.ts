@@ -172,7 +172,10 @@ describe("main with the agent", () => {
     expect(apiRequests).toHaveLength(2);
     expect(apiRequests[0]?.query).not.toContain("@inContext");
     expect(apiRequests[0]?.variables).toEqual({});
-    expect(apiRequests[1]?.variables).toMatchObject({ country: "CA", language: "FR" });
+    expect(apiRequests[1]?.variables).toMatchObject({
+      storefrontCountry: "CA",
+      storefrontLanguage: "FR",
+    });
     expect(modelRequests).toHaveLength(3);
     for (const request of modelRequests) {
       expect(request).toMatchObject({

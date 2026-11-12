@@ -55,12 +55,31 @@ describe("pinVariant", () => {
     await pinVariant(STOREFRONT_URL, CA_FR, signal);
 
     expect(requests[0]?.url).toMatch(/^https:\/\/shop\.example\/api\/[^/]+\/graphql\.json$/);
-    expect(requests[0]?.query).toContain("@inContext(country: $country, language: $language)");
+    expect(requests[0]?.query).toContain(
+      "@inContext(country: $storefrontCountry, language: $storefrontLanguage)",
+    );
     expect(requests[0]?.variables).toEqual({
       first: 50,
       after: null,
-      country: "CA",
-      language: "FR",
+      storefrontCountry: "CA",
+      storefrontLanguage: "FR",
+    });
+  });
+
+  // Storefront API language codes that Hydrogen's shared `ShopifyLanguageCode` leaves out.
+  it.each(["LA", "SH", "MO"] as const)("sends the language code %s unchanged", async (language) => {
+    const requests = stubFetch([page([available("board")])]);
+
+    await pinVariant(STOREFRONT_URL, { country: "CA", language }, signal);
+
+    expect(requests[0]?.query).toContain(
+      "@inContext(country: $storefrontCountry, language: $storefrontLanguage)",
+    );
+    expect(requests[0]?.variables).toEqual({
+      first: 50,
+      after: null,
+      storefrontCountry: "CA",
+      storefrontLanguage: language,
     });
   });
 
@@ -86,7 +105,7 @@ describe("pinVariant", () => {
     });
   });
 
-  it("follows the pagination cursor", async () => {
+  it("follows the pagination cursor and keeps the context on every page", async () => {
     const requests = stubFetch([
       page([product("sold-out", { id: "v1", availableForSale: false })], {
         hasNextPage: true,
@@ -95,10 +114,13 @@ describe("pinVariant", () => {
       page([available("later")]),
     ]);
 
-    const pin = await pinVariant(STOREFRONT_URL, CA_FR, signal);
+    const pin = await pinVariant(STOREFRONT_URL, { country: "CA", language: "LA" }, signal);
 
     expect(pin.status === "pinned" && pin.pinned.productHandle).toBe("later");
-    expect(requests.map((request) => request.variables.after)).toEqual([null, "cursor-1"]);
+    expect(requests.map((request) => request.variables)).toEqual([
+      { first: 50, after: null, storefrontCountry: "CA", storefrontLanguage: "LA" },
+      { first: 50, after: "cursor-1", storefrontCountry: "CA", storefrontLanguage: "LA" },
+    ]);
   });
 
   it("skips when the catalog was searched to the end", async () => {
