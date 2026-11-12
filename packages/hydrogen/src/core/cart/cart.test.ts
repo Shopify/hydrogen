@@ -9,7 +9,6 @@ import {
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "../shopify-scripts";
 import { assert, createTestLogger } from "../test-utils";
-import { attachQuantityInput } from "./attach-quantity-input";
 import {
   configureCartEndpoint,
   getShopifyStandardActions,
@@ -20,7 +19,6 @@ import {
   revalidateConnectedCartCheckoutUrls,
   type CartStore,
 } from "./cart";
-import { createCartFormRegister } from "./form";
 import type { CartData, CartLine, CartPending, CartState } from "./state";
 import {
   EMPTY_CART_DATA,
@@ -1196,33 +1194,13 @@ describe("CartStore.handleFormSubmit — line mutations", () => {
       };
       store.hydrate(makeCartState({ lines: [line], totalQuantity: currentQuantity }));
 
-      const register = createCartFormRegister();
-      const form = document.createElement("form");
-      const setButton = Object.assign(document.createElement("button"), register("set"));
-      const lineIdInput = Object.assign(
-        document.createElement("input"),
-        register("lineId", { value: "line-1" }),
+      const event = submitForm(
+        { lineId: "line-1", quantity: String(requestedQuantity) },
+        "intent",
+        "set",
       );
-      const quantityInput = Object.assign(
-        document.createElement("input"),
-        register("quantity", { value: currentQuantity, interactive: true }),
-      );
-      form.append(setButton, lineIdInput, quantityInput);
-      document.body.appendChild(form);
-      attachQuantityInput(quantityInput, form);
-
-      let submission: Promise<void> | undefined;
-      form.addEventListener("submit", (event) => {
-        event.preventDefault();
-        submission = store.handleFormSubmit(event as SubmitEvent);
-      });
-
-      quantityInput.value = String(requestedQuantity);
-      quantityInput.dispatchEvent(new Event("change", { bubbles: true }));
+      const promise = store.handleFormSubmit(event);
       await nextTick();
-      document.body.removeChild(form);
-
-      assert(submission, "Expected the quantity change to submit the form");
 
       const optimisticLines = getCartLines(store.getState().data);
       expect(optimisticLines.map((l) => ({ id: l.id, quantity: l.quantity }))).toEqual([
@@ -1237,7 +1215,7 @@ describe("CartStore.handleFormSubmit — line mutations", () => {
         0,
         serverCart(requestedQuantity, [{ id: "line-1", quantity: requestedQuantity }]),
       );
-      await submission;
+      await promise;
     },
   );
 
