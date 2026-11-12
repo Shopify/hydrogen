@@ -182,7 +182,7 @@ describe("main with the agent", () => {
     });
     // Two planning requests (act, then done) and the `act` tool's own request.
     expect(modelRequests).toHaveLength(3);
-    // The fixture page shows the add only after the click.
+    // Exactly one Add to cart POST reached the fixture.
     expect(addClicks).toBe(1);
     for (const request of modelRequests) {
       expect(request).toMatchObject({
