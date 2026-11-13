@@ -144,7 +144,7 @@ import * as serverBuild from "virtual:react-router/server-build";
 export default {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
     const handleRequest = createRequestHandler(serverBuild, import.meta.env.MODE);
-    const context = await createAppLoadContext(request, env, executionContext);
+    const context = await createRouterContext(request, env, executionContext);
 
     return handleRequest(request, context);
   },
@@ -153,10 +153,10 @@ export default {
 
 Prefer `import.meta.env.MODE` for the Vite/Oxygen template entrypoint. Do not introduce a Node-oriented `process.env.NODE_ENV` dependency unless existing template code already requires it and it has been verified in MiniOxygen.
 
-Implement `createAppLoadContext` using React Router's context API and the example's existing middleware expectations. This function is the right place to create request-scoped Worker resources and expose them to middleware/loaders:
+Implement `createRouterContext` using React Router's context API and the example's existing middleware expectations. This function is the right place to create request-scoped Worker resources and expose them to middleware/loaders:
 
 ```ts
-async function createAppLoadContext(
+async function createRouterContext(
   request: Request,
   env: Env,
   executionContext: ExecutionContext,
@@ -179,6 +179,15 @@ request handler. The root middleware owns `handleShopifyRoutes` before `next()`,
 framework 404, and storefront response headers on framework responses. Shopify handler responses already include
 their own storefront response headers. The catch-all route should only produce the framework 404 that lets the root
 middleware check for a Shopify redirect.
+
+React Router 8 passes the raw request to middleware and loaders, so single-fetch data requests keep their `.data`
+suffix and internal `index`/`_routes` search params. The normalized URL is the `url` argument.
+
+- In the root middleware, give Hydrogen `toRoutedRequest(request, url)` from `app/lib/routed-request.ts` instead of
+  `request`. Otherwise `handleShopifyRoutes`, `handleShopifyRedirects`, and the request context match against paths
+  like `/admin.data`.
+- In loaders, read search params from `url.searchParams`, not `new URL(request.url)`. Otherwise helpers such as
+  `getSelectedProductOptions` read `_routes` as a product option.
 
 ## entry.server.tsx and entry.client.tsx (REQUIRED)
 
