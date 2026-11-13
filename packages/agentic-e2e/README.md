@@ -15,6 +15,8 @@ The URL must be the storefront root URL. A URL with a path, such as `/en-ca`, is
 
 Run `pnpm --filter @shopify/agentic-e2e run browser:install` once before the first run. It downloads the Chromium build that matches this package's Playwright version (about 340 MB) into Playwright's shared cache. To use another Chromium-based browser, set `AGENTIC_E2E_BROWSER_PATH` to its executable.
 
+The browser window is 1280 × 800 CSS pixels, a desktop size, so stores show their desktop layout. The page is 1280 pixels wide. It is less high than the window, because the window includes the browser's top bar. Without a set size, headless Chrome shows a page of about 756 × 413, where many stores show their narrow layout.
+
 Without `--test`, the command runs every test in this order: `add-to-cart`, `choose-a-variant`, then `change-quantity-and-remove`. `--test <name>` runs only that test. A `fail`, `indeterminate`, or `skipped` test does not stop the later tests. Each test is one agent run (one paid model run), so a run without `--test` costs three agent runs, one for each test. `--help` shows the usage.
 
 By default, the command writes one table line to stdout for each test, when that test ends: the status, the test name, and the reason when the status is not `pass`. There is no header and no summary line.
@@ -179,6 +181,7 @@ There is one model path: `anthropic/claude-haiku-5-5` through the Shopify AI pro
 - **`change-quantity-and-remove` follows the line by its cart line ID, not by a variant ID**, because `update` and `remove` events and their results have no variant ID. When the add result also has an automatic gift line, the followed line is the one that the first change names.
 - **A wrong agent action gives `fail` in `change-quantity-and-remove`.** For example, a remove before the decrease is `fail`, because code cannot tell it from a storefront defect. An agent that stops early, without a confirmed completion, gives `indeterminate`.
 - **The `change-quantity-and-remove` stock check leaves carts on the shop:** one cart that nothing uses for each checked variant, at most 5 in one run.
+- **Desktop layout only.** The window is always 1280 × 800. Narrow (phone or tablet) layouts are not tested, and a control that only a narrow layout hides or shows is not found. The window size does not change the browser's user agent, so a store that selects its layout from the user agent can still show another layout.
 - One main page only. Events in popups or frames are not recorded.
 - The script observes `event.promise` with a rejection handler. This marks a native promise as handled, so the storefront may not get an `unhandledrejection` for it.
 - `pnpm build:pkgs` (or `pnpm --filter @shopify/hydrogen build`) is needed first.
