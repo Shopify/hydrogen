@@ -56,7 +56,7 @@ const STANDARD_EVENTS_COLLECTION_SORT_KEY: Record<string, ProductCollectionSortK
  *
  * The function reads Liquid-compatible `filter.p.*` and `filter.v.*` keys and the `sort_by` param.
  *
- * A URL that sets availability to both in stock and out of stock produces no availability filter. The function recognizes the best-selling and manual sort values, plus created, price, and title with an ascending or descending suffix. For other sort values, the sort key is `undefined`. The `parseSortByValue` function also recognizes relevance, collection default, and ID.
+ * A URL that sets availability to both in stock and out of stock produces no availability filter. A price bound must be a non-negative number as `<input type="number">` submits it, such as `12.5`; the function ignores any other value, such as `12,50`, the same way on the server and in the browser. The function recognizes the best-selling and manual sort values, plus created, price, and title with an ascending or descending suffix. For other sort values, the sort key is `undefined`. The `parseSortByValue` function also recognizes relevance, collection default, and ID.
  *
  * @param searchParams - URL search params to read.
  * @returns The filters, sort key, and sort direction from the URL.
@@ -246,11 +246,11 @@ export function parseSortByValue(value: string): {
 function parseProductFilters(searchParams: URLSearchParams): ProductFilter[] {
   const filters: ProductFilter[] = [];
   const price: ProductFilter["price"] = {};
-  const minPrice = searchParams.get("filter.v.price.gte");
-  const maxPrice = searchParams.get("filter.v.price.lte");
+  const minPrice = parsePriceBound(searchParams.get("filter.v.price.gte"));
+  const maxPrice = parsePriceBound(searchParams.get("filter.v.price.lte"));
 
-  if (minPrice) price.min = parseLocalizedNumber(minPrice);
-  if (maxPrice) price.max = parseLocalizedNumber(maxPrice);
+  if (minPrice !== undefined) price.min = minPrice;
+  if (maxPrice !== undefined) price.max = maxPrice;
   if (price.min !== undefined || price.max !== undefined) filters.push({ price });
 
   const availability = searchParams.getAll("filter.v.availability");
@@ -322,24 +322,15 @@ function parseCollectionSortKey(
   return rawSortBy ? STANDARD_EVENTS_COLLECTION_SORT_KEY[rawSortBy] : undefined;
 }
 
-const CANONICAL_DECIMAL = /^-?\d+(\.\d+)?$/;
+// The HTML valid floating-point number grammar, which <input type="number"> submits and
+// String(n) writes, without the sign. A URL must mean the same price to every reader, so
+// locale-formatted values such as 12,50 are dropped instead of guessed.
+const PRICE_BOUND = /^(\d+(\.\d+)?|\.\d+)([eE][+-]?\d+)?$/;
 
-function parseLocalizedNumber(value: string): number {
-  // Canonical decimals come from String(n) in the serializer and from
-  // <input type="number">, so they must survive regardless of shop locale.
-  if (CANONICAL_DECIMAL.test(value)) return Number(value);
-
-  try {
-    const locale = typeof window !== "undefined" ? window.Shopify?.locale : undefined;
-    const parts = new Intl.NumberFormat(locale ?? "en").formatToParts(1234.5);
-    const group = parts.find((part) => part.type === "group")?.value ?? ",";
-    const decimal = parts.find((part) => part.type === "decimal")?.value ?? ".";
-    const normalized = value.split(group).join("").replace(decimal, ".");
-    const number = Number(normalized);
-    if (!Number.isNaN(number)) return number;
-  } catch {}
-
-  return Number(value.replace(/[^\d.]/g, "")) || 0;
+function parsePriceBound(value: string | null): number | undefined {
+  if (value === null || !PRICE_BOUND.test(value)) return undefined;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
 }
 
 function decodeFilterKeyPart(value: string): string {

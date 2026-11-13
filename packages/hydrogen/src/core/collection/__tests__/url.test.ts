@@ -886,47 +886,74 @@ describe("category filter", () => {
   });
 });
 
-describe("price bounds under window.Shopify.locale", () => {
-  const state = {
-    filters: [{ price: { min: 12.5, max: 1234.5 } }],
-    sortKey: undefined,
-    reverse: false,
-  };
-
+describe("price bounds", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it.each(["en", "fr", "de", "nl", "tr"])(
-    "reads its own serialized price bounds back unchanged when the shop locale is %s",
-    (locale) => {
-      vi.stubGlobal("window", { Shopify: { locale } });
+  it.each([
+    ["0", 0],
+    ["12", 12],
+    ["12.5", 12.5],
+    [".5", 0.5],
+    ["1.000", 1],
+    ["1e3", 1000],
+    ["1E+3", 1000],
+    ["2.5e-1", 0.25],
+  ])("reads %s as %s", (value, expected) => {
+    const result = parseCollectionParams(params(`filter.v.price.gte=${encodeURIComponent(value)}`));
 
-      const result = parseCollectionParams(serializeCollectionParams(state));
+    expect(result.filters).toEqual([{ price: { min: expected } }]);
+  });
 
-      expect(result.filters).toEqual(state.filters);
-    },
-  );
+  it.each([
+    "12,50",
+    "1.234,50",
+    "12,50 €",
+    "abc",
+    "Infinity",
+    "-Infinity",
+    "NaN",
+    "0x10",
+    " 12",
+    "12.50.30",
+    "5.",
+    "-5",
+    "1".repeat(400),
+  ])("drops the bound %s", (value) => {
+    const result = parseCollectionParams(params(`filter.v.price.lte=${encodeURIComponent(value)}`));
 
-  it("treats the URL it wrote as matching its own state when the shop locale groups with a dot", () => {
-    vi.stubGlobal("window", { Shopify: { locale: "de" } });
+    expect(result.filters).toEqual([]);
+  });
 
+  it("keeps a valid bound when the other bound is dropped", () => {
+    const result = parseCollectionParams(params("filter.v.price.gte=10&filter.v.price.lte=12,50"));
+
+    expect(result.filters).toEqual([{ price: { min: 10 } }]);
+  });
+
+  it("reads its own serialized price bounds back unchanged", () => {
+    const state = {
+      filters: [{ price: { min: 1e-7, max: 1e21 } }],
+      sortKey: undefined,
+      reverse: false,
+    };
+
+    expect(parseCollectionParams(serializeCollectionParams(state)).filters).toEqual(state.filters);
     expect(collectionParamsMatchState(serializeCollectionParams(state), state)).toBe(true);
   });
 
-  it("parses a locale-formatted comma decimal under de", () => {
-    vi.stubGlobal("window", { Shopify: { locale: "de" } });
+  const mixedQuery = "filter.v.price.gte=12.5&filter.v.price.lte=1.234,50";
 
-    const result = parseCollectionParams(params("filter.v.price.gte=12,50"));
+  it.each(["en", "fr", "de", "nl", "tr", "pt_br", "x_bogus!"])(
+    "reads price bounds the same under window.Shopify.locale %s as with no window",
+    (locale) => {
+      expect(typeof window).toBe("undefined");
+      const serverResult = parseCollectionParams(params(mixedQuery));
 
-    expect(result.filters).toEqual([{ price: { min: 12.5 } }]);
-  });
+      vi.stubGlobal("window", { Shopify: { locale } });
 
-  it("treats a dot-only numeric string as a canonical decimal under de, not a grouped thousand", () => {
-    vi.stubGlobal("window", { Shopify: { locale: "de" } });
-
-    const result = parseCollectionParams(params("filter.v.price.gte=1.000"));
-
-    expect(result.filters).toEqual([{ price: { min: 1 } }]);
-  });
+      expect(parseCollectionParams(params(mixedQuery))).toEqual(serverResult);
+    },
+  );
 });
