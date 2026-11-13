@@ -117,6 +117,38 @@ export class CartNetworkError extends Error {
   }
 }
 
+/** A cart read that the server reported as failed: a `null` cart with errors. */
+class CartLoadError extends Error {
+  constructor(errors: Array<{ message: string }>) {
+    super(errors.map(({ message }) => message).join("\n"));
+    this.name = "CartLoadError";
+  }
+}
+
+function getCartLoadError({ cart, errors }: CartInitialData): CartLoadError | null {
+  return cart === null && errors !== undefined && errors.length > 0
+    ? new CartLoadError(errors)
+    : null;
+}
+
+function createSettledEmptyCartState(data: CartInitialData): CartState {
+  const state = createEmptyCartState({ loading: false });
+  const loadError = getCartLoadError(data);
+  return loadError ? { ...state, loadError: createNetworkEntry(loadError) } : state;
+}
+
+function withoutLoadError(state: CartState): CartState {
+  if (!state.loadError) return state;
+  const { loadError: _loadError, ...rest } = state;
+  return rest;
+}
+
+function logUnexpectedLoadError(message: string) {
+  return (error: unknown) => {
+    if (!(error instanceof CartLoadError)) log.error(message, { error });
+  };
+}
+
 /**
  * Holds the customer's cart and runs cart changes in any framework. In React, `CartProvider` creates the store for you.
  *
@@ -127,7 +159,7 @@ export class CartNetworkError extends Error {
  * @example
  * ```ts
  * const store = createCartStore({
- *   initialData: { cart: loaderData.cart },
+ *   initialData: loaderData.cartData,
  * });
  *
  * store.connect();
@@ -164,14 +196,14 @@ export type CartStore = {
   /**
    * Loads the full cart from the server.
    *
-   * The promise rejects when the load fails, with a `CartNetworkError` when your cart endpoint returns a non-2xx status.
+   * The promise rejects when the load fails: with a `CartNetworkError` when your cart endpoint returns a non-2xx status, and with an error when your cart endpoint reports that it couldn't read the cart. When the store has no cart ID, a failed load also sets `loadError` in the cart state.
    */
   fetch(): Promise<void>;
 
   /**
-   * Reloads the cart after a cart change that skipped the store, such as a server action. When the store has no cart yet, the method picks up the cart that the server created.
+   * Reloads the cart after a cart change that skipped the store, such as a server action. When the store has no cart yet, the method picks up the cart that the server created. Call it to retry when the cart state has a `loadError`.
    *
-   * A failed reload adds an entry to the network errors in the cart state.
+   * A failed reload adds an entry to the network errors in the cart state, or replaces `loadError` when the state has one. A reload that returns the cart, or confirms that no cart exists, clears `loadError`.
    */
   refresh(): void;
 
@@ -201,9 +233,9 @@ export type CartActions = Pick<CartStore, "refresh">;
 
 /** The cart that the server loaded for the first render. */
 type CartInitialData<TData extends CartData = CartData> = {
-  /** The loaded cart, or `null` when the server found no cart. */
+  /** The loaded cart, or `null` when the server found no cart or could not read it. */
   cart: TData | null;
-  /** Load errors from the server. The store ignores the errors. */
+  /** Load errors from the server. A `null` cart with errors means that the server could not read the cart, and the store sets `loadError` in the cart state. */
   errors?: Array<{ message: string }>;
 };
 
@@ -212,8 +244,10 @@ export type CreateCartStoreOptions<TData extends CartData = CartData> = {
   /**
    * The cart that the server loaded, or a promise of the cart for streamed data.
    *
-   * Pass the `data` property of the cart GET handler's result. A `null` cart
-   * tells the store that no cart exists yet. Without initial data, the store starts empty and loads the cart when you call `connect()`.
+   * Pass the `data` property of the cart GET handler's result. A `null` cart without errors
+   * tells the store that no cart exists yet. A `null` cart with errors, resolved or from a promise, tells the store that the server couldn't read the cart: the store sets `loadError` and doesn't load the cart until you call `refresh()`. Without initial data, the store starts empty and loads the cart when you call `connect()`.
+   *
+   * Without a cart endpoint from `configureCartEndpoint` or a cart provider, loads go through Standard Actions, where a failed read looks like no cart.
    */
   initialData?: CartInitialData<TData> | PromiseLike<CartInitialData<TData>>;
 };
@@ -609,6 +643,7 @@ function reuseVisibleReferences(previous: CartState, next: CartState): CartState
     previous.data === data &&
     previous.loading === next.loading &&
     previous.revalidating === next.revalidating &&
+    previous.loadError === next.loadError &&
     previous.errors === next.errors &&
     previous.pending === pending
   ) {
@@ -2331,7 +2366,7 @@ function hasLocalCartData(state: CartState): boolean {
 function hydrateCartInStore(store: CartStoreContext, data: CartData): void {
   const current = store.observable.state;
   invalidateActiveCartLoad(store);
-  if (current.data.id !== null && current.data.id === data.id) {
+  if (!current.loadError && current.data.id !== null && current.data.id === data.id) {
     store.observable.clearReadyState();
     return;
   }
@@ -2351,7 +2386,9 @@ function resetCartStore(store: CartStoreContext): void {
   const shouldReloadAfterReset =
     store.cartSyncAttached &&
     !hadActiveRevalidation &&
-    (hadActiveCartLoad || hasLocalCartData(store.observable.state));
+    (hadActiveCartLoad ||
+      hasLocalCartData(store.observable.state) ||
+      store.observable.state.loadError !== undefined);
 
   clearPendingTransactions(store);
   store.activeMutationTransports.clear();
@@ -2362,9 +2399,7 @@ function resetCartStore(store: CartStoreContext): void {
   publishVisibleState(store);
 
   if (shouldReloadAfterReset) {
-    loadCartInStore(store).catch((error: unknown) =>
-      log.error("cart reset load failed", { error }),
-    );
+    loadCartInStore(store).catch(logUnexpectedLoadError("cart reset load failed"));
   }
 }
 
@@ -2392,13 +2427,16 @@ function loadCartInStore(
       if (!isCurrentCartLoad(store, request)) return;
       if (data) hydrateCartInStore(store, data);
       if (!data) {
-        store.settled = { ...store.settled, loading: false };
+        store.settled = { ...withoutLoadError(store.settled), loading: false };
         publishVisibleState(store);
       }
     })
     .catch((error) => {
       if (isCurrentCartLoad(store, request)) {
-        store.settled = { ...store.settled, loading: false };
+        store.settled =
+          store.settled.data.id === null
+            ? { ...store.settled, loading: false, loadError: createNetworkEntry(error) }
+            : { ...store.settled, loading: false };
         publishVisibleState(store);
       }
       throw error;
@@ -2422,7 +2460,7 @@ function loadCartInStore(
  * ```ts
  * // With synchronous loader data
  * const store = createCartStore({
- *   initialData: { cart: loaderData.cart },
+ *   initialData: loaderData.cartData,
  * });
  *
  * // With deferred/streamed data
@@ -2447,7 +2485,7 @@ export function createCartStore<TData extends CartData = CartData>(
   const settled = initialCart
     ? createCartState(initialCart)
     : syncInitialData
-      ? createEmptyCartState({ loading: false })
+      ? createSettledEmptyCartState(initialData)
       : createEmptyCartState();
   let context: CartStoreContext | null = null;
   const observable = createCartObservable(settled, () => {
@@ -2487,8 +2525,12 @@ export function createCartStore<TData extends CartData = CartData>(
   if (asyncInitialData) {
     loadCartInStore(
       store,
-      Promise.resolve(initialData).then((data) => data.cart),
-    ).catch((error: unknown) => log.error("cart initial load failed", { error }));
+      Promise.resolve(initialData).then((data) => {
+        const loadError = getCartLoadError(data);
+        if (loadError) throw loadError;
+        return data.cart;
+      }),
+    ).catch(logUnexpectedLoadError("cart initial load failed"));
   }
 
   let initialCartLoadStarted = syncInitialData || asyncInitialData;
@@ -2498,9 +2540,7 @@ export function createCartStore<TData extends CartData = CartData>(
       const connected = connectCartStore(store, handlers);
       if (!connected || initialCartLoadStarted) return;
       initialCartLoadStarted = true;
-      loadCartInStore(store).catch((error: unknown) =>
-        log.error("cart initial load failed", { error }),
-      );
+      loadCartInStore(store).catch(logUnexpectedLoadError("cart initial load failed"));
     },
     destroy: () => destroyCartStore(store, handlers),
     hydrate: (data) => hydrateCartInStore(store, data),
@@ -2789,7 +2829,9 @@ async function fetchCart(
       signal,
     });
     if (!response.ok) throw new CartNetworkError(response.status);
-    const result = (await response.json()) as { cart: CartResponse | null };
+    const result = (await response.json()) as CartInitialData<CartResponse>;
+    const loadError = getCartLoadError(result);
+    if (loadError) throw loadError;
     return { cart: result.cart };
   }
 
@@ -2887,6 +2929,7 @@ function applyCartRevalidation(
       hydrateCartInStore(store, cart);
       return;
     }
+    store.settled = withoutLoadError(store.settled);
     store.revalidation.visible = false;
     publishVisibleState(store);
     return;
@@ -2902,7 +2945,7 @@ function applyCartRevalidation(
     return;
   }
   store.settled = {
-    ...store.settled,
+    ...withoutLoadError(store.settled),
     data: mergeAuthoritativeCartData(store.settled.data, cart),
   };
   store.revalidation.visible = false;
@@ -2953,9 +2996,13 @@ function revalidateCartWhenIdle(store: CartStoreContext): void {
     .catch((error: unknown) => {
       if (isAbortError(error) || !isCurrentCartRevalidationRequest(store, request)) return;
       store.revalidation.visible = false;
-      addProjectedError(store, [REVALIDATION_ERROR_KEY], (state, timestampMs) =>
-        writeNetworkError(state, new Error(CART_REVALIDATION_ERROR_MESSAGE), timestampMs),
-      );
+      if (store.settled.loadError) {
+        store.settled = { ...store.settled, loadError: createNetworkEntry(error) };
+      } else {
+        addProjectedError(store, [REVALIDATION_ERROR_KEY], (state, timestampMs) =>
+          writeNetworkError(state, new Error(CART_REVALIDATION_ERROR_MESSAGE), timestampMs),
+        );
+      }
       publishVisibleState(store);
     })
     .finally(() => {
@@ -3004,7 +3051,7 @@ export function revalidateConnectedCartCheckoutUrls(): void {
  * ```ts
  * // With synchronous loader data
  * const store = createCartStore({
- *   initialData: { cart: loaderData.cart },
+ *   initialData: loaderData.cartData,
  * });
  *
  * // With deferred/streamed data

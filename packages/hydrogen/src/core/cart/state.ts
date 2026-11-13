@@ -200,7 +200,7 @@ export interface CartErrorState {
   /** Errors keyed by discount code. */
   discountCodes: Map<string, CartErrorGroup>;
   /**
-   * Failed cart requests. A failed cart change adds an entry, with an HTTP status when the endpoint returned a non-2xx response. A failed refresh adds an entry with a generic message and no status. A failed first load or a failed load after a reset adds no entry.
+   * Failed cart requests. A failed cart change adds an entry, with an HTTP status when the endpoint returned a non-2xx response. A failed refresh adds an entry with a generic message and no status, unless `loadError` is set. A failed first load or a failed load after a reset adds no entry. The store sets `loadError` instead.
    */
   network: CartNetworkEntry[];
   /** Time in milliseconds since the epoch when the store last recorded any error, or `0` before the first. */
@@ -262,6 +262,10 @@ export interface CartData {
  *   // Initial cart load in progress — show skeleton
  * }
  *
+ * if (state.loadError) {
+ *   // The cart couldn't load — show a retry that calls refresh(), not the empty cart
+ * }
+ *
  * if (state.pending.lines.size > 0) {
  *   // One or more lines are mid-mutation — show per-line spinners
  * }
@@ -282,6 +286,12 @@ export interface CartState<TData extends CartData = CartData> {
   pending: CartPending;
   /** `true` while the store reloads the cart in the background after overlapping cart changes or a `refresh()` call. */
   revalidating?: boolean;
+  /**
+   * Present when the store couldn't load the cart and has no cart to show: the server reported a failed cart read in the initial data, or a full load failed before the store had a cart ID. Cart changes don't clear it, so `data` can hold a partial cart. A full load, `refresh()`, or `reset()` clears it when the server returns the cart or confirms that no cart exists, and a failed `refresh()` replaces it.
+   *
+   * Show a retry that calls `refresh()` instead of the cart, its totals, or its line count. `useSuspenseCart` doesn't suspend in this state. `message` is diagnostic text, such as a raw Storefront API message, not copy for shoppers.
+   */
+  loadError?: CartNetworkEntry;
   /** Errors and warnings, grouped by the part of the cart that they affect. */
   errors: CartErrorState;
 }

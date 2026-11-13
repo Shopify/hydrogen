@@ -2,6 +2,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import type { CartActionError } from "../../../vendor/standard-actions";
+import { trackCartAnalytics } from "../analytics/cart-tracker";
+import { AnalyticsEvent } from "../analytics/events";
 import { configureLogging } from "../logging";
 import {
   CONSENT_TRACKING_API_LOADED_EVENT,
@@ -374,6 +376,7 @@ describe("createCartStore", () => {
 
     expect(localStore.getState().loading).toBe(false);
     expect(localStore.getState().data).toEqual(EMPTY_CART_DATA);
+    expect("loadError" in localStore.getState()).toBe(false);
 
     localStore.destroy();
   });
@@ -384,6 +387,79 @@ describe("createCartStore", () => {
     });
 
     expect(localStore.getState().readyPromise).toBeUndefined();
+
+    localStore.destroy();
+  });
+
+  it("sets loadError without loading the cart when sync initialData reports a failed read", () => {
+    const localStore = createCartStore({
+      initialData: { cart: null, errors: [{ message: "Throttled" }] },
+    });
+
+    expect(localStore.getState().loading).toBe(false);
+    expect(localStore.getState().loadError).toEqual({ message: "Throttled" });
+    expect(localStore.getState().data).toEqual(EMPTY_CART_DATA);
+
+    localStore.connect();
+
+    expect(localStore.getState().readyPromise).toBeUndefined();
+
+    localStore.destroy();
+  });
+
+  it("treats sync initialData with a null cart and empty errors as no cart", () => {
+    const localStore = createCartStore({ initialData: { cart: null, errors: [] } });
+
+    expect(localStore.getState().loading).toBe(false);
+    expect("loadError" in localStore.getState()).toBe(false);
+
+    localStore.connect();
+
+    expect(localStore.getState().readyPromise).toBeUndefined();
+
+    localStore.destroy();
+  });
+
+  it("keeps a sync initialData cart that arrives with errors", () => {
+    const localStore = createCartStore({
+      initialData: {
+        cart: makeCartState({ totalQuantity: 2 }),
+        errors: [{ message: "Partial" }],
+      },
+    });
+
+    expect(localStore.getState().loading).toBe(false);
+    expect(localStore.getState().data.totalQuantity).toBe(2);
+    expect("loadError" in localStore.getState()).toBe(false);
+
+    localStore.connect();
+
+    expect(localStore.getState().readyPromise).toBeUndefined();
+
+    localStore.destroy();
+  });
+
+  it("sets loadError without loading the cart when streamed initialData reports a failed read", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const deferred = createDeferred<{
+      cart: CartData | null;
+      errors?: Array<{ message: string }>;
+    }>();
+    const localStore = createCartStore({ initialData: deferred.promise });
+
+    localStore.connect();
+    const readyPromise = localStore.getState().readyPromise;
+    assert(readyPromise, "Expected streamed initialData to create a readyPromise");
+
+    deferred.resolve({ cart: null, errors: [{ message: "Throttled" }] });
+    await readyPromise;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(localStore.getState().loading).toBe(false);
+    expect(localStore.getState().loadError).toEqual({ message: "Throttled" });
+    expect(mockGetCart).not.toHaveBeenCalled();
+    expect(logger.error).not.toHaveBeenCalled();
 
     localStore.destroy();
   });
@@ -6948,5 +7024,261 @@ describe("configureCartEndpoint", () => {
       expect(form.querySelector<HTMLInputElement>('input[name="quantity"]')?.value).toBe("3");
       form.remove();
     });
+  });
+});
+
+describe("loadError", () => {
+  const FAILED_READ = { cart: null, errors: [{ message: "Throttled" }] };
+
+  function createFailedStore(): CartStore {
+    const failedStore = createCartStore({ initialData: FAILED_READ });
+    failedStore.connect();
+    return failedStore;
+  }
+
+  function stubCartEndpoint(response: Response) {
+    const fetchMock = vi.fn().mockResolvedValue(response);
+    vi.stubGlobal("fetch", fetchMock);
+    configureCartEndpoint("/api/cart");
+    return fetchMock;
+  }
+
+  async function settleRefresh(target: CartStore): Promise<void> {
+    target.refresh();
+    expect(target.getState().revalidating).toBe(true);
+    await vi.waitFor(() => expect(target.getState().revalidating).toBeUndefined());
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("clears loadError when refresh() loads the cart", async () => {
+    const failedStore = createFailedStore();
+    stubCartEndpoint(Response.json({ cart: makeCartState({ totalQuantity: 2 }) }));
+
+    await settleRefresh(failedStore);
+
+    expect("loadError" in failedStore.getState()).toBe(false);
+    expect(failedStore.getState().data.totalQuantity).toBe(2);
+
+    failedStore.destroy();
+  });
+
+  it("clears loadError when refresh() finds no cart", async () => {
+    const failedStore = createFailedStore();
+    stubCartEndpoint(Response.json({ cart: null }));
+
+    await settleRefresh(failedStore);
+
+    expect("loadError" in failedStore.getState()).toBe(false);
+    expect(failedStore.getState().data.id).toBeNull();
+
+    failedStore.destroy();
+  });
+
+  it("replaces loadError instead of adding a network error when refresh() reads a failed cart", async () => {
+    const failedStore = createFailedStore();
+    stubCartEndpoint(Response.json({ cart: null, errors: [{ message: "Still throttled" }] }));
+
+    await settleRefresh(failedStore);
+
+    expect(failedStore.getState().loadError).toEqual({ message: "Still throttled" });
+    expect(failedStore.getState().errors.network).toHaveLength(0);
+
+    failedStore.destroy();
+  });
+
+  it("keeps the status in loadError when refresh() gets a non-2xx response", async () => {
+    const failedStore = createFailedStore();
+    stubCartEndpoint(new Response("Server Error", { status: 503 }));
+
+    await settleRefresh(failedStore);
+
+    expect(failedStore.getState().loadError).toEqual({
+      message: expect.any(String),
+      status: 503,
+    });
+    expect(failedStore.getState().errors.network).toHaveLength(0);
+
+    failedStore.destroy();
+  });
+
+  it("clears loadError when fetch() finds no cart", async () => {
+    const failedStore = createFailedStore();
+    stubCartEndpoint(Response.json({ cart: null }));
+
+    await failedStore.fetch();
+
+    expect("loadError" in failedStore.getState()).toBe(false);
+    expect(failedStore.getState().loading).toBe(false);
+
+    failedStore.destroy();
+  });
+
+  it("loads the cart when reset() runs from the failed state", async () => {
+    const failedStore = createFailedStore();
+    stubCartEndpoint(Response.json({ cart: makeCartState({ totalQuantity: 2 }) }));
+
+    failedStore.reset();
+    const readyPromise = failedStore.getState().readyPromise;
+    assert(readyPromise, "Expected reset() from the failed state to load the cart");
+    await readyPromise;
+
+    expect(failedStore.getState().loading).toBe(false);
+    expect("loadError" in failedStore.getState()).toBe(false);
+    expect(failedStore.getState().data.totalQuantity).toBe(2);
+
+    failedStore.destroy();
+  });
+
+  it("sets loadError when the first load fails without initial data", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    stubCartEndpoint(new Response("Server Error", { status: 500 }));
+    const localStore = createCartStore();
+
+    localStore.connect();
+    await localStore.getState().readyPromise;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(localStore.getState().loading).toBe(false);
+    expect(localStore.getState().loadError).toEqual({ message: expect.any(String), status: 500 });
+    expect(logger.error).toHaveBeenCalledWith("cart initial load failed", {
+      scope: "cart",
+      error: expect.any(CartNetworkError),
+    });
+
+    localStore.destroy();
+  });
+
+  it("sets loadError without logging when the endpoint reports a failed first read", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    stubCartEndpoint(Response.json(FAILED_READ));
+    const localStore = createCartStore();
+
+    localStore.connect();
+    await localStore.getState().readyPromise;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(localStore.getState().loadError).toEqual({ message: "Throttled" });
+    expect(logger.error).not.toHaveBeenCalled();
+
+    localStore.destroy();
+  });
+
+  it("keeps a shown cart and sets no loadError when fetch() fails", async () => {
+    const localStore = createCartStore({
+      initialData: { cart: makeCartState({ totalQuantity: 2 }) },
+    });
+    stubCartEndpoint(Response.json(FAILED_READ));
+
+    await expect(localStore.fetch()).rejects.toThrow("Throttled");
+
+    expect("loadError" in localStore.getState()).toBe(false);
+    expect(localStore.getState().data.totalQuantity).toBe(2);
+
+    localStore.destroy();
+  });
+
+  it("replaces loadError when refresh() fails after a cart change set the cart ID", async () => {
+    const failedStore = createFailedStore();
+    const addPromise = failedStore.handleFormSubmit(
+      submitForm(
+        { merchandiseId: "gid://shopify/ProductVariant/1", quantity: "1" },
+        "intent",
+        "add",
+      ),
+    );
+    await vi.waitFor(() => expect(updateDeferreds).toHaveLength(1));
+    resolveUpdate(0, serverCart(1, [{ id: "line-1", quantity: 1 }]));
+    await addPromise;
+    const previousLoadError = failedStore.getState().loadError;
+
+    expect(failedStore.getState().data.id).toBe("gid://shopify/Cart/123");
+    expect(previousLoadError).toEqual({ message: "Throttled" });
+
+    mockGetCart.mockRejectedValueOnce(new Error("Still failing"));
+    await settleRefresh(failedStore);
+
+    expect(failedStore.getState().loadError).toEqual({ message: "Still failing" });
+    expect(failedStore.getState().loadError).not.toBe(previousLoadError);
+    expect(failedStore.getState().errors.network).toHaveLength(0);
+
+    failedStore.destroy();
+  });
+
+  it("publishes one add from the failed state, then adopts the full cart on refresh() without events", async () => {
+    localStorage.clear();
+    const publish = vi.fn();
+    Object.assign(window.Shopify as object, {
+      analytics: { publish, getConfig: () => ({ shop: null, consent: {} }) },
+    });
+    const failedStore = createFailedStore();
+    const stopTracking = trackCartAnalytics(failedStore);
+    const firstLine = lineWithMerchandise("line-1", 1, "gid://shopify/ProductVariant/1");
+    const secondLine = lineWithMerchandise("line-2", 1, "gid://shopify/ProductVariant/2");
+    const addedLine = lineWithMerchandise("line-3", 1, "gid://shopify/ProductVariant/3");
+    const fullCart = {
+      id: "gid://shopify/Cart/123",
+      updatedAt: "2026-11-12T00:00:00Z",
+      totalQuantity: 3,
+      cost: { totalAmount: { amount: "30", currencyCode: "USD" } },
+      lines: [firstLine, secondLine, addedLine],
+      discountCodes: [],
+    };
+    const addEvents = () =>
+      publish.mock.calls.filter(([event]) => event === AnalyticsEvent.PRODUCT_ADD_TO_CART);
+
+    const addPromise = failedStore.handleFormSubmit(
+      submitForm(
+        { merchandiseId: "gid://shopify/ProductVariant/3", quantity: "1" },
+        "intent",
+        "add",
+      ),
+    );
+    await vi.waitFor(() => expect(updateDeferreds).toHaveLength(1));
+    resolveUpdate(0, { cart: fullCart });
+    await addPromise;
+
+    expect(addEvents()).toHaveLength(1);
+    expect(failedStore.getState().loadError).toEqual({ message: "Throttled" });
+    expect(getCartLines(failedStore.getState().data).map((line) => line.id)).toEqual(["line-3"]);
+
+    mockGetCart.mockResolvedValueOnce({ cart: fullCart });
+    await settleRefresh(failedStore);
+
+    expect("loadError" in failedStore.getState()).toBe(false);
+    expect(getCartLines(failedStore.getState().data).map((line) => line.id)).toEqual([
+      "line-1",
+      "line-2",
+      "line-3",
+    ]);
+    expect(addEvents()).toHaveLength(1);
+
+    const increasePromise = failedStore.handleFormSubmit(
+      submitForm({ lineId: "line-1" }, "intent", "increase"),
+    );
+    await vi.waitFor(() => expect(updateDeferreds).toHaveLength(2));
+    resolveUpdate(1, {
+      cart: {
+        ...fullCart,
+        updatedAt: "2026-11-12T00:01:00Z",
+        totalQuantity: 4,
+        lines: [{ ...firstLine, quantity: 2 }, secondLine, addedLine],
+      },
+    });
+    await increasePromise;
+
+    expect(addEvents()).toHaveLength(2);
+    expect(addEvents()[1]?.[1]).toEqual(
+      expect.objectContaining({
+        currentLine: expect.objectContaining({ id: "line-1", quantity: 2 }),
+      }),
+    );
+
+    stopTracking();
+    failedStore.destroy();
   });
 });
