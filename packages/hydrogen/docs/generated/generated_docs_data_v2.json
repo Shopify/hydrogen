@@ -3256,6 +3256,13 @@
         {
           "filePath": "src/core/cart/queries.ts",
           "syntaxKind": "PropertySignature",
+          "name": "cartBuyerIdentityUpdate",
+          "value": "StorefrontQueryString",
+          "description": "Mutation that sets a cart's buyer identity."
+        },
+        {
+          "filePath": "src/core/cart/queries.ts",
+          "syntaxKind": "PropertySignature",
           "name": "cartCreate",
           "value": "StorefrontQueryString",
           "description": "Mutation that creates a cart from a cart input."
@@ -3296,7 +3303,7 @@
           "description": "Mutation that sets a cart's note."
         }
       ],
-      "value": "export interface CartQueriesForDocs {\n  /** Query that fetches a cart by ID. */\n  readonly cart: StorefrontQueryString;\n  /** Mutation that creates a cart from a cart input. */\n  readonly cartCreate: StorefrontQueryString;\n  /** Mutation that adds merchandise lines to a cart. */\n  readonly cartLinesAdd: StorefrontQueryString;\n  /** Mutation that updates existing lines in a cart. */\n  readonly cartLinesUpdate: StorefrontQueryString;\n  /** Mutation that removes lines from a cart by line ID. */\n  readonly cartLinesRemove: StorefrontQueryString;\n  /** Mutation that replaces a cart's discount codes. */\n  readonly cartDiscountCodesUpdate: StorefrontQueryString;\n  /** Mutation that sets a cart's note. */\n  readonly cartNoteUpdate: StorefrontQueryString;\n  /** Mutation that sets a cart's custom attributes. */\n  readonly cartAttributesUpdate: StorefrontQueryString;\n}"
+      "value": "export interface CartQueriesForDocs {\n  /** Query that fetches a cart by ID. */\n  readonly cart: StorefrontQueryString;\n  /** Mutation that creates a cart from a cart input. */\n  readonly cartCreate: StorefrontQueryString;\n  /** Mutation that adds merchandise lines to a cart. */\n  readonly cartLinesAdd: StorefrontQueryString;\n  /** Mutation that updates existing lines in a cart. */\n  readonly cartLinesUpdate: StorefrontQueryString;\n  /** Mutation that removes lines from a cart by line ID. */\n  readonly cartLinesRemove: StorefrontQueryString;\n  /** Mutation that replaces a cart's discount codes. */\n  readonly cartDiscountCodesUpdate: StorefrontQueryString;\n  /** Mutation that sets a cart's note. */\n  readonly cartNoteUpdate: StorefrontQueryString;\n  /** Mutation that sets a cart's custom attributes. */\n  readonly cartAttributesUpdate: StorefrontQueryString;\n  /** Mutation that sets a cart's buyer identity. */\n  readonly cartBuyerIdentityUpdate: StorefrontQueryString;\n}"
     }
   },
   "CartDataFromQuery": {
@@ -3344,6 +3351,14 @@
           "name": "attributes",
           "value": "Attribute[]",
           "description": "Cart-level custom attributes."
+        },
+        {
+          "filePath": "src/core/cart/state.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "buyerIdentity",
+          "value": "CartBuyerIdentity | null",
+          "description": "The buyer that the cart belongs to. Absent until the first server response.",
+          "isOptional": true
         },
         {
           "filePath": "src/core/cart/state.ts",
@@ -3405,7 +3420,7 @@
           "isOptional": true
         }
       ],
-      "value": "export interface CartData {\n  /** The cart's Storefront API GID, or `null` when no cart exists yet. */\n  id: string | null;\n  /** The cart's last update time in ISO 8601 format. Absent until the first server response. */\n  updatedAt?: string;\n  /** The Shopify checkout URL. The URL can change when the customer logs in or out, or changes tracking consent. */\n  checkoutUrl?: string | null;\n  /** Sum of all line quantities. */\n  totalQuantity: number;\n  /** The cart's subtotal, total, and checkout charge. */\n  cost: CartCost;\n  /** Customer-supplied cart note, or `null` or empty when unset. */\n  note?: string | null;\n  /** Cart-level custom attributes. */\n  attributes: Attribute[];\n  /** The cart's line items. */\n  lines: CartLineConnection;\n  /** Discount codes applied to the cart, with their applicability. */\n  discountCodes: DiscountCode[];\n  /** Extra cart fields from your custom cart fragment, unchanged. */\n  [key: string]: unknown;\n}"
+      "value": "export interface CartData {\n  /** The cart's Storefront API GID, or `null` when no cart exists yet. */\n  id: string | null;\n  /** The cart's last update time in ISO 8601 format. Absent until the first server response. */\n  updatedAt?: string;\n  /** The Shopify checkout URL. The URL can change when the customer logs in or out, or changes tracking consent. */\n  checkoutUrl?: string | null;\n  /** Sum of all line quantities. */\n  totalQuantity: number;\n  /** The cart's subtotal, total, and checkout charge. */\n  cost: CartCost;\n  /** Customer-supplied cart note, or `null` or empty when unset. */\n  note?: string | null;\n  /** Cart-level custom attributes. */\n  attributes: Attribute[];\n  /** The cart's line items. */\n  lines: CartLineConnection;\n  /** Discount codes applied to the cart, with their applicability. */\n  discountCodes: DiscountCode[];\n  /** The buyer that the cart belongs to. Absent until the first server response. */\n  buyerIdentity?: CartBuyerIdentity | null;\n  /** Extra cart fields from your custom cart fragment, unchanged. */\n  [key: string]: unknown;\n}"
     }
   },
   "Attribute": {
@@ -3430,6 +3445,48 @@
         }
       ],
       "value": "export interface Attribute {\n  /** The attribute name. Look up the attribute's errors with this name. */\n  key: string;\n  /** The attribute value. */\n  value: string | null;\n}"
+    }
+  },
+  "CartBuyerIdentity": {
+    "src/core/cart/state.ts": {
+      "filePath": "src/core/cart/state.ts",
+      "name": "CartBuyerIdentity",
+      "description": "The buyer that the cart belongs to. The Storefront API prices the cart for the buyer's country.",
+      "members": [
+        {
+          "filePath": "src/core/cart/state.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "countryCode",
+          "value": "CountryCode | null",
+          "description": "The country that the cart is priced for. A country without a market on the shop gets the shop's default currency. The cart GET handler resets the country to the request's country when the two differ, except on a B2B cart.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/cart/state.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "email",
+          "value": "string | null",
+          "description": "The buyer's email address.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/cart/state.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "phone",
+          "value": "string | null",
+          "description": "The buyer's phone number.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/cart/state.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "purchasingCompany",
+          "value": "{ location: { id: string } } | null",
+          "description": "The B2B company location that the customer buys for, or `null` for a non-B2B cart.",
+          "isOptional": true
+        }
+      ],
+      "value": "export interface CartBuyerIdentity {\n  /** The country that the cart is priced for. A country without a market on the shop gets the shop's default currency. The cart GET handler resets the country to the request's country when the two differ, except on a B2B cart. */\n  countryCode?: CountryCode | null;\n  /** The buyer's email address. */\n  email?: string | null;\n  /** The buyer's phone number. */\n  phone?: string | null;\n  /** The B2B company location that the customer buys for, or `null` for a non-B2B cart. */\n  purchasingCompany?: { location: { id: string } } | null;\n}"
     }
   },
   "CartCost": {
@@ -7900,7 +7957,7 @@
         "name": "CartServerHandlers | CartServerHandlersWithCustomerSession",
         "value": "CartServerHandlers | CartServerHandlersWithCustomerSession"
       },
-      "value": "export function createCartServerHandlers(\n  options?: CreateCartServerHandlersOptions,\n): CartServerHandlers | CartServerHandlersWithCustomerSession {\n  const queries = options?.fragment\n    ? makeCartQueries({ fragment: options.fragment } as CreateCartQueriesOptions)\n    : cartQueries;\n  const runtimeQueries = queries as RuntimeCartQueries;\n  const customerSession = options?.customerSession;\n\n  const handlers = {\n    get: createCallableRouteHandler(\n      CART_API_PATH,\n      CART_GET_METHOD,\n      (context: CartGetHandlerContext & Partial<CartCustomerSessionReadContext>) =>\n        handleGet(context, runtimeQueries, customerSession),\n    ),\n    post: createCallableRouteHandler(\n      CART_API_PATH,\n      CART_POST_METHOD,\n      (context: CartPostHandlerContext & Partial<CartCustomerSessionWriteContext>) =>\n        handlePost(context, runtimeQueries, customerSession, options?.rateLimitHandling),\n    ),\n  };\n\n  Object.defineProperty(handlers, cartServerHandlersCartQuery, { value: queries.cart });\n  if (customerSession) {\n    // Symbol-keyed and non-enumerable so the capability never registers as a\n    // route in handleShopifyRoutes and stays uncallable outside Hydrogen wiring.\n    Object.defineProperty(handlers, cartBuyerIdentitySync, {\n      value: createCartBuyerIdentitySync(),\n    });\n  }\n  return handlers as CartServerHandlers | CartServerHandlersWithCustomerSession;\n}",
+      "value": "export function createCartServerHandlers(\n  options?: CreateCartServerHandlersOptions,\n): CartServerHandlers | CartServerHandlersWithCustomerSession {\n  const queries = options?.fragment\n    ? makeCartQueries({ fragment: options.fragment } as CreateCartQueriesOptions)\n    : cartQueries;\n  const runtimeQueries = queries as RuntimeCartQueries;\n  const customerSession = options?.customerSession;\n\n  const handlers = {\n    get: createCallableRouteHandler(\n      CART_API_PATH,\n      CART_GET_METHOD,\n      (context: CartGetHandlerContext & Partial<CartCustomerSessionReadContext>) =>\n        handleGet(context, runtimeQueries, customerSession),\n    ),\n    post: createCallableRouteHandler(\n      CART_API_PATH,\n      CART_POST_METHOD,\n      (context: CartPostHandlerContext & Partial<CartCustomerSessionWriteContext>) =>\n        handlePost(context, runtimeQueries, customerSession, options?.rateLimitHandling),\n    ),\n  };\n\n  Object.defineProperty(handlers, cartServerHandlersCartQuery, { value: queries.cart });\n  if (customerSession) {\n    // Symbol-keyed and non-enumerable so the capability never registers as a\n    // route in handleShopifyRoutes and stays uncallable outside Hydrogen wiring.\n    Object.defineProperty(handlers, cartBuyerIdentitySync, {\n      value: createCartBuyerIdentitySync(runtimeQueries),\n    });\n  }\n  return handlers as CartServerHandlers | CartServerHandlersWithCustomerSession;\n}",
       "examples": [
         {
           "title": "Example",
