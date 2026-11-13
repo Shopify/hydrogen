@@ -475,7 +475,11 @@ describe("createCartServerHandlers", () => {
       assert(result, "expected a response");
       expect(result.status).toBe(429);
       expect(result.headers.get("retry-after")).toBe("3");
-      expect(result.headers.get("cache-control")).toBe("no-store");
+      // The cart GET marks the response personalized before it fetches, and the finalizer applies
+      // the private value after the 429 `no-store`.
+      expect(result.headers.get("cache-control")).toBe(
+        "private, no-store, max-age=0, must-revalidate",
+      );
       expect(result.headers.get("x-request-id")).toBeNull();
       const body = await result.json();
       expect(body).toEqual({
