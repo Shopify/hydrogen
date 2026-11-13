@@ -18,10 +18,11 @@
     "isbot": "^5.1.36",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-router": "7.15.1"
+    "react-router": "8.5.1"
   },
   "devDependencies": {
-    "@react-router/dev": "7.15.1",
+    "@react-router/dev": "8.5.1",
+    "@react-router/fs-routes": "8.5.1",
     "@shopify/cli": "4.8.1",
     "@shopify/mini-oxygen": "workspace:*",
     "@shopify/oxygen-workers-types": "^4.1.6",
@@ -36,7 +37,7 @@
     "vite": "^8.0.3"
   },
   "engines": {
-    "node": "^22.12 || ^24"
+    "node": "^22.22 || ^24"
   },
   "packageManager": "pnpm@10.33.0"
 }

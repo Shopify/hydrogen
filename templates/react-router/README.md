@@ -2,7 +2,7 @@
 
 [![Deploy to Oxygen](../../.github/images/deploy-to-oxygen.svg)](https://admin.shopify.com/hydrogen/new?template=react-router)
 
-A React Router 7 (framework mode, SSR) storefront built on
+A React Router 8 (framework mode, SSR) storefront built on
 [`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen) and the
 Oxygen runtime through Vite and Mini Oxygen. It's a starting point you can clone
 and build your store on top of — five pages on a shared layout, with a real cart,
@@ -38,7 +38,7 @@ analytics, and a consent banner wired up.
 
 ## Run it
 
-Requires Node.js 22 (22.12 or later) or Node.js 24.
+Requires Node.js 22 (22.22 or later) or Node.js 24.
 
 ```bash
 npm install
@@ -185,8 +185,10 @@ loader awaits can change its status. Give deferred promises a local fallback, su
 ## Where to start
 
 - Swap the store in `app/lib/shop.ts` + `.env`.
-- Routes live in `app/routes/`; shared UI in `app/components/`; data/query helpers
-  in `app/lib/`.
+- Routes live in `app/routes/` and use file-based routing
+  ([`@react-router/fs-routes`](https://reactrouter.com/how-to/file-route-conventions)):
+  `products.$handle.tsx` serves `/products/:handle`. Shared UI lives in
+  `app/components/`; data/query helpers in `app/lib/`.
 - The design is yours to change — `app/tokens.css` holds the design tokens; the
   components use them via semantic classes.
 

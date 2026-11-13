@@ -46,6 +46,8 @@ Dependencies:
 - Keep app dependencies required by the template, such as `@shopify/hydrogen`, React, React Router, and `isbot`.
 - Remove `lru-cache`, `@react-router/node`, and `@react-router/serve`.
 - Add `@shopify/mini-oxygen`, `@shopify/oxygen-workers-types`, and `@shopify/cli`.
+- Add `@react-router/fs-routes` to `devDependencies`, pinned to the same version as `react-router`. `app/routes.ts`
+  exports `flatRoutes()`, so route URLs come from file names such as `products.$handle.tsx` and `robots[.]txt.ts`.
 - **`@shopify/hydrogen`: use `workspace:*` in this repository** so template builds and E2E exercise the package under
   development. The `Shopify/hydrogen` release flow replaces it with the published version in
   `packages/hydrogen/package.json` before standalone lockfile generation. That version must be a stable `YYYY.Q.P`
@@ -58,7 +60,7 @@ Dependencies:
 - **`@shopify/mini-oxygen`: use `workspace:*` in this repository**, like `@shopify/hydrogen`. The release flow pins it
   to the version in `packages/mini-oxygen/package.json` before standalone lockfile generation. Its `oxygen()` plugin
   adds `configurePreviewServer`, which `vite preview` needs to run the Worker.
-- Add `"engines": {"node": "^22 || ^24"}`.
+- Add `"engines": {"node": "^22.22 || ^24"}`. React Router 8 requires Node.js 22.22 or later.
 - Replace `catalog:` ranges with npm-compatible semver ranges. Keep `@types/node` in `devDependencies` (build tooling
   such as `vite.config.ts` needs it) even though it is dropped from the app tsconfig `types` (see "Env and types").
 - Choose other package versions at implementation time; prefer the versions already present in the example's package files.
@@ -80,6 +82,13 @@ export default defineConfig({
   },
   build: {
     assetsInlineLimit: 0,
+  },
+  environments: {
+    ssr: {
+      build: {
+        rolldownOptions: {input: "./server.ts"},
+      },
+    },
   },
   ssr: {
     optimizeDeps: {
@@ -103,6 +112,8 @@ export default defineConfig({
 
 Keep the Hydrogen `localHttps` plugin when Customer Account support is enabled. Do not add `localCdnAssets`, `hydrogen()` from classic Hydrogen, or separate `allowedHosts` configuration unless requested.
 
+Keep the `environments.ssr.build.rolldownOptions.input` entry. React Router 8 always builds through the Vite Environment API, and without that entry it builds its own server build module, so `dist/server/index.js` exports no Worker `fetch` handler.
+
 Keep the `build.assetsInlineLimit: 0` and `ssr.optimizeDeps.include` interop settings unless a successful Worker build and MiniOxygen runtime test proves they are unnecessary. They prevent common CJS/ESM runtime failures in the Oxygen runtime such as `module is not defined` / `require is not defined`. Use plain `oxygen()`; MiniOxygen auto-loads `.env` into the Worker via its own `loadEnv` fallback when no `env` option is provided.
 
 ## react-router.config.ts
@@ -116,13 +127,13 @@ export default {
   ssr: true,
   subResourceIntegrity: false,
   future: {
-    v8_middleware: true,
     unstable_optimizeDeps: true,
   },
 };
 ```
 
-Preserve any additional future flags that the template needs. Keep `buildDirectory: "dist"` aligned with the deploy script's `dist/client` and `dist/server` flags. If one changes, update the other in the same change.
+React Router 8 always enables middleware, split route modules, and the Vite Environment API, so the template doesn't
+set the v7 `v8_*` future flags. Preserve any additional future flags that the template needs. Keep `buildDirectory: "dist"` aligned with the deploy script's `dist/client` and `dist/server` flags. If one changes, update the other in the same change.
 
 ## server.ts
 
@@ -135,7 +146,7 @@ import * as serverBuild from "virtual:react-router/server-build";
 export default {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
     const handleRequest = createRequestHandler(serverBuild, import.meta.env.MODE);
-    const context = await createAppLoadContext(request, env, executionContext);
+    const context = await createRouterContext(request, env, executionContext);
 
     return handleRequest(request, context);
   },
@@ -144,10 +155,10 @@ export default {
 
 Prefer `import.meta.env.MODE` for the Vite/Oxygen template entrypoint. Do not introduce a Node-oriented `process.env.NODE_ENV` dependency unless existing template code already requires it and it has been verified in MiniOxygen.
 
-Implement `createAppLoadContext` using React Router's context API and the example's existing middleware expectations. This function is the right place to create request-scoped Worker resources and expose them to middleware/loaders:
+Implement `createRouterContext` using React Router's context API and the example's existing middleware expectations. This function is the right place to create request-scoped Worker resources and expose them to middleware/loaders:
 
 ```ts
-async function createAppLoadContext(
+async function createRouterContext(
   request: Request,
   env: Env,
   executionContext: ExecutionContext,
@@ -170,6 +181,15 @@ request handler. The root middleware owns `handleShopifyRoutes` before `next()`,
 framework 404, and storefront response headers on framework responses. Shopify handler responses already include
 their own storefront response headers. The catch-all route should only produce the framework 404 that lets the root
 middleware check for a Shopify redirect.
+
+React Router 8 passes the raw request to middleware and loaders, so single-fetch data requests keep their `.data`
+suffix and internal `index`/`_routes` search params. The normalized URL is the `url` argument.
+
+- In the root middleware, give Hydrogen `toRoutedRequest(request, url)` from `app/lib/routed-request.ts` instead of
+  `request`. Otherwise `handleShopifyRoutes`, `handleShopifyRedirects`, and the request context match against paths
+  like `/admin.data`.
+- In loaders, read search params from `url.searchParams`, not `new URL(request.url)`. Otherwise helpers such as
+  `getSelectedProductOptions` read `_routes` as a product option.
 
 ## entry.server.tsx and entry.client.tsx (REQUIRED)
 
