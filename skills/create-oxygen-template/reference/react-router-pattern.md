@@ -46,6 +46,8 @@ Dependencies:
 - Keep app dependencies required by the template, such as `@shopify/hydrogen`, React, React Router, and `isbot`.
 - Remove `lru-cache`, `@react-router/node`, and `@react-router/serve`.
 - Add `@shopify/mini-oxygen`, `@shopify/oxygen-workers-types`, and `@shopify/cli`.
+- Add `@react-router/fs-routes` to `devDependencies`, pinned to the same version as `react-router`. `app/routes.ts`
+  exports `flatRoutes()`, so route URLs come from file names such as `products.$handle.tsx` and `robots[.]txt.ts`.
 - **`@shopify/hydrogen`: use `workspace:*` in this repository** so template builds and E2E exercise the package under
   development. The `Shopify/hydrogen` release flow replaces it with the published version in
   `packages/hydrogen/package.json` before standalone lockfile generation. That version must be a stable `YYYY.Q.P`

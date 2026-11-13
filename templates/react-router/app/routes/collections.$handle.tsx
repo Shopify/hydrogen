@@ -17,7 +17,7 @@ import { loadCollectionPage } from "~/lib/collection";
 import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
-import type { Route } from "./+types/collection";
+import type { Route } from "./+types/collections.$handle";
 
 export function meta({ matches }: Route.MetaArgs) {
   const shopName = getShopNameFromRootMatch(matches[0]);

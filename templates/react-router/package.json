@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@react-router/dev": "8.5.1",
+    "@react-router/fs-routes": "8.5.1",
     "@shopify/cli": "4.8.1",
     "@shopify/mini-oxygen": "workspace:*",
     "@shopify/oxygen-workers-types": "^4.1.6",

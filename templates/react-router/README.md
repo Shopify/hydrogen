@@ -185,8 +185,10 @@ loader awaits can change its status. Give deferred promises a local fallback, su
 ## Where to start
 
 - Swap the store in `app/lib/shop.ts` + `.env`.
-- Routes live in `app/routes/`; shared UI in `app/components/`; data/query helpers
-  in `app/lib/`.
+- Routes live in `app/routes/` and use file-based routing
+  ([`@react-router/fs-routes`](https://reactrouter.com/how-to/file-route-conventions)):
+  `products.$handle.tsx` serves `/products/:handle`. Shared UI lives in
+  `app/components/`; data/query helpers in `app/lib/`.
 - The design is yours to change — `app/tokens.css` holds the design tokens; the
   components use them via semantic classes.
 

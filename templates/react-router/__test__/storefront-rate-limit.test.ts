@@ -419,10 +419,10 @@ test("explicit application redirects and 404 Responses pass through unchanged", 
 test("the template wraps each Storefront page loader and passes the status to applyResponseHeaders", async () => {
   for (const path of [
     "root",
-    "routes/home",
-    "routes/collection",
-    "routes/collections",
-    "routes/product",
+    "routes/_index",
+    "routes/collections.$handle",
+    "routes/collections._index",
+    "routes/products.$handle",
     "routes/search",
   ]) {
     const source = await readFile(new URL(`../app/${path}.tsx`, import.meta.url), "utf8");

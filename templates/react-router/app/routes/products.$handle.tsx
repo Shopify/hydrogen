@@ -18,7 +18,7 @@ import { ProductProvider, useProductForm } from "~/lib/product";
 import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
-import type { Route } from "./+types/product";
+import type { Route } from "./+types/products.$handle";
 
 const PRODUCT_VARIANT_FRAGMENT = gql(`
   fragment ProductVariantFields on ProductVariant {

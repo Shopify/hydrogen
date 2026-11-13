@@ -544,6 +544,9 @@ importers:
       '@react-router/dev':
         specifier: 8.5.1
         version: 8.5.1(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(typescript@5.9.3)(vite@8.0.10(@types/node@22.19.17)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))
+      '@react-router/fs-routes':
+        specifier: 8.5.1
+        version: 8.5.1(@react-router/dev@8.5.1(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(typescript@5.9.3)(vite@8.0.10(@types/node@22.19.17)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0)))(typescript@5.9.3)
       '@shopify/cli':
         specifier: 4.8.1
         version: 4.8.1
@@ -4008,6 +4011,16 @@ packages:
     peerDependencies:
       '@react-router/dev': ^7.15.1
       typescript: ^5.1.0 || ^6.0.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
+  '@react-router/fs-routes@8.5.1':
+    resolution: {integrity: sha512-rSvu2d33x5aNGYcdevdW9Rtz7gD36Dfz+uFiQYuwIgvSShrf8/eKrg1AwDtXyfA8nak/2oTOeUtqxH7K7GoTug==, tarball: https://registry.npmjs.org/@react-router/fs-routes/-/fs-routes-8.5.1.tgz}
+    engines: {node: '>=22.22.0'}
+    peerDependencies:
+      '@react-router/dev': ^8.5.1
+      typescript: ^5.1.0 || ^6.0.0 || ^7.0.0
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -14484,6 +14497,13 @@ snapshots:
     dependencies:
       '@react-router/dev': 7.15.1(@react-router/serve@7.15.1(react-router@7.15.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3))(@types/node@25.8.0)(jiti@2.6.1)(lightningcss@1.32.0)(react-router@7.15.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(terser@5.46.2)(tsx@4.21.0)(typescript@5.9.3)(vite@8.0.10(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4))(yaml@2.8.4)
       minimatch: 9.0.9
+    optionalDependencies:
+      typescript: 5.9.3
+
+  '@react-router/fs-routes@8.5.1(@react-router/dev@8.5.1(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(typescript@5.9.3)(vite@8.0.10(@types/node@22.19.17)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0)))(typescript@5.9.3)':
+    dependencies:
+      '@react-router/dev': 8.5.1(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(typescript@5.9.3)(vite@8.0.10(@types/node@22.19.17)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.9.0))
+      minimatch: 10.2.5
     optionalDependencies:
       typescript: 5.9.3
 
