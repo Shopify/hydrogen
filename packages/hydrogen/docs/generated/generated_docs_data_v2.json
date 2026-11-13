@@ -8474,7 +8474,7 @@
     "src/core/collection/url.ts": {
       "filePath": "src/core/collection/url.ts",
       "name": "ParseCollectionParamsGeneratedType",
-      "description": "Reads collection filters and sort from URL search params. Pass the result to your Storefront API collection query.\n\nThe function reads Liquid-compatible `filter.p.*` and `filter.v.*` keys and the `sort_by` param.\n\nA URL that sets availability to both in stock and out of stock produces no availability filter. The function recognizes the best-selling and manual sort values, plus created, price, and title with an ascending or descending suffix. For other sort values, the sort key is `undefined`. The `parseSortByValue` function also recognizes relevance, collection default, and ID.",
+      "description": "Reads collection filters and sort from URL search params. Pass the result to your Storefront API collection query.\n\nThe function reads Liquid-compatible `filter.p.*` and `filter.v.*` keys and the `sort_by` param.\n\nA URL that sets availability to both in stock and out of stock produces no availability filter. A price bound must be a non-negative number as `<input type=\"number\">` submits it, such as `12.5`; the function ignores any other value, such as `12,50`, the same way on the server and in the browser. The function recognizes the best-selling and manual sort values, plus created, price, and title with an ascending or descending suffix. For other sort values, the sort key is `undefined`. The `parseSortByValue` function also recognizes relevance, collection default, and ID.",
       "isPublicDocs": true,
       "params": [
         {

@@ -1,0 +1,5 @@
+---
+"@shopify/hydrogen": patch
+---
+
+`parseCollectionParams` now reads `filter.v.price.gte` and `filter.v.price.lte` the same way on the server and in the browser. Before, a locale-formatted value such as `12,50` was read through `window.Shopify.locale` in the browser and as English on the server, so under a German shop locale the loader queried a minimum of 1250 while the collection store showed 12.5, and the page failed to hydrate. Shop locales such as `pt_br` threw inside `Intl.NumberFormat` and fell back to stripping every non-digit, so `1.234,50` became 1.2345. A price bound must now be a non-negative number as `<input type="number">` submits it, such as `12.5` or `1e3`; any other value, including `12,50`, negatives, and `Infinity`, sets no bound. Values that `serializeCollectionParams` writes, including exponent forms such as `1e21`, still read back unchanged. The `hydrogen-collection-browser` skill now explains why price inputs stay `type="number"`, and says that a custom `type="text"` price input must parse the shopper's text in the customer's market locale and submit a plain number.
