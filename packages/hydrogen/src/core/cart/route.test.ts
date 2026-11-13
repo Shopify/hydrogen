@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
 import { createCustomerSession } from "../../customer-account/session";
+import { gql } from "../../graphql";
 import { configureLogging } from "../logging";
 import { createShopifyRequestContext } from "../request-context";
 import { handleShopifyRoutes as handleShopifyRoutesImpl } from "../request-routing/handle-shopify-routes";
@@ -567,6 +568,73 @@ describe("createCartServerHandlers", () => {
           cartCountry: "CA",
           requestCountry: "US",
         });
+      });
+
+      it("omits contact fields the cart doesn't have from the reset", async () => {
+        mockFetch
+          .mockResolvedValueOnce(
+            mockGqlResponse({
+              cart: {
+                ...CA_CART,
+                buyerIdentity: { ...CA_CART.buyerIdentity, email: null, phone: null },
+              },
+            }),
+          )
+          .mockResolvedValueOnce(
+            mockGqlResponse({ cartBuyerIdentityUpdate: { cart: US_CART, userErrors: [] } }),
+          );
+
+        await handleCartRequest(createGetRequest("cart=123"), defaultConfig);
+
+        expect(mockFetch).toHaveBeenCalledTimes(2);
+        const [, init] = mockFetch.mock.calls[1];
+        expect(JSON.parse(init.body).variables.buyerIdentity).toEqual({ countryCode: "US" });
+      });
+
+      it("returns the cart it already read when the reset response has no cart", async () => {
+        mockFetch
+          .mockResolvedValueOnce(mockGqlResponse({ cart: CA_CART }))
+          .mockResolvedValueOnce(
+            mockGqlResponse({ cartBuyerIdentityUpdate: { cart: null, userErrors: [] } }),
+          );
+
+        const result = await handleCartRequest(createGetRequest("cart=123"), defaultConfig);
+
+        assert(result, "expected a response");
+        expect(result.status).toBe(200);
+        const body = await result.json();
+        expect(body.cart.buyerIdentity.countryCode).toBe("CA");
+      });
+
+      it("resets a custom-fragment cart with the consumer's fragment", async () => {
+        const customCartFragment = gql(`
+          fragment CartFragment on Cart {
+            createdAt
+          }
+        `);
+        const createdAt = "2026-11-01T00:00:00Z";
+        mockFetch
+          .mockResolvedValueOnce(mockGqlResponse({ cart: { ...CA_CART, createdAt } }))
+          .mockResolvedValueOnce(
+            mockGqlResponse({
+              cartBuyerIdentityUpdate: { cart: { ...US_CART, createdAt }, userErrors: [] },
+            }),
+          );
+        const cartHandlers = createCartServerHandlers({ fragment: customCartFragment });
+
+        const result = await handleCartRequest(
+          createGetRequest("cart=123"),
+          defaultConfig,
+          cartHandlers,
+        );
+
+        assert(result, "expected a response");
+        const [, init] = mockFetch.mock.calls[1];
+        const { query } = JSON.parse(init.body);
+        expect(query).toContain("cartBuyerIdentityUpdate");
+        expect(query).toContain("fragment CartFragment on Cart");
+        const body = await result.json();
+        expect(body.cart).toMatchObject({ createdAt, buyerIdentity: { countryCode: "US" } });
       });
     });
 
