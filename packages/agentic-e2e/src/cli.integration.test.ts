@@ -80,6 +80,19 @@ const CLAIMED_ADD =
   "The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.";
 /** The `agent` field of a run that the first add event stopped. */
 const STOPPED = { completed: false, reason: "Stopped by the command after the add event." };
+/** The `agent` field of a change-quantity-and-remove run that the cart changes stopped. */
+const STOPPED_AFTER_CHANGES = {
+  completed: false,
+  reason: "Stopped by the command after the cart changes.",
+};
+const ADD_PASS =
+  "One add event held exactly 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings.";
+const LINE_PASS =
+  "The cart line went 1, 2, 1, removed, and every cart event resolved without cart user errors.";
+/** Hydrogen-shaped: the cart line ID holds the cart token, which must never be printed. */
+const CART_TOKEN = "fixture-cart-token";
+const CART_LINE = `gid://shopify/CartLine/fixture-line?cart=${CART_TOKEN}`;
+const CART_CONTROLS = ["button: Increase quantity", "button: Decrease quantity", "button: Remove"];
 
 type ApiRequest = { query: string; variables: Record<string, unknown> };
 /** The products that the catalog query returns, or an HTTP status for every API request. */
@@ -96,6 +109,10 @@ type StoreMode = {
   addStatus: number;
   /** The add endpoint holds its answer until Stagehand detaches. */
   holdAdd: boolean;
+  /** False: a change to a higher quantity leaves the cart line as it is. */
+  plusChangesCart: boolean;
+  /** The highest quantity of a line that the fixture's `cartCreate` accepts. */
+  stock: number;
 };
 
 type ModelRequest = {
@@ -121,8 +138,10 @@ let held: ServerResponse[];
 let catalog: Catalog;
 let apiRequests: ApiRequest[];
 let mode: StoreMode;
-/** Store events in order: adds and releases. */
+/** Store events in order: adds, releases, and cart line changes. */
 let storeLog: string[];
+/** The quantity of the cart line on the store, after the last add or change. */
+let cartQuantity: number;
 /** The variant ID of each add request that reached the store. */
 let addedVariants: string[];
 /** The path of each product page request. */
@@ -162,8 +181,15 @@ beforeEach(async () => {
   reply = () => undefined;
   catalog = { products: [eligibleProduct(PINNED.productHandle)] };
   apiRequests = [];
-  mode = { addEvent: "with-promise", addStatus: 200, holdAdd: false };
+  mode = {
+    addEvent: "with-promise",
+    addStatus: 200,
+    holdAdd: false,
+    plusChangesCart: true,
+    stock: 2,
+  };
   storeLog = [];
+  cartQuantity = 0;
   addedVariants = [];
   productPageRequests = [];
   storeCookies = [];
@@ -628,20 +654,130 @@ describe("main with the agent", () => {
   });
 });
 
+describe("main with change-quantity-and-remove", () => {
+  const ARGS = () => [origin, "--test", "change-quantity-and-remove", "--json"];
+
+  it("passes when the agent adds, increases, decreases, and removes, and the command stops it after the remove", async () => {
+    // After the remove, the script holds the next model request: only the command's stop can
+    // end the run.
+    reply = clickThenHold("button: Add to cart", ...CART_CONTROLS);
+
+    await expect(main(ARGS())).resolves.toBe(0);
+
+    expect(results()).toEqual([
+      {
+        test: "change-quantity-and-remove",
+        status: "pass",
+        reason: LINE_PASS,
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: STOPPED_AFTER_CHANGES,
+      },
+    ]);
+    expect(storeLog).toEqual(["add", "update 2", "update 1", "remove"]);
+    // A planning request and an `act` request for each of the 4 clicks. The stop waits for the
+    // remove result, so the next planning request can start before it: it is held, never
+    // answered, so only the stop ended the run.
+    expect(modelRequests.length - held.length).toBe(8);
+    expect(held.length).toBeLessThanOrEqual(1);
+    // The stock check: one tokenless cartCreate with 2 units, in the discovered context.
+    const check = apiRequests.find(({ query }) =>
+      query.startsWith("mutation AgenticE2EStockCheck("),
+    );
+    expect(check?.variables).toEqual({
+      lines: [{ merchandiseId: PINNED.variantId, quantity: 2 }],
+      storefrontCountry: "CA",
+      storefrontLanguage: "FR",
+    });
+    const [planning] = modelRequests;
+    expect(planning?.body).toContain(
+      "Then remove the item with the cart's remove control, not by decreasing the quantity.",
+    );
+    expect(planning?.body).not.toContain("Do not open the cart");
+    expect(stdout.join("") + stderr.join("")).not.toContain(CART_TOKEN);
+    expectStagehandDetached();
+  });
+
+  it("fails when the plus control does not change the cart, and stops the agent at once", async () => {
+    mode.plusChangesCart = false;
+    reply = clickThenHold("button: Add to cart", "button: Increase quantity");
+
+    await expect(main(ARGS())).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        test: "change-quantity-and-remove",
+        status: "fail",
+        reason: "The cart line went 1, 1. Expected 1, 2, 1, removed.",
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: STOPPED_AFTER_CHANGES,
+      },
+    ]);
+    expect(storeLog).toEqual(["add", "update 2"]);
+    expectStagehandDetached();
+  });
+
+  it("fails when the agent calls done after only the add", async () => {
+    reply = clickAdd();
+
+    await expect(main(ARGS())).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        test: "change-quantity-and-remove",
+        status: "fail",
+        reason:
+          "The agent reports that it completed the task, but the cart line went only 1. Expected 1, 2, 1, removed.",
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: { completed: true, summary: expect.stringContaining("Added 1 unit.") },
+      },
+    ]);
+    expect(storeLog).toEqual(["add"]);
+    expectStagehandDetached();
+  });
+
+  it("skips when the shop accepts only 1 unit, exits 3, and starts no browser", async () => {
+    mode.stock = 1;
+
+    await expect(main(ARGS())).resolves.toBe(3);
+
+    expect(results()).toEqual([
+      {
+        test: "change-quantity-and-remove",
+        status: "skipped",
+        reason:
+          "No variant could be added to a cart with 2 units (1 eligible variant checked): the catalog was searched to the end.",
+        context: CONTEXT,
+      },
+    ]);
+    expect(apiRequests.map(({ query }) => /^(?:query|mutation) (\w+)/.exec(query)?.[1])).toEqual([
+      "AgenticE2ELocalization",
+      "AgenticE2ECatalog",
+      "AgenticE2EStockCheck",
+    ]);
+    expect(productPageRequests).toEqual([]);
+    expectNoBrowser();
+  });
+});
+
 describe("main with every test", () => {
   it("runs every test in list order, each in a new browser session, and exits 0", async () => {
     catalog = suiteCatalog();
-    reply = perRun(clickAdd(), click("button: Large", "button: Add to cart"));
+    reply = perRun(
+      clickAdd(),
+      click("button: Large", "button: Add to cart"),
+      clickThenHold("button: Add to cart", ...CART_CONTROLS),
+    );
 
     await expect(main([origin, "--json"])).resolves.toBe(0);
 
-    const reason =
-      "One add event held exactly 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings.";
     expect(results()).toEqual([
       {
         test: "add-to-cart",
         status: "pass",
-        reason,
+        reason: ADD_PASS,
         context: CONTEXT,
         pinned: PINNED,
         agent: STOPPED,
@@ -649,23 +785,35 @@ describe("main with every test", () => {
       {
         test: "choose-a-variant",
         status: "pass",
-        reason,
+        reason: ADD_PASS,
         context: CONTEXT,
         pinned: TEE_PINNED,
         agent: STOPPED,
+      },
+      {
+        test: "change-quantity-and-remove",
+        status: "pass",
+        reason: LINE_PASS,
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: STOPPED_AFTER_CHANGES,
       },
     ]);
     expect(stderr.filter((line) => line.startsWith("Running test "))).toEqual([
       "Running test add-to-cart\n",
       "Running test choose-a-variant\n",
+      "Running test change-quantity-and-remove\n",
     ]);
-    // One context read, then the pin query of each test.
-    expect(apiRequests.map(({ query }) => /^query (\w+)/.exec(query)?.[1])).toEqual([
+    // One context read, then the pin requests of each test: the third test reads the catalog,
+    // then checks the stock of its candidate.
+    expect(apiRequests.map(({ query }) => /^(?:query|mutation) (\w+)/.exec(query)?.[1])).toEqual([
       "AgenticE2ELocalization",
       "AgenticE2ECatalog",
       "AgenticE2EVariantChoice",
+      "AgenticE2ECatalog",
+      "AgenticE2EStockCheck",
     ]);
-    expect(addedVariants).toEqual([PINNED.variantId, TEE_PINNED.variantId]);
+    expect(addedVariants).toEqual([PINNED.variantId, TEE_PINNED.variantId, PINNED.variantId]);
     // Each test starts from an empty session: its product page request has no cookie, and its add
     // sends only the cookie that its own page set.
     expect(storeCookies).toEqual([
@@ -673,31 +821,48 @@ describe("main with every test", () => {
       { path: "/cart/add", cookie: "fixture-session=1" },
       { path: "/products/fixture-tee", cookie: undefined },
       { path: "/cart/add", cookie: "fixture-session=2" },
+      { path: "/products/fixture-board", cookie: undefined },
+      { path: "/cart/add", cookie: "fixture-session=3" },
     ]);
-    expect(createBrowserSession).toHaveBeenCalledTimes(2);
+    expect(createBrowserSession).toHaveBeenCalledTimes(3);
     // Each test attached Stagehand once and detached it before its browser closed.
-    expect(Stagehand.prototype.init).toHaveBeenCalledTimes(2);
-    expect(stagehandCloses).toEqual([{ browserRunning: true }, { browserRunning: true }]);
+    expect(Stagehand.prototype.init).toHaveBeenCalledTimes(3);
+    expect(stagehandCloses).toEqual([
+      { browserRunning: true },
+      { browserRunning: true },
+      { browserRunning: true },
+    ]);
+    expect(stdout.join("") + stderr.join("")).not.toContain(CART_TOKEN);
   });
 
   it("prints the table without --json, with no progress lines, and exits 1 for a fail", async () => {
     catalog = suiteCatalog();
     // choose-a-variant: the agent adds the default variant without a selection.
-    reply = perRun(clickAdd(), clickAdd());
+    // change-quantity-and-remove: the agent ends after the plus without a confirmed done.
+    reply = perRun(
+      clickAdd(),
+      clickAdd(),
+      clickThen(["button: Add to cart", "button: Increase quantity"], () => done(false)),
+    );
 
     await expect(main([origin])).resolves.toBe(1);
 
     expect(stdout.join("")).toBe(
       [
         "  pass           add-to-cart",
-        "  fail           choose-a-variant   An add event did not hold exactly 1 unit of the pinned variant.",
+        "  fail           choose-a-variant             An add event did not hold exactly 1 unit of the pinned variant.",
+        "  indeterminate  change-quantity-and-remove   The cart line went 1, 2 by the time Stagehand was disconnected. Expected 1, 2, 1, removed.",
         "",
       ].join("\n"),
     );
     expect(stderr).toEqual([]);
-    expect(addedVariants).toEqual([PINNED.variantId, TEE_DEFAULT.id]);
-    expect(createBrowserSession).toHaveBeenCalledTimes(2);
-    expect(stagehandCloses).toEqual([{ browserRunning: true }, { browserRunning: true }]);
+    expect(addedVariants).toEqual([PINNED.variantId, TEE_DEFAULT.id, PINNED.variantId]);
+    expect(createBrowserSession).toHaveBeenCalledTimes(3);
+    expect(stagehandCloses).toEqual([
+      { browserRunning: true },
+      { browserRunning: true },
+      { browserRunning: true },
+    ]);
   });
 
   it("prints one skipped line for each test, exits 3, and starts no browser", async () => {
@@ -708,8 +873,15 @@ describe("main with every test", () => {
     expect(results()).toEqual([
       expect.objectContaining({ test: "add-to-cart", status: "skipped", context: CONTEXT }),
       expect.objectContaining({ test: "choose-a-variant", status: "skipped", context: CONTEXT }),
+      {
+        test: "change-quantity-and-remove",
+        status: "skipped",
+        reason: "No eligible variant: the catalog was searched to the end.",
+        context: CONTEXT,
+      },
     ]);
-    expect(apiRequests).toHaveLength(3);
+    // No candidate: no stock check.
+    expect(apiRequests).toHaveLength(4);
     expectNoBrowser();
   });
 });
@@ -827,6 +999,8 @@ function onStoreRequest(request: IncomingMessage, response: ServerResponse) {
       .end(productPage(TEE_PINNED.productTitle, variants));
   } else if (path === "/cart/add" && request.method === "POST") {
     onAddRequest(request, response);
+  } else if (path === "/cart/change" && request.method === "POST") {
+    onChangeRequest(request, response);
   } else {
     response.writeHead(500, { "content-type": "text/html" }).end("<title>Broken</title>");
   }
@@ -853,10 +1027,12 @@ function onAddRequest(request: IncomingMessage, response: ServerResponse) {
       return;
     }
     storeLog.push("add");
+    cartQuantity = 1;
+    const cart = { id: "fixture", lines: [{ id: CART_LINE, quantity: 1 }] };
     const answer = () =>
       response
         .writeHead(200, { "content-type": "application/json" })
-        .end(JSON.stringify({ cart: { id: "fixture" }, userErrors: [] }));
+        .end(JSON.stringify({ cart, userErrors: [] }));
     if (!mode.holdAdd) {
       answer();
       return;
@@ -869,11 +1045,36 @@ function onAddRequest(request: IncomingMessage, response: ServerResponse) {
 }
 
 /**
+ * Sets the cart line to the posted quantity, and answers with the cart lines, like a Hydrogen
+ * storefront: `lines: []` after a remove. With `plusChangesCart: false`, a higher quantity leaves
+ * the line as it is.
+ */
+function onChangeRequest(request: IncomingMessage, response: ServerResponse) {
+  const chunks: Buffer[] = [];
+  request.on("data", (chunk: Buffer) => chunks.push(chunk));
+  request.on("end", () => {
+    const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as {
+      id: string;
+      quantity: number;
+    };
+    storeLog.push(body.quantity === 0 ? "remove" : `update ${body.quantity}`);
+    if (mode.plusChangesCart || body.quantity <= cartQuantity) cartQuantity = body.quantity;
+    const lines = cartQuantity === 0 ? [] : [{ id: body.id, quantity: cartQuantity }];
+    response
+      .writeHead(200, { "content-type": "application/json" })
+      .end(JSON.stringify({ cart: { id: "fixture", lines }, userErrors: [] }));
+  });
+}
+
+/**
  * A product page with an Add to cart button. The page first selects the first variant. With more
  * than one variant, a button for each size selects that variant. The add posts the selected
  * variant to `/cart/add`. By default the click dispatches `shopify:cart:lines-update` on the
  * document with the add promise and the selected variant, like a Hydrogen storefront. The promise
- * rejects on an HTTP error.
+ * rejects on an HTTP error. After the add resolves, a cart opens by itself, like on a Hydrogen
+ * storefront, with the line quantity and Increase quantity, Decrease quantity, and Remove buttons.
+ * Each button posts the new absolute quantity of the line to `/cart/change` and dispatches one
+ * `update` event (`remove` for 0, also for Decrease at 1) with the line ID and the promise.
  */
 function productPage(title: string, variants: Array<{ id: string; size: string }>): string {
   const [first] = variants;
@@ -919,8 +1120,49 @@ document.getElementById("add").addEventListener("click", () => {
     return response.json();
   });
   ${dispatch}
-  promise.then(() => { document.getElementById("status").textContent = "Added"; }, () => undefined);
+  promise.then((result) => {
+    document.getElementById("status").textContent = "Added";
+    showCart(result);
+  }, () => undefined);
 });
+let lineId = null;
+let quantity = 0;
+function showCart(result) {
+  const line = result.cart.lines[0];
+  if (line !== undefined) lineId = line.id;
+  quantity = line === undefined ? 0 : line.quantity;
+  let cart = document.getElementById("cart");
+  if (quantity === 0) {
+    if (cart !== null) cart.remove();
+    return;
+  }
+  if (cart === null) {
+    cart = document.createElement("section");
+    cart.id = "cart";
+    cart.setAttribute("aria-label", "Cart");
+    cart.innerHTML = '<h2>Cart</h2><p id="cart-quantity"></p>' +
+      '<button id="increase" type="button">Increase quantity</button>' +
+      '<button id="decrease" type="button">Decrease quantity</button>' +
+      '<button id="remove" type="button">Remove</button>';
+    document.body.append(cart);
+    document.getElementById("increase").addEventListener("click", () => change(quantity + 1));
+    document.getElementById("decrease").addEventListener("click", () => change(quantity - 1));
+    document.getElementById("remove").addEventListener("click", () => change(0));
+  }
+  document.getElementById("cart-quantity").textContent = "Quantity: " + quantity;
+}
+function change(next) {
+  const promise = fetch("/cart/change", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ id: lineId, quantity: next }),
+  }).then((response) => {
+    if (!response.ok) throw new Error("The change failed.");
+    return response.json();
+  });
+  document.dispatchEvent(Object.assign(new Event("shopify:cart:lines-update", { bubbles: true, cancelable: true }), { action: next === 0 ? "remove" : "update", context: "cart", lines: [{ id: lineId, quantity: next }], promise }));
+  promise.then(showCart, () => undefined);
+}
 </script>`;
 }
 
@@ -941,14 +1183,32 @@ function onApiRequest(request: IncomingMessage, response: ServerResponse) {
             country: { isoCode: "CA", name: "Canada", currency: { isoCode: "CAD" } },
           },
         }
-      : {
-          products: {
-            pageInfo: { hasNextPage: false, endCursor: null },
-            nodes: catalog.products,
-          },
-        };
+      : body.query.includes("cartCreate")
+        ? stockCheckAnswer(body.variables)
+        : {
+            products: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: catalog.products,
+            },
+          };
     response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ data }));
   });
+}
+
+/**
+ * The `cartCreate` answer of the stock check: the line has the requested quantity, at most
+ * `mode.stock`, and no user errors, like the Storefront API over stock.
+ */
+function stockCheckAnswer(variables: Record<string, unknown>) {
+  const [line] = variables.lines as Array<{ merchandiseId: string; quantity: number }>;
+  assert(line, "The stock check sent no line.");
+  const quantity = Math.min(line.quantity, mode.stock);
+  return {
+    cartCreate: {
+      cart: { lines: { nodes: [{ quantity, merchandise: { id: line.merchandiseId } }] } },
+      userErrors: [],
+    },
+  };
 }
 
 /**
@@ -1055,6 +1315,16 @@ function clickAdd(...more: string[]): Reply {
  * snapshot.
  */
 function click(...targets: string[]): Reply {
+  return clickThen(targets, () => done(true));
+}
+
+/** The agent clicks each target in order, then never gets an answer: only a stop ends it. */
+function clickThenHold(...targets: string[]): Reply {
+  return clickThen(targets, () => undefined);
+}
+
+/** The agent clicks each target in order (see `click`), then the planning reply is `end()`. */
+function clickThen(targets: string[], end: () => Record<string, unknown> | undefined): Reply {
   let planningTurns = 0;
   return ({ tools, body }) => {
     if (!tools.includes("act") && !isFinalAssessment(tools)) {
@@ -1073,7 +1343,7 @@ function click(...targets: string[]): Reply {
     }
     planningTurns += 1;
     const target = targets[planningTurns - 1];
-    if (target === undefined) return done(true);
+    if (target === undefined) return end();
     return message([
       { type: "tool_use", id: "toolu_act", name: "act", input: { action: `click the ${target}` } },
     ]);

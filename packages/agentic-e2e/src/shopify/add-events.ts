@@ -5,7 +5,8 @@ export const ADD_EVENT_NAME = "shopify:cart:lines-update";
 const BINDING = "__agenticE2eAddEvent";
 export const MAX_LINES = 50;
 export const MAX_STRING = 200;
-const MAX_MESSAGE_LENGTH = 16_384;
+// 50 lines of 2 strings of 200 characters fit in it.
+const MAX_MESSAGE_LENGTH = 32_768;
 
 export type ScriptLimits = { binding: string; maxLines: number; maxString: number };
 
@@ -14,9 +15,11 @@ export type ScriptLimits = { binding: string; maxLines: number; maxString: numbe
  * `shopify:cart:lines-update` in the capture phase on `document`, so events dispatched on the
  * document or on an element in it are seen. Events dispatched directly on `window` are not
  * recorded. For each event it sends one `input` message with a bounded copy of `action` and of
- * each line's `merchandiseId` and `quantity`, and whether `event.promise` is thenable. When it is,
- * it sends one `settled` or `failed` message. `settled` tells whether the resolved value and its
- * `cart` are non-null objects, the `userErrors` count, and a bounded copy of each warning's `code`.
+ * each line's `id` (the cart line ID), `merchandiseId`, and `quantity`, and whether
+ * `event.promise` is thenable. When it is, it sends one `settled` or `failed` message. `settled`
+ * tells whether the resolved value and its `cart` are non-null objects, the `userErrors` count, a
+ * bounded copy of each warning's `code`, and a bounded copy of the `id` and `quantity` of each line
+ * of the result's `cart.lines` (`null` when the result has no `cart` or no `lines` array).
  * `userErrors` or `warningCodes` is `null` when that field is present but not an array. It does not
  * dispatch events or throw into the page. Its rejection handler marks a native `event.promise` as
  * handled, so the storefront may not get an `unhandledrejection` for it.
@@ -57,6 +60,7 @@ export function recordAddEvents({ binding, maxLines, maxString }: ScriptLimits):
       action: text(field(event, "action")),
       lines: isArray(lines)
         ? lines.slice(0, maxLines).map((line: unknown) => ({
+            id: text(field(line, "id")),
             merchandiseId: text(field(line, "merchandiseId")),
             quantity: number(field(line, "quantity")),
           }))
@@ -70,6 +74,7 @@ export function recordAddEvents({ binding, maxLines, maxString }: ScriptLimits):
           const errors = field(result, "userErrors");
           const warnings = field(result, "warnings");
           const cart = field(result, "cart");
+          const cartLines = field(cart, "lines");
           // Absent lists count as empty: Standard Actions add them only when there are any.
           let userErrors: number | null = null;
           if (errors === undefined) userErrors = 0;
@@ -89,6 +94,13 @@ export function recordAddEvents({ binding, maxLines, maxString }: ScriptLimits):
             hasCart: typeof cart === "object" && cart !== null,
             userErrors,
             warningCodes,
+            // The same `text` bound as the input lines, so a line ID compares equal in both.
+            lines: isArray(cartLines)
+              ? cartLines.slice(0, maxLines).map((line: unknown) => ({
+                  id: text(field(line, "id")),
+                  quantity: number(field(line, "quantity")),
+                }))
+              : null,
           });
         } catch {
           // Never throw into the page.
@@ -120,7 +132,7 @@ const messageSchema = z.discriminatedUnion("phase", [
     id,
     action: text,
     lines: z
-      .array(z.object({ merchandiseId: text, quantity: z.number().nullable() }))
+      .array(z.object({ id: text, merchandiseId: text, quantity: z.number().nullable() }))
       .max(MAX_LINES),
     hasPromise: z.boolean(),
   }),
@@ -132,11 +144,18 @@ const messageSchema = z.discriminatedUnion("phase", [
     hasCart: z.boolean(),
     userErrors: z.int().min(0).nullable(),
     warningCodes: z.array(text).max(MAX_LINES).nullable(),
+    lines: z
+      .array(z.object({ id: text, quantity: z.number().nullable() }))
+      .max(MAX_LINES)
+      .nullable(),
   }),
   z.object({ name, phase: z.literal("failed"), id }),
 ]);
 
-/** One recorded message. `order` is its receive order in Node, from 0. */
+/**
+ * One recorded message. `order` is its receive order in Node, from 0. A line `id` can hold the
+ * cart token: keep it in memory only, never in a result, a reason, or a progress line.
+ */
 export type AddEvent = z.infer<typeof messageSchema> & { order: number };
 
 /** Parses one page message. Returns `undefined` for an oversized or invalid message. */
@@ -169,11 +188,19 @@ export class AddEventLog {
    * order) is in the log.
    */
   onFirstAdd(from: number, listener: () => void): void {
+    this.onceWhen(
+      () =>
+        this.events.some(
+          (event) => event.order >= from && event.phase === "input" && event.action === "add",
+        ),
+      listener,
+    );
+  }
+
+  /** Calls `listener` once, as soon as `condition` is true: now, or after a new message. */
+  onceWhen(condition: () => boolean, listener: () => void): void {
     const check = (): void => {
-      const found = this.events.some(
-        (event) => event.order >= from && event.phase === "input" && event.action === "add",
-      );
-      if (!found) return;
+      if (!condition()) return;
       this.#listeners.delete(check);
       listener();
     };

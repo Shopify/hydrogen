@@ -1,7 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { PAGE_LIMIT, pinNonDefaultVariant, pinVariant, productUrl } from "./catalog.ts";
-import { fakeFetch } from "./fake-fetch.ts";
+import {
+  PAGE_LIMIT,
+  pinNonDefaultVariant,
+  pinVariant,
+  pinVariantWithTwoUnits,
+  productUrl,
+  STOCK_CHECK_LIMIT,
+} from "./catalog.ts";
+import { fakeFetch, type FakeResponse } from "./fake-fetch.ts";
 import type { StorefrontLocale } from "./storefront.ts";
 
 // Every test runs the real Hydrogen public client. Only `fetch` is fake.
@@ -38,7 +45,7 @@ function page(
   return { body: { data: { products: { pageInfo, nodes } } } };
 }
 
-function stubFetch(responses: Array<{ status?: number; body: unknown }>) {
+function stubFetch(responses: FakeResponse[]) {
   const fake = fakeFetch(responses);
   vi.stubGlobal("fetch", fake.fetch);
   return fake.requests;
@@ -384,20 +391,184 @@ describe("pinNonDefaultVariant", () => {
     expect(requests).toHaveLength(PAGE_LIMIT);
   });
 
-  it("throws when pagination returns no cursor", async () => {
-    stubFetch([page([], { hasNextPage: true, endCursor: null })]);
-
-    await expect(pinNonDefaultVariant(STOREFRONT_URL, CA_FR, signal)).rejects.toThrow(
-      "Catalog pagination returned no cursor after page 1.",
-    );
-  });
-
   it("throws on a bad shape", async () => {
     const { variants: _dropped, ...withoutVariants } = choosable("board");
     stubFetch([page([withoutVariants])]);
 
     await expect(pinNonDefaultVariant(STOREFRONT_URL, CA_FR, signal)).rejects.toThrow(
       "Invalid response data: products.nodes.0.variants: ",
+    );
+  });
+});
+
+/** A `cartCreate` answer: one line of `variantId` with `quantity`, and `userErrors`. */
+function cart(
+  variantId: string,
+  quantity: number,
+  userErrors: Array<{ code: string | null; message: string }> = [],
+) {
+  return {
+    body: {
+      data: {
+        cartCreate: {
+          cart: { lines: { nodes: [{ quantity, merchandise: { id: variantId } }] } },
+          userErrors,
+        },
+      },
+    },
+  };
+}
+
+const variantOf = (handle: string) => `gid://shopify/ProductVariant/${handle}`;
+
+describe("pinVariantWithTwoUnits", () => {
+  it("pins the first eligible variant after one tokenless cartCreate with 2 units, the context, and no cart ID or checkout URL", async () => {
+    const requests = stubFetch([
+      page([product("sold-out", { id: "v1", availableForSale: false }), available("board")]),
+      cart(variantOf("board"), 2),
+    ]);
+
+    await expect(pinVariantWithTwoUnits(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
+      status: "pinned",
+      pinned: {
+        productHandle: "board",
+        productTitle: "Title board",
+        variantId: variantOf("board"),
+        selectedOptions: [{ name: "Size", value: "M" }],
+      },
+    });
+    // The same catalog query as pinVariant, then one cartCreate.
+    expect(requests).toHaveLength(2);
+    expect(requests[0]?.query).toContain("query AgenticE2ECatalog(");
+    const [, check] = requests;
+    expect(check?.url).toMatch(/^https:\/\/shop\.example\/api\/[^/]+\/graphql\.json$/);
+    expect(check?.query).toMatch(/^mutation AgenticE2EStockCheck\(/);
+    expect(check?.query).toContain(
+      "@inContext(country: $storefrontCountry, language: $storefrontLanguage)",
+    );
+    expect(check?.query).toContain("userErrors { code message }");
+    expect(check?.query).not.toMatch(/checkoutUrl|cart \{ id/);
+    expect(check?.variables).toEqual({
+      lines: [{ merchandiseId: variantOf("board"), quantity: 2 }],
+      storefrontCountry: "CA",
+      storefrontLanguage: "FR",
+    });
+    expect(check?.headers.has("x-shopify-storefront-access-token")).toBe(false);
+    expect(check?.headers.has("shopify-storefront-private-token")).toBe(false);
+  });
+
+  it.each([
+    {
+      // Over stock: a lower quantity and no userErrors (a warning only).
+      case: "fewer units, with no user errors",
+      answer: cart(variantOf("first"), 1),
+    },
+    {
+      case: "cart user errors",
+      answer: cart(variantOf("first"), 2, [{ code: "INVALID", message: "No" }]),
+    },
+    {
+      case: "a line of another variant",
+      answer: cart(variantOf("other"), 2),
+    },
+    {
+      case: "no cart",
+      answer: { body: { data: { cartCreate: { cart: null, userErrors: [] } } } },
+    },
+  ])("rejects a candidate for $case and tries the next one", async ({ answer }) => {
+    stubFetch([
+      page([available("first"), available("second")]),
+      answer,
+      cart(variantOf("second"), 2),
+    ]);
+
+    const pin = await pinVariantWithTwoUnits(STOREFRONT_URL, CA_FR, signal);
+
+    expect(pin.status === "pinned" && pin.pinned.productHandle).toBe("second");
+  });
+
+  it("follows the pagination cursor, and counts the checks over pages", async () => {
+    const requests = stubFetch([
+      page([available("a"), available("b")], { hasNextPage: true, endCursor: "cursor-1" }),
+      cart(variantOf("a"), 1),
+      cart(variantOf("b"), 1),
+      page([available("c")]),
+      cart(variantOf("c"), 1),
+    ]);
+
+    await expect(pinVariantWithTwoUnits(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
+      status: "skipped",
+      reason:
+        "No variant could be added to a cart with 2 units (3 eligible variants checked): the catalog was searched to the end.",
+    });
+    expect(requests[3]?.variables).toMatchObject({ after: "cursor-1" });
+  });
+
+  it("skips with the count after the check limit, and reads no further page", async () => {
+    const handles = ["a", "b", "c", "d", "e", "f"];
+    const requests = stubFetch([
+      page(handles.map(available), { hasNextPage: true, endCursor: "cursor-1" }),
+      ...handles.slice(0, STOCK_CHECK_LIMIT).map((handle) => cart(variantOf(handle), 1)),
+    ]);
+
+    await expect(pinVariantWithTwoUnits(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
+      status: "skipped",
+      reason:
+        "No variant could be added to a cart with 2 units (5 eligible variants checked): the 5-variant check limit was reached.",
+    });
+    // One catalog page and 5 checks.
+    expect(requests).toHaveLength(1 + STOCK_CHECK_LIMIT);
+  });
+
+  it("says 1 variant when one was checked", async () => {
+    stubFetch([page([available("a")]), cart(variantOf("a"), 1)]);
+
+    await expect(pinVariantWithTwoUnits(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
+      status: "skipped",
+      reason:
+        "No variant could be added to a cart with 2 units (1 eligible variant checked): the catalog was searched to the end.",
+    });
+  });
+
+  it("skips with the pinVariant reason, and sends no cartCreate, when no variant is eligible", async () => {
+    const requests = stubFetch([
+      page([product("sold-out", { id: "v1", availableForSale: false })]),
+    ]);
+
+    await expect(pinVariantWithTwoUnits(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
+      status: "skipped",
+      reason: "No eligible variant: the catalog was searched to the end.",
+    });
+    expect(requests).toHaveLength(1);
+  });
+
+  it("passes the caller's signal to the stock check, and sends no further cartCreate after an abort", async () => {
+    const interrupt = new AbortController();
+    // The first stock check gets no answer until its signal aborts.
+    const requests = stubFetch([
+      page([available("a"), available("b")]),
+      { pending: true },
+      cart(variantOf("b"), 2),
+    ]);
+
+    const pinning = pinVariantWithTwoUnits(STOREFRONT_URL, CA_FR, interrupt.signal);
+    await vi.waitFor(() => expect(requests).toHaveLength(2));
+    const [, check] = requests;
+    expect(check?.query).toMatch(/^mutation AgenticE2EStockCheck\(/);
+    expect(check?.signal?.aborted).toBe(false);
+    interrupt.abort();
+
+    // The request in flight gets the abort, the pin rejects, and no second cartCreate is sent.
+    expect(check?.signal?.aborted).toBe(true);
+    await expect(pinning).rejects.toMatchObject({ name: "AbortError" });
+    expect(requests).toHaveLength(2);
+  });
+
+  it("throws on a bad cartCreate shape", async () => {
+    stubFetch([page([available("board")]), { body: { data: { cartCreate: null } } }]);
+
+    await expect(pinVariantWithTwoUnits(STOREFRONT_URL, CA_FR, signal)).rejects.toThrow(
+      "Invalid response data: cartCreate: ",
     );
   });
 });

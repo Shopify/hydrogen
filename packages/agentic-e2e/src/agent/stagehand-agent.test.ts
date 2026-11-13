@@ -3,7 +3,7 @@ import type { Page } from "playwright-core";
 import { describe, expect, it, vi } from "vitest";
 
 import type { ModelConfig } from "./model-config.ts";
-import { attachStagehand, confirmsCompletion } from "./stagehand-agent.ts";
+import { attachStagehand, confirmsCompletion, STOPPED_AT_ADD } from "./stagehand-agent.ts";
 
 type Step = { toolCalls: Array<{ toolName: string }> };
 type ExecuteOptions = {
@@ -36,23 +36,40 @@ const MODEL: ModelConfig = {
 const PAGE = {} as Page;
 
 /** Starts a run whose SDK call never ends, and resolves once the SDK call started. */
-async function startRun({ interrupt, stop }: { interrupt: AbortSignal; stop: AbortSignal }) {
+async function startRun({
+  interrupt,
+  stop,
+  stopReason = STOPPED_AT_ADD,
+}: {
+  interrupt: AbortSignal;
+  stop: AbortSignal;
+  stopReason?: string;
+}) {
   const { promise: started, resolve } = Promise.withResolvers<AbortSignal>();
   sdk.execute.mockImplementation(async ({ signal }) => {
     resolve(signal);
     return new Promise(() => undefined);
   });
   const agent = await attachStagehand("ws://browser");
-  const running = agent.run({ page: PAGE, task: "Add it.", model: MODEL, interrupt, stop });
+  const running = agent.run({
+    page: PAGE,
+    task: "Add it.",
+    model: MODEL,
+    interrupt,
+    stop,
+    stopReason,
+  });
   return { running, sdkSignal: await started };
 }
 
 describe("StagehandAgent.run", () => {
-  it("returns the fixed outcome at once when the stop signal aborts, and does not throw", async () => {
+  it("returns the stop reason of the run input at once when the stop signal aborts, and does not throw", async () => {
     const stop = new AbortController();
+    // Neither stop constant: a hard-coded reason fails.
     const { running, sdkSignal } = await startRun({
       interrupt: new AbortController().signal,
       stop: stop.signal,
+      stopReason: "Stopped by the test.",
     });
 
     stop.abort();
@@ -60,7 +77,7 @@ describe("StagehandAgent.run", () => {
     // No `message`: Stagehand returned no result.
     await expect(running).resolves.toStrictEqual({
       completed: false,
-      reason: "Stopped by the command after the add event.",
+      reason: "Stopped by the test.",
     });
     // The SDK receives the stop through its own signal.
     expect(sdkSignal.aborted).toBe(true);
@@ -160,6 +177,7 @@ async function runToEnd() {
     model: MODEL,
     interrupt: new AbortController().signal,
     stop: new AbortController().signal,
+    stopReason: STOPPED_AT_ADD,
   });
 }
 
