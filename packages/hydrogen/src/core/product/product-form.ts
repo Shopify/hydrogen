@@ -1,3 +1,4 @@
+import type { ProductViewPayload } from "../../../vendor/standard-events";
 import type { CartStore } from "../cart/cart";
 import type {
   CartLine,
@@ -7,6 +8,7 @@ import type {
   CartWarning,
 } from "../cart/state";
 import { createObservable } from "../observable";
+import { importStandardEventsFromCDN } from "../shopify-scripts/standard-events";
 import {
   buildProductOptions,
   type DecodedVariantCache,
@@ -208,6 +210,8 @@ type ProductFormStoreContext<TProduct extends ProductInput> = {
   decodedVariantCache: DecodedVariantCache;
   destroyed: boolean;
   unsubCart: () => void;
+  /** ID of the last product that this store dispatched `shopify:product:view` for. */
+  viewedProductId?: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -218,6 +222,8 @@ type ProductFormStoreContext<TProduct extends ProductInput> = {
  * Creates a store that tracks the customer's option selection for one product and adds the selected variant to the cart.
  *
  * The store resolves variants from the product data that you pass and leaves the URL to you. Build the product URL from the result of `selectOption()`. Call `destroy()` when the product form unmounts. The product provider from `createProductComponents` creates and destroys the store for you.
+ *
+ * In the browser, the store dispatches the `shopify:product:view` Standard Event on `document` with `context: "page"` when you create it, and again when `hydrate()` loads a product with a different ID.
  *
  * @param product The product from your Storefront API query.
  * @param cartStore The cart store that the form adds variants to and reads cart errors from.
@@ -260,6 +266,7 @@ export function createProductFormStore<TProduct extends ProductInput>(
     if (context.destroyed) return;
     syncFromCart(context);
   });
+  dispatchProductView(context);
 
   return {
     getState: () => context.observable.state,
@@ -383,6 +390,7 @@ function hydrate<TProduct extends ProductInput>(
     context.observable.state.selectedOptions;
   const variantState = buildVariantState(product, selectedOptions, context.decodedVariantCache);
   context.observable.setState(deriveFullState(variantState, context.cartStore.getState()));
+  dispatchProductView(context);
 }
 
 function reset<TProduct extends ProductInput>(context: ProductFormStoreContext<TProduct>): void {
@@ -482,6 +490,49 @@ function syncFromCart<TProduct extends ProductInput>(
   }
 }
 
+// Products with a view event that waits for the CDN module. React Strict Mode renders twice and
+// creates a second store for the same product, and this keeps that render to one event.
+const pendingProductViews = new Set<string>();
+
+/**
+ * Dispatches `shopify:product:view` in the browser when the store gets a product that it hasn't
+ * dispatched a view for, keyed by product ID. Reconnects and variant changes don't dispatch.
+ */
+function dispatchProductView<TProduct extends ProductInput>(
+  context: ProductFormStoreContext<TProduct>,
+): void {
+  const { id, title, handle } = context.currentProduct;
+  if (typeof document === "undefined" || context.viewedProductId === id) return;
+  context.viewedProductId = id;
+  if (pendingProductViews.has(id)) return;
+  pendingProductViews.add(id);
+
+  const { selectedVariant, selectedOptions } = context.observable.state;
+  const payload: ProductViewPayload = {
+    context: "page",
+    selectedOptions,
+    product: {
+      id,
+      title,
+      handle,
+      selectedVariant: selectedVariant && {
+        id: selectedVariant.id,
+        title: selectedVariant.title,
+        availableForSale: selectedVariant.availableForSale,
+        price: selectedVariant.price,
+        selectedOptions: selectedVariant.selectedOptions,
+      },
+    },
+  };
+
+  void importStandardEventsFromCDN()
+    .catch(() => undefined)
+    .then((StandardEvents) => {
+      pendingProductViews.delete(id);
+      if (StandardEvents) document.dispatchEvent(new StandardEvents.ProductViewEvent(payload));
+    });
+}
+
 function invalid<TVariant extends ProductVariantInput>(
   selectedOptions: SelectedOption[],
   reason: string,
@@ -498,6 +549,8 @@ function invalid<TVariant extends ProductVariantInput>(
  * Creates a store that tracks the customer's option selection for one product and adds the selected variant to the cart.
  *
  * The store resolves variants from the product data that you pass and leaves the URL to you. Build the product URL from the result of `selectOption()`. Call `destroy()` when the product form unmounts. The product provider from `createProductComponents` creates and destroys the store for you.
+ *
+ * In the browser, the store dispatches the `shopify:product:view` Standard Event on `document` with `context: "page"` when you create it, and again when `hydrate()` loads a product with a different ID.
  *
  * @example
  * ```ts
