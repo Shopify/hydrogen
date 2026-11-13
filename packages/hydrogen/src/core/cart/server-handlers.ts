@@ -175,7 +175,7 @@ export type CartServerHandlers<
    *
    * GraphQL errors return a `null` cart with the errors in the response body. The handler throws when the Storefront API request fails.
    *
-   * When the request has a cart ID, the handler marks the Storefront API client's request context with `markResponseAsPersonalized()` before it fetches the cart, so `applyResponseHeaders()` makes a page that renders the cart private and uncacheable, even when the loader streams the unresolved result. Requests without a cart ID stay cacheable.
+   * The handler marks the Storefront API client's request context with `markResponseAsPersonalized()` on every call, before it fetches the cart, so `applyResponseHeaders()` makes the page private and uncacheable even when the loader streams the unresolved result. This concerns the CDN and page cache only; the cart route's own response headers are always private. Requests that do not call the cart handler stay cacheable.
    */
   get: CartGetHandler<TCart>;
   /**
@@ -389,7 +389,7 @@ async function handleGet(
   const { request, storefrontClient } = context;
   const { requestContext } = storefrontClient;
   const cartId = getCartId(request ?? requestContext);
-  if (cartId) requestContext.markResponseAsPersonalized(CART_PERSONALIZATION_REASON);
+  requestContext.markResponseAsPersonalized(CART_PERSONALIZATION_REASON);
   const result = await getCart(cartId, storefrontClient, queries.cart);
   logCartErrors(result.errors);
   const cart = await addLoggedInCheckoutParam(result.cart, context, customerSession);

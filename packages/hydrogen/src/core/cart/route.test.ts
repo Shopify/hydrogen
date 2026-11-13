@@ -566,7 +566,7 @@ describe("createCartServerHandlers", () => {
       },
     );
 
-    it("keeps a page cacheable when the request has no cart ID", async () => {
+    it("marks the page private when the request has no cart ID", async () => {
       const request = createPageRequest("https://my-app.com/products/widget");
       const storefrontClient = createPrivateStorefrontClient(request);
 
@@ -574,8 +574,8 @@ describe("createCartServerHandlers", () => {
 
       expect(result.data).toEqual({ cart: null });
       const headers = applyPageResponseHeaders(storefrontClient);
-      expect(headers.get("cache-control")).toBe("public, max-age=60");
-      expect(headers.get("oxygen-cache-control")).toBe("public, max-age=3600");
+      expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
+      expect(headers.get("oxygen-cache-control")).toBeNull();
     });
 
     it("makes a page private when the cart cookie no longer resolves to a cart", async () => {
