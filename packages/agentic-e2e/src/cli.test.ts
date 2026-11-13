@@ -14,6 +14,7 @@ import {
 import { ADD_EVENT_NAME, AddEventLog, observeAddEvents } from "./shopify/add-events.ts";
 import { pinNonDefaultVariant, pinVariant, type PinnedVariant } from "./shopify/catalog.ts";
 import { discoverContext, type StorefrontContext } from "./shopify/storefront.ts";
+import { SPINNER_INTERVAL_MS } from "./spinner.ts";
 
 vi.mock("./browser/session.ts", () => ({ createBrowserSession: vi.fn() }));
 vi.mock("./agent/stagehand-agent.ts", () => ({ attachStagehand: vi.fn() }));
@@ -63,6 +64,8 @@ const STOPPED: AgentOutcome = {
 
 let stdout: string[];
 let stderr: string[];
+/** Every stdout and stderr write in order, to check the order across the two streams. */
+let writes: Array<[stream: "stdout" | "stderr", chunk: string]>;
 /** Calls in order, to check the order of work. */
 let calls: string[];
 /** The add event log of the current run. */
@@ -93,17 +96,23 @@ beforeEach(() => {
     log = new AddEventLog();
     return log;
   });
+  writes = [];
   vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
     stdout.push(String(chunk));
+    writes.push(["stdout", String(chunk)]);
     return true;
   });
   vi.spyOn(process.stderr, "write").mockImplementation((chunk) => {
     stderr.push(String(chunk));
+    writes.push(["stderr", String(chunk)]);
     return true;
   });
+  // Not an interactive terminal unless a test says so: no spinner.
+  setTty({ stdout: false, stderr: false });
 });
 
 afterEach(() => {
+  restoreTty();
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
   vi.mocked(createBrowserSession).mockReset();
@@ -1118,6 +1127,208 @@ describe("main without --json", () => {
     expect(stderr).toEqual(["Cleanup failed: profile is busy\n"]);
   });
 });
+
+describe("main on an interactive terminal", () => {
+  const URL_ONLY = ["https://shop.example"];
+
+  beforeEach(() => {
+    setTty({ stdout: true, stderr: true, columns: 80 });
+    vi.stubEnv("CI", "");
+    // Only the spinner timer. The run's other timers stay real.
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("shows a spinner line on stderr while each test runs, and replaces it with the result line", async () => {
+    const { agent } = fakes();
+    const { promise: firstRunning, resolve: firstStarted } = Promise.withResolvers<void>();
+    const { promise: release, resolve: releaseFirst } = Promise.withResolvers<void>();
+    agent.run.mockImplementationOnce(async () => {
+      firstStarted();
+      await release;
+      recordAdd();
+      recordOutcome("settled");
+      return STOPPED;
+    });
+
+    const run = main(URL_ONLY);
+    await firstRunning;
+    expect(writes).toEqual([["stderr", "  ⠋ running      add-to-cart"]]);
+    vi.advanceTimersByTime(SPINNER_INTERVAL_MS * 2);
+    releaseFirst();
+
+    await expect(run).resolves.toBe(0);
+    expect(writes).toEqual([
+      ["stderr", runningLine("add-to-cart")],
+      ["stderr", `${eraseLine("add-to-cart")}${runningLine("add-to-cart", "⠙")}`],
+      ["stderr", `${eraseLine("add-to-cart")}${runningLine("add-to-cart", "⠹")}`],
+      ["stderr", eraseLine("add-to-cart")],
+      ["stdout", "  pass           add-to-cart\n"],
+      ["stderr", runningLine("choose-a-variant")],
+      ["stderr", eraseLine("choose-a-variant")],
+      ["stdout", "  pass           choose-a-variant\n"],
+    ]);
+    // The test name is in the same column as in the result line.
+    expect(runningLine("add-to-cart").indexOf("add-to-cart")).toBe(
+      "  pass           add-to-cart".indexOf("add-to-cart"),
+    );
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("cuts the spinner line to fit a 20-column terminal and its resize, and prints full result lines", async () => {
+    setTty({ stdout: true, stderr: true, columns: 20 });
+    const { agent } = fakes();
+    const { promise: firstRunning, resolve: firstStarted } = Promise.withResolvers<void>();
+    const { promise: release, resolve: releaseFirst } = Promise.withResolvers<void>();
+    agent.run.mockImplementationOnce(async () => {
+      firstStarted();
+      await release;
+      recordAdd();
+      recordOutcome("failed");
+      return STOPPED;
+    });
+
+    const run = main(URL_ONLY);
+    await firstRunning;
+    // The terminal gets narrower after the first frame.
+    setTty({ stdout: true, stderr: true, columns: 12 });
+    vi.advanceTimersByTime(SPINNER_INTERVAL_MS);
+    setTty({ stdout: true, stderr: true, columns: 20 });
+    releaseFirst();
+
+    await expect(run).resolves.toBe(1);
+    expect(writes).toEqual([
+      ["stderr", "  ⠋ running      ad"],
+      ["stderr", `\r${" ".repeat(11)}\r  ⠙ running`],
+      ["stderr", `\r${" ".repeat(11)}\r`],
+      ["stdout", "  fail           add-to-cart        An add event promise was rejected.\n"],
+      ["stderr", "  ⠋ running      ch"],
+      ["stderr", `\r${" ".repeat(19)}\r`],
+      ["stdout", "  pass           choose-a-variant\n"],
+    ]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("erases the spinner line before the interrupt line and the result line, and runs no later test", async () => {
+    const { agent } = fakes();
+    const agentRunning = runUntilInterrupted(agent);
+    const listenersBefore = process.listenerCount("SIGINT");
+
+    const run = main(URL_ONLY);
+    await agentRunning;
+    process.emit("SIGINT", "SIGINT");
+    // The next frame draws the line again below the interrupt line, while the cleanup runs.
+    vi.advanceTimersByTime(SPINNER_INTERVAL_MS);
+
+    await expect(run).resolves.toBe(2);
+    expect(writes).toEqual([
+      ["stderr", runningLine("add-to-cart")],
+      ["stderr", eraseLine("add-to-cart")],
+      ["stderr", "Received SIGINT. Stopping the run.\n"],
+      ["stderr", runningLine("add-to-cart", "⠙")],
+      ["stderr", eraseLine("add-to-cart")],
+      ["stdout", "  indeterminate  add-to-cart        Interrupted by SIGINT.\n"],
+    ]);
+    expect(pinNonDefaultVariant).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+    expect(process.listenerCount("SIGINT")).toBe(listenersBefore);
+  });
+
+  it("erases the spinner line before a cleanup failure", async () => {
+    const { session } = fakes();
+    session.close.mockRejectedValue(new Error("profile is busy"));
+
+    await expect(main([...URL_ONLY, "--test", "add-to-cart"])).resolves.toBe(0);
+
+    expect(writes).toEqual([
+      ["stderr", runningLine("add-to-cart")],
+      ["stderr", eraseLine("add-to-cart")],
+      ["stderr", "Cleanup failed: profile is busy\n"],
+      ["stdout", "  pass           add-to-cart\n"],
+    ]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("stops the spinner and erases its line when a test throws", async () => {
+    vi.mocked(createBrowserSession).mockImplementation(() => {
+      throw new Error("Unexpected error.");
+    });
+    const listenersBefore = process.listenerCount("SIGINT");
+
+    await expect(main(URL_ONLY)).rejects.toThrow("Unexpected error.");
+
+    expect(writes).toEqual([
+      ["stderr", runningLine("add-to-cart")],
+      ["stderr", eraseLine("add-to-cart")],
+    ]);
+    expect(vi.getTimerCount()).toBe(0);
+    expect(process.listenerCount("SIGINT")).toBe(listenersBefore);
+  });
+
+  it.each([
+    { when: "stdout is redirected", tty: { stdout: false, stderr: true }, ci: "", argv: [] },
+    { when: "stderr is redirected", tty: { stdout: true, stderr: false }, ci: "", argv: [] },
+    { when: "CI is set", tty: { stdout: true, stderr: true }, ci: "true", argv: [] },
+    { when: "--json is set", tty: { stdout: true, stderr: true }, ci: "", argv: ["--json"] },
+  ])("shows no spinner when $when", async ({ tty, ci, argv }) => {
+    fakes();
+    setTty(tty);
+    vi.stubEnv("CI", ci);
+
+    await expect(main([...URL_ONLY, ...argv])).resolves.toBe(0);
+
+    expect(stderr.join("")).not.toMatch(/\r| running /);
+    expect(stdout).toHaveLength(2);
+    expect(vi.getTimerCount()).toBe(0);
+    if (argv.length === 0) {
+      expect(stdout).toEqual([
+        "  pass           add-to-cart\n",
+        "  pass           choose-a-variant\n",
+      ]);
+      expect(stderr).toEqual([]);
+    }
+  });
+});
+
+/** The spinner line of `test` with `frame`. */
+function runningLine(test: string, frame = "⠋"): string {
+  return `  ${frame} running      ${test}`;
+}
+
+/** Erases the spinner line of `test`. */
+function eraseLine(test: string): string {
+  return `\r${" ".repeat(runningLine(test).length)}\r`;
+}
+
+/** The own stubbed properties of each stream before the test, to restore after it. */
+const streamPropsBefore = new Map<
+  [NodeJS.WriteStream, "isTTY" | "columns"],
+  PropertyDescriptor | undefined
+>();
+
+function stubStream(stream: NodeJS.WriteStream, key: "isTTY" | "columns", value: unknown): void {
+  const saved = [...streamPropsBefore.keys()].some(([s, k]) => s === stream && k === key);
+  if (!saved) streamPropsBefore.set([stream, key], Object.getOwnPropertyDescriptor(stream, key));
+  Object.defineProperty(stream, key, { value, configurable: true, writable: true });
+}
+
+/** Makes stdout and stderr look like an interactive terminal or not, with the stderr width. */
+function setTty(tty: { stdout: boolean; stderr: boolean; columns?: number }): void {
+  stubStream(process.stdout, "isTTY", tty.stdout);
+  stubStream(process.stderr, "isTTY", tty.stderr);
+  if (tty.columns !== undefined) stubStream(process.stderr, "columns", tty.columns);
+}
+
+function restoreTty(): void {
+  for (const [[stream, key], descriptor] of streamPropsBefore) {
+    if (descriptor === undefined) Reflect.deleteProperty(stream, key);
+    else Object.defineProperty(stream, key, descriptor);
+  }
+  streamPropsBefore.clear();
+}
 
 /** The result fields of a test that SIGINT stopped during the agent run. */
 const INTERRUPTED = {

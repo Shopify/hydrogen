@@ -23,6 +23,8 @@ By default, the command writes one table line to stdout for each test, when that
   fail           choose-a-variant   An add event did not hold exactly 1 unit of the pinned variant.
 ```
 
+In an interactive terminal, a temporary spinner line on stderr shows the test that is running until its result line replaces it. In CI, with redirected stdout or stderr, or with `--json`, there is no spinner and the output does not change.
+
 With `--json`, the command writes one JSON result line to stdout for each test instead (see [Results and exit codes](#results-and-exit-codes)), and progress lines to stderr. Use it for scripts and for triage: the JSON line has the context, the pinned variant, and the agent outcome and message. In both modes, stderr gets the usage error, the interrupt lines, and `Cleanup failed: …`.
 
 pnpm adds its own lines (a script banner on stdout, and error lines on a non-zero exit) unless it runs with `-s`. When the output is parsed, use:

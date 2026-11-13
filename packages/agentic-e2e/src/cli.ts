@@ -22,6 +22,7 @@ import {
   type PinnedVariant,
 } from "./shopify/catalog.ts";
 import { discoverContext, type StorefrontContext } from "./shopify/storefront.ts";
+import { canAnimate, createSpinner, SILENT_SPINNER } from "./spinner.ts";
 import { ADD_WAIT_MS, verifyAdd } from "./verdict.ts";
 
 const NAVIGATION_DEADLINE_MS = 30_000;
@@ -46,6 +47,9 @@ status is not pass:
 
   pass           add-to-cart
   fail           choose-a-variant   An add event did not hold exactly 1 unit of the pinned variant.
+
+When stdout and stderr are both an interactive terminal and CI is not set, a spinner line on
+stderr shows the test that is running. Its result line then replaces it. Never with --json.
 
 With --json, one JSON result line for each test on stdout instead (with the context, the pinned
 variant, and the agent outcome), and the progress lines on stderr.
@@ -93,7 +97,7 @@ type StorefrontPin =
   | { status: "skipped"; reason: string; context: StorefrontContext }
   | Indeterminate;
 
-/** Writes one progress line. A no-op without `--json`. */
+/** Writes one stderr line without its line break: progress (only with `--json`) or a warning. */
 type Log = (line: string) => void;
 
 /** The result of one test. The JSON result line adds the test name as its first key. */
@@ -204,6 +208,11 @@ export function formatResultLine(
   return `${status}${test.padEnd(NAME_WIDTH)}${reason}`;
 }
 
+/** The spinner line of the test that is running: the test name in the column of the table. */
+function formatRunningLine(test: TestName, frame: string): string {
+  return `  ${`${frame} running`.padEnd(STATUS_WIDTH)}${test}`;
+}
+
 /**
  * The exit code of a run of one or more tests: any `fail` is 1, else any `indeterminate` is 2,
  * else every `skipped` is 3, else 0. No result decides nothing: 2.
@@ -223,8 +232,17 @@ export function suiteExitCode(statuses: readonly RunResult["status"][]): number 
  */
 async function runTests(url: URL, tests: readonly TestName[], json: boolean): Promise<number> {
   const statuses: RunResult["status"][] = [];
-  // Progress lines only with `--json`. Warnings (interrupt, cleanup) are written in both modes.
-  const progress: Log = json ? (line) => process.stderr.write(`${line}\n`) : () => undefined;
+  // A temporary line on stderr, never with `--json`. stdout gets only the result lines.
+  const spinner =
+    !json && canAnimate(process, process.env) ? createSpinner(process.stderr) : SILENT_SPINNER;
+  // Every stderr line erases the spinner line first. Warnings (interrupt, cleanup) are written in
+  // both modes.
+  const warn: Log = (line) => {
+    spinner.clear();
+    process.stderr.write(`${line}\n`);
+  };
+  // Progress lines only with `--json`.
+  const progress: Log = json ? warn : () => undefined;
   const print = (test: TestName, result: RunResult): void => {
     // `test` is the first key of every JSON result line.
     const line = json ? JSON.stringify({ test, ...result }) : formatResultLine(test, result);
@@ -248,9 +266,17 @@ async function runTests(url: URL, tests: readonly TestName[], json: boolean): Pr
     for (const test of tests) {
       if (interrupt.aborted) return;
       progress(`Running test ${test}`);
-      print(test, await runTest(url, test, model, readContext, interrupt, progress));
+      spinner.start((frame) => formatRunningLine(test, frame));
+      let result: RunResult;
+      try {
+        result = await runTest(url, test, model, readContext, interrupt, progress, warn);
+      } finally {
+        // On every path, also a thrown error: the timer stops and the line is erased.
+        spinner.stop();
+      }
+      print(test, result);
     }
-  });
+  }, warn);
   // Fewer results than tests: the interrupt stopped the run. The tests that did not run print no
   // line, but count as one `indeterminate`, so the exit is never 0 or 3.
   return suiteExitCode(statuses.length < tests.length ? [...statuses, "indeterminate"] : statuses);
@@ -263,11 +289,12 @@ async function runTest(
   readContext: () => Promise<StorefrontContext>,
   interrupt: AbortSignal,
   progress: Log,
+  warn: Log,
 ): Promise<RunResult> {
   const storefront = await pinFromStorefront(url, test, readContext, interrupt, progress);
   if (storefront.status !== "pinned") return storefront;
   const { context, pinned } = storefront;
-  const run = await runAddToCart(url, context, pinned, model, interrupt, progress);
+  const run = await runAddToCart(url, context, pinned, model, interrupt, progress, warn);
   if (run.status === "indeterminate") {
     return { status: run.status, reason: run.reason, context, pinned, ...agentField(run.agent) };
   }
@@ -333,6 +360,7 @@ async function runAddToCart(
   model: ModelConfig,
   interrupt: AbortSignal,
   progress: Log,
+  warn: Log,
 ): Promise<AddRun> {
   const url = productUrl(storefrontUrl, pinned.productHandle);
   progress(`Opening ${url.href}`);
@@ -391,7 +419,7 @@ async function runAddToCart(
         () => undefined,
       )
       .catch((error: unknown) => {
-        process.stderr.write(`Cleanup failed: ${errorMessage(error)}\n`);
+        warn(`Cleanup failed: ${errorMessage(error)}`);
       });
     await starting
       .then(
@@ -399,7 +427,7 @@ async function runAddToCart(
         () => undefined,
       )
       .catch((error: unknown) => {
-        process.stderr.write(`Cleanup failed: ${errorMessage(error)}\n`);
+        warn(`Cleanup failed: ${errorMessage(error)}`);
       });
   }
 }
