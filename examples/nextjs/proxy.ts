@@ -1,7 +1,6 @@
 import {
   type CacheInstance,
   createContentSecurityPolicy,
-  getCartId,
   handleShopifyRoutes,
 } from "@shopify/hydrogen";
 import { getCache } from "@vercel/functions";
@@ -108,8 +107,8 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
   requestHeaders.delete("Content-Security-Policy");
   requestHeaders.delete("Content-Security-Policy-Report-Only");
   const response = NextResponse.next({ request: { headers: requestHeaders } });
-  // `AppShell` reads the cart after these headers are sent, on its own request context.
-  if (getCartId(request)) requestContext.markResponseAsPersonalized("cart");
+  // AppShell reads the cart on every page, on its own request context.
+  requestContext.markResponseAsPersonalized("cart");
   applyProxyResponseHeaders(requestContext, response.headers);
   csp.applyResponseHeaders(response.headers);
   return response;

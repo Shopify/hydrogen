@@ -61,10 +61,10 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 }
 ```
 
-`cartHandlers.get()` marks the shell's request context personalized, but that mark doesn't reach the page response. `proxy.ts` sends the response headers before the shell renders, and `getStorefrontClient()` creates a separate request context. Next makes dynamic pages private by default, but it keeps a `Cache-Control` header that `proxy.ts` sets. Mark the response in `proxy.ts` when the request has a cart ID, before `requestContext.applyResponseHeaders()`:
+`cartHandlers.get()` marks the shell's request context personalized, but that mark doesn't reach the page response. `proxy.ts` sends the response headers before the shell renders, and `getStorefrontClient()` creates a separate request context. Next makes dynamic pages private by default, but it keeps a `Cache-Control` header that `proxy.ts` sets. Mark the response personalized in `proxy.ts` on every request, before `requestContext.applyResponseHeaders()`:
 
 ```ts
-if (getCartId(request)) requestContext.markResponseAsPersonalized("cart");
+requestContext.markResponseAsPersonalized("cart");
 requestContext.applyResponseHeaders(response.headers);
 ```
 
