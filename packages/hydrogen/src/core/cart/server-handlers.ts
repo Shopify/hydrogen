@@ -34,7 +34,6 @@ import {
 import { getCartIdFromCookie, createCartCookie, createExpiredCartCookie } from "./cookie";
 import { getCart, getCartId, type CartDataFromQuery } from "./get-cart";
 import {
-  cartBuyerIdentityUpdateMutation,
   cartQueries,
   makeCartQueries,
   type CartDataForOptions,
@@ -171,6 +170,8 @@ export type CartServerHandlers<
   readonly [cartServerHandlersCartQuery]: TCartQuery | undefined;
   /**
    * Returns the current cart. The handler reads the cart ID from the request's `cartId` search parameter or `cart` cookie. Without a request, the handler reads the cart ID from the Storefront API client's request context.
+   *
+   * When the cart's buyer country differs from the request's country, the handler resets it with `cartBuyerIdentityUpdate` and returns the repriced cart. B2B carts keep their country.
    *
    * GraphQL errors return a `null` cart with the errors in the response body. The handler throws when the Storefront API request fails.
    */
@@ -347,15 +348,19 @@ export function createCartServerHandlers(
     // Symbol-keyed and non-enumerable so the capability never registers as a
     // route in handleShopifyRoutes and stays uncallable outside Hydrogen wiring.
     Object.defineProperty(handlers, cartBuyerIdentitySync, {
-      value: createCartBuyerIdentitySync(),
+      value: createCartBuyerIdentitySync(runtimeQueries),
     });
   }
   return handlers as CartServerHandlers | CartServerHandlersWithCustomerSession;
 }
 
-function createCartBuyerIdentitySync(): CartBuyerIdentitySync {
+type RuntimeCartQueries = typeof cartQueries;
+type RuntimeCartData = CartDataFromQuery<RuntimeCartQueries["cart"]>;
+
+function createCartBuyerIdentitySync(queries: RuntimeCartQueries): CartBuyerIdentitySync {
   return {
-    updateBuyerIdentity: updateCartBuyerIdentity,
+    updateBuyerIdentity: (context, customerAccessToken) =>
+      updateCartBuyerIdentity(context, customerAccessToken, queries),
     expiredCartCookie: createExpiredCartCookie(),
   };
 }
@@ -363,11 +368,12 @@ function createCartBuyerIdentitySync(): CartBuyerIdentitySync {
 async function updateCartBuyerIdentity(
   context: CartBuyerIdentitySyncContext,
   customerAccessToken: string | null,
+  queries: RuntimeCartQueries,
 ): Promise<void> {
   const cartId = getCartIdFromCookie(context.request);
   if (!cartId) return;
 
-  const result = await context.storefrontClient.graphql(cartBuyerIdentityUpdateMutation, {
+  const result = await context.storefrontClient.graphql(queries.cartBuyerIdentityUpdate, {
     variables: { cartId, buyerIdentity: { customerAccessToken } },
   });
   const { userErrors } = assertMutationData(result, "cartBuyerIdentityUpdate");
@@ -375,8 +381,6 @@ async function updateCartBuyerIdentity(
     throw new Error(userErrors.map(({ message }) => message).join("\n"));
   }
 }
-
-type RuntimeCartQueries = typeof cartQueries;
 
 async function handleGet(
   context: CartGetHandlerContext & Partial<CartCustomerSessionReadContext>,
@@ -387,7 +391,8 @@ async function handleGet(
   const cartIdSource = request ?? storefrontClient.requestContext;
   const result = await getCart(getCartId(cartIdSource), storefrontClient, queries.cart);
   logCartErrors(result.errors);
-  const cart = await addLoggedInCheckoutParam(result.cart, context, customerSession);
+  const reconciledCart = await reconcileBuyerCountry(result.cart, storefrontClient, queries);
+  const cart = await addLoggedInCheckoutParam(reconciledCart, context, customerSession);
   const data = { cart, ...(result.errors && { errors: result.errors }) };
   const headers = createProxyResponseHeaders(result.headers);
   applyPrivateResponseCacheHeaders(headers);
@@ -397,6 +402,53 @@ async function handleGet(
     data,
     headers,
   };
+}
+
+// The Storefront API prices a cart from its persisted buyerIdentity.countryCode,
+// not from @inContext, and checkout rewrites that country from the shipping
+// address. cartBuyerIdentityUpdate keeps the customer and preferences that the
+// input omits but clears email and phone, so the reset echoes those two.
+// B2B carts are priced by their company location, so the reset leaves them alone.
+async function reconcileBuyerCountry(
+  cart: RuntimeCartData | null,
+  storefrontClient: StorefrontClient,
+  queries: RuntimeCartQueries,
+): Promise<RuntimeCartData | null> {
+  const requestCountry = storefrontClient.requestContext.i18n.country;
+  const buyerIdentity = cart?.buyerIdentity;
+  if (
+    !cart ||
+    !buyerIdentity?.countryCode ||
+    buyerIdentity.countryCode === requestCountry ||
+    buyerIdentity.purchasingCompany
+  ) {
+    return cart;
+  }
+
+  try {
+    const result = await storefrontClient.graphql(queries.cartBuyerIdentityUpdate, {
+      variables: {
+        cartId: cart.id,
+        buyerIdentity: {
+          countryCode: requestCountry,
+          ...(buyerIdentity.email && { email: buyerIdentity.email }),
+          ...(buyerIdentity.phone && { phone: buyerIdentity.phone }),
+        },
+      },
+    });
+    const { cart: updatedCart, userErrors } = assertMutationData(result, "cartBuyerIdentityUpdate");
+    if (userErrors.length > 0) {
+      throw new Error(userErrors.map(({ message }) => message).join("\n"));
+    }
+    return updatedCart ?? cart;
+  } catch (error) {
+    log.error("cart country reset failed", {
+      error,
+      cartCountry: buyerIdentity.countryCode,
+      requestCountry,
+    });
+    return cart;
+  }
 }
 
 function logCartErrors(errors: CartGetData["errors"]): void {
