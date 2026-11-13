@@ -1,5 +1,87 @@
 # @shopify/hydrogen
 
+## 2026.10.4
+
+### Minor Changes
+
+- 96a5529: Add `getHtmlLang`, which converts a Shopify language code into the BCP 47 tag for the `<html lang>` attribute. Shopify's regional codes no longer produce invalid tags such as `pt_br`.
+  
+  ```tsx
+  import { getHtmlLang } from "@shopify/hydrogen";
+  
+  <html lang={getHtmlLang(requestContext.locale.language)}>;
+  // EN -> "en", PT_BR -> "pt-BR", ZH_TW -> "zh-Hant"
+  ```
+  
+  It takes the language only: `<html lang>` names the language the page is written in, not the market country.
+- 6bcd256: Serve a Hydrogen manifest at `/__shopify/hydrogen/manifest.json` from `handleShopifyRoutes`, so Shopify services can build URLs for a headless storefront. The route is always on and needs no new options: it reads the `routeTemplates` you already pass and the `defineShopifyI18n` definition in the request context.
+  
+  ```json
+  {
+    "version": 1,
+    "routes": { "product": "/p/:productHandle", "cart": "/basket", "...": "..." },
+    "i18n": {
+      "type": "pathname",
+      "defaultLocale": { "language": "EN", "country": "US" },
+      "locales": [
+        { "language": "EN", "country": "US", "pathPrefix": "" },
+        { "language": "FR", "country": "CA", "pathPrefix": "/fr-ca" }
+      ]
+    }
+  }
+  ```
+  
+  `routes` lists every standard route, filling in Shopify's default path for each one you don't override, and is `null` when `handleShopifyRoutes` receives no `routeTemplates`. `i18n` lists every supported locale, default first, with its `pathPrefix` under pathname routing or its `hostname` under domain routing, and is `null` when the request context uses the deprecated fixed-locale `i18n` input. Only those fields are published: extra keys on route templates or locale entries stay private. Every hostname in a domain-routed definition is published, so keep staging or unreleased hostnames out of it. The route answers `GET` and `HEAD` with a short public cache, and other methods with `405`.
+- ec8d17d: Fix carts and predictive search using the default locale on storefronts that serve locales under a path prefix. The browser sent cart and predictive search requests to `/api/cart` and `/api/predictive-search` from every page, so a cart created from `/fr-ca` was created and priced in the default market.
+  
+  Add `LocaleProvider` and `useLocale` to `@shopify/hydrogen/react` and `@shopify/hydrogen/vue`. Pass the request's locale through your loader data and wrap your app in `LocaleProvider`, above the cart and predictive search providers:
+  
+  ```tsx
+  // root loader: return { locale: requestContext.locale, cartData }
+  <LocaleProvider locale={loaderData.locale}>
+    <CartProvider initialData={loaderData.cartData}>
+      <App />
+    </CartProvider>
+  </LocaleProvider>
+  ```
+  
+  - Inside `LocaleProvider`, the cart provider sends its requests to `/fr-ca/api/cart`, and cart and product forms post there. `PredictiveSearchProvider` requests `/fr-ca/api/predictive-search`, and its form submits to `/fr-ca/search`. A custom cart endpoint, `predictiveSearchEndpoint`, or `searchAction` that starts with `/` gets the prefix too. Absolute URLs are used as they are.
+  - `useLocale()` returns the request's `{language, country, pathPrefix}` for your own links and requests.
+  - The cart and predictive search routes have to answer under the locale prefix. Handlers registered with `handleShopifyRoutes` already do. Path-based rules for `/api/cart` and `/api/predictive-search`, such as rate limits, need the prefixed paths too.
+  - Storefronts with one locale, or with one domain per locale, need no changes.
+  - Hydrogen keeps one locale per page load. Change locale with a full page load, such as a plain link built with `getLocalizedHref`. In development, Hydrogen logs a warning when a page under a locale prefix has no `LocaleProvider`, when `LocaleProvider` and `ShopifyScripts` receive different locales, and when a client-side navigation leaves the page's locale prefix.
+  - `configureCartEndpoint` now works with the React and Vue cart providers, which used to reset the endpoint to `/api/cart` when they mounted. Call it at module scope in code that runs on the server and in the browser, and pass the path without a locale prefix.
+  - Fix server rendering hanging when `configureCartEndpoint` ran on the server and the cart streamed in through `initialData`.
+  - Without the React or Vue bindings, add the prefix yourself in the browser: ``configureCartEndpoint(`${locale.pathPrefix}/api/cart`)`` and ``createPredictiveSearchStore({ predictiveSearchEndpoint: `${locale.pathPrefix}/api/predictive-search` })``.
+- 752bf4d: Add optional `rateLimitHandling: "response"` to `createCartServerHandlers`, `createPredictiveSearchServerHandlers`, and `handleShopifyRoutes`. Each API keeps its previous rate-limit handling when the option is absent. With the option, a Storefront API HTTP `429` produces a caller `429`, a constant message, `Cache-Control: no-store`, and a validated `Retry-After` header. Each mapped failure is logged once through Hydrogen's logger.
+  
+  Cart mutations keep the existing `cart_mutation_failed` code. Predictive search keeps `invalid_predictive_search_request`. Neither error-code union changes, so exhaustive switches and `Record` mappings remain valid. A rate-limited native cart form receives a plain-text `429` page. The router option maps thrown registered-handler errors, including cart reads, to a JSON error with generic code `rate_limited`. Set the option on the cart handlers as well to keep `cart_mutation_failed` and the plain-text form response; otherwise a rate-limited native cart form gets a JSON page. A direct `cartHandlers.get()` still throws. A route handler that throws synchronously now rejects the returned promise, as `handleShopifyRoutes` already documents.
+  
+  This change doesn't change any default: without the option, every API keeps its previous behavior.
+  
+  A route error result accepts optional `format: "text"` to send only its message as plain text. Results without it stay JSON. Predictive search logs failed Storefront API queries and no longer exposes their upstream diagnostic body in error messages.
+- 752bf4d: `StorefrontApiError` now exposes `retryAfter`, the raw `retry-after` header value from a Storefront API error response, mirroring `CustomerAccountApiError`. Read it on a `429` response to schedule a retry. The value is unvalidated: validate it before you send it as a header. `withStorefrontRateLimit` does this for React Router loaders. Responses without the header, redirect responses, and network failures leave `retryAfter` undefined.
+- 752bf4d: Add `withStorefrontRateLimit`. Wrap a React Router loader or action with it to return HTTP `429` instead of `500` when the Storefront API rate limits the request. The `429` response has a fixed body, `Cache-Control: no-store`, and the Storefront API's `Retry-After` value when the value is valid. Other errors pass through unchanged. React Router doesn't report thrown responses to `handleError`, so the wrapper logs the original `StorefrontApiError` at `error` level through Hydrogen's logger. Loaders that you don't wrap still return `500`.
+  
+  `requestContext.applyResponseHeaders()` accepts the response status as an optional second argument. React Router drops the headers of a thrown response, so pass `response.status` from your root middleware, and call the method on the request context of the Storefront API client that your loaders use. For a `429` after a Storefront API rate limit, the method then restores `Cache-Control: no-store` and `Retry-After`; see the method's documentation for the exact rules. If you omit the status after a rate limit, the method logs one warning. Without a rate limit, and for other statuses, the method works as before.
+
+### Patch Changes
+
+- 3e72ac9: `parseCollectionParams` now reads `filter.v.price.gte` and `filter.v.price.lte` the same way on the server and in the browser. Before, a locale-formatted value such as `12,50` was read through `window.Shopify.locale` in the browser and as English on the server, so under a German shop locale the loader queried a minimum of 1250 while the collection store showed 12.5, and the page failed to hydrate. Shop locales such as `pt_br` threw inside `Intl.NumberFormat` and fell back to stripping every non-digit, so `1.234,50` became 1.2345. A price bound must now be a non-negative number as `<input type="number">` submits it, such as `12.5` or `1e3`; any other value, including `12,50`, negatives, and `Infinity`, sets no bound. Values that `serializeCollectionParams` writes, including exponent forms such as `1e21`, still read back unchanged. The `hydrogen-collection-browser` skill now explains why price inputs stay `type="number"`, and says that a custom `type="text"` price input must parse the shopper's text in the customer's market locale and submit a plain number.
+- 96867ee: A `Shopify.actions.updateCart` call that changes several lines now keeps each line at its new quantity when the response returns the lines under different IDs, unless the response reports an error or warning for that line. Before, the lines kept their old quantities next to the new cart totals until the follow-up refresh, and lost the update if that refresh failed. The store also stops waiting for a cart request it doesn't own after `STANDARD_ACTION_TIMEOUT_IN_MS`, so a request that never settles can't block cart revalidation after a reconnect.
+- 8aeb372: `getCartId()` now reads the cart ID only from the `cart` cookie and no longer reads a `cartId` search parameter. To load a specific cart, pass its ID to `getCart()`.
+- 9e358a2: Cart `set` submissions no longer clamp against a non-positive `quantityAvailable`. When the cart fragment selects `ProductVariant.quantityAvailable` and the Storefront API returns `0` (untracked inventory) or a negative number (oversold under the CONTINUE policy), the store used that as the upper bound, so typing a positive quantity removed the line or sent a negative quantity. Those values now set no cap and the requested quantity goes to Shopify, which validates stock and returns the line error. `sanitizeQuantity` now also returns `min` instead of `Infinity` for non-finite input such as `"1e400"` when there's no `max`, and `min` wins when `max` is below it.
+- 2b4d9a7: `gql()` now deduplicates shared fragments across Storefront and Customer Account documents, preventing duplicate-fragment errors. Conflicting definitions with the same name throw when the module that composes them loads.
+- 07abf40: The Customer Account authorize route now redirects to the failed-login path when the OAuth token request times out, can't reach Shopify, or gets a response body that isn't JSON. These failures used to reject `handleShopifyRoutes()`, so the customer saw the app's error page instead. The authorize route now also logs a `sign-in failed` warning with the error code whenever it redirects to the failed-login path.
+  
+  `customerSession.handleOAuthCallback()` now throws `CustomerAccountOAuthError` for these failures, with the original error as `cause`. The code is `token_exchange_failed` when the token request fails or times out, and `invalid_token_response` when the response body isn't JSON. If you call `handleOAuthCallback()` directly and catch `CustomerAccountApiError` to handle token request timeouts, catch `CustomerAccountOAuthError` instead.
+- a179cbd: Product option values now resolve `exists` and `available` from `encodedVariantExistence` and `encodedVariantAvailability` even when no loaded variant carries the value. Before, a value with no `firstSelectableVariant`, or any value on a query that omitted `firstSelectableVariant` and `adjacentVariants`, was reported as existing and in stock whenever the other selected options matched a variant.
+- af55496: Storefront responses now include a `Link: </.well-known/ucp>; rel="ucp"` header, so AI agents can discover your store's Universal Commerce Protocol (UCP) profile from any URL, as they already can on Online Store themes. `requestContext.applyResponseHeaders()` adds it to every response. Any existing `Link` header is kept, and the UCP link isn't added again if the response already has a `rel="ucp"` link. The header is left off Oxygen deployment URLs on `myshopify.dev`, because the profile isn't served there. The `<link rel="ucp">` tag rendered by `ShopifyScripts` ([#4154](https://github.com/Shopify/hydrogen/pull/4154)) still renders on those preview domains, because its descriptors are often built without request context.
+  
+  On Oxygen custom domains, Shopify serves `/.well-known/ucp` before the request reaches your app. Everywhere else, `handleShopifyRoutes` serves it, starting with [#3976](https://github.com/Shopify/hydrogen/pull/3976). This header ships together with or after that change.
+  
+  **Behavior change for Next.js apps:** if your `proxy.ts` (or `middleware.ts`) calls `applyResponseHeaders()` directly on the `NextResponse.next()` response, your route handlers' `Link` headers will be dropped after upgrading. Next.js copies the proxy's headers onto the final response first, then drops any route handler header with the same name. To fix it, adopt the save-and-restore pattern in the updated `examples/nextjs` proxy helper, `applyProxyResponseHeaders()`: save the `Link` header of the `NextResponse.next()` response before calling `applyResponseHeaders()`, then restore it afterwards. Any `Link` your proxy sets itself is kept. Next.js pages then don't send the UCP header. Instead, they advertise UCP through the `<link rel="ucp">` tag rendered by `ShopifyScripts` ([#4154](https://github.com/Shopify/hydrogen/pull/4154)).
+
 ## 2026.10.3
 
 ### Minor Changes
