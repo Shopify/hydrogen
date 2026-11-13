@@ -83,13 +83,12 @@ type CollectionQueryVariables = StorefrontApi.VariablesOf<typeof COLLECTION_QUER
 export async function loadCollectionPage({
   storefrontClient,
   handle,
-  request,
+  url,
 }: {
   storefrontClient: StorefrontClient;
   handle: string;
-  request: Request;
+  url: URL;
 }) {
-  const url = new URL(request.url);
   const browse = parseCollectionParams(url.searchParams);
   const after = url.searchParams.get("after") || undefined;
 

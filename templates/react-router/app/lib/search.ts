@@ -108,12 +108,11 @@ export type SearchPageData = SearchPageEmptyData | SearchPagePerformedData;
 
 export async function loadSearchPage({
   storefrontClient,
-  request,
+  url,
 }: {
   storefrontClient: StorefrontClient;
-  request: Request;
+  url: URL;
 }): Promise<SearchPageData> {
-  const url = new URL(request.url);
   const searchTerm = (url.searchParams.get("q") ?? "").trim();
 
   if (!searchTerm) {

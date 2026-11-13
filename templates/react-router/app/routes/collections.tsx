@@ -19,9 +19,9 @@ export function meta({ matches }: Route.MetaArgs) {
   ];
 }
 
-export const loader = withStorefrontRateLimit(async ({ context, request }: Route.LoaderArgs) => {
+export const loader = withStorefrontRateLimit(async ({ context, url }: Route.LoaderArgs) => {
   const storefrontClient = context.get(storefrontClientContext);
-  return loadCollectionsPage({ storefrontClient, request });
+  return loadCollectionsPage({ storefrontClient, url });
 });
 
 type CollectionNode = Route.ComponentProps["loaderData"]["collections"]["nodes"][number];

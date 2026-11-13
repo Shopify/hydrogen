@@ -18,6 +18,15 @@ export default defineConfig({
     // without inlining assets as base64:
     assetsInlineLimit: 0,
   },
+  environments: {
+    ssr: {
+      build: {
+        // Build the Oxygen Worker entry, which wraps React Router's server
+        // build, instead of React Router's default server build module.
+        rolldownOptions: { input: "./server.ts" },
+      },
+    },
+  },
   ssr: {
     optimizeDeps: {
       /**

@@ -6,8 +6,8 @@
 // types (packages/hydrogen/vendor/standard-actions.d.ts, version below).
 // Inlined here so this template is self-contained — it does NOT depend on a
 // relative `/// <reference path="../../../packages/hydrogen/vendor/...">` into
-// any sibling example. @shopify/hydrogen's own analytics globals augment the
-// `Shopify` interface declared here (see its src/core/analytics/globals.d.ts).
+// any sibling example. `window.Shopify` itself is typed by @shopify/hydrogen's
+// globals, so this file doesn't redeclare it on `Window`.
 //
 // version: 977e4f914dd2b3eca85ad01dee81c2c96eb1b2e5
 export interface Price {
@@ -170,11 +170,6 @@ declare global {
     locale?: string;
     theme?: {
       theme_store_id?: number | null;
-    };
-  }
-  interface Window {
-    Shopify?: Shopify & {
-      [key: string]: unknown;
     };
   }
 }

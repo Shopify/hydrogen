@@ -31,12 +31,12 @@ export function meta({ matches }: Route.MetaArgs) {
 }
 
 export const loader = withStorefrontRateLimit(
-  async ({ context, params, request }: Route.LoaderArgs) => {
+  async ({ context, params, url }: Route.LoaderArgs) => {
     const handle = params.handle;
     if (!handle) throw new Response("Not Found", { status: 404 });
 
     const storefrontClient = context.get(storefrontClientContext);
-    return loadCollectionPage({ storefrontClient, handle, request });
+    return loadCollectionPage({ storefrontClient, handle, url });
   },
 );
 

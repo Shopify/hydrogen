@@ -151,13 +151,13 @@ export function meta({ matches }: Route.MetaArgs) {
 }
 
 export const loader = withStorefrontRateLimit(
-  async ({ context, params, request }: Route.LoaderArgs) => {
+  async ({ context, params, url }: Route.LoaderArgs) => {
     const handle = params.handle;
     if (!handle) throw new Response("Not Found", { status: 404 });
 
     const storefrontClient = context.get(storefrontClientContext);
     const selectedOptions = getSelectedProductOptions({
-      searchParams: new URL(request.url).searchParams,
+      searchParams: url.searchParams,
     });
     const { data } = await storefrontClient.graphql(PRODUCT_QUERY, {
       variables: { handle, selectedOptions },

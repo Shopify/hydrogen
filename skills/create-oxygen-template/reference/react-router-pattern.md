@@ -58,7 +58,7 @@ Dependencies:
 - **`@shopify/mini-oxygen`: use `workspace:*` in this repository**, like `@shopify/hydrogen`. The release flow pins it
   to the version in `packages/mini-oxygen/package.json` before standalone lockfile generation. Its `oxygen()` plugin
   adds `configurePreviewServer`, which `vite preview` needs to run the Worker.
-- Add `"engines": {"node": "^22 || ^24"}`.
+- Add `"engines": {"node": "^22.22 || ^24"}`. React Router 8 requires Node.js 22.22 or later.
 - Replace `catalog:` ranges with npm-compatible semver ranges. Keep `@types/node` in `devDependencies` (build tooling
   such as `vite.config.ts` needs it) even though it is dropped from the app tsconfig `types` (see "Env and types").
 - Choose other package versions at implementation time; prefer the versions already present in the example's package files.
@@ -80,6 +80,13 @@ export default defineConfig({
   },
   build: {
     assetsInlineLimit: 0,
+  },
+  environments: {
+    ssr: {
+      build: {
+        rolldownOptions: {input: "./server.ts"},
+      },
+    },
   },
   ssr: {
     optimizeDeps: {
@@ -103,6 +110,8 @@ export default defineConfig({
 
 Keep the Hydrogen `localHttps` plugin when Customer Account support is enabled. Do not add `localCdnAssets`, `hydrogen()` from classic Hydrogen, or separate `allowedHosts` configuration unless requested.
 
+Keep the `environments.ssr.build.rolldownOptions.input` entry. React Router 8 always builds through the Vite Environment API, and without that entry it builds its own server build module, so `dist/server/index.js` exports no Worker `fetch` handler.
+
 Keep the `build.assetsInlineLimit: 0` and `ssr.optimizeDeps.include` interop settings unless a successful Worker build and MiniOxygen runtime test proves they are unnecessary. They prevent common CJS/ESM runtime failures in the Oxygen runtime such as `module is not defined` / `require is not defined`. Use plain `oxygen()`; MiniOxygen auto-loads `.env` into the Worker via its own `loadEnv` fallback when no `env` option is provided.
 
 ## react-router.config.ts
@@ -116,13 +125,13 @@ export default {
   ssr: true,
   subResourceIntegrity: false,
   future: {
-    v8_middleware: true,
     unstable_optimizeDeps: true,
   },
 };
 ```
 
-Preserve any additional future flags that the template needs. Keep `buildDirectory: "dist"` aligned with the deploy script's `dist/client` and `dist/server` flags. If one changes, update the other in the same change.
+React Router 8 always enables middleware, split route modules, and the Vite Environment API, so the template doesn't
+set the v7 `v8_*` future flags. Preserve any additional future flags that the template needs. Keep `buildDirectory: "dist"` aligned with the deploy script's `dist/client` and `dist/server` flags. If one changes, update the other in the same change.
 
 ## server.ts
 

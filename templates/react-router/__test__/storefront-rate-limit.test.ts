@@ -199,11 +199,7 @@ function handler(
       url: "manifest.js",
       version: "test",
     },
-    future: {
-      v8_middleware: true,
-      v8_passThroughRequests: false,
-      unstable_trailingSlashAwareDataRequests: false,
-    },
+    future: {},
     ssr: true,
     isSpaMode: false,
     prerender: [],
@@ -252,7 +248,7 @@ test("a mapped rate limit is logged once through Hydrogen, because React Router 
 });
 
 for (const child of [false, true]) {
-  for (const path of ["/", "/_root.data"]) {
+  for (const path of ["/", "/_.data"]) {
     test(`mapped ${child ? "child" : "root"} critical loader returns 429 and Retry-After for ${path}`, async () => {
       const client = createClient(() => upstream());
       const response = await handler(() => client.graphql(QUERY), client.requestContext, {
@@ -290,7 +286,7 @@ for (const [recovered, critical] of [
   ["1", "60"],
   ["60", "1"],
 ]) {
-  for (const path of ["/", "/_root.data"]) {
+  for (const path of ["/", "/_.data"]) {
     test(`recovered ${recovered}s and critical ${critical}s use conservative retry advice for ${path}`, async () => {
       let calls = 0;
       const client = createClient(() => upstream(429, calls++ === 0 ? recovered : critical));
