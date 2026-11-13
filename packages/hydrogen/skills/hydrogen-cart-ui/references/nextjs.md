@@ -61,6 +61,15 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 }
 ```
 
+`cartHandlers.get()` marks the shell's request context personalized, but that mark doesn't reach the page response. `proxy.ts` sends the response headers before the shell renders, and `getStorefrontClient()` creates a separate request context. Next makes dynamic pages private by default, but it keeps a `Cache-Control` header that `proxy.ts` sets. Mark the response personalized in `proxy.ts` on every request, before `requestContext.applyResponseHeaders()`:
+
+```ts
+requestContext.markResponseAsPersonalized("cart");
+requestContext.applyResponseHeaders(response.headers);
+```
+
+See the `hydrogen-request-handlers` skill's Next.js reference for the full `proxy.ts`.
+
 Wrap cart content that needs the full cart in a local Suspense boundary and read it with `useSuspenseCart()`:
 
 ```tsx

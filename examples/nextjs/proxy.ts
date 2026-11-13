@@ -107,6 +107,8 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
   requestHeaders.delete("Content-Security-Policy");
   requestHeaders.delete("Content-Security-Policy-Report-Only");
   const response = NextResponse.next({ request: { headers: requestHeaders } });
+  // AppShell reads the cart on every page, on its own request context.
+  requestContext.markResponseAsPersonalized("cart");
   applyProxyResponseHeaders(requestContext, response.headers);
   csp.applyResponseHeaders(response.headers);
   return response;

@@ -82,6 +82,12 @@ function createGetRequest(cookies?: string, url = "https://my-app.com/api/cart")
   });
 }
 
+function createPageRequest(url: string, cookies?: string, accept = "text/html"): Request {
+  return new Request(url, {
+    headers: { accept, ...(cookies && { cookie: cookies }) },
+  });
+}
+
 function createJsonPostRequest(
   body: unknown,
   cookies?: string,
@@ -130,6 +136,17 @@ function createPrivateStorefrontClient(
       privateStorefrontToken: "test-private-token",
     },
   });
+}
+
+function applyPageResponseHeaders(
+  storefrontClient: ReturnType<typeof createPrivateStorefrontClient>,
+): Headers {
+  const headers = new Headers({
+    "cache-control": "public, max-age=60",
+    "oxygen-cache-control": "public, max-age=3600",
+  });
+  storefrontClient.requestContext.applyResponseHeaders(headers);
+  return headers;
 }
 
 function handleCartRequest(
@@ -458,7 +475,11 @@ describe("createCartServerHandlers", () => {
       assert(result, "expected a response");
       expect(result.status).toBe(429);
       expect(result.headers.get("retry-after")).toBe("3");
-      expect(result.headers.get("cache-control")).toBe("no-store");
+      // The cart GET marks the response personalized before it fetches, and the finalizer applies
+      // the private value after the 429 `no-store`.
+      expect(result.headers.get("cache-control")).toBe(
+        "private, no-store, max-age=0, must-revalidate",
+      );
       expect(result.headers.get("x-request-id")).toBeNull();
       const body = await result.json();
       expect(body).toEqual({
@@ -522,6 +543,69 @@ describe("createCartServerHandlers", () => {
       expect(body.errors).toEqual([{ message: "Cart not found" }]);
       expect(logger.error).toHaveBeenCalledOnce();
       expect(logger.error).toHaveBeenCalledWith("Cart not found", { scope: "cart-api" });
+    });
+  });
+
+  describe("GET — server-rendered cart", () => {
+    it.each([
+      ["a document request", "/products/widget", "text/html", true],
+      ["a .data request", "/products/widget.data", "*/*", true],
+      ["a read without a request", "/", "text/html", false],
+    ])(
+      "makes the response private for %s with a cart",
+      async (_name, path, accept, withRequest) => {
+        mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
+        const request = createPageRequest(`https://my-app.com${path}`, "cart=123", accept);
+        const storefrontClient = createPrivateStorefrontClient(request);
+
+        const result = await createCartServerHandlers().get({
+          storefrontClient,
+          ...(withRequest && { request }),
+        });
+
+        expect(result.data.cart).toEqual(MOCK_CART);
+        const headers = applyPageResponseHeaders(storefrontClient);
+        expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
+        expect(headers.get("oxygen-cache-control")).toBeNull();
+      },
+    );
+
+    it("marks the page private when the request has no cart ID", async () => {
+      const request = createPageRequest("https://my-app.com/products/widget");
+      const storefrontClient = createPrivateStorefrontClient(request);
+
+      const result = await createCartServerHandlers().get({ storefrontClient, request });
+
+      expect(result.data).toEqual({ cart: null });
+      const headers = applyPageResponseHeaders(storefrontClient);
+      expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
+      expect(headers.get("oxygen-cache-control")).toBeNull();
+    });
+
+    it("makes a page private when the cart cookie no longer resolves to a cart", async () => {
+      mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: null }));
+      const request = createPageRequest("https://my-app.com/products/widget", "cart=expired");
+      const storefrontClient = createPrivateStorefrontClient(request);
+
+      const result = await createCartServerHandlers().get({ storefrontClient, request });
+
+      expect(result.data).toEqual({ cart: null });
+      const headers = applyPageResponseHeaders(storefrontClient);
+      expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
+    });
+
+    it("makes a page private before a streamed cart read settles", async () => {
+      const cartResponse = Promise.withResolvers<Response>();
+      mockFetch.mockReturnValueOnce(cartResponse.promise);
+      const request = createPageRequest("https://my-app.com/products/widget", "cart=123");
+      const storefrontClient = createPrivateStorefrontClient(request);
+
+      const pendingResult = createCartServerHandlers().get({ storefrontClient, request });
+      const headers = applyPageResponseHeaders(storefrontClient);
+
+      expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
+      cartResponse.resolve(mockGqlResponse({ cart: MOCK_CART }));
+      expect((await pendingResult).data.cart).toEqual(MOCK_CART);
     });
   });
 

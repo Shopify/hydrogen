@@ -50,6 +50,7 @@ const CART_POST_METHOD = "POST" as const;
 const CART_MUTATION_FAILED_STATUS = 500;
 const CART_MUTATION_FAILED_MESSAGE = "Cart mutation failed. Please try again.";
 const CART_RATE_LIMITED_MESSAGE = "Cart mutation is rate limited. Please try again later.";
+const CART_PERSONALIZATION_REASON = "cart";
 const cartServerHandlersCartQuery: unique symbol = Symbol("hydrogen.cartQuery");
 
 /**
@@ -173,6 +174,8 @@ export type CartServerHandlers<
    * Returns the current cart. The handler reads the cart ID from the request's `cartId` search parameter or `cart` cookie. Without a request, the handler reads the cart ID from the Storefront API client's request context.
    *
    * GraphQL errors return a `null` cart with the errors in the response body. The handler throws when the Storefront API request fails.
+   *
+   * The handler marks the Storefront API client's request context with `markResponseAsPersonalized()` on every call, before it fetches the cart, so `applyResponseHeaders()` makes the page private and uncacheable even when the loader streams the unresolved result. This concerns the CDN and page cache only; the cart route's own response headers are always private. Requests that do not call the cart handler stay cacheable.
    */
   get: CartGetHandler<TCart>;
   /**
@@ -384,8 +387,10 @@ async function handleGet(
   customerSession?: CartCustomerSession,
 ): Promise<CartGetResult> {
   const { request, storefrontClient } = context;
-  const cartIdSource = request ?? storefrontClient.requestContext;
-  const result = await getCart(getCartId(cartIdSource), storefrontClient, queries.cart);
+  const { requestContext } = storefrontClient;
+  const cartId = getCartId(request ?? requestContext);
+  requestContext.markResponseAsPersonalized(CART_PERSONALIZATION_REASON);
+  const result = await getCart(cartId, storefrontClient, queries.cart);
   logCartErrors(result.errors);
   const cart = await addLoggedInCheckoutParam(result.cart, context, customerSession);
   const data = { cart, ...(result.errors && { errors: result.errors }) };
