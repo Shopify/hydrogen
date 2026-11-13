@@ -171,6 +171,8 @@ export type CartServerHandlers<
   /**
    * Returns the current cart. The handler reads the cart ID from the request's `cartId` search parameter or `cart` cookie. Without a request, the handler reads the cart ID from the Storefront API client's request context.
    *
+   * When the cart's buyer country differs from the request's country, the handler resets it with `cartBuyerIdentityUpdate` and returns the repriced cart. B2B carts keep their country.
+   *
    * GraphQL errors return a `null` cart with the errors in the response body. The handler throws when the Storefront API request fails.
    */
   get: CartGetHandler<TCart>;
