@@ -1,0 +1,116 @@
+name: Bundle size
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: bundle-size-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    name: Measure bundle size
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      npm_config_registry: https://registry.npmjs.org/
+      TURBO_TELEMETRY_DISABLED: "1"
+      BASE_DIR: ${{ github.workspace }}/../bundle-size-base
+    steps:
+      # The pull_request ref is a merge commit; its first parent is exactly
+      # the base this PR's changes are measured against.
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Measure PR
+        run: |
+          pnpm turbo run build --filter=@shopify/hydrogen
+          node scripts/bundle-size.ts measure --package-dir packages/hydrogen --out "$RUNNER_TEMP/head.json"
+
+      # Uses this PR's scenarios against the base build. A failure here still
+      # produces a report, without deltas.
+      - name: Measure base
+        continue-on-error: true
+        run: |
+          git worktree add --detach "$BASE_DIR" HEAD^1
+          cd "$BASE_DIR"
+          pnpm install --frozen-lockfile
+          pnpm turbo run build --filter=@shopify/hydrogen
+          cd "$GITHUB_WORKSPACE"
+          node scripts/bundle-size.ts measure --package-dir "$BASE_DIR/packages/hydrogen" --out "$RUNNER_TEMP/base.json"
+
+      - name: Generate report
+        run: |
+          node scripts/bundle-size.ts report --base "$RUNNER_TEMP/base.json" --head "$RUNNER_TEMP/head.json" --out "$RUNNER_TEMP/report.md"
+          cat "$RUNNER_TEMP/report.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: bundle-size-report
+          path: ${{ runner.temp }}/report.md
+          retention-days: 1
+
+  # Separate job so no PR-controlled code (install scripts, build) runs where
+  # the write token exists. Fork PRs get a read-only token, so they only get
+  # the job summary.
+  comment:
+    name: Comment bundle size
+    needs: measure
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: bundle-size-report
+          path: ${{ runner.temp }}
+
+      - name: Create or update comment
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # The report is produced by PR code, so the marker is hardcoded here
+          # (kept in sync by scripts/bundle-size-report.test.ts) and never
+          # read from the report into the jq program.
+          report="$RUNNER_TEMP/report.md"
+          marker='<!-- hydrogen-bundle-size-report -->'
+          if [ "$(head -n 1 "$report")" != "$marker" ]; then
+            echo "::error::report.md does not start with the expected marker"
+            exit 1
+          fi
+          comment_ids=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id")
+          comment_id=${comment_ids%%$'\n'*}
+          if [[ -n "$comment_id" && ! "$comment_id" =~ ^[0-9]+$ ]]; then
+            echo "::error::Unexpected comment id: $comment_id"
+            exit 1
+          fi
+          if [ -n "$comment_id" ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$comment_id" -F body=@"$report" > /dev/null
+          else
+            gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file "$report"
+          fi
