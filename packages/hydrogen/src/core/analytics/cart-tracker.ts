@@ -71,7 +71,10 @@ function trackCartChange(
 
   syncShopifyCurrency(cart);
 
-  if (cart.updatedAt === state.prevCart?.updatedAt) return;
+  if (cart.updatedAt === state.prevCart?.updatedAt) {
+    state.prevCart = cart;
+    return;
+  }
 
   let cartLastUpdatedAt: CartStorage | null;
   try {

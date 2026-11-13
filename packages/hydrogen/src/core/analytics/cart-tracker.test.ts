@@ -8,7 +8,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createCartStore } from "../cart/cart";
 import type { CartStore } from "../cart/cart";
 import { getCart } from "../cart/get-cart";
-import type { CartData } from "../cart/state";
+import type { CartData, CartState } from "../cart/state";
+import { createCartState } from "../cart/state";
 import { assert } from "../test-utils";
 import { trackCartAnalytics } from "./cart-tracker";
 import { AnalyticsEvent } from "./events";
@@ -500,6 +501,49 @@ describe("trackCartAnalytics", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("adopts a cart with an unchanged updatedAt as the baseline without publishing", () => {
+    const { analytics, publish } = createTestAnalytics();
+    setGlobalAnalytics(analytics);
+    const otherLine = {
+      ...CART_LINE,
+      id: "gid://shopify/CartLine/other",
+      merchandise: { ...CART_LINE.merchandise, id: "gid://shopify/ProductVariant/2" },
+    };
+    let state = createCartState(createCartDataFromAnalyticsCart(CART_DATA));
+    let listener: ((next: CartState) => void) | undefined;
+    const store = {
+      getState: () => state,
+      subscribe: (next: (value: CartState) => void) => {
+        listener = next;
+        return () => {};
+      },
+    } as Parameters<typeof trackCartAnalytics>[0];
+    const publishState = (cart: AnalyticsCart) => {
+      state = createCartState(createCartDataFromAnalyticsCart(cart));
+      listener?.(state);
+    };
+
+    trackCartAnalytics(store);
+    publishState({ ...CART_DATA, lines: { nodes: [CART_LINE, otherLine] } });
+
+    expect(publish).not.toHaveBeenCalled();
+
+    publishState({
+      ...CART_DATA_QUANTITY_INCREASED,
+      lines: { nodes: [{ ...CART_LINE, quantity: 2 }, otherLine] },
+    });
+    const addEvents = publish.mock.calls.filter(
+      ([event]) => event === AnalyticsEvent.PRODUCT_ADD_TO_CART,
+    );
+
+    expect(addEvents).toHaveLength(1);
+    expect(addEvents[0]?.[1]).toEqual(
+      expect.objectContaining({
+        currentLine: expect.objectContaining({ id: CART_LINE.id, quantity: 2 }),
+      }),
+    );
   });
 
   it("deduplicates via localStorage across tracker instances", () => {
