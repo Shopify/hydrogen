@@ -30,6 +30,8 @@ When designing or adjusting APIs for the `hydrogen` package, closely follow the 
 - Tests and type tests may use type assertions, `import()` type annotations, explicit `any`, and higher-complexity setup when that keeps mocks or compile-time assertions clear.
 - Non-null assertions (`!`) are still forbidden in tests. Use an assertion helper instead so failures include a useful message.
 - In Hydrogen package tests, import `assert` from `packages/hydrogen/src/core/test-utils.ts` rather than using `!`.
+- Property tests use `fast-check` and sit next to the example tests as `*.property.test.ts`. Name each test after the rule it checks. Work out what the rule expects without calling the code under test, unless the rule itself compares two of its results.
+- fast-check draws a new seed on every run, so a property can fail on an unrelated change. The failure is a counterexample: replay it by adding the printed `seed`, `path` and `endOnFailure` to the options of `fc.assert`, then fix the code or correct the property. For a property that takes `fc.scheduler()`, add the `seed` only, because the path does not restore the order of the scheduled tasks.
 
 ## MiniOxygen
 
