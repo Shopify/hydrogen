@@ -10,8 +10,14 @@ const OFF_SITE_TARGETS = [
   "https://evil.example/sale",
   "//evil.example",
   "/\\evil.example",
+  "\\\\evil.example",
   "/./\\evil.example",
   "/sale/..//evil.example",
+  // URL parsers strip leading spaces and C0 controls and drop tabs anywhere.
+  " /\\evil.example",
+  "\t/\\evil.example",
+  "/\t/evil.example",
+  "\u0001/\\evil.example",
 ];
 
 test.describe("Discount links", () => {
@@ -20,7 +26,11 @@ test.describe("Discount links", () => {
     baseURL,
   }) => {
     // A `blob:` URL reports the origin of the URL it wraps.
-    const targets = [...OFF_SITE_TARGETS, `blob:${new URL("/sale", baseURL).href}`];
+    const targets = [
+      ...OFF_SITE_TARGETS,
+      `blob:${new URL("/sale", baseURL).href}`,
+      "javascript:alert(1)",
+    ];
 
     for (const target of targets) {
       const response = await request.get(DISCOUNT_LINK, {
