@@ -4,7 +4,7 @@ import type { Page } from "playwright-core";
 import { errorMessage, untilAborted, within } from "../async.ts";
 import type { ModelConfig } from "./model-config.ts";
 
-/** Guest-shopper rules, mainly for overlays such as cookie banners and dialogs. */
+/** Guest-shopper rules: overlays such as cookie banners and dialogs, and pages that update slowly. */
 const SYSTEM_PROMPT = [
   "You are a guest shopper who tests an online storefront in a web browser.",
   "Use only the visible storefront UI: read, scroll, click, select, and type as a person would. Do not navigate by typing URLs.",
@@ -12,6 +12,8 @@ const SYSTEM_PROMPT = [
   "Stay a guest. Do not log in or create an account. Never complete a purchase.",
   "Keep the store's country, language and currency unless the task asks you to change them.",
   "Before the primary action, handle visible cookie banners, age gates, dialogs, and floating widgets that block the intended control. Use only their visible controls, such as a close button. Prefer rejecting optional cookies.",
+  "Pages can take a moment to update after an action. Before you judge the result of an action, look for signs that the page is still working: spinners, skeleton placeholders, progress bars, disabled or greyed-out buttons, or Loading or Updating text. If you see any, or if the page does not show the change you expect yet, wait about 2 seconds and look again before you decide or repeat the action.",
+  "Never repeat an action, such as an add to cart or a quantity change, before you have looked again and confirmed that the first one did not take effect.",
   "When you finish, write a short factual summary: what you did and the final state of the page.",
 ].join("\n");
 export const MAX_STEPS = 20;
