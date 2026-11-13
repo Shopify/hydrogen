@@ -84,7 +84,7 @@ const storefrontClient = {
 } as unknown as StorefrontClient;
 
 function sellerCookie(seller: string, token: string, writtenAt = NOW_SECONDS - 60): string {
-  return `hydrogen-cart.${seller}=${writtenAt}|${encodeURIComponent(token)}`;
+  return `cart-${seller}=${writtenAt}|${encodeURIComponent(token)}`;
 }
 
 function getRequest(url: string, cookie?: string): Request {
@@ -385,7 +385,7 @@ describe("seller cart POST", () => {
       ordering: "sequential",
     });
     expect(setCookies(result)).toEqual([
-      `hydrogen-cart.raycon=${NOW_SECONDS}|raycon-token%3Fkey%3Dr; Path=/; SameSite=Lax; HttpOnly; Max-Age=${TEN_DAYS}; Secure`,
+      `cart-raycon=${NOW_SECONDS}|raycon-token%3Fkey%3Dr; Path=/; SameSite=Lax; HttpOnly; Max-Age=${TEN_DAYS}; Secure`,
     ]);
   });
 
@@ -417,9 +417,7 @@ describe("seller cart POST", () => {
     );
     expect(setCookies(result)).toEqual([
       expect.stringMatching(
-        new RegExp(
-          `^hydrogen-cart\\.raycon=${NOW_SECONDS}\\|raycon-token%3Fkey%3Dr;.*Max-Age=1209600`,
-        ),
+        new RegExp(`^cart-raycon=${NOW_SECONDS}\\|raycon-token%3Fkey%3Dr;.*Max-Age=1209600`),
       ),
     ]);
   });
@@ -437,7 +435,7 @@ describe("seller cart POST", () => {
     });
 
     expect(setCookies(result)).toEqual([
-      expect.stringMatching(/^hydrogen-cart\.raycon=\d+\|raycon-token.*Max-Age=864000/),
+      expect.stringMatching(/^cart-raycon=\d+\|raycon-token.*Max-Age=864000/),
     ]);
   });
 
@@ -456,7 +454,7 @@ describe("seller cart POST", () => {
     });
 
     expect(setCookies(result)).toEqual([
-      "hydrogen-cart.raycon=; Path=/; SameSite=Lax; HttpOnly; Max-Age=0; Secure",
+      "cart-raycon=; Path=/; SameSite=Lax; HttpOnly; Max-Age=0; Secure",
     ]);
   });
 
@@ -503,8 +501,8 @@ describe("seller cart POST", () => {
 
     const cookies = setCookies(result);
     expect(cookies).toHaveLength(2);
-    expect(cookies[0]).toMatch(/^hydrogen-cart\.raycon=/);
-    expect(cookies[1]).toBe("hydrogen-cart.s0=; Path=/; SameSite=Lax; HttpOnly; Max-Age=0; Secure");
+    expect(cookies[0]).toMatch(/^cart-raycon=/);
+    expect(cookies[1]).toBe("cart-s0=; Path=/; SameSite=Lax; HttpOnly; Max-Age=0; Secure");
   });
 
   it("returns missing_cart for a change without a seller cart", async () => {
@@ -548,7 +546,7 @@ describe("seller cart POST", () => {
       { storefrontClient, seller: "raycon" },
     );
     expect(result).toMatchObject({ type: "redirect", location: "/products/a" });
-    expect(setCookies(result)).toEqual([expect.stringMatching(/^hydrogen-cart\.raycon=/)]);
+    expect(setCookies(result)).toEqual([expect.stringMatching(/^cart-raycon=/)]);
   });
 
   it("redirects a form post with an invalid seller without changing a cart", async () => {

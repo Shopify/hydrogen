@@ -4,7 +4,7 @@ const COOKIE_NAME = "cart";
 const MAX_AGE_IN_SECONDS = 1209600; // 14 days
 const CART_GID_PREFIX = "gid://shopify/Cart/";
 
-const SELLER_COOKIE_PREFIX = "hydrogen-cart.";
+const SELLER_COOKIE_PREFIX = "cart-";
 const SELLER_HANDLE_PATTERN = /^[a-z0-9][a-z0-9-]{0,62}$/;
 const SELLER_COOKIE_VALUE_PATTERN = /^(\d{1,12})\|(.+)$/;
 const MAX_SELLER_CARTS = 10;
@@ -15,7 +15,7 @@ const MAX_SELLER_COOKIE_MAX_AGE = 2592000; // 30 days
 
 type CartCookieSource = Request | { cookie?: string };
 
-/** A seller cart ID read from a `hydrogen-cart.<seller>` cookie. */
+/** A seller cart ID read from a `cart-<seller>` cookie. */
 export type SellerCartCookie = {
   seller: string;
   cartId: string;

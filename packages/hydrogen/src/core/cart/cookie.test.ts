@@ -91,7 +91,7 @@ const NOW = Date.UTC(2026, 10, 9, 12, 0, 0);
 const NOW_SECONDS = NOW / 1000;
 
 function sellerPair(seller: string, token: string, writtenAt = NOW_SECONDS): string {
-  return `hydrogen-cart.${seller}=${writtenAt}|${encodeURIComponent(token)}`;
+  return `cart-${seller}=${writtenAt}|${encodeURIComponent(token)}`;
 }
 
 function sellers(cookie: string) {
@@ -140,11 +140,11 @@ describe("getSellerCartsFromCookie", () => {
   });
 
   it.each([
-    ["an invalid handle", `hydrogen-cart.Raycon=${NOW_SECONDS}|t`],
-    ["a dotted handle", `hydrogen-cart.a.b=${NOW_SECONDS}|t`],
-    ["a missing timestamp", "hydrogen-cart.raycon=t"],
-    ["an empty token", `hydrogen-cart.raycon=${NOW_SECONDS}|`],
-    ["a malformed encoding", `hydrogen-cart.raycon=${NOW_SECONDS}|%FF`],
+    ["an invalid handle", `cart-Raycon=${NOW_SECONDS}|t`],
+    ["a dotted handle", `cart-a.b=${NOW_SECONDS}|t`],
+    ["a missing timestamp", "cart-raycon=t"],
+    ["an empty token", `cart-raycon=${NOW_SECONDS}|`],
+    ["a malformed encoding", `cart-raycon=${NOW_SECONDS}|%FF`],
     ["a cart_ prefix", `cart_raycon=${NOW_SECONDS}|t`],
   ])("ignores %s", (_label, cookie) => {
     expect(sellers(cookie)).toEqual([]);
@@ -193,7 +193,7 @@ describe("createSellerCartCookie", () => {
     });
 
     expect(cookie).toBe(
-      `hydrogen-cart.raycon=${NOW_SECONDS}|r1%3Fkey%3Da; Path=/; SameSite=Lax; HttpOnly; Max-Age=1209600`,
+      `cart-raycon=${NOW_SECONDS}|r1%3Fkey%3Da; Path=/; SameSite=Lax; HttpOnly; Max-Age=1209600`,
     );
   });
 
@@ -228,7 +228,7 @@ describe("createSellerCartCookie", () => {
 describe("createExpiredSellerCartCookie", () => {
   it("expires the seller cookie with the same attributes", () => {
     expect(createExpiredSellerCartCookie("raycon", { secure: true })).toBe(
-      "hydrogen-cart.raycon=; Path=/; SameSite=Lax; HttpOnly; Max-Age=0; Secure",
+      "cart-raycon=; Path=/; SameSite=Lax; HttpOnly; Max-Age=0; Secure",
     );
   });
 });
@@ -256,7 +256,7 @@ describe("planSellerCookieEvictions", () => {
   });
 
   it("evicts the oldest sellers until the new cookie fits the byte budget", () => {
-    const token = "x".repeat(200);
+    const token = "x".repeat(210);
     const cookie = Array.from({ length: 9 }, (_, index) =>
       sellerPair(`s${index}`, token, NOW_SECONDS - index),
     ).join("; ");

@@ -73,7 +73,7 @@ export type CartGetData<TCart = CartData> = {
   /** `sequential` when the handlers' `transport` needs the cart store to send one cart change at a time. Absent for the default Storefront API cart. */
   ordering?: "sequential";
   /**
-   * The seller carts from the request's `hydrogen-cart.<seller>` cookies, when you pass `includeSellers: true` to handlers whose `transport` supports sellers. The handler reads the carts in parallel and leaves out carts that fail to load, no longer exist, or have no lines. Absent otherwise.
+   * The seller carts from the request's `cart-<seller>` cookies, when you pass `includeSellers: true` to handlers whose `transport` supports sellers. The handler reads the carts in parallel and leaves out carts that fail to load, no longer exist, or have no lines. Absent otherwise.
    */
   sellers?: Array<{ seller: string; cart: TCart }>;
 };
@@ -182,7 +182,7 @@ export type CartGetHandler<
 /**
  * Handles GET requests to `/api/cart` for cart server handlers created with `transport`.
  *
- * A request with a `seller` search parameter returns that seller's cart from its `hydrogen-cart.<seller>` cookie, or an `invalid_seller` error when the handle isn't valid. Pass `includeSellers: true` to return the home cart with every seller cart in `sellers` instead, which never returns an error result.
+ * A request with a `seller` search parameter returns that seller's cart from its `cart-<seller>` cookie, or an `invalid_seller` error when the handle isn't valid. Pass `includeSellers: true` to return the home cart with every seller cart in `sellers` instead, which never returns an error result.
  */
 export type CartTransportGetHandler = {
   (context: CartGetHandlerContext & { includeSellers: true }): Promise<CartGetResult>;
@@ -275,7 +275,7 @@ export type CartDataFromHandlers<THandlers> = CartDataFromHandlerResult<
 /**
  * The cart route handlers that `createCartServerHandlers` returns when you pass `transport`.
  *
- * With a transport that supports sellers, such as `createUcpCartTransport()`, the handlers keep one cart per seller. `/api/cart?seller=<handle>` reads and changes the cart of the store at `<handle>.myshopify.com`, kept in a `hydrogen-cart.<handle>` cookie. Each seller cart has its own checkout.
+ * With a transport that supports sellers, such as `createUcpCartTransport()`, the handlers keep one cart per seller. `/api/cart?seller=<handle>` reads and changes the cart of the store at `<handle>.myshopify.com`, kept in a `cart-<handle>` cookie. Each seller cart has its own checkout.
  */
 export type CartServerHandlersWithTransport = {
   /** The cart query document that the handlers run. Always `undefined`, because the transport reads carts. */
@@ -283,7 +283,7 @@ export type CartServerHandlersWithTransport = {
   /** Returns the home cart, one seller's cart, or the home cart with every seller cart. */
   get: CartTransportGetHandler;
   /**
-   * Runs the cart change that the request describes, like the POST handler in `CartServerHandlers`. With `?seller=<handle>`, the change runs on that seller's cart. The handler sets the seller's `hydrogen-cart.<handle>` cookie (`HttpOnly`, with `Max-Age` from the cart's expiry), expires it when the cart no longer exists, and expires the least recently written seller cookies when there are more than 10 or they exceed 2,048 bytes.
+   * Runs the cart change that the request describes, like the POST handler in `CartServerHandlers`. With `?seller=<handle>`, the change runs on that seller's cart. The handler sets the seller's `cart-<handle>` cookie (`HttpOnly`, with `Max-Age` from the cart's expiry), expires it when the cart no longer exists, and expires the least recently written seller cookies when there are more than 10 or they exceed 2,048 bytes.
    */
   post: CartPostHandler;
 };
