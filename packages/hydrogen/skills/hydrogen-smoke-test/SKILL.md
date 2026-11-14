@@ -4,7 +4,7 @@ description: >
   Smoke-test checklist for Hydrogen storefronts built by agents. Use after
   creating or modifying a Hydrogen storefront, setup flow, cart, product page,
   collection/search browsing, analytics, request handlers, Shopify redirects,
-  Shop Pay, or framework middleware integration.
+  robots.txt, Shop Pay, or framework middleware integration.
 ---
 
 # Hydrogen Storefront Smoke Tests
@@ -29,6 +29,7 @@ Request handlers:
 - [ ] GET /api/cart returns cart handler JSON (no cart cookie -> {cart: null})
 - [ ] GET /admin redirects to the configured shop/admin domain
 - [ ] Unknown path returns framework 404 unless a Shopify URL redirect matches
+- [ ] When the app serves /robots.txt: 200 text/plain, publicly cacheable, no Set-Cookie
 
 Navigation:
 - [ ] Every navbar and footer link href returns 200 when curled directly (no invented routes)
@@ -124,6 +125,12 @@ curl -i http://localhost:<port>/this-does-not-exist
 ```
 
 Expected: framework 404 unless Shopify has a matching URL redirect.
+
+```bash
+curl -i http://localhost:<port>/robots.txt
+```
+
+Run this check when the app serves `/robots.txt`. Expected: `200` with `Content-Type: text/plain`, a public `Cache-Control`, and no `Set-Cookie` header. The rules themselves are the app's policy; see the `hydrogen-robots-txt` skill.
 
 ## Navigation
 

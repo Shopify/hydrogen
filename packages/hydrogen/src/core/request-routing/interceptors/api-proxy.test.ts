@@ -11,7 +11,7 @@ const STORE_URL = "https://test-store.myshopify.com";
 function handleShopifyApiProxy(request: Request) {
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n: { defaultLocale: { country: "US", language: "EN" } },
   });
 
   return handleShopifyApiProxyImpl(new URL(request.url), {
@@ -25,6 +25,7 @@ function handleShopifyApiProxy(request: Request) {
     },
     storefrontClient: {
       type: "public",
+      locale: { country: "US", language: "EN", pathPrefix: "" },
       i18n: { country: "US", language: "EN", pathPrefix: "" },
       storeUrl: STORE_URL,
       apiUrl: `${STORE_URL}/api/2026-04/graphql.json`,
@@ -63,12 +64,27 @@ describe("handleShopifyApiProxy", () => {
     expect(call[0].href).toBe("https://test-store.myshopify.com/agent/buyer-claims?locale=en");
   });
 
-  it("forwards the prefix root to the SFR root", async () => {
-    await handleShopifyApiProxy(new Request("https://my-app.com/__shopify"));
+  it.each(["/__shopify", "/__shopify/", "/__shopify//"])(
+    "returns 404 for the prefix root %s without proxying",
+    async (pathname) => {
+      const response = await handleShopifyApiProxy(new Request(`https://my-app.com${pathname}`));
 
-    const call = mockFetch.mock.calls[0];
-    assert(call, "expected fetch to be called");
-    expect(call[0].href).toBe("https://test-store.myshopify.com/");
+      assert(response, "expected a response");
+      expect(response.status).toBe(404);
+      expect(await response.json()).toEqual({ error: "Not Found" });
+      expect(mockFetch).not.toHaveBeenCalled();
+    },
+  );
+
+  it("returns an empty 404 for HEAD requests to the prefix root", async () => {
+    const response = await handleShopifyApiProxy(
+      new Request("https://my-app.com/__shopify", { method: "HEAD" }),
+    );
+
+    assert(response, "expected a response");
+    expect(response.status).toBe(404);
+    expect(await response.text()).toBe("");
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it.each([

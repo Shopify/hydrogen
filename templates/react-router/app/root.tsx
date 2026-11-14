@@ -1,5 +1,10 @@
-import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
-import { ShopifyScripts } from "@shopify/hydrogen/react";
+import {
+  getHtmlLang,
+  handleShopifyRedirects,
+  handleShopifyRoutes,
+  withStorefrontRateLimit,
+} from "@shopify/hydrogen";
+import { LocaleProvider, ShopifyScripts } from "@shopify/hydrogen/react";
 import type { ReactNode } from "react";
 import {
   isRouteErrorResponse,
@@ -27,7 +32,7 @@ import { predictiveSearchHandlers } from "~/lib/predictive-search-handlers";
 import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { createEphemeralSessionManager } from "~/lib/session";
-import { analyticsConsent, resolveShopIdentity, storefrontConfig } from "~/lib/shop";
+import { analyticsConsent, resolveShopIdentity } from "~/lib/shop";
 import { createRequestStorefrontClient, storefrontClientContext } from "~/lib/storefront";
 
 import type { Route } from "./+types/root";
@@ -59,6 +64,7 @@ export const middleware: Route.MiddlewareFunction[] = [
       sessionManager,
       storefrontClient,
       routeTemplates,
+      rateLimitHandling: "response",
       handlers: customerAccount
         ? [cartHandlers, predictiveSearchHandlers, customerAccount.handlers]
         : [cartHandlers, predictiveSearchHandlers],
@@ -82,12 +88,12 @@ export const middleware: Route.MiddlewareFunction[] = [
       if (redirect) return redirect;
     }
 
-    requestContext.applyResponseHeaders(response.headers);
+    requestContext.applyResponseHeaders(response.headers, response.status);
     return response;
   },
 ];
 
-export async function loader({ context, request }: Route.LoaderArgs) {
+export const loader = withStorefrontRateLimit(async ({ context, request }: Route.LoaderArgs) => {
   const env = context.get(envContext);
   const storefrontClient = context.get(storefrontClientContext);
   const [cartResult, layout] = await Promise.all([
@@ -100,8 +106,9 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     shopInfo: layout.shopInfo,
     shopIdentity: resolveShopIdentity(env, layout.shopId),
     currency: layout.currency,
+    locale: storefrontClient.locale,
   };
-}
+});
 
 export function Layout({ children }: { children: ReactNode }) {
   const nonce = useNonce();
@@ -110,14 +117,14 @@ export function Layout({ children }: { children: ReactNode }) {
   const rootData = useRouteLoaderData<typeof loader>("root");
 
   return (
-    <html lang="en">
+    <html lang={rootData ? getHtmlLang(rootData.locale.language) : "en"}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {rootData ? (
           <ShopifyScripts
             nonce={nonce}
-            i18n={{ ...storefrontConfig.i18n, currency: rootData.currency }}
+            i18n={{ ...rootData.locale, currency: rootData.currency }}
             shop={rootData.shopIdentity.scriptShop}
             analytics={{ channel: rootData.shopIdentity.analyticsShop.channel }}
             shopifyAnalytics={rootData.shopIdentity.shopifyAnalytics}
@@ -146,18 +153,27 @@ export function Layout({ children }: { children: ReactNode }) {
 
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
-    <CartProvider initialData={loaderData.cartData}>
-      <PageViewedTracker />
-      <CartAnalyticsTracker />
-      <AnnouncementBar />
-      <Header shopInfo={loaderData.shopInfo} />
-      <Outlet />
-      <Footer shopInfo={loaderData.shopInfo} />
-      <CartDrawer />
-      <SearchDrawer />
-    </CartProvider>
+    // Keeps cart and predictive search requests under the locale's path prefix once the i18n
+    // definition in `lib/shop.ts` serves more than one locale.
+    <LocaleProvider locale={loaderData.locale}>
+      <CartProvider initialData={loaderData.cartData}>
+        <PageViewedTracker />
+        <CartAnalyticsTracker />
+        <AnnouncementBar />
+        <Header shopInfo={loaderData.shopInfo} />
+        <Outlet />
+        <Footer shopInfo={loaderData.shopInfo} />
+        <CartDrawer />
+        <SearchDrawer />
+      </CartProvider>
+    </LocaleProvider>
   );
 }
+
+const STATUS_COPY: Partial<Record<number, { message: string; details: string }>> = {
+  404: { message: "404", details: "The requested page could not be found." },
+  429: { message: "Too many requests", details: "Please try again later." },
+};
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";
@@ -165,9 +181,9 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404 ? "The requested page could not be found." : error.statusText || details;
+    const copy = STATUS_COPY[error.status];
+    message = copy?.message ?? "Error";
+    details = copy?.details ?? (error.statusText || details);
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;

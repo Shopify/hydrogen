@@ -7,7 +7,8 @@ export const COLLECTIONS_PAGE_SIZE = 12;
 
 export const COLLECTIONS_QUERY = gql(
   `
-    query CollectionsList($first: Int!, $after: String) {
+    query CollectionsList($first: Int!, $after: String, $country: CountryCode, $language: LanguageCode)
+    @inContext(country: $country, language: $language) {
       collections(first: $first, after: $after) {
         pageInfo {
           hasNextPage

@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, beforeEach, vi } from "vitest";
 
+import { configureLogging } from "./logging";
 import { SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT } from "./shopify-scripts/constants";
 import {
   getShopifyScriptTags,
@@ -21,8 +22,8 @@ import {
 } from "./shopify-scripts/index";
 import { getPerfKitScript } from "./shopify-scripts/perfkit";
 import type { ShopifyScriptTagsOptions } from "./shopify-scripts/types";
-import { createShopifyRouteTemplates } from "./standard-routes/index";
-import { assert } from "./test-utils";
+import { defineShopifyRouteTemplates } from "./standard-routes/index";
+import { assert, createTestLogger } from "./test-utils";
 import { loadScript } from "./utils/load-script";
 
 vi.mock("./utils/load-script", () => ({
@@ -66,7 +67,7 @@ const TEST_SHOP = {
 };
 
 describe("shopify scripts", () => {
-  const emptyRouteTemplates = createShopifyRouteTemplates({});
+  const emptyRouteTemplates = defineShopifyRouteTemplates({});
 
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -157,7 +158,7 @@ describe("shopify scripts", () => {
 
   it("falls back to native navigation when a navigator is omitted", async () => {
     const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
 
@@ -169,6 +170,31 @@ describe("shopify scripts", () => {
 
     expect(assign).toHaveBeenCalledWith("/p/snowboard");
     expect(window.Shopify?.navigate).toBe(shopifyNavigate);
+  });
+
+  // The check warns once per document and this file shares one document, so this has to stay
+  // the only test here that leaves a locale path prefix through `history`.
+  it("warns in development when a navigation leaves the page's locale path prefix", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    (window as any).Shopify = { routes: { root: "/fr-ca/" } };
+    window.history.replaceState({}, "", "/fr-ca");
+
+    try {
+      await initializeShopifyScripts({ routes: emptyRouteTemplates, webMcp: false });
+
+      window.history.pushState({}, "", "/fr-ca/products/snowboard");
+      expect(logger.warn).not.toHaveBeenCalled();
+
+      window.history.pushState({}, "", "/products/snowboard");
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('"/products/snowboard"'), {
+        scope: "i18n",
+      });
+    } finally {
+      configureLogging({});
+      delete (window as any).Shopify;
+      window.history.replaceState({}, "", "/");
+    }
   });
 
   it("sets Shopify navigation without replacing existing route state", async () => {
@@ -183,7 +209,7 @@ describe("shopify scripts", () => {
 
   it("resolves Shopify standard routes before navigating", async () => {
     const navigate = vi.fn();
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
     (window as any).Shopify = {
@@ -269,7 +295,7 @@ describe("shopify scripts", () => {
   it("keeps the cart page SPA-navigable and resolves its custom route", async () => {
     const navigate = vi.fn();
     const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
-    const routeTemplates = createShopifyRouteTemplates({ cart: "/bag" });
+    const routeTemplates = defineShopifyRouteTemplates({ cart: "/bag" });
 
     await initializeShopifyScripts({ navigate, routes: routeTemplates, webMcp: false });
 
@@ -280,7 +306,7 @@ describe("shopify scripts", () => {
   });
 
   it("sets Shopify standard route resolver from route templates", async () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
     (window as any).Shopify = {
@@ -311,7 +337,7 @@ describe("shopify scripts", () => {
 
   it("initializes routing and WebMCP loading for custom framework integrations", async () => {
     const navigate = vi.fn();
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
     (window as any).Shopify = {
@@ -335,7 +361,7 @@ describe("shopify scripts", () => {
 
   it("initializes routing without WebMCP when disabled", async () => {
     const navigate = vi.fn();
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
     (window as any).Shopify = {

@@ -1,3 +1,3 @@
 import { createCartServerHandlers } from "@shopify/hydrogen";
 
-export const cartHandlers = createCartServerHandlers();
+export const cartHandlers = createCartServerHandlers({ rateLimitHandling: "response" });

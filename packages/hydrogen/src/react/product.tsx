@@ -29,7 +29,7 @@ import {
   type ValidProductSelectionResult,
   type VariantSelectionResult,
 } from "../core/product";
-import { getCartEndpoint, useCartStore } from "./cart";
+import { useCartEndpoint, useCartStore } from "./cart";
 
 const log = getLogger("product");
 
@@ -136,6 +136,7 @@ export function useProductForm<TProduct extends ProductInput>(
 
   const state = useSyncExternalStore(store.subscribe, store.getState, store.getState);
   const [pending, setPending] = useState(false);
+  const cartEndpoint = useCartEndpoint();
 
   const selectOption = useCallback(
     (name: string, value: string) => {
@@ -178,9 +179,9 @@ export function useProductForm<TProduct extends ProductInput>(
           .finally(() => setPending(false));
       },
       method: "post",
-      action: getCartEndpoint(),
+      action: cartEndpoint,
     }),
-    [store],
+    [store, cartEndpoint],
   );
 
   return {

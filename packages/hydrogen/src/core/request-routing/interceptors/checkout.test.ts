@@ -14,7 +14,7 @@ type TestStorefrontConfig = {
 };
 
 const PRIVATE_CACHE_CONTROL = "private, no-store, max-age=0, must-revalidate";
-const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
+const DEFAULT_I18N = { defaultLocale: { country: "US", language: "EN" } } as const;
 
 const defaultConfig: TestStorefrontConfig = {
   storeDomain: "test-store.myshopify.com",
@@ -144,6 +144,20 @@ describe("handleCheckoutRedirect", () => {
     );
     expect(result?.headers.get("cache-control")).toBe(PRIVATE_CACHE_CONTROL);
     expect(() => result?.headers.set("x-test", "1")).not.toThrow();
+  });
+
+  it("redirects checkout mode to the cookie cart instead of a cartId query param", async () => {
+    mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
+
+    await handleCheckoutRedirect(
+      new Request("https://my-app.com/checkout?cartId=gid%3A%2F%2Fshopify%2FCart%2Fquery-cart", {
+        headers: { cookie: "cart=123" },
+      }),
+      defaultConfig,
+    );
+
+    const [, init] = mockFetch.mock.calls[0];
+    expect(JSON.parse(init.body).variables.id).toBe("gid://shopify/Cart/123");
   });
 
   it("redirects checkout mode to the root route without a cart", async () => {

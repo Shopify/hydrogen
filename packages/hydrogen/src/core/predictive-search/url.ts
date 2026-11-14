@@ -34,7 +34,7 @@ export type PredictiveSearchItem = PredictiveSearchResourceItem | PredictiveSear
 export type PredictiveSearchItemUrlOptions = {
   /** Prefix to add before the route path, such as a locale prefix. */
   pathPrefix?: string;
-  /** Route templates for product, collection, page, and article paths, from `createShopifyRouteTemplates`. */
+  /** Route templates for product, collection, page, and article paths, from `defineShopifyRouteTemplates`. */
   routes: ShopifyRouteTemplates;
   /** Search term that the customer typed. The link carries the term in the `q` URL parameter. */
   term: string;

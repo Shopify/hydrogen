@@ -25,7 +25,19 @@ describe("StorefrontApiError", () => {
 
     expect(error.requestId).toBeUndefined();
     expect(error.status).toBeUndefined();
+    expect(error.retryAfter).toBeUndefined();
     expect(error.cause).toBeUndefined();
+  });
+
+  it("sets retryAfter when provided", () => {
+    const error = new StorefrontApiError("SFAPI responded with 429", {
+      requestId: "req-429",
+      status: 429,
+      retryAfter: "5",
+    });
+
+    expect(error.status).toBe(429);
+    expect(error.retryAfter).toBe("5");
   });
 
   it("exposes name via Symbol.toStringTag", () => {
@@ -94,6 +106,19 @@ describe("StorefrontApiError", () => {
       const json = error.toJSON();
 
       expect(json).toEqual({ name: "StorefrontApiError", message: "bare" });
+      expect(json).not.toHaveProperty("retryAfter");
+    });
+
+    it("includes retryAfter in JSON when present", () => {
+      const error = new StorefrontApiError("throttled", {
+        requestId: "req-429",
+        status: 429,
+        retryAfter: "5",
+      });
+
+      const json = error.toJSON();
+      expect(json.retryAfter).toBe("5");
+      expect(JSON.parse(JSON.stringify(error)).retryAfter).toBe("5");
     });
 
     it("toJSON is the sole serialization boundary — all paths converge here", () => {

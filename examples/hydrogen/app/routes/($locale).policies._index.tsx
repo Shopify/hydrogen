@@ -1,6 +1,8 @@
 import { gql } from "@shopify/hydrogen";
 import { useLoaderData, Link } from "react-router";
 
+import { useLocalizedPath } from "~/lib/locale-path";
+
 import type { Route } from "./+types/($locale).policies._index";
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -24,6 +26,7 @@ export async function loader({ context }: Route.LoaderArgs) {
 
 export default function Policies() {
   const { policies } = useLoaderData<typeof loader>();
+  const localizedPath = useLocalizedPath();
 
   return (
     <div className="policies">
@@ -31,7 +34,7 @@ export default function Policies() {
       <div>
         {policies.map((policy) => (
           <fieldset key={policy.id}>
-            <Link to={`/policies/${policy.handle}`}>{policy.title}</Link>
+            <Link to={localizedPath(`/policies/${policy.handle}`)}>{policy.title}</Link>
           </fieldset>
         ))}
       </div>

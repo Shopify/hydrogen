@@ -1,6 +1,30 @@
 export type { RedirectOptions } from "./request-routing/handle-shopify-redirects";
-export { createShopifyRouteTemplates } from "./standard-routes/index";
+export { createShopifyRouteTemplates, defineShopifyRouteTemplates } from "./standard-routes/index";
 export type { ShopifyRouteTemplates } from "./standard-routes/index";
+export {
+  defineShopifyI18n,
+  getHtmlLang,
+  getLocalePathSegment,
+  getLocalizedHref,
+  getSupportedLocales,
+  isSameLocale,
+  matchLocale,
+  resolveSupportedLocale,
+  UnsupportedLocaleError,
+} from "./i18n/index";
+export type {
+  GetLocalizedHrefOptions,
+  LocaleMatchSource,
+  ShopifyCountryCode,
+  ShopifyDomainLocale,
+  ShopifyI18n,
+  ShopifyI18nRouting,
+  ShopifyLanguageCode,
+  ShopifyLocale,
+  ShopifyMatchedLocale,
+  ShopifyPathnameLocale,
+  ShopifySupportedLocale,
+} from "./i18n/index";
 export { handleShopifyRedirects } from "./request-routing/handle-shopify-redirects";
 export { handleShopifyRoutes } from "./request-routing/handle-shopify-routes";
 export { createShopifyRouteHandler } from "./request-routing/registered-routes";
@@ -28,6 +52,7 @@ export type {
 export { Cache, createFetchWithCache, createRunWithCache } from "./cache";
 export type { CacheInstance, CacheOptions, CachingStrategy } from "./cache";
 export { StorefrontApiError, StorefrontTimeoutError } from "../client/errors";
+export { withStorefrontRateLimit } from "./storefront-rate-limit";
 export { gql } from "../graphql";
 export type {
   I18nConfig,

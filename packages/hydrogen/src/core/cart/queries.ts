@@ -1,11 +1,9 @@
 import {
   gql,
   type AnyStorefrontQueryString,
-  type ComposedSource,
-  type SourceOf,
+  type ComposedDocument,
   type StorefrontQueryString,
 } from "../../graphql";
-import type { InferResult, InferVariables } from "../../graphql";
 import type { CartData, CartLineConnection } from "./state";
 
 const CART_FRAGMENT_NAME = "CartFragment";
@@ -501,22 +499,12 @@ type DefaultCartQueries = typeof DEFAULT_CART_QUERIES;
 
 export const cartBuyerIdentityUpdateMutation = gql(CART_BUYER_IDENTITY_UPDATE_MUTATION_SOURCE);
 
-type QueryFor<
-  Source extends string,
-  Fragments extends readonly AnyStorefrontQueryString[],
-  DocumentSource extends string = ComposedSource<Source, Fragments>,
-> = StorefrontQueryString<
-  InferResult<DocumentSource>,
-  InferVariables<DocumentSource>,
-  DocumentSource
->;
-
 type CartFragmentDocument = AnyStorefrontQueryString;
 
 type CustomQueryFor<
   Document extends AnyStorefrontQueryString,
   TCartFragment extends CartFragmentDocument,
-> = QueryFor<SourceOf<Document>, readonly [TCartFragment]>;
+> = ComposedDocument<Document, readonly [TCartFragment]>;
 
 type CartQueriesForFragment<TCartFragment extends CartFragmentDocument> = {
   readonly cart: CustomQueryFor<typeof CUSTOM_CART_QUERY, TCartFragment>;

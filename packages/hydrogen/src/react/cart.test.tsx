@@ -3,18 +3,12 @@ import { createElement, Suspense } from "react";
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import {
-  configureCartEndpoint as configureCoreCartEndpoint,
-  createCartStore,
-  type CreateCartStoreOptions,
-  type CartStore,
-} from "../core/cart/cart";
+import { createCartStore, type CreateCartStoreOptions, type CartStore } from "../core/cart/cart";
 import type { CartData, CartState } from "../core/cart/state";
 import { EMPTY_CART_DATA, EMPTY_CART_STATE, createEmptyCartErrors } from "../core/cart/state";
 import { assert } from "../core/test-utils";
 import {
   CartProvider,
-  configureCartEndpoint,
   createCartComponents,
   useCart,
   useCartActions,
@@ -23,8 +17,8 @@ import {
   useOptionalCart,
 } from "./cart";
 
-vi.mock("../core/cart/cart", () => ({
-  configureCartEndpoint: vi.fn(),
+vi.mock("../core/cart/cart", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../core/cart/cart")>()),
   createCartStore: vi.fn(),
 }));
 
@@ -145,7 +139,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   subscribeListener = null;
   vi.mocked(createCartStore).mockImplementation((options) => createMockStore(options?.initialData));
-  configureCartEndpoint("/api/cart");
 });
 
 describe("CartProvider", () => {
@@ -679,47 +672,5 @@ describe("useCartForm", () => {
     expect(result.name).toBe("quantity");
     expect(result.type).toBe("text");
     expect(result.ref).toBeTypeOf("function");
-  });
-});
-
-describe("cartEndpoint option", () => {
-  it("defaults formProps.action to /api/cart", async () => {
-    // The shared beforeEach configures the endpoint, so load an unconfigured binding.
-    vi.resetModules();
-    const core = await import("../core/cart/cart");
-    vi.mocked(core.createCartStore).mockImplementation((options) =>
-      createMockStore(options?.initialData),
-    );
-    const fresh = await import("./cart");
-    let result: ReturnType<ReturnType<typeof fresh.useCartForm>["formProps"]> | undefined;
-
-    function Consumer() {
-      const { formProps } = fresh.useCartForm();
-      result = formProps();
-      return null;
-    }
-
-    render(createElement(fresh.CartProvider, null, createElement(Consumer)));
-    assert(result, "expected formProps to be assigned");
-
-    expect(result.action).toBe("/api/cart");
-    expect(core.configureCartEndpoint).toHaveBeenCalledWith("/api/cart");
-  });
-
-  it("custom cartEndpoint configures transport and flows to formProps.action", () => {
-    configureCartEndpoint("/custom/cart");
-    let result: ReturnType<ReturnType<typeof useCartForm>["formProps"]> | undefined;
-
-    function Consumer() {
-      const { formProps } = useCartForm();
-      result = formProps();
-      return null;
-    }
-
-    render(createElement(CartProvider, null, createElement(Consumer)));
-    assert(result, "expected formProps to be assigned");
-
-    expect(result.action).toBe("/custom/cart");
-    expect(configureCoreCartEndpoint).toHaveBeenCalledWith("/custom/cart");
   });
 });

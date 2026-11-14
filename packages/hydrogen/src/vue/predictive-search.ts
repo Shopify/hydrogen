@@ -1,4 +1,5 @@
 import {
+  computed,
   defineComponent,
   inject,
   onMounted,
@@ -6,6 +7,7 @@ import {
   provide,
   shallowRef,
   watch,
+  type ComputedRef,
   type InjectionKey,
   type PropType,
   type ShallowRef,
@@ -22,18 +24,21 @@ import {
   type PredictiveSearchState,
   type PredictiveSearchStore,
 } from "../core/predictive-search";
+import { PREDICTIVE_SEARCH_API_PATH } from "../core/predictive-search/constants";
+import { applyI18nPathPrefix } from "../core/standard-routes/path";
 import type {
   PredictiveSearchLimitScope,
   PredictiveSearchType,
   SearchableField,
   SearchUnavailableProductsType,
 } from "../graphql/generated/storefront-api-types";
+import { useLocalePathPrefix } from "./locale";
 
 const CONFIG_ARRAY_SEPARATOR = "\0";
 
 type PredictiveSearchContextValue = {
   storeRef: ShallowRef<PredictiveSearchStore>;
-  searchActionRef: ShallowRef<string | undefined>;
+  searchActionRef: ComputedRef<string>;
 };
 
 const PredictiveSearchKey: InjectionKey<PredictiveSearchContextValue> = Symbol("PredictiveSearch");
@@ -76,6 +81,8 @@ export type PredictiveSearchFormResult = {
  *
  * The provider connects the store on mount and destroys the store on unmount. A change to a store option prop replaces the store with a new one. The provider compares the types and searchable fields arrays by their values.
  *
+ * Below a locale provider, the provider puts the endpoint and the search action under the locale's path prefix when they start with `/`, so results and the search page stay in the customer's locale.
+ *
  * The provider throws when neither the fetch prop nor a global fetch function exists.
  *
  * @throws {Error} When neither the fetch prop nor a global fetch function exists.
@@ -99,9 +106,24 @@ export const PredictiveSearchProvider = defineComponent({
     },
   },
   setup(props, { slots }) {
+    const pathPrefix = useLocalePathPrefix();
+    const endpoint = computed(() =>
+      applyI18nPathPrefix(
+        props.predictiveSearchEndpoint ?? PREDICTIVE_SEARCH_API_PATH,
+        pathPrefix.value,
+      ),
+    );
+    // `getPredictiveSearchFormAttributes` owns the default search page path.
+    const searchActionRef = computed(() =>
+      applyI18nPathPrefix(
+        getPredictiveSearchFormAttributes(props.searchAction).action,
+        pathPrefix.value,
+      ),
+    );
+
     function buildStoreOptions(): CreatePredictiveSearchStoreOptions {
       return {
-        predictiveSearchEndpoint: props.predictiveSearchEndpoint,
+        predictiveSearchEndpoint: endpoint.value,
         debounceInMs: props.debounceInMs,
         minTermLength: props.minTermLength,
         fetch: props.fetch as typeof globalThis.fetch | undefined,
@@ -116,20 +138,12 @@ export const PredictiveSearchProvider = defineComponent({
     const storeRef = shallowRef<PredictiveSearchStore>(
       createPredictiveSearchStore(buildStoreOptions()),
     );
-    const searchActionRef = shallowRef(props.searchAction);
 
     provide(PredictiveSearchKey, { storeRef, searchActionRef });
 
     watch(
-      () => props.searchAction,
-      (next) => {
-        searchActionRef.value = next;
-      },
-    );
-
-    watch(
       () => [
-        props.predictiveSearchEndpoint,
+        endpoint.value,
         props.debounceInMs,
         props.minTermLength,
         props.fetch,
