@@ -3,6 +3,7 @@ import {
   applyNoStoreResponseCacheHeaders,
   applyPrivateResponseCacheHeaders,
   CONSENT_MANAGEMENT_HEADER,
+  getSetCookieValues,
   HYDROGEN_VERSION_HEADER,
   REQUEST_GROUP_ID_HEADER,
   SDK_VARIANT_HEADER,
@@ -323,7 +324,7 @@ export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
     // chance of returning them from the main server response. The main response
     // needs headers set at send time, while the body can stream later, so this
     // may not be used if subrequests finish after the main response is sent.
-    const cookies = headers.getSetCookie();
+    const cookies = getSetCookieValues(headers);
     if (cookies.length > 0) capturedCookies ??= cookies;
   };
 
@@ -409,7 +410,7 @@ export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
 
       // Replay cookies captured from fresh SFAPI and proxy responses when allowed.
       if (capturedCookies && mayReturnShopifyState) {
-        const existingSetCookies = new Set(headers.getSetCookie());
+        const existingSetCookies = new Set(getSetCookieValues(headers));
         for (const value of capturedCookies) {
           if (existingSetCookies.has(value)) continue;
           headers.append("set-cookie", value);

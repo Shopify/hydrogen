@@ -118,6 +118,20 @@ function deleteTargetedCacheHeaders(headers: Headers): void {
   }
 }
 
+/**
+ * Returns `Set-Cookie` values from `headers`. Prefers `Headers.getSetCookie()` when the
+ * runtime implements it. Falls back to `headers.get("set-cookie")` for environments such
+ * as Oxygen that may omit the method.
+ */
+export function getSetCookieValues(headers: Headers): string[] {
+  if (typeof headers.getSetCookie === "function") {
+    return headers.getSetCookie();
+  }
+
+  const value = headers.get("set-cookie");
+  return value ? [value] : [];
+}
+
 const COMMON_PROXY_HEADER_ALLOWLIST = defineHeaderList(
   "accept",
   "accept-encoding",
