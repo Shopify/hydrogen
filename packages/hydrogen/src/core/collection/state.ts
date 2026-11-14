@@ -1,5 +1,7 @@
-import type { ProductFilter } from "../../../vendor/standard-events";
-import type { ProductCollectionSortKeys } from "../../graphql/generated/storefront-api-types";
+import type {
+  ProductCollectionSortKeys,
+  ProductFilter,
+} from "../../graphql/generated/storefront-api-types";
 
 export type { ProductCollectionSortKeys, ProductFilter };
 
