@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, onTestFinished } from "vitest";
 
 import type { CartActionError } from "../../../vendor/standard-actions";
 import { configureLogging } from "../logging";
@@ -6596,6 +6596,18 @@ describe("CartStore.handleFormSubmit — add intent", () => {
 // Standard Actions readiness
 // ---------------------------------------------------------------------------
 
+const flushMicrotasks = () => new Promise((resolve) => setTimeout(resolve));
+
+function setShopify(value: object) {
+  Object.defineProperty(window, "Shopify", { value, configurable: true, writable: true });
+}
+
+function exposeActions() {
+  const updateCart = createStandardActionsMock();
+  setShopify({ actions: { updateCart, getCart: vi.fn() } });
+  return updateCart;
+}
+
 describe("getShopifyStandardActions", () => {
   afterEach(() => {
     Object.defineProperty(document, "readyState", {
@@ -6657,6 +6669,78 @@ describe("getShopifyStandardActions", () => {
 
     await expect(actionsPromise).resolves.toBe(window.Shopify?.actions);
     expect(updateCart.configure).toHaveBeenCalledTimes(1);
+  });
+
+  it("logs when a connected store cannot set up Standard Actions", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    setShopify({});
+    resetStandardActionsForTests();
+    const localStore = createCartStore();
+    onTestFinished(() => localStore.destroy());
+
+    localStore.connect();
+
+    await vi.waitFor(() =>
+      expect(logger.error).toHaveBeenCalledWith("standard actions setup failed", {
+        scope: "cart",
+        error: expect.objectContaining({
+          message: expect.stringContaining(`include ${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}`),
+        }),
+      }),
+    );
+  });
+
+  describe("while the document is interactive", () => {
+    beforeEach(() => {
+      Object.defineProperty(document, "readyState", { value: "interactive", configurable: true });
+      setShopify({});
+      resetStandardActionsForTests();
+    });
+
+    it.each([
+      ["DOMContentLoaded", document],
+      ["load", window],
+    ] as const)("configures Standard Actions that run before %s", async (eventName, target) => {
+      const actionsPromise = getShopifyStandardActions();
+      const settled = vi.fn();
+      void actionsPromise.then(settled, settled);
+      await flushMicrotasks();
+      expect(settled).not.toHaveBeenCalled();
+
+      const updateCart = exposeActions();
+      target.dispatchEvent(new Event(eventName));
+
+      await expect(actionsPromise).resolves.toBe(window.Shopify?.actions);
+      expect(updateCart.configure).toHaveBeenCalledTimes(1);
+    });
+
+    it("configures Standard Actions that already ran without waiting", async () => {
+      const updateCart = exposeActions();
+
+      await expect(getShopifyStandardActions()).resolves.toBe(window.Shopify?.actions);
+      expect(updateCart.configure).toHaveBeenCalledTimes(1);
+    });
+
+    it("rejects when the script still has not run at window load", async () => {
+      const script = document.createElement("script");
+      script.type = "application/json";
+      script.src = SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT;
+      document.head.append(script);
+      onTestFinished(() => script.remove());
+
+      const actionsPromise = getShopifyStandardActions();
+      const settled = vi.fn();
+      void actionsPromise.then(settled, settled);
+      await flushMicrotasks();
+      expect(settled).not.toHaveBeenCalled();
+
+      window.dispatchEvent(new Event("load"));
+
+      await expect(actionsPromise).rejects.toThrow(
+        "Ensure the Shopify script tag has loaded before calling cart actions.",
+      );
+    });
   });
 
   it("form submissions wait for configured Standard Actions", async () => {

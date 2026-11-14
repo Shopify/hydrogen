@@ -3,10 +3,11 @@ import { act } from "@testing-library/react";
 import { createElement, Suspense, type ReactNode } from "react";
 import { hydrateRoot, type Root } from "react-dom/client";
 import { renderToString } from "react-dom/server";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CartData } from "../core/cart/state";
-import { assert } from "../core/test-utils";
+import { configureLogging } from "../core/logging";
+import { assert, createTestLogger } from "../core/test-utils";
 import { CartProvider, createCartComponents, useCart } from "./cart";
 
 const CART: CartData = {
@@ -59,7 +60,12 @@ function SuspenseCartSummary() {
   return createElement("span", { "data-testid": "cart-summary" }, quantity);
 }
 
+beforeEach(() => {
+  configureLogging({ logger: createTestLogger() });
+});
+
 afterEach(() => {
+  configureLogging({});
   document.body.replaceChildren();
   vi.restoreAllMocks();
 });
