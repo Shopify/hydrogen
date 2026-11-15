@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { Await, NavLink } from "react-router";
 
 import type { FooterQuery, HeaderQuery } from "~/lib/fragments";
+import { useLocalizedMenuPath } from "~/lib/locale-path";
 
 interface FooterProps {
   footer: Promise<FooterQuery | null>;
@@ -38,6 +39,8 @@ function FooterMenu({
   primaryDomainUrl: FooterProps["header"]["shop"]["primaryDomain"]["url"];
   publicStoreDomain: string;
 }) {
+  const localizedMenuPath = useLocalizedMenuPath();
+
   return (
     <nav className="footer-menu" role="navigation">
       {(menu || FALLBACK_FOOTER_MENU).items.map((item) => {
@@ -55,7 +58,13 @@ function FooterMenu({
             {item.title}
           </a>
         ) : (
-          <NavLink end key={item.id} prefetch="intent" style={activeLinkStyle} to={url}>
+          <NavLink
+            end
+            key={item.id}
+            prefetch="intent"
+            style={activeLinkStyle}
+            to={localizedMenuPath(url)}
+          >
             {item.title}
           </NavLink>
         );

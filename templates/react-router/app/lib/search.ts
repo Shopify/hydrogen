@@ -15,10 +15,14 @@ export const SEARCH_QUERY = gql(
       $sortKey: SearchSortKeys
       $reverse: Boolean
       $productFilters: [ProductFilter!]
-    ) {
-      shop {
-        paymentSettings {
-          currencyCode
+      $country: CountryCode
+      $language: LanguageCode
+    ) @inContext(country: $country, language: $language) {
+      localization {
+        country {
+          currency {
+            isoCode
+          }
         }
       }
       search(
@@ -74,7 +78,7 @@ type SearchNode = SearchQueryResult["search"]["nodes"][number];
 type SearchProductNode = Extract<SearchNode, { __typename: "Product" }>;
 type SearchFilters = SearchQueryResult["search"]["productFilters"];
 type SearchPageInfo = SearchQueryResult["search"]["pageInfo"];
-type SearchCurrencyCode = SearchQueryResult["shop"]["paymentSettings"]["currencyCode"];
+type SearchCurrencyCode = SearchQueryResult["localization"]["country"]["currency"]["isoCode"];
 
 type SearchPageEmptyData = {
   performed: false;
@@ -154,7 +158,7 @@ export async function loadSearchPage({
     products,
     availableFilters: data.search.productFilters,
     pageInfo: data.search.pageInfo,
-    currencyCode: data.shop.paymentSettings.currencyCode,
+    currencyCode: data.localization.country.currency.isoCode,
     totalCount: data.search.totalCount,
     dataSearch: url.searchParams.toString(),
     origin: url.origin,

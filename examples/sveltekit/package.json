@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
-    "dev:https": "vite dev",
+    "dev": "node --conditions=development node_modules/vite/bin/vite.js dev",
+    "dev:https": "node --conditions=development node_modules/vite/bin/vite.js dev",
     "build": "vite build",
     "start": "node --env-file-if-exists=.env build",
     "prepare": "svelte-kit sync || echo ''",

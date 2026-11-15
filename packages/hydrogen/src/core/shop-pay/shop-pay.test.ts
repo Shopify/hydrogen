@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { assert } from "../test-utils";
 import {
   createShopPayButton,
+  getShopPayButtonDeclarativeShadowDomHtml,
   getShopPayButtonUrl,
   initializeShopPayButtonElement,
   renderShopPayButton,
@@ -271,6 +272,19 @@ describe("createShopPayButton", () => {
 
     expect(style.nonce).toBe("nonce-1");
     expect(style.textContent).toContain("background-color:#5433eb");
+  });
+
+  it("discards a leftover declarative template when the host already has a shadow root", () => {
+    const options = { variants: ["123"] };
+    const element = createShopPayButton(options);
+    element.innerHTML = getShopPayButtonDeclarativeShadowDomHtml(options);
+    assert(element.querySelector("template[shadowrootmode]"), "expected a leftover template");
+
+    document.body.append(element);
+
+    expect(element.shadowRoot?.querySelectorAll("a")).toHaveLength(1);
+    expect(element.shadowRoot?.querySelectorAll("style")).toHaveLength(1);
+    expect(element.querySelector("template")).toBeNull();
   });
 
   it("removes the CSP nonce when the host attribute is removed", () => {

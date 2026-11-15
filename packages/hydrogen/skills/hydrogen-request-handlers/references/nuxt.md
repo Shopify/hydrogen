@@ -21,7 +21,7 @@ Create `server/middleware/shopify.ts`:
 
 The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` from the app's trusted deployment headers per the buyer-IP guidance from `hydrogen-storefront-client`.
 
-Create an app-owned `routeTemplates` value before `handleShopifyRoutes`. Cart handlers do not read the session, so this example passes no `sessionManager`; add a request-scoped one when registering Customer Account handlers or cart handlers created with `customerSession`.
+Create app-owned `routeTemplates` and `i18n` (the `defineShopifyI18n` definition from `SKILL.md`) values before `handleShopifyRoutes`. Cart handlers do not read the session, so this example passes no `sessionManager`; add a request-scoped one when registering Customer Account handlers or cart handlers created with `customerSession`.
 
 ```ts
 import {
@@ -31,6 +31,7 @@ import {
   handleShopifyRoutes,
   type ShopifyRequestContext,
 } from "@shopify/hydrogen";
+import { i18n } from "~/lib/i18n";
 
 const cartHandlers = createCartServerHandlers();
 
@@ -38,7 +39,7 @@ export default defineEventHandler(async (event) => {
   const request = toWebRequest(event);
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n,
   });
   const storefrontClient = createPublicStorefrontClient(requestContext);
 
@@ -95,7 +96,7 @@ Augment Nuxt and H3 types so `$storefrontClient` and `event.context.storefrontCl
 
 ## Response Headers
 
-Create `server/plugins/shopify-headers.ts`:
+Create `server/plugins/shopify-headers.ts`. Copy every outgoing header into a `Headers` object, apply the request context, then sync the result back so added headers (such as `powered-by` and the UCP discovery `Link`), changed cache headers, and removed headers all reach the response:
 
 ```ts
 export default defineNitroPlugin((nitroApp) => {
@@ -103,39 +104,50 @@ export default defineNitroPlugin((nitroApp) => {
     const requestContext = event.context.shopifyRequestContext;
     if (!requestContext) return;
 
-    const headers = new Headers();
-    copyHeader(event.node.res.getHeader("content-type"), (value) => {
-      headers.set("content-type", value);
-    });
+    const response = event.node.res;
+    const headers = createHeaders(response.getHeaders());
 
     requestContext.applyResponseHeaders(headers);
-
-    const setCookies = headers.getSetCookie();
-    if (setCookies.length > 0) {
-      event.node.res.setHeader("set-cookie", [
-        ...normalizeSetCookie(event.node.res.getHeader("set-cookie")),
-        ...setCookies,
-      ]);
-    }
+    syncHeaders(response, headers);
   });
 });
 
-function copyHeader(value: number | string | string[] | undefined, copy: (value: string) => void) {
-  if (Array.isArray(value)) {
-    for (const item of value) copy(item);
-  } else if (value != null) {
-    copy(String(value));
+type ResponseHeaders = Record<string, number | string | string[] | undefined>;
+
+function createHeaders(source: ResponseHeaders): Headers {
+  const headers = new Headers();
+  for (const [name, value] of Object.entries(source)) {
+    if (Array.isArray(value)) {
+      for (const item of value) headers.append(name, item);
+    } else if (value != null) {
+      headers.set(name, String(value));
+    }
   }
+  return headers;
 }
 
-function normalizeSetCookie(value: number | string | string[] | undefined): string[] {
-  if (Array.isArray(value)) return value;
-  if (typeof value === "string") return [value];
-  return [];
+function syncHeaders(
+  response: {
+    getHeaders(): ResponseHeaders;
+    removeHeader(name: string): void;
+    setHeader(name: string, value: number | string | readonly string[]): unknown;
+  },
+  headers: Headers,
+) {
+  for (const name of Object.keys(response.getHeaders())) {
+    if (!headers.has(name)) response.removeHeader(name);
+  }
+  for (const [name, value] of headers) {
+    if (name !== "set-cookie") response.setHeader(name, value);
+  }
+
+  const setCookies = headers.getSetCookie();
+  if (setCookies.length > 0) response.setHeader("set-cookie", setCookies);
+  else response.removeHeader("set-cookie");
 }
 ```
 
-Preserve existing `set-cookie` values when appending Storefront cookies.
+Copy existing `set-cookie` values in with `getHeaders()` so Storefront cookies are appended rather than replacing app cookies. Do not copy only selected headers or write back only cookies: `applyResponseHeaders` also adds and removes other headers.
 
 ## 404 Redirects
 
@@ -166,16 +178,17 @@ if (import.meta.server && props.error.statusCode === 404) {
 
 ## Client Storefront Plugin
 
-For client-side refetches, use a public client whose `fetch` rewrites Storefront API URLs to the same-origin Hydrogen SFAPI proxy:
+For client-side refetches, use a public client whose `fetch` rewrites Storefront API URLs to the same-origin Hydrogen SFAPI proxy. Pass the page URL as `request.url` so the browser client resolves the same locale as the server did:
 
 ```ts
 import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
+import { i18n } from "~/lib/i18n";
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig().public;
   const requestContext = createShopifyRequestContext({
-    request: { headers: new Headers() },
-    i18n: { country: "US", language: "EN" },
+    request: { headers: new Headers(), url: window.location.href },
+    i18n,
   });
   const storefrontClient = createStorefrontClient({
     type: "public",

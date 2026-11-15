@@ -3,8 +3,6 @@ type StorefrontConfigShape = {
   publicStorefrontToken: string;
 };
 
-type I18nShape = { country: "US"; language: "EN" };
-
 type ShopifyScriptsShopShape = {
   shopId: string;
   storefrontId: string;
@@ -29,11 +27,6 @@ export const customerAccountConfig = {
   shopId: process.env.NEXT_PUBLIC_SHOP_ID || "",
   customerAccountApiClientId: process.env.NEXT_PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID || "",
 } satisfies CustomerAccountConfigShape;
-
-export const defaultI18n = {
-  country: "US",
-  language: "EN",
-} satisfies I18nShape;
 
 export const shop = {
   shopId: customerAccountConfig.shopId,

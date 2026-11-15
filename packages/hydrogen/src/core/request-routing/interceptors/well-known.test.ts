@@ -12,7 +12,7 @@ const FEC_PRODUCE_PATH = "/.well-known/shopify/fec/produce";
 function handleWellKnownProxy(request: Request) {
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n: { defaultLocale: { country: "US", language: "EN" } },
   });
 
   return handleWellKnownProxyImpl(new URL(request.url), {
@@ -26,6 +26,7 @@ function handleWellKnownProxy(request: Request) {
     },
     storefrontClient: {
       type: "private",
+      locale: { country: "US", language: "EN", pathPrefix: "" },
       i18n: { country: "US", language: "EN", pathPrefix: "" },
       storeUrl: STORE_URL,
       apiUrl: `${STORE_URL}/api/2026-04/graphql.json`,
@@ -137,6 +138,33 @@ describe("handleWellKnownProxy", () => {
     expect(headers.get("authorization")).toBe("Bearer secret");
     expect(headers.get("Custom-Storefront-Request-Group-ID")).not.toBeNull();
     expect(headers.get("Sec-Shopify-Storefront-Origin")).toBe("https://headless.example");
+  });
+
+  it.each([
+    "forwarded",
+    "oxygen-buyer-ip",
+    "shopify-storefront-buyer-ip",
+    "true-client-ip",
+    "x-client-ip",
+    "x-forwarded-for",
+    "x-forwarded-host",
+    "x-forwarded-port",
+    "x-forwarded-proto",
+    "x-forwarded-scheme",
+    "x-forwarded-ssl",
+    "x-real-ip",
+    "x-shopify-client-ip",
+  ])("does not forward the caller-set %s header", async (header) => {
+    await handleWellKnownProxy(
+      new Request(`https://headless.example${FEC_PRODUCE_PATH}`, {
+        method: "POST",
+        headers: { [header]: "1.2.3.4" },
+      }),
+    );
+
+    const call = mockFetch.mock.calls[0];
+    assert(call, "expected fetch to be called");
+    expect(new Headers(call[1].headers).get(header)).toBeNull();
   });
 
   it("preserves upstream response metadata while consuming cookies", async () => {

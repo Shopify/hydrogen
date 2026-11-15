@@ -1,4 +1,5 @@
 import type {
+  ContentSecurityPolicy,
   PublicStorefrontClient,
   RequestScopedPrivateStorefrontClient,
   ShopifyRequestContext,
@@ -15,6 +16,7 @@ declare module "h3" {
     storefrontClient: PublicStorefrontClient | RequestScopedPrivateStorefrontClient;
     storefrontConfig: StorefrontModeConfig;
     shopifyRequestContext?: ShopifyRequestContext;
+    csp?: ContentSecurityPolicy;
     customerAccountClient?: CustomerAccountClient;
     customerSessionManager?: WritableCustomerSessionManager;
   }

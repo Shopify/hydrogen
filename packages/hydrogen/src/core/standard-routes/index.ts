@@ -1,4 +1,8 @@
-export { createShopifyRouteTemplates, getStandardRoute } from "./build";
+export {
+  createShopifyRouteTemplates,
+  defineShopifyRouteTemplates,
+  getStandardRoute,
+} from "./build";
 export {
   getStandardRouteTarget,
   isStandardRouteSelfRedirect,

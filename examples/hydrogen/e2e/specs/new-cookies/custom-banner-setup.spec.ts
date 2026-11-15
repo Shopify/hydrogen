@@ -27,8 +27,8 @@ test("custom setup holds analytics until the shopper's choice is synchronized", 
     "The custom setup must hold delivery even though Shopify already allows analytics",
   ).toBe(true);
 
-  // 2. Observe the real bus through its public APIs. Raw subscribers confirm events
-  // were published; the destination must receive nothing while setup is pending.
+  // 2. Observe the real bus. Wrapping publish confirms events were published before
+  // consent gating; the destination must receive nothing while setup is pending.
   await page.evaluate(async () => {
     const bus = window.Shopify?.analytics;
     if (!bus) throw new Error("The storefront analytics bus is missing");
@@ -37,7 +37,11 @@ test("custom setup holds analytics until the shopper's choice is synchronized", 
       delivered: [],
     };
     (window as ObservationWindow).consentEvents = observed;
-    bus.subscribe("page_viewed", ({ url }) => observed.published.push(url ?? ""));
+    const publish = bus.publish;
+    bus.publish = ((event, ...payload) => {
+      observed.published.push(event);
+      publish(event, ...payload);
+    }) as typeof bus.publish;
     bus.addDestination({
       name: "custom-consent-e2e",
       setup({ subscribe }) {

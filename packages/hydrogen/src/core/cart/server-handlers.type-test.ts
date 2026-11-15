@@ -5,12 +5,41 @@ import { createCustomerSession } from "../../customer-account";
 import type { ShopifyRouteHandlerGroup } from "../request-routing/registered-routes";
 import {
   createCartServerHandlers,
+  type CartErrorCode,
   type CartServerHandlers,
   type CartServerHandlersWithCustomerSession,
   type CreateCartServerHandlersOptions,
 } from "./server-handlers";
 
 describe("CartServerHandlers route handler compatibility", () => {
+  it("preserves legacy exhaustive CartErrorCode consumers", () => {
+    const messages: Record<CartErrorCode, string> = {
+      invalid_cart_request: "Invalid request",
+      missing_cart: "Missing cart",
+      cart_mutation_failed: "Mutation failed",
+    };
+    function legacyMessage(code: CartErrorCode): string {
+      switch (code) {
+        case "invalid_cart_request":
+        case "missing_cart":
+        case "cart_mutation_failed":
+          return messages[code];
+        default: {
+          const exhaustive: never = code;
+          return exhaustive;
+        }
+      }
+    }
+    expectTypeOf<CartErrorCode>().toEqualTypeOf<
+      "invalid_cart_request" | "missing_cart" | "cart_mutation_failed"
+    >();
+    expectTypeOf(legacyMessage).returns.toEqualTypeOf<string>();
+    const handlers = createCartServerHandlers({ rateLimitHandling: "response" });
+    type Result = Awaited<ReturnType<typeof handlers.post>>;
+    type Code = Extract<Result, { type: "error" }>["error"]["code"];
+    expectTypeOf<Code>().toEqualTypeOf<CartErrorCode>();
+  });
+
   it("fits inside a ShopifyRouteHandlerGroup[]", () => {
     expectTypeOf<CartServerHandlers>().toMatchTypeOf<ShopifyRouteHandlerGroup>();
   });

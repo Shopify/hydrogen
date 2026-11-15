@@ -27,19 +27,21 @@ type DestinationRecord = {
   cleanup?: () => void;
   subscriptions: Map<string, Set<DestinationCallback>>;
   nextReplaySequence: number;
+  catchingUp: boolean;
 };
 
 /**
  * Delivers one buffered event to a destination's subscribed callbacks.
  * Always advances the destination replay cursor, even when it has no
- * subscribers for that event.
+ * subscribers for that event. The cursor advances before callbacks run, so a
+ * callback that removes its own destination does not see the event again
+ * when the destination is re-added.
  */
 function deliverDestinationEvent(destination: DestinationRecord, entry: ReplayEntry): void {
+  destination.nextReplaySequence = Math.max(destination.nextReplaySequence, entry.sequence + 1);
+
   const eventSubscriptions = destination.subscriptions.get(entry.event);
-  if (!eventSubscriptions?.size) {
-    destination.nextReplaySequence = Math.max(destination.nextReplaySequence, entry.sequence + 1);
-    return;
-  }
+  if (eventSubscriptions === undefined) return;
 
   for (const callback of eventSubscriptions) {
     try {
@@ -51,8 +53,6 @@ function deliverDestinationEvent(destination: DestinationRecord, entry: ReplayEn
       });
     }
   }
-
-  destination.nextReplaySequence = Math.max(destination.nextReplaySequence, entry.sequence + 1);
 }
 
 type DestinationManagerDeps = {
@@ -72,9 +72,52 @@ type DestinationManagerDeps = {
 export function createDestinationManager(deps: DestinationManagerDeps) {
   let nextReplaySequence = 0;
   let shouldRecordReplay = true;
+  // Holds contiguous sequences: recording only stops when the buffer is
+  // cleared, so `catchUp()` can index it by sequence. A gap would make
+  // catch-up silently skip entries, though it would still terminate.
   const replayBuffer: ReplayEntry[] = [];
   const destinations = new Set<DestinationRecord>();
   const destinationNames = new Set<string>();
+  // Replay cursors of removed destinations, keyed by name. Re-adding a name
+  // resumes from its cursor, so each retained event reaches a destination name
+  // at most once, even across component remounts.
+  const removedReplayCursors = new Map<string, number>();
+
+  /**
+   * Delivers the retained events a destination has not processed yet, oldest
+   * first, while it stays registered and tracking stays allowed. Re-reads the buffer on every step
+   * because callbacks may publish, which appends to it and can evict its
+   * oldest entry. A nested call for the same destination returns straight
+   * away and the outer loop picks up the new entries, so every callback sees
+   * events in order. Entries published during a catch-up, including by other
+   * destinations' callbacks, share the same buffer; if the backlog plus those
+   * publishes exceed it, this destination can miss the oldest. More than a
+   * buffer's worth of publishes during one catch-up is treated as a feedback
+   * loop and stops the catch-up instead of hanging the page.
+   */
+  function catchUp(destination: DestinationRecord): void {
+    if (destination.catchingUp) return;
+    destination.catchingUp = true;
+    const startSequence = nextReplaySequence;
+    try {
+      while (destinations.has(destination) && deps.canTrack()) {
+        if (nextReplaySequence - startSequence > MAX_REPLAY_BUFFER_SIZE) {
+          consoleLogger.error(
+            `too many analytics events were published while delivering to destination "${destination.name}"`,
+            { scope: "analytics" },
+          );
+          return;
+        }
+        const oldest = replayBuffer[0];
+        if (oldest === undefined) return;
+        const entry = replayBuffer[Math.max(0, destination.nextReplaySequence - oldest.sequence)];
+        if (entry === undefined) return;
+        deliverDestinationEvent(destination, entry);
+      }
+    } finally {
+      destination.catchingUp = false;
+    }
+  }
 
   /**
    * Replays buffered events to all registered destinations.
@@ -93,17 +136,15 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
 
     shouldRecordReplay = true;
     for (const destination of destinations) {
-      for (const entry of replayBuffer) {
-        if (entry.sequence < destination.nextReplaySequence) continue;
-        deliverDestinationEvent(destination, entry);
-      }
+      catchUp(destination);
     }
   }
 
   /**
    * Registers a destination integration. Runs setup synchronously or
    * asynchronously, then replays any buffered events the destination
-   * subscribes to.
+   * subscribes to. Re-adding a previously removed name resumes after the last
+   * event processed for that name, including events it did not subscribe to.
    *
    * @returns A function that removes the destination and runs its cleanup hook.
    */
@@ -116,6 +157,8 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
     }
 
     destinationNames.add(destination.name);
+    const initialReplaySequence = removedReplayCursors.get(destination.name) ?? 0;
+    removedReplayCursors.delete(destination.name);
 
     const tag = `hydrogen:${destination.name}`;
     const destinationRecord: DestinationRecord = {
@@ -127,7 +170,8 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
           deps.canTrack() ? getTrackingValues(tag) : { uniqueToken: "", visitToken: "" },
       },
       subscriptions: new Map(),
-      nextReplaySequence: 0,
+      nextReplaySequence: initialReplaySequence,
+      catchingUp: false,
     };
     let removed = false;
 
@@ -169,6 +213,9 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
       removed = true;
       destinations.delete(destinationRecord);
       destinationNames.delete(destination.name);
+      removedReplayCursors.set(destination.name, destinationRecord.nextReplaySequence);
+      // Empty each set too, so a delivery loop already iterating one stops.
+      for (const callbacks of destinationRecord.subscriptions.values()) callbacks.clear();
       destinationRecord.subscriptions.clear();
       destinationRecord.cleanup?.();
     };
@@ -216,27 +263,27 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
   }
 
   /**
-   * Records a published event in the replay buffer and delivers it to
-   * destinations when tracking is allowed.
+   * Records a published event in the replay buffer and, when tracking is
+   * allowed, brings every destination up to date. A destination still behind
+   * on replay receives its earlier events first, so events published from a
+   * callback never make it skip ones it has not seen.
    */
   function onPublish(event: string, payload: unknown): void {
-    const replayEntry = {
-      sequence: nextReplaySequence++,
-      event,
-      payload,
-    };
+    const canTrack = deps.canTrack();
+    // Live delivery reads from the buffer, so a trackable event must be recorded.
+    if (canTrack) shouldRecordReplay = true;
 
     if (shouldRecordReplay) {
-      replayBuffer.push(replayEntry);
+      replayBuffer.push({ sequence: nextReplaySequence, event, payload });
       if (replayBuffer.length > MAX_REPLAY_BUFFER_SIZE) {
         replayBuffer.shift();
       }
     }
+    nextReplaySequence++;
 
-    if (deps.canTrack()) {
-      for (const destination of destinations) {
-        deliverDestinationEvent(destination, replayEntry);
-      }
+    if (!canTrack) return;
+    for (const destination of destinations) {
+      catchUp(destination);
     }
   }
 
@@ -249,6 +296,7 @@ export function createDestinationManager(deps: DestinationManagerDeps) {
     }
     destinations.clear();
     destinationNames.clear();
+    removedReplayCursors.clear();
   }
 
   return {

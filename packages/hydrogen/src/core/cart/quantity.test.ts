@@ -67,6 +67,29 @@ describe("sanitizeQuantity", () => {
     it("clamps to custom min", () => {
       expect(sanitizeQuantity(1, { min: 3 })).toBe(3);
     });
+
+    it.each([0, -2])("never returns less than min when max is %i", (max) => {
+      expect(sanitizeQuantity(3, { min: 1, max })).toBe(1);
+    });
+  });
+
+  describe("non-finite inputs", () => {
+    it.each([Infinity, -Infinity, "1e400", "-1e400"])(
+      "returns a finite whole number for %s",
+      (raw) => {
+        const result = sanitizeQuantity(raw);
+        expect(Number.isFinite(result)).toBe(true);
+        expect(Number.isInteger(result)).toBe(true);
+      },
+    );
+
+    it("falls back to min for Infinity when there is no max", () => {
+      expect(sanitizeQuantity(Infinity)).toBe(DEFAULT_MINIMUM_QUANTITY);
+    });
+
+    it.each([Infinity, "1e400"])("clamps %s to max when max is set", (raw) => {
+      expect(sanitizeQuantity(raw, { max: 4 })).toBe(4);
+    });
   });
 
   describe("constants", () => {

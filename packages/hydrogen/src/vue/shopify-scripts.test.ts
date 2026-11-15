@@ -17,7 +17,7 @@ import {
   SHOPIFY_STOREFRONT_WEBMCP_SCRIPT,
 } from "../core/shopify-scripts";
 import * as shopifyScriptsCore from "../core/shopify-scripts";
-import { createShopifyRouteTemplates } from "../core/standard-routes/index";
+import { defineShopifyRouteTemplates } from "../core/standard-routes/index";
 import type { ShopifyGlobal } from "../globals";
 import { ShopifyScripts } from "./shopify-scripts";
 
@@ -41,7 +41,7 @@ const CONSENT = {
 
 describe("ShopifyScripts", () => {
   it("renders Shopify storefront runtime scripts during SSR", async () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
     const html = await renderToString(
@@ -58,11 +58,13 @@ describe("ShopifyScripts", () => {
     );
 
     expect(html).toContain('nonce="test-nonce"');
-    expect(html).toContain('"country":"US"');
-    expect(html).toContain('"locale":"en"');
-    expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
-    expect(html).toContain(`"shop":"${TEST_MYSHOPIFY_DOMAIN}"`);
-    expect(html).not.toContain('"templates"');
+    expect(html).toContain("&quot;country&quot;:&quot;US&quot;");
+    expect(html).toContain("&quot;locale&quot;:&quot;en&quot;");
+    expect(html).toContain(
+      "&quot;routes&quot;:{&quot;root&quot;:&quot;/&quot;,&quot;apiProxyPrefix&quot;:&quot;/__shopify&quot;}",
+    );
+    expect(html).toContain(`&quot;shop&quot;:&quot;${TEST_MYSHOPIFY_DOMAIN}&quot;`);
+    expect(html).not.toContain("&quot;templates&quot;");
     expect(html).toContain(`<link rel="preconnect" href="${SHOPIFY_CDN_ORIGIN}">`);
     expect(html).toContain(`<link rel="preconnect" href="${SHOPIFY_SHOP_APP_ORIGIN}">`);
     expect(html).toContain(
@@ -103,16 +105,18 @@ describe("ShopifyScripts", () => {
     expect(html).toContain(SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT);
     expect(html).toContain(SHOPIFY_STOREFRONT_STANDARD_EVENTS_SCRIPT);
     expect(html).not.toContain(SHOPIFY_STOREFRONT_WEBMCP_SCRIPT);
-    expect(html).toContain('"country":"US"');
-    expect(html).toContain('"locale":"en"');
-    expect(html).toContain('"routes":{"root":"/","apiProxyPrefix":"/__shopify"}');
-    expect(html).not.toContain('"templates"');
+    expect(html).toContain("&quot;country&quot;:&quot;US&quot;");
+    expect(html).toContain("&quot;locale&quot;:&quot;en&quot;");
+    expect(html).toContain(
+      "&quot;routes&quot;:{&quot;root&quot;:&quot;/&quot;,&quot;apiProxyPrefix&quot;:&quot;/__shopify&quot;}",
+    );
+    expect(html).not.toContain("&quot;templates&quot;");
   });
 
   it("initializes browser script behavior once with initial props", async () => {
     const initializeShopifyScripts = vi.spyOn(shopifyScriptsCore, "initializeShopifyScripts");
     const navigate = vi.fn();
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
     (window as any).Shopify = {

@@ -2,13 +2,15 @@
 
 Next splits Hydrogen routing across `proxy.ts` and `app/not-found.tsx`.
 
+For CSP, see [Content Security Policy](./content-security-policy.md). Call `csp.applyResponseHeaders()` on the response. In nonce mode, also set `Content-Security-Policy` to `csp.header` on the headers returned by `getForwardedRequestHeaders()` so Next's renderer can nonce its own scripts. Nonce mode requires dynamic document rendering. Forward `csp.nonce` in an app-owned request header such as `x-nonce`, overwriting any incoming value, and read it in the layout for Shopify's scripts. Use `nonce: false` with explicit inline-script authorization to preserve a prerendered shell; in that mode, remove incoming CSP and report-only CSP request headers instead of forwarding a policy.
+
 ## `proxy.ts`
 
 `proxy.ts` can short-circuit before routing, so put `handleShopifyRoutes` there. In Next 16+, the file is `proxy.ts` and the exported function is named `proxy`; older Next projects may use `middleware.ts` with an exported `middleware` function. It cannot inspect the routed response, so forward the original URL to not-found UI.
 
 The scaffold defaults to a public client; `NEXT_PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` from the app's trusted deployment headers per the buyer-IP guidance from `hydrogen-storefront-client`.
 
-This shape assumes app-owned server-only helpers and values for `customerSession`, `createSessionManager`, and `routeTemplates`. Do not import those names from Hydrogen.
+This shape assumes app-owned server-only helpers and values for `customerSession`, `createSessionManager`, `routeTemplates`, and `i18n` (the `defineShopifyI18n` definition in `lib/i18n.ts`). Do not import those names from Hydrogen.
 
 ```ts
 import {
@@ -20,6 +22,8 @@ import {
 import { createCustomerAccountServerHandlers } from "@shopify/hydrogen/customer-account";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { i18n } from "@/lib/i18n";
+
 const cartHandlers = createCartServerHandlers({ customerSession });
 const customerAccountHandlers = createCustomerAccountServerHandlers({
   customerSession,
@@ -29,7 +33,7 @@ const customerAccountHandlers = createCustomerAccountServerHandlers({
 export async function proxy(request: NextRequest) {
   const requestContext = createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n,
   });
   const storefrontClient = createStorefrontClient({
     type: "public",
@@ -53,7 +57,11 @@ export async function proxy(request: NextRequest) {
 
   const requestHeaders = requestContext.getForwardedRequestHeaders();
   const response = NextResponse.next({ request: { headers: requestHeaders } });
+  // Next.js drops a route handler's header when the proxy already set it, so leave `Link` to the route.
+  const link = response.headers.get("link");
   requestContext.applyResponseHeaders(response.headers);
+  if (link === null) response.headers.delete("link");
+  else response.headers.set("link", link);
   return response;
 }
 
@@ -61,6 +69,10 @@ export const config = {
   matcher: ["/((?!_next/static|_next/image|_next/data|favicon.ico).*)"],
 };
 ```
+
+Next.js copies headers from `NextResponse.next()` onto the final response before the route runs, then skips any route handler header with the same name (only `Set-Cookie`, `Vary` and the authenticate headers are appended). Save the pass-through response's `Link` before `applyResponseHeaders` and restore it afterwards. This keeps any `Link` the proxy set itself and leaves out the UCP discovery `Link`, so a route handler's own `Link` is never replaced. Responses returned by `handleShopifyRoutes` are final and keep the UCP link. Next.js pages advertise UCP through the `<link rel="ucp">` tag rendered by `ShopifyScripts` instead.
+
+Upgrade note: apps upgrading Hydrogen whose proxy calls `applyResponseHeaders` directly will lose their route handlers' `Link` headers unless they adopt the save-and-restore pattern in `examples/nextjs/lib/proxy-response-headers.ts`.
 
 The proxy returns a matched promise directly so Next owns any rejection. If the app adds a request-level `try/catch` that returns a custom error response, use `return await shopifyRoute` inside that boundary after the truthy check.
 
@@ -115,7 +127,7 @@ With `cacheComponents: true`, keep request-time work in an async child under `<S
 
 ## Storefront Client
 
-In server components, use a cached server-only factory that reads `headers()` and creates a request-scoped client (public by default). In `proxy.ts`, use the actual `NextRequest` so URL, signal, and forwarded headers are preserved. `requestContext.getForwardedRequestHeaders()` carries the original URL through `x-storefront-url` for `not-found.tsx`.
+In server components, use a cached server-only factory that reads `headers()` and creates a request-scoped client (public by default). In `proxy.ts`, use the actual `NextRequest` so URL, signal, and forwarded headers are preserved. `requestContext.getForwardedRequestHeaders()` carries the original URL through `x-storefront-url` for `not-found.tsx`, and `createShopifyRequestContext({ request: { headers }, i18n })` reads that same header to resolve `requestContext.locale` in Server Components. Module-scope static clients have no URL; pass `locale: i18n.defaultLocale` there.
 
 When a Server Component or layout reads Customer Account session state under Cache Components, put that read below an explicit dynamic boundary (`connection()` + `<Suspense>`). Do not rely on static route-segment config that Cache Components rejects.
 

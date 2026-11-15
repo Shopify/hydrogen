@@ -10,11 +10,12 @@ import { configureLogging } from "../core/logging";
 import { createProductFormStore } from "../core/product/product-form";
 import type { ProductInput, ProductVariantInput } from "../core/product/state";
 import { assert, createTestLogger } from "../core/test-utils";
-import { CartProvider, configureCartEndpoint } from "./cart";
+import { CartProvider } from "./cart";
+import { LocaleProvider } from "./locale";
 import { createProductComponents, useProductForm } from "./product";
 
-vi.mock("../core/cart/cart", () => ({
-  configureCartEndpoint: vi.fn(),
+vi.mock("../core/cart/cart", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../core/cart/cart")>()),
   createCartStore: vi.fn(),
 }));
 
@@ -193,6 +194,8 @@ function makeStore(
   return { store, cartStore };
 }
 
+const FR_CA = { language: "FR", country: "CA", pathPrefix: "/fr-ca" } as const;
+
 function mountStandaloneConsumer<T>(
   setupFn: () => { exposed: T; render: () => ReturnType<typeof h> | null },
 ): T {
@@ -224,7 +227,6 @@ describe("useProductForm", () => {
         (options?.initialData as { cart?: CartData | CartState } | undefined)?.cart,
       ),
     );
-    configureCartEndpoint("/api/cart");
   });
   afterEach(() => {
     configureLogging({});
@@ -495,6 +497,39 @@ describe("useProductForm", () => {
 
       expect(formProps.method).toBe("post");
       expect(formProps.action).toBe("/api/cart");
+    });
+
+    it("posts to the cart provider's endpoint under the locale path prefix", () => {
+      const { store } = makeStore();
+      let action: unknown;
+      const Consumer = defineComponent({
+        setup() {
+          action = useProductForm(store).formProps().action;
+          return () => null;
+        },
+      });
+
+      mount(LocaleProvider, {
+        props: { locale: FR_CA },
+        slots: { default: () => h(CartProvider, null, () => h(Consumer)) },
+      });
+
+      expect(action).toBe("/fr-ca/api/cart");
+    });
+
+    it("posts to the unprefixed endpoint when no cart provider sends requests under the prefix", () => {
+      const { store } = makeStore();
+      let action: unknown;
+      const Consumer = defineComponent({
+        setup() {
+          action = useProductForm(store).formProps().action;
+          return () => null;
+        },
+      });
+
+      mount(LocaleProvider, { props: { locale: FR_CA }, slots: { default: () => h(Consumer) } });
+
+      expect(action).toBe("/api/cart");
     });
 
     it("calls beforeSubmit synchronously and afterSubmit after completion", async () => {
@@ -795,7 +830,6 @@ describe("createProductComponents", () => {
         (options?.initialData as { cart?: CartData | CartState } | undefined)?.cart,
       ),
     );
-    configureCartEndpoint("/api/cart");
   });
 
   describe("ProductProvider", () => {
@@ -996,7 +1030,6 @@ describe("template reactivity", () => {
         (options?.initialData as { cart?: CartData | CartState } | undefined)?.cart,
       ),
     );
-    configureCartEndpoint("/api/cart");
   });
 
   it("DOM updates aria-pressed after clicking an option button (standalone)", async () => {
