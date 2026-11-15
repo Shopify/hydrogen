@@ -1,16 +1,20 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  createShopifyRouteTemplates,
+  defineShopifyRouteTemplates,
   getStandardRoute,
   matchStandardRouteUrl,
   resolveStandardRouteUrl,
 } from "./standard-routes/index";
-import { normalizePathPrefix, prependPathPrefix } from "./standard-routes/path";
+import {
+  applyI18nPathPrefix,
+  normalizePathPrefix,
+  prependPathPrefix,
+} from "./standard-routes/path";
 
 describe("standard routes", () => {
   it("builds default Shopify standard routes", () => {
-    const routeTemplates = createShopifyRouteTemplates({});
+    const routeTemplates = defineShopifyRouteTemplates({});
 
     expect(getStandardRoute(routeTemplates, "product", { productHandle: "snow board" })).toBe(
       "/products/snow%20board",
@@ -30,7 +34,7 @@ describe("standard routes", () => {
   });
 
   it("builds configured standard routes", () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       article: "/journal/:blogHandle/:articleHandle",
       cart: "/basket",
       collectionList: "/catalog",
@@ -59,7 +63,7 @@ describe("standard routes", () => {
   });
 
   it("resolves standard route URLs to configured route templates", () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
 
@@ -72,7 +76,7 @@ describe("standard routes", () => {
   });
 
   it("matches configured route templates", () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       article: "/journal/:blogHandle/:articleHandle",
       product: "/p/:productHandle",
     });
@@ -105,7 +109,7 @@ describe("standard routes", () => {
   });
 
   it("matches default standard routes even when custom templates are configured", () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
 
@@ -132,7 +136,7 @@ describe("standard routes", () => {
   });
 
   it("prefers Shopify default route identities over overlapping configured templates", () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       policy: "/pages/:policyHandle",
       productInCollection: "/products/:productHandle",
     });
@@ -150,7 +154,7 @@ describe("standard routes", () => {
   });
 
   it("gives a collection-scoped product match without a collection handle the product's standard path", () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       productInCollection: "/shop/:productHandle",
     });
 
@@ -169,7 +173,7 @@ describe("standard routes", () => {
   });
 
   it("matches the root as the index route", () => {
-    const routeTemplates = createShopifyRouteTemplates({ collectionList: "/" });
+    const routeTemplates = defineShopifyRouteTemplates({ collectionList: "/" });
 
     expect(resolveStandardRouteUrl({ routeTemplates, url: "/collections" })).toBe("/");
 
@@ -229,13 +233,13 @@ describe("standard routes", () => {
       },
     },
   ] as const)("matches the Liquid page template for $url", ({ url, expected }) => {
-    const routeTemplates = createShopifyRouteTemplates({});
+    const routeTemplates = defineShopifyRouteTemplates({});
 
     expect(matchStandardRouteUrl({ routeTemplates, url })).toMatchObject(expected);
   });
 
   it("matches configured storefront utility routes", () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       cart: "/basket",
       collectionList: "/catalog",
       policy: "/legal/:policyHandle",
@@ -267,7 +271,7 @@ describe("standard routes", () => {
   });
 
   it("resolves canonical and legacy collection-listing routes", () => {
-    const routeTemplates = createShopifyRouteTemplates({ collectionList: "/catalog" });
+    const routeTemplates = defineShopifyRouteTemplates({ collectionList: "/catalog" });
 
     expect(resolveStandardRouteUrl({ routeTemplates, url: "/collections" })).toBe("/catalog");
     expect(resolveStandardRouteUrl({ routeTemplates, url: "/products" })).toBe("/catalog");
@@ -284,7 +288,7 @@ describe("standard routes", () => {
   });
 
   it("resolves standard route URLs with an i18n path prefix", () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       article: "/journal/:blogHandle/:articleHandle",
     });
 
@@ -298,7 +302,7 @@ describe("standard routes", () => {
   });
 
   it("matches route templates with an i18n path prefix", () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       productInCollection: "/c/:collectionHandle/p/:productHandle",
     });
 
@@ -321,7 +325,7 @@ describe("standard routes", () => {
   });
 
   it("preserves URLs without matching route templates", () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
 
@@ -344,8 +348,30 @@ describe("standard routes", () => {
     expect(prependPathPrefix("/products", " /fr-ca/ ")).toBe("/fr-ca/products");
   });
 
+  it.each([
+    { url: "/api/cart", pathPrefix: "/fr-ca", expected: "/fr-ca/api/cart" },
+    { url: "/api/cart?step=1", pathPrefix: " /fr-ca/ ", expected: "/fr-ca/api/cart?step=1" },
+    { url: "/api/cart", pathPrefix: "", expected: "/api/cart" },
+    { url: "/api/cart", pathPrefix: undefined, expected: "/api/cart" },
+    { url: "/fr-ca/api/cart", pathPrefix: "/fr-ca", expected: "/fr-ca/api/cart" },
+    { url: "/fr-ca?step=1", pathPrefix: "/fr-ca", expected: "/fr-ca/?step=1" },
+    { url: "/fr-ca#top", pathPrefix: "/fr-ca", expected: "/fr-ca/#top" },
+    {
+      url: "https://cart.example/api/cart",
+      pathPrefix: "/fr-ca",
+      expected: "https://cart.example/api/cart",
+    },
+    { url: "//cart.example/api/cart", pathPrefix: "/fr-ca", expected: "//cart.example/api/cart" },
+    { url: "api/cart", pathPrefix: "/fr-ca", expected: "api/cart" },
+  ])(
+    "puts the request URL $url under the locale path prefix $pathPrefix as $expected",
+    ({ url, pathPrefix, expected }) => {
+      expect(applyI18nPathPrefix(url, pathPrefix)).toBe(expected);
+    },
+  );
+
   it("does not match external or unknown URLs", () => {
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
 
@@ -357,5 +383,18 @@ describe("standard routes", () => {
         url: "https://cdn.example/products/snowboard",
       }),
     ).toBeNull();
+  });
+
+  it("matches paths with long runs of slashes in linear time", () => {
+    const routeTemplates = defineShopifyRouteTemplates({});
+    const slashes = "/".repeat(65_536);
+    const start = performance.now();
+
+    expect(matchStandardRouteUrl({ routeTemplates, url: `/products/a${slashes}b` })).toBeNull();
+    expect(matchStandardRouteUrl({ routeTemplates, url: `/products/a${slashes}` })).toMatchObject({
+      params: { productHandle: "a" },
+    });
+    // The quadratic regex took over a second here; the loop takes well under a millisecond.
+    expect(performance.now() - start).toBeLessThan(100);
   });
 });

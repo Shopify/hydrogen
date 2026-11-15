@@ -4,4 +4,5 @@ import { createPredictiveSearchServerHandlers } from "@shopify/hydrogen";
 // suggestions never offer what the fallback page cannot show.
 export const predictiveSearchHandlers = createPredictiveSearchServerHandlers({
   types: ["PRODUCT"],
+  rateLimitHandling: "response",
 });

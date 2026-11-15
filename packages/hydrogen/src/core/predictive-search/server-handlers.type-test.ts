@@ -28,6 +28,30 @@ type CustomData = PredictiveSearchDataForOptions<{
 }>;
 
 describe("createPredictiveSearchServerHandlers type tests", () => {
+  it("preserves the inferred legacy error code with and without rate-limit handling", () => {
+    type DefaultResult = Awaited<ReturnType<typeof defaultHandlers.get>>;
+    type DefaultCode = Extract<DefaultResult, { type: "error" }>["error"]["code"];
+    const enabledHandlers = createPredictiveSearchServerHandlers({ rateLimitHandling: "response" });
+    type EnabledResult = Awaited<ReturnType<typeof enabledHandlers.get>>;
+    type EnabledCode = Extract<EnabledResult, { type: "error" }>["error"]["code"];
+    const messages: Record<DefaultCode, string> = {
+      invalid_predictive_search_request: "Invalid request",
+    };
+    function legacyMessage(code: DefaultCode): string {
+      switch (code) {
+        case "invalid_predictive_search_request":
+          return messages[code];
+        default: {
+          const exhaustive: never = code;
+          return exhaustive;
+        }
+      }
+    }
+    expectTypeOf<DefaultCode>().toEqualTypeOf<"invalid_predictive_search_request">();
+    expectTypeOf<EnabledCode>().toEqualTypeOf<DefaultCode>();
+    expectTypeOf(legacyMessage).returns.toEqualTypeOf<string>();
+  });
+
   it("carries custom fragment data through handler get results", () => {
     type Product = PredictiveSearchDataFromHandlers<
       typeof customHandlers

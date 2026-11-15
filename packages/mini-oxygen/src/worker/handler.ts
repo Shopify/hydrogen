@@ -48,11 +48,18 @@ async function miniOxygenHandler(
     }
   }
 
+  // Oxygen replaces the trace context the buyer sent, so this goes after the
+  // incoming headers.
+  const traceId = crypto.randomUUID().replaceAll('-', '');
+  const parentId = crypto.randomUUID().replaceAll('-', '').slice(0, 16);
+  const traceparent = `00-${traceId}-${parentId}-01`;
+
   const requestInit = {
     headers: {
       'request-id': crypto.randomUUID(),
       ...env.oxygenHeadersMap,
       ...Object.fromEntries(request.headers.entries()),
+      traceparent,
     },
   } satisfies RequestInit;
 

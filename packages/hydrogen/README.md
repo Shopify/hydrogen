@@ -64,14 +64,12 @@ The editor plugin generates `storefront-graphql-env.d.ts` and `customer-account-
 Use `@shopify/hydrogen/customer-account` for type-safe Customer Account API requests from server code:
 
 ```ts
-import { createShopifyRequestContext } from "@shopify/hydrogen";
+import { createShopifyRequestContext, defineShopifyI18n } from "@shopify/hydrogen";
 import * as CAAPI from "@shopify/hydrogen/customer-account";
 
 const CUSTOMER_QUERY = CAAPI.gql(`query { customer { firstName emailAddress { emailAddress } } }`);
-const requestContext = createShopifyRequestContext({
-  request,
-  i18n: { country: "US", language: "EN" },
-});
+const i18n = defineShopifyI18n({ defaultLocale: { country: "US", language: "EN" } });
+const requestContext = createShopifyRequestContext({ request, i18n });
 
 const customerAccount = CAAPI.createCustomerAccountClient({
   shopId: env.SHOP_ID,
@@ -108,6 +106,6 @@ Use `createCustomerAccountServerHandlers({customerSession})` with `handleShopify
 
 The login handler respects a `return_to` search parameter when it is a same-origin path or URL, such as `/account/orders`, and otherwise redirects back to `defaultPostLoginRedirectPathname` (default `/`). The logout handler redirects through Shopify using `postLogoutRedirectUri` (default `/`) when an ID token is present; otherwise, it redirects directly to `postLogoutRedirectUri`. Apps can still implement their own framework routes when they need custom behavior.
 
-When a writable method can update cookie-backed session state, commit once while finalizing the response and append headers from `await sessionManager.commit?.()` there. After committing session headers, call `requestContext.applyResponseHeaders(response.headers)`. Customer Account session reads and GraphQL calls mark the request context private so the finalizer can prevent public/CDN caching of personalized responses.
+When a writable method can update cookie-backed session state, commit once while finalizing the response and append headers from `await sessionManager.commit?.()` there. After committing session headers, call `requestContext.applyResponseHeaders(response.headers, response.status)`. With the status, a `429` response after a Storefront API rate limit keeps `Retry-After` and `Cache-Control: no-store`. Customer Account session reads and GraphQL calls mark the request context private so the finalizer can prevent public/CDN caching of personalized responses.
 
 Use the GraphQL client from server or edge routes only. Keep Customer Account tokens in protected server session storage or encrypted HttpOnly cookies, not browser-readable storage. Pass the same Shopify request context used by the Storefront client so the Customer Account client can derive the `Origin` header, default language, and final response cache policy from request-scoped data. Keep GraphQL documents static and pass user input through variables. Do not retry Customer Account mutations after a timeout unless the operation is externally idempotent.

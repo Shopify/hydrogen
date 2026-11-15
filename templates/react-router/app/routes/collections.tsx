@@ -1,3 +1,4 @@
+import { withStorefrontRateLimit } from "@shopify/hydrogen";
 import { Link } from "react-router";
 
 import { CollectionCard } from "~/components/CollectionCard";
@@ -18,10 +19,10 @@ export function meta({ matches }: Route.MetaArgs) {
   ];
 }
 
-export async function loader({ context, request }: Route.LoaderArgs) {
+export const loader = withStorefrontRateLimit(async ({ context, request }: Route.LoaderArgs) => {
   const storefrontClient = context.get(storefrontClientContext);
   return loadCollectionsPage({ storefrontClient, request });
-}
+});
 
 type CollectionNode = Route.ComponentProps["loaderData"]["collections"]["nodes"][number];
 

@@ -1,5 +1,9 @@
 import type { GraphQLFormattedError } from "../client/types";
-import { CUSTOMER_ACCOUNT_API_VERSION, DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
+import {
+  CUSTOMER_ACCOUNT_API_VERSION,
+  DEFAULT_TIMEOUT_IN_MS,
+  HYDROGEN_USER_AGENT,
+} from "../core/constants";
 import type { ShopifyRequestContext } from "../core/request-context";
 import { isObjectRecord } from "../core/utils/record";
 import type { introspection } from "../graphql/generated/customer-account-graphql-env";
@@ -26,7 +30,6 @@ const MAX_ASCII_CONTROL_CODE_POINT = 31;
 const ASCII_DELETE_CODE_POINT = 127;
 const MAX_SET_TIMEOUT_IN_MS = 2_147_483_647;
 const LOCAL_ORIGIN_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
-const USER_AGENT = `Hydrogen ${__HYDROGEN_VERSION__}`;
 const CUSTOMER_ACCOUNT_GRAPHQL_PERSONALIZATION_REASON = "customer-account-graphql";
 
 /** A Customer Account API access token, or `null` or `undefined` when the customer has none. */
@@ -248,7 +251,7 @@ export function createCustomerAccountClient({
       const variables = getVariables(
         document,
         getOptionalVariables(options.variables),
-        requestContext.i18n.language,
+        requestContext.locale.language,
       );
       const response = await fetchCustomerAccountGraphql({
         fetch: resolvedFetch,
@@ -295,7 +298,7 @@ async function fetchCustomerAccountGraphql({
           Authorization: accessToken,
           "Content-Type": "application/json",
           Origin: origin,
-          "User-Agent": USER_AGENT,
+          "User-Agent": HYDROGEN_USER_AGENT,
         }),
         body: JSON.stringify({ query, variables }),
         cache: "no-store",
@@ -418,7 +421,7 @@ function withAbort<T>(promise: T | Promise<T>, signal: AbortSignal | undefined):
 function getVariables(
   document: { i18nVariableNames: ReadonlySet<keyof I18nVariableTypes> },
   variables: Record<string, unknown>,
-  language: ShopifyRequestContext["i18n"]["language"],
+  language: ShopifyRequestContext["locale"]["language"],
 ): Record<string, unknown> {
   if (!document.i18nVariableNames.has("language")) return variables;
   if ("language" in variables) return variables;

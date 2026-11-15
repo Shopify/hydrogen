@@ -20,6 +20,7 @@ import {
 } from "../core/predictive-search";
 import { getEmptyPredictiveSearchResult } from "../core/predictive-search/search";
 import { assert } from "../core/test-utils";
+import { LocaleProvider } from "./locale";
 import {
   PredictiveSearchProvider,
   usePredictiveSearch,
@@ -209,6 +210,55 @@ describe("PredictiveSearchProvider", () => {
     rerender(createElement(PredictiveSearchProvider, { searchAction: "/find" }, null));
 
     expect(createPredictiveSearchStore).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("PredictiveSearchProvider inside LocaleProvider", () => {
+  const FR_CA = { language: "FR", country: "CA", pathPrefix: "/fr-ca" } as const;
+
+  function SearchForm() {
+    const { formProps, register } = usePredictiveSearchForm();
+    return createElement("form", formProps(), createElement("input", register("query")));
+  }
+
+  function renderSearch(props: Parameters<typeof PredictiveSearchProvider>[0] = {}) {
+    render(
+      createElement(
+        LocaleProvider,
+        { locale: FR_CA },
+        createElement(PredictiveSearchProvider, props, createElement(SearchForm)),
+      ),
+    );
+    return { form: screen.getByRole("search"), input: screen.getByRole("searchbox") };
+  }
+
+  it("searches the endpoint and submits to the search page under the locale path prefix", async () => {
+    const { fetch } = await setupActualStore();
+
+    const { form, input } = renderSearch({ fetch, debounceInMs: IMMEDIATE_DEBOUNCE_IN_MS });
+    fireEvent.change(input, { target: { value: "snow" } });
+
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith("/fr-ca/api/predictive-search?q=snow", expect.anything()),
+    );
+    expect(form.getAttribute("action")).toBe("/fr-ca/search");
+  });
+
+  it("puts a custom endpoint and search action under the locale path prefix", async () => {
+    const { fetch } = await setupActualStore();
+
+    const { form, input } = renderSearch({
+      fetch,
+      debounceInMs: IMMEDIATE_DEBOUNCE_IN_MS,
+      predictiveSearchEndpoint: "/storefront/suggest",
+      searchAction: "/find",
+    });
+    fireEvent.change(input, { target: { value: "snow" } });
+
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith("/fr-ca/storefront/suggest?q=snow", expect.anything()),
+    );
+    expect(form.getAttribute("action")).toBe("/fr-ca/find");
   });
 });
 

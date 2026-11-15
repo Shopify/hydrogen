@@ -3,18 +3,12 @@ import { mount } from "@vue/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { defineComponent, h, nextTick } from "vue";
 
-import {
-  configureCartEndpoint as configureCoreCartEndpoint,
-  createCartStore,
-  type CreateCartStoreOptions,
-  type CartStore,
-} from "../core/cart/cart";
+import { createCartStore, type CreateCartStoreOptions, type CartStore } from "../core/cart/cart";
 import type { CartData, CartState } from "../core/cart/state";
 import { EMPTY_CART_DATA, EMPTY_CART_STATE } from "../core/cart/state";
 import { assert } from "../core/test-utils";
 import {
   CartProvider,
-  configureCartEndpoint,
   useCart,
   useCartActions,
   useCartAnalytics,
@@ -22,8 +16,8 @@ import {
   useOptionalCart,
 } from "./cart";
 
-vi.mock("../core/cart/cart", () => ({
-  configureCartEndpoint: vi.fn(),
+vi.mock("../core/cart/cart", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../core/cart/cart")>()),
   createCartStore: vi.fn(),
 }));
 
@@ -134,7 +128,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   subscribeListener = null;
   vi.mocked(createCartStore).mockImplementation((options) => createMockStore(options?.initialData));
-  configureCartEndpoint("/api/cart");
   delete (window as { Shopify?: unknown }).Shopify;
 });
 
@@ -630,42 +623,5 @@ describe("useCartForm", () => {
     assert(isPending, "isPending is not defined");
     expect(isPending.lines("line-1")).toBe(true);
     expect(isPending.lines("line-2")).toBe(false);
-  });
-});
-
-describe("cartEndpoint option", () => {
-  it("defaults formProps.action to /api/cart", async () => {
-    // The shared beforeEach configures the endpoint, so load an unconfigured binding.
-    vi.resetModules();
-    const core = await import("../core/cart/cart");
-    vi.mocked(core.createCartStore).mockImplementation((options) =>
-      createMockStore(options?.initialData),
-    );
-    const fresh = await import("./cart");
-    let result: ReturnType<ReturnType<typeof fresh.useCartForm>["formProps"]> | undefined;
-    const Consumer = defineComponent({
-      setup() {
-        result = fresh.useCartForm().formProps();
-        return () => null;
-      },
-    });
-
-    mount(fresh.CartProvider, { slots: { default: () => h(Consumer) } });
-    assert(result, "expected formProps to be assigned");
-
-    expect(result.action).toBe("/api/cart");
-    expect(core.configureCartEndpoint).toHaveBeenCalledWith("/api/cart");
-  });
-
-  it("custom cartEndpoint configures transport and flows to formProps.action", () => {
-    configureCartEndpoint("/custom/cart");
-
-    const result = mountWithConsumer(() => {
-      const { formProps } = useCartForm();
-      return { exposed: formProps(), render: () => null };
-    });
-
-    expect(result.action).toBe("/custom/cart");
-    expect(configureCoreCartEndpoint).toHaveBeenCalledWith("/custom/cart");
   });
 });

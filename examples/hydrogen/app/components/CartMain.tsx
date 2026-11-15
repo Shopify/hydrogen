@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { useAside } from "~/components/Aside";
 import { CartLineItem } from "~/components/CartLineItem";
 import { useCart } from "~/lib/cart";
+import { useLocalizedPath } from "~/lib/locale-path";
 
 import { CartSummary } from "./CartSummary";
 
@@ -98,12 +99,13 @@ function getParentLineId(line: object): string | undefined {
 
 function CartEmpty({ hidden = false }: { hidden: boolean; layout?: CartMainProps["layout"] }) {
   const { close } = useAside();
+  const localizedPath = useLocalizedPath();
   return (
     <div hidden={hidden}>
       <br />
       <p>Looks like you haven&rsquo;t added anything yet, let&rsquo;s get you started!</p>
       <br />
-      <Link to="/collections" onClick={close} prefetch="viewport">
+      <Link to={localizedPath("/collections")} onClick={close} prefetch="viewport">
         Continue shopping →
       </Link>
     </div>

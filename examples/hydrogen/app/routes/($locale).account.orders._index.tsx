@@ -6,6 +6,7 @@ import { PaginatedResourceSection } from "~/components/PaginatedResourceSection"
 import { CUSTOMER_ORDERS_QUERY } from "~/graphql/customer-account/CustomerOrdersQuery";
 import { flattenConnection } from "~/lib/connection";
 import { requireCustomerAccessToken } from "~/lib/customer-account";
+import { useLocalizedPath } from "~/lib/locale-path";
 import { formatMoney } from "~/lib/money";
 import {
   buildOrderSearchQuery,
@@ -87,6 +88,7 @@ function OrdersTable({
 }
 
 function EmptyOrders({ hasFilters = false }: { hasFilters?: boolean }) {
+  const localizedPath = useLocalizedPath();
   return (
     <div>
       {hasFilters ? (
@@ -102,7 +104,7 @@ function EmptyOrders({ hasFilters = false }: { hasFilters?: boolean }) {
           <p>You haven&apos;t placed any orders yet.</p>
           <br />
           <p>
-            <Link to="/collections">Start Shopping →</Link>
+            <Link to={localizedPath("/collections")}>Start Shopping →</Link>
           </p>
         </>
       )}

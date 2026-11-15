@@ -53,12 +53,27 @@ Wire `publicStorefrontToken` from the canonical env variable without asserting i
 
 This example belongs in a server-only module unless the config values are explicitly passed into browser code by a server boundary.
 
+Every request context takes the storefront's i18n definition. Declare it once at module scope with `defineShopifyI18n` and import it wherever a request context is created:
+
+```ts
+// lib/i18n.ts
+import { defineShopifyI18n } from "@shopify/hydrogen";
+
+// Single-locale storefront. Add `routing` to serve more locales by path prefix or hostname;
+// see the hydrogen-markets skill.
+export const i18n = defineShopifyI18n({
+  defaultLocale: { language: "EN", country: "US" },
+});
+```
+
 ```ts
 import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
+import { i18n } from "./lib/i18n";
 
 const requestContext = createShopifyRequestContext({
   request: { headers: new Headers() },
-  i18n: { country: "US", language: "EN" },
+  i18n,
+  locale: i18n.defaultLocale,
 });
 
 const client = createStorefrontClient({
@@ -73,10 +88,11 @@ const client = createStorefrontClient({
 
 ### Private client (SSR upgrade)
 
-Use when the app has a private token and trusted buyer context. Requires `buyerIp` to forward trusted buyer context. Resolve request-derived values before creating the client:
+Use when the app has a private token and trusted buyer context. Requires `buyerIp` to forward trusted buyer context. Resolve request-derived values before creating the client. With a real `Request`, the locale is matched from `request.url` against the definition, so no `locale` override is needed:
 
 ```ts
 import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
+import { i18n } from "./lib/i18n";
 
 function getBuyerIp(headers: Headers) {
   const buyerIp = headers.get("oxygen-buyer-ip");
@@ -87,7 +103,7 @@ function getBuyerIp(headers: Headers) {
 const buyerIp = getBuyerIp(request.headers);
 const requestContext = createShopifyRequestContext({
   request,
-  i18n: getLocaleFromRequest(request),
+  i18n,
   buyerIp,
 });
 
@@ -114,12 +130,13 @@ When using `handleShopifyRoutes`, pass the trusted `buyerIp` into `createShopify
 
 ### Private client without buyer context
 
-For queries not on behalf of a specific buyer (pre-rendering, static site generation). No buyer IP is forwarded.
+For queries not on behalf of a specific buyer (pre-rendering, static site generation). No buyer IP is forwarded. There is no request URL to match a locale from, so pin one with `locale`; it must be a locale the definition contains or the request context throws.
 
 ```ts
 const requestContext = createShopifyRequestContext({
   request: { headers: new Headers() },
-  i18n: { country: "US", language: "EN" },
+  i18n,
+  locale: i18n.defaultLocale,
 });
 
 const client = createStorefrontClient({
@@ -232,7 +249,7 @@ export type ProductCardData =
 
 ### Variables and i18n auto-injection
 
-`$country` and `$language` are auto-injected from `requestContext.i18n` when the query declares them as `$country: CountryCode` and `$language: LanguageCode` (nullable or `!`). Static clients still create a request context, usually with empty headers plus the resolved locale. You only pass the variables you own:
+`$country` and `$language` are auto-injected from `requestContext.locale` when the query declares them as `$country: CountryCode` and `$language: LanguageCode` (nullable or `!`). `requestContext.locale` is the `{ language, country, pathPrefix }` resolved for this request, also exposed as `client.locale`. `requestContext.i18n` and `client.i18n` are deprecated aliases of it; don't use them. Static clients still create a request context, usually with empty headers plus an explicit `locale`. You only pass the variables you own:
 
 ```ts
 const PRODUCTS = gql(`
@@ -260,7 +277,7 @@ const { data } = await client.graphql(QUERY);
 const { data } = await client.graphql(QUERY, { signal });
 ```
 
-`requestContext.signal`, per-call `signal`, and the client's timeout signal are raced automatically. They are combined with `AbortSignal.any`, which the Next.js edge sandbox does not have, so an edge route or middleware that calls this client needs an `AbortSignal.any` polyfill installed before the first request. At the final response boundary, append committed session headers first, then call `requestContext.applyResponseHeaders(response.headers)`.
+`requestContext.signal`, per-call `signal`, and the client's timeout signal are raced automatically. They are combined with `AbortSignal.any`, which the Next.js edge sandbox does not have, so an edge route or middleware that calls this client needs an `AbortSignal.any` polyfill installed before the first request. At the final response boundary, append committed session headers first, then call `requestContext.applyResponseHeaders(response.headers, response.status)`. The status keeps the headers of a rate-limited `429` response; see the checklist in "Return `429` from a rate-limited React Router loader".
 
 Read `references/caching.md` to cache catalog reads across sub-requests on Oxygen-style runtimes.
 
@@ -286,6 +303,37 @@ Every successful result includes `headers` (the raw `Headers` object from the re
 
 A 200 response with GraphQL `errors` does NOT throw — partial success is valid in GraphQL. Non-200 responses, timeouts, network failures, and JSON parse errors all throw `StorefrontApiError` (or the `StorefrontTimeoutError` subclass).
 
+On a non-OK response, `StorefrontApiError` exposes `status`, `requestId`, and `retryAfter` (the raw, unvalidated `retry-after` header, when the response has one). Redirects, timeouts, network failures, and parse errors leave `retryAfter` undefined.
+
+### Return `429` from a rate-limited React Router loader
+
+An uncaught `StorefrontApiError` in a React Router loader renders as HTTP `500`, even when its `status` is `429`. Make all three changes:
+
+1. Wrap each loader or action that awaits Storefront API data with `withStorefrontRateLimit`. Without the wrapper, the response stays `500`.
+2. At the end of the root middleware, pass the final status: `applyResponseHeaders(response.headers, response.status)`. Without the status, the response is `429` but has no `Retry-After` and no `Cache-Control: no-store`.
+3. Call `applyResponseHeaders` on the request context of the Storefront API client that the loaders use, for example `storefrontClient.requestContext`. A different request context has no record of the rate limit, so the result is the same as without the status.
+
+```ts
+import { withStorefrontRateLimit } from "@shopify/hydrogen";
+
+export const loader = withStorefrontRateLimit(async ({ context }: Route.LoaderArgs) => {
+  const { data } = await context.get(storefrontClientContext).graphql(QUERY);
+  return data;
+});
+
+// app/root.tsx, at the end of the root middleware:
+const response = await next();
+requestContext.applyResponseHeaders(response.headers, response.status);
+return response;
+```
+
+- The wrapper maps only `StorefrontApiError` with `status === 429`. It throws a `429` `Response` with a fixed body, `Cache-Control: no-store`, and `Retry-After` when the upstream value is delay-seconds or an IMF-fixdate. Other errors pass through unchanged.
+- The wrapper logs the original error once, at `error` level with scope `rate-limit`, because React Router doesn't pass thrown responses to `handleError`. Use `configureLogging({ logger })` to send the entry to error reporting. Don't log the error again in the loader.
+- React Router drops the headers of a thrown response. With the status, `applyResponseHeaders` restores `Cache-Control: no-store` and `Retry-After` for a `429` after a Storefront API rate limit on the same request context, for page and single-fetch `.data` responses, so routes don't need a `headers` export. The method's documentation describes the `Retry-After` rule. Responses with other statuses keep their cache headers.
+- Don't build a `429` body from `error.message`, and don't copy upstream headers. The message holds part of the upstream response body.
+- Only work that the loader awaits can change the status. Handle deferred promises locally with `<Await errorElement>`.
+- Server-handler mapping is opt-in. Set `rateLimitHandling: "response"` on `createCartServerHandlers` for cart mutations, on `createPredictiveSearchServerHandlers` for search, and on `handleShopifyRoutes` for thrown registered-handler errors, including cart reads. Without the option, each API keeps its previous rate-limit handling. Enabled handlers return `429`, `Cache-Control: no-store`, and a valid `Retry-After`. With the cart option (mutations only), cart mutations keep code `cart_mutation_failed` and a native cart form gets the message as plain text; with only the router option, a thrown mutation becomes a JSON `rate_limited` error, also for a form. Search keeps `invalid_predictive_search_request`; mapped thrown errors use the generic code `rate_limited`. Each mapped error is logged once at `error` level. A direct `cartHandlers.get()` call still throws, so wrap its loader.
+
 ---
 
 ## Testing
@@ -301,7 +349,7 @@ const client = createStorefrontClient({
   type: "public",
     requestContext: createShopifyRequestContext({
       request: { headers: new Headers() },
-      i18n: { country: "US", language: "EN" },
+      i18n: defineShopifyI18n({ defaultLocale: { language: "EN", country: "US" } }),
     }),
   config: {
     storeDomain: "test.myshopify.com",
@@ -317,7 +365,8 @@ const client = createStorefrontClient({
 
 - **Private tokens throw in browser** — a `typeof document !== "undefined"` guard fires at construction.
 - **Env APIs are server-only** — examples that use `process.env` belong in server-only modules. Browser bundles may leave `process.env` undefined, inline stale build-time values, or accidentally expose config. Pass safe public values through server data when browser code needs them.
-- **Module-scope only for request-independent clients** — static public clients and `private_no_buyer_context` clients can be module-scoped when their `requestContext` uses static headers and static `i18n`. Private per-buyer clients and clients with a real incoming request context must be created per request.
+- **Module-scope only for request-independent clients** — static public clients and `private_no_buyer_context` clients can be module-scoped when their `requestContext` uses static headers and an explicit `locale`. Private per-buyer clients and clients with a real incoming request context must be created per request.
+- **`define*` vs `create*`** — `defineShopifyI18n` and `defineShopifyRouteTemplates` return module-scope, serializable configuration that server and client code can both import. `createShopifyRequestContext` and `createStorefrontClient` return stateful objects tied to a request or a token; keep them out of shared config modules.
 
 ---
 

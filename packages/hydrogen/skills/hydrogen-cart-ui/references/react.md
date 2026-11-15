@@ -61,6 +61,8 @@ Pass the full handler data envelope (`{cart, errors?}`) to `initialData`. Do not
 
 If there is no server cart fetch yet, still wrap with `<CartProvider>`; it will fetch `/api/cart` after hydration. Register the `cartHandlers` from the server-only module in the app's central `handleShopifyRoutes` wiring; use the `hydrogen-request-handlers` skill for the full framework-specific setup.
 
+When the storefront serves locales under a path prefix (`/fr-ca`), render `<LocaleProvider>` above `<CartProvider>` so cart requests and form actions carry the prefix; use the local `hydrogen-markets` skill.
+
 > Next.js App Router has its own cart binding shape — see `references/nextjs.md`.
 
 Seed `initialData` from the server data path on every framework that can (React Router loader, Next.js server layout/page). Prefer promise `initialData` where the framework supports it and the cart UI is wrapped in local Suspense; the Next.js reference is the main template for that pattern. Reserve the no-`initialData`, fetch-after-hydration path for runtimes with no server cart read.
