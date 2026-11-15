@@ -8,6 +8,7 @@ export {
   useCollectionForm,
 } from "./collection";
 export type { CollectionActions, CollectionData } from "./collection";
+export { LocaleProvider, useLocale } from "./locale";
 export {
   PredictiveSearchProvider,
   usePredictiveSearch,

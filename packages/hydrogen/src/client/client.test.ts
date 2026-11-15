@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-import type { CacheInstance } from "../core";
+import type { CacheInstance, ShopifyI18n } from "../core";
 import { Cache } from "../core/cache";
 import { DEFAULT_TIMEOUT_IN_MS } from "../core/constants";
 import {
@@ -8,11 +8,11 @@ import {
   type ShopifyRequestContext,
   type ShopifyRequestContextWithBuyerIp,
 } from "../core/request-context";
-import { assert } from "../core/test-utils";
+import { assert, createOpaqueResponse } from "../core/test-utils";
 import { gql } from "../graphql";
 import { createStorefrontClient } from "./client";
 import { StorefrontApiError, StorefrontTimeoutError } from "./errors";
-import type { I18nConfig, StorefrontClient } from "./types";
+import type { StorefrontClient } from "./types";
 
 const SHOP_QUERY = gql(`query { shop { name } }`);
 const PRODUCT_QUERY = gql(
@@ -69,10 +69,10 @@ describe("createStorefrontClient", () => {
 
       expect(client.type).toBe("public");
       expect(typeof client.graphql).toBe("function");
-      expect(client.i18n).toEqual(DEFAULT_I18N);
       expect(typeof client.apiUrl).toBe("string");
       expect(typeof client.storeUrl).toBe("string");
-      expect(client.i18n).toEqual(DEFAULT_I18N);
+      expect(client.locale).toEqual({ ...DEFAULT_LOCALE, pathPrefix: "" });
+      expect(client.i18n).toBe(client.locale);
     });
 
     it("constructs storeUrl and apiUrl from storeDomain and pinned API version", () => {
@@ -208,6 +208,33 @@ describe("createStorefrontClient", () => {
       expect(headers.get("X-Hydrogen-Version")).toBeTruthy();
     });
 
+    it.each([
+      ["public", createPublicClient],
+      ["private", createPrivateClient],
+      ["private_no_buyer_context", createPrivateNoBuyerContextClient],
+    ])("sends a Hydrogen User-Agent, not the buyer's, from a %s client", async (_, create) => {
+      const requestContext = createBuyerTestRequestContext({
+        headers: new Headers({ "user-agent": "BuyerBrowser/1.0" }),
+      });
+      const client = create({ fetch: mockFetch, requestContext });
+      await client.graphql(SHOP_QUERY);
+
+      expect(getHeaders(mockFetch).get("user-agent")).toBe("Hydrogen 0.0.0-test");
+    });
+
+    it("leaves the User-Agent to the browser", async () => {
+      vi.stubGlobal("document", {});
+
+      try {
+        const client = createPublicClient({ fetch: mockFetch });
+        await client.graphql(SHOP_QUERY);
+
+        expect(getHeaders(mockFetch).has("user-agent")).toBe(false);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+
     it("sends public access token header", async () => {
       const client = createPublicClient({
         publicStorefrontToken: "pub-token-123",
@@ -341,8 +368,8 @@ describe("createStorefrontClient", () => {
       const client = createStorefrontClient({
         type: "public",
         requestContext: createShopifyRequestContext({
-          request: { headers: new Headers() },
-          i18n: { language: "ES", country: "ES", pathPrefix: "/es-es/" },
+          request: new Request("https://shop.example.com/es-es/products/snowboard"),
+          i18n: PATHNAME_I18N,
         }),
         config: {
           storeDomain: "test.myshopify.com",
@@ -350,7 +377,7 @@ describe("createStorefrontClient", () => {
           fetch: mockFetch,
         },
       });
-      expect(client.i18n).toEqual({ language: "ES", country: "ES", pathPrefix: "/es-es" });
+      expect(client.locale).toEqual({ language: "ES", country: "ES", pathPrefix: "/es-es" });
       await client.graphql(LOCALIZED_QUERY);
 
       const body = getBody(mockFetch);
@@ -360,12 +387,12 @@ describe("createStorefrontClient", () => {
       });
     });
 
-    it("uses request context i18n for auto-injected variables", async () => {
+    it("uses request context locale for auto-injected variables", async () => {
       const client = createPublicClient({
         fetch: mockFetch,
         requestContext: createShopifyRequestContext({
-          request: { headers: new Headers() },
-          i18n: { language: "FR", country: "CA", pathPrefix: "/fr-ca/" },
+          request: new Request("https://shop.example.com/fr-ca/products/snowboard"),
+          i18n: PATHNAME_I18N,
         }),
       });
       await client.graphql(LOCALIZED_QUERY);
@@ -525,6 +552,71 @@ describe("createStorefrontClient", () => {
       }
     });
 
+    it("exposes Retry-After on a 429 response", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse(
+          { errors: [{ message: "throttled" }] },
+          { status: 429, headers: { "retry-after": "5" } },
+        ),
+      );
+
+      const client = createPublicClient({ fetch: mockFetch });
+
+      const error = await client.graphql(SHOP_QUERY).catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(StorefrontApiError);
+      expect((error as StorefrontApiError).status).toBe(429);
+      expect((error as StorefrontApiError).retryAfter).toBe("5");
+    });
+
+    it("leaves retryAfter undefined when the response has no Retry-After header", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({ errors: [{ message: "server error" }] }, { status: 500 }),
+      );
+
+      const client = createPublicClient({ fetch: mockFetch });
+
+      const error = await client.graphql(SHOP_QUERY).catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(StorefrontApiError);
+      expect((error as StorefrontApiError).status).toBe(500);
+      expect((error as StorefrontApiError).retryAfter).toBeUndefined();
+    });
+
+    it("lets applyResponseHeaders add the Retry-After value of a 429 response", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse(
+          { errors: [{ message: "throttled" }] },
+          { status: 429, headers: { "retry-after": "5" } },
+        ),
+      );
+      const requestContext = createTestRequestContext();
+      const client = createPublicClient({ fetch: mockFetch, requestContext });
+
+      await expect(client.graphql(SHOP_QUERY)).rejects.toBeInstanceOf(StorefrontApiError);
+
+      const headers = new Headers();
+      requestContext.applyResponseHeaders(headers, 429);
+      expect(headers.get("cache-control")).toBe("no-store");
+      expect(headers.get("retry-after")).toBe("5");
+    });
+
+    it("doesn't record a rate limit for other failed statuses", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse(
+          { errors: [{ message: "unavailable" }] },
+          { status: 503, headers: { "retry-after": "5" } },
+        ),
+      );
+      const requestContext = createTestRequestContext();
+      const client = createPublicClient({ fetch: mockFetch, requestContext });
+
+      await expect(client.graphql(SHOP_QUERY)).rejects.toBeInstanceOf(StorefrontApiError);
+
+      const headers = new Headers();
+      requestContext.applyResponseHeaders(headers, 429);
+      expect(headers.get("cache-control")).toBeNull();
+      expect(headers.get("retry-after")).toBeNull();
+    });
+
     it("returns data and errors for 200 with throttled GraphQL error", async () => {
       mockFetch.mockResolvedValueOnce(
         mockResponse({
@@ -624,6 +716,134 @@ describe("createStorefrontClient", () => {
     });
   });
 
+  describe("redirect handling", () => {
+    function createCachedPublicClient(cache: MemoryKeyValueCache) {
+      return createStorefrontClient({
+        type: "public",
+        requestContext: createTestRequestContext(),
+        config: {
+          storeDomain: "test.myshopify.com",
+          publicStorefrontToken: "test-pub-token",
+          cache,
+          fetch: mockFetch,
+        },
+      });
+    }
+
+    it('passes `redirect: "manual"`, including through the cache wrapper', async () => {
+      mockFetch.mockImplementation(async () =>
+        mockResponse({ data: { shop: { name: "Test Shop" } } }),
+      );
+      await createPublicClient({ fetch: mockFetch }).graphql(SHOP_QUERY);
+      await createCachedPublicClient(new MemoryKeyValueCache()).graphql(SHOP_QUERY, {
+        cache: Cache.long(),
+      });
+
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      for (const [, init] of mockFetch.mock.calls) {
+        expect((init as RequestInit).redirect).toBe("manual");
+      }
+    });
+
+    it("rejects a redirect without capturing its headers or waiting on its body", async () => {
+      const requestContext = createTestRequestContext();
+      const capture = vi.spyOn(requestContext, "captureSubrequestHeaders");
+      const retainedClones: Response[] = [];
+      const fetch = vi.fn(async () => {
+        const response = new Response("redirect body", {
+          status: 307,
+          headers: {
+            location: "https://attacker.example/collect",
+            "set-cookie": "_shopify_y=bad",
+            "x-request-id": "req-3xx",
+          },
+        });
+        // A wrapper that keeps an unread clone makes awaiting `body.cancel()` hang.
+        retainedClones.push(response.clone());
+        return response;
+      });
+
+      const error = await createPublicClient({ fetch, requestContext })
+        .graphql(SHOP_QUERY)
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(StorefrontApiError);
+      expect((error as StorefrontApiError).status).toBe(307);
+      expect((error as StorefrontApiError).requestId).toBe("req-3xx");
+      expect((error as StorefrontApiError).message).toMatch(/redirect/);
+      expect((error as StorefrontApiError).message).toContain("https://attacker.example");
+      expect((error as StorefrontApiError).message).not.toContain("/collect");
+      expect(capture).not.toHaveBeenCalled();
+    });
+
+    it("names a relative redirect's resolved origin", async () => {
+      mockFetch.mockResolvedValueOnce(
+        new Response(null, { status: 301, headers: { location: "/api/graphql.json" } }),
+      );
+
+      const error = await createPublicClient({ fetch: mockFetch })
+        .graphql(SHOP_QUERY)
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(StorefrontApiError);
+      expect((error as StorefrontApiError).message).toBe(
+        "SFAPI responded with a redirect (301 to https://test.myshopify.com); redirects are not followed",
+      );
+    });
+
+    it("treats 304 Not Modified as a non-OK response, not a redirect", async () => {
+      mockFetch.mockResolvedValueOnce(new Response(null, { status: 304 }));
+
+      const error = await createPublicClient({ fetch: mockFetch })
+        .graphql(SHOP_QUERY)
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(StorefrontApiError);
+      expect((error as StorefrontApiError).status).toBe(304);
+      expect((error as StorefrontApiError).message).not.toMatch(/redirect/);
+    });
+
+    // Node and workerd return a real 3xx for `redirect: "manual"`, which the cache wrapper reserializes.
+    it("rejects a cached request's redirect without storing it", async () => {
+      mockFetch.mockImplementation(
+        async () =>
+          new Response(null, { status: 302, headers: { location: "https://attacker.example/" } }),
+      );
+      const cache = new MemoryKeyValueCache();
+      const client = createCachedPublicClient(cache);
+
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const error = await client
+          .graphql(SHOP_QUERY, { cache: Cache.long() })
+          .catch((caught: unknown) => caught);
+        expect(error).toBeInstanceOf(StorefrontApiError);
+        expect((error as StorefrontApiError).status).toBe(302);
+      }
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    // A wrapped `RangeError` from the cache wrapper would also be a StorefrontApiError, so check
+    // for the redirect error itself.
+    it.each([
+      ["without a cache", () => createPublicClient({ fetch: mockFetch }).graphql(SHOP_QUERY)],
+      [
+        "through the cache wrapper",
+        () =>
+          createCachedPublicClient(new MemoryKeyValueCache()).graphql(SHOP_QUERY, {
+            cache: Cache.long(),
+          }),
+      ],
+    ])("rejects an opaque browser redirect %s without exposing status 0", async (_name, run) => {
+      mockFetch.mockResolvedValueOnce(createOpaqueResponse("opaqueredirect"));
+
+      const error = await run().catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(StorefrontApiError);
+      expect((error as StorefrontApiError).message).toMatch(/redirect/);
+      expect((error as StorefrontApiError).status).toBeUndefined();
+    });
+  });
+
   describe("subrequest caching", () => {
     it("creates a cache-aware fetch internally when cache is configured", async () => {
       const cache = new MemoryKeyValueCache();
@@ -652,6 +872,74 @@ describe("createStorefrontClient", () => {
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(first.data).toEqual({ shop: { name: "Test Shop" } });
       expect(second.data).toEqual({ shop: { name: "Test Shop" } });
+    });
+
+    it.each(["private, max-age=0", "max-age=60, no-store", "Private"])(
+      "returns a response marked `%s` without storing it",
+      async (cacheControl) => {
+        const cache = new MemoryKeyValueCache();
+        const fetch = vi.fn(async () =>
+          mockResponse(
+            { data: { shop: { name: "Treatment Shop" } } },
+            { headers: { "cache-control": cacheControl } },
+          ),
+        );
+        const client = createPublicClient({ cache, fetch });
+
+        const first = await client.graphql(SHOP_QUERY, { cache: Cache.long() });
+        const second = await client.graphql(SHOP_QUERY, { cache: Cache.long() });
+
+        expect(first.data).toEqual({ shop: { name: "Treatment Shop" } });
+        expect(second.data).toEqual({ shop: { name: "Treatment Shop" } });
+        expect(fetch).toHaveBeenCalledTimes(2);
+        expect(cache.store.size).toBe(0);
+      },
+    );
+
+    it.each([
+      ["with", Cache.long()],
+      ["without", undefined],
+    ])(
+      "makes the final response private when a request %s a cache strategy gets a private response",
+      async (_name, strategy) => {
+        const requestContext = createTestRequestContext({ headers: new Headers(), method: "GET" });
+        const fetch = vi.fn(async () =>
+          mockResponse(
+            { data: { shop: { name: "Treatment Shop" } } },
+            { headers: { "cache-control": "private, no-store" } },
+          ),
+        );
+        const client = createPublicClient({
+          cache: new MemoryKeyValueCache(),
+          fetch,
+          requestContext,
+        });
+
+        await client.graphql(SHOP_QUERY, { cache: strategy });
+
+        const headers = new Headers({ "cache-control": "public, s-maxage=600" });
+        requestContext.applyResponseHeaders(headers);
+        expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
+      },
+    );
+
+    it("keeps the final response cacheable when the response allows shared caching", async () => {
+      const requestContext = createTestRequestContext({ headers: new Headers(), method: "GET" });
+      const fetch = vi.fn(async () =>
+        mockResponse(
+          { data: { shop: { name: "Test Shop" } } },
+          { headers: { "cache-control": "public, max-age=60, no-cache" } },
+        ),
+      );
+      const cache = new MemoryKeyValueCache();
+      const client = createPublicClient({ cache, fetch, requestContext });
+
+      await client.graphql(SHOP_QUERY, { cache: Cache.long() });
+
+      const headers = new Headers({ "cache-control": "public, s-maxage=600" });
+      requestContext.applyResponseHeaders(headers);
+      expect(headers.get("cache-control")).toBe("public, s-maxage=600");
+      expect(cache.store.size).toBe(1);
     });
 
     it("does not pass cache metadata for mutations", async () => {
@@ -1025,21 +1313,32 @@ describe("createStorefrontClient", () => {
   });
 });
 
-const DEFAULT_I18N = { language: "EN", country: "US", pathPrefix: "" } as I18nConfig;
+const DEFAULT_LOCALE = { language: "EN", country: "US" } as const;
+const DEFAULT_I18N = { defaultLocale: DEFAULT_LOCALE } as const satisfies ShopifyI18n;
+const PATHNAME_I18N = {
+  defaultLocale: DEFAULT_LOCALE,
+  routing: {
+    type: "pathname",
+    locales: [
+      { language: "ES", country: "ES" },
+      { language: "FR", country: "CA" },
+    ],
+  },
+} as const satisfies ShopifyI18n;
 
 type StorefrontRequestInput = Pick<Request, "headers"> &
   Partial<Pick<Request, "method" | "signal" | "url">>;
 
 function createTestRequestContext(
   input: StorefrontRequestInput = { headers: new Headers() },
-  i18n: I18nConfig = DEFAULT_I18N,
+  i18n: ShopifyI18n = DEFAULT_I18N,
 ): ShopifyRequestContext {
   return createShopifyRequestContext({ request: input, i18n });
 }
 
 function createBuyerTestRequestContext(
   input: StorefrontRequestInput = { headers: new Headers() },
-  i18n: I18nConfig = DEFAULT_I18N,
+  i18n: ShopifyI18n = DEFAULT_I18N,
 ): ShopifyRequestContextWithBuyerIp {
   return createShopifyRequestContext({
     request: input,

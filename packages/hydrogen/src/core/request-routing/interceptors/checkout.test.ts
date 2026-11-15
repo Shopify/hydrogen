@@ -13,7 +13,8 @@ type TestStorefrontConfig = {
   storeDomain: string;
 };
 
-const DEFAULT_I18N = { country: "US", language: "EN", pathPrefix: "" } as const;
+const PRIVATE_CACHE_CONTROL = "private, no-store, max-age=0, must-revalidate";
+const DEFAULT_I18N = { defaultLocale: { country: "US", language: "EN" } } as const;
 
 const defaultConfig: TestStorefrontConfig = {
   storeDomain: "test-store.myshopify.com",
@@ -141,7 +142,22 @@ describe("handleCheckoutRedirect", () => {
     expect(result?.headers.get("location")).toBe(
       "https://test-store.myshopify.com/checkouts/cn/abc?key=value&payment=shop_pay&source=hydrogen",
     );
+    expect(result?.headers.get("cache-control")).toBe(PRIVATE_CACHE_CONTROL);
     expect(() => result?.headers.set("x-test", "1")).not.toThrow();
+  });
+
+  it("redirects checkout mode to the cookie cart instead of a cartId query param", async () => {
+    mockFetch.mockResolvedValueOnce(mockGqlResponse({ cart: MOCK_CART }));
+
+    await handleCheckoutRedirect(
+      new Request("https://my-app.com/checkout?cartId=gid%3A%2F%2Fshopify%2FCart%2Fquery-cart", {
+        headers: { cookie: "cart=123" },
+      }),
+      defaultConfig,
+    );
+
+    const [, init] = mockFetch.mock.calls[0];
+    expect(JSON.parse(init.body).variables.id).toBe("gid://shopify/Cart/123");
   });
 
   it("redirects checkout mode to the root route without a cart", async () => {
@@ -190,6 +206,7 @@ describe("handleCheckoutRedirect", () => {
     );
 
     expect(result?.status).toBe(502);
+    expect(result?.headers.get("cache-control")).toBe(PRIVATE_CACHE_CONTROL);
     expect(await result?.json()).toEqual({ error: "SFAPI request failed" });
     expect(logger.error).toHaveBeenCalledWith("checkout redirect request failed", {
       scope: "checkout",
@@ -209,6 +226,7 @@ describe("handleCheckoutRedirect", () => {
     expect(result?.headers.get("location")).toBe(
       "https://test-store.myshopify.com/cart/123:2,456:1?discount=SAVE10&payment=shop_pay&source=hydrogen",
     );
+    expect(result?.headers.get("cache-control")).toBe(PRIVATE_CACHE_CONTROL);
     expect(mockFetch).not.toHaveBeenCalled();
   });
 

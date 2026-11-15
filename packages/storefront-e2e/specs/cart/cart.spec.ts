@@ -255,7 +255,11 @@ async function openCartOverlayFor(page: Page, productTitle: string): Promise<Loc
   const line = cartOverlayLineFor(page, productTitle);
   if (await line.isVisible().catch(() => false)) return line;
 
-  await page.getByRole("button", { name: CART_CONTROL_NAME }).first().click();
+  await page
+    .getByRole("button", { name: CART_CONTROL_NAME })
+    .or(page.getByRole("link", { name: CART_CONTROL_NAME }))
+    .first()
+    .click();
   return line;
 }
 

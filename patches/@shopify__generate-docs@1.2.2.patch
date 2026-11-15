@@ -1,0 +1,13 @@
+diff --git a/dist/generate-docs/src/assembler/assembler.js b/dist/generate-docs/src/assembler/assembler.js
+index 8043322c15e27f5a4902a6ecbe2c806d1563c932..c39d3116740f7c93c95fa582f0af76927bee3c54 100644
+--- a/dist/generate-docs/src/assembler/assembler.js
++++ b/dist/generate-docs/src/assembler/assembler.js
+@@ -58,7 +58,7 @@ const GetTypeMap = async (typePaths, overridePath = '', declarationPaths) => {
+             ignore: DEFAULT_EXCLUDE_PATTERNS,
+         })
+             .then((files) => {
+-            return (0, harvester_1.getProps)(files, overrideFileContent, declarationPaths);
++            return (0, harvester_1.getProps)(files.sort(), overrideFileContent, declarationPaths);
+         })
+             .catch((error) => {
+             throw error;

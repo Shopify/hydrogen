@@ -6,6 +6,8 @@ Astro pages run their frontmatter on the server, so `Astro.request` and `Astro.c
 
 Use `Astro.locals` to pass the storefront client from middleware to pages. The middleware creates the client once per request. The scaffold defaults to a public client; `PUBLIC_STOREFRONT_API_TOKEN` may be unset, which means tokenless access (all mock.shop supports). Once the app has a private token and trusted buyer context, switch to `type: "private"` and resolve `buyerIp` (e.g. from `Astro.clientAddress`) per the `hydrogen-storefront-client` buyer-IP guidance.
 
+`i18n` is the module-scope `defineShopifyI18n` definition (see `SKILL.md`); the request context matches the locale from `context.request.url`.
+
 ```ts
 // src/middleware.ts
 import { defineMiddleware } from "astro:middleware";
@@ -13,11 +15,12 @@ import {
   createStorefrontClient,
   createShopifyRequestContext,
 } from "@shopify/hydrogen";
+import { i18n } from "./lib/i18n";
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const requestContext = createShopifyRequestContext({
     request: context.request,
-    i18n: { country: "US", language: "EN" },
+    i18n,
   });
   const client = createStorefrontClient({
     type: "public",
@@ -70,15 +73,17 @@ This requires `output: "server"` in `astro.config.mjs` (all pages SSR by default
 
 ## Static pages (no buyer IP)
 
-For prerendered pages — marketing, collection listings — use a module-scoped `private_no_buyer_context` client. No middleware needed since there's no request to read from.
+For prerendered pages — marketing, collection listings — use a module-scoped `private_no_buyer_context` client. No middleware needed since there's no request to read from, which also means no URL to match a locale from: pin `locale` explicitly.
 
 ```ts
 // src/lib/storefront-static.ts
 import { createStorefrontClient, createShopifyRequestContext } from "@shopify/hydrogen";
+import { i18n } from "./i18n";
 
 const requestContext = createShopifyRequestContext({
   request: { headers: new Headers() },
-  i18n: { country: "US", language: "EN" },
+  i18n,
+  locale: i18n.defaultLocale,
 });
 
 export const staticStorefrontClient = createStorefrontClient({

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { attachQuantityInput } from "@shopify/hydrogen";
+import type { Directive } from "vue";
+
 import { useCart, useCartForm } from "~/storefront/cart";
 import { closeCartDrawer } from "~/storefront/cart-drawer";
 import { formatMoney } from "~/storefront/money";
@@ -46,6 +49,16 @@ watch(
   },
   { flush: "post" },
 );
+
+const detachQuantityInputs = new WeakMap<HTMLInputElement, () => void>();
+const vQuantityInput: Directive<HTMLInputElement> = {
+  mounted(el) {
+    if (el.form) detachQuantityInputs.set(el, attachQuantityInput(el, el.form));
+  },
+  beforeUnmount(el) {
+    detachQuantityInputs.get(el)?.();
+  },
+};
 
 function errorIdForLine(lineId: string) {
   return `${props.errorIdPrefix}-${lineId.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
@@ -96,6 +109,7 @@ function errorIdForLine(lineId: string) {
         class="space-y-3"
       >
         <div class="flex items-center gap-6">
+          <button v-bind="register('set')" />
           <input type="hidden" v-bind="register('lineId', { value: line.id })" />
 
           <img
@@ -144,9 +158,8 @@ function errorIdForLine(lineId: string) {
             </button>
 
             <input
-              type="text"
-              inputmode="numeric"
-              v-bind="register('quantity', { value: line.quantity })"
+              v-quantity-input
+              v-bind="register('quantity', { value: line.quantity, interactive: true })"
               :aria-label="`Quantity for ${line.merchandise?.product.title ?? 'cart item'}`"
               :aria-invalid="
                 Boolean(

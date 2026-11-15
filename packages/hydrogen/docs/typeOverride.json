@@ -11,7 +11,7 @@
   "FragmentSources": "The query text of a list of fragment documents, joined with line breaks.",
   "CartDataFromHandlers": "The cart data type for your cart server handlers, with the fields from your custom cart fragment. Use `CartDataFromHandlers<typeof cartHandlers>` to type cart data in your own components and functions.",
   "InferredDoc": "The typed document that the Storefront API client creates when you pass a plain query string. The document carries the result and variables types from the query text.",
-  "ShopifyRouteHandler": "A route handler that createShopifyRouteHandler returns for one pathname and HTTP method. Call the handler with the route context to get a JSON, redirect, or error result, and read its `pathname` and `method` to see what it matches.",
+  "ShopifyRouteHandler": "A route handler that createShopifyRouteHandler returns for one pathname and HTTP method. Call the handler with the route context to get a JSON, redirect, or error result, and read its `pathname` and `method` to see what it matches. The handler's context type comes from the annotated context parameter and defaults to `ShopifyRouteHandlerContext`.",
   "CartGetHandler": "Handles GET requests to `/api/cart` and returns the current cart. The handler also exposes the pathname and HTTP method that it matches.",
   "CartPostHandler": "Handles POST requests to `/api/cart` and runs the cart change that the request body describes. The handler also exposes the pathname and HTTP method that it matches.",
   "ProductOptionValueFrom": "An option value from your product query type, such as \"Red\" under \"Color\". The type includes every option value field that your query selects.",
@@ -19,5 +19,6 @@
   "PredictiveSearchGetHandler": "Handles GET requests to the predictive search route and returns the results as JSON. An invalid setting or a failed Storefront API query returns an error with HTTP status 400.",
   "AnalyticsEventName": "The name of a supported analytics event, such as `\"page_viewed\"`.",
   "PayloadFor": "The payload type for an analytics event name, such as `PayloadFor<\"product_viewed\">`.",
-  "StorefrontQueryString": "A GraphQL document that `gql` returns. At runtime, the document is the plain query text. The document's type carries the query's result and variables types, which `StorefrontApi.ResultOf` and `StorefrontApi.VariablesOf` read."
+  "StorefrontQueryString": "A GraphQL document that `gql` returns. At runtime, the document is the plain query text. The document's type carries the query's result and variables types, which `StorefrontApi.ResultOf` and `StorefrontApi.VariablesOf` read.",
+  "HydrogenRoutesOptions": "The options for handleShopifyRoutes: the `request`, the `requestContext`, the `storefrontClient` created with that request context, optional `routeTemplates`, and optional `handlers`, an array of handler groups. Pass `sessionManager` when a registered handler's context includes it, such as Customer Account handlers or cart handlers created with `customerSession`. Otherwise `sessionManager` is optional when the handler types are inferred from `handlers`."
 }

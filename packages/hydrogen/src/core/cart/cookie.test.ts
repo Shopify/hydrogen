@@ -34,6 +34,10 @@ describe("getCartIdFromCookie", () => {
     expect(getCartIdFromCookie(request)).toBeNull();
   });
 
+  it("returns null for a malformed cart cookie", () => {
+    expect(getCartIdFromCookie(requestWithCookies("cart=%FF"))).toBeNull();
+  });
+
   it("reads cart ID from a request context cookie", () => {
     expect(getCartIdFromCookie({ cookie: "cart=context-token" })).toBe(
       "gid://shopify/Cart/context-token",

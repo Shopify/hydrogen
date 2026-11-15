@@ -10,11 +10,12 @@ import { configureLogging } from "../core/logging";
 import { createProductFormStore } from "../core/product/product-form";
 import type { ProductInput, ProductVariantInput } from "../core/product/state";
 import { createTestLogger } from "../core/test-utils";
-import { CartProvider, configureCartEndpoint } from "./cart";
+import { CartProvider } from "./cart";
+import { LocaleProvider } from "./locale";
 import { createProductComponents, useProductForm } from "./product";
 
-vi.mock("../core/cart/cart", () => ({
-  configureCartEndpoint: vi.fn(),
+vi.mock("../core/cart/cart", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../core/cart/cart")>()),
   createCartStore: vi.fn(),
 }));
 
@@ -193,6 +194,8 @@ function makeStore(
   return { store, cartStore };
 }
 
+const FR_CA = { language: "FR", country: "CA", pathPrefix: "/fr-ca" } as const;
+
 function makeCartProviderWrapper() {
   return ({ children }: { children: ReactNode }) =>
     createElement(CartProvider, { initialData: { cart: makeCartData() } }, children);
@@ -219,7 +222,6 @@ describe("useProductForm", () => {
         (options?.initialData as { cart?: CartData | CartState } | undefined)?.cart,
       ),
     );
-    configureCartEndpoint("/api/cart");
   });
   afterEach(() => {
     configureLogging({});
@@ -512,6 +514,30 @@ describe("useProductForm", () => {
       expect(props.action).toBe("/api/cart");
     });
 
+    it("posts to the cart provider's endpoint under the locale path prefix", () => {
+      const { store } = makeStore();
+      const { result } = renderHook(() => useProductForm(store), {
+        wrapper: ({ children }: { children: ReactNode }) =>
+          createElement(
+            LocaleProvider,
+            { locale: FR_CA },
+            createElement(CartProvider, { initialData: { cart: makeCartData() } }, children),
+          ),
+      });
+
+      expect(result.current.formProps().action).toBe("/fr-ca/api/cart");
+    });
+
+    it("posts to the unprefixed endpoint when no cart provider sends requests under the prefix", () => {
+      const { store } = makeStore();
+      const { result } = renderHook(() => useProductForm(store), {
+        wrapper: ({ children }: { children: ReactNode }) =>
+          createElement(LocaleProvider, { locale: FR_CA }, children),
+      });
+
+      expect(result.current.formProps().action).toBe("/api/cart");
+    });
+
     it("calls beforeSubmit synchronously and afterSubmit after completion", async () => {
       const { store, cartStore } = makeStore();
       const { result } = renderHook(() => useProductForm(store));
@@ -742,7 +768,6 @@ describe("createProductComponents", () => {
         (options?.initialData as { cart?: CartData | CartState } | undefined)?.cart,
       ),
     );
-    configureCartEndpoint("/api/cart");
   });
 
   describe("ProductProvider", () => {
@@ -800,6 +825,75 @@ describe("createProductComponents", () => {
       rerender();
 
       expect(result.current.selectOption).toBe(first);
+    });
+
+    it("reports a multi-option value with no variants as non-existent so templates disable it", () => {
+      const smallRed = makeVariant({
+        id: "v-small-red",
+        selectedOptions: [
+          { name: "Size", value: "Small" },
+          { name: "Color", value: "Red" },
+        ],
+        product: { handle: "hoodie" },
+      });
+      const smallBlue = makeVariant({
+        id: "v-small-blue",
+        selectedOptions: [
+          { name: "Size", value: "Small" },
+          { name: "Color", value: "Blue" },
+        ],
+        product: { handle: "hoodie" },
+      });
+      const largeRed = makeVariant({
+        id: "v-large-red",
+        selectedOptions: [
+          { name: "Size", value: "Large" },
+          { name: "Color", value: "Red" },
+        ],
+        product: { handle: "hoodie" },
+      });
+      const product: ProductInput = {
+        id: "gid://shopify/Product/hoodie",
+        title: "Hoodie",
+        handle: "hoodie",
+        encodedVariantExistence: "v1_0:0-1,1:0-1,",
+        encodedVariantAvailability: "v1_0:0-1,1:0-1,",
+        options: [
+          {
+            name: "Size",
+            optionValues: [
+              { name: "Small", firstSelectableVariant: smallRed },
+              { name: "Large", firstSelectableVariant: largeRed },
+            ],
+          },
+          {
+            name: "Color",
+            optionValues: [
+              { name: "Red", firstSelectableVariant: smallRed },
+              { name: "Blue", firstSelectableVariant: smallBlue },
+              { name: "Green", firstSelectableVariant: null },
+            ],
+          },
+        ],
+        selectedOrFirstAvailableVariant: smallRed,
+        adjacentVariants: [largeRed, smallBlue],
+      };
+      const onSelect = vi.fn();
+      const { result } = renderHook(() => useProduct(), {
+        wrapper: makeFactoryWrapper(product, onSelect),
+      });
+
+      const green = getColorValue(result.current as ReturnType<typeof useProductForm>, "Green");
+      expect(green).toMatchObject({ name: "Green", exists: false, available: false });
+
+      let selectionResult: ReturnType<typeof result.current.selectOption> | undefined;
+      act(() => {
+        selectionResult = result.current.selectOption("Color", "Green");
+      });
+
+      expect(selectionResult?.status).toBe("invalid");
+      expect(onSelect).not.toHaveBeenCalled();
+      expect(result.current.selectedVariant).toBe(smallRed);
     });
   });
 

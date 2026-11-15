@@ -32,6 +32,8 @@ Use the same request-scoped Storefront client as the app's other Hydrogen handle
 
 The default browser predictive search endpoint is `GET /api/predictive-search`. Override it with `predictiveSearchEndpoint` when the JSON route lives elsewhere. The route accepts `q` plus optional Storefront API controls such as `limit`, `limitScope`, `types`, `searchableFields`, and `unavailableProducts`.
 
+When the storefront serves locales under a path prefix (`/fr-ca`), the request, the form action, and the result links all need that prefix. Inside `LocaleProvider`, the React and Vue providers add it to the endpoint and the search action; result links take `pathPrefix` from `useLocale()` (see "Tracking URLs"). Use the local `hydrogen-markets` skill for the setup.
+
 ## Framework UI
 
 When building with a UI framework, check this skill's `references/` directory for framework-specific instructions. Framework bindings share the same route, store, and URL contracts.
@@ -49,7 +51,7 @@ const querySuggestionHref = getPredictiveSearchItemUrl(querySuggestion, {
 });
 ```
 
-Pass `{term}` for resource items such as products, collections, pages, and articles. These items do not contain the shopper's typed search text, but the destination URL needs it for attribution. Do not pass `{term}` for `SearchQuerySuggestion` items; the helper uses `querySuggestion.text` automatically. Pass `{routes: routeTemplates}` so query suggestions honor a custom `search` route. Pass `{searchPath}` only when the suggestion link intentionally differs from the shared search route; it takes precedence when provided.
+Pass `{pathPrefix}` when locales are served under a path prefix, so result links stay in the page's locale. Pass `{term}` for resource items such as products, collections, pages, and articles. These items do not contain the shopper's typed search text, but the destination URL needs it for attribution. Do not pass `{term}` for `SearchQuerySuggestion` items; the helper uses `querySuggestion.text` automatically. Pass `{routes: routeTemplates}` so query suggestions honor a custom `search` route. Pass `{searchPath}` only when the suggestion link intentionally differs from the shared search route; it takes precedence when provided.
 
 If the storefront uses custom Shopify resource paths, use the local `hydrogen-routing` skill before wiring predictive search result URLs. Do not create predictive-search-only URL callbacks.
 
@@ -77,7 +79,7 @@ const predictiveSearchFragments = {
   `),
 };
 
-const predictiveSearchHandlers = createPredictiveSearchServerHandlers({
+export const predictiveSearchHandlers = createPredictiveSearchServerHandlers({
   fragments: predictiveSearchFragments,
 });
 
@@ -93,6 +95,23 @@ const data = await queryPredictiveSearch({
 ```
 
 Use the route-handler form for browser-backed autocomplete. Use `makePredictiveSearchQueries()` when querying directly from server code. Keep fragment names as documented by the API types. Hydrogen composes these with required base fields such as IDs, handles, titles, prices, images, and tracking parameters.
+
+Type client state from the same handlers so the UI sees the custom fields:
+
+```ts
+import type { PredictiveSearchDataFromHandlers } from "@shopify/hydrogen";
+import { usePredictiveSearch } from "@shopify/hydrogen/react"; // or "@shopify/hydrogen/vue"
+import type { predictiveSearchHandlers } from "./predictive-search-handlers";
+
+type SearchData = PredictiveSearchDataFromHandlers<typeof predictiveSearchHandlers>;
+
+// Call inside a component or setup().
+export function usePredictiveSearchState() {
+  return usePredictiveSearch<SearchData>();
+}
+```
+
+Import the handlers with `import type` so server code stays out of the client bundle. Derive the type from the handlers rather than writing it by hand, and point the provider at those handlers' route: the client doesn't validate responses, and when there's no response to show, the result only holds empty item arrays.
 
 ## Rules
 

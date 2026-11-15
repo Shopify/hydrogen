@@ -5,7 +5,11 @@ import { createFetchWithCache } from "../core/cache/fetch-with-cache";
 import type { FetchCacheOptions, FetchCacheResponseContext } from "../core/cache/fetch-with-cache";
 import type { CacheInstance } from "../core/cache/run-with-cache";
 import type { CachingStrategy } from "../core/cache/strategies";
-import { DEFAULT_TIMEOUT_IN_MS, STOREFRONT_API_VERSION } from "../core/constants";
+import {
+  DEFAULT_TIMEOUT_IN_MS,
+  HYDROGEN_USER_AGENT,
+  STOREFRONT_API_VERSION,
+} from "../core/constants";
 import {
   HYDROGEN_VERSION_HEADER,
   REQUEST_GROUP_ID_HEADER,
@@ -21,7 +25,9 @@ import {
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
 } from "../core/headers";
-import type { I18nConfig, ShopifyRequestContext } from "../core/request-context";
+import type { ShopifyLocale } from "../core/i18n/types";
+import type { ShopifyRequestContext } from "../core/request-context";
+import { RATE_LIMITED_STATUS } from "../core/request-routing/rate-limit";
 import { normalizeStoreDomain } from "../core/url";
 import type { AnyStorefrontQueryString } from "../graphql";
 import { StorefrontApiError, StorefrontTimeoutError } from "./errors";
@@ -62,8 +68,12 @@ const REQUEST_IDENTITY_HEADERS = new Set([
   SHOPIFY_STOREFRONT_Y_HEADER.toLowerCase(),
   SHOPIFY_STOREFRONT_S_HEADER.toLowerCase(),
 ]);
+// 304 Not Modified is a 3xx but not a redirect, so it falls through to the non-OK handling.
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const CACHE_ENABLED_GRAPHQL_CLIENTS = new WeakSet<StorefrontClient["graphql"]>();
 const SHOULD_CACHE_RESULT = Symbol();
+const PRIVATE_RESPONSE_DIRECTIVES = new Set(["private", "no-store"]);
+const STOREFRONT_PRIVATE_RESPONSE_PERSONALIZATION_REASON = "storefront-api-private-response";
 
 type ShouldCacheResult = (body: object) => boolean;
 
@@ -159,6 +169,10 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
   const staticHeaders: Record<string, string> = {
     "content-type": "application/json",
   };
+  // Browsers drop a script-set User-Agent or send a CORS preflight for it.
+  if (typeof document === "undefined") {
+    staticHeaders["user-agent"] = HYDROGEN_USER_AGENT;
+  }
   if (config.storefrontId) {
     staticHeaders[STOREFRONT_ID_HEADER] = config.storefrontId;
   }
@@ -189,7 +203,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       throw new Error(`Unsupported client type: ${clientType}`);
   }
 
-  const i18n = requestContext.i18n;
+  const locale = requestContext.locale;
   const requestHeaders = new Headers(staticHeaders);
   requestContext.applyStorefrontRequestHeaders(requestHeaders);
 
@@ -231,7 +245,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       );
     }
 
-    const variables = buildVariables(queryText, opts.variables, i18n);
+    const variables = buildVariables(queryText, opts.variables, locale);
     const externalSignals = [requestContext.signal, opts.signal].filter(
       (signal): signal is AbortSignal => Boolean(signal),
     );
@@ -260,6 +274,9 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
         method: "POST",
         headers: new Headers(requestHeaders),
         body: JSON.stringify({ query: queryText, variables }),
+        // Never follow redirects: runtimes forward custom Shopify credential headers across
+        // origins, so a 3xx fails closed through the redirect check below.
+        redirect: "manual",
         signal: externalSignals.length > 0 ? AbortSignal.any(externalSignals) : undefined,
       };
 
@@ -274,19 +291,44 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       const response = await (resolvedFetch as ResolvedStorefrontFetch)(apiUrl, init, cacheOptions);
 
       responseHeaders = response.headers;
+      requestId = responseHeaders.get("x-request-id") ?? undefined;
+      status = response.status;
+
+      // Reject redirects before capturing headers so a rejected response can't set cookies.
+      // Browsers hide a manual redirect's status behind an opaque response, so leave it out.
+      const isOpaqueRedirect = response.type === "opaqueredirect";
+      if (isOpaqueRedirect || REDIRECT_STATUSES.has(status)) {
+        // Don't await: a cancel waits on any unread clone (tee) a custom fetch kept.
+        void response.body?.cancel().catch(() => {});
+        // Name only the target origin, which diagnoses a misconfigured `storeDomain` (e.g. an
+        // `http://` domain redirected to https) without logging the target's path or query.
+        const locationOrigin = getLocationOrigin(responseHeaders.get("location"), apiUrl);
+        throw new StorefrontApiError(
+          isOpaqueRedirect
+            ? "SFAPI responded with a redirect; redirects are not followed"
+            : `SFAPI responded with a redirect (${status}${locationOrigin ? ` to ${locationOrigin}` : ""}); redirects are not followed`,
+          { status: isOpaqueRedirect ? undefined : status, requestId, queryText, variables },
+        );
+      }
+
       const hydrogenCacheStatus = getHydrogenCacheStatus(responseHeaders);
       if (hydrogenCacheStatus !== "hit") {
         requestContext.captureSubrequestHeaders(responseHeaders);
       }
-
-      requestId = responseHeaders.get("x-request-id") ?? undefined;
-      status = response.status;
+      if (isPrivateResponse(responseHeaders)) {
+        requestContext.markResponseAsPersonalized(
+          STOREFRONT_PRIVATE_RESPONSE_PERSONALIZATION_REASON,
+        );
+      }
 
       if (!response.ok) {
+        const retryAfter = responseHeaders.get("retry-after") ?? undefined;
+        // `applyResponseHeaders()` adds the value when the app answers this error with a `429`.
+        if (status === RATE_LIMITED_STATUS) requestContext.captureStorefrontRateLimit?.(retryAfter);
         const bodyHint = await response.text().catch(() => "");
         throw new StorefrontApiError(
           `SFAPI responded with ${status}${bodyHint ? `: ${bodyHint.slice(0, 200)}` : ""}`,
-          { status, requestId, queryText, variables },
+          { status, requestId, retryAfter, queryText, variables },
         );
       }
 
@@ -344,7 +386,8 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
 
   const client: StorefrontClient = {
     type: clientType,
-    i18n,
+    i18n: locale,
+    locale,
     graphql: graphql as StorefrontClient["graphql"],
     apiUrl,
     storeUrl,
@@ -357,15 +400,24 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
   return client;
 }
 
+function getLocationOrigin(location: string | null, baseUrl: string): string | undefined {
+  if (!location) return undefined;
+  try {
+    return new URL(location, baseUrl).origin;
+  } catch {
+    return undefined;
+  }
+}
+
 function buildVariables(
   queryText: string,
   userVariables: Record<string, unknown> | undefined,
-  resolvedI18n: I18nConfig,
+  locale: ShopifyLocale,
 ): Record<string, unknown> {
   const variables: Record<string, unknown> = { ...userVariables };
 
   for (const name of getI18nVariableNames(queryText)) {
-    variables[name] = resolvedI18n[name];
+    variables[name] = locale[name];
   }
 
   return variables;
@@ -390,8 +442,8 @@ function createStorefrontCacheOptions(
   return {
     key: createStorefrontCacheKey(apiUrl, init),
     strategy,
-    shouldCacheResponse: async ({ json }: FetchCacheResponseContext) => {
-      if (!json) return false;
+    shouldCacheResponse: async ({ headers, json }: FetchCacheResponseContext) => {
+      if (!json || isPrivateResponse(headers)) return false;
 
       const body = await json().catch(() => undefined);
       if (typeof body !== "object" || body == null || Array.isArray(body) || "errors" in body) {
@@ -405,6 +457,17 @@ function createStorefrontCacheOptions(
     // disabled the client timeout to own the foreground one.
     backgroundSignal: () => AbortSignal.timeout(backgroundTimeoutInMs),
   };
+}
+
+function isPrivateResponse(headers: Headers): boolean {
+  return (
+    headers
+      .get("cache-control")
+      ?.split(",")
+      .some((directive) =>
+        PRIVATE_RESPONSE_DIRECTIVES.has(directive.split("=")[0]?.trim().toLowerCase() ?? ""),
+      ) ?? false
+  );
 }
 
 function createStorefrontCacheKey(apiUrl: string, init: PlainRequestInit) {

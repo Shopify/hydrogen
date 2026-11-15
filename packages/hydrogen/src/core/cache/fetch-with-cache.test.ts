@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createOpaqueResponse } from "../test-utils";
 import { Cache, createFetchWithCache } from "./index";
 import type { KeyValueCacheLike } from "./store";
 
@@ -343,6 +344,27 @@ describe("createFetchWithCache", () => {
     expect(cache.store.size).toBe(0);
     expect(response.headers.get("cache-status")).toBe("Hydrogen; fwd=bypass");
     await expect(response.json()).resolves.toEqual({ ok: true });
+  });
+
+  it.each([
+    ["an opaque redirect with a cache strategy", "opaqueredirect", strategy],
+    ["an opaque redirect with Cache.none()", "opaqueredirect", Cache.none()],
+    ["an opaque response with a cache strategy", "opaque", strategy],
+  ] as const)("returns %s unchanged without caching it", async (_name, type, cacheStrategy) => {
+    const cache = new MemoryKeyValueCache();
+    const opaqueResponse = createOpaqueResponse(type);
+    const fetchWithCache = createFetchWithCache({
+      cache,
+      fetch: vi.fn(async () => opaqueResponse),
+    });
+
+    const response = await fetchWithCache("https://example.com/redirect", undefined, {
+      key: "opaque",
+      strategy: cacheStrategy,
+    });
+
+    expect(response).toBe(opaqueResponse);
+    expect(cache.store.size).toBe(0);
   });
 
   it("supports annotation opt-out", async () => {

@@ -3,14 +3,15 @@ import type { ResultOf, VariablesOf } from "gql.tada";
 
 import type { StorefrontClient } from "../../client";
 import { gql } from "../../graphql";
-import { createShopifyRouteTemplates } from "../standard-routes/index";
+import type { SearchResultUrlOptions } from "../index";
+import { defineShopifyRouteTemplates } from "../standard-routes/index";
 import type {
   PredictiveSearchDataForOptions,
   PredictiveSearchProductItem,
   PredictiveSearchQueryItem,
   predictiveSearchQueries,
 } from "./index";
-import { getPredictiveSearchItemUrl, makePredictiveSearchQueries } from "./index";
+import { getPredictiveSearchItemUrl, getSearchResultUrl, makePredictiveSearchQueries } from "./index";
 import { queryPredictiveSearch } from "./search";
 
 const customProductFragment = gql(`
@@ -120,7 +121,7 @@ describe("predictive search URL helper types", () => {
       styledText: "<b>snow</b>board",
       trackingParameters: null,
     } satisfies PredictiveSearchQueryItem;
-    const routeTemplates = createShopifyRouteTemplates({ search: "/find" });
+    const routeTemplates = defineShopifyRouteTemplates({ search: "/find" });
 
     const url = getPredictiveSearchItemUrl(query, {
       pathPrefix: "/fr-ca",
@@ -163,7 +164,7 @@ describe("predictive search URL helper types", () => {
       selectedOrFirstAvailableVariant: null,
     } satisfies PredictiveSearchProductItem;
 
-    const routeTemplates = createShopifyRouteTemplates({
+    const routeTemplates = defineShopifyRouteTemplates({
       product: "/p/:productHandle",
     });
 
@@ -196,6 +197,12 @@ describe("predictive search URL helper types", () => {
       });
 
     expectTypeOf(callWithCallbackRoutes).toEqualTypeOf<() => string>();
+  });
+
+  it("exports the getSearchResultUrl options type", () => {
+    expectTypeOf<SearchResultUrlOptions>().toEqualTypeOf<
+      Parameters<typeof getSearchResultUrl>[0]
+    >();
   });
 });
 

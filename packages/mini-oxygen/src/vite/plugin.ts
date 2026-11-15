@@ -48,8 +48,6 @@ export type {MiniOxygenDevEnvironment};
 export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
   let apiOptions: OxygenApiOptions = {};
   let miniOxygenEnvironment: MiniOxygenDevEnvironment | undefined;
-  let root = process.cwd();
-  let isSsrBuild = false;
   let userTsconfigPaths: boolean | undefined;
 
   const resolveMiniOxygenOptions = async (
@@ -134,10 +132,6 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           },
         };
       },
-      configResolved(resolvedConfig) {
-        root = resolvedConfig.root;
-        isSsrBuild = Boolean(resolvedConfig.build.ssr);
-      },
       configEnvironment(name) {
         if (name !== 'ssr') return;
 
@@ -191,7 +185,8 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         },
       },
       generateBundle() {
-        if (!isSsrBuild) return;
+        const {consumer, root} = this.environment.config;
+        if (consumer !== 'server') return;
 
         const compatibilityDate =
           apiOptions.compatibilityDate ?? getHydrogenCompatibilityDate(root);

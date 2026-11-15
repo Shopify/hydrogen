@@ -20,6 +20,6 @@ export function getShopifyAnalyticsConfig({
   };
 }
 
-export function getShopifyAnalyticsBusScript(analytics: StorefrontAnalyticsConfig): string {
-  return asInlineScript(initializeShopifyAnalyticsBus)(analytics);
-}
+export const shopifyAnalyticsBootstrap = /* @__PURE__ */ asInlineScript(
+  initializeShopifyAnalyticsBus,
+);

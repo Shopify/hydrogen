@@ -1,5 +1,7 @@
+import { tokenize } from "../graphql/tokens";
+
 /**
- * Variables the client fills from `requestContext.i18n`, with the named type
+ * Variables the client fills from `requestContext.locale`, with the named type
  * each must be declared as. Same-named variables of any other type belong to
  * the caller.
  */
@@ -10,10 +12,6 @@ export const I18N_VARIABLE_TYPES = {
 
 export type I18nVariableName = keyof typeof I18N_VARIABLE_TYPES;
 
-// Significant GraphQL tokens plus comments, which are dropped. Matching whole
-// strings keeps their contents from being read as declarations.
-const TOKEN_RE =
-  /"""(?:\\"""|[^])*?"""|"(?:\\.|[^"\\\n\r])*"|#[^\n\r]*|[_A-Za-z][_0-9A-Za-z]*|[^\s,]/g;
 const NAME_RE = /^[_A-Za-z]/;
 const OPERATION_TYPES = new Set(["query", "mutation", "subscription"]);
 const OPENING = new Set(["(", "[", "{"]);
@@ -25,25 +23,38 @@ const CLOSING = new Set([")", "]", "}"]);
  * This is the same rule the `graphql()` variables type applies.
  */
 export function getI18nVariableNames(source: string): I18nVariableName[] {
-  const names: I18nVariableName[] = [];
-  for (const [name, colon, ...rest] of readFirstOperationVariables(tokenize(source))) {
-    if (colon !== ":" || !isI18nVariableName(name)) continue;
+  return getVariableNamesDeclaredAs(source, I18N_VARIABLE_TYPES);
+}
+
+/**
+ * Returns the names in `types` that the document's first operation declares
+ * with the mapped named type, nullable or non-null. List types never match.
+ * The runtime counterpart of `InferVariableNamesDeclaredAs`.
+ */
+export function getVariableNamesDeclaredAs<Types extends Readonly<Record<string, string>>>(
+  source: string,
+  types: Types,
+): Array<keyof Types & string> {
+  const names: Array<keyof Types & string> = [];
+  for (const [name, colon, ...rest] of readFirstOperationVariables(tokenValues(source))) {
+    if (colon !== ":" || !isKeyOf(types, name)) continue;
     const typeEnd = rest.findIndex((token) => token === "=" || token === "@");
     const type = rest.slice(0, typeEnd === -1 ? undefined : typeEnd).join("");
-    const expected = I18N_VARIABLE_TYPES[name];
+    const expected = types[name];
     if (type === expected || type === `${expected}!`) names.push(name);
   }
   return names;
 }
 
-function isI18nVariableName(name: string | undefined): name is I18nVariableName {
-  return name !== undefined && Object.hasOwn(I18N_VARIABLE_TYPES, name);
+function isKeyOf<Types extends object>(
+  types: Types,
+  name: string | undefined,
+): name is keyof Types & string {
+  return name !== undefined && Object.hasOwn(types, name);
 }
 
-function* tokenize(source: string): Generator<string> {
-  for (const [token] of source.matchAll(TOKEN_RE)) {
-    if (token[0] !== "#") yield token;
-  }
+function* tokenValues(source: string): Generator<string> {
+  for (const token of tokenize(source)) yield token.value;
 }
 
 function readFirstOperationVariables(tokens: Generator<string>): string[][] {

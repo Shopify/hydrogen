@@ -4,7 +4,11 @@ export type { ShopifyStandardActions } from "../../vendor/standard-actions";
 export { createCartComponents, useCartAnalytics } from "./cart";
 export type { CartActions } from "./cart";
 export type { ShopifyGlobal } from "../globals";
-export type { QuantityInputAttributes, SetButtonAttributes } from "../core/cart/form";
+export type {
+  QuantityInputAttributes,
+  RemoveButtonAttributes,
+  SetButtonAttributes,
+} from "../core/cart/form";
 export {
   CollectionProvider,
   useCollection,
@@ -12,6 +16,8 @@ export {
   useCollectionForm,
 } from "./collection";
 export type { CollectionActions, CollectionProviderProps, CollectionData } from "./collection";
+export { LocaleProvider, useLocale } from "./locale";
+export type { LocaleProviderProps } from "./locale";
 export {
   PredictiveSearchProvider,
   usePredictiveSearch,

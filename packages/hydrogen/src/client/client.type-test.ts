@@ -9,24 +9,30 @@ import type {
   StorefrontApi,
   StorefrontGraphqlResult,
   GraphQLFormattedError,
-  I18nConfig,
   PrivateStorefrontClient,
   StorefrontQueryString,
 } from './index';
-import type {CachingStrategy} from '../core';
+import type {
+  CachingStrategy,
+  I18nConfig,
+  ShopifyI18n,
+  ShopifyRequestContext,
+} from '../core';
+import type {SourceOf} from '../graphql';
 import type * as StorefrontExports from './index';
 import type {ResultOf, VariablesOf} from 'gql.tada';
 
-const DEFAULT_I18N = {country: 'US', language: 'EN', pathPrefix: ''} as const satisfies I18nConfig;
+const DEFAULT_LOCALE = {country: 'US', language: 'EN'} as const;
+const DEFAULT_I18N = {defaultLocale: DEFAULT_LOCALE} as const satisfies ShopifyI18n;
 
 const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify({data: {}}))));
 vi.stubGlobal('fetch', fetchMock);
 
-function createTestRequestContext(i18n: I18nConfig = DEFAULT_I18N) {
+function createTestRequestContext(i18n: ShopifyI18n = DEFAULT_I18N) {
   return createShopifyRequestContext({request: {headers: new Headers()}, i18n});
 }
 
-function createBuyerRequestContext(i18n: I18nConfig = DEFAULT_I18N) {
+function createBuyerRequestContext(i18n: ShopifyI18n = DEFAULT_I18N) {
   return createShopifyRequestContext({
     request: {headers: new Headers()},
     i18n,
@@ -58,6 +64,28 @@ const SHOP_WITH_BRANDED_COMPOSED_FRAGMENT_QUERY = gql(
 const SHOP_WITH_COMMA_SEPARATED_BRANDED_COMPOSED_FRAGMENT_QUERY = gql(
   gql(`query { shop { name, ...ShopFields } }`),
   [SHOP_FIELDS_FRAGMENT],
+);
+const IMAGE_FRAGMENT = gql(`fragment Image on Image { url altText }`);
+const PRODUCT_CARD_WITH_IMAGE_FRAGMENT = gql(
+  `fragment ProductCardWithImage on Product { handle featuredImage { ...Image } }`,
+  [IMAGE_FRAGMENT],
+);
+const COLLECTION_CARD_WITH_IMAGE_FRAGMENT = gql(
+  `fragment CollectionCardWithImage on Collection { handle image { ...Image } }`,
+  [IMAGE_FRAGMENT],
+);
+const HOME_WITH_SHARED_SUB_FRAGMENT_QUERY = gql(
+  `query HomeWithSharedSubFragment { collections(first: 1) { nodes { ...CollectionCardWithImage } } products(first: 1) { nodes { ...ProductCardWithImage } } }`,
+  [PRODUCT_CARD_WITH_IMAGE_FRAGMENT, COLLECTION_CARD_WITH_IMAGE_FRAGMENT],
+);
+const SHOP_FIELDS_FRAGMENT_LIST: (typeof SHOP_FIELDS_FRAGMENT)[] = [SHOP_FIELDS_FRAGMENT];
+const SHOP_WITH_FRAGMENT_LIST_QUERY = gql(
+  `query ShopWithFragmentList { shop { name ...ShopFields } }`,
+  SHOP_FIELDS_FRAGMENT_LIST,
+);
+const SHOP_WITH_BRANDED_FRAGMENT_LIST_QUERY = gql(
+  gql(`query ShopWithBrandedFragmentList { shop { name ...ShopFields } }`),
+  SHOP_FIELDS_FRAGMENT_LIST,
 );
 const PRODUCT_WITH_FRAGMENT_FIRST_QUERY = gql(
   `fragment ProductSummary on Product { title handle }
@@ -308,7 +336,8 @@ describe('type tests', () => {
         // @ts-expect-error — requestContext must come from createShopifyRequestContext()
         requestContext: {
           requestGroupId: 'group-id',
-          i18n: DEFAULT_I18N,
+          locale: {...DEFAULT_LOCALE, pathPrefix: ''},
+          i18n: {...DEFAULT_LOCALE, pathPrefix: ''},
           getForwardedRequestHeaders() {
             return new Headers();
           },
@@ -332,17 +361,19 @@ describe('type tests', () => {
       });
     });
 
-    it('exposes i18n from requestContext', () => {
+    it('exposes i18n and locale from requestContext', () => {
+      const i18n = {
+        defaultLocale: {
+          country: 'ES',
+          language: 'ES',
+          market: 'spain' as const,
+        },
+      } as const;
       const requestContext = createShopifyRequestContext({
         request: {
           headers: new Headers(),
         },
-        i18n: {
-          country: 'ES',
-          language: 'ES',
-          pathPrefix: '/es-es',
-          market: 'spain' as const,
-        },
+        i18n,
       });
 
       const client = createStorefrontClient({
@@ -354,8 +385,40 @@ describe('type tests', () => {
       });
 
       expectTypeOf(client.requestContext).toEqualTypeOf<typeof requestContext>();
-      expectTypeOf(client.i18n.pathPrefix).toEqualTypeOf<string>();
-      expectTypeOf(client.i18n.market).toEqualTypeOf<'spain'>();
+      expectTypeOf(client.i18n).toEqualTypeOf<typeof client.locale>();
+      expectTypeOf(client.locale.pathPrefix).toEqualTypeOf<string>();
+      expectTypeOf(client.locale.market).toEqualTypeOf<'spain'>();
+    });
+
+    it('keeps the legacy I18nConfig input and output shape', () => {
+      const requestContext = createShopifyRequestContext({
+        request: {headers: new Headers()},
+        i18n: {country: 'ES', language: 'ES', market: 'spain'},
+      });
+
+      const client = createStorefrontClient({
+        type: 'public',
+        requestContext,
+        config: {storeDomain: 'test.myshopify.com'},
+      });
+
+      expectTypeOf(requestContext.i18n.market).toEqualTypeOf<'spain'>();
+      expectTypeOf(requestContext.i18n.pathPrefix).toEqualTypeOf<string>();
+      expectTypeOf(requestContext.locale).toEqualTypeOf(requestContext.i18n);
+      expectTypeOf(client.i18n.country).toEqualTypeOf<'ES'>();
+      expectTypeOf<
+        ShopifyRequestContext<{country: 'US'; language: 'EN'}>['i18n']['pathPrefix']
+      >().toEqualTypeOf<string>();
+      expectTypeOf<I18nConfig>().toHaveProperty('pathPrefix');
+    });
+
+    it('rejects a locale override with a legacy I18nConfig', () => {
+      createShopifyRequestContext({
+        request: {headers: new Headers()},
+        // @ts-expect-error — a legacy I18nConfig already pins the locale, so `locale` needs a definition
+        i18n: {country: 'ES', language: 'ES'},
+        locale: {country: 'ES', language: 'ES'},
+      });
     });
 
     it('rejects clients without requestContext', () => {
@@ -433,10 +496,10 @@ describe('type tests', () => {
     });
 
     it('rejects buyerIp callbacks', () => {
-      // @ts-expect-error — resolve request-derived buyerIp before creating the context
       createShopifyRequestContext({
         request: {headers: new Headers()},
         i18n: DEFAULT_I18N,
+        // @ts-expect-error — resolve request-derived buyerIp before creating the context
         buyerIp: (_request: Request) => '1.2.3.4',
       });
     });
@@ -720,6 +783,23 @@ describe('type tests', () => {
       expectTypeOf<Shop>().not.toBeAny();
       expectTypeOf<Shop>().toHaveProperty('name');
       expectTypeOf<Shop>().toHaveProperty('description');
+    });
+
+    it('ResultOf includes fields when two composed fragments share a sub-fragment', () => {
+      type R = ResultOf<typeof HOME_WITH_SHARED_SUB_FRAGMENT_QUERY>;
+      type Product = R['products']['nodes'][number];
+      type Collection = R['collections']['nodes'][number];
+
+      expectTypeOf<Product>().not.toBeAny();
+      expectTypeOf<NonNullable<Product['featuredImage']>>().toHaveProperty('url');
+      expectTypeOf<NonNullable<Collection['image']>>().toHaveProperty('altText');
+    });
+
+    it('widens the source to string when the fragment array is not a tuple', () => {
+      expectTypeOf<SourceOf<typeof SHOP_WITH_FRAGMENT_LIST_QUERY>>().toEqualTypeOf<string>();
+      expectTypeOf<
+        SourceOf<typeof SHOP_WITH_BRANDED_FRAGMENT_LIST_QUERY>
+      >().toEqualTypeOf<string>();
     });
 
     it('ResultOf uses the operation when a document starts with a fragment', () => {

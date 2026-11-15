@@ -5,6 +5,8 @@ import { inlineScriptImports } from "./plugins/inline-shopify-analytics-bus.ts";
 export default defineConfig({
   define: {
     __DEV__: "true",
+    // Hash generation is verified by the plugin build tests.
+    __SCRIPT_HASHES__: "[]",
     __HYDROGEN_VERSION__: JSON.stringify("0.0.0-test"),
   },
   plugins: [inlineScriptImports({ version: "0.0.0-test" })],

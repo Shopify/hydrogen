@@ -9,11 +9,13 @@ const getPageTemplate = (url = window.location.href) =>
   window.Shopify?.routes?.match?.(url)?.pageTemplateName ?? "unknown";
 
 // Keep this URL inline so consumer bundlers such as Vite recognize it as an external import.
+// webpack can't build URL imports and Turbopack turns them into a require() that fails in the
+// browser, so webpackIgnore tells both to leave the native import alone.
 const importStandardEventsFromCDN: () => Promise<
   Pick<typeof StandardEventsModule, "PageViewEvent">
 > = () =>
   // @ts-expect-error CDN package without automatic types
-  import("https://cdn.shopify.com/storefront/standard-events.js");
+  import(/* webpackIgnore: true */ "https://cdn.shopify.com/storefront/standard-events.js");
 
 export function initializeShopifyPageViewEvents(
   importStandardEvents = importStandardEventsFromCDN,

@@ -33,12 +33,17 @@ jobs:
             directory: templates/react-router
             package: "@shopify/hydrogen-template-react-router"
             port: 4201
-            devCommand: "pnpm --filter @shopify/hydrogen-template-react-router exec vite dev --port 4201"
+            startCommand: "pnpm --filter @shopify/hydrogen-template-react-router exec vite dev --port 4201"
           - name: Next.js
             directory: examples/nextjs
             package: "@shopify/hydrogen-example-nextjs"
             port: 4202
-            devCommand: "pnpm --filter @shopify/hydrogen-example-nextjs exec next dev -p 4202"
+            startCommand: "pnpm --filter @shopify/hydrogen-example-nextjs exec next dev -p 4202"
+          - name: Nuxt
+            directory: examples/nuxt
+            package: "@shopify/hydrogen-example-nuxt"
+            port: 4203
+            startCommand: "PORT=4203 pnpm --filter @shopify/hydrogen-example-nuxt start"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -54,21 +59,43 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify Chrome is available
-        run: google-chrome --version
+      # Chrome before 156.0.8078.73 has known security vulnerabilities. Runner images
+      # can lag behind Chrome releases, so upgrade Chrome when the image's copy is older.
+      # Chrome is deliberately unpinned so CI keeps getting security fixes: the upgrade
+      # installs the latest stable from dl.google.com, the runner image's own source.
+      - name: Ensure Chrome is patched
+        env:
+          MIN_CHROME_VERSION: 156.0.8078.73
+        run: |
+          chrome_version() { google-chrome --version | grep -oE '[0-9]+(\.[0-9]+){3}'; }
+          is_patched() { [ "$(printf '%s\n' "$MIN_CHROME_VERSION" "$1" | sort -V | head -n1)" = "$MIN_CHROME_VERSION" ]; }
+
+          version="$(chrome_version || true)"
+          if ! is_patched "$version"; then
+            echo "Google Chrome $version is older than $MIN_CHROME_VERSION, upgrading"
+            pnpm --filter @shopify/storefront-e2e exec playwright install --force chrome
+            version="$(chrome_version)"
+          fi
+
+          if ! is_patched "$version"; then
+            echo "::error::Google Chrome $version is older than $MIN_CHROME_VERSION"
+            exit 1
+          fi
+          echo "Google Chrome $version"
 
       - name: Build packages
         run: pnpm run build:pkgs
 
       - name: Configure ${{ matrix.template.name }}
+        if: matrix.template.directory != 'examples/nuxt'
         run: cp ${{ matrix.template.directory }}/.env.example ${{ matrix.template.directory }}/.env
 
       - name: Build ${{ matrix.template.name }}
         run: pnpm --filter ${{ matrix.template.package }} build
 
-      - name: Start ${{ matrix.template.name }} dev server
+      - name: Start ${{ matrix.template.name }} server
         run: |
-          ${{ matrix.template.devCommand }} > template-dev.log 2>&1 &
+          ${{ matrix.template.startCommand }} > template-dev.log 2>&1 &
           echo $! > template-dev.pid
 
       - name: Wait for ${{ matrix.template.name }}
@@ -82,7 +109,7 @@ jobs:
           STOREFRONT_BASE_URL: http://localhost:${{ matrix.template.port }}/
           STOREFRONT_SKIP_NO_JS_VARIANTS: ${{ matrix.template.directory == 'examples/nextjs' }}
 
-      - name: Stop dev server
+      - name: Stop server
         if: always()
         run: |
           if [ -f template-dev.pid ]; then
@@ -95,6 +122,15 @@ jobs:
         with:
           name: storefront-e2e-report-${{ matrix.template.port }}
           path: packages/storefront-e2e/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload Playwright JSON results
+        if: failure()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: storefront-e2e-results-${{ matrix.template.port }}
+          path: packages/storefront-e2e/playwright-results.json
           if-no-files-found: ignore
           retention-days: 7
 

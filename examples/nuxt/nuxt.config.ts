@@ -10,6 +10,8 @@ const httpsPlugin = localHttps(httpsOptions);
 
 export default defineNuxtConfig({
   compatibilityDate: "2025-05-08",
+  // Nuxt DevTools injects an inline timing script outside Unhead's nonce hook.
+  devtools: { enabled: false },
   devServer: httpsPlugin.api.getDevServerConfig(),
   alias: {
     "@shared": new URL("../shared", import.meta.url).pathname,

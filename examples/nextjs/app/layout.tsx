@@ -1,3 +1,4 @@
+import { getHtmlLang } from "@shopify/hydrogen";
 import type { Metadata } from "next";
 
 import "./globals.css";
@@ -6,8 +7,9 @@ import { Suspense } from "react";
 
 import { ShopifyScriptsWithNavigation } from "@/components/ShopifyScriptsWithNavigation";
 import { getAnalyticsShop } from "@/lib/analytics-shop";
-import { defaultI18n, shop } from "@/lib/config";
+import { shop } from "@/lib/config";
 import { content } from "@/lib/content";
+import { defaultI18n } from "@/lib/i18n";
 import { SITE_ORIGIN } from "@/lib/site";
 
 import { AppShell } from "./app-shell";
@@ -47,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // value (not request-scoped) to preserve the static shell; a multi-market store
 // would inject the resolved locale per request via
 // middleware/parent server component instead.
-const htmlLang = defaultI18n.language.toLowerCase();
+const htmlLang = getHtmlLang(defaultI18n.language);
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { currency } = await getAnalyticsShop();

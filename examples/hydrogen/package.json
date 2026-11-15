@@ -17,7 +17,6 @@
   "dependencies": {
     "@shopify/hydrogen": "workspace:*",
     "@shopify/hydrogen-react": "^2026.4.3",
-    "content-security-policy-builder": "^2.2.0",
     "isbot": "^5.1.36",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

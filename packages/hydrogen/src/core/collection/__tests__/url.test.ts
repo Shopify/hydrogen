@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 
 import type { ProductFilter } from "../../../../vendor/standard-events";
 import {
@@ -78,6 +78,18 @@ describe("parseCollectionParams", () => {
     it("parses variant option filter", () => {
       const result = parseCollectionParams(params("filter.v.option.Color=Red"));
       expect(result.filters).toEqual([{ variantOption: { name: "Color", value: "Red" } }]);
+    });
+
+    it.each([
+      ["filter.v.option.%25FF=Red", { variantOption: { name: "%FF", value: "Red" } }],
+      // `%2B` survives URLSearchParams as a literal `+`, so the fallback must still turn it into a space.
+      ["filter.v.option.Big%2B%ZZ=Red", { variantOption: { name: "Big %ZZ", value: "Red" } }],
+      [
+        "filter.p.m.%25ZZ.material=leather",
+        { productMetafield: { namespace: "%ZZ", key: "material", value: "leather" } },
+      ],
+    ])("keeps malformed percent sequences literal in %s", (query, filter) => {
+      expect(parseCollectionParams(params(query)).filters).toEqual([filter]);
     });
 
     it("parses lowercase variant option key (mock.shop color facet)", () => {
@@ -872,4 +884,76 @@ describe("category filter", () => {
     expect(filterEquals(a, b)).toBe(true);
     expect(filterEquals(a, c)).toBe(false);
   });
+});
+
+describe("price bounds", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it.each([
+    ["0", 0],
+    ["12", 12],
+    ["12.5", 12.5],
+    [".5", 0.5],
+    ["1.000", 1],
+    ["1e3", 1000],
+    ["1E+3", 1000],
+    ["2.5e-1", 0.25],
+  ])("reads %s as %s", (value, expected) => {
+    const result = parseCollectionParams(params(`filter.v.price.gte=${encodeURIComponent(value)}`));
+
+    expect(result.filters).toEqual([{ price: { min: expected } }]);
+  });
+
+  it.each([
+    "12,50",
+    "1.234,50",
+    "12,50 €",
+    "abc",
+    "Infinity",
+    "-Infinity",
+    "NaN",
+    "0x10",
+    " 12",
+    "12.50.30",
+    "5.",
+    "-5",
+    "1".repeat(400),
+  ])("drops the bound %s", (value) => {
+    const result = parseCollectionParams(params(`filter.v.price.lte=${encodeURIComponent(value)}`));
+
+    expect(result.filters).toEqual([]);
+  });
+
+  it("keeps a valid bound when the other bound is dropped", () => {
+    const result = parseCollectionParams(params("filter.v.price.gte=10&filter.v.price.lte=12,50"));
+
+    expect(result.filters).toEqual([{ price: { min: 10 } }]);
+  });
+
+  it("reads its own serialized price bounds back unchanged", () => {
+    const state = {
+      filters: [{ price: { min: 1e-7, max: 1e21 } }],
+      sortKey: undefined,
+      reverse: false,
+    };
+
+    expect(parseCollectionParams(serializeCollectionParams(state)).filters).toEqual(state.filters);
+    expect(collectionParamsMatchState(serializeCollectionParams(state), state)).toBe(true);
+  });
+
+  const mixedQuery = "filter.v.price.gte=12.5&filter.v.price.lte=1.234,50";
+
+  it.each(["en", "fr", "de", "nl", "tr", "pt_br", "x_bogus!"])(
+    "reads price bounds the same under window.Shopify.locale %s as with no window",
+    (locale) => {
+      expect(typeof window).toBe("undefined");
+      const serverResult = parseCollectionParams(params(mixedQuery));
+
+      vi.stubGlobal("window", { Shopify: { locale } });
+
+      expect(parseCollectionParams(params(mixedQuery))).toEqual(serverResult);
+    },
+  );
 });
