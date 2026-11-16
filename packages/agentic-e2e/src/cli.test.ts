@@ -259,6 +259,15 @@ describe("formatResultLine", () => {
     );
   });
 
+  it("replaces terminal control characters in a reason with spaces", () => {
+    // A screen clear, then an OSC 8 hyperlink: ESC (\u001b) and BEL (\u0007) must not reach the terminal.
+    const reason =
+      "Timeout\u001b[2J\u001b[H\u001b]8;;https://evil.example\u0007Open log\u001b]8;;\u0007.";
+    expect(formatResultLine("add-to-cart", { status: "fail", reason })).toBe(
+      "  fail           add-to-cart        Timeout [2J [H ]8;;https://evil.example Open log ]8;; .",
+    );
+  });
+
   it("writes no trailing spaces, also for an empty reason", () => {
     for (const status of ["pass", "fail", "indeterminate", "skipped"] as const) {
       for (const reason of ["", " \n ", "Reason. "]) {
