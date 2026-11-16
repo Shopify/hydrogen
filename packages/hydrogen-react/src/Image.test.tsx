@@ -224,6 +224,22 @@ describe('<Image />', () => {
       expect(img.src).toContain('crop=center');
     });
 
+    it.each([{width: 300}, {width: '100%'}])(
+      'renders an empty height the same as an omitted height (width=$width)',
+      ({width}) => {
+        const data = {height: 600, width: 800};
+
+        const {container: emptyHeight} = render(
+          <Image {...defaultProps} data={data} width={width} height="" />,
+        );
+        const {container: omittedHeight} = render(
+          <Image {...defaultProps} data={data} width={width} />,
+        );
+
+        expect(emptyHeight.innerHTML).toBe(omittedHeight.innerHTML);
+      },
+    );
+
     it('does not create srcset with greater dimensions than source image when using aspect-ratio', () => {
       const data = {height: 300, width: 400};
 

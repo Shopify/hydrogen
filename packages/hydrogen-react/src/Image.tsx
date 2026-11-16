@@ -203,7 +203,10 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
       const nWidth = `${widthParts.number}${widthParts.unit}`;
 
       const autoHeight =
-        height === undefined || height === null || height === 'auto';
+        height === undefined ||
+        height === null ||
+        height === '' ||
+        height === 'auto';
       const heightParts = autoHeight
         ? null
         : getUnitValueParts(height.toString());
@@ -292,7 +295,6 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
           aspectRatio={aspectRatio}
           crop={crop}
           decoding={decoding}
-          height={height}
           imageWidths={imageWidths}
           loader={loader}
           loading={loading}
@@ -350,7 +352,6 @@ const FixedWidthImage = React.forwardRef<
       aspectRatio,
       crop,
       decoding,
-      height,
       imageWidths,
       loader = shopifyLoader,
       loading,
@@ -363,7 +364,9 @@ const FixedWidthImage = React.forwardRef<
   ) => {
     const fixed = React.useMemo(() => {
       const intWidth: number | undefined = getNormalizedFixedUnit(width);
-      const intHeight: number | undefined = getNormalizedFixedUnit(height);
+      const intHeight: number | undefined = getNormalizedFixedUnit(
+        normalizedProps.height,
+      );
 
       /*
        * The aspect ratio for fixed width images is taken from the explicitly
@@ -417,16 +420,7 @@ const FixedWidthImage = React.forwardRef<
         srcSet,
         src,
       };
-    }, [
-      aspectRatio,
-      crop,
-      data,
-      height,
-      imageWidths,
-      loader,
-      normalizedProps,
-      width,
-    ]);
+    }, [aspectRatio, crop, data, imageWidths, loader, normalizedProps, width]);
 
     return (
       <img
@@ -604,7 +598,7 @@ function getUnitValueParts(value: string): {unit: string; number: number} {
   const number = parseFloat(value.replace(unit, ''));
 
   return {
-    unit: unit === '' ? (number === undefined ? 'auto' : 'px') : unit,
+    unit: unit === '' ? 'px' : unit,
     number,
   };
 }
