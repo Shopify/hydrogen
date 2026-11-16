@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { generateReport, parseSnapshot, type SizeSnapshot } from "./bundle-size-report.ts";
+import {
+  formatBytes,
+  generateReport,
+  parseSnapshot,
+  type SizeSnapshot,
+} from "./bundle-size-report.ts";
 
 const targetOf = (name: string) => (name.startsWith("react") ? "client" : "server");
 
@@ -94,6 +99,13 @@ test("starts the report with the sticky comment marker", () => {
   const report = generateReport(snapshot({ "cart handlers": [1, 1] }), null);
 
   assert.equal(report.split("\n")[0], "<!-- hydrogen-bundle-size-report -->");
+});
+
+test("switches from bytes to kilobytes at 1000 in either direction", () => {
+  assert.equal(formatBytes(999), "999 B");
+  assert.equal(formatBytes(1000), "1 kB");
+  assert.equal(formatBytes(-999), "-999 B");
+  assert.equal(formatBytes(-1000), "-1 kB");
 });
 
 test("rejects malformed snapshots", () => {
