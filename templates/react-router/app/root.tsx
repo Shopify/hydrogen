@@ -31,9 +31,11 @@ import { envContext } from "~/lib/env";
 import { predictiveSearchHandlers } from "~/lib/predictive-search-handlers";
 import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
+import { toRoutedRequest } from "~/lib/routed-request";
 import { createEphemeralSessionManager } from "~/lib/session";
 import { analyticsConsent, resolveShopIdentity } from "~/lib/shop";
 import { createRequestStorefrontClient, storefrontClientContext } from "~/lib/storefront";
+import { cacheContext, waitUntilContext } from "~/lib/worker-context";
 
 import type { Route } from "./+types/root";
 
@@ -45,13 +47,14 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export const middleware: Route.MiddlewareFunction[] = [
-  async ({ context, request }, next) => {
+  async ({ context, request: rawRequest, url }, next) => {
+    const request = toRoutedRequest(rawRequest, url);
     const env = context.get(envContext);
     const storefrontClient = createRequestStorefrontClient(
       request,
       env,
-      context.cache,
-      context.waitUntil,
+      context.get(cacheContext),
+      context.get(waitUntilContext),
     );
     const requestContext = storefrontClient.requestContext;
     const customerAccount = await createRequestCustomerAccount(request, env, requestContext);

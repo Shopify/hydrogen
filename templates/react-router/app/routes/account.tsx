@@ -55,14 +55,14 @@ export function meta({}: Route.MetaArgs) {
   return [{ title: "Account · CORE" }];
 }
 
-export async function loader({ context, request }: Route.LoaderArgs) {
+export async function loader({ context, url }: Route.LoaderArgs) {
   const customerAccount = context.get(customerAccountContext);
   if (!customerAccount) return { status: "unavailable" } as const;
 
   const { client, session, sessionManager, requestContext } = customerAccount;
   // Reading the token marks the response as personalized, so it is never cached.
   const accessToken = await session.getOrRefreshAccessToken(sessionManager, requestContext);
-  const searchParams = new URL(request.url).searchParams;
+  const searchParams = url.searchParams;
   if (!accessToken) {
     return { status: "signed-out", loginFailed: searchParams.get("login") === "failed" } as const;
   }

@@ -6,7 +6,7 @@ import { loadCollectionsPage } from "~/lib/collections";
 import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
-import type { Route } from "./+types/collections";
+import type { Route } from "./+types/collections._index";
 
 export function meta({ matches }: Route.MetaArgs) {
   const shopName = getShopNameFromRootMatch(matches[0]);
@@ -19,9 +19,9 @@ export function meta({ matches }: Route.MetaArgs) {
   ];
 }
 
-export const loader = withStorefrontRateLimit(async ({ context, request }: Route.LoaderArgs) => {
+export const loader = withStorefrontRateLimit(async ({ context, url }: Route.LoaderArgs) => {
   const storefrontClient = context.get(storefrontClientContext);
-  return loadCollectionsPage({ storefrontClient, request });
+  return loadCollectionsPage({ storefrontClient, url });
 });
 
 type CollectionNode = Route.ComponentProps["loaderData"]["collections"]["nodes"][number];

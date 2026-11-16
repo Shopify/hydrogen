@@ -27,12 +27,11 @@ type CollectionsQueryVariables = StorefrontApi.VariablesOf<typeof COLLECTIONS_QU
 
 export async function loadCollectionsPage({
   storefrontClient,
-  request,
+  url,
 }: {
   storefrontClient: StorefrontClient;
-  request: Request;
+  url: URL;
 }) {
-  const url = new URL(request.url);
   const variables: CollectionsQueryVariables = {
     first: COLLECTIONS_PAGE_SIZE,
     after: url.searchParams.get("after") || null,

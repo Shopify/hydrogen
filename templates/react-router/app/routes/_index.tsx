@@ -17,7 +17,7 @@ import {
 } from "~/lib/storefront-shop";
 import type { loader as rootLoader } from "~/root";
 
-import type { Route } from "./+types/home";
+import type { Route } from "./+types/_index";
 
 const HOME_QUERY = gql(
   `
