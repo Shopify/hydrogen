@@ -17,12 +17,16 @@ type StorefrontCartTransportOptions = {
   readonly fragment?: AnyStorefrontQueryString;
 };
 
-export interface StorefrontCartTransport extends CartTransport {
+export type StorefrontCartTransportContext = CartTransportContext & {
+  customerAccessToken?: string;
+};
+
+export interface StorefrontCartTransport extends CartTransport<StorefrontCartTransportContext> {
   readonly cartQuery: AnyStorefrontQueryString;
   updateBuyerIdentity(
     cartId: string,
     customerAccessToken: string | null,
-    ctx: Pick<CartTransportContext, "storefrontClient">,
+    ctx: CartTransportContext,
   ): Promise<void>;
 }
 

@@ -1,11 +1,11 @@
 import type { CartAction } from "./actions";
 import type { CartTransport, CartTransportContext, CartWriteResult } from "./transport";
 
-export async function runCartAction(
-  transport: CartTransport,
+export async function runCartAction<TContext extends CartTransportContext>(
+  transport: CartTransport<TContext>,
   cartId: string | null,
   action: CartAction,
-  ctx: CartTransportContext,
+  ctx: TContext,
 ): Promise<CartWriteResult> {
   if (action.intent === "add") {
     return transport.updateCart({ ...(cartId && { cartId }), lines: action.lines }, ctx);
@@ -43,10 +43,10 @@ export async function runCartAction(
 
 // The cart has no endpoint that adds or removes one discount code, so concurrent
 // requests can overwrite each other's codes.
-async function getDiscountCodes(
-  transport: CartTransport,
+async function getDiscountCodes<TContext extends CartTransportContext>(
+  transport: CartTransport<TContext>,
   cartId: string,
-  ctx: CartTransportContext,
+  ctx: TContext,
 ): Promise<string[]> {
   const { cart, errors } = await transport.getCart({ cartId }, ctx);
   if (errors?.length) throw new Error(errors[0]?.message ?? "GraphQL error");

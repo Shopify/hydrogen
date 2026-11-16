@@ -31,13 +31,12 @@ import { getCartId, type CartDataFromQuery } from "./get-cart";
 import type { cartQueries, CartDataForOptions, CartQueriesForOptions } from "./queries";
 import { runCartAction } from "./run-cart-action";
 import type { CartData } from "./state";
-import { storefrontCartTransport, type StorefrontCartTransport } from "./storefront-cart-transport";
-import type {
-  CartReadResult,
-  CartTransport,
-  CartTransportContext,
-  CartWriteResult,
-} from "./transport";
+import {
+  storefrontCartTransport,
+  type StorefrontCartTransport,
+  type StorefrontCartTransportContext,
+} from "./storefront-cart-transport";
+import type { CartReadResult, CartTransport, CartWriteResult } from "./transport";
 const log = getLogger("cart-api");
 
 const CART_API_PATH = "/api/cart" as const;
@@ -383,7 +382,7 @@ function logCartErrors(errors: CartGetData["errors"]): void {
 
 async function handlePost(
   context: CartPostHandlerContext & Partial<CartCustomerSessionWriteContext>,
-  transport: CartTransport,
+  transport: StorefrontCartTransport,
   customerSession?: CartCustomerSession,
 ): Promise<CartPostResult> {
   const { request, storefrontClient } = context;
@@ -475,8 +474,8 @@ function getMissingCartResponse(
 async function executeCartMutation(
   action: CartAction,
   cartId: string | null,
-  transport: CartTransport,
-  transportContext: CartTransportContext,
+  transport: StorefrontCartTransport,
+  transportContext: StorefrontCartTransportContext,
   customerSessionHeaders: Headers | undefined,
 ): Promise<
   ({ type: "mutation" } & CartWriteResult) | { type: "response"; response: CartPostResult }

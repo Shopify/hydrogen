@@ -4,7 +4,6 @@ import type { CartData, CartUserError, CartWarning } from "./state";
 
 export type CartTransportContext = {
   storefrontClient: StorefrontClient;
-  customerAccessToken?: string;
 };
 
 export type CartReadResult = {
@@ -20,8 +19,8 @@ export type CartWriteResult = {
   headers: Headers;
 };
 
-export interface CartTransport {
-  getCart(payload: Required<GetCartPayload>, ctx: CartTransportContext): Promise<CartReadResult>;
+export interface CartTransport<TContext extends CartTransportContext = CartTransportContext> {
+  getCart(payload: Required<GetCartPayload>, ctx: TContext): Promise<CartReadResult>;
   /** Creates a cart from the payload when it has no `cartId`. */
-  updateCart(payload: UpdateCartPayload, ctx: CartTransportContext): Promise<CartWriteResult>;
+  updateCart(payload: UpdateCartPayload, ctx: TContext): Promise<CartWriteResult>;
 }
