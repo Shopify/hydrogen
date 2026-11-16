@@ -195,15 +195,15 @@ const NAME_WIDTH = Math.max(...TEST_NAMES.map((name) => name.length)) + 3;
 
 /**
  * One table line of a result, without the line break: the status, the test name, and the reason
- * for every status except `pass`. Each whitespace run in the reason becomes one space. No
- * trailing spaces.
+ * for every status except `pass`. Each run of whitespace or control characters in the reason
+ * becomes one space. No trailing spaces.
  */
 export function formatResultLine(
   test: TestName,
   result: Pick<RunResult, "status" | "reason">,
 ): string {
   const status = `  ${result.status.padEnd(STATUS_WIDTH)}`;
-  const reason = result.reason.replaceAll(/\s+/g, " ").trim();
+  const reason = result.reason.replaceAll(/[\s\p{Cc}]+/gu, " ").trim();
   if (result.status === "pass" || reason === "") return `${status}${test}`;
   return `${status}${test.padEnd(NAME_WIDTH)}${reason}`;
 }
