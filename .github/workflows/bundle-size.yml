@@ -73,16 +73,19 @@ jobs:
   # Separate job so no PR-controlled code (install scripts, build) runs where
   # the write token exists. Fork PRs get a read-only token, so they only get
   # the job summary.
+  # Also runs when measuring fails, so the sticky comment from a previous push
+  # doesn't keep showing numbers that no longer apply.
   comment:
     name: Comment bundle size
     needs: measure
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: ${{ !cancelled() && github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       pull-requests: write
     steps:
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        if: needs.measure.result == 'success'
         with:
           name: bundle-size-report
           path: ${{ runner.temp }}
@@ -92,12 +95,19 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          MEASURE_RESULT: ${{ needs.measure.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           # The report is produced by PR code, so the marker is hardcoded here
           # (kept in sync by scripts/bundle-size-report.test.ts) and never
           # read from the report into the jq program.
           report="$RUNNER_TEMP/report.md"
           marker='<!-- hydrogen-bundle-size-report -->'
+          if [ "$MEASURE_RESULT" != "success" ]; then
+            printf '%s\n## 📦 Bundle size report\n\n⚠️ Bundle size could not be measured for %s. See the [workflow run](%s).\n' \
+              "$marker" "$HEAD_SHA" "$RUN_URL" > "$report"
+          fi
           if [ "$(head -n 1 "$report")" != "$marker" ]; then
             echo "::error::report.md does not start with the expected marker"
             exit 1
@@ -108,6 +118,10 @@ jobs:
           if [[ -n "$comment_id" && ! "$comment_id" =~ ^[0-9]+$ ]]; then
             echo "::error::Unexpected comment id: $comment_id"
             exit 1
+          fi
+          if [[ -z "$comment_id" && "$MEASURE_RESULT" != "success" ]]; then
+            echo "No previous report to mark as stale."
+            exit 0
           fi
           if [ -n "$comment_id" ]; then
             gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$comment_id" -F body=@"$report" > /dev/null
