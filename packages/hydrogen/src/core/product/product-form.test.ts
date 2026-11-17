@@ -1611,6 +1611,58 @@ describe("createProductFormStore", () => {
         { code: null, message: "Quantity limit" },
       ]);
       expect(listener).toHaveBeenCalledTimes(1);
+
+      cartStore._setState((prev) => ({
+        ...prev,
+        errors: {
+          ...prev.errors,
+          lines: new Map([
+            [
+              "line-1",
+              {
+                userErrors: [{ code: null, message: "Another limit" }],
+                warnings: [],
+              },
+            ],
+          ]),
+        },
+      }));
+
+      expect(listener).toHaveBeenCalledTimes(2);
+      expect(store.getState().errors.userErrors).toEqual([
+        { code: null, message: "Another limit" },
+      ]);
+    });
+
+    it("notifies listeners when cart warnings change", () => {
+      const cartStore = createMockCartStore();
+      const store = createStore(makeSingleOptionProduct(RED), cartStore);
+      const listener = vi.fn();
+      store.subscribe(listener);
+
+      cartStore._setState((prev) => ({
+        ...prev,
+        errors: {
+          ...prev.errors,
+          cart: {
+            ...prev.errors.cart,
+            warnings: [
+              {
+                code: "DISCOUNT_CURRENTLY_INACTIVE",
+                message: "Cart warning",
+              },
+            ],
+          },
+        },
+      }));
+
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(store.getState().errors.warnings).toEqual([
+        {
+          code: "DISCOUNT_CURRENTLY_INACTIVE",
+          message: "Cart warning",
+        },
+      ]);
     });
   });
 
