@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.1.1
+
+### Patch Changes
+
+- Update the bundled CLI Kit to 5.0.0. ([#4272](https://github.com/Shopify/hydrogen/pull/4272)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
 ## 5.1.0
 
 ### Minor Changes
