@@ -730,14 +730,23 @@ export function useLoadMore<T>(
   dataSearch: string,
 ) {
   const fetcher = useFetcher();
-  const [nodes, setNodes] = useState<readonly T[]>(initialNodes);
-  const [pageInfo, setPageInfo] = useState<BrowsePageInfo>(initialPageInfo);
+  const [loaded, setLoaded] = useState({
+    initialNodes,
+    nodes: initialNodes,
+    pageInfo: initialPageInfo,
+  });
   const requestedSearch = useRef<string | null>(null);
   const appendedSearches = useRef(new Set<string>());
 
+  // Reset during render, not in an effect, so the loaded products never lag behind new results.
+  // The collection view reports this count when a filter or sort change finishes.
+  let current = loaded;
+  if (loaded.initialNodes !== initialNodes) {
+    current = { initialNodes, nodes: initialNodes, pageInfo: initialPageInfo };
+    setLoaded(current);
+  }
+
   useEffect(() => {
-    setNodes(initialNodes);
-    setPageInfo(initialPageInfo);
     requestedSearch.current = null;
     appendedSearches.current.clear();
   }, [dataSearch, initialNodes, initialPageInfo]);
@@ -749,13 +758,16 @@ export function useLoadMore<T>(
 
     appendedSearches.current.add(data.dataSearch);
     requestedSearch.current = null;
-    setNodes((current) => [...current, ...data.products]);
-    setPageInfo(data.pageInfo);
+    setLoaded((previous) => ({
+      ...previous,
+      nodes: [...previous.nodes, ...data.products],
+      pageInfo: data.pageInfo,
+    }));
   }, [fetcher.data]);
 
   return {
-    nodes,
-    pageInfo,
+    nodes: current.nodes,
+    pageInfo: current.pageInfo,
     isLoading: fetcher.state !== "idle",
     loadMore: (href: string, nextDataSearch: string) => {
       requestedSearch.current = nextDataSearch;
