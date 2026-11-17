@@ -198,6 +198,34 @@ describe('Codegen', () => {
         });
       });
     });
+
+    it('warns when a project uses an object-style schema pointer that cannot be matched', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await writeGraphQLConfig(tmpDir, {
+          projects: {
+            storefront: {
+              // Object-style pointer (e.g. live introspection endpoint with headers)
+              // instead of a string path ending in `storefront.schema.json`.
+              schema: {
+                'https://my-shop.myshopify.com/api/2026-01/graphql.json': {
+                  headers: {'X-Shopify-Storefront-Access-Token': 'token'},
+                },
+              },
+              documents: ['app/**/*.tsx'],
+            },
+          },
+        });
+
+        await generateDefaultConfig({rootDirectory: tmpDir});
+
+        const {renderWarning} = await import('@shopify/cli-kit/node/ui');
+        expect(vi.mocked(renderWarning)).toHaveBeenCalledWith(
+          expect.objectContaining({
+            headline: expect.stringContaining('Storefront API schema'),
+          }),
+        );
+      });
+    });
   });
 });
 
