@@ -44,6 +44,9 @@ importers:
       oxlint:
         specifier: ^1.62.0
         version: 1.62.0
+      rolldown:
+        specifier: 1.0.0-rc.17
+        version: 1.0.0-rc.17
       turbo:
         specifier: ^2.9.14
         version: 2.9.14
