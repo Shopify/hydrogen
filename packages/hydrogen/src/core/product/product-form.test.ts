@@ -816,6 +816,21 @@ describe("createProductFormStore", () => {
         },
       ]);
       expect(thinStore.selectOption("Strap", "Thin").status).toBe("invalid");
+
+      const unencodedStore = createStore({
+        ...thinQuery,
+        encodedVariantExistence: null,
+        encodedVariantAvailability: null,
+      });
+
+      expect(unencodedStore.getState().options[2]).toMatchObject({
+        name: "Strap",
+        values: [
+          { name: "Thin", exists: false, available: false },
+          { name: "Wide", exists: false, available: false },
+        ],
+      });
+      expect(unencodedStore.selectOption("Strap", "Thin").status).toBe("invalid");
     });
 
     it("treats a sibling child's option axis as non-existent when it is ordered before a shared axis", () => {
@@ -889,14 +904,15 @@ describe("createProductFormStore", () => {
         ],
       });
 
-      const thinStore = createStore({
+      const thinQuery: ProductInput = {
         ...redChild,
         options: redChild.options.map((option) => ({
           name: option.name,
           optionValues: option.optionValues.map((value) => ({ name: value.name })),
         })),
         adjacentVariants: [],
-      });
+      };
+      const thinStore = createStore(thinQuery);
 
       expect(thinStore.getState().options).toMatchObject([
         {
@@ -922,6 +938,23 @@ describe("createProductFormStore", () => {
         },
       ]);
       expect(thinStore.selectOption("Strap", "Thin").status).toBe("invalid");
+
+      // With no encoded fields there is nothing to decode, so the loaded variant decides: it
+      // has no Strap, which rules Strap out on this child instead of falling back to "exists".
+      const unencodedStore = createStore({
+        ...thinQuery,
+        encodedVariantExistence: null,
+        encodedVariantAvailability: null,
+      });
+
+      expect(unencodedStore.getState().options[1]).toMatchObject({
+        name: "Strap",
+        values: [
+          { name: "Thin", exists: false, available: false },
+          { name: "Wide", exists: false, available: false },
+        ],
+      });
+      expect(unencodedStore.selectOption("Strap", "Thin").status).toBe("invalid");
     });
 
     it("starts with empty selectedOptions when no variant and no selectedOptions provided", () => {
