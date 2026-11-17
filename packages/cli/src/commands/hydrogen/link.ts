@@ -25,6 +25,7 @@ import {waitForJob} from '../../lib/graphql/admin/fetch-job.js';
 import {titleize} from '../../lib/string.js';
 import {getCliCommand} from '../../lib/shell.js';
 import {login} from '../../lib/auth.js';
+import {abandonOnAbort} from '../../lib/abort.js';
 import type {AdminSession} from '../../lib/auth.js';
 import {
   type HydrogenStorefront,
@@ -140,6 +141,7 @@ export async function linkStorefront(
     storefrontName,
     cliCommand,
     storefronts,
+    signal,
   }: {
     force?: boolean;
     flagCreateStorefront?: boolean;
@@ -147,8 +149,10 @@ export async function linkStorefront(
     storefrontName?: string;
     cliCommand: string;
     storefronts?: ParsedHydrogenStorefront[];
+    signal?: AbortSignal;
   },
 ) {
+  signal?.throwIfAborted();
   storefrontName = storefrontName?.trim() || undefined;
 
   if (flagStorefront && (flagCreateStorefront || storefrontName)) {
@@ -164,8 +168,10 @@ export async function linkStorefront(
 
   if (config.storefront?.id && !force) {
     const overwriteLink = await renderConfirmationPrompt({
-      message: `Your project is currently linked to ${config.storefront.title}. Do you want to link to a different Hydrogen storefront on Shopify?`,
+      message: `Your project is currently linked to ${config.storefront!.title}. Do you want to link to a different Hydrogen storefront on Shopify?`,
+      ...(signal ? {abortSignal: signal} : {}),
     });
+    signal?.throwIfAborted();
 
     if (!overwriteLink) {
       return;
@@ -173,8 +179,9 @@ export async function linkStorefront(
   }
 
   if (!storefronts) {
-    storefronts = await getStorefronts(session);
+    storefronts = await abandonOnAbort(() => getStorefronts(session), signal);
   }
+  signal?.throwIfAborted();
 
   let selectedStorefront: HydrogenStorefront | undefined;
 
@@ -190,25 +197,25 @@ export async function linkStorefront(
       );
     }
   } else if (flagCreateStorefront || storefrontName) {
-    selectedStorefront = await createNewStorefront(
+    return createNewStorefront(
       root,
       session,
       storefronts,
       storefrontName,
+      signal,
     );
   } else {
-    selectedStorefront = await handleStorefrontSelection(storefronts);
+    selectedStorefront = await handleStorefrontSelection(storefronts, signal);
+    signal?.throwIfAborted();
 
     if (!selectedStorefront) {
-      selectedStorefront = await createNewStorefront(
-        root,
-        session,
-        storefronts,
-      );
+      return createNewStorefront(root, session, storefronts, undefined, signal);
     }
   }
 
+  signal?.throwIfAborted();
   await setStorefront(root, selectedStorefront);
+  signal?.throwIfAborted();
 
   return selectedStorefront;
 }
@@ -218,7 +225,9 @@ async function createNewStorefront(
   session: AdminSession,
   storefronts: ParsedHydrogenStorefront[],
   storefrontName?: string,
+  signal?: AbortSignal,
 ) {
+  signal?.throwIfAborted();
   const projectDirectory = basename(root);
   let defaultProjectName = titleize(projectDirectory);
   const nameAlreadyUsed = storefronts.some(
@@ -233,28 +242,41 @@ async function createNewStorefront(
     (await renderTextPrompt({
       message: 'New storefront name',
       defaultValue: defaultProjectName,
+      ...(signal ? {abortSignal: signal} : {}),
     }));
+  signal?.throwIfAborted();
 
   let storefront: HydrogenStorefront | undefined;
   let jobId: string | undefined;
 
-  await renderTasks([
-    {
-      title: 'Creating storefront',
-      task: async () => {
-        const result = await createStorefront(session, projectName);
-        storefront = result.storefront;
-        jobId = result.jobId;
+  try {
+    await renderTasks([
+      {
+        title: 'Creating storefront',
+        task: async () => {
+          signal?.throwIfAborted();
+          const result = await createStorefront(session, projectName);
+          storefront = result.storefront;
+          jobId = result.jobId;
+          signal?.throwIfAborted();
+        },
       },
-    },
-    {
-      title: 'Creating API tokens',
-      task: async () => {
-        await waitForJob(session, jobId!);
+      {
+        title: 'Creating API tokens',
+        task: async () => {
+          await waitForJob(session, jobId!, signal);
+        },
+        skip: () => !jobId,
       },
-      skip: () => !jobId,
-    },
-  ]);
+    ]);
+    signal?.throwIfAborted();
+  } catch (error) {
+    // Cancellation can stop polling after creation has committed remotely.
+    if (signal?.aborted && error === signal.reason && storefront) {
+      await setStorefront(root, storefront);
+    }
+    throw error;
+  }
 
   if (!storefront) {
     throw new AbortError(
@@ -262,5 +284,7 @@ async function createNewStorefront(
     );
   }
 
+  await setStorefront(root, storefront);
+  signal?.throwIfAborted();
   return storefront;
 }

@@ -41,7 +41,7 @@ CLI-owned fields. Storefront and environment lists contain all fetched resources
 {"storeDomain": "example.myshopify.com", "storefronts": []}
 ```
 
-`dev` and `preview` are streaming commands.
+`dev --json` and `preview --json` stream JSONL records. See each command's `--help` for the stream contract.
 
 `codegen --json --watch`, `build --json --watch`, and `debug cpu --json` emit typed JSONL records for each cycle.
 

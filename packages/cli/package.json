@@ -42,7 +42,7 @@
   "dependencies": {
     "@ast-grep/napi": "0.34.1",
     "@oclif/core": "4.8.3",
-    "@shopify/cli-kit": "4.9.0",
+    "@shopify/cli-kit": "5.0.0",
     "@shopify/oxygen-cli": "4.6.18",
     "ansi-escapes": "^6.2.0",
     "chokidar": "3.5.3",

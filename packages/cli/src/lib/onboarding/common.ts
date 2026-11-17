@@ -261,7 +261,9 @@ export type ParsedHydrogenStorefront = HydrogenStorefront & {parsedId: string};
 
 export async function handleStorefrontSelection(
   storefronts: HydrogenStorefront[],
+  signal?: AbortSignal,
 ): Promise<HydrogenStorefront | undefined> {
+  signal?.throwIfAborted();
   const choices = [
     {
       label: 'Create a new storefront',
@@ -280,7 +282,9 @@ export async function handleStorefrontSelection(
   const storefrontId = await renderSelectPrompt({
     message: 'Select a Hydrogen storefront to link',
     choices,
+    ...(signal ? {abortSignal: signal} : {}),
   });
+  signal?.throwIfAborted();
 
   return storefrontId
     ? storefronts.find(({id}) => id === storefrontId)

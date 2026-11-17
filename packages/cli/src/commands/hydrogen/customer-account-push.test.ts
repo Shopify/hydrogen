@@ -7,6 +7,8 @@ import CustomerAccountPush, {
   pushCustomerAccountConfig,
 } from './customer-account-push.js';
 import {captureJsonOutput} from '../../../tests/output.js';
+import {deferPromise} from '../../lib/defer.js';
+import {abandonOnAbort} from '../../lib/abort.js';
 
 vi.mock('../../lib/auth.js');
 vi.mock('../../lib/graphql/admin/customer-application-update.js');
@@ -49,6 +51,95 @@ describe('runCustomerAccountPush', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('does not mutate configuration after authentication is cancelled', async () => {
+    const controller = new AbortController();
+    const authenticated = deferPromise();
+    vi.mocked(login).mockImplementation(async (_root, _shop, signal) => {
+      await abandonOnAbort(() => authenticated.promise, signal);
+      return {session: ADMIN_SESSION, config: SHOPIFY_CONFIG};
+    });
+    const running = runCustomerAccountPush({
+      devOrigin: DEV_ORIGIN,
+      storefrontId: STOREFRONT_ID,
+      signal: controller.signal,
+    });
+    await vi.waitFor(() => expect(login).toHaveBeenCalled());
+    controller.abort();
+    await expect(running).rejects.toBe(controller.signal.reason);
+    authenticated.resolve();
+    await Promise.resolve();
+    expect(replaceCustomerApplicationUrls).not.toHaveBeenCalled();
+    expect(setCustomerAccountConfig).not.toHaveBeenCalled();
+  });
+
+  it('waits for an in-flight mutation before rolling back cancellation', async () => {
+    const controller = new AbortController();
+    const mutation = deferPromise();
+    vi.mocked(replaceCustomerApplicationUrls).mockImplementationOnce(
+      async () => {
+        await mutation.promise;
+        return {success: true, userErrors: []};
+      },
+    );
+    const running = runCustomerAccountPush({
+      devOrigin: DEV_ORIGIN,
+      storefrontId: STOREFRONT_ID,
+      signal: controller.signal,
+    });
+    await vi.waitFor(() =>
+      expect(replaceCustomerApplicationUrls).toHaveBeenCalled(),
+    );
+    controller.abort();
+    expect(replaceCustomerApplicationUrls).toHaveBeenCalledTimes(1);
+    expect(replaceCustomerApplicationUrls).toHaveBeenCalledWith(
+      ADMIN_SESSION,
+      STOREFRONT_ID,
+      expect.any(Object),
+    );
+    expect(setCustomerAccountConfig).not.toHaveBeenCalled();
+    mutation.resolve();
+    await expect(running).rejects.toBe(controller.signal.reason);
+    expect(replaceCustomerApplicationUrls).toHaveBeenCalledTimes(2);
+    expect(setCustomerAccountConfig).not.toHaveBeenCalled();
+  });
+
+  it('restores previous URLs if cancellation races with a successful mutation', async () => {
+    const controller = new AbortController();
+    const reason = new Error('Cancelled');
+    vi.mocked(replaceCustomerApplicationUrls).mockImplementationOnce(
+      async () => {
+        controller.abort(reason);
+        return {success: true, userErrors: []};
+      },
+    );
+    await expect(
+      runCustomerAccountPush({
+        devOrigin: DEV_ORIGIN,
+        storefrontId: STOREFRONT_ID,
+        signal: controller.signal,
+      }),
+    ).rejects.toBe(reason);
+    expect(replaceCustomerApplicationUrls).toHaveBeenLastCalledWith(
+      ADMIN_SESSION,
+      STOREFRONT_ID,
+      {
+        redirectUri: {
+          add: [PREVIOUS_CONFIG.redirectUri],
+          removeRegex: `${DEV_ORIGIN}/account/authorize`,
+        },
+        javascriptOrigin: {
+          add: [PREVIOUS_CONFIG.javascriptOrigin],
+          removeRegex: DEV_ORIGIN,
+        },
+        logoutUris: {
+          add: [PREVIOUS_CONFIG.logoutUri],
+          removeRegex: DEV_ORIGIN,
+        },
+      },
+    );
+    expect(setCustomerAccountConfig).not.toHaveBeenCalled();
   });
 
   it('writes configured URLs as one JSON document through the command', async () => {
