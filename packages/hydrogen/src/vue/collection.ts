@@ -20,10 +20,23 @@ import {
   type CollectionStore,
 } from "../core/collection";
 import type { CollectionState } from "../core/collection";
+import {
+  createCollectionUpdateSource,
+  type CollectionUpdateSource,
+} from "../core/collection/collection-update";
 
 export type { CollectionActions, CollectionData };
 
 const CollectionStoreKey: InjectionKey<ShallowRef<CollectionStore>> = Symbol("CollectionStore");
+
+/**
+ * Provides the filter and sort changes of the nearest collection provider. `CollectionView`
+ * injects it to send `shopify:collection:update` events.
+ *
+ * @internal
+ */
+export const CollectionUpdateSourceKey: InjectionKey<ShallowRef<CollectionUpdateSource>> =
+  Symbol("CollectionUpdateSource");
 
 /**
  * Creates a collection store and keeps its filters and sort in sync with the URL.
@@ -81,6 +94,10 @@ export const CollectionProvider = defineComponent({
     });
     const storeRef = shallowRef<CollectionStore>(initialStore);
     provide(CollectionStoreKey, storeRef);
+    const updateSourceRef = shallowRef<CollectionUpdateSource>(
+      createCollectionUpdateSource(initialStore),
+    );
+    provide(CollectionUpdateSourceKey, updateSourceRef);
 
     let reconciler: CollectionReconciler = createCollectionReconciler(
       {
@@ -90,7 +107,14 @@ export const CollectionProvider = defineComponent({
       },
       readUrlSearch(),
     );
-    initialStore.setOnBrowseChange(() => reconciler.handleBrowseChange());
+    const listen = () => {
+      const source = updateSourceRef.value;
+      source.store.setOnBrowseChange(() => {
+        source.notify();
+        reconciler.handleBrowseChange();
+      });
+    };
+    listen();
 
     function resetStore() {
       storeRef.value.setOnBrowseChange(null);
@@ -99,8 +123,9 @@ export const CollectionProvider = defineComponent({
         urlSearch: readUrlSearch(),
       });
       storeRef.value = store;
+      updateSourceRef.value = createCollectionUpdateSource(store);
       reconciler.reset(readUrlSearch());
-      store.setOnBrowseChange(() => reconciler.handleBrowseChange());
+      listen();
     }
 
     watch(

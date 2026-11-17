@@ -23,8 +23,13 @@ import {
   type CollectionStore,
 } from "../core/collection";
 import type { CollectionState } from "../core/collection";
+import {
+  createCollectionUpdateSource,
+  type CollectionUpdateSource,
+} from "../core/collection/collection-update";
 
 const CollectionContext = createContext<CollectionStore | null>(null);
+const CollectionUpdateContext = createContext<CollectionUpdateSource | null>(null);
 
 /**
  * Props for `CollectionProvider`.
@@ -79,6 +84,8 @@ export function CollectionProvider({
     [data.handle],
   );
 
+  const updateSource = useMemo(() => createCollectionUpdateSource(store), [store]);
+
   const reconcilerRef = useRef<CollectionReconciler | null>(null);
 
   useLayoutEffect(() => {
@@ -90,17 +97,34 @@ export function CollectionProvider({
       },
       urlSearchRef.current,
     );
-    store.setOnBrowseChange(() => reconcilerRef.current?.handleBrowseChange());
+    store.setOnBrowseChange(() => {
+      updateSource.notify();
+      reconcilerRef.current?.handleBrowseChange();
+    });
     return () => {
       store.setOnBrowseChange(null);
     };
-  }, [store]);
+  }, [store, updateSource]);
 
   useLayoutEffect(() => {
     reconcilerRef.current?.reconcile(urlSearch, dataRef.current.dataSearch);
   }, [urlSearch, store, collectionHandle, dataSearch]);
 
-  return createElement(CollectionContext.Provider, { value: store }, children);
+  return createElement(
+    CollectionContext.Provider,
+    { value: store },
+    createElement(CollectionUpdateContext.Provider, { value: updateSource }, children),
+  );
+}
+
+/**
+ * Returns the filter and sort changes of the nearest `CollectionProvider`, or `null` outside a
+ * provider. `CollectionView` uses it to send `shopify:collection:update` events.
+ *
+ * @internal
+ */
+export function useCollectionUpdateSource(): CollectionUpdateSource | null {
+  return useContext(CollectionUpdateContext);
 }
 
 function useRequiredStore(hookName: string): CollectionStore {
