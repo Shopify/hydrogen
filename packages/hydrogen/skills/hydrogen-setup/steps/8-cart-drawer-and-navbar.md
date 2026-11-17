@@ -24,7 +24,7 @@ Create or update the shared site navigation. Do this after the cart drawer, so t
 - Ensure a home link exists, if not, make one and point to `/`.
 - Every navbar link must resolve: the route must exist in the app, and dynamic destinations (collection or page handles) must exist in the shop. Do not invent handles. In particular, do not link to `/collections/all` — the "all" collection is a Liquid storefront convention with no Storefront API equivalent; `collection(handle: "all")` returns null and the route 404s unless the merchant explicitly created a collection with that handle. For a browse-everything destination link to the `/collections` listing route or `/search`; for specific collections use handles returned by the Storefront API (e.g. from the home page collections query).
 - The cart trigger is a `/cart` anchor that opens the drawer via `showModal()` after hydration; follow the `hydrogen-cart-drawer` skill for the markup.
-- Make `/cart` reachable as a real link in the **footer** (site chrome). `/cart` is the full-page fallback when the cart drawer is unavailable. For strict no-JS live cart HTML, the cart route must receive resolved cart `initialData`.
+- Make `/cart` reachable as a real link in the **footer** (site chrome). `/cart` is the full-page fallback when the cart drawer is unavailable. The cart route's server loader reads the cart so the root `CartProvider` can seed from it; this renders the cart without JavaScript and keeps non-cart routes' data responses cacheable.
 - Use the framework's native link component when one is already used in the app.
 - Keep the navbar server-renderable unless the app already uses a client-only navigation shell.
 - Do not block the response by waiting for the cart contents to load.
