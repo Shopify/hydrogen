@@ -38,6 +38,7 @@ import { createRequestStorefrontClient, storefrontClientContext } from "~/lib/st
 import { cacheContext, waitUntilContext } from "~/lib/worker-context";
 
 import type { Route } from "./+types/root";
+import type { loader as cartLoader } from "./routes/cart";
 
 import appStylesHref from "./app.css?url";
 
@@ -96,16 +97,12 @@ export const middleware: Route.MiddlewareFunction[] = [
   },
 ];
 
-export const loader = withStorefrontRateLimit(async ({ context, request }: Route.LoaderArgs) => {
+export const loader = withStorefrontRateLimit(async ({ context }: Route.LoaderArgs) => {
   const env = context.get(envContext);
   const storefrontClient = context.get(storefrontClientContext);
-  const [cartResult, layout] = await Promise.all([
-    cartHandlers.get({ storefrontClient, request }),
-    loadRootLayout(storefrontClient),
-  ]);
+  const layout = await loadRootLayout(storefrontClient);
 
   return {
-    cartData: cartResult.data,
     shopInfo: layout.shopInfo,
     shopIdentity: resolveShopIdentity(env, layout.shopId),
     currency: layout.currency,
@@ -155,11 +152,15 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
+  // Only /cart reads the cart on the server, so other routes don't mark their responses as
+  // personalized. Everywhere else the provider loads the cart in the browser.
+  const cartRoute = useRouteLoaderData<typeof cartLoader>("routes/cart");
+
   return (
     // Keeps cart and predictive search requests under the locale's path prefix once the i18n
     // definition in `lib/shop.ts` serves more than one locale.
     <LocaleProvider locale={loaderData.locale}>
-      <CartProvider initialData={loaderData.cartData}>
+      <CartProvider initialData={cartRoute?.cartData}>
         <PageViewedTracker />
         <CartAnalyticsTracker />
         <AnnouncementBar />

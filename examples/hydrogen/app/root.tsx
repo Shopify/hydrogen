@@ -17,7 +17,6 @@ import {
 import favicon from "~/assets/favicon.svg";
 import { CartAnalyticsSync, HydrogenAnalyticsProvider } from "~/lib/analytics";
 import { CartProvider } from "~/lib/cart";
-import { cartHandlers } from "~/lib/cart-handlers";
 import { useNonce } from "~/lib/csp";
 import { FOOTER_QUERY, HEADER_QUERY, type HeaderQuery } from "~/lib/fragments";
 import { i18n } from "~/lib/i18n";
@@ -26,6 +25,7 @@ import { routeTemplates } from "~/lib/route-templates";
 import type { Route } from "./+types/root";
 import { useCustomConsentBanner } from "./components/CustomConsentBanner";
 import { PageLayout } from "./components/PageLayout";
+import type { loader as cartLoader } from "./routes/($locale).cart";
 
 import tailwindCss from "./styles/tailwind.css?url";
 import appStyles from "~/styles/app.css?url";
@@ -45,7 +45,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({ formMethod, current
   // revalidate when manually revalidating via useRevalidator
   if (currentUrl.toString() === nextUrl.toString()) return true;
 
-  // The root data (locale, menus, cart) belongs to one locale. Locale changes are full page
+  // The root data (locale, menus) belongs to one locale. Locale changes are full page
   // loads, so this only keeps that data from going stale if a client-side navigation crosses
   // locales by mistake.
   if (matchLocale(currentUrl, i18n).pathPrefix !== matchLocale(nextUrl, i18n).pathPrefix) {
@@ -116,17 +116,14 @@ async function loadCriticalData(args: Route.LoaderArgs) {
   const { context } = args;
   const { storefront } = context;
 
-  const [header, cartData] = await Promise.all([
-    storefront.query(HEADER_QUERY, {
-      cache: Cache.long(),
-      variables: {
-        headerMenuHandle: "main-menu", // Adjust to your header menu handle
-      },
-    }),
-    cartHandlers.get({ storefrontClient: storefront }).then(({ data }) => data),
-  ]);
+  const header = await storefront.query(HEADER_QUERY, {
+    cache: Cache.long(),
+    variables: {
+      headerMenuHandle: "main-menu", // Adjust to your header menu handle
+    },
+  });
 
-  return { cartData, header };
+  return { header };
 }
 
 function getAnalyticsCurrency(header: HeaderQuery): string | null {
@@ -209,6 +206,9 @@ export function Layout({ children }: { children?: React.ReactNode }) {
 
 export default function App() {
   const data = useRouteLoaderData<RootLoader>("root");
+  // Only the cart page reads the cart on the server, so other routes don't mark their
+  // responses as personalized. Everywhere else the provider loads the cart in the browser.
+  const cartRoute = useRouteLoaderData<typeof cartLoader>("routes/($locale).cart");
 
   if (!data) {
     return <Outlet />;
@@ -217,7 +217,7 @@ export default function App() {
   return (
     <HydrogenAnalyticsProvider>
       <LocaleProvider locale={data.locale}>
-        <CartProvider initialData={data.cartData}>
+        <CartProvider initialData={cartRoute?.cartData}>
           <CartAnalyticsSync />
           <PageLayout {...data}>
             <Outlet />

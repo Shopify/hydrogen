@@ -207,11 +207,10 @@ function CartLines() {
   const loading = useCart((state) => state.loading);
   const lines = useCart((state) => state.data.lines.nodes);
 
-  if (loading) {
-    return <p className="text-on-surface-secondary type-body-sm">Loading cart…</p>;
-  }
-
   if (lines.length === 0) {
+    if (loading) {
+      return <p className="text-on-surface-secondary type-body-sm">Loading cart…</p>;
+    }
     return (
       <div className="flex h-full flex-col items-center justify-center text-center">
         <p className="text-on-surface font-medium">Your cart is empty.</p>
@@ -222,12 +221,20 @@ function CartLines() {
     );
   }
 
+  // A change made during the first load shows before the rest of the cart arrives.
   return (
-    <ul role="list" className="divide-border -mt-4 divide-y">
-      {lines.map((line) => (
-        <CartLineItem key={line.id} line={line} emptyCartFocusId="cart-drawer-title" />
-      ))}
-    </ul>
+    <>
+      <ul role="list" className="divide-border -mt-4 divide-y">
+        {lines.map((line) => (
+          <CartLineItem key={line.id} line={line} emptyCartFocusId="cart-drawer-title" />
+        ))}
+      </ul>
+      {loading ? (
+        <p className="text-on-surface-secondary type-body-sm mt-4">
+          Loading the rest of your cart…
+        </p>
+      ) : null}
+    </>
   );
 }
 
