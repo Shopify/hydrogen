@@ -181,36 +181,38 @@ function CollectionPage(props: CollectionPageProps) {
         </p>
       ) : null}
 
-      <form
-        {...formProps()}
-        method="get"
-        action={collectionPath}
-        className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8"
-      >
-        <FilterSidebar
-          key={collection.handle}
-          availableFilters={availableFilters}
-          activeFilters={state.filters}
-          isLoading={isLoading}
-          currencyCode={currencyCode}
-        />
-
-        <div key="results" className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-4">
-            <p className="type-body-sm text-on-surface-secondary" aria-live="polite">
-              {showingCount}
-            </p>
-            <SortSelect isLoading={isLoading} options={COLLECTION_SORT_OPTIONS} />
-          </div>
-
-          <ActiveFilterChips
+      {/* Wraps the filter and sort form, so collection update events come from the element that
+          contains the controls. */}
+      <CollectionView collection={collection} productsCount={products.length} className="block">
+        <form
+          {...formProps()}
+          method="get"
+          action={collectionPath}
+          className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8"
+        >
+          <FilterSidebar
+            key={collection.handle}
+            availableFilters={availableFilters}
             activeFilters={state.filters}
-            collectionPath={collectionPath}
-            onNavigate={onNavigate}
+            isLoading={isLoading}
             currencyCode={currencyCode}
           />
 
-          <CollectionView collection={collection} productsCount={products.length} className="block">
+          <div key="results" className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-4">
+              <p className="type-body-sm text-on-surface-secondary" aria-live="polite">
+                {showingCount}
+              </p>
+              <SortSelect isLoading={isLoading} options={COLLECTION_SORT_OPTIONS} />
+            </div>
+
+            <ActiveFilterChips
+              activeFilters={state.filters}
+              collectionPath={collectionPath}
+              onNavigate={onNavigate}
+              currencyCode={currencyCode}
+            />
+
             {products.length === 0 ? (
               <p className="text-on-surface-secondary py-12 text-center">
                 {content.collection.noProducts}
@@ -232,18 +234,18 @@ function CollectionPage(props: CollectionPageProps) {
                 ))}
               </ul>
             )}
-          </CollectionView>
 
-          <LoadMore pageInfo={pageInfo} collectionPath={collectionPath} onNavigate={onNavigate} />
+            <LoadMore pageInfo={pageInfo} collectionPath={collectionPath} onNavigate={onNavigate} />
 
-          {/* No-JS submit so the GET filter/sort form is submittable without JS (F4). */}
-          <noscript>
-            <button type="submit" className="rounded-button button-primary h-11 px-4">
-              {content.collection.showResults}
-            </button>
-          </noscript>
-        </div>
-      </form>
+            {/* No-JS submit so the GET filter/sort form is submittable without JS (F4). */}
+            <noscript>
+              <button type="submit" className="rounded-button button-primary h-11 px-4">
+                {content.collection.showResults}
+              </button>
+            </noscript>
+          </div>
+        </form>
+      </CollectionView>
     </div>
   );
 }
