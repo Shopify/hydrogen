@@ -28,10 +28,8 @@ const EXIT_WAIT_MS = 1_000;
 const DISCONNECT_MS = 1_000;
 const NEVER_ABORTED = new AbortController().signal;
 /**
- * The browser window, in CSS pixels: a desktop size, so stores show their desktop layout. The page
- * is as wide as the window. It is less high, because the window includes the browser's top bar.
- * Without this, headless Chrome opens a window with a page of about 756 × 413, where many stores
- * show their narrow layout.
+ * The browser window, in CSS pixels: a desktop size, so stores show their desktop layout. Without
+ * it, headless Chrome's page is narrow enough that many stores switch to their narrow layout.
  */
 export const WINDOW_SIZE = { width: 1280, height: 800 } as const;
 
