@@ -6350,6 +6350,122 @@ describe("changes during the first cart load", () => {
       expect(store.getState().data.totalQuantity).toBe(LOADED_QUANTITY);
     });
 
+    it("keeps the loaded cart's codes when a code is applied during the first load", async () => {
+      const firstLoad = await connectWithPendingLoad();
+      void store.handleFormSubmit(
+        submitForm({ discountCode: "SAVE10" }, "intent", "discount-apply"),
+      );
+      await macrotask();
+
+      firstLoad.resolve({
+        cart: makeCartState({
+          totalQuantity: LOADED_QUANTITY,
+          lines: [makeLine(loadedLine)],
+          discountCodes: [{ code: "VIP", applicable: true }],
+        }),
+      });
+      await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledTimes(1));
+
+      expect(sentPayload(0)).toEqual({ discountCodes: ["VIP", "SAVE10"] });
+      expect(store.getState().data.discountCodes.map(({ code }) => code)).toEqual([
+        "VIP",
+        "SAVE10",
+      ]);
+    });
+
+    it("sends a code once when the loaded cart already has the code applied during the first load", async () => {
+      const firstLoad = await connectWithPendingLoad();
+      void store.handleFormSubmit(submitForm({ discountCode: "VIP" }, "intent", "discount-apply"));
+      await macrotask();
+
+      firstLoad.resolve({
+        cart: makeCartState({ discountCodes: [{ code: "VIP", applicable: true }] }),
+      });
+      await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledTimes(1));
+
+      expect(sentPayload(0)).toEqual({ discountCodes: ["VIP"] });
+      expect(store.getState().data.discountCodes).toEqual([{ code: "VIP", applicable: true }]);
+    });
+
+    it("keeps both codes and the loaded cart's codes when two codes are applied during the first load", async () => {
+      const firstLoad = await connectWithPendingLoad();
+      const first = store.handleFormSubmit(
+        submitForm({ discountCode: "SAVE10" }, "intent", "discount-apply"),
+      );
+      void store.handleFormSubmit(
+        submitForm({ discountCode: "WELCOME" }, "intent", "discount-apply"),
+      );
+      await macrotask();
+      await expect(first).resolves.toBeUndefined();
+
+      firstLoad.resolve({
+        cart: makeCartState({ discountCodes: [{ code: "VIP", applicable: true }] }),
+      });
+      await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledTimes(1));
+      await macrotask();
+
+      expect(mockUpdateCart).toHaveBeenCalledTimes(1);
+      expect(sentPayload(0)).toEqual({ discountCodes: ["VIP", "SAVE10", "WELCOME"] });
+      expect([...store.getState().pending.discountCodes].toSorted()).toEqual(["SAVE10", "WELCOME"]);
+    });
+
+    it("keeps the loaded cart's codes when a code applied during the first load is removed again", async () => {
+      const firstLoad = await connectWithPendingLoad();
+      void store.handleFormSubmit(
+        submitForm({ discountCode: "SAVE10" }, "intent", "discount-apply"),
+      );
+      void store.handleFormSubmit(
+        submitForm({ discountCode: "SAVE10" }, "intent", "discount-remove"),
+      );
+      await macrotask();
+
+      firstLoad.resolve({
+        cart: makeCartState({ discountCodes: [{ code: "VIP", applicable: true }] }),
+      });
+      await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledTimes(1));
+
+      expect(sentPayload(0)).toEqual({ discountCodes: ["VIP"] });
+      expect(store.getState().pending.discountCodes.size).toBe(0);
+    });
+
+    it("keeps the codes of the cart that hydrate() supplies during the load", async () => {
+      await connectWithPendingLoad();
+      void store.handleFormSubmit(
+        submitForm({ discountCode: "SAVE10" }, "intent", "discount-apply"),
+      );
+      await macrotask();
+
+      store.hydrate(makeCartState({ discountCodes: [{ code: "VIP", applicable: true }] }));
+      await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledTimes(1));
+
+      expect(sentPayload(0)).toEqual({ discountCodes: ["VIP", "SAVE10"] });
+    });
+
+    it("puts an error on the code the server rejected after a code applied during the first load joins the loaded codes", async () => {
+      const firstLoad = await connectWithPendingLoad();
+      const change = store.handleFormSubmit(
+        submitForm({ discountCode: "BAD" }, "intent", "discount-apply"),
+      );
+      await macrotask();
+      firstLoad.resolve({
+        cart: makeCartState({ discountCodes: [{ code: "VIP", applicable: true }] }),
+      });
+      await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledTimes(1));
+
+      resolveUpdate(0, {
+        cart: {
+          ...serverCart(0, []).cart,
+          discountCodes: [{ code: "VIP", applicable: true }],
+        },
+        userErrors: [{ code: "INVALID", message: "Bad code", field: ["discountCodes", "1"] }],
+      });
+      await change;
+
+      const { discountCodes } = store.getState().errors;
+      expect([...discountCodes.keys()]).toEqual(["BAD"]);
+      expect(store.getState().data.discountCodes).toEqual([{ code: "VIP", applicable: true }]);
+    });
+
     it("sends only the latest of two note changes made during the first load", async () => {
       const firstLoad = await connectWithPendingLoad();
       const first = store.handleFormSubmit(submitForm({ note: "One" }, "intent", "note-update"));
