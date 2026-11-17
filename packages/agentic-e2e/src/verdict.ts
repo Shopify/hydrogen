@@ -1,4 +1,10 @@
-import { type AddEvent, MAX_LINES } from "./shopify/add-events.ts";
+import {
+  ADD_EVENT_NAME,
+  type AddEvent,
+  COLLECTION_VIEW_EVENT_NAME,
+  MAX_LINES,
+  PRODUCT_VIEW_EVENT_NAME,
+} from "./shopify/add-events.ts";
 
 /** How long the check waits for the outcomes of the recorded add events. */
 export const ADD_WAIT_MS = 5_000;
@@ -9,6 +15,11 @@ export type Verdict =
   | { status: "indeterminate"; reason: string };
 
 type ResultLine = { id: string | null; quantity: number | null };
+
+/** A recorded `shopify:cart:lines-update` message, of any phase. */
+type CartMessage = Extract<AddEvent, { name: typeof ADD_EVENT_NAME }>;
+/** A recorded `shopify:product:view` message. */
+type ProductView = Extract<AddEvent, { name: typeof PRODUCT_VIEW_EVENT_NAME }>;
 
 /** One recorded `shopify:cart:lines-update` event and its outcome so far. */
 type CartEvent = {
@@ -108,7 +119,9 @@ export async function verifyAdd({
  * with outcomes matched by correlation ID.
  */
 function recordedCartEvents(events: readonly AddEvent[], agentStart: number): CartEvent[] {
-  const recent = events.filter((event) => event.order >= agentStart);
+  const recent = events.filter(
+    (event): event is CartMessage => event.order >= agentStart && event.name === ADD_EVENT_NAME,
+  );
   const inputs = new Map<string, CartEvent>();
   for (const event of recent) {
     if (event.phase !== "input") continue;
@@ -402,6 +415,92 @@ function changeProblem(changes: CartEvent[]): string | undefined {
     return "A cart change event resolved with cart user errors.";
   }
   return undefined;
+}
+
+export type VerifyBrowseInput = {
+  /** The recorded messages, in receive order. */
+  events: readonly AddEvent[];
+  /** Receive order when the agent started. An earlier product page view does not count. */
+  agentStart: number;
+  /** The pinned collection. */
+  collectionHandle: string;
+  /** The pinned product in it. */
+  productHandle: string;
+  /**
+   * The agent confirmed that it completed the task (a `done` action with `taskCompleted: true`).
+   * Used only when no product page view was recorded.
+   */
+  agentCompleted: boolean;
+};
+
+/**
+ * The first `shopify:product:view` with `context: "page"` at or after `agentStart`, or
+ * `undefined`. Views with another context (cards, recommendations, dialogs) never count.
+ */
+export function firstProductPageView(
+  events: readonly AddEvent[],
+  agentStart: number,
+): ProductView | undefined {
+  return events.find(
+    (event): event is ProductView =>
+      event.order >= agentStart &&
+      event.name === PRODUCT_VIEW_EVENT_NAME &&
+      event.context === "page",
+  );
+}
+
+/**
+ * Decides the result of `browse-from-collection` from the recorded collection and product views
+ * and, only when no product page view was recorded, from whether the agent confirmed completion.
+ * These events have no promise, so nothing is awaited. The caller stops the agent at the first
+ * product page view (see {@link firstProductPageView}) and confirms the detach first. First match
+ * decides:
+ *
+ * 1. No product page view: fail when the agent confirmed completion, else indeterminate.
+ * 2. Its product handle is not the pinned product's: fail.
+ * 3. No `shopify:collection:view` for the pinned collection was recorded before it (before or
+ *    after the agent start): fail.
+ * 4. Else pass.
+ */
+export function verifyBrowseFromCollection({
+  events,
+  agentStart,
+  collectionHandle,
+  productHandle,
+  agentCompleted,
+}: VerifyBrowseInput): Verdict {
+  const opened = firstProductPageView(events, agentStart);
+  if (opened === undefined) {
+    if (agentCompleted) {
+      return fail(
+        'The agent reports that it opened the product page, but no shopify:product:view event with context "page" was dispatched.',
+      );
+    }
+    return {
+      status: "indeterminate",
+      reason:
+        'No shopify:product:view event with context "page" was recorded by the time Stagehand was disconnected.',
+    };
+  }
+  if (opened.handle !== productHandle) {
+    return fail("The product page that opened is not the pinned product.");
+  }
+  const collectionViewed = events.some(
+    (event) =>
+      event.order < opened.order &&
+      event.name === COLLECTION_VIEW_EVENT_NAME &&
+      event.handle === collectionHandle,
+  );
+  if (!collectionViewed) {
+    return fail(
+      "No shopify:collection:view event for the pinned collection was dispatched before the product page opened.",
+    );
+  }
+  return {
+    status: "pass",
+    reason:
+      "The collection page dispatched shopify:collection:view for the pinned collection, and then the pinned product's page dispatched shopify:product:view.",
+  };
 }
 
 function fail(reason: string): Verdict {

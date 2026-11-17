@@ -322,6 +322,99 @@ function pinnedVariant(
   };
 }
 
+/** `pinCollectionProduct` reads at most this many collections. */
+export const COLLECTIONS_SEARCHED = 20;
+/** `pinCollectionProduct` reads at most this many products of each collection. */
+export const PRODUCTS_PER_COLLECTION = 50;
+
+/** The pin of `browse-from-collection`: one collection and one product in it. */
+export type PinnedCollectionProduct = {
+  collectionHandle: string;
+  productHandle: string;
+  productTitle: string;
+};
+
+export type CollectionPin =
+  | { status: "pinned"; pinned: PinnedCollectionProduct }
+  | { status: "skipped"; reason: string };
+
+// No product filter and no sort key: the products come in the collection's default order, as on
+// the storefront's collection page.
+const COLLECTION_PRODUCT_QUERY = `query AgenticE2ECollectionProduct($collections: Int!, $products: Int!, $storefrontCountry: CountryCode!, $storefrontLanguage: LanguageCode!) @inContext(country: $storefrontCountry, language: $storefrontLanguage) {
+  collections(first: $collections) {
+    nodes {
+      handle
+      products(first: $products) { nodes { handle title availableForSale } }
+    }
+  }
+}`;
+
+const collectionProductSchema = z.object({
+  collections: z.object({
+    nodes: z.array(
+      z.object({
+        handle: z.string(),
+        products: z.object({
+          nodes: z.array(
+            z.object({ handle: z.string(), title: z.string(), availableForSale: z.boolean() }),
+          ),
+        }),
+      }),
+    ),
+  }),
+});
+
+/**
+ * Pins the first of the first {@link COLLECTIONS_SEARCHED} collections, in API order, that has an
+ * eligible product among its first {@link PRODUCTS_PER_COLLECTION} products, in the collection's
+ * default order, and the first eligible product in it. Eligible: available for sale in `context`,
+ * and no other product read for that collection has the same title (the agent finds the product
+ * by its title). One request. API and response-shape errors throw.
+ */
+export async function pinCollectionProduct(
+  storefrontUrl: URL,
+  context: StorefrontLocale,
+  signal: AbortSignal,
+): Promise<CollectionPin> {
+  const client = publicStorefrontClient(storefrontUrl);
+  const variables = {
+    collections: COLLECTIONS_SEARCHED,
+    products: PRODUCTS_PER_COLLECTION,
+    storefrontCountry: context.country,
+    storefrontLanguage: context.language,
+  };
+  const result = await client.graphql(COLLECTION_PRODUCT_QUERY, { variables, signal });
+  const collections = readData(result, collectionProductSchema).collections.nodes;
+  for (const collection of collections) {
+    const products = collection.products.nodes;
+    const product = products.find(
+      (candidate) =>
+        candidate.availableForSale &&
+        products.filter((other) => other.title === candidate.title).length === 1,
+    );
+    if (product !== undefined) {
+      return {
+        status: "pinned",
+        pinned: {
+          collectionHandle: collection.handle,
+          productHandle: product.handle,
+          productTitle: product.title,
+        },
+      };
+    }
+  }
+  const searched = `${collections.length} ${collections.length === 1 ? "collection" : "collections"} searched`;
+  return {
+    status: "skipped",
+    reason: `No collection has a product that is available for sale and has a unique title among its first ${PRODUCTS_PER_COLLECTION} products (${searched}).`,
+  };
+}
+
+/** `/collections/<handle>` on the URL's origin. */
+export function collectionUrl(storefrontUrl: URL, handle: string): URL {
+  return new URL(`/collections/${encodeURIComponent(handle)}`, storefrontUrl.origin);
+}
+
 /** `/products/<handle>` on the URL's origin. */
 export function productUrl(storefrontUrl: URL, handle: string): URL {
   return new URL(`/products/${encodeURIComponent(handle)}`, storefrontUrl.origin);
