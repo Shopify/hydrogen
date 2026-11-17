@@ -276,23 +276,18 @@ describe("createRunWithCache", () => {
     ).rejects.toThrow("runWithCache callback must return {data, shouldCache}.");
   });
 
-  it("serves stale data and schedules background revalidation for stale hits", async () => {
+  it("serves stale data and schedules one revalidation for concurrent stale hits", async () => {
     const cache = new MemoryKeyValueCache();
     const waitUntil = vi.fn();
     const runWithCache = createRunWithCache({ cache, waitUntil });
-    const firstRevalidation = Promise.withResolvers<{
-      data: { value: string };
-      shouldCache: boolean;
-    }>();
-    const secondRevalidation = Promise.withResolvers<{
+    const revalidation = Promise.withResolvers<{
       data: { value: string };
       shouldCache: boolean;
     }>();
     const run = vi
       .fn()
       .mockResolvedValueOnce({ data: { value: "first" }, shouldCache: true })
-      .mockReturnValueOnce(firstRevalidation.promise)
-      .mockReturnValueOnce(secondRevalidation.promise);
+      .mockReturnValueOnce(revalidation.promise);
 
     await runWithCache({ key: "stale", strategy }, run);
     await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
@@ -307,20 +302,62 @@ describe("createRunWithCache", () => {
       { data: { value: "first" }, cacheStatus: "hit" },
     ]);
 
-    expect(waitUntil).toHaveBeenCalledTimes(3);
-    firstRevalidation.resolve({ data: { value: "second" }, shouldCache: true });
-    secondRevalidation.resolve({ data: { value: "second" }, shouldCache: true });
+    expect(waitUntil).toHaveBeenCalledTimes(2);
+    revalidation.resolve({ data: { value: "second" }, shouldCache: true });
     await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
-    expect(run.mock.calls).toEqual([
-      [{ background: false }],
-      [{ background: true }],
-      [{ background: true }],
-    ]);
+    expect(run.mock.calls).toEqual([[{ background: false }], [{ background: true }]]);
 
     await expect(runWithCache({ key: "stale", strategy }, run)).resolves.toEqual({
       data: { value: "second" },
       cacheStatus: "hit",
     });
+  });
+
+  it("refreshes a stale entry once while its refresh is in flight", async () => {
+    const cache = new MemoryKeyValueCache();
+    const waitUntil = vi.fn();
+    const runWithCache = createRunWithCache({ cache, waitUntil });
+    const refresh = Promise.withResolvers<{ data: { value: string }; shouldCache: boolean }>();
+    const run = vi
+      .fn()
+      .mockResolvedValueOnce({ data: { value: "first" }, shouldCache: true })
+      .mockReturnValue(refresh.promise);
+
+    await runWithCache({ key: "stale", strategy }, run);
+    await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
+    vi.advanceTimersByTime(2000);
+
+    await Promise.all([1, 2, 3].map(() => runWithCache({ key: "stale", strategy }, run)));
+    refresh.resolve({ data: { value: "second" }, shouldCache: true });
+    await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
+
+    expect(run.mock.calls).toEqual([[{ background: false }], [{ background: true }]]);
+  });
+
+  it("allows a new stale refresh after the previous one failed", async () => {
+    const cache = new MemoryKeyValueCache();
+    const waitUntil = vi.fn();
+    const runWithCache = createRunWithCache({ cache, waitUntil });
+    const run = vi
+      .fn()
+      .mockResolvedValueOnce({ data: { value: "first" }, shouldCache: true })
+      .mockRejectedValueOnce(new Error("origin down"))
+      .mockResolvedValue({ data: { value: "second" }, shouldCache: true });
+
+    await runWithCache({ key: "stale", strategy }, run);
+    await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
+    vi.advanceTimersByTime(2000);
+
+    await runWithCache({ key: "stale", strategy }, run);
+    await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
+    await runWithCache({ key: "stale", strategy }, run);
+    await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
+
+    expect(run.mock.calls).toEqual([
+      [{ background: false }],
+      [{ background: true }],
+      [{ background: true }],
+    ]);
   });
 
   it("serves stale-if-error data when synchronous refresh fails", async () => {

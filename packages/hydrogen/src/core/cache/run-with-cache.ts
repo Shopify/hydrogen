@@ -125,6 +125,9 @@ export class StaleFallbackDisabledError extends Error {}
  */
 export function createRunWithCache({ cache, waitUntil }: CreateRunWithCacheOptions): RunWithCache {
   const store = createNormalizedCacheStore(cache);
+  // Keys with a background refresh in flight in this isolate, so a stale entry
+  // is refreshed once per window instead of once per stale hit.
+  const revalidating = new Set<string>();
 
   return async function runWithCache<T extends SerializableCacheValue>(
     options: RunWithCacheOptions,
@@ -168,11 +171,14 @@ export function createRunWithCache({ cache, waitUntil }: CreateRunWithCacheOptio
     options: RunWithCacheOptions,
     run: RunCallback<T>,
   ) {
+    if (revalidating.has(cacheKey)) return;
+    revalidating.add(cacheKey);
+
     const entry = runAndMaybeStore(cacheKey, options, run, {
       scheduleCacheWrite: false,
       background: true,
     });
-    schedule(entry.complete);
+    schedule(entry.complete.finally(() => revalidating.delete(cacheKey)));
   }
 
   async function refreshWithStaleFallback<T extends SerializableCacheValue>(
