@@ -49,8 +49,10 @@ export function CartMain({ layout }: CartMainProps) {
           ))}
         </div>
       ) : null}
+      {/* Outside /cart the cart loads in the browser, so no lines can mean "not loaded yet". */}
       <div aria-busy={cartState.revalidating === true}>
-        <CartEmpty hidden={linesCount} layout={layout} />
+        <CartEmpty hidden={linesCount || cartState.loading} layout={layout} />
+        {cartState.loading && !linesCount ? <p>Loading cart…</p> : null}
       </div>
       <div className="cart-details">
         <p id="cart-lines" className="sr-only">
@@ -69,6 +71,8 @@ export function CartMain({ layout }: CartMainProps) {
               );
             })}
           </ul>
+          {/* A change made during the first load shows before the rest of the cart arrives. */}
+          {cartState.loading && linesCount ? <p>Loading the rest of your cart…</p> : null}
         </div>
         {cartHasItems && <CartSummary cart={cart} layout={layout} totalsPending={totalsPending} />}
       </div>
