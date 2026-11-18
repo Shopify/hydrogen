@@ -1,4 +1,6 @@
-# Warns about, then closes, issues and pull requests with no activity for 60 days.
+# Warns about, then closes, pull requests with no activity for 60 days. Issues are only labelled,
+# never closed: they're the only way the public can reach us once Hydrogen's source of truth moves
+# into World, and almost none of them carry triage labels we could exempt.
 # See https://github.com/actions/stale for the options.
 name: Mark stale issues and pull requests
 
@@ -16,7 +18,8 @@ jobs:
       - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          stale-issue-message: "This issue has been marked as stale due to inactivity for 60 days. Please comment or update if this is still relevant, otherwise it will be closed in 7 days."
+          stale-issue-message: "This issue has been marked as stale due to inactivity for 60 days. It will stay open, and any new activity removes the label."
           stale-pr-message: "This pull request has been marked as stale due to inactivity for 60 days. If no further activity occurs, it will be closed in 7 days."
           stale-issue-label: "inactive"
           stale-pr-label: "inactive"
+          days-before-issue-close: -1
