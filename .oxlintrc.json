@@ -22,6 +22,7 @@
     "**/node_modules/**",
     "patches/**",
     "scripts/**",
+    "!scripts/bundle-size*.ts",
     "!scripts/calver*.ts",
     "!scripts/copy-hydrogen-to-preview*.ts",
     "!scripts/preview-template-dist*.ts",
