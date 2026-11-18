@@ -6428,6 +6428,37 @@ describe("changes during the first cart load", () => {
       expect(store.getState().pending.discountCodes.size).toBe(0);
     });
 
+    it("drops a code removed during a load that lands a different cart", async () => {
+      store.destroy();
+      store = createCartStore();
+      store.hydrate(
+        makeCartState({
+          id: "gid://shopify/Cart/A",
+          discountCodes: [{ code: "VIP", applicable: true }],
+        }),
+      );
+      const load = createDeferred<{ cart: CartData | null }>();
+      mockGetCart.mockReset();
+      mockGetCart.mockReturnValueOnce(load.promise);
+      void store.fetch();
+      void store.handleFormSubmit(submitForm({ discountCode: "VIP" }, "intent", "discount-remove"));
+      await macrotask();
+      expect(mockUpdateCart).not.toHaveBeenCalled();
+
+      load.resolve({
+        cart: makeCartState({
+          id: "gid://shopify/Cart/B",
+          discountCodes: [
+            { code: "VIP", applicable: true },
+            { code: "OTHER", applicable: true },
+          ],
+        }),
+      });
+      await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledTimes(1));
+
+      expect(sentPayload(0)).toEqual({ discountCodes: ["OTHER"] });
+    });
+
     it("keeps the codes of the cart that hydrate() supplies during the load", async () => {
       await connectWithPendingLoad();
       void store.handleFormSubmit(
