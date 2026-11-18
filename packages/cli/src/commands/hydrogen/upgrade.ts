@@ -30,9 +30,9 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {
   getDependencies,
-  getPackageManager,
   type PackageJson,
 } from '@shopify/cli-kit/node/node-package-manager';
+import {findPackageManagerByLockfile} from '../../lib/package-managers.js';
 import {exec} from '@shopify/cli-kit/node/system';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {dirname, joinPath, resolvePath} from '@shopify/cli-kit/node/path';
@@ -1095,7 +1095,7 @@ export async function upgradeNodeModules({
         await uninstallNodeModules({
           directory: appPath,
           packageManager: resolvePackageManagerName(
-            await getPackageManager(appPath),
+            await findPackageManagerByLockfile(appPath),
           ),
           args: depsToRemove,
         });
@@ -1118,7 +1118,7 @@ export async function upgradeNodeModules({
     tasks.push({
       title: `Upgrading dependencies`,
       task: async () => {
-        const packageManager = await getPackageManager(appPath);
+        const packageManager = await findPackageManagerByLockfile(appPath);
         const command =
           packageManager === 'npm'
             ? 'install'
@@ -1324,7 +1324,7 @@ async function promptUpgradeOptions(
 /**
  * Displays a summary of the upgrade and next steps
  */
-async function displayUpgradeSummary({
+export async function displayUpgradeSummary({
   appPath,
   currentVersion,
   selectedRelease,
@@ -1367,7 +1367,9 @@ async function displayUpgradeSummary({
     ? `You've upgraded Hydrogen ${selectedPinnedVersion} dependencies`
     : `You've upgraded from ${fromToMsg}`;
 
-  const packageManager = await getPackageManager(appPath);
+  const packageManager = resolvePackageManagerName(
+    await findPackageManagerByLockfile(appPath),
+  );
 
   return renderSuccess({
     headline,
