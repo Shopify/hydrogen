@@ -462,9 +462,16 @@ function hasCartDerivedFieldsChanged<TVariant extends ProductVariantInput>(
   return (
     prev.matchedLineItem !== next.matchedLineItem ||
     prev.selectedVariant !== next.selectedVariant ||
-    prev.errors.userErrors !== next.errors.userErrors ||
-    prev.errors.warnings !== next.errors.warnings ||
+    !haveSameItems(prev.errors.userErrors, next.errors.userErrors) ||
+    !haveSameItems(prev.errors.warnings, next.errors.warnings) ||
     prev.errors.networkErrors !== next.errors.networkErrors
+  );
+}
+
+function haveSameItems<T>(prev: T[], next: T[]): boolean {
+  return (
+    prev === next ||
+    (prev.length === next.length && prev.every((item, index) => item === next[index]))
   );
 }
 
