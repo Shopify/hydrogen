@@ -30,6 +30,7 @@ export function initializeShopifyPageViewEvents(
 
   const standardEventsPromise = importStandardEvents().catch(() => undefined);
   let lastPageKey = getPageKey();
+  let lastPathname = window.location.pathname;
   let scheduledNavigation: number | undefined;
 
   const emitPageView = () => {
@@ -45,11 +46,18 @@ export function initializeShopifyPageViewEvents(
     });
   };
 
-  const stopObservingNavigation = observeNavigation(() => {
+  const stopObservingNavigation = observeNavigation((type) => {
     const pageKey = getPageKey();
     if (pageKey === lastPageKey) return;
 
+    const { pathname } = window.location;
+    // A replacement that keeps the path writes UI state into the URL, such as a selected variant,
+    // so the buyer is still on the same page.
+    const isSamePageReplace = type === "replace" && pathname === lastPathname;
     lastPageKey = pageKey;
+    lastPathname = pathname;
+    if (isSamePageReplace) return;
+
     if (scheduledNavigation !== undefined) {
       cancelAnimationFrame(scheduledNavigation);
     }
