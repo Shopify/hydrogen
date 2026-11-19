@@ -5,9 +5,9 @@ import { hydrateRoot, type Root } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { resetStandardActionsForTests } from "../core/cart/cart";
 import type { CartData } from "../core/cart/state";
-import { configureLogging } from "../core/logging";
-import { assert, createTestLogger } from "../core/test-utils";
+import { assert, createStandardActionsStub } from "../core/test-utils";
 import { CartProvider, createCartComponents, useCart } from "./cart";
 
 const CART: CartData = {
@@ -61,11 +61,12 @@ function SuspenseCartSummary() {
 }
 
 beforeEach(() => {
-  configureLogging({ logger: createTestLogger() });
+  (window as { Shopify?: unknown }).Shopify = { actions: createStandardActionsStub() };
 });
 
 afterEach(() => {
-  configureLogging({});
+  resetStandardActionsForTests();
+  delete (window as { Shopify?: unknown }).Shopify;
   document.body.replaceChildren();
   vi.restoreAllMocks();
 });

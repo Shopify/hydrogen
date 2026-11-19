@@ -18,6 +18,20 @@ export function createOpaqueResponse(type: "opaque" | "opaqueredirect"): Respons
   return response;
 }
 
+/**
+ * Minimal `window.Shopify.actions`, so connecting a cart store in tests that aren't about Standard
+ * Actions doesn't fail its setup.
+ */
+export function createStandardActionsStub() {
+  return {
+    updateCart: Object.assign(vi.fn(), {
+      configure: vi.fn(() => true),
+      isDefault: vi.fn(() => false),
+    }),
+    getCart: vi.fn(),
+  };
+}
+
 type TestLogger = Record<LogSeverity, ReturnType<typeof vi.fn>>;
 
 export function createTestLogger(): TestLogger {

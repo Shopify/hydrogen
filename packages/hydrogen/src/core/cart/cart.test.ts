@@ -2649,6 +2649,8 @@ describe("CartStore.handleFormSubmit — error handling", () => {
   });
 
   it("throws descriptive error when Standard Actions not available", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
     Object.defineProperty(window, "Shopify", {
       value: {},
       configurable: true,
@@ -2658,6 +2660,10 @@ describe("CartStore.handleFormSubmit — error handling", () => {
 
     const event = submitForm({ lineId: "line-1" }, "intent", "increase");
     await expect(store.handleFormSubmit(event)).rejects.toThrow("Standard Actions not available");
+    expect(logger.error).toHaveBeenCalledWith("standard actions setup failed", {
+      scope: "cart",
+      error: expect.any(Error),
+    });
   });
 
   it("throws for missing lineId", async () => {
@@ -3525,6 +3531,8 @@ describe("CartStore.fetch", () => {
   });
 
   it("throws when Standard Actions not available", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
     Object.defineProperty(window, "Shopify", {
       value: { actions: undefined },
       configurable: true,
@@ -3534,6 +3542,10 @@ describe("CartStore.fetch", () => {
 
     await expect(store.fetch()).rejects.toThrow("Standard Actions not available");
     expect(store.getState().loading).toBe(false);
+    expect(logger.error).toHaveBeenCalledWith("standard actions setup failed", {
+      scope: "cart",
+      error: expect.any(Error),
+    });
   });
 
   it("fetches from configured endpoint instead of getCart", async () => {
@@ -6617,6 +6629,8 @@ describe("getShopifyStandardActions", () => {
   });
 
   it("explains how to add the Standard Actions script when the tag is missing", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
     Object.defineProperty(window, "Shopify", {
       value: {},
       configurable: true,
@@ -6627,9 +6641,15 @@ describe("getShopifyStandardActions", () => {
     await expect(getShopifyStandardActions()).rejects.toThrow(
       `include ${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}`,
     );
+    expect(logger.error).toHaveBeenCalledWith("standard actions setup failed", {
+      scope: "cart",
+      error: expect.any(Error),
+    });
   });
 
   it("explains that Standard Actions has not loaded when the script tag is present", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
     Object.defineProperty(window, "Shopify", {
       value: {},
       configurable: true,
@@ -6644,6 +6664,10 @@ describe("getShopifyStandardActions", () => {
     await expect(getShopifyStandardActions()).rejects.toThrow(
       "Ensure the Shopify script tag has loaded before calling cart actions.",
     );
+    expect(logger.error).toHaveBeenCalledWith("standard actions setup failed", {
+      scope: "cart",
+      error: expect.any(Error),
+    });
   });
 
   it("waits for DOMContentLoaded before configuring Standard Actions", async () => {
@@ -6758,6 +6782,8 @@ describe("getShopifyStandardActions", () => {
     });
 
     it("rejects when the script still has not run at window load", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
       const script = document.createElement("script");
       script.type = "application/json";
       script.src = SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT;
@@ -6775,6 +6801,10 @@ describe("getShopifyStandardActions", () => {
       await expect(actionsPromise).rejects.toThrow(
         "Ensure the Shopify script tag has loaded before calling cart actions.",
       );
+      expect(logger.error).toHaveBeenCalledWith("standard actions setup failed", {
+        scope: "cart",
+        error: expect.any(Error),
+      });
     });
   });
 
