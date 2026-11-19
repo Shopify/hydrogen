@@ -313,30 +313,58 @@ describe("createRunWithCache", () => {
     });
   });
 
-  it("shares the refresh lock across runners that use the same cache object", async () => {
+  it("shares the refresh lock across runners that wrap the same store", async () => {
+    const store = new MemoryKeyValueCache();
+    // A new cache object per request over the same store, as `caches.open` gives.
+    const wrap = () => ({
+      get: (key: string) => store.get(key),
+      set: (key: string, value: unknown, options?: Parameters<KeyValueCacheLike["set"]>[2]) =>
+        store.set(key, value, options),
+      delete: (key: string) => store.delete(key),
+    });
+    const waitUntil = vi.fn();
+    await createRunWithCache({ cache: wrap(), waitUntil })(
+      { key: "shared", strategy },
+      async () => ({ data: { value: "first" }, shouldCache: true }),
+    );
+    await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
+    waitUntil.mockClear();
+
+    vi.advanceTimersByTime(2000);
+    const refresh = Promise.withResolvers<{ data: { value: string }; shouldCache: boolean }>();
+    const run = vi.fn().mockReturnValueOnce(refresh.promise);
+    await createRunWithCache({ cache: wrap(), waitUntil })({ key: "shared", strategy }, run);
+    await createRunWithCache({ cache: wrap(), waitUntil })({ key: "shared", strategy }, run);
+    await createRunWithCache({ cache: wrap(), waitUntil })({ key: "shared", strategy }, run);
+
+    expect(waitUntil).toHaveBeenCalledTimes(1);
+    refresh.resolve({ data: { value: "second" }, shouldCache: true });
+    await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
+    expect(run.mock.calls).toEqual([[{ background: true }]]);
+  });
+
+  it("lets a new refresh start once a stuck refresh's lock expires", async () => {
     const cache = new MemoryKeyValueCache();
     const waitUntil = vi.fn();
-    const first = createRunWithCache({ cache, waitUntil });
-    await first({ key: "shared", strategy }, async () => ({
+    const runWithCache = createRunWithCache({ cache, waitUntil });
+    const longStale = CacheStrategy.short({ maxAge: 1, staleWhileRevalidate: 300 });
+    await runWithCache({ key: "stuck", strategy: longStale }, async () => ({
       data: { value: "first" },
       shouldCache: true,
     }));
     await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
     waitUntil.mockClear();
 
-    // A new runner per request, as a Storefront client built per request does.
-    const refresh = Promise.withResolvers<{ data: { value: string }; shouldCache: boolean }>();
-    const run = vi.fn().mockReturnValueOnce(refresh.promise);
-    const second = createRunWithCache({ cache, waitUntil });
-    const third = createRunWithCache({ cache, waitUntil });
     vi.advanceTimersByTime(2000);
-    await second({ key: "shared", strategy }, run);
-    await third({ key: "shared", strategy }, run);
+    const stuck = vi.fn().mockReturnValueOnce(new Promise(() => {}));
+    await runWithCache({ key: "stuck", strategy: longStale }, stuck);
+    await runWithCache({ key: "stuck", strategy: longStale }, stuck);
+    expect(stuck).toHaveBeenCalledTimes(1);
 
-    expect(waitUntil).toHaveBeenCalledTimes(1);
-    refresh.resolve({ data: { value: "second" }, shouldCache: true });
-    await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
-    expect(run.mock.calls).toEqual([[{ background: true }]]);
+    vi.advanceTimersByTime(31_000);
+    const next = vi.fn().mockResolvedValue({ data: { value: "third" }, shouldCache: true });
+    await runWithCache({ key: "stuck", strategy: longStale }, next);
+    expect(next).toHaveBeenCalledWith({ background: true });
   });
 
   it("refreshes a stale entry once while its refresh is in flight", async () => {

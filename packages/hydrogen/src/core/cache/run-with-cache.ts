@@ -115,10 +115,13 @@ type RunAndMaybeStoreOptions = {
  */
 export class StaleFallbackDisabledError extends Error {}
 
-// Keys with a background refresh in flight, per cache object. Module scope, so
-// runners created per request (for example, a Storefront client per request)
-// share the lock as long as they use the same cache object in this isolate.
-const revalidatingByCache = new WeakMap<object, Set<string>>();
+// Background refreshes in flight in this isolate, by cache key. Module scope so
+// runners created per request (`caches.open` returns a new object each call)
+// share the lock. Locks expire, so a refresh whose `waitUntil` was cancelled
+// cannot block its key forever. Keys from different caches can collide, which
+// only skips a refresh until the next stale window.
+const REVALIDATION_LOCK_MS = 30_000;
+const revalidationLocks = new Map<string, number>();
 
 /**
  * Creates a function that caches the result of any async work, such as data that several API calls
@@ -130,13 +133,6 @@ const revalidatingByCache = new WeakMap<object, Set<string>>();
  */
 export function createRunWithCache({ cache, waitUntil }: CreateRunWithCacheOptions): RunWithCache {
   const store = createNormalizedCacheStore(cache);
-  // A stale entry is refreshed once per window, not once per stale hit.
-  let revalidating = revalidatingByCache.get(cache);
-  if (!revalidating) {
-    revalidating = new Set<string>();
-    revalidatingByCache.set(cache, revalidating);
-  }
-  const inFlight = revalidating;
 
   return async function runWithCache<T extends SerializableCacheValue>(
     options: RunWithCacheOptions,
@@ -180,14 +176,21 @@ export function createRunWithCache({ cache, waitUntil }: CreateRunWithCacheOptio
     options: RunWithCacheOptions,
     run: RunCallback<T>,
   ) {
-    if (inFlight.has(cacheKey)) return;
-    inFlight.add(cacheKey);
+    // A stale entry is refreshed once per window, not once per stale hit.
+    const now = Date.now();
+    const startedAt = revalidationLocks.get(cacheKey);
+    if (startedAt !== undefined && now - startedAt < REVALIDATION_LOCK_MS) return;
+    revalidationLocks.set(cacheKey, now);
 
     const entry = runAndMaybeStore(cacheKey, options, run, {
       scheduleCacheWrite: false,
       background: true,
     });
-    schedule(entry.complete.finally(() => inFlight.delete(cacheKey)));
+    schedule(
+      entry.complete.finally(() => {
+        if (revalidationLocks.get(cacheKey) === now) revalidationLocks.delete(cacheKey);
+      }),
+    );
   }
 
   async function refreshWithStaleFallback<T extends SerializableCacheValue>(
