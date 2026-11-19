@@ -1,4 +1,4 @@
-import { Comment, defineComponent, h, Text, type VNode } from "vue";
+import { Comment, defineComponent, Fragment, h, isVNode, Text, type VNode } from "vue";
 
 import { CUSTOMER_ACCOUNT_PATHS } from "../core/url";
 import { useLocalePathPrefix } from "./locale";
@@ -48,9 +48,15 @@ export const ShopifyAccount = defineComponent({
 });
 
 // An empty slot hides the component's default signed-out icon, so a slot that renders only
-// comments, such as a false `v-if`, or whitespace counts as no content.
+// comments, such as a false `v-if`, whitespace, or an empty `v-for` counts as no content.
 function isVisible(node: VNode): boolean {
   if (node.type === Comment) return false;
   if (node.type === Text) return String(node.children).trim() !== "";
+  if (node.type === Fragment)
+    return Array.isArray(node.children) && node.children.some(isVnodeVisible);
   return true;
+}
+
+function isVnodeVisible(child: unknown): boolean {
+  return isVNode(child) ? isVisible(child) : typeof child === "string" && child.trim() !== "";
 }
