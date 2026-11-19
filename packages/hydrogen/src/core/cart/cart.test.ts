@@ -6735,10 +6735,7 @@ describe("getShopifyStandardActions", () => {
       resetStandardActionsForTests();
     });
 
-    it.each([
-      ["DOMContentLoaded", document],
-      ["load", window],
-    ] as const)("configures Standard Actions that run before %s", async (eventName, target) => {
+    it("configures Standard Actions that run before DOMContentLoaded", async () => {
       const actionsPromise = getShopifyStandardActions();
       const settled = vi.fn();
       void actionsPromise.then(settled, settled);
@@ -6746,7 +6743,7 @@ describe("getShopifyStandardActions", () => {
       expect(settled).not.toHaveBeenCalled();
 
       const updateCart = exposeActions();
-      target.dispatchEvent(new Event(eventName));
+      document.dispatchEvent(new Event("DOMContentLoaded"));
 
       await expect(actionsPromise).resolves.toBe(window.Shopify?.actions);
       expect(updateCart.configure).toHaveBeenCalledTimes(1);

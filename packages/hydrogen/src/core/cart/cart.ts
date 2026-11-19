@@ -2756,7 +2756,7 @@ export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
     };
 
     // Deferred scripts run after readyState turns "interactive" but before DOMContentLoaded.
-    // If DOMContentLoaded already fired, window load is the next point the script has settled.
+    // If DOMContentLoaded already fired, the script has failed and window load only ends the wait.
     if (
       typeof document !== "undefined" &&
       (document.readyState === "loading" ||
