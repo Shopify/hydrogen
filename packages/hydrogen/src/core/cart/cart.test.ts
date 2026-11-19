@@ -6285,9 +6285,13 @@ describe("changes during the first cart load", () => {
       await macrotask();
       expect(mockUpdateCart).not.toHaveBeenCalled();
 
+      const published: CartState[] = [];
+      const unsubscribe = store.subscribe((state) => published.push(state));
       firstLoad.resolve({ cart: null });
       await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledTimes(1));
+      unsubscribe();
       expect(sentPayload(0)).not.toHaveProperty("cartId");
+      expect(published.every((state) => state.pending.lines.size > 0)).toBe(true);
 
       resolveUpdate(0, serverCart(1, [added]));
       await change;
@@ -6429,6 +6433,8 @@ describe("changes during the first cart load", () => {
       });
       localStorage.setItem("cartLastUpdatedAt", JSON.stringify({ id: CART_ID, updatedAt: "U0" }));
       const firstLoad = await connectWithPendingLoad();
+      const published: CartState[] = [];
+      const unsubscribe = store.subscribe((state) => published.push(state));
       const stopTracking = trackCartAnalytics(store);
       const loaded = lineWithMerchandise("line-existing", LOADED_QUANTITY, VARIANT_OTHER);
       const change = formAdd();
@@ -6448,11 +6454,13 @@ describe("changes during the first cart load", () => {
       });
       await change;
       stopTracking();
+      unsubscribe();
 
       const addedLineIds = publish.mock.calls
         .filter(([event]) => event === AnalyticsEvent.PRODUCT_ADD_TO_CART)
         .map(([, payload]) => payload.currentLine.id);
       expect(addedLineIds).toEqual([added.id]);
+      expect(published.every((state) => state.loading || state.data.id === CART_ID)).toBe(true);
       const [, updated] =
         publish.mock.calls.find(([event]) => event === AnalyticsEvent.CART_UPDATED) ?? [];
       expect(updated?.prevCart?.updatedAt).toBe("U0");
@@ -6775,6 +6783,7 @@ describe("fetch() during a revalidation", () => {
     await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
     expect(store.getState().data.id).toBe("gid://shopify/Cart/other");
     expect(store.getState().data.totalQuantity).toBe(2);
+    expect(mockGetCart).toHaveBeenCalledTimes(2);
   });
 });
 

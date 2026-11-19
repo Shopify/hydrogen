@@ -147,7 +147,8 @@ return { locale: requestContext.locale };
 import { LocaleProvider } from "@shopify/hydrogen/react"; // or "@shopify/hydrogen/vue"
 
 // The cart route's loader reads the cart; see the `hydrogen-cart-ui` skill.
-const cartRoute = useRouteLoaderData<typeof cartLoader>("routes/cart");
+// import type { loader as cartLoader } from "./routes/($locale).cart";
+const cartRoute = useRouteLoaderData<typeof cartLoader>("routes/($locale).cart");
 
 <LocaleProvider locale={loaderData.locale}>
   <CartProvider initialData={cartRoute?.cartData}>

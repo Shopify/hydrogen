@@ -20,14 +20,24 @@ function displayCount(count: number) {
 }
 
 // Outside /cart the count fills in after the first browser load, so the live region stays silent
-// until the shopper changes the count, instead of announcing the loaded count on every page.
+// until the shopper changes the count, instead of announcing the loaded count on every page. A
+// change made during the load counts: the first loaded count already includes it.
 function useCartCountAnnouncement(totalQuantity: number, loading: boolean): string {
+  const mountedQuantity = useRef(totalQuantity);
   const loadedQuantity = useRef<number | null>(null);
+  const changedDuringLoad = useRef(false);
   const [changed, setChanged] = useState(false);
   useEffect(() => {
-    if (loading) return;
-    if (loadedQuantity.current === null) loadedQuantity.current = totalQuantity;
-    else if (totalQuantity !== loadedQuantity.current) setChanged(true);
+    if (loading) {
+      if (totalQuantity !== mountedQuantity.current) changedDuringLoad.current = true;
+      return;
+    }
+    if (loadedQuantity.current === null) {
+      loadedQuantity.current = totalQuantity;
+      if (changedDuringLoad.current) setChanged(true);
+    } else if (totalQuantity !== loadedQuantity.current) {
+      setChanged(true);
+    }
   }, [loading, totalQuantity]);
   return changed ? liveCartCountLabel(totalQuantity) : "";
 }

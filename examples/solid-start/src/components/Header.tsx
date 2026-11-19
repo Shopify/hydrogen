@@ -16,15 +16,19 @@ const fetchHeaderCollections = query(async () => {
 export function Header() {
   const collections = createAsync(() => fetchHeaderCollections());
   const totalQuantity = useCart((s) => s.data.totalQuantity);
+  // During the first load the count covers only changes made so far, so show none.
+  const loading = useCart((s) => s.loading);
   const location = useLocation();
   const [hasHydrated, setHasHydrated] = createSignal(false);
   const rendersCartPage = () => location.pathname === "/cart";
   const cartLabel = () =>
-    totalQuantity() === 0
-      ? "Cart, empty"
-      : `Cart, ${totalQuantity() > 99 ? "99 or more" : totalQuantity()} ${
-          totalQuantity() === 1 ? "item" : "items"
-        }`;
+    loading()
+      ? "Cart"
+      : totalQuantity() === 0
+        ? "Cart, empty"
+        : `Cart, ${totalQuantity() > 99 ? "99 or more" : totalQuantity()} ${
+            totalQuantity() === 1 ? "item" : "items"
+          }`;
 
   onMount(() => setHasHydrated(true));
 
@@ -105,7 +109,7 @@ export function Header() {
                   <path d="M5 7h14l-1.5 12a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8L5 7Z" />
                   <path d="M9 7V5a3 3 0 0 1 6 0v2" />
                 </svg>
-                <Show when={totalQuantity() > 0}>
+                <Show when={!loading() && totalQuantity() > 0}>
                   <span class="absolute -top-2 -right-2 grid h-5 min-w-5 place-items-center rounded-full bg-black px-1 text-[11px] font-bold text-white">
                     {totalQuantity() > 99 ? "99+" : totalQuantity()}
                   </span>
@@ -134,7 +138,7 @@ export function Header() {
                 <path d="M5 7h14l-1.5 12a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8L5 7Z" />
                 <path d="M9 7V5a3 3 0 0 1 6 0v2" />
               </svg>
-              <Show when={totalQuantity() > 0}>
+              <Show when={!loading() && totalQuantity() > 0}>
                 <span class="absolute -top-2 -right-2 grid h-5 min-w-5 place-items-center rounded-full bg-black px-1 text-[11px] font-bold text-white">
                   {totalQuantity() > 99 ? "99+" : totalQuantity()}
                 </span>

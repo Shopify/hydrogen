@@ -67,10 +67,12 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
   // A storefront may load the cart in the browser. Hold that first read until after the click, so
   // the add starts during the load and must still build on the line already at the stock limit.
   // Hold the change until the test has checked the optimistic quantity.
+  const productPathname = new URL(product.path, "http://storefront.test").pathname;
   await page.route(CART_ENDPOINT_PATTERN, async (route) => {
-    if (route.request().method() === "POST") {
+    const request = route.request();
+    if (request.method() === "POST") {
       await requestGate.wait;
-    } else if (!firstReadSeen) {
+    } else if (!firstReadSeen && new URL(request.frame().url()).pathname === productPathname) {
       firstReadSeen = true;
       await firstReadGate.wait;
     }

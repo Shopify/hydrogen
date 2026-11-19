@@ -2309,12 +2309,16 @@ function adoptCart(store: CartStoreContext, data: CartData): boolean {
   }
   store.settled = createCartState(data);
   store.projectedErrors = [];
-  // A running revalidation reads the cart this replaces, so run it again for the new cart.
+  // A running revalidation started before this cart was read, so the cart supersedes it. A
+  // revalidation requested since then still runs.
   if (store.revalidation.active) {
     store.revalidation.active.controller.abort();
     store.revalidation.active = null;
-    store.revalidation.requested = true;
+    store.revalidation.visible = store.revalidation.requested;
   }
+  // Subscribers such as the analytics tracker take the adopted cart as their baseline, which they
+  // can't do once held changes show on it. Publish it on its own first, in the same task.
+  if (store.transactions.length > 0) publishVisibleState(store, store.settled);
   return true;
 }
 
@@ -2326,9 +2330,6 @@ function adoptCart(store: CartStoreContext, data: CartData): boolean {
 function finishCartLoad(store: CartStoreContext, load: ActiveCartLoad | null): void {
   if (!load || store.activeCartLoad !== load) return;
   store.activeCartLoad = null;
-  // Subscribers such as the analytics tracker take the loaded cart as their baseline, which they
-  // can't do once held changes show on it. Publish it on its own first, in the same task.
-  if (store.transactions.length > 0) publishVisibleState(store, store.settled);
   publishVisibleState(store);
   load.resolveReadyPromise();
   releaseHeldTransports(store);
