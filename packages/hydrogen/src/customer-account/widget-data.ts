@@ -133,8 +133,8 @@ export async function queryAccountWidgetCustomer(
     displayName: customer.displayName,
     firstName: customer.firstName ?? null,
     lastName: customer.lastName ?? null,
-    // The Customer Account API's `imageUrl` is a Gravatar URL with Gravatar's default image, so
-    // every customer would get an image. With `null`, the component shows the customer's initials.
+    // The Customer Account API's `imageUrl` is a Gravatar URL that falls back to Shopify's
+    // placeholder image, so every customer would get an image. With `null`, the component shows the customer's initials.
     avatarUrl: null,
   };
 }
