@@ -1,7 +1,9 @@
 import type { StorefrontClient } from "../client";
-import { withStorefrontClientCache } from "../client/client";
+import { createStorefrontClientForApiVersion, withStorefrontClientCache } from "../client/client";
 import { Cache } from "../core/cache";
+import { getLogger } from "../core/logging";
 import type { ShopifyRequestContext } from "../core/request-context";
+import { isObjectRecord } from "../core/utils/record";
 import { gql as storefrontGql } from "../graphql";
 import type { CustomerAccountClient } from "./client";
 import { gql } from "./graphql";
@@ -21,6 +23,25 @@ const ACCOUNT_WIDGET_SHOP_QUERY = storefrontGql(`
     }
   }
 `);
+
+// TODO: move these fields into `ACCOUNT_WIDGET_SHOP_QUERY` when they reach a stable Storefront API
+// version. Until then they exist only in `unstable`, outside Hydrogen's bundled schema, so the
+// query is a plain string and the result is checked by hand.
+const ACCOUNT_WIDGET_MARKETING_CONSENT_QUERY: string = `
+  query AccountWidgetMarketingConsent($country: CountryCode) @inContext(country: $country) {
+    shop {
+      marketingConsentSigninEnabled
+      marketingConsentPreselected
+    }
+  }
+`;
+
+const MARKETING_CONSENT_OFF = {
+  marketingConsentSigninEnabled: false,
+  marketingConsentPreselected: false,
+};
+
+const log = getLogger("customer-account");
 
 const ACCOUNT_WIDGET_CUSTOMER_QUERY = gql(`
   query AccountWidgetCustomer {
@@ -62,8 +83,10 @@ export type AccountWidgetShop = {
   customerAccountTranslations: { key: string; value: string }[];
   legacyCustomerAccounts: false;
   b2bEnabled: false;
-  marketingConsentSigninEnabled: false;
-  marketingConsentPreselected: false;
+  /** Whether the sign-in form shows the marketing consent checkbox. */
+  marketingConsentSigninEnabled: boolean;
+  /** Whether the marketing consent checkbox starts checked for the visitor's country. */
+  marketingConsentPreselected: boolean;
 };
 
 /**
@@ -81,10 +104,13 @@ export async function queryAccountWidgetShop(
   storefrontClient: StorefrontClient,
   signal: AbortSignal,
 ): Promise<AccountWidgetShop> {
-  const result = await storefrontClient.graphql(
-    ACCOUNT_WIDGET_SHOP_QUERY,
-    withStorefrontClientCache(storefrontClient, { signal }, Cache.long()),
-  );
+  const [result, marketingConsent] = await Promise.all([
+    storefrontClient.graphql(
+      ACCOUNT_WIDGET_SHOP_QUERY,
+      withStorefrontClientCache(storefrontClient, { signal }, Cache.long()),
+    ),
+    queryMarketingConsent(storefrontClient, signal),
+  ]);
   if (result.errors) {
     throw new Error("Storefront API returned errors for the account widget shop query", {
       cause: result.errors,
@@ -105,10 +131,45 @@ export async function queryAccountWidgetShop(
     legacyCustomerAccounts: false,
     // Only picks the Shop sign-in card's style, which never shows with a custom `sign-in-url`.
     b2bEnabled: false,
-    // Off until Hydrogen's login route forwards the widget's `marketing_consent` choice.
-    marketingConsentSigninEnabled: false,
-    marketingConsentPreselected: false,
+    ...marketingConsent,
   };
+}
+
+/**
+ * Reads the shop's marketing consent settings from the `unstable` Storefront API. Resolves to
+ * both settings off when the request fails, so the account sheet still renders without the
+ * checkbox.
+ */
+async function queryMarketingConsent(
+  storefrontClient: StorefrontClient,
+  signal: AbortSignal,
+): Promise<typeof MARKETING_CONSENT_OFF> {
+  const unstableClient = createStorefrontClientForApiVersion(storefrontClient, "unstable");
+  if (!unstableClient) return MARKETING_CONSENT_OFF;
+
+  try {
+    const result = await unstableClient.graphql(
+      ACCOUNT_WIDGET_MARKETING_CONSENT_QUERY,
+      withStorefrontClientCache(unstableClient, { signal }, Cache.long()),
+    );
+    if (result.errors) {
+      throw new Error("Storefront API returned errors for the marketing consent query", {
+        cause: result.errors,
+      });
+    }
+
+    const data: unknown = result.data;
+    const shop = isObjectRecord(data) && isObjectRecord(data.shop) ? data.shop : {};
+    const marketingConsentSigninEnabled = shop.marketingConsentSigninEnabled === true;
+    return {
+      marketingConsentSigninEnabled,
+      marketingConsentPreselected:
+        marketingConsentSigninEnabled && shop.marketingConsentPreselected === true,
+    };
+  } catch (error) {
+    log.warn("account widget marketing consent query failed", { error });
+    return MARKETING_CONSENT_OFF;
+  }
 }
 
 export async function queryAccountWidgetCustomer(
