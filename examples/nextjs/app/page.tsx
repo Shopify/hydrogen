@@ -142,7 +142,7 @@ function BestSellers({ products }: { products: ProductNode[] }) {
         <ul role="list" className="grid grid-cols-1 gap-x-1 gap-y-10 md:grid-cols-2 lg:grid-cols-4">
           {products.map((product) => (
             <li key={product.id}>
-              <ProductCard product={product} loading="lazy" />
+              <ProductCard product={product} context="collection" loading="lazy" />
             </li>
           ))}
         </ul>

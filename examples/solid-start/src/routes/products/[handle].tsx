@@ -5,6 +5,7 @@ import { createEffect, For, Show } from "solid-js";
 
 import { ProductCard } from "../../components/ProductCard";
 import { ProductPurchasePanel } from "../../components/ProductPurchasePanel";
+import { ProductView } from "../../components/ProductView";
 import { AnalyticsEvent, getAnalytics } from "../../lib/analytics";
 import { getRequestStorefrontClient } from "../../lib/request-storefront";
 
@@ -111,6 +112,7 @@ const PRODUCT_QUERY = gql(
     }
     products(first: 4) {
       nodes {
+        id
         handle
         title
         featuredImage {
@@ -186,23 +188,25 @@ export default function Product() {
         return (
           <main id="main-content" tabIndex={-1}>
             <Title>{product().title} — Mock.shop</Title>
-            <section class="grid grid-cols-1 gap-12 px-6 py-10 md:grid-cols-[minmax(0,1fr)_420px] md:gap-16 md:px-10 md:py-12">
-              <div class="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-2">
-                <For each={product().images.nodes}>
-                  {(image, i) => (
-                    <div class="aspect-square overflow-hidden bg-neutral-100">
-                      <img
-                        src={image.url}
-                        alt={image.altText ?? `${product().title} — image ${i() + 1}`}
-                        class="h-full w-full object-cover"
-                      />
-                    </div>
-                  )}
-                </For>
-              </div>
+            <ProductView product={product()} context="page" class="block">
+              <section class="grid grid-cols-1 gap-12 px-6 py-10 md:grid-cols-[minmax(0,1fr)_420px] md:gap-16 md:px-10 md:py-12">
+                <div class="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-2">
+                  <For each={product().images.nodes}>
+                    {(image, i) => (
+                      <div class="aspect-square overflow-hidden bg-neutral-100">
+                        <img
+                          src={image.url}
+                          alt={image.altText ?? `${product().title} — image ${i() + 1}`}
+                          class="h-full w-full object-cover"
+                        />
+                      </div>
+                    )}
+                  </For>
+                </div>
 
-              <ProductPurchasePanel product={product()} />
-            </section>
+                <ProductPurchasePanel product={product()} />
+              </section>
+            </ProductView>
 
             <section class="border-t border-black/10 px-6 py-16 md:px-10 md:py-20">
               <h2 class="text-2xl font-black tracking-tight">You may also like</h2>
@@ -212,7 +216,7 @@ export default function Product() {
                     .filter((p) => p.handle !== product().handle)
                     .slice(0, 4)}
                 >
-                  {(p) => <ProductCard product={p} />}
+                  {(p) => <ProductCard product={p} context="recommendation" />}
                 </For>
               </div>
             </section>

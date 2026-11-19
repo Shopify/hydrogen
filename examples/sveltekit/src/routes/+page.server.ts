@@ -6,6 +6,7 @@ const HOME_QUERY = gql(`
 	query Home {
 		products(first: 3) {
 			nodes {
+				id
 				handle
 				title
 				featuredImage {

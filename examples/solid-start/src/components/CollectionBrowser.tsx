@@ -431,7 +431,9 @@ export function CollectionBrowser(props: {
                 : "mt-8 grid grid-cols-2 gap-x-6 gap-y-12 opacity-100 transition-opacity duration-200 md:grid-cols-3"
             }
           >
-            <For each={props.products}>{(product) => <ProductCard product={product} />}</For>
+            <For each={props.products}>
+              {(product) => <ProductCard product={product} context="collection" />}
+            </For>
           </section>
 
           <Show when={props.products.length === 0 && !isLoading()}>

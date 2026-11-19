@@ -19,6 +19,7 @@ const COLLECTION_QUERY = gql(`
 			description
 			products(first: 24, filters: $filters, sortKey: $sortKey, reverse: $reverse) {
 				nodes {
+					id
 					handle
 					title
 					featuredImage {
