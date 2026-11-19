@@ -34,16 +34,22 @@ describe("ShopifyAccount", () => {
     expect(element.getAttribute("sign-in-url")).toBe("/fr-ca/account/login");
   });
 
-  it("renders slot content", () => {
+  it("puts the signed-out avatar in the component's slot without affecting layout", () => {
     const { container } = render(
-      createElement(
-        ShopifyAccount,
-        null,
-        createElement("div", { slot: "signed-out-avatar" }, "Sign in"),
-      ),
+      createElement(ShopifyAccount, {
+        signedOutAvatar: createElement("span", null, "Sign in"),
+      }),
     );
 
     const slotted = getAccountElement(container).querySelector('[slot="signed-out-avatar"]');
-    expect(slotted?.textContent).toBe("Sign in");
+    if (!(slotted instanceof HTMLElement)) throw new Error("expected a signed-out-avatar slot");
+    expect(slotted.style.display).toBe("contents");
+    expect(slotted.innerHTML).toBe("<span>Sign in</span>");
+  });
+
+  it("renders no slot without a signed-out avatar", () => {
+    const { container } = render(createElement(ShopifyAccount));
+
+    expect(getAccountElement(container).children).toHaveLength(0);
   });
 });

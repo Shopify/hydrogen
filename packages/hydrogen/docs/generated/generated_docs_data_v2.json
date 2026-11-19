@@ -7900,7 +7900,7 @@
           "description": "",
           "tabs": [
             {
-              "code": "<ShopifyScripts shop={shop} account />\n<ShopifyAccount>\n  <div slot=\"signed-out-avatar\">Sign in</div>\n</ShopifyAccount>",
+              "code": "<ShopifyScripts shop={shop} account />\n<ShopifyAccount signedOutAvatar=\"Sign in\" />",
               "title": "Example"
             }
           ]
@@ -12053,7 +12053,7 @@
       "params": [
         {
           "name": "input1",
-          "description": "Content for the component's slots.",
+          "description": "The content to show while the customer is signed out.",
           "value": "ShopifyAccountProps",
           "filePath": "src/react/account.tsx"
         }
@@ -12064,14 +12064,14 @@
         "name": "ReactElement",
         "value": "ReactElement"
       },
-      "value": "export function ShopifyAccount({ children }: ShopifyAccountProps): ReactElement {\n  const pathPrefix = useLocalePathPrefix() ?? \"\";\n\n  return createElement(\n    \"shopify-account\",\n    {\n      \"account-data-url\": `${pathPrefix}${CUSTOMER_ACCOUNT_PATHS.widgetData}`,\n      \"sign-in-url\": `${pathPrefix}${CUSTOMER_ACCOUNT_PATHS.login}`,\n    },\n    children,\n  );\n}",
+      "value": "export function ShopifyAccount({ signedOutAvatar }: ShopifyAccountProps): ReactElement {\n  const pathPrefix = useLocalePathPrefix() ?? \"\";\n\n  return createElement(\n    \"shopify-account\",\n    {\n      \"account-data-url\": `${pathPrefix}${CUSTOMER_ACCOUNT_PATHS.widgetData}`,\n      \"sign-in-url\": `${pathPrefix}${CUSTOMER_ACCOUNT_PATHS.login}`,\n    },\n    signedOutAvatar == null\n      ? null\n      : // `display: contents` keeps the wrapper out of the layout, so the content sits in the\n        // component's avatar button as if it were slotted directly.\n        createElement(\n          \"div\",\n          { slot: \"signed-out-avatar\", style: { display: \"contents\" } },\n          signedOutAvatar,\n        ),\n  );\n}",
       "examples": [
         {
           "title": "Example",
           "description": "",
           "tabs": [
             {
-              "code": "<ShopifyAccount>\n  <div slot=\"signed-out-avatar\">Sign in</div>\n</ShopifyAccount>",
+              "code": "<ShopifyAccount signedOutAvatar=\"Sign in\" />",
               "title": "Example"
             }
           ]
@@ -12088,13 +12088,13 @@
         {
           "filePath": "src/react/account.tsx",
           "syntaxKind": "PropertySignature",
-          "name": "children",
+          "name": "signedOutAvatar",
           "value": "ReactNode",
-          "description": "Content for the component's slots, such as `<div slot=\"signed-out-avatar\">Sign in</div>`.",
+          "description": "Shows in place of the avatar while the customer is signed out, such as a \"Sign in\" label or an icon.",
           "isOptional": true
         }
       ],
-      "value": "export interface ShopifyAccountProps {\n  /** Content for the component's slots, such as `<div slot=\"signed-out-avatar\">Sign in</div>`. */\n  children?: ReactNode;\n}"
+      "value": "export interface ShopifyAccountProps {\n  /** Shows in place of the avatar while the customer is signed out, such as a \"Sign in\" label or an icon. */\n  signedOutAvatar?: ReactNode;\n}"
     }
   },
   "CreateCartComponentsGeneratedType": {

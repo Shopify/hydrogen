@@ -696,9 +696,7 @@ export async function getCustomerSessionRefreshResult(
  * @example
  * ```tsx
  * <ShopifyScripts shop={shop} account />
- * <ShopifyAccount>
- *   <div slot="signed-out-avatar">Sign in</div>
- * </ShopifyAccount>
+ * <ShopifyAccount signedOutAvatar="Sign in" />
  * ```
  *
  * @returns The login, authorize, refresh, logout, and account widget data routes.
