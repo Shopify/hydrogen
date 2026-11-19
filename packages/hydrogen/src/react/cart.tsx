@@ -208,7 +208,7 @@ function useOptionalCartContext(): CartContextValue | null {
  * @example
  * ```tsx
  * // In your root layout
- * <CartProvider initialData={{ cart: loaderData.cart }}>
+ * <CartProvider initialData={loaderData.cartData}>
  *   <App />
  * </CartProvider>
  * ```

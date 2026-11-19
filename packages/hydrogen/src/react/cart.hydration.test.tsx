@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { act } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
 import { createElement, Suspense, type ReactNode } from "react";
 import { hydrateRoot, type Root } from "react-dom/client";
 import { renderToString } from "react-dom/server";
@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { CartData } from "../core/cart/state";
 import { assert } from "../core/test-utils";
-import { CartProvider, createCartComponents, useCart } from "./cart";
+import { CartProvider, createCartComponents, useCart, useCartActions } from "./cart";
 
 const CART: CartData = {
   id: "gid://shopify/Cart/123",
@@ -115,6 +115,54 @@ describe("CartProvider hydration", () => {
     expect(container.textContent).toBe("3");
     expect(onRecoverableError).not.toHaveBeenCalled();
     expect(consoleError).not.toHaveBeenCalled();
+
+    await act(async () => root?.unmount());
+  });
+
+  it("hydrates a failed server read without fetching, then loads the cart on retry", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(Response.json({ cart: CART }));
+
+    function RetryableCartSummary() {
+      const loadError = useCart((state) => state.loadError);
+      const { refresh } = useCartActions();
+      if (!loadError) return createElement(CartSummary);
+      return createElement("button", { type: "button", onClick: refresh }, "Try again");
+    }
+
+    function App() {
+      return createElement(
+        CartProvider,
+        { initialData: { cart: null, errors: [{ message: "Throttled" }] } },
+        createElement(RetryableCartSummary),
+      );
+    }
+
+    const container = document.createElement("div");
+    container.innerHTML = renderToString(createElement(App));
+    document.body.append(container);
+    expect(container.textContent).toBe("Try again");
+
+    const onRecoverableError = vi.fn();
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    let root: Root | undefined;
+
+    await act(async () => {
+      root = hydrateRoot(container, createElement(App), { onRecoverableError });
+    });
+
+    expect(container.textContent).toBe("Try again");
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(onRecoverableError).not.toHaveBeenCalled();
+    expect(consoleError).not.toHaveBeenCalled();
+
+    const button = container.querySelector("button");
+    assert(button, "Expected the retry button to render");
+    await act(async () => button.click());
+
+    await waitFor(() => expect(container.textContent).toBe("3"));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
 
     await act(async () => root?.unmount());
   });

@@ -2,7 +2,7 @@ import { ShopPayButton } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
 
 import { publishCartViewed } from "~/components/AnalyticsTrackers";
-import { CartLineItem } from "~/components/CartDrawer";
+import { CartLineItem, CartLoadErrorMessage } from "~/components/CartDrawer";
 import { useCart } from "~/lib/cart";
 import { formatPrice } from "~/lib/money";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
@@ -16,11 +16,12 @@ export function meta({ matches }: Route.MetaArgs) {
 export default function CartRoute() {
   const cart = useCart((state) => state.data);
   const loading = useCart((state) => state.loading);
+  const hasLoadError = useCart((state) => state.loadError !== undefined);
   const lines = cart.lines.nodes;
 
   useEffect(() => {
-    publishCartViewed(cart);
-  }, [cart]);
+    if (!hasLoadError) publishCartViewed(cart);
+  }, [cart, hasLoadError]);
 
   return (
     <main
@@ -32,7 +33,8 @@ export default function CartRoute() {
         Cart
       </h1>
       {loading ? <p className="text-on-surface-secondary">Loading cart…</p> : null}
-      {!loading && lines.length === 0 ? (
+      {!loading && hasLoadError ? <CartLoadErrorMessage /> : null}
+      {!loading && !hasLoadError && lines.length === 0 ? (
         <div>
           <p className="text-on-surface font-medium">Your cart is empty.</p>
           <p className="text-on-surface-secondary mt-2 text-sm">
@@ -40,7 +42,7 @@ export default function CartRoute() {
           </p>
         </div>
       ) : null}
-      {lines.length > 0 ? (
+      {!hasLoadError && lines.length > 0 ? (
         <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
           <ul role="list" className="divide-border divide-y">
             {lines.map((line) => (

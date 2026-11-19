@@ -25,9 +25,25 @@ function CartLoadingState() {
   return createElement("span", { "data-testid": "loading" }, String(loading));
 }
 
+function CartLoadErrorState() {
+  const failed = useCart((s) => s.loadError !== undefined);
+  return createElement("span", { "data-testid": "load-error" }, String(failed));
+}
+
 const typedCart = createCartComponents<{
   get: () => Promise<{ data: { cart: CartData } }>;
 }>();
+
+type FailedCartRead = { cart: CartData | null; errors?: Array<{ message: string }> };
+
+const failableCart = createCartComponents<{
+  get: () => Promise<{ data: FailedCartRead }>;
+}>();
+
+function SuspenseCartLoadErrorState() {
+  const failed = failableCart.useSuspenseCart((s) => s.loadError !== undefined);
+  return createElement("span", { "data-testid": "load-error" }, String(failed));
+}
 
 function SuspenseCartTotalQuantity() {
   const qty = typedCart.useSuspenseCart((s) => s.data.totalQuantity);
@@ -131,6 +147,20 @@ describe("CartProvider SSR", () => {
     expect(html).toContain(">false<");
   });
 
+  it("renders the load error when initialData reports a failed cart read", () => {
+    const html = renderToString(
+      createElement(
+        CartProvider,
+        { initialData: { cart: null, errors: [{ message: "Throttled" }] } },
+        createElement(CartLoadingState),
+        createElement(CartLoadErrorState),
+      ),
+    );
+
+    expect(html).toContain('data-testid="loading">false<');
+    expect(html).toContain('data-testid="load-error">true<');
+  });
+
   it("renders loading=false when initialData is provided", () => {
     const html = renderToString(
       createElement(
@@ -176,6 +206,29 @@ describe("CartProvider SSR", () => {
     const html = await streamToString(tree, () => resolveInitialData?.({ cart: MOCK_CART }));
 
     expect(html).toContain(">3<");
+    expect(html).not.toContain("Loading cart");
+  });
+
+  it("streams the load error when streamed initialData reports a failed cart read", async () => {
+    let resolveInitialData: ((value: FailedCartRead) => void) | undefined;
+    const initialData = new Promise<FailedCartRead>((resolve) => {
+      resolveInitialData = resolve;
+    });
+    const tree = createElement(
+      failableCart.CartProvider,
+      { initialData },
+      createElement(
+        Suspense,
+        { fallback: createElement("span", null, "Loading cart") },
+        createElement(SuspenseCartLoadErrorState),
+      ),
+    );
+
+    const html = await streamToString(tree, () =>
+      resolveInitialData?.({ cart: null, errors: [{ message: "Throttled" }] }),
+    );
+
+    expect(html).toContain('data-testid="load-error">true<');
     expect(html).not.toContain("Loading cart");
   });
 });

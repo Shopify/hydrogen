@@ -114,7 +114,7 @@ function useOptionalCartStore(): CartStore | null {
  *
  * @example
  * ```vue
- * <CartProvider :initialData="{ cart: loaderData.cart }">
+ * <CartProvider :initialData="loaderData.cartData">
  *   <App />
  * </CartProvider>
  * ```

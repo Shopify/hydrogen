@@ -21,6 +21,7 @@ function displayCount(count: number) {
 
 export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
   const totalQuantity = useCart((state) => state.data.totalQuantity);
+  const hasLoadError = useCart((state) => state.loadError !== undefined);
   const [failedLogoUrl, setFailedLogoUrl] = useState<string | null>(null);
   const logo = shopInfo.logo;
 
@@ -94,7 +95,7 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
           <Link
             to="/cart"
             className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
-            aria-label={cartCountLabel(totalQuantity)}
+            aria-label={hasLoadError ? "Cart" : cartCountLabel(totalQuantity)}
             aria-controls={CART_DRAWER_ID}
             aria-haspopup="dialog"
             data-testid="cart-trigger"
@@ -105,7 +106,7 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
               aria-hidden="true"
             >
               <img src="/icons/icon-cart.svg" alt="" className="size-5" />
-              {totalQuantity > 0 ? (
+              {!hasLoadError && totalQuantity > 0 ? (
                 <span className="bg-interactive text-interactive-text absolute end-0 top-0 flex h-5 min-w-5 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full px-1 text-xs font-medium">
                   {displayCount(totalQuantity)}
                 </span>
@@ -113,7 +114,7 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
             </span>
           </Link>
           <span aria-live="polite" aria-atomic="true" className="sr-only">
-            {liveCartCountLabel(totalQuantity)}
+            {hasLoadError ? null : liveCartCountLabel(totalQuantity)}
           </span>
         </div>
       </div>
