@@ -115,6 +115,11 @@ type RunAndMaybeStoreOptions = {
  */
 export class StaleFallbackDisabledError extends Error {}
 
+// Keys with a background refresh in flight, per cache object. Module scope, so
+// runners created per request (for example, a Storefront client per request)
+// share the lock as long as they use the same cache object in this isolate.
+const revalidatingByCache = new WeakMap<object, Set<string>>();
+
 /**
  * Creates a function that caches the result of any async work, such as data that several API calls
  * produce together. For a single fetch response, use `createFetchWithCache`.
@@ -125,9 +130,13 @@ export class StaleFallbackDisabledError extends Error {}
  */
 export function createRunWithCache({ cache, waitUntil }: CreateRunWithCacheOptions): RunWithCache {
   const store = createNormalizedCacheStore(cache);
-  // Keys with a background refresh in flight in this isolate, so a stale entry
-  // is refreshed once per window instead of once per stale hit.
-  const revalidating = new Set<string>();
+  // A stale entry is refreshed once per window, not once per stale hit.
+  let revalidating = revalidatingByCache.get(cache);
+  if (!revalidating) {
+    revalidating = new Set<string>();
+    revalidatingByCache.set(cache, revalidating);
+  }
+  const inFlight = revalidating;
 
   return async function runWithCache<T extends SerializableCacheValue>(
     options: RunWithCacheOptions,
@@ -171,14 +180,14 @@ export function createRunWithCache({ cache, waitUntil }: CreateRunWithCacheOptio
     options: RunWithCacheOptions,
     run: RunCallback<T>,
   ) {
-    if (revalidating.has(cacheKey)) return;
-    revalidating.add(cacheKey);
+    if (inFlight.has(cacheKey)) return;
+    inFlight.add(cacheKey);
 
     const entry = runAndMaybeStore(cacheKey, options, run, {
       scheduleCacheWrite: false,
       background: true,
     });
-    schedule(entry.complete.finally(() => revalidating.delete(cacheKey)));
+    schedule(entry.complete.finally(() => inFlight.delete(cacheKey)));
   }
 
   async function refreshWithStaleFallback<T extends SerializableCacheValue>(

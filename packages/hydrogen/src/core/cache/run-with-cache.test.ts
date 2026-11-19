@@ -313,6 +313,32 @@ describe("createRunWithCache", () => {
     });
   });
 
+  it("shares the refresh lock across runners that use the same cache object", async () => {
+    const cache = new MemoryKeyValueCache();
+    const waitUntil = vi.fn();
+    const first = createRunWithCache({ cache, waitUntil });
+    await first({ key: "shared", strategy }, async () => ({
+      data: { value: "first" },
+      shouldCache: true,
+    }));
+    await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
+    waitUntil.mockClear();
+
+    // A new runner per request, as a Storefront client built per request does.
+    const refresh = Promise.withResolvers<{ data: { value: string }; shouldCache: boolean }>();
+    const run = vi.fn().mockReturnValueOnce(refresh.promise);
+    const second = createRunWithCache({ cache, waitUntil });
+    const third = createRunWithCache({ cache, waitUntil });
+    vi.advanceTimersByTime(2000);
+    await second({ key: "shared", strategy }, run);
+    await third({ key: "shared", strategy }, run);
+
+    expect(waitUntil).toHaveBeenCalledTimes(1);
+    refresh.resolve({ data: { value: "second" }, shouldCache: true });
+    await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
+    expect(run.mock.calls).toEqual([[{ background: true }]]);
+  });
+
   it("refreshes a stale entry once while its refresh is in flight", async () => {
     const cache = new MemoryKeyValueCache();
     const waitUntil = vi.fn();
