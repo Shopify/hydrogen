@@ -637,6 +637,13 @@ function getVisiblePendingKeys(store: CartStoreContext, transaction: PendingTran
   );
 }
 
+// An add's placeholder line is gone once the add replays onto a line the load brought.
+function isReplacedPlaceholderKey(state: CartState, key: string): boolean {
+  if (!key.startsWith(`${LINE_KEY_PREFIX}${OPTIMISTIC_LINE_ID_PREFIX}`)) return false;
+  const lineId = key.slice(LINE_KEY_PREFIX.length);
+  return !getLines(state.data).some((line) => line.id === lineId);
+}
+
 function derivePending(store: CartStoreContext, state: CartState): CartState["pending"] {
   const lines = new Set<string>();
   const discountCodes = new Set<string>();
@@ -646,6 +653,7 @@ function derivePending(store: CartStoreContext, state: CartState): CartState["pe
 
   for (const transaction of store.transactions) {
     for (const key of getVisiblePendingKeys(store, transaction)) {
+      if (isReplacedPlaceholderKey(state, key)) continue;
       if (key === NOTE_KEY) note = true;
       if (key === ATTRIBUTES_KEY) attributes = true;
       if (key.startsWith(LINE_KEY_PREFIX)) {
@@ -680,9 +688,12 @@ function projectVisibleState(store: CartStoreContext): CartState {
   return state;
 }
 
-function publishVisibleState(store: CartStoreContext): void {
+function publishVisibleState(
+  store: CartStoreContext,
+  visible: CartState = projectVisibleState(store),
+): void {
   const previous = store.observable.state;
-  const next = reuseVisibleReferences(previous, projectVisibleState(store));
+  const next = reuseVisibleReferences(previous, visible);
   // The server publishes state too, when streamed initial data resolves, and has no inputs to sync.
   const cartRequestUrl =
     previous === next || typeof document === "undefined" ? null : getCartRequestUrl();
@@ -1990,6 +2001,17 @@ async function dispatchTransaction<TType extends TransactionType>(
       const index = gate.held.indexOf(held);
       if (index === -1) return;
       gate.held.splice(index, 1);
+      // Drop it now rather than a microtask later, so the change replacing it, or a cart that
+      // `hydrate()` passes in the same task, doesn't count it as a request in flight. The
+      // replacing change publishes, so this doesn't, and a subscriber can't re-enter here.
+      const transaction = store.transactions.find(
+        (candidate) => candidate.promise === deferred.promise,
+      );
+      if (transaction) {
+        removeTransaction(store, transaction.id);
+        releaseSignalKeys(store, transaction);
+        store.observedPromises.delete(deferred.promise);
+      }
       deferred.reject(createAbortError());
     },
     { once: true },
@@ -2060,8 +2082,9 @@ function startHeldTransport(
  * Sends every held transport that may start. None may start while a cart load is active: the
  * store could not tell whether the load read the cart before or after the request. They also
  * stay held until Standard Actions loads, so a load that starts in the meantime still holds
- * them. An add that awaits a cart ID starts alone while the store still has no cart ID, so two
- * adds never create two carts.
+ * them. While the store has no cart ID, one add that awaits a cart ID starts alone and every
+ * other change waits for it, so two adds never create two carts and a note or discount doesn't
+ * reach the cart route before a cart exists.
  */
 function releaseHeldTransports(store: CartStoreContext): void {
   if (store.activeCartLoad) return;
@@ -2078,23 +2101,21 @@ function releaseHeldTransports(store: CartStoreContext): void {
     return;
   }
   const cartId = store.settled.data.id ?? undefined;
-  for (const held of gate.held.splice(0)) {
-    if (!held.awaitsCartId || cartId) {
-      startHeldTransport(store, held, actions, held.awaitsCartId ? cartId : undefined);
-      continue;
-    }
-    if (gate.creatingCart) {
-      gate.held.push(held);
-      continue;
-    }
-    gate.creatingCart = held;
+  const creator = cartId || gate.creatingCart ? undefined : gate.held.find((h) => h.awaitsCartId);
+  if (creator) {
+    gate.held.splice(gate.held.indexOf(creator), 1);
+    gate.creatingCart = creator;
     const releaseNext = () => {
-      if (gate.creatingCart !== held) return;
+      if (gate.creatingCart !== creator) return;
       gate.creatingCart = null;
       releaseHeldTransports(store);
     };
-    held.deferred.promise.then(releaseNext, releaseNext);
-    startHeldTransport(store, held, actions);
+    creator.deferred.promise.then(releaseNext, releaseNext);
+    startHeldTransport(store, creator, actions);
+  }
+  if (!cartId && gate.creatingCart) return;
+  for (const held of gate.held.splice(0)) {
+    startHeldTransport(store, held, actions, held.awaitsCartId ? cartId : undefined);
   }
 }
 
@@ -2288,6 +2309,12 @@ function adoptCart(store: CartStoreContext, data: CartData): boolean {
   }
   store.settled = createCartState(data);
   store.projectedErrors = [];
+  // A running revalidation reads the cart this replaces, so run it again for the new cart.
+  if (store.revalidation.active) {
+    store.revalidation.active.controller.abort();
+    store.revalidation.active = null;
+    store.revalidation.requested = true;
+  }
   return true;
 }
 
@@ -2299,6 +2326,9 @@ function adoptCart(store: CartStoreContext, data: CartData): boolean {
 function finishCartLoad(store: CartStoreContext, load: ActiveCartLoad | null): void {
   if (!load || store.activeCartLoad !== load) return;
   store.activeCartLoad = null;
+  // Subscribers such as the analytics tracker take the loaded cart as their baseline, which they
+  // can't do once held changes show on it. Publish it on its own first, in the same task.
+  if (store.transactions.length > 0) publishVisibleState(store, store.settled);
   publishVisibleState(store);
   load.resolveReadyPromise();
   releaseHeldTransports(store);

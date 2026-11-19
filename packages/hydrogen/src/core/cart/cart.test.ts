@@ -2,6 +2,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach, onTestFinished } from "vitest";
 
 import type { CartActionError } from "../../../vendor/standard-actions";
+import { trackCartAnalytics } from "../analytics/cart-tracker";
+import { AnalyticsEvent } from "../analytics/events";
 import { configureLogging } from "../logging";
 import {
   CONSENT_TRACKING_API_LOADED_EVENT,
@@ -6350,6 +6352,7 @@ describe("changes during the first cart load", () => {
       const second = store.handleFormSubmit(submitForm({ note: "Two" }, "intent", "note-update"));
       await macrotask();
       expect(mockUpdateCart).not.toHaveBeenCalled();
+      expect(store.getState().revalidating).toBeFalsy();
 
       firstLoad.resolve({ cart: threeItemCart() });
       await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledTimes(1));
@@ -6363,6 +6366,96 @@ describe("changes during the first cart load", () => {
       expect(sentPayload(0)).toMatchObject({ note: "Two" });
       expect(store.getState().data.note).toBe("Two");
       expect(store.getState().pending.note).toBe(false);
+      expect(store.getState().revalidating).toBeFalsy();
+      expect(mockGetCart).toHaveBeenCalledTimes(1);
+    });
+
+    it("adopts the cart hydrate() passes right after a held change is replaced", async () => {
+      await connectWithPendingLoad();
+      void store.handleFormSubmit(submitForm({ note: "One" }, "intent", "note-update"));
+      void store.handleFormSubmit(submitForm({ note: "Two" }, "intent", "note-update"));
+      expect(store.getState().data.id).toBeNull();
+
+      store.hydrate(threeItemCart());
+
+      expect(store.getState().data.id).toBe(CART_ID);
+      expect(store.getState().data.totalQuantity).toBe(LOADED_QUANTITY);
+    });
+
+    it("holds a note behind the add that creates the cart", async () => {
+      const firstLoad = await connectWithPendingLoad();
+      const change = formAdd();
+      const note = store.handleFormSubmit(submitForm({ note: "Gift" }, "intent", "note-update"));
+      await macrotask();
+
+      firstLoad.resolve({ cart: null });
+      await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledTimes(1));
+      await macrotask();
+      expect(mockUpdateCart).toHaveBeenCalledTimes(1);
+      expect(sentPayload(0)).toMatchObject({ lines: [{ merchandiseId: VARIANT_ADDED }] });
+
+      resolveUpdate(0, serverCart(1, [added]));
+      await change;
+      await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledTimes(2));
+      expect(sentPayload(1)).toMatchObject({ note: "Gift" });
+      resolveUpdate(1, { cart: { ...serverCart(1, [added]).cart, note: "Gift" } });
+      await note;
+
+      expect(store.getState().data.note).toBe("Gift");
+    });
+
+    it("names no placeholder line as pending once a held add replays onto a loaded line", async () => {
+      const firstLoad = await connectWithPendingLoad();
+      void formAdd(VARIANT_ADDED);
+      await macrotask();
+      expect([...store.getState().pending.lines]).toEqual([`optimistic:${VARIANT_ADDED}`]);
+
+      firstLoad.resolve({
+        cart: makeCartState({
+          totalQuantity: LOADED_QUANTITY,
+          lines: [lineWithMerchandise("line-existing", LOADED_QUANTITY, VARIANT_ADDED)],
+        }),
+      });
+      await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledTimes(1));
+
+      expect(getCartLines(store.getState().data).map((line) => line.id)).toEqual(["line-existing"]);
+      expect([...store.getState().pending.lines]).toEqual(["line-existing"]);
+    });
+
+    it("lets the analytics tracker take the loaded cart as its baseline", async () => {
+      const publish = vi.fn();
+      Object.assign(window.Shopify as object, {
+        analytics: { publish, getConfig: () => ({ shop: null }) },
+      });
+      localStorage.setItem("cartLastUpdatedAt", JSON.stringify({ id: CART_ID, updatedAt: "U0" }));
+      const firstLoad = await connectWithPendingLoad();
+      const stopTracking = trackCartAnalytics(store);
+      const loaded = lineWithMerchandise("line-existing", LOADED_QUANTITY, VARIANT_OTHER);
+      const change = formAdd();
+      await macrotask();
+
+      firstLoad.resolve({
+        cart: makeCartState({ totalQuantity: LOADED_QUANTITY, updatedAt: "U0", lines: [loaded] }),
+      });
+      await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledTimes(1));
+      publish.mockClear();
+      resolveUpdate(0, {
+        cart: {
+          ...serverCart(LOADED_QUANTITY + 1, []).cart,
+          updatedAt: "U1",
+          lines: [loaded, lineWithMerchandise(added.id, 1, VARIANT_ADDED)],
+        },
+      });
+      await change;
+      stopTracking();
+
+      const addedLineIds = publish.mock.calls
+        .filter(([event]) => event === AnalyticsEvent.PRODUCT_ADD_TO_CART)
+        .map(([, payload]) => payload.currentLine.id);
+      expect(addedLineIds).toEqual([added.id]);
+      const [, updated] =
+        publish.mock.calls.find(([event]) => event === AnalyticsEvent.CART_UPDATED) ?? [];
+      expect(updated?.prevCart?.updatedAt).toBe("U0");
     });
 
     it("sends two held adds with the loaded cart ID", async () => {
@@ -6467,6 +6560,9 @@ describe("changes during the first cart load", () => {
       const external = codeAdd();
       await readyPromise;
       await vi.waitFor(() => expect(mockUpdateCart).toHaveBeenCalledTimes(2));
+      expect(sentPayload(1)).toMatchObject({
+        lines: [{ merchandiseId: VARIANT_OTHER, quantity: 1 }],
+      });
       expect(store.getState().loading).toBe(false);
       expect(store.getState().readyPromise).toBeUndefined();
 
@@ -6650,6 +6746,35 @@ describe("changes during the first cart load", () => {
       await replaced;
       expect(mockUpdateCart).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe("fetch() during a revalidation", () => {
+  it("does not stay revalidating when it adopts a different cart", async () => {
+    store.destroy();
+    const revalidation = createDeferred<{ cart: CartData | null }>();
+    const load = createDeferred<{ cart: CartData | null }>();
+    const otherCart = makeCartState({ id: "gid://shopify/Cart/other", totalQuantity: 2 });
+    mockGetCart.mockReset();
+    mockGetCart
+      .mockReturnValueOnce(revalidation.promise)
+      .mockReturnValueOnce(load.promise)
+      .mockResolvedValue({ cart: otherCart });
+    store = createCartStore({ initialData: { cart: makeCartState({ totalQuantity: 1 }) } });
+    store.connect();
+    store.refresh();
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(1));
+    expect(store.getState().revalidating).toBe(true);
+
+    const fetched = store.fetch();
+    await vi.waitFor(() => expect(mockGetCart).toHaveBeenCalledTimes(2));
+    load.resolve({ cart: otherCart });
+    await fetched;
+    revalidation.resolve({ cart: makeCartState({ totalQuantity: 1 }) });
+
+    await vi.waitFor(() => expect(store.getState().revalidating).toBeFalsy());
+    expect(store.getState().data.id).toBe("gid://shopify/Cart/other");
+    expect(store.getState().data.totalQuantity).toBe(2);
   });
 });
 
