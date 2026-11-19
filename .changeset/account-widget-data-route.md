@@ -2,7 +2,7 @@
 "@shopify/hydrogen": minor
 ---
 
-`createCustomerAccountServerHandlers` now also serves `GET /account/widget-data`, the JSON that Shopify's `<shopify-account>` component reads from its `account-data-url` attribute. The route returns the signed-in customer's name, email, and avatar, or `customer: null` for signed-out visitors, plus the shop's sign-in providers and account sheet translations for the request's locale. The customer's access token stays on the server.
+`createCustomerAccountServerHandlers` now also serves `GET /account/widget-data`, the JSON that Shopify's `<shopify-account>` component reads from its `account-data-url` attribute. The route returns the signed-in customer's name and email, or `customer: null` for signed-out visitors, plus the shop's sign-in providers and account sheet translations for the request's locale. The customer's access token stays on the server.
 
 Render the component with the new `ShopifyAccount` component from `@shopify/hydrogen/react` or `@shopify/hydrogen/vue`, and load its script with `<ShopifyScripts account />`:
 
