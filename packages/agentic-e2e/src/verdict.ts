@@ -311,8 +311,8 @@ function formatSteps(steps: readonly number[]): string {
  * 3. An add problem that {@link verifyAdd} fails on (a wrong item or quantity, no promise, a
  *    rejected promise, cart `userErrors`, a value that is not an object, `userErrors` or `warnings`
  *    that are not arrays, no `cart`, a stock or availability warning, more than one add event); any
- *    other cart event with no promise, a rejected promise, or cart `userErrors`: fail. Then any cart
- *    event with no outcome in time: fail.
+ *    other cart event with no promise, a rejected promise, `userErrors` that are present but not an
+ *    array, or cart `userErrors`: fail. Then any cart event with no outcome in time: fail.
  * 4. Code cannot follow the cart line (see {@link LineFollow}): indeterminate.
  * 5. The steps equal {@link EXPECTED_LINE_STEPS}: pass. A proper prefix: fail when the agent
  *    confirmed completion, else indeterminate. Anything else: fail.

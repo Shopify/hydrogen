@@ -501,6 +501,18 @@ describe("verifyCartLineChanges", () => {
     await expect(verifyChanges(events)).resolves.toEqual({ status: "fail", reason });
   });
 
+  it("fails for a full 1, 2, 1, removed run when the plus resolved with userErrors that are not an array", async () => {
+    const messages = fullRun();
+    messages[3] = settled("u1", null, { lines: [{ id: LINE, quantity: 2 }] });
+
+    for (const completed of [false, true]) {
+      await expect(verifyChanges(log(...messages), completed)).resolves.toEqual({
+        status: "fail",
+        reason: "A cart change event resolved with userErrors that are not an array.",
+      });
+    }
+  });
+
   // Rule 5.
   it.each([
     {
