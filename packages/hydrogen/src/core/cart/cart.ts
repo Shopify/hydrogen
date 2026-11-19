@@ -2767,7 +2767,11 @@ export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
       const listeners = new AbortController();
       const onReady = () => {
         listeners.abort();
-        configure();
+        try {
+          configure();
+        } catch (error) {
+          reject(error);
+        }
       };
       document.addEventListener("DOMContentLoaded", onReady, { signal: listeners.signal });
       window.addEventListener("load", onReady, { signal: listeners.signal });

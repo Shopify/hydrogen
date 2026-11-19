@@ -6715,6 +6715,20 @@ describe("getShopifyStandardActions", () => {
       expect(updateCart.configure).toHaveBeenCalledTimes(1);
     });
 
+    it("rejects when updateCart can't be configured once the script has run", async () => {
+      const actionsPromise = getShopifyStandardActions();
+      const updateCart = exposeActions();
+      updateCart.configure.mockReturnValueOnce(false);
+      document.dispatchEvent(new Event("DOMContentLoaded"));
+
+      await expect(actionsPromise).rejects.toThrow(
+        "Standard Actions updateCart could not be configured.",
+      );
+      const retry = getShopifyStandardActions();
+      expect(retry).not.toBe(actionsPromise);
+      await expect(retry).resolves.toBe(window.Shopify?.actions);
+    });
+
     it("configures Standard Actions that already ran without waiting", async () => {
       const updateCart = exposeActions();
 
