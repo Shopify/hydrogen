@@ -1,5 +1,5 @@
 import type { StorefrontClient } from "../client";
-import { createStorefrontClientForApiVersion, withStorefrontClientCache } from "../client/client";
+import { withStorefrontApiVersion, withStorefrontClientCache } from "../client/client";
 import { Cache } from "../core/cache";
 import { getLogger } from "../core/logging";
 import type { ShopifyRequestContext } from "../core/request-context";
@@ -26,7 +26,9 @@ const ACCOUNT_WIDGET_SHOP_QUERY = storefrontGql(`
 
 // TODO: move these fields into `ACCOUNT_WIDGET_SHOP_QUERY` when they reach a stable Storefront API
 // version. Until then they exist only in `unstable`, outside Hydrogen's bundled schema, so the
-// query is a plain string and the result is checked by hand.
+// query is a plain string and the result is checked by hand. `unstable` has no stability
+// guarantee: if it renames or drops these fields, each widget data request still sends this query,
+// uncached because the result has errors, and logs a warning.
 const ACCOUNT_WIDGET_MARKETING_CONSENT_QUERY: string = `
   query AccountWidgetMarketingConsent($country: CountryCode) @inContext(country: $country) {
     shop {
@@ -36,7 +38,12 @@ const ACCOUNT_WIDGET_MARKETING_CONSENT_QUERY: string = `
   }
 `;
 
-const MARKETING_CONSENT_OFF = {
+type AccountWidgetMarketingConsent = Pick<
+  AccountWidgetShop,
+  "marketingConsentSigninEnabled" | "marketingConsentPreselected"
+>;
+
+const MARKETING_CONSENT_OFF: AccountWidgetMarketingConsent = {
   marketingConsentSigninEnabled: false,
   marketingConsentPreselected: false,
 };
@@ -104,6 +111,8 @@ export async function queryAccountWidgetShop(
   storefrontClient: StorefrontClient,
   signal: AbortSignal,
 ): Promise<AccountWidgetShop> {
+  // The response waits for both requests, so a slow marketing consent request delays the account
+  // sheet until the route's deadline.
   const [result, marketingConsent] = await Promise.all([
     storefrontClient.graphql(
       ACCOUNT_WIDGET_SHOP_QUERY,
@@ -143,14 +152,14 @@ export async function queryAccountWidgetShop(
 async function queryMarketingConsent(
   storefrontClient: StorefrontClient,
   signal: AbortSignal,
-): Promise<typeof MARKETING_CONSENT_OFF> {
-  const unstableClient = createStorefrontClientForApiVersion(storefrontClient, "unstable");
-  if (!unstableClient) return MARKETING_CONSENT_OFF;
-
+): Promise<AccountWidgetMarketingConsent> {
   try {
-    const result = await unstableClient.graphql(
+    const result = await storefrontClient.graphql(
       ACCOUNT_WIDGET_MARKETING_CONSENT_QUERY,
-      withStorefrontClientCache(unstableClient, { signal }, Cache.long()),
+      withStorefrontApiVersion(
+        withStorefrontClientCache(storefrontClient, { signal }, Cache.long()),
+        "unstable",
+      ),
     );
     if (result.errors) {
       throw new Error("Storefront API returned errors for the marketing consent query", {
@@ -167,7 +176,8 @@ async function queryMarketingConsent(
         marketingConsentSigninEnabled && shop.marketingConsentPreselected === true,
     };
   } catch (error) {
-    log.warn("account widget marketing consent query failed", { error });
+    // An abort is the visitor leaving or the route's deadline, not a failed query.
+    if (!signal.aborted) log.warn("account widget marketing consent query failed", { error });
     return MARKETING_CONSENT_OFF;
   }
 }
