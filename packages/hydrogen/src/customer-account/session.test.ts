@@ -1893,6 +1893,12 @@ describe("account widget data route", () => {
   it.each([
     { failure: "an HTTP error", marketingConsent: () => new Response(null, { status: 500 }) },
     {
+      failure: "a network error",
+      marketingConsent: (): Response => {
+        throw new TypeError("fetch failed");
+      },
+    },
+    {
       failure: "GraphQL errors",
       marketingConsent: () =>
         jsonResponse({
@@ -1922,6 +1928,27 @@ describe("account widget data route", () => {
       );
     },
   );
+
+  it("responds with marketing consent off, without a warning, when the unstable request outlasts the deadline", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const storefrontFetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      if (!String(input).includes("/api/unstable/")) {
+        return Promise.resolve(jsonResponse({ data: { shop: SHOP } }));
+      }
+      return new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => reject(init.signal?.reason));
+      });
+    });
+
+    const responsePromise = requestWidgetData({ storefrontFetch });
+    await vi.advanceTimersByTimeAsync(8_000);
+    const response = await responsePromise;
+
+    expect(response?.status).toBe(200);
+    await expect(response?.json()).resolves.toMatchObject({ shop: EXPECTED_SHOP });
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
 
   it("returns an empty translation list when the shop has none", async () => {
     const response = await requestWidgetData({
