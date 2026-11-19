@@ -388,6 +388,9 @@ function changeProblem(changes: CartEvent[]): string | undefined {
   if (changes.some((change) => change.outcome === "rejected")) {
     return "A cart change event promise was rejected.";
   }
+  if (changes.some((change) => change.settled?.userErrors === null)) {
+    return "A cart change event resolved with userErrors that are not an array.";
+  }
   if (changes.some((change) => (change.settled?.userErrors ?? 0) > 0)) {
     return "A cart change event resolved with cart user errors.";
   }
