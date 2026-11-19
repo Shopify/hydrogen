@@ -8,7 +8,7 @@ import {
   withStorefrontRateLimit,
   type SelectedOption,
 } from "@shopify/hydrogen";
-import { ShopPayButton } from "@shopify/hydrogen/react";
+import { ProductView, ShopPayButton } from "@shopify/hydrogen/react";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 
@@ -782,7 +782,7 @@ function RelatedProducts({ products }: { products: RelatedProduct[] }) {
           >
             {products.map((product) => (
               <li key={product.handle}>
-                <ProductCard product={product} />
+                <ProductCard product={product} context="recommendation" />
               </li>
             ))}
           </ul>
@@ -818,7 +818,9 @@ export default function ProductRoute({ loaderData }: Route.ComponentProps) {
     >
       <ProductViewedTracker product={product} />
       <main className="flex-1" id="main-content" tabIndex={-1}>
-        <ProductPageContent product={product} />
+        <ProductView product={product} context="page" className="block">
+          <ProductPageContent product={product} />
+        </ProductView>
         <RelatedProducts products={relatedProducts} />
       </main>
     </ProductProvider>
