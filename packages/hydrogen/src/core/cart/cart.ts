@@ -2204,9 +2204,7 @@ function connectCartStore(store: CartStoreContext, handlers: CartEventHandlers):
   document.addEventListener("shopify:cart:discount-update", handlers.discount);
   document.addEventListener("shopify:cart:note-update", handlers.note);
   document.addEventListener("shopify:cart:attributes-update", handlers.attributes);
-  void getShopifyStandardActions().catch((error: unknown) =>
-    log.error("standard actions setup failed", { error }),
-  );
+  void getShopifyStandardActions().catch(() => {});
   if (store.revalidateOnConnect) {
     store.revalidateOnConnect = false;
     refreshCartInStore(store);
@@ -2778,8 +2776,9 @@ export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
       return;
     }
     configure();
-  }).catch((error) => {
+  }).catch((error: unknown) => {
     standardActionsPromise = null;
+    log.error("standard actions setup failed", { error });
     throw error;
   }));
 }

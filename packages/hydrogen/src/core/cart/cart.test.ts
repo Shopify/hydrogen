@@ -6671,24 +6671,37 @@ describe("getShopifyStandardActions", () => {
     expect(updateCart.configure).toHaveBeenCalledTimes(1);
   });
 
-  it("logs when a connected store cannot set up Standard Actions", async () => {
+  it("logs a failed Standard Actions setup once, however many stores connect", async () => {
     const logger = createTestLogger();
     configureLogging({ logger });
     setShopify({});
     resetStandardActionsForTests();
-    const localStore = createCartStore();
-    onTestFinished(() => localStore.destroy());
+    const stores = [createCartStore(), createCartStore()];
+    onTestFinished(() => stores.forEach((localStore) => localStore.destroy()));
 
-    localStore.connect();
+    // StrictMode-style connect -> destroy -> connect, plus a second store.
+    stores[0].connect();
+    stores[0].destroy();
+    stores[0].connect();
+    stores[1].connect();
+    await flushMicrotasks();
 
-    await vi.waitFor(() =>
-      expect(logger.error).toHaveBeenCalledWith("standard actions setup failed", {
-        scope: "cart",
-        error: expect.objectContaining({
-          message: expect.stringContaining(`include ${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}`),
-        }),
-      }),
+    const setupFailures = logger.error.mock.calls.filter(
+      ([message]) => message === "standard actions setup failed",
     );
+    expect(setupFailures).toEqual([
+      [
+        "standard actions setup failed",
+        {
+          scope: "cart",
+          error: expect.objectContaining({
+            message: expect.stringContaining(
+              `include ${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}`,
+            ),
+          }),
+        },
+      ],
+    ]);
   });
 
   describe("while the document is interactive", () => {
@@ -6716,6 +6729,8 @@ describe("getShopifyStandardActions", () => {
     });
 
     it("rejects when updateCart can't be configured once the script has run", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
       const actionsPromise = getShopifyStandardActions();
       const updateCart = exposeActions();
       updateCart.configure.mockReturnValueOnce(false);
@@ -6724,6 +6739,12 @@ describe("getShopifyStandardActions", () => {
       await expect(actionsPromise).rejects.toThrow(
         "Standard Actions updateCart could not be configured.",
       );
+      expect(logger.error).toHaveBeenCalledWith("standard actions setup failed", {
+        scope: "cart",
+        error: expect.objectContaining({
+          message: "Standard Actions updateCart could not be configured.",
+        }),
+      });
       const retry = getShopifyStandardActions();
       expect(retry).not.toBe(actionsPromise);
       await expect(retry).resolves.toBe(window.Shopify?.actions);
