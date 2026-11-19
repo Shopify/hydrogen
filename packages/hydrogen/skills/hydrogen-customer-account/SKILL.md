@@ -89,7 +89,7 @@ Wrap header/account-link UI in the framework's streaming primitive when possible
 
 ## Account Page
 
-Hydrogen ships no account UI yet — the app owns it. A storefront with the handlers wired but no account page has working auth endpoints a buyer can never reach. Build at least a minimal `/account` route:
+Hydrogen ships no account page yet — the app owns it. A storefront with the handlers wired but no account page has working auth endpoints a buyer can never reach. Build at least a minimal `/account` route:
 
 - **Signed out** — render a sign-in panel linking to `/account/login?return_to=/account`. The login link must be a full-document navigation (plain `<a>` or the framework link's reload-document mode): the handler returns a raw redirect to Shopify's hosted login page that client-side routing cannot follow.
 - **Signed in** — fetch and render a minimal profile (`customer { firstName lastName emailAddress { emailAddress } }`). Check GraphQL `errors` and render an error state instead of crashing.
