@@ -32,7 +32,6 @@ const ACCOUNT_WIDGET_CUSTOMER_QUERY = gql(`
       emailAddress {
         emailAddress
       }
-      imageUrl
     }
   }
 `);
@@ -53,7 +52,7 @@ export type AccountWidgetCustomer = {
   displayName: string;
   firstName: string | null;
   lastName: string | null;
-  avatarUrl: string;
+  avatarUrl: null;
 };
 
 /** The shop settings that `<shopify-account>` reads for its sign-in options and strings. */
@@ -134,7 +133,9 @@ export async function queryAccountWidgetCustomer(
     displayName: customer.displayName,
     firstName: customer.firstName ?? null,
     lastName: customer.lastName ?? null,
-    avatarUrl: customer.imageUrl,
+    // The Customer Account API's `imageUrl` is a Gravatar URL with Gravatar's default image, so
+    // every customer would get an image. With `null`, the component shows the customer's initials.
+    avatarUrl: null,
   };
 }
 

@@ -1568,7 +1568,6 @@ describe("account widget data route", () => {
     firstName: "Ada",
     lastName: "Lovelace",
     emailAddress: { emailAddress: "ada@example.com" },
-    imageUrl: "https://cdn.shopify.com/avatar.png",
   };
   const EXPECTED_CUSTOMER = {
     id: "gid://shopify/Customer/1",
@@ -1576,7 +1575,7 @@ describe("account widget data route", () => {
     displayName: "Ada Lovelace",
     firstName: "Ada",
     lastName: "Lovelace",
-    avatarUrl: "https://cdn.shopify.com/avatar.png",
+    avatarUrl: null,
   };
 
   beforeEach(() => {

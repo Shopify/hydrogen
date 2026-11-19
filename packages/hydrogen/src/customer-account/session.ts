@@ -290,7 +290,7 @@ export type CustomerAccountServerHandlers<
     "GET"
   >;
   /**
-   * Returns the data for `<shopify-account account-data-url>` at `/account/widget-data`: the signed-in customer's name, email, and avatar, or `null` for signed-out visitors, plus the shop's sign-in providers and account sheet translations for the request's locale. Accepts `GET`. The customer's access token stays on the server. Under a locale path prefix, point `account-data-url` at the prefixed path, such as `/fr-ca/account/widget-data`, to get that locale's translations.
+   * Returns the data for `<shopify-account account-data-url>` at `/account/widget-data`: the signed-in customer's name and email, or `null` for signed-out visitors, plus the shop's sign-in providers and account sheet translations for the request's locale. Accepts `GET`. The customer's access token stays on the server. Under a locale path prefix, point `account-data-url` at the prefixed path, such as `/fr-ca/account/widget-data`, to get that locale's translations.
    *
    * The route refreshes an expired access token and commits the session. The response is private and uncacheable. When the Customer Account API rejects the access token with a `401` status, the route clears the stored tokens and returns `customer: null`. When the Storefront API or Customer Account API request fails otherwise, or a signed-in customer's token can't be refreshed for a temporary reason, the route returns a `502` error instead of partial data. The token refresh and the API requests share an 8-second deadline, within the component's 10-second timeout. The route needs `storefrontClient` in the handler context, and throws when the customer session doesn't come from `createCustomerSession`.
    */
