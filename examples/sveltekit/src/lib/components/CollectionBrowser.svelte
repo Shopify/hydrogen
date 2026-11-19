@@ -4,6 +4,7 @@
 	import type { AvailableFilter, ProductFilter } from '@shopify/hydrogen';
 	import { onDestroy, untrack } from 'svelte';
 	import {
+		getCollectionViewAttributes,
 		getFilterRemovalUrl,
 		getSortByValue,
 		isFilterInputActive,
@@ -21,6 +22,7 @@
 	let {
 		title,
 		description,
+		id,
 		handle,
 		dataSearch,
 		products,
@@ -28,6 +30,7 @@
 	}: {
 		title: string;
 		description: string | null;
+		id: string;
 		handle: string;
 		dataSearch: string;
 		products: ProductCardData[];
@@ -356,26 +359,35 @@
 				</div>
 			{/if}
 
-			<section
-				class={isLoading
-					? 'mt-8 grid grid-cols-2 gap-x-6 gap-y-12 opacity-50 transition-opacity duration-200 md:grid-cols-3'
-					: 'mt-8 grid grid-cols-2 gap-x-6 gap-y-12 opacity-100 transition-opacity duration-200 md:grid-cols-3'}
+			<!-- The element sends the event again when the collection handle changes, not when products load. -->
+			<shopify-collection-view
+				{...getCollectionViewAttributes({
+					collection: { id, handle },
+					productsCount: products.length
+				})}
+				class="block"
 			>
-				{#each products as product (product.handle)}
-					<ProductCard {product} context="collection" />
-				{/each}
-			</section>
+				<section
+					class={isLoading
+						? 'mt-8 grid grid-cols-2 gap-x-6 gap-y-12 opacity-50 transition-opacity duration-200 md:grid-cols-3'
+						: 'mt-8 grid grid-cols-2 gap-x-6 gap-y-12 opacity-100 transition-opacity duration-200 md:grid-cols-3'}
+				>
+					{#each products as product (product.handle)}
+						<ProductCard {product} context="collection" />
+					{/each}
+				</section>
 
-			{#if products.length === 0 && !isLoading}
-				<div class="mt-16 text-center">
-					<p class="text-lg text-black/60">No products found matching your filters.</p>
-					{#if hasActiveFilters}
-						<a href={collectionPath} class="mt-4 inline-block text-sm font-semibold underline">
-							Clear all filters
-						</a>
-					{/if}
-				</div>
-			{/if}
+				{#if products.length === 0 && !isLoading}
+					<div class="mt-16 text-center">
+						<p class="text-lg text-black/60">No products found matching your filters.</p>
+						{#if hasActiveFilters}
+							<a href={collectionPath} class="mt-4 inline-block text-sm font-semibold underline">
+								Clear all filters
+							</a>
+						{/if}
+					</div>
+				{/if}
+			</shopify-collection-view>
 		</div>
 	</form>
 </main>
