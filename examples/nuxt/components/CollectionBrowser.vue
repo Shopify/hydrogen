@@ -9,6 +9,7 @@ import { collectionRouteSearch } from "~/utils/collection-route-search";
 const props = defineProps<{
   title: string;
   description: string | null;
+  id: string;
   handle: string;
   dataSearch: string;
   products: ProductCardData[];
@@ -53,6 +54,7 @@ async function handleChange(search: string) {
     <CollectionBrowserContent
       :title="title"
       :description="description"
+      :collection="{ id, handle }"
       :products="products"
       :available-filters="availableFilters"
       :collection-path="route.path"

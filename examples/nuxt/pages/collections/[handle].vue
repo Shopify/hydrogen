@@ -86,6 +86,7 @@ useHead({ title: () => `${collection.value.title} — Mock.shop` });
   <CollectionBrowser
     :title="collection.title"
     :description="collection.description"
+    :id="collection.id"
     :handle="collection.handle"
     :data-search="data?.dataSearch ?? ''"
     :products="collection.products.nodes"

@@ -151,6 +151,7 @@ export default function Collection() {
           <CollectionBrowser
             title={loaded().collection.title}
             description={loaded().collection.description}
+            id={loaded().collection.id}
             handle={loaded().collection.handle}
             dataSearch={loaded().dataSearch}
             products={loaded().collection.products.nodes}

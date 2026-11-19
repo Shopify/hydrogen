@@ -7,6 +7,7 @@ import {
   parseCollectionParams,
   serializeCollectionParams,
 } from "@shopify/hydrogen";
+import { CollectionView } from "@shopify/hydrogen/vue";
 
 import type { ProductCardData } from "~/components/ProductCard.vue";
 import { useCollection, useCollectionForm } from "~/storefront/collection";
@@ -14,6 +15,7 @@ import { useCollection, useCollectionForm } from "~/storefront/collection";
 const props = defineProps<{
   title: string;
   description: string | null;
+  collection: { id: string; handle: string };
   products: ProductCardData[];
   availableFilters: AvailableFilter[];
   collectionPath: string;
@@ -335,31 +337,33 @@ function visibleFilters(filters: AvailableFilter[]) {
           </NuxtLink>
         </div>
 
-        <!-- Product grid -->
-        <section
-          class="mt-8 grid grid-cols-2 gap-x-6 gap-y-12 transition-opacity duration-200 md:grid-cols-3"
-          :class="isLoading ? 'opacity-50' : 'opacity-100'"
-        >
-          <ProductCard
-            v-for="product in products"
-            :key="product.handle"
-            :product="product"
-            context="collection"
-          />
-        </section>
-
-        <!-- Empty state -->
-        <div v-if="products.length === 0 && !isLoading" class="mt-16 text-center">
-          <p class="text-lg text-black/60">No products found matching your filters.</p>
-          <NuxtLink
-            v-if="hasActiveFilters"
-            :to="collectionPath"
-            @click="restoreHistoryPrice"
-            class="mt-4 inline-block text-sm font-semibold underline"
+        <CollectionView :collection="collection" :products-count="products.length" class="block">
+          <!-- Product grid -->
+          <section
+            class="mt-8 grid grid-cols-2 gap-x-6 gap-y-12 transition-opacity duration-200 md:grid-cols-3"
+            :class="isLoading ? 'opacity-50' : 'opacity-100'"
           >
-            Clear all filters
-          </NuxtLink>
-        </div>
+            <ProductCard
+              v-for="product in products"
+              :key="product.handle"
+              :product="product"
+              context="collection"
+            />
+          </section>
+
+          <!-- Empty state -->
+          <div v-if="products.length === 0 && !isLoading" class="mt-16 text-center">
+            <p class="text-lg text-black/60">No products found matching your filters.</p>
+            <NuxtLink
+              v-if="hasActiveFilters"
+              :to="collectionPath"
+              @click="restoreHistoryPrice"
+              class="mt-4 inline-block text-sm font-semibold underline"
+            >
+              Clear all filters
+            </NuxtLink>
+          </div>
+        </CollectionView>
       </div>
     </form>
   </main>
