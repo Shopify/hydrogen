@@ -232,6 +232,8 @@ export type {
 export { buildProductSelectionSearchParams } from "./product";
 export type { ProductSelectionLinkStyle } from "./product";
 export { getSelectedProductOptions } from "./product";
+export { defineProductView, getProductViewAttributes, PRODUCT_VIEW_TAG_NAME } from "./product";
+export type { ProductViewOptions, ProductViewProduct } from "./product";
 export type {
   ProductInput,
   ProductAddToCartProps,
