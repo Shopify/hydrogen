@@ -290,7 +290,7 @@ export type CustomerAccountServerHandlers<
     "GET"
   >;
   /**
-   * Returns the data for `<shopify-account account-data-url="/account/widget-data">` at `/account/widget-data`: the signed-in customer's name, email, and avatar, or `null` for signed-out visitors, plus the shop's sign-in providers and account sheet translations for the request's locale. Accepts `GET`. The customer's access token stays on the server.
+   * Returns the data for `<shopify-account account-data-url>` at `/account/widget-data`: the signed-in customer's name, email, and avatar, or `null` for signed-out visitors, plus the shop's sign-in providers and account sheet translations for the request's locale. Accepts `GET`. The customer's access token stays on the server. Under a locale path prefix, point `account-data-url` at the prefixed path, such as `/fr-ca/account/widget-data`, to get that locale's translations.
    *
    * The route refreshes an expired access token and commits the session. The response is private and uncacheable. When the Customer Account API rejects the access token with a `401` status, the route clears the stored tokens and returns `customer: null`. When the Storefront API or Customer Account API request fails otherwise, or a signed-in customer's token can't be refreshed for a temporary reason, the route returns a `502` error instead of partial data. The token refresh and the API requests share an 8-second deadline, within the component's 10-second timeout. The route needs `storefrontClient` in the handler context, and throws when the customer session doesn't come from `createCustomerSession`.
    */
@@ -691,14 +691,22 @@ export async function getCustomerSessionRefreshResult(
  *
  * Link to these paths with full-page navigation, such as a plain `<a>` link or a `<form>`. Client-side navigation components can't follow these redirects.
  *
- * The widget data route at `/account/widget-data` returns JSON for Shopify's `<shopify-account>` component, so the component can show the signed-in customer without the access token reaching the page.
+ * The widget data route at `/account/widget-data` returns JSON for Shopify's `<shopify-account>` component, so the component can show the signed-in customer without the access token reaching the page. Build the component's `account-data-url` and `sign-in-url` from the `pathPrefix` that `useLocale()` returns, so a page under a locale prefix such as `/fr-ca` gets the account sheet in its own language and starts sign-in with that locale's country. A storefront without `LocaleProvider` has one locale and can use `/account/widget-data` and `/account/login` as they are. Load the component with `<ShopifyScripts account />`.
  *
  * @example
  * ```tsx
- * <ShopifyScripts shop={shop} account />
- * <shopify-account account-data-url="/account/widget-data" sign-in-url="/account/login">
- *   <div slot="signed-out-avatar">Sign in</div>
- * </shopify-account>
+ * // An account button in the page's locale
+ * function AccountButton() {
+ *   const { pathPrefix } = useLocale();
+ *   return (
+ *     <shopify-account
+ *       account-data-url={`${pathPrefix}/account/widget-data`}
+ *       sign-in-url={`${pathPrefix}/account/login`}
+ *     >
+ *       <div slot="signed-out-avatar">Sign in</div>
+ *     </shopify-account>
+ *   );
+ * }
  * ```
  *
  * @returns The login, authorize, refresh, logout, and account widget data routes.
