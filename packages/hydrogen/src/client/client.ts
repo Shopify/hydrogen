@@ -71,6 +71,10 @@ const REQUEST_IDENTITY_HEADERS = new Set([
 // 304 Not Modified is a 3xx but not a redirect, so it falls through to the non-OK handling.
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const CACHE_ENABLED_GRAPHQL_CLIENTS = new WeakSet<StorefrontClient["graphql"]>();
+const STOREFRONT_CLIENT_ARGS = new WeakMap<
+  StorefrontClient["graphql"],
+  CreateStorefrontClientArgs
+>();
 const SHOULD_CACHE_RESULT = Symbol();
 const PRIVATE_RESPONSE_DIRECTIVES = new Set(["private", "no-store"]);
 const STOREFRONT_PRIVATE_RESPONSE_PERSONALIZATION_REASON = "storefront-api-private-response";
@@ -88,6 +92,24 @@ export function withStorefrontClientCache<TOptions extends object>(
   if (!CACHE_ENABLED_GRAPHQL_CLIENTS.has(client.graphql)) return options;
 
   return { ...options, cache: strategy, [SHOULD_CACHE_RESULT]: shouldCacheResult };
+}
+
+/**
+ * Creates a copy of a client that queries another Storefront API version, such as `unstable`,
+ * with the same token, fetch, cache, and request context. Returns `undefined` for a client that
+ * `createStorefrontClient` didn't create.
+ */
+export function createStorefrontClientForApiVersion(
+  client: Pick<StorefrontClient, "graphql">,
+  apiVersion: string,
+): StorefrontClient | undefined {
+  const args = STOREFRONT_CLIENT_ARGS.get(client.graphql);
+  if (!args) return undefined;
+
+  return createStorefrontClient({
+    ...args,
+    config: { ...args.config, apiVersion },
+  } as CreateStorefrontClientArgs);
 }
 
 /**
@@ -396,6 +418,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
   };
 
   if (config.cache) CACHE_ENABLED_GRAPHQL_CLIENTS.add(client.graphql);
+  STOREFRONT_CLIENT_ARGS.set(client.graphql, args);
 
   return client;
 }

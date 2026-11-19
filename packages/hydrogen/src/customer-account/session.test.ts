@@ -816,6 +816,23 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(loginUrl.searchParams.get("locale")).toBe("fr-CA");
   });
 
+  it.each([
+    { value: "true", forwarded: "true" },
+    { value: "false", forwarded: "false" },
+    { value: "1", forwarded: null },
+    { value: "", forwarded: null },
+  ])("forwards marketing_consent=$value to Shopify as $forwarded", async ({ value, forwarded }) => {
+    const response = await handleShopifyRoutes({
+      request: new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGIN_PATH}?marketing_consent=${value}`),
+      sessionManager: new TestSessionManager(),
+      handlers: [createCustomerAccountServerHandlers({ customerSession: createSession() })],
+    });
+
+    const location = response?.headers.get("location");
+    assert(location, "Expected the login route to redirect");
+    expect(new URL(location).searchParams.get("marketing_consent")).toBe(forwarded);
+  });
+
   it("logs out, commits cleared state, and redirects through Shopify", async () => {
     const sessionManager = new TestSessionManager(validSessionData());
     const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGOUT_PATH}`, {
@@ -1826,6 +1843,85 @@ describe("account widget data route", () => {
       },
     });
   });
+
+  function storefrontFetchWithMarketingConsent(marketingConsent: () => Response) {
+    return vi.fn((input: RequestInfo | URL) =>
+      Promise.resolve(
+        String(input).includes("/api/unstable/")
+          ? marketingConsent()
+          : jsonResponse({ data: { shop: SHOP } }),
+      ),
+    );
+  }
+
+  it("reads the shop's marketing consent settings from the unstable Storefront API", async () => {
+    const storefrontFetch = storefrontFetchWithMarketingConsent(() =>
+      jsonResponse({
+        data: { shop: { marketingConsentSigninEnabled: true, marketingConsentPreselected: true } },
+      }),
+    );
+
+    const response = await requestWidgetData({ storefrontFetch });
+
+    await expect(response?.json()).resolves.toMatchObject({
+      shop: { marketingConsentSigninEnabled: true, marketingConsentPreselected: true },
+    });
+    const unstableCalls = storefrontFetch.mock.calls.filter(([input]) =>
+      String(input).includes("/api/unstable/"),
+    );
+    expect(unstableCalls).toHaveLength(1);
+    const [, init] = unstableCalls[0] as unknown as [unknown, RequestInit];
+    expect(JSON.parse(String(init.body)).variables).toEqual({ country: "US" });
+  });
+
+  it("leaves the marketing consent checkbox unchecked when the shop doesn't collect consent at sign-in", async () => {
+    const response = await requestWidgetData({
+      storefrontFetch: storefrontFetchWithMarketingConsent(() =>
+        jsonResponse({
+          data: {
+            shop: { marketingConsentSigninEnabled: false, marketingConsentPreselected: true },
+          },
+        }),
+      ),
+    });
+
+    await expect(response?.json()).resolves.toMatchObject({
+      shop: { marketingConsentSigninEnabled: false, marketingConsentPreselected: false },
+    });
+  });
+
+  it.each([
+    { failure: "an HTTP error", marketingConsent: () => new Response(null, { status: 500 }) },
+    {
+      failure: "GraphQL errors",
+      marketingConsent: () =>
+        jsonResponse({
+          data: null,
+          errors: [{ message: "Field 'marketingConsentSigninEnabled' doesn't exist" }],
+        }),
+    },
+  ])(
+    "turns marketing consent off and still responds when the unstable request returns $failure",
+    async ({ marketingConsent }) => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+
+      const response = await requestWidgetData({
+        storefrontFetch: storefrontFetchWithMarketingConsent(marketingConsent),
+      });
+
+      expect(response?.status).toBe(200);
+      await expect(response?.json()).resolves.toEqual({
+        customer: null,
+        shop: EXPECTED_SHOP,
+        visitor: { country: "US", language: "EN" },
+      });
+      expect(logger.warn).toHaveBeenCalledWith(
+        "account widget marketing consent query failed",
+        expect.objectContaining({ scope: "customer-account", error: expect.any(Error) }),
+      );
+    },
+  );
 
   it("returns an empty translation list when the shop has none", async () => {
     const response = await requestWidgetData({
