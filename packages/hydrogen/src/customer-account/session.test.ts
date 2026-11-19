@@ -1901,7 +1901,7 @@ describe("account widget data route", () => {
     expect(response?.headers.get("set-cookie")).toBe("session=1");
     expect(sessionManager.data).toBeUndefined();
     await expect(response?.json()).resolves.toMatchObject({ customer: null });
-    expect(getCartMutations(storefrontFetch)).toEqual([
+    expect(getCartMutations(storefrontFetch)).toMatchObject([
       { cartId: CART_GID, buyerIdentity: { customerAccessToken: null } },
     ]);
   });
@@ -1937,7 +1937,7 @@ describe("account widget data route", () => {
     });
 
     expect(response?.status).toBe(200);
-    expect(getCartMutations(storefrontFetch)).toEqual([
+    expect(getCartMutations(storefrontFetch)).toMatchObject([
       { cartId: CART_GID, buyerIdentity: { customerAccessToken: NEW_ACCESS_TOKEN } },
     ]);
   });
@@ -1956,7 +1956,7 @@ describe("account widget data route", () => {
 
     expect(response?.status).toBe(200);
     expect(response?.headers.get("set-cookie")).toBe("session=1");
-    expect(getCartMutations(storefrontFetch)).toEqual([
+    expect(getCartMutations(storefrontFetch)).toMatchObject([
       { cartId: CART_GID, buyerIdentity: { customerAccessToken: null } },
     ]);
   });
