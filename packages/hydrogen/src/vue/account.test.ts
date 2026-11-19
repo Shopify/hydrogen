@@ -50,6 +50,22 @@ describe("ShopifyAccount", () => {
     expect(wrapper.get('shopify-account > [slot="signed-out-avatar"]').text()).toBe("Sign in");
   });
 
+  it("keeps the component's default icon when a fragment renders nothing", () => {
+    const wrapper = mount(ShopifyAccount, {
+      slots: { signedOutAvatar: () => [h(Fragment, [createCommentVNode("v-if")])] },
+    });
+
+    expect(wrapper.get("shopify-account").element.children).toHaveLength(0);
+  });
+
+  it("renders a signed-out avatar inside a fragment", () => {
+    const wrapper = mount(ShopifyAccount, {
+      slots: { signedOutAvatar: () => [h(Fragment, [h("span", "Sign in")])] },
+    });
+
+    expect(wrapper.get('shopify-account > [slot="signed-out-avatar"]').text()).toBe("Sign in");
+  });
+
   it("keeps the component's default icon without a signed-out avatar", () => {
     expect(mount(ShopifyAccount).get("shopify-account").element.children).toHaveLength(0);
   });
