@@ -141,13 +141,16 @@ With the React or Vue bindings, pass the request's locale through loader data an
 
 ```tsx
 // root loader
-return { locale: requestContext.locale, cartData };
+return { locale: requestContext.locale };
 
 // root component
 import { LocaleProvider } from "@shopify/hydrogen/react"; // or "@shopify/hydrogen/vue"
 
+// The cart route's loader reads the cart; see the `hydrogen-cart-ui` skill.
+const cartRoute = useRouteLoaderData<typeof cartLoader>("routes/cart");
+
 <LocaleProvider locale={loaderData.locale}>
-  <CartProvider initialData={loaderData.cartData}>
+  <CartProvider initialData={cartRoute?.cartData}>
     <Outlet />
   </CartProvider>
 </LocaleProvider>;

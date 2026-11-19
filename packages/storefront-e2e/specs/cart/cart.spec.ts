@@ -60,20 +60,29 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
     });
   }
   await setCartLineQuantity(page, expectation, product.maxQuantity);
-  await page.goto(product.path);
 
   const requestGate = createRequestGate();
-  // Hold only the change. A storefront may load the cart in the browser, and that first read
-  // must land so the optimistic add builds on the line already at the stock limit.
+  const firstReadGate = createRequestGate();
+  let firstReadSeen = false;
+  // A storefront may load the cart in the browser. Hold that first read until after the click, so
+  // the add starts during the load and must still build on the line already at the stock limit.
+  // Hold the change until the test has checked the optimistic quantity.
   await page.route(CART_ENDPOINT_PATTERN, async (route) => {
-    if (route.request().method() === "POST") await requestGate.wait;
+    if (route.request().method() === "POST") {
+      await requestGate.wait;
+    } else if (!firstReadSeen) {
+      firstReadSeen = true;
+      await firstReadGate.wait;
+    }
     await route.continue();
   });
+  await page.goto(product.path);
 
   const addToCart = page.getByRole("button", { name: ADD_TO_CART_NAME }).first();
 
   try {
     await addToCart.click();
+    firstReadGate.release();
     const line = await openCartOverlayFor(page, product.productTitle);
     await expect(line).toBeVisible({ timeout: CART_SETTLE_TIMEOUT_MS });
     const quantityInput = await quantityInputFor(line, product.path);
@@ -92,6 +101,7 @@ test("cart rolls back an optimistic add beyond available stock", async ({ data, 
       .toBe(product.maxQuantity);
     await expectCartTotalsStatus(page, CART_TOTALS_UPDATED_TEXT, data.paths.cart);
   } finally {
+    firstReadGate.release();
     requestGate.release();
     await page.unroute(CART_ENDPOINT_PATTERN);
   }

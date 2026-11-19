@@ -187,7 +187,7 @@ function CartContentBody() {
 }
 ```
 
-Keep using `useCart(selector)` for non-blocking UI such as cart counts, pending states, and optimistic controls.
+Keep using `useCart(selector)` for non-blocking UI such as cart counts, pending states, and optimistic controls. A `useSuspenseCart` view stays suspended while a change made during the first load waits for that load, so it shows the change only once the load lands.
 
 ## Refreshing Cart State
 

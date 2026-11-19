@@ -90,6 +90,8 @@ export function CartLineItem({
   const merchandise = line.merchandise;
   const product = merchandise?.product;
   const pending = pendingLines.has(line.id);
+  // A line the store shows before the server creates it has no server ID to change yet.
+  const unconfirmed = line.id.startsWith("optimistic:");
   const optionText = merchandise?.selectedOptions
     ?.map((option: { name: string; value: string }) => option.value)
     .join(" / ");
@@ -163,6 +165,7 @@ export function CartLineItem({
             <button
               type="submit"
               {...register("decrease")}
+              disabled={unconfirmed}
               className="text-on-surface-secondary hover:text-on-surface inline-flex size-11 items-center justify-center disabled:cursor-not-allowed disabled:opacity-50 motion-safe:transition-[color,transform] motion-safe:active:scale-[0.90]"
               aria-label={`Decrease quantity for ${product?.title ?? merchandise?.title ?? "item"}`}
             >
@@ -170,6 +173,7 @@ export function CartLineItem({
             </button>
             <input
               {...register("quantity", { value: line.quantity, interactive: true })}
+              disabled={unconfirmed}
               className={`number-reset text-on-surface h-11 w-12 rounded-none border-0 bg-transparent p-0 text-center text-sm ${pending ? "opacity-50" : ""}`}
               aria-label="Quantity"
               aria-describedby={lineError?.userErrors.length ? errorId : undefined}
@@ -178,6 +182,7 @@ export function CartLineItem({
             <button
               type="submit"
               {...register("increase")}
+              disabled={unconfirmed}
               className="text-on-surface-secondary hover:text-on-surface inline-flex size-11 items-center justify-center disabled:cursor-not-allowed disabled:opacity-50 motion-safe:transition-[color,transform] motion-safe:active:scale-[0.90]"
               aria-label={`Increase quantity for ${product?.title ?? merchandise?.title ?? "item"}`}
             >
@@ -187,7 +192,8 @@ export function CartLineItem({
           <button
             type="submit"
             {...register("remove")}
-            className="text-on-surface-secondary hover:text-on-surface inline-flex size-11 items-center justify-center rounded motion-safe:transition-[color,transform] motion-safe:active:scale-[0.90]"
+            disabled={unconfirmed}
+            className="text-on-surface-secondary hover:text-on-surface inline-flex size-11 items-center justify-center rounded disabled:cursor-not-allowed disabled:opacity-50 motion-safe:transition-[color,transform] motion-safe:active:scale-[0.90]"
             aria-label={`Remove ${product?.title ?? merchandise?.title ?? "item"}`}
           >
             <img src="/icons/icon-trash.svg" alt="" className="size-5" aria-hidden="true" />
@@ -282,6 +288,7 @@ function CartFooter() {
 
 export function CartDrawer() {
   const totalQuantity = useCart((state) => state.data.totalQuantity);
+  const loading = useCart((state) => state.loading);
   const cart = useCart((state) => state.data);
   const statusMessage = useCartStatusMessage();
 
@@ -324,7 +331,7 @@ export function CartDrawer() {
               >
                 Cart
               </h2>
-              <span className="cart-count-badge">{totalQuantity}</span>
+              {loading ? null : <span className="cart-count-badge">{totalQuantity}</span>}
             </div>
             <button
               type="button"
