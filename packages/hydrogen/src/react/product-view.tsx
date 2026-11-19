@@ -28,8 +28,6 @@ export type ProductViewProps = ProductViewOptions & HTMLAttributes<HTMLElement>;
  * @publicDocs
  */
 export function ProductView(props: ProductViewProps): ReactElement {
-  // Pass `props` whole: TypeScript can't rebuild the `context`/`product` union from separate
-  // variables. Destructure them only to keep them out of the element's HTML attributes.
   const { product: _product, context: _context, children, className, ...rest } = props;
   return createElement(
     PRODUCT_VIEW_TAG_NAME,

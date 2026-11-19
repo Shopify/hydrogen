@@ -13054,7 +13054,7 @@
         "name": "ReactElement",
         "value": "ReactElement"
       },
-      "value": "export function ProductView(props: ProductViewProps): ReactElement {\n  // Pass `props` whole: TypeScript can't rebuild the `context`/`product` union from separate\n  // variables. Destructure them only to keep them out of the element's HTML attributes.\n  const { product: _product, context: _context, children, className, ...rest } = props;\n  return createElement(\n    PRODUCT_VIEW_TAG_NAME,\n    // React 18 doesn't map `className` to `class` on custom elements.\n    { ...rest, class: className, ...getProductViewAttributes(props) },\n    children,\n  );\n}"
+      "value": "export function ProductView(props: ProductViewProps): ReactElement {\n  const { product: _product, context: _context, children, className, ...rest } = props;\n  return createElement(\n    PRODUCT_VIEW_TAG_NAME,\n    // React 18 doesn't map `className` to `class` on custom elements.\n    { ...rest, class: className, ...getProductViewAttributes(props) },\n    children,\n  );\n}"
     }
   },
   "UseProductFormGeneratedType": {

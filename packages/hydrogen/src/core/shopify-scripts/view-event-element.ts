@@ -91,7 +91,6 @@ function sendAgainOnKeyChange<Payload>(
     dispatch();
   };
 
-  // Payloads that are missing, don't parse, or have no key return undefined.
   const keyOf = (value: string | null) => {
     if (value === null) return undefined;
     try {
@@ -124,8 +123,7 @@ function sendAgainOnKeyChange<Payload>(
       const key = this.isConnected ? keyOf(this.getAttribute(PAYLOAD)) : undefined;
       if (key != null) {
         const dialogOpen = getDialog(this)?.open === true;
-        // Skip a duplicate send for the same key during one dialog opening (for example,
-        // the queued `toggle` event after `showModal()` or after mounting during an open).
+        // The base element also sends on the `toggle` event that `showModal()` queues.
         if (dialogOpen && this.#dialogDispatchedKey === key) return;
         this.#lastDispatchedKey = key;
         if (dialogOpen) this.#dialogDispatchedKey = key;
@@ -149,7 +147,6 @@ function sendAgainOnKeyChange<Payload>(
       if (this.#lastDispatchedKey === undefined) return;
 
       const key = keyOf(newValue);
-      // A missing key, or a return to the key already sent, cancels a pending visibility send.
       if (key == null || key === this.#lastDispatchedKey) {
         unobserve(this);
         return;
