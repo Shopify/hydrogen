@@ -21,7 +21,7 @@ export interface LocaleProviderProps {
 /**
  * Shares the request's locale with your app, so requests from the browser stay in the customer's locale.
  *
- * Inside the provider, `useLocale` returns the locale. `CartProvider` and `PredictiveSearchProvider` send their requests under the locale's path prefix, such as `/fr-ca/api/cart`, and cart and search forms post under the same prefix. Render the provider above both, and pass the same locale to `ShopifyScripts`. A storefront with one locale doesn't need the provider.
+ * Inside the provider, `useLocale` returns the locale. `CartProvider` and `PredictiveSearchProvider` send their requests under the locale's path prefix, such as `/fr-ca/api/cart`, and cart and search forms post under the same prefix. `ShopifyAccount` reads the account widget data and signs in under it too. Render the provider above all of them, and pass the same locale to `ShopifyScripts`. A storefront with one locale doesn't need the provider.
  *
  * Hydrogen keeps one locale per page load. Change locale with a full page load, such as a plain link built with `getLocalizedHref`, so Shopify's scripts and the cart start again in the new locale.
  *
