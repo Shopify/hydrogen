@@ -340,7 +340,12 @@ function visibleFilters(filters: AvailableFilter[]) {
           class="mt-8 grid grid-cols-2 gap-x-6 gap-y-12 transition-opacity duration-200 md:grid-cols-3"
           :class="isLoading ? 'opacity-50' : 'opacity-100'"
         >
-          <ProductCard v-for="product in products" :key="product.handle" :product="product" />
+          <ProductCard
+            v-for="product in products"
+            :key="product.handle"
+            :product="product"
+            context="collection"
+          />
         </section>
 
         <!-- Empty state -->

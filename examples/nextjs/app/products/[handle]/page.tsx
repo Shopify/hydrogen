@@ -173,7 +173,7 @@ async function RelatedProducts({ handle }: { handle: string }) {
       <ul role="list" className="grid grid-cols-2 gap-x-1 gap-y-10 contain-paint lg:grid-cols-4">
         {related.map((relatedProduct) => (
           <li key={relatedProduct.id}>
-            <ProductCard product={relatedProduct} loading="lazy" />
+            <ProductCard product={relatedProduct} context="recommendation" loading="lazy" />
           </li>
         ))}
       </ul>

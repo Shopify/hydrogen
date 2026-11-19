@@ -5,6 +5,7 @@ import {
   type PredictiveSearchStatus,
 } from "@shopify/hydrogen";
 import {
+  ProductView,
   useLocale,
   usePredictiveSearchActions,
   usePredictiveSearch as usePredictiveSearchState,
@@ -247,23 +248,25 @@ function SearchResultsPredictiveProducts({
           const image = product.selectedOrFirstAvailableVariant?.image;
           return (
             <li className="predictive-search-result-item" key={product.id}>
-              <Link
-                to={getPredictiveSearchResourceUrl(product, term.current, pathPrefix)}
-                onClick={closeSearch}
-              >
-                {image && (
-                  <Image
-                    alt={image.altText ?? ""}
-                    src={image.url}
-                    width={PREDICTIVE_SEARCH_THUMBNAIL_SIZE}
-                    height={PREDICTIVE_SEARCH_THUMBNAIL_SIZE}
-                  />
-                )}
-                <div>
-                  <p>{product.title}</p>
-                  <small>{price ? formatMoney(price) : null}</small>
-                </div>
-              </Link>
+              <ProductView product={product} context="search" className="block">
+                <Link
+                  to={getPredictiveSearchResourceUrl(product, term.current, pathPrefix)}
+                  onClick={closeSearch}
+                >
+                  {image && (
+                    <Image
+                      alt={image.altText ?? ""}
+                      src={image.url}
+                      width={PREDICTIVE_SEARCH_THUMBNAIL_SIZE}
+                      height={PREDICTIVE_SEARCH_THUMBNAIL_SIZE}
+                    />
+                  )}
+                  <div>
+                    <p>{product.title}</p>
+                    <small>{price ? formatMoney(price) : null}</small>
+                  </div>
+                </Link>
+              </ProductView>
             </li>
           );
         })}
