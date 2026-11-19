@@ -27,6 +27,7 @@
 	<CollectionBrowser
 		title={data.collection.title}
 		description={data.collection.description}
+		id={data.collection.id}
 		handle={data.collection.handle}
 		dataSearch={data.dataSearch}
 		products={data.collection.products.nodes}
