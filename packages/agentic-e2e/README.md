@@ -61,7 +61,7 @@ This test checks that a buyer can change the quantity of an item in the cart and
 
 - **Condition:** the same eligible variant as `add-to-cart`, and the shop accepts 2 units of it (see the stock check in [Storefront API](#storefront-api)). Else `skipped`, and no browser starts.
 - **Arrange:** the command pins that variant. The product page opens with no variant in the URL, as in `add-to-cart`.
-- **Act:** one agent task: add exactly 1 unit, open the cart if it is not open, increase the quantity of the item to 2 with the cart's quantity control, decrease it to 1, then remove the item with the cart's remove control. One change at a time, no change of any other item, and no checkout. The command stops the agent as soon as the cart events show the full sequence, or a sequence that can no longer become it (see [How the result is decided](#how-the-result-is-decided)).
+- **Act:** one agent task: add exactly 1 unit, open the cart if it is not open, increase the quantity of the item to 2 with the cart's quantity control, decrease it to 1, then remove the item with the cart's remove control. One change at a time, no change of any other item, and no checkout. The command stops the agent as soon as the cart events show the full sequence, a sequence that can no longer become it, or a cart change error. It also stops when code cannot follow the line (see [How the result is decided](#how-the-result-is-decided)).
 - **Assert:** from the Standard Events only: the one cart line that the add created goes from quantity 1 to 2, to 1, then is removed, in that order, and every cart event resolved without cart user errors.
 
 ## Results and exit codes
@@ -133,7 +133,7 @@ An add event is a `shopify:cart:lines-update` Standard Event with `action: "add"
 
 The verdict relies on these facts about `shopify:cart:lines-update`, seen on a Hydrogen storefront and on a Liquid Horizon theme: each cart change dispatches exactly one event with a `promise`. An add has `action: "add"` and lines with `merchandiseId` and `quantity`. A plus or minus has `action: "update"` and lines with the cart line `id` and the new absolute `quantity`. A remove has `action: "remove"` and `quantity: 0`. The `promise` resolves with a `cart` whose `lines` have each line's `id` and `quantity` (`lines: []` after the last remove). The line `id` in the inputs equals the `id` in the add result and does not change. Only the add input has a variant ID. A result without `userErrors` (Horizon has none) counts as 0 user errors. The script also records each input line's `id` and each result line's `id` and `quantity`. Line IDs can hold the cart token: they stay in memory and are never printed.
 
-The command stops the agent as soon as the steps below are complete or already wrong, or code cannot follow the line. Then it detaches Stagehand and waits up to 5 seconds, as for the add tests. The first rule that matches decides:
+The command stops the agent as soon as the steps below are complete or already wrong, code cannot follow the line, or a cart event that is not an add has no `promise`, a rejected `promise`, cart `userErrors`, or `userErrors` that are present but not an array. Then it detaches Stagehand and waits up to 5 seconds, as for the add tests. The first rule that matches decides:
 
 1. No add event: `fail` when the agent confirmed that it completed the task, else `indeterminate`.
 2. The command waits until every cart event has an outcome, or a problem is already certain.

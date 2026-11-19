@@ -215,12 +215,19 @@ export function followCartLine(events: readonly AddEvent[], agentStart: number):
 }
 
 /**
- * The stop rule of `change-quantity-and-remove`: true when code can no longer follow the line, or
- * when its steps are no longer a proper prefix of {@link EXPECTED_LINE_STEPS} (complete, or
- * already contradicted).
+ * The stop rule of `change-quantity-and-remove`: true when a cart event that is not an add, at or
+ * after `agentStart`, has a problem that {@link verifyCartLineChanges} fails on (no promise, a
+ * rejected promise, `userErrors` that are present but not an array, or cart `userErrors`), when
+ * code can no longer follow the line, or when its steps are no longer a proper prefix of
+ * {@link EXPECTED_LINE_STEPS} (complete, or already contradicted). A change with no outcome yet
+ * and no such problem keeps it waiting.
  */
 export function cartLineChangesDecided(events: readonly AddEvent[], agentStart: number): boolean {
-  const follow = followCartLine(events, agentStart);
+  const cartEvents = recordedCartEvents(events, agentStart);
+  if (changeProblem(cartEvents.filter((event) => event.action !== "add")) !== undefined) {
+    return true;
+  }
+  const follow = followLine(cartEvents);
   if (follow.status === "waiting") return false;
   if (follow.status === "lost") return true;
   return !isProperPrefix(follow.steps, EXPECTED_LINE_STEPS);

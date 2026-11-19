@@ -700,4 +700,38 @@ describe("followCartLine and cartLineChangesDecided", () => {
     push(events, result("u1", [{ id: LINE, quantity: 2 }]));
     expect(followCartLine(events, 0)).toEqual({ status: "steps", steps: [1, 2, 1] });
   });
+
+  const added = (): Message[] => [add("a"), result("a", [{ id: LINE, quantity: 1 }])];
+
+  it.each([
+    { case: "a rejected plus", messages: [...added(), change("u1", 2), failed("u1")] },
+    {
+      case: "a plus with no promise",
+      messages: [...added(), { ...change("u1", 2), hasPromise: false } as Message],
+    },
+    {
+      case: "a plus that resolved with cart user errors",
+      messages: [...added(), change("u1", 2), result("u1", [{ id: LINE, quantity: 2 }], 1)],
+    },
+    {
+      case: "a plus that resolved with userErrors that are not an array",
+      messages: [
+        ...added(),
+        change("u1", 2),
+        settled("u1", null, { lines: [{ id: LINE, quantity: 2 }] }),
+      ],
+    },
+  ])("stops after $case, which the verdict fails on", ({ messages }) => {
+    expect(cartLineChangesDecided(log(...messages), 0)).toBe(true);
+  });
+
+  it("keeps waiting for a clean change that has no outcome yet", () => {
+    expect(cartLineChangesDecided(log(...added(), change("u1", 2)), 0)).toBe(false);
+  });
+
+  it("ignores a rejected change from before the agent started", () => {
+    const events = log(change("old", 2), failed("old"), ...added());
+
+    expect(cartLineChangesDecided(events, 2)).toBe(false);
+  });
 });
