@@ -102,14 +102,12 @@ Hydrogen ships no account page yet — the app owns it. A storefront with the ha
 Shopify's `<shopify-account>` component shows an avatar that opens an account sheet. Load its script with `<ShopifyScripts account />` (or `account: true` on the script helpers), and render it with `ShopifyAccount`:
 
 ```tsx
-import { ShopifyAccount } from "@shopify/hydrogen/react"; // or "@shopify/hydrogen/vue"
+import { ShopifyAccount } from "@shopify/hydrogen/react";
 
-<ShopifyAccount>
-  <div slot="signed-out-avatar">Sign in</div>
-</ShopifyAccount>;
+<ShopifyAccount signedOutAvatar="Sign in" />;
 ```
 
-`ShopifyAccount` points the component at the widget data and login routes. Inside `LocaleProvider`, both carry the page's locale prefix, such as `/fr-ca/account/widget-data`, so the account sheet shows in the page's language and sign-in starts in the locale's country. Don't hard-code `<shopify-account>` URLs in React or Vue. Without the bindings, render `<shopify-account account-data-url="{pathPrefix}/account/widget-data" sign-in-url="{pathPrefix}/account/login">` with the `pathPrefix` of `requestContext.locale`.
+In Vue, pass the signed-out content in the `signedOutAvatar` slot: `<ShopifyAccount><template #signedOutAvatar>Sign in</template></ShopifyAccount>`. `ShopifyAccount` puts it in the component's `signed-out-avatar` slot and points the component at the widget data and login routes. Inside `LocaleProvider`, both carry the page's locale prefix, such as `/fr-ca/account/widget-data`, so the account sheet shows in the page's language and sign-in starts in the locale's country. Don't hard-code `<shopify-account>` URLs in React or Vue. Without the bindings, render `<shopify-account account-data-url="{pathPrefix}/account/widget-data" sign-in-url="{pathPrefix}/account/login">` with the `pathPrefix` of `requestContext.locale`.
 
 The route returns the signed-in customer's name, email, and avatar (or `customer: null`), the shop's sign-in providers, and its translations for the request's locale. The access token stays on the server. The response is private and uncacheable. A token the Customer Account API rejects with `401` is cleared and returns `customer: null`; any other upstream failure returns `502`, so `<shopify-account>` logs it and keeps its current state on `refresh()` instead of quietly signing the customer out.
 

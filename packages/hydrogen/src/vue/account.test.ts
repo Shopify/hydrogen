@@ -34,11 +34,17 @@ describe("ShopifyAccount", () => {
     );
   });
 
-  it("renders slot content", () => {
+  it("puts the signed-out avatar in the component's slot without affecting layout", () => {
     const wrapper = mount(ShopifyAccount, {
-      slots: { default: () => h("div", { slot: "signed-out-avatar" }, "Sign in") },
+      slots: { signedOutAvatar: () => h("span", "Sign in") },
     });
 
-    expect(wrapper.get('shopify-account [slot="signed-out-avatar"]').text()).toBe("Sign in");
+    const slotted = wrapper.get('shopify-account > [slot="signed-out-avatar"]');
+    expect(slotted.attributes("style")).toBe("display: contents;");
+    expect(slotted.html()).toContain("<span>Sign in</span>");
+  });
+
+  it("renders no slot without a signed-out avatar", () => {
+    expect(mount(ShopifyAccount).get("shopify-account").element.children).toHaveLength(0);
   });
 });
