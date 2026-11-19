@@ -34,7 +34,9 @@ export function ShopifyAccount({ signedOutAvatar }: ShopifyAccountProps): ReactE
       "account-data-url": `${pathPrefix}${CUSTOMER_ACCOUNT_PATHS.widgetData}`,
       "sign-in-url": `${pathPrefix}${CUSTOMER_ACCOUNT_PATHS.login}`,
     },
-    signedOutAvatar == null
+    // An empty slot hides the component's default signed-out icon, so nothing renders for the
+    // values React renders as nothing.
+    signedOutAvatar == null || typeof signedOutAvatar === "boolean" || signedOutAvatar === ""
       ? null
       : // `display: contents` keeps the wrapper out of the layout, so the content sits in the
         // component's avatar button as if it were slotted directly.

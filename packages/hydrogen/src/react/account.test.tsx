@@ -47,9 +47,12 @@ describe("ShopifyAccount", () => {
     expect(slotted.innerHTML).toBe("<span>Sign in</span>");
   });
 
-  it("renders no slot without a signed-out avatar", () => {
-    const { container } = render(createElement(ShopifyAccount));
+  it.each([undefined, null, false, true, ""])(
+    "keeps the component's default icon when the signed-out avatar is %j",
+    (signedOutAvatar) => {
+      const { container } = render(createElement(ShopifyAccount, { signedOutAvatar }));
 
-    expect(getAccountElement(container).children).toHaveLength(0);
-  });
+      expect(getAccountElement(container).children).toHaveLength(0);
+    },
+  );
 });
