@@ -27,6 +27,11 @@ const GRACEFUL_CLOSE_MS = 2_000;
 const EXIT_WAIT_MS = 1_000;
 const DISCONNECT_MS = 1_000;
 const NEVER_ABORTED = new AbortController().signal;
+/**
+ * The browser window, in CSS pixels: a desktop size, so stores show their desktop layout. Without
+ * it, headless Chrome's page is narrow enough that many stores switch to their narrow layout.
+ */
+export const WINDOW_SIZE = { width: 1280, height: 800 } as const;
 
 /**
  * Launches a headless browser that this session owns, with a fresh temporary profile, and
@@ -150,6 +155,7 @@ function browserArgs(userDataDir: string): string[] {
     "--headless=new",
     "--remote-debugging-port=0",
     `--user-data-dir=${userDataDir}`,
+    `--window-size=${WINDOW_SIZE.width},${WINDOW_SIZE.height}`,
     "--no-first-run",
     "--no-default-browser-check",
     "--disable-background-networking",

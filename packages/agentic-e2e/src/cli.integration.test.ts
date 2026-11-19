@@ -12,7 +12,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 
 import { MAX_STEPS } from "./agent/stagehand-agent.ts";
 import { within } from "./async.ts";
-import { createBrowserSession } from "./browser/session.ts";
+import { createBrowserSession, WINDOW_SIZE } from "./browser/session.ts";
 import { main } from "./cli.ts";
 
 // Real headless Chromium, real Stagehand 3.7.3, and the real Hydrogen Storefront client against
@@ -46,7 +46,7 @@ vi.mock("./agent/model-config.ts", async (importOriginal) => {
 // Calls through: only records whether a browser started.
 vi.mock("./browser/session.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("./browser/session.ts")>();
-  return { createBrowserSession: vi.fn(original.createBrowserSession) };
+  return { ...original, createBrowserSession: vi.fn(original.createBrowserSession) };
 });
 
 // Same key order as `discoverContext`: the CLI process tests compare the printed JSON line.
@@ -959,6 +959,23 @@ describe("the CLI process", () => {
 });
 
 describe("createBrowserSession", () => {
+  it("opens the page at the desktop window width, and a new page too", async () => {
+    const session = await createBrowserSession();
+    try {
+      await session.page.goto(`${origin}/products/fixture-board`);
+      const popup = await session.page.context().newPage();
+      for (const page of [session.page, popup]) {
+        const size = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
+        expect(size.width).toBe(WINDOW_SIZE.width);
+        // The window includes the browser's top bar, so the page is less high than the window.
+        expect(size.height).toBeGreaterThan(WINDOW_SIZE.height / 2);
+        expect(size.height).toBeLessThanOrEqual(WINDOW_SIZE.height);
+      }
+    } finally {
+      await session.close();
+    }
+  });
+
   it("closes safely twice", async () => {
     const session = await createBrowserSession();
     await session.page.goto(`${origin}/products/fixture-board`);
