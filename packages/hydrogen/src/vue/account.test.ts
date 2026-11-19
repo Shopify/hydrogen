@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
-import { createCommentVNode, createTextVNode, h } from "vue";
+import { createCommentVNode, createTextVNode, Fragment, h } from "vue";
 
 import { ShopifyAccount } from "./account";
 import { LocaleProvider } from "./locale";
@@ -44,13 +44,21 @@ describe("ShopifyAccount", () => {
     expect(slotted.html()).toContain("<span>Sign in</span>");
   });
 
+  it("renders a text-only signed-out avatar", () => {
+    const wrapper = mount(ShopifyAccount, { slots: { signedOutAvatar: () => "Sign in" } });
+
+    expect(wrapper.get('shopify-account > [slot="signed-out-avatar"]').text()).toBe("Sign in");
+  });
+
   it("keeps the component's default icon without a signed-out avatar", () => {
     expect(mount(ShopifyAccount).get("shopify-account").element.children).toHaveLength(0);
   });
 
   it("keeps the component's default icon when the signed-out avatar renders nothing", () => {
     const wrapper = mount(ShopifyAccount, {
-      slots: { signedOutAvatar: () => [createCommentVNode("v-if"), createTextVNode("  ")] },
+      slots: {
+        signedOutAvatar: () => [createCommentVNode("v-if"), createTextVNode("  "), h(Fragment, [])],
+      },
     });
 
     expect(wrapper.get("shopify-account").element.children).toHaveLength(0);
