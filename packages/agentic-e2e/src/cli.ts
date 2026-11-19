@@ -342,7 +342,7 @@ async function pinFromStorefront(
     const context = await untilAborted(readContext(), interrupt);
     progress(`Storefront API context: ${context.country} ${context.language}`);
     step = "Storefront API catalog pin";
-    const pin = await untilAborted(pinForTest(test, url, context, interrupt), interrupt);
+    const pin = await untilAborted(TESTS[test].pin(url, context, interrupt), interrupt);
     if (pin.status === "skipped") {
       progress(`Skipped: ${pin.reason}`);
       return { status: "skipped", reason: pin.reason, context };
@@ -355,65 +355,44 @@ async function pinFromStorefront(
   }
 }
 
-/** The pin of each test. The browser and agent steps are the same for every test. */
-async function pinForTest(
-  test: TestName,
-  url: URL,
-  context: StorefrontContext,
-  signal: AbortSignal,
-): Promise<CatalogPin> {
-  switch (test) {
-    case "add-to-cart":
-      return pinVariant(url, context, signal);
-    case "choose-a-variant":
-      return pinNonDefaultVariant(url, context, signal);
-    case "change-quantity-and-remove":
-      return pinVariantWithTwoUnits(url, context, signal);
-  }
-}
+/** The steps that differ between tests. The browser and agent steps are the same for every test. */
+type TestDefinition = {
+  /** Pins one variant in the active context. */
+  pin: (url: URL, context: StorefrontContext, signal: AbortSignal) => Promise<CatalogPin>;
+  /** The task that the agent gets. */
+  task: (input: ObjectiveInput) => string;
+  /** The `reason` of the agent outcome when the command stops the agent run. */
+  stopReason: string;
+  /** Calls `stop` once, when the events of the agent run decide the test. */
+  stopWhen: (log: AddEventLog, agentStart: number, stop: () => void) => void;
+  /** Decides the verdict from the cart events. */
+  verify: (input: VerifyAddInput) => Promise<Verdict>;
+};
 
-/** The task of each test, and the `reason` of the agent outcome when the command stops it. */
-function agentTaskForTest(
-  test: TestName,
-  input: ObjectiveInput,
-): { task: string; stopReason: string } {
-  switch (test) {
-    case "add-to-cart":
-    case "choose-a-variant":
-      return { task: buildObjective(input), stopReason: STOPPED_AT_ADD };
-    case "change-quantity-and-remove":
-      return { task: buildChangeQuantityObjective(input), stopReason: STOPPED_AFTER_CART_CHANGES };
-  }
-}
-
-/** Calls `stop` once, when the events of the agent run decide the test. */
-function stopAgentWhenDecided(
-  test: TestName,
-  log: AddEventLog,
-  agentStart: number,
-  stop: () => void,
-): void {
-  switch (test) {
-    case "add-to-cart":
-    case "choose-a-variant":
-      log.onFirstAdd(agentStart, stop);
-      return;
-    case "change-quantity-and-remove":
-      log.onceWhen(() => cartLineChangesDecided(log.events, agentStart), stop);
-      return;
-  }
-}
-
-/** The verdict of each test. */
-async function verifyForTest(test: TestName, input: VerifyAddInput): Promise<Verdict> {
-  switch (test) {
-    case "add-to-cart":
-    case "choose-a-variant":
-      return verifyAdd(input);
-    case "change-quantity-and-remove":
-      return verifyCartLineChanges(input);
-  }
-}
+const TESTS = {
+  "add-to-cart": {
+    pin: pinVariant,
+    task: buildObjective,
+    stopReason: STOPPED_AT_ADD,
+    stopWhen: (log, agentStart, stop) => log.onFirstAdd(agentStart, stop),
+    verify: verifyAdd,
+  },
+  "choose-a-variant": {
+    pin: pinNonDefaultVariant,
+    task: buildObjective,
+    stopReason: STOPPED_AT_ADD,
+    stopWhen: (log, agentStart, stop) => log.onFirstAdd(agentStart, stop),
+    verify: verifyAdd,
+  },
+  "change-quantity-and-remove": {
+    pin: pinVariantWithTwoUnits,
+    task: buildChangeQuantityObjective,
+    stopReason: STOPPED_AFTER_CART_CHANGES,
+    stopWhen: (log, agentStart, stop) =>
+      log.onceWhen(() => cartLineChangesDecided(log.events, agentStart), stop),
+    verify: verifyCartLineChanges,
+  },
+} satisfies Record<TestName, TestDefinition>;
 
 /**
  * Starts the browser, records cart events and attaches Stagehand before the first navigation,
@@ -450,16 +429,16 @@ async function runAgent(
     const agentStart = log.events.length;
     // The stop rule of the test stops the agent. This is separate from the interrupt.
     const stop = new AbortController();
-    stopAgentWhenDecided(test, log, agentStart, () => stop.abort());
-    const { task, stopReason } = agentTaskForTest(test, { pinned, context });
+    const definition = TESTS[test];
+    definition.stopWhen(log, agentStart, () => stop.abort());
     // An early end (step limit, deadline, error) still goes to the verdict. An interrupt throws.
     agentOutcome = await agent.run({
       page: session.page,
-      task,
+      task: definition.task({ pinned, context }),
       model,
       interrupt,
       stop: stop.signal,
-      stopReason,
+      stopReason: definition.stopReason,
     });
     progress(
       agentOutcome.completed ? "The agent completed." : `The agent ended: ${agentOutcome.reason}`,
@@ -469,7 +448,7 @@ async function runAgent(
     // An interrupt during the detach ends the run here: no wait.
     interrupt.throwIfAborted();
     const verdict = await untilAborted(
-      verifyForTest(test, {
+      definition.verify({
         events: log.events,
         agentStart,
         variantId: pinned.variantId,
