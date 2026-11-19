@@ -31,3 +31,10 @@ export {
   serializeCollectionParams,
 } from "./url";
 export type { CollectionParams } from "./url";
+
+export {
+  COLLECTION_VIEW_TAG_NAME,
+  defineCollectionView,
+  getCollectionViewAttributes,
+} from "./collection-view";
+export type { CollectionViewOptions } from "./collection-view";

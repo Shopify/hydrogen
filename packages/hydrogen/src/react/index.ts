@@ -52,6 +52,8 @@ export type {
   ProductQuantityDefaultProps,
   ProductQuantityProps,
 } from "../core/product";
+export { CollectionView } from "./collection-view";
+export type { CollectionViewProps } from "./collection-view";
 export { ProductView } from "./product-view";
 export type { ProductViewProps } from "./product-view";
 export { ShopPayButton } from "./shop-pay";
