@@ -5952,7 +5952,7 @@
         "name": "Record<\"view-event-trigger\" | \"view-event-payload\", string>",
         "value": "Record<\"view-event-trigger\" | \"view-event-payload\", string>"
       },
-      "value": "export function getProductViewAttributes(\n  options: ProductViewOptions,\n): Record<\"view-event-trigger\" | \"view-event-payload\", string> {\n  const { product, context } = options;\n  const variant =\n    options.context === \"page\" || options.context === \"dialog\"\n      ? options.product.selectedOrFirstAvailableVariant\n      : null;\n  const selectedOptions =\n    variant?.selectedOptions.map(({ name, value }) => ({ name, value })) ?? [];\n  const payload: StandardEvents.ProductViewPayload = {\n    context,\n    selectedOptions,\n    product: {\n      id: product.id,\n      title: product.title,\n      handle: product.handle,\n      selectedVariant: variant\n        ? {\n            id: variant.id,\n            title: variant.title,\n            availableForSale: variant.availableForSale,\n            price: { amount: variant.price.amount, currencyCode: variant.price.currencyCode },\n            selectedOptions,\n          }\n        : null,\n    },\n  };\n\n  return {\n    \"view-event-trigger\": TRIGGERS[context],\n    \"view-event-payload\": JSON.stringify(payload),\n  };\n}"
+      "value": "export function getProductViewAttributes(\n  options: ProductViewOptions,\n): Record<\"view-event-trigger\" | \"view-event-payload\", string> {\n  const { product, context } = options;\n  const variant =\n    context === \"page\" || context === \"dialog\" ? product.selectedOrFirstAvailableVariant : null;\n  const selectedOptions =\n    variant?.selectedOptions.map(({ name, value }) => ({ name, value })) ?? [];\n  const payload: StandardEvents.ProductViewPayload = {\n    context,\n    selectedOptions,\n    product: {\n      id: product.id,\n      title: product.title,\n      handle: product.handle,\n      selectedVariant: variant\n        ? {\n            id: variant.id,\n            title: variant.title,\n            availableForSale: variant.availableForSale,\n            price: { amount: variant.price.amount, currencyCode: variant.price.currencyCode },\n            selectedOptions,\n          }\n        : null,\n    },\n  };\n\n  return {\n    \"view-event-trigger\": TRIGGERS[context],\n    \"view-event-payload\": JSON.stringify(payload),\n  };\n}"
     }
   },
   "ProductViewOptions": {
@@ -13054,7 +13054,7 @@
         "name": "ReactElement",
         "value": "ReactElement"
       },
-      "value": "export function ProductView(props: ProductViewProps): ReactElement {\n  const { product: _product, context: _context, children, className, ...rest } = props;\n  return createElement(\n    PRODUCT_VIEW_TAG_NAME,\n    // React 18 doesn't map `className` to `class` on custom elements.\n    { ...rest, class: className, ...getProductViewAttributes(props) },\n    children,\n  );\n}"
+      "value": "export function ProductView(props: ProductViewProps): ReactElement {\n  // Pass `props` whole: TypeScript can't rebuild the `context`/`product` union from separate\n  // variables. Destructure them only to keep them out of the element's HTML attributes.\n  const { product: _product, context: _context, children, className, ...rest } = props;\n  return createElement(\n    PRODUCT_VIEW_TAG_NAME,\n    // React 18 doesn't map `className` to `class` on custom elements.\n    { ...rest, class: className, ...getProductViewAttributes(props) },\n    children,\n  );\n}"
     }
   },
   "UseProductFormGeneratedType": {

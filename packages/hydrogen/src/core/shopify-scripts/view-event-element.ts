@@ -121,16 +121,14 @@ function sendAgainOnKeyChange<Payload>(
     }
 
     dispatchViewEvent() {
-      const dialog = getDialog(this);
-      if (this.isConnected) {
-        const key = keyOf(this.getAttribute(PAYLOAD));
-        if (key != null) {
-          // Skip a duplicate send for the same key during one dialog opening (for example,
-          // the queued `toggle` event after `showModal()` or after mounting during an open).
-          if (dialog?.open && this.#dialogDispatchedKey === key) return;
-          this.#lastDispatchedKey = key;
-          if (dialog?.open) this.#dialogDispatchedKey = key;
-        }
+      const key = this.isConnected ? keyOf(this.getAttribute(PAYLOAD)) : undefined;
+      if (key != null) {
+        const dialogOpen = getDialog(this)?.open === true;
+        // Skip a duplicate send for the same key during one dialog opening (for example,
+        // the queued `toggle` event after `showModal()` or after mounting during an open).
+        if (dialogOpen && this.#dialogDispatchedKey === key) return;
+        this.#lastDispatchedKey = key;
+        if (dialogOpen) this.#dialogDispatchedKey = key;
       }
       super.dispatchViewEvent();
     }
@@ -151,11 +149,8 @@ function sendAgainOnKeyChange<Payload>(
       if (this.#lastDispatchedKey === undefined) return;
 
       const key = keyOf(newValue);
-      if (key == null) {
-        unobserve(this);
-        return;
-      }
-      if (key === this.#lastDispatchedKey) {
+      // A missing key, or a return to the key already sent, cancels a pending visibility send.
+      if (key == null || key === this.#lastDispatchedKey) {
         unobserve(this);
         return;
       }
