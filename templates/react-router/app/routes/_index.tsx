@@ -127,7 +127,7 @@ function NewArrivals({ products }: { products: readonly ProductCardData[] }) {
           >
             {products.map((product) => (
               <li key={product.handle}>
-                <ProductCard product={product} />
+                <ProductCard product={product} context="collection" />
               </li>
             ))}
           </ul>
