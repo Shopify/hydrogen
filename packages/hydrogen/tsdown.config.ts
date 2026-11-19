@@ -18,6 +18,7 @@ const productionEntries = [
   "src/vue/index.ts",
 ];
 const developmentEntries = ["src/core/development.ts", "src/react/index.ts", "src/vue/index.ts"];
+const productionOutDir = "dist";
 const developmentOnlyEntries = developmentEntries.filter(
   (entry) => !productionEntries.includes(entry),
 );
@@ -26,6 +27,7 @@ export default defineConfig([
   {
     entry: [...productionEntries, ...developmentOnlyEntries],
     format: "esm",
+    outDir: productionOutDir,
     dts: true,
     hash: false,
     minify: false,
@@ -53,7 +55,7 @@ export default defineConfig([
       __HYDROGEN_VERSION__: JSON.stringify(pkg.version),
       __DEV__: "true",
     },
-    plugins: [...plugins(), reexportProductionDeclarations("dist")],
+    plugins: [...plugins(), reexportProductionDeclarations(productionOutDir)],
     deps: { neverBundle: ["gql.tada", "react", "vue"] },
   },
   // CLI binary — referenced via the `bin` field in package.json, not in `exports`.

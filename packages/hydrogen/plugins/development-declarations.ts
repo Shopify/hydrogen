@@ -1,4 +1,4 @@
-import { dirname, relative, resolve } from "node:path";
+import { dirname, relative, resolve, sep } from "node:path";
 
 import type { Rolldown } from "tsdown";
 
@@ -12,6 +12,8 @@ const DECLARATION_FILE_RE = /\.d\.[cm]?ts$/;
 /**
  * Keeps the declarations of `entries` but drops the JavaScript only they reach,
  * so a production build can type development-only entries without shipping them.
+ * Modules shared with other entries still ship, including any export that only
+ * a development-only entry uses.
  */
 export function declarationsOnly(entries: readonly string[]): Rolldown.Plugin {
   const declarationOnlyIds = new Set(entries.map((entry) => resolve(entry)));
@@ -63,11 +65,14 @@ export function reexportProductionDeclarations(productionOutDir: string): Rolldo
         const target = relative(
           dirname(resolve(outDir, output.fileName)),
           resolve(productionOutDir, output.fileName),
-        );
+        )
+          .split(sep)
+          .join("/");
+        const specifier = target.startsWith(".") ? target : `./${target}`;
         this.emitFile({
           type: "asset",
           fileName: output.fileName.replace(/\.mjs$/, ".d.mts"),
-          source: `export * from "${target.startsWith(".") ? target : `./${target}`}";\n`,
+          source: `export * from ${JSON.stringify(specifier)};\n`,
         });
       }
     },
