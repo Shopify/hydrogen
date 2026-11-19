@@ -63,9 +63,7 @@ export function getProductViewAttributes(
 ): Record<"view-event-trigger" | "view-event-payload", string> {
   const { product, context } = options;
   const variant =
-    options.context === "page" || options.context === "dialog"
-      ? options.product.selectedOrFirstAvailableVariant
-      : null;
+    context === "page" || context === "dialog" ? product.selectedOrFirstAvailableVariant : null;
   const selectedOptions =
     variant?.selectedOptions.map(({ name, value }) => ({ name, value })) ?? [];
   const payload: StandardEvents.ProductViewPayload = {
