@@ -7869,7 +7869,7 @@
     "src/customer-account/session.ts": {
       "filePath": "src/customer-account/session.ts",
       "name": "CreateCustomerAccountServerHandlersGeneratedType",
-      "description": "Creates the customer account routes under `/account` for sign-in, the OAuth callback, token refresh, and logout. Add the returned object to the `handlers` option of `handleShopifyRoutes`.\n\nThe login route redirects to Shopify's login page. The authorize and refresh routes redirect back to a same-origin path in your app. The logout route redirects to Shopify's logout endpoint when the session has an ID token, and to the post-logout URL otherwise. Each redirect commits the session and sends `cache-control: no-store`.\n\nLink to these paths with full-page navigation, such as a plain `<a>` link or a `<form>`. Client-side navigation components can't follow these redirects.\n\nThe widget data route at `/account/widget-data` returns JSON for Shopify's `<shopify-account>` component, so the component can show the signed-in customer without the access token reaching the page. Build the component's `account-data-url` and `sign-in-url` from the `pathPrefix` that `useLocale()` returns, so a page under a locale prefix such as `/fr-ca` gets the account sheet in its own language and starts sign-in with that locale's country. A storefront without `LocaleProvider` has one locale and can use `/account/widget-data` and `/account/login` as they are. Load the component with `<ShopifyScripts account />`.",
+      "description": "Creates the customer account routes under `/account` for sign-in, the OAuth callback, token refresh, and logout. Add the returned object to the `handlers` option of `handleShopifyRoutes`.\n\nThe login route redirects to Shopify's login page. The authorize and refresh routes redirect back to a same-origin path in your app. The logout route redirects to Shopify's logout endpoint when the session has an ID token, and to the post-logout URL otherwise. Each redirect commits the session and sends `cache-control: no-store`.\n\nLink to these paths with full-page navigation, such as a plain `<a>` link or a `<form>`. Client-side navigation components can't follow these redirects.\n\nThe widget data route at `/account/widget-data` returns JSON for Shopify's `<shopify-account>` component, so the component can show the signed-in customer without the access token reaching the page. Render the component with `ShopifyAccount` from `@shopify/hydrogen/react` or `@shopify/hydrogen/vue`, which points it at this route and the login route under the page's locale prefix, and load its script with `<ShopifyScripts account />`.",
       "isPublicDocs": true,
       "params": [
         {
@@ -7892,8 +7892,8 @@
           "description": "",
           "tabs": [
             {
-              "code": "function AccountButton() {\n  const { pathPrefix } = useLocale();\n  return (\n    <shopify-account\n      account-data-url={`${pathPrefix}/account/widget-data`}\n      sign-in-url={`${pathPrefix}/account/login`}\n    >\n      <div slot=\"signed-out-avatar\">Sign in</div>\n    </shopify-account>\n  );\n}",
-              "title": "An account button in the page's locale"
+              "code": "<ShopifyScripts shop={shop} account />\n<ShopifyAccount>\n  <div slot=\"signed-out-avatar\">Sign in</div>\n</ShopifyAccount>",
+              "title": "Example"
             }
           ]
         }
@@ -12034,6 +12034,59 @@
           "description": "Returns the formatted range. Template literals and string concatenation call the method for you."
         }
       ]
+    }
+  },
+  "ShopifyAccountGeneratedType": {
+    "src/react/account.tsx": {
+      "filePath": "src/react/account.tsx",
+      "name": "ShopifyAccountGeneratedType",
+      "description": "Renders Shopify's `<shopify-account>` component, which shows the customer's avatar and opens an account sheet. The component reads the customer from the `/account/widget-data` route of `createCustomerAccountServerHandlers`, so the access token stays on the server, and signs in through `/account/login`.\n\nInside `LocaleProvider`, both URLs carry the locale's path prefix, such as `/fr-ca/account/widget-data`, so the account sheet shows in the page's language. Load the component's script with `<ShopifyScripts account />`.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "input1",
+          "description": "Content for the component's slots.",
+          "value": "ShopifyAccountProps",
+          "filePath": "src/react/account.tsx"
+        }
+      ],
+      "returns": {
+        "filePath": "src/react/account.tsx",
+        "description": "The `shopify-account` element.",
+        "name": "ReactElement",
+        "value": "ReactElement"
+      },
+      "value": "export function ShopifyAccount({ children }: ShopifyAccountProps): ReactElement {\n  const pathPrefix = useLocalePathPrefix() ?? \"\";\n\n  return createElement(\n    \"shopify-account\",\n    {\n      \"account-data-url\": `${pathPrefix}${CUSTOMER_ACCOUNT_PATHS.widgetData}`,\n      \"sign-in-url\": `${pathPrefix}${CUSTOMER_ACCOUNT_PATHS.login}`,\n    },\n    children,\n  );\n}",
+      "examples": [
+        {
+          "title": "Example",
+          "description": "",
+          "tabs": [
+            {
+              "code": "<ShopifyAccount>\n  <div slot=\"signed-out-avatar\">Sign in</div>\n</ShopifyAccount>",
+              "title": "Example"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "ShopifyAccountProps": {
+    "src/react/account.tsx": {
+      "filePath": "src/react/account.tsx",
+      "name": "ShopifyAccountProps",
+      "description": "Props for `ShopifyAccount`.",
+      "members": [
+        {
+          "filePath": "src/react/account.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "children",
+          "value": "ReactNode",
+          "description": "Content for the component's slots, such as `<div slot=\"signed-out-avatar\">Sign in</div>`.",
+          "isOptional": true
+        }
+      ],
+      "value": "export interface ShopifyAccountProps {\n  /** Content for the component's slots, such as `<div slot=\"signed-out-avatar\">Sign in</div>`. */\n  children?: ReactNode;\n}"
     }
   },
   "CreateCartComponentsGeneratedType": {

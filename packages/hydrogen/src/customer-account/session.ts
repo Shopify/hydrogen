@@ -691,22 +691,14 @@ export async function getCustomerSessionRefreshResult(
  *
  * Link to these paths with full-page navigation, such as a plain `<a>` link or a `<form>`. Client-side navigation components can't follow these redirects.
  *
- * The widget data route at `/account/widget-data` returns JSON for Shopify's `<shopify-account>` component, so the component can show the signed-in customer without the access token reaching the page. Build the component's `account-data-url` and `sign-in-url` from the `pathPrefix` that `useLocale()` returns, so a page under a locale prefix such as `/fr-ca` gets the account sheet in its own language and starts sign-in with that locale's country. A storefront without `LocaleProvider` has one locale and can use `/account/widget-data` and `/account/login` as they are. Load the component with `<ShopifyScripts account />`.
+ * The widget data route at `/account/widget-data` returns JSON for Shopify's `<shopify-account>` component, so the component can show the signed-in customer without the access token reaching the page. Render the component with `ShopifyAccount` from `@shopify/hydrogen/react` or `@shopify/hydrogen/vue`, which points it at this route and the login route under the page's locale prefix, and load its script with `<ShopifyScripts account />`.
  *
  * @example
  * ```tsx
- * // An account button in the page's locale
- * function AccountButton() {
- *   const { pathPrefix } = useLocale();
- *   return (
- *     <shopify-account
- *       account-data-url={`${pathPrefix}/account/widget-data`}
- *       sign-in-url={`${pathPrefix}/account/login`}
- *     >
- *       <div slot="signed-out-avatar">Sign in</div>
- *     </shopify-account>
- *   );
- * }
+ * <ShopifyScripts shop={shop} account />
+ * <ShopifyAccount>
+ *   <div slot="signed-out-avatar">Sign in</div>
+ * </ShopifyAccount>
  * ```
  *
  * @returns The login, authorize, refresh, logout, and account widget data routes.
