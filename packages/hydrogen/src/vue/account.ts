@@ -1,0 +1,37 @@
+import { defineComponent, h } from "vue";
+
+import { CUSTOMER_ACCOUNT_PATHS } from "../core/url";
+import { useLocalePathPrefix } from "./locale";
+
+/**
+ * Renders Shopify's `<shopify-account>` component, which shows the customer's avatar and opens an account sheet. The component reads the customer from the `/account/widget-data` route of `createCustomerAccountServerHandlers`, so the access token stays on the server, and signs in through `/account/login`.
+ *
+ * Below the locale provider, both URLs carry the locale's path prefix, such as `/fr-ca/account/widget-data`, so the account sheet shows in the page's language. Pass slot content, such as the `signed-out-avatar` slot, as children. Load the component's script with `<ShopifyScripts account />`.
+ *
+ * @example
+ * ```vue
+ * <ShopifyAccount>
+ *   <div slot="signed-out-avatar">Sign in</div>
+ * </ShopifyAccount>
+ * ```
+ * @publicDocs
+ */
+export const ShopifyAccount = defineComponent({
+  name: "ShopifyAccount",
+  inheritAttrs: false,
+  setup(_, { slots }) {
+    const pathPrefix = useLocalePathPrefix();
+
+    return () => {
+      const prefix = pathPrefix.value ?? "";
+      return h(
+        "shopify-account",
+        {
+          "account-data-url": `${prefix}${CUSTOMER_ACCOUNT_PATHS.widgetData}`,
+          "sign-in-url": `${prefix}${CUSTOMER_ACCOUNT_PATHS.login}`,
+        },
+        slots.default?.(),
+      );
+    };
+  },
+});

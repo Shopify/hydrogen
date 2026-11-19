@@ -1,6 +1,8 @@
 "use client";
 
 export type { ShopifyStandardActions } from "../../vendor/standard-actions";
+export { ShopifyAccount } from "./account";
+export type { ShopifyAccountProps } from "./account";
 export { createCartComponents, useCartAnalytics } from "./cart";
 export type { CartActions } from "./cart";
 export type { ShopifyGlobal } from "../globals";

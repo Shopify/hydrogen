@@ -99,25 +99,17 @@ Hydrogen ships no account UI yet — the app owns it. A storefront with the hand
 
 ## Account Widget
 
-Shopify's `<shopify-account>` component shows an avatar that opens an account sheet. Load its script with `<ShopifyScripts account />` (or `account: true` on the script helpers) and point the component at the widget data and login routes under the page's locale prefix from `useLocale()`:
+Shopify's `<shopify-account>` component shows an avatar that opens an account sheet. Load its script with `<ShopifyScripts account />` (or `account: true` on the script helpers), and render it with `ShopifyAccount`:
 
 ```tsx
-import { useLocale } from "@shopify/hydrogen/react";
+import { ShopifyAccount } from "@shopify/hydrogen/react"; // or "@shopify/hydrogen/vue"
 
-function AccountButton() {
-  const { pathPrefix } = useLocale();
-  return (
-    <shopify-account
-      account-data-url={`${pathPrefix}/account/widget-data`}
-      sign-in-url={`${pathPrefix}/account/login`}
-    >
-      <div slot="signed-out-avatar">Sign in</div>
-    </shopify-account>
-  );
-}
+<ShopifyAccount>
+  <div slot="signed-out-avatar">Sign in</div>
+</ShopifyAccount>;
 ```
 
-In Vue, `useLocale()` returns a ref, so read `locale.value.pathPrefix` in script, or `locale.pathPrefix` in the template. Without the prefix, a page under `/fr-ca` gets the account sheet in the default locale's language and starts sign-in with the default country. A storefront without `LocaleProvider` has one locale; use `/account/widget-data` and `/account/login` as they are, since `useLocale()` throws outside the provider.
+`ShopifyAccount` points the component at the widget data and login routes. Inside `LocaleProvider`, both carry the page's locale prefix, such as `/fr-ca/account/widget-data`, so the account sheet shows in the page's language and sign-in starts in the locale's country. Don't hard-code `<shopify-account>` URLs in React or Vue. Without the bindings, render `<shopify-account account-data-url="{pathPrefix}/account/widget-data" sign-in-url="{pathPrefix}/account/login">` with the `pathPrefix` of `requestContext.locale`.
 
 The route returns the signed-in customer's name, email, and avatar (or `customer: null`), the shop's sign-in providers, and its translations for the request's locale. The access token stays on the server. The response is private and uncacheable. A token the Customer Account API rejects with `401` is cleared and returns `customer: null`; any other upstream failure returns `502`, so `<shopify-account>` logs it and keeps its current state on `refresh()` instead of quietly signing the customer out.
 
