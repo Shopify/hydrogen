@@ -101,7 +101,7 @@ function RecommendedProducts({ products }: { products: Promise<RecommendedProduc
             <div className="recommended-products-grid">
               {response
                 ? response.products.nodes.map((product) => (
-                    <ProductItem key={product.id} product={product} />
+                    <ProductItem key={product.id} product={product} context="collection" />
                   ))
                 : null}
             </div>

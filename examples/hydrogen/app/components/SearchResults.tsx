@@ -1,3 +1,4 @@
+import { ProductView } from "@shopify/hydrogen/react";
 import { Link } from "react-router";
 
 import { Image } from "~/components/Image";
@@ -128,7 +129,7 @@ function SearchResultProduct({
   const image = product.selectedOrFirstAvailableVariant?.image;
 
   return (
-    <div className="search-results-item">
+    <ProductView product={product} context="search" className="search-results-item block">
       <Link prefetch="intent" to={productUrl}>
         {image && <Image data={image} alt={product.title} width={50} />}
         <div>
@@ -136,7 +137,7 @@ function SearchResultProduct({
           <small>{price ? formatMoney(price) : null}</small>
         </div>
       </Link>
-    </div>
+    </ProductView>
   );
 }
 

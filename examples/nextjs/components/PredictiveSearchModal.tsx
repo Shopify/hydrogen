@@ -7,6 +7,7 @@ import {
 } from "@shopify/hydrogen";
 import {
   PredictiveSearchProvider,
+  ProductView,
   usePredictiveSearch,
   usePredictiveSearchActions,
   usePredictiveSearchForm,
@@ -186,25 +187,27 @@ function PredictiveBody({
         const price = variant?.price ?? null;
         return (
           <li key={product.id} role="listitem">
-            <Link
-              href={href}
-              onClick={onNavigate}
-              className="hover:bg-surface-secondary flex items-center gap-3 rounded p-2 no-underline"
-            >
-              {image ? (
-                <img
-                  src={shopifyImageUrl(image.url, { width: 64 })}
-                  alt={image.altText ?? product.title}
-                  className="size-12 rounded object-cover"
-                />
-              ) : null}
-              <span className="flex flex-col">
-                <span className="type-body-sm text-on-surface font-medium">{product.title}</span>
-                {price ? (
-                  <span className="text-on-surface-secondary text-sm">{formatPrice(price)}</span>
+            <ProductView product={product} context="search" className="block">
+              <Link
+                href={href}
+                onClick={onNavigate}
+                className="hover:bg-surface-secondary flex items-center gap-3 rounded p-2 no-underline"
+              >
+                {image ? (
+                  <img
+                    src={shopifyImageUrl(image.url, { width: 64 })}
+                    alt={image.altText ?? product.title}
+                    className="size-12 rounded object-cover"
+                  />
                 ) : null}
-              </span>
-            </Link>
+                <span className="flex flex-col">
+                  <span className="type-body-sm text-on-surface font-medium">{product.title}</span>
+                  {price ? (
+                    <span className="text-on-surface-secondary text-sm">{formatPrice(price)}</span>
+                  ) : null}
+                </span>
+              </Link>
+            </ProductView>
           </li>
         );
       })}

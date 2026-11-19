@@ -218,6 +218,7 @@ function CollectionPage(props: CollectionPageProps) {
                 <li key={product.id} className={isLoading ? "opacity-60" : ""}>
                   <ProductCard
                     product={product}
+                    context="collection"
                     loading={index < 3 ? "eager" : "lazy"}
                     fetchPriority={index === 0 ? "high" : "auto"}
                   />
@@ -357,6 +358,7 @@ function SearchPage(props: SearchPageProps) {
                 <li key={product.id} className={isLoading ? "opacity-60" : ""}>
                   <ProductCard
                     product={product}
+                    context="search"
                     loading={index < 3 ? "eager" : "lazy"}
                     fetchPriority={index === 0 ? "high" : "auto"}
                   />

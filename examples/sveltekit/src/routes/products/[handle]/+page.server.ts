@@ -106,6 +106,7 @@ const PRODUCT_QUERY = gql(
 		}
 		products(first: 4) {
 			nodes {
+				id
 				handle
 				title
 				featuredImage {

@@ -362,7 +362,7 @@
 					: 'mt-8 grid grid-cols-2 gap-x-6 gap-y-12 opacity-100 transition-opacity duration-200 md:grid-cols-3'}
 			>
 				{#each products as product (product.handle)}
-					<ProductCard {product} />
+					<ProductCard {product} context="collection" />
 				{/each}
 			</section>
 
