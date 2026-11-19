@@ -80,7 +80,7 @@ export function useLocale(): Readonly<Ref<ShopifyMatchedLocale>> {
 }
 
 /**
- * The path prefix that the cart and predictive search providers send requests under. Without a
+ * The path prefix that Hydrogen's components send requests under. Without a
  * provider the storefront has one locale, so there is no prefix.
  */
 export function useLocalePathPrefix(): ComputedRef<string | undefined> {
