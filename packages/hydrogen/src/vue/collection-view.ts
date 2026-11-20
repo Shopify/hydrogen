@@ -1,4 +1,4 @@
-import { defineComponent, h, inject, shallowRef, watch } from "vue";
+import { defineComponent, h, inject, shallowRef } from "vue";
 
 import { connectCollectionUpdates } from "../core/collection/collection-update";
 import {
@@ -7,6 +7,7 @@ import {
   type CollectionViewOptions,
 } from "../core/collection/collection-view";
 import { CollectionUpdateSourceKey } from "./collection";
+import { useUpdateEvents } from "./update-events";
 
 /**
  * Props for the Vue `CollectionView` component.
@@ -35,31 +36,11 @@ export type CollectionViewProps = CollectionViewOptions;
 export const CollectionView = defineComponent(
   (props: CollectionViewProps, { slots }) => {
     const element = shallowRef<HTMLElement>();
-    const source = inject(CollectionUpdateSourceKey, null);
-    const status = shallowRef<string>();
-    const view = () => ({ collection: props.collection, productsCount: props.productsCount });
-
-    watch(
-      () => [source?.value, element.value] as const,
-      ([current, target], _, onCleanup) => {
-        if (!current || !target) return;
-        const connection = connectCollectionUpdates(current, target, view());
-        // Updates after each render, so the update promises resolve with the rendered count.
-        const stopUpdates = watch(
-          () => [props.collection.id, props.collection.handle, props.productsCount, status.value],
-          () => connection.update(view()),
-          { flush: "post", immediate: true },
-        );
-        const unsubscribe = current.store.subscribe((state) => {
-          status.value = state.status;
-        });
-        onCleanup(() => {
-          unsubscribe();
-          stopUpdates();
-          connection.disconnect();
-        });
-      },
-      { flush: "post" },
+    useUpdateEvents(
+      inject(CollectionUpdateSourceKey, null),
+      element,
+      () => ({ collection: props.collection, productsCount: props.productsCount }),
+      connectCollectionUpdates,
     );
 
     return () =>

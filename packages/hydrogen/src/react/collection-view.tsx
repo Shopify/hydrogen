@@ -1,22 +1,13 @@
-import {
-  createElement,
-  useEffect,
-  useRef,
-  useSyncExternalStore,
-  type HTMLAttributes,
-  type ReactElement,
-} from "react";
+import { createElement, useRef, type HTMLAttributes, type ReactElement } from "react";
 
-import {
-  connectCollectionUpdates,
-  type CollectionUpdateConnection,
-} from "../core/collection/collection-update";
+import { connectCollectionUpdates } from "../core/collection/collection-update";
 import {
   COLLECTION_VIEW_TAG_NAME,
   getCollectionViewAttributes,
   type CollectionViewOptions,
 } from "../core/collection/collection-view";
 import { useCollectionUpdateSource } from "./collection";
+import { useUpdateEvents } from "./update-events";
 
 /**
  * Props for the `CollectionView` component: the collection, the number of products that the page
@@ -25,8 +16,6 @@ import { useCollectionUpdateSource } from "./collection";
  * @publicDocs
  */
 export type CollectionViewProps = CollectionViewOptions & HTMLAttributes<HTMLElement>;
-
-const noSubscribe = () => () => {};
 
 /**
  * Sends the `shopify:collection:view` event when the collection page renders. `ShopifyScripts`
@@ -54,31 +43,8 @@ export function CollectionView({
   ...rest
 }: CollectionViewProps): ReactElement {
   const ref = useRef<HTMLElement>(null);
-  const source = useCollectionUpdateSource();
-  const connection = useRef<CollectionUpdateConnection | null>(null);
   const view = { collection, productsCount };
-  const viewRef = useRef(view);
-  viewRef.current = view;
-  // Renders again when the store settles, so the update promises resolve with the rendered count.
-  const status = useSyncExternalStore(
-    source?.store.subscribe ?? noSubscribe,
-    () => source?.store.getState().status,
-    () => undefined,
-  );
-
-  useEffect(() => {
-    if (!source || !ref.current) return;
-    const current = connectCollectionUpdates(source, ref.current, viewRef.current);
-    connection.current = current;
-    return () => {
-      connection.current = null;
-      current.disconnect();
-    };
-  }, [source]);
-
-  useEffect(() => {
-    connection.current?.update(viewRef.current);
-  }, [source, collection.id, collection.handle, productsCount, status]);
+  useUpdateEvents(useCollectionUpdateSource(), ref, view, connectCollectionUpdates);
 
   return createElement(
     COLLECTION_VIEW_TAG_NAME,
