@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type * as StandardEventsModule from "../../../vendor/standard-events";
+import { COLLECTION_VIEW_TAG_NAME } from "../collection/collection-view";
 import { PRODUCT_VIEW_TAG_NAME } from "../product/product-view";
 import { initializeShopifyScripts } from "./initialize";
 
@@ -23,6 +24,7 @@ describe("initializeShopifyScripts", () => {
 
     await vi.waitFor(() => {
       expect(customElements.get(PRODUCT_VIEW_TAG_NAME)).toBeDefined();
+      expect(customElements.get(COLLECTION_VIEW_TAG_NAME)).toBeDefined();
     });
   });
 });
