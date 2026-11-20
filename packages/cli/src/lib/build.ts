@@ -5,17 +5,22 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {dirname, joinPath} from '@shopify/cli-kit/node/path';
 import {execAsync} from './process.js';
 
-// Avoid using fileURLToPath here to prevent backslashes nightmare on Windows
-const monorepoPackagesPath = new URL('../../..', import.meta.url).pathname;
+// Resolve the `packages/` directory that contains this file.
+// Avoid using fileURLToPath here to prevent backslashes nightmare on Windows.
+// URL pathnames are percent-encoded, so decode to support directories that
+// contain spaces or other reserved characters.
+export function getMonorepoPackagesPath(moduleUrl: string | URL) {
+  return decodeURIComponent(new URL('../../..', moduleUrl).pathname);
+}
 
 // Check if we're in the Hydrogen monorepo by checking the path structure
 // This was the original logic before PR #3074 that worked for over a year
 // Check if we're in the monorepo by looking for the templates/skeleton directory
 // This works both in development and when built as npm package
-export const isHydrogenMonorepo = (() => {
+export function detectHydrogenMonorepo(moduleUrl: string | URL) {
   try {
     const skeletonPath = joinPath(
-      dirname(monorepoPackagesPath),
+      dirname(getMonorepoPackagesPath(moduleUrl)),
       'templates',
       'skeleton',
     );
@@ -25,7 +30,11 @@ export const isHydrogenMonorepo = (() => {
   } catch {
     return false;
   }
-})();
+}
+
+const monorepoPackagesPath = getMonorepoPackagesPath(import.meta.url);
+
+export const isHydrogenMonorepo = detectHydrogenMonorepo(import.meta.url);
 export const hydrogenPackagesPath = isHydrogenMonorepo
   ? monorepoPackagesPath
   : undefined;
