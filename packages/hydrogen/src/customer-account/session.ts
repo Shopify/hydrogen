@@ -292,7 +292,7 @@ export type CustomerAccountServerHandlers<
   /**
    * Returns the data for `<shopify-account account-data-url>` at `/account/widget-data`: the signed-in customer's name and email, or `null` for signed-out visitors, plus the shop's sign-in providers and account sheet translations for the request's locale. Accepts `GET`. The customer's access token stays on the server. Under a locale path prefix, point `account-data-url` at the prefixed path, such as `/fr-ca/account/widget-data`, to get that locale's translations.
    *
-   * The route refreshes an expired access token and commits the session. The response is private and uncacheable. When the Customer Account API rejects the access token with a `401` status, the route clears the stored tokens and returns `customer: null`. When the Storefront API or Customer Account API request fails otherwise, or a signed-in customer's token can't be refreshed for a temporary reason, the route returns a `502` error instead of partial data. The token refresh and the API requests share an 8-second deadline, within the component's 10-second timeout. The route needs `storefrontClient` in the handler context, and throws when the customer session doesn't come from `createCustomerSession`.
+   * The route refreshes an expired access token and commits the session. The response is private and uncacheable. When the Customer Account API rejects the access token with a `401` status, the route refreshes the token once and retries. It clears the stored tokens and returns `customer: null` when the refresh or the retried request is rejected too. When the Storefront API or Customer Account API request fails otherwise, or a signed-in customer's token can't be refreshed for a temporary reason, the route returns a `502` error instead of partial data. The token refresh and the API requests share an 8-second deadline, within the component's 10-second timeout. The route needs `storefrontClient` in the handler context, and throws when the customer session doesn't come from `createCustomerSession`.
    */
   widgetData: CallableRouteHandler<
     TContext & Pick<ShopifyRouteHandlerContext, "storefrontClient">,
@@ -404,6 +404,8 @@ type OAuthCallbackResult = {
 type InternalRefreshOptions = RequestOriginOptions & {
   /** Stops waiting for the refresh, which then counts as a transient failure. The shared refresh request keeps running. */
   signal?: AbortSignal;
+  /** Refreshes even when the stored access token hasn't expired, such as after the Customer Account API rejected it. */
+  forceRefresh?: boolean;
 };
 type CustomerSessionInternals = {
   getOrRefreshAccessToken(
@@ -523,7 +525,7 @@ export function createCustomerSession({
     requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON);
     const sessionData = await readSessionData(sessionManager);
     const accessToken = getUsableAccessToken(sessionData);
-    if (accessToken) return { status: "authenticated", accessToken };
+    if (accessToken && !options.forceRefresh) return { status: "authenticated", accessToken };
 
     const refreshToken = getRefreshToken(sessionData);
     if (!refreshToken) return { status: "unauthenticated", accessToken: undefined };
@@ -1017,23 +1019,66 @@ async function getWidgetCustomer(
     return { customer: { status: "fulfilled", value: null }, cartCustomerAccessToken };
   }
 
-  const { accessToken } = tokenResult;
+  const customer = await queryWidgetCustomer(
+    internal,
+    requestContext,
+    tokenResult.accessToken,
+    options.signal,
+  );
+  if (!isRejectedAccessTokenResult(customer)) return { customer, cartCustomerAccessToken };
+  // A token refreshed for this request was rejected too, so another refresh wouldn't help.
+  if (tokenResult.tokensChanged) return signOutWidgetCustomer(sessionManager);
+
+  // The access token can be revoked or rejected before it expires while the refresh token is
+  // still good, so one refresh comes before signing the customer out.
+  const retry = await internal.getOrRefreshAccessToken(sessionManager, requestContext, {
+    ...options,
+    forceRefresh: true,
+  });
+  if (retry.status === "transient") {
+    const reason = new Error("The access token refresh failed temporarily");
+    return { customer: { status: "rejected", reason }, cartCustomerAccessToken: undefined };
+  }
+  if (!retry.accessToken) return signOutWidgetCustomer(sessionManager);
+
+  const retried = await queryWidgetCustomer(
+    internal,
+    requestContext,
+    retry.accessToken,
+    options.signal,
+  );
+  if (isRejectedAccessTokenResult(retried)) return signOutWidgetCustomer(sessionManager);
+  return { customer: retried, cartCustomerAccessToken: retry.accessToken };
+}
+
+function queryWidgetCustomer(
+  internal: CustomerSessionInternals,
+  requestContext: ShopifyRequestContext,
+  accessToken: string,
+  signal: AbortSignal,
+): Promise<PromiseSettledResult<AccountWidgetCustomer>> {
   // Creating the client throws for a non-HTTPS request URL, and a throw here would skip
   // committing the tokens the refresh just wrote.
-  const customer = await settle(
+  return settle(
     Promise.resolve().then(() =>
       queryAccountWidgetCustomer(
         internal.createCustomerAccountClient(requestContext),
         accessToken,
-        options.signal,
+        signal,
       ),
     ),
   );
-  if (customer.status === "rejected" && isRejectedAccessToken(customer.reason)) {
-    await clearTokens(sessionManager);
-    return { customer: { status: "fulfilled", value: null }, cartCustomerAccessToken: null };
-  }
-  return { customer, cartCustomerAccessToken };
+}
+
+async function signOutWidgetCustomer(sessionManager: WritableCustomerSessionManager) {
+  log.warn(
+    "account widget signed the customer out after the Customer Account API rejected the access token",
+  );
+  await clearTokens(sessionManager);
+  return {
+    customer: { status: "fulfilled", value: null },
+    cartCustomerAccessToken: null,
+  } satisfies Awaited<ReturnType<typeof getWidgetCustomer>>;
 }
 
 function createWidgetDataResult(
@@ -1091,8 +1136,12 @@ function createWidgetDataDeadline(requestSignal: AbortSignal | undefined) {
   };
 }
 
-function isRejectedAccessToken(error: unknown): boolean {
-  return error instanceof CustomerAccountApiError && error.status === 401;
+function isRejectedAccessTokenResult(result: PromiseSettledResult<unknown>): boolean {
+  return (
+    result.status === "rejected" &&
+    result.reason instanceof CustomerAccountApiError &&
+    result.reason.status === 401
+  );
 }
 
 // Settled up front so a rejection that happens before it is awaited isn't reported as unhandled.
