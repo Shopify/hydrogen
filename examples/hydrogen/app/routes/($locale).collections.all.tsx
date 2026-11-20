@@ -54,26 +54,30 @@ export default function Collection() {
   return (
     <div className="collection">
       <h1>Products</h1>
-      {/* The all-products listing has no collection record, so the collection ID is null. */}
-      <CollectionView
-        collection={{ id: null, handle: "all" }}
-        productsCount={products.nodes.length}
-        className="block"
+      <PaginatedResourceSection<ProductItemData>
+        connection={products}
+        resourcesClassName="products-grid"
+        wrapResources={(resources, nodes) => (
+          // The all-products listing has no collection record, so the collection ID is null.
+          // Count `nodes`: it includes the pages that Pagination restores on Back or reload.
+          <CollectionView
+            collection={{ id: null, handle: "all" }}
+            productsCount={nodes.length}
+            className="block"
+          >
+            {resources}
+          </CollectionView>
+        )}
       >
-        <PaginatedResourceSection<ProductItemData>
-          connection={products}
-          resourcesClassName="products-grid"
-        >
-          {({ node: product, index }) => (
-            <ProductItem
-              key={product.id}
-              product={product}
-              context="collection"
-              loading={index < 8 ? "eager" : undefined}
-            />
-          )}
-        </PaginatedResourceSection>
-      </CollectionView>
+        {({ node: product, index }) => (
+          <ProductItem
+            key={product.id}
+            product={product}
+            context="collection"
+            loading={index < 8 ? "eager" : undefined}
+          />
+        )}
+      </PaginatedResourceSection>
     </div>
   );
 }
