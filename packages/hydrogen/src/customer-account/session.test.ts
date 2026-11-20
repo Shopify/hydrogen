@@ -112,6 +112,10 @@ function createSession(overrides: Partial<Parameters<typeof createCustomerSessio
   });
 }
 
+function unauthorized() {
+  return new Response(null, { status: 401 });
+}
+
 function validSessionData(overrides: CustomerAccountSessionData = {}): CustomerAccountSessionData {
   return {
     ...overrides,
@@ -1887,7 +1891,7 @@ describe("account widget data route", () => {
     expect(error?.headers.get("x-content-type-options")).toBe("nosniff");
   });
 
-  it("treats a 401 from the Customer Account API as signed out and clears the stored tokens", async () => {
+  it("signs the customer out when the Customer Account API rejects the access token and the refresh", async () => {
     const sessionManager = new TestSessionManager(validSessionData());
     const storefrontFetch = storefrontFetchReturning();
 
@@ -1905,6 +1909,96 @@ describe("account widget data route", () => {
     expect(getCartMutations(storefrontFetch)).toMatchObject([
       { cartId: CART_GID, buyerIdentity: { customerAccessToken: null } },
     ]);
+  });
+
+  /** Answers Customer Account API requests in order, then token requests with `token`. */
+  function customerAccountFetchAnswering(
+    customerResponses: Array<() => Response>,
+    token: () => Response = () => tokenResponse(),
+  ) {
+    const remaining = [...customerResponses];
+    return vi.fn((input: RequestInfo | URL) => {
+      if (!String(input).startsWith(CUSTOMER_ACCOUNT_API_URL_PREFIX)) {
+        return Promise.resolve(token());
+      }
+      const next = remaining.shift();
+      assert(next, "expected no more Customer Account API requests");
+      return Promise.resolve(next());
+    });
+  }
+
+  const customerData = () => jsonResponse({ data: { customer: CUSTOMER } });
+
+  function getTokenCalls(fetchMock: ReturnType<typeof vi.fn>) {
+    return fetchMock.mock.calls.filter(
+      ([input]) => !String(input).startsWith(CUSTOMER_ACCOUNT_API_URL_PREFIX),
+    );
+  }
+
+  it("refreshes once and returns the customer when the Customer Account API rejects an unexpired access token", async () => {
+    const sessionManager = new TestSessionManager(validSessionData());
+    const storefrontFetch = storefrontFetchReturning();
+    const fetch = customerAccountFetchAnswering([unauthorized, customerData]);
+
+    const response = await requestWidgetData({
+      sessionManager,
+      fetch,
+      storefrontFetch,
+      withCart: true,
+    });
+
+    expect(response?.status).toBe(200);
+    await expect(response?.json()).resolves.toMatchObject({ customer: EXPECTED_CUSTOMER });
+    expect(getTokenCalls(fetch)).toHaveLength(1);
+    expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
+    expect(getCartMutations(storefrontFetch)).toMatchObject([
+      { cartId: CART_GID, buyerIdentity: { customerAccessToken: NEW_ACCESS_TOKEN } },
+    ]);
+  });
+
+  it("signs the customer out when the Customer Account API also rejects the refreshed access token", async () => {
+    const sessionManager = new TestSessionManager(validSessionData());
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const fetch = customerAccountFetchAnswering([unauthorized, unauthorized]);
+
+    const response = await requestWidgetData({ sessionManager, fetch });
+
+    expect(response?.status).toBe(200);
+    await expect(response?.json()).resolves.toMatchObject({ customer: null });
+    expect(getTokenCalls(fetch)).toHaveLength(1);
+    expect(sessionManager.data?.tokens).toBeUndefined();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining("signed the customer out"),
+      expect.anything(),
+    );
+  });
+
+  it("returns a 502 and keeps the stored tokens when the refresh after a 401 fails temporarily", async () => {
+    const sessionManager = new TestSessionManager(validSessionData());
+    const fetch = customerAccountFetchAnswering(
+      [unauthorized],
+      () => new Response("unavailable", { status: 503 }),
+    );
+
+    const response = await requestWidgetData({ sessionManager, fetch });
+
+    expect(response?.status).toBe(502);
+    expect(response?.headers.get("set-cookie")).toBe("session=1");
+    expect(sessionManager.data?.tokens?.accessToken).toBe(ACCESS_TOKEN);
+  });
+
+  it("signs the customer out without another refresh when a token refreshed for the request is rejected", async () => {
+    const sessionManager = new TestSessionManager(
+      validSessionData({ tokens: { expiresAt: NOW_IN_MS } }),
+    );
+    const fetch = customerAccountFetchAnswering([unauthorized]);
+
+    const response = await requestWidgetData({ sessionManager, fetch });
+
+    await expect(response?.json()).resolves.toMatchObject({ customer: null });
+    expect(getTokenCalls(fetch)).toHaveLength(1);
+    expect(sessionManager.data?.tokens).toBeUndefined();
   });
 
   it("returns a 502 and keeps the stored tokens on a 403 from the Customer Account API", async () => {
