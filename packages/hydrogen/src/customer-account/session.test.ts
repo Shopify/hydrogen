@@ -816,6 +816,23 @@ describe("createCustomerAccountServerHandlers", () => {
     expect(loginUrl.searchParams.get("locale")).toBe("fr-CA");
   });
 
+  it.each([
+    { value: "true", forwarded: "true" },
+    { value: "false", forwarded: "false" },
+    { value: "1", forwarded: null },
+    { value: "", forwarded: null },
+  ])("forwards marketing_consent=$value to Shopify as $forwarded", async ({ value, forwarded }) => {
+    const response = await handleShopifyRoutes({
+      request: new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGIN_PATH}?marketing_consent=${value}`),
+      sessionManager: new TestSessionManager(),
+      handlers: [createCustomerAccountServerHandlers({ customerSession: createSession() })],
+    });
+
+    const location = response?.headers.get("location");
+    assert(location, "Expected the login route to redirect");
+    expect(new URL(location).searchParams.get("marketing_consent")).toBe(forwarded);
+  });
+
   it("logs out, commits cleared state, and redirects through Shopify", async () => {
     const sessionManager = new TestSessionManager(validSessionData());
     const request = new Request(`${ORIGIN}${CUSTOMER_ACCOUNT_LOGOUT_PATH}`, {
@@ -1552,6 +1569,7 @@ describe("account widget data route", () => {
   const CUSTOMER_ACCOUNT_API_URL_PREFIX = `https://shopify.com/${SHOP_ID}/account/customer/api/`;
   const WIDGET_DATA_URL = `${ORIGIN}${CUSTOMER_ACCOUNT_WIDGET_DATA_PATH}`;
   const PRIVATE_CACHE_CONTROL = "private, no-store, max-age=0, must-revalidate";
+  const MARKETING_CONSENT_TIMEOUT_IN_MS = 2_000;
   const SHOP = {
     id: "gid://shopify/Shop/1",
     socialLoginProviders: [{ handle: "Shop" }],
@@ -1642,8 +1660,10 @@ describe("account widget data route", () => {
     customerSession,
     withCart = false,
     url = WIDGET_DATA_URL,
+    signal,
   }: {
     url?: string;
+    signal?: AbortSignal;
     sessionManager?: TestSessionManager;
     fetch?: ReturnType<typeof vi.fn>;
     storefrontFetch?: ReturnType<typeof vi.fn>;
@@ -1652,7 +1672,10 @@ describe("account widget data route", () => {
   } = {}) {
     const brandedSession = createSession({ fetch });
     return handleShopifyRoutes({
-      request: new Request(url, withCart ? { headers: { cookie: CART_COOKIE } } : {}),
+      request: new Request(url, {
+        signal,
+        headers: withCart ? { cookie: CART_COOKIE } : undefined,
+      }),
       sessionManager,
       storefrontFetch,
       handlers: [
@@ -1825,6 +1848,175 @@ describe("account widget data route", () => {
         ],
       },
     });
+  });
+
+  function storefrontFetchWithMarketingConsent(marketingConsent: () => Response) {
+    return vi.fn((input: RequestInfo | URL) =>
+      Promise.resolve(
+        String(input).includes("/api/unstable/")
+          ? marketingConsent()
+          : jsonResponse({ data: { shop: SHOP } }),
+      ),
+    );
+  }
+
+  it("reads the shop's marketing consent settings from the unstable Storefront API", async () => {
+    const storefrontFetch = storefrontFetchWithMarketingConsent(() =>
+      jsonResponse({
+        data: { shop: { marketingConsentSigninEnabled: true, marketingConsentPreselected: true } },
+      }),
+    );
+
+    const response = await requestWidgetData({ storefrontFetch });
+
+    await expect(response?.json()).resolves.toMatchObject({
+      shop: { marketingConsentSigninEnabled: true, marketingConsentPreselected: true },
+    });
+    const unstableCalls = storefrontFetch.mock.calls.filter(([input]) =>
+      String(input).includes("/api/unstable/"),
+    );
+    expect(unstableCalls).toHaveLength(1);
+    const [, init] = unstableCalls[0] as unknown as [unknown, RequestInit];
+    expect(JSON.parse(String(init.body)).variables).toEqual({ country: "US" });
+  });
+
+  it("leaves the marketing consent checkbox unchecked when the shop doesn't collect consent at sign-in", async () => {
+    const response = await requestWidgetData({
+      storefrontFetch: storefrontFetchWithMarketingConsent(() =>
+        jsonResponse({
+          data: {
+            shop: { marketingConsentSigninEnabled: false, marketingConsentPreselected: true },
+          },
+        }),
+      ),
+    });
+
+    await expect(response?.json()).resolves.toMatchObject({
+      shop: { marketingConsentSigninEnabled: false, marketingConsentPreselected: false },
+    });
+  });
+
+  it.each([
+    { failure: "an HTTP error", marketingConsent: () => new Response(null, { status: 500 }) },
+    {
+      failure: "a network error",
+      marketingConsent: (): Response => {
+        throw new TypeError("fetch failed");
+      },
+    },
+    {
+      failure: "GraphQL errors",
+      marketingConsent: () =>
+        jsonResponse({
+          data: null,
+          errors: [{ message: "Field 'marketingConsentSigninEnabled' doesn't exist" }],
+        }),
+    },
+  ])(
+    "turns marketing consent off and still responds when the unstable request returns $failure",
+    async ({ marketingConsent }) => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+
+      const response = await requestWidgetData({
+        storefrontFetch: storefrontFetchWithMarketingConsent(marketingConsent),
+      });
+
+      expect(response?.status).toBe(200);
+      await expect(response?.json()).resolves.toEqual({
+        customer: null,
+        shop: EXPECTED_SHOP,
+        visitor: { country: "US", language: "EN" },
+      });
+      expect(logger.warn).toHaveBeenCalledWith(
+        "account widget marketing consent query failed",
+        expect.objectContaining({ scope: "customer-account", error: expect.any(Error) }),
+      );
+    },
+  );
+
+  function storefrontFetchWithHangingMarketingConsent() {
+    return vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      if (isCartMutation(init)) return Promise.resolve(cartMutationResponse());
+      if (!String(input).includes("/api/unstable/")) {
+        return Promise.resolve(jsonResponse({ data: { shop: SHOP } }));
+      }
+      return new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => reject(init.signal?.reason));
+      });
+    });
+  }
+
+  it("turns marketing consent off with a warning when the unstable request outlasts its timeout", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+
+    const responsePromise = requestWidgetData({
+      storefrontFetch: storefrontFetchWithHangingMarketingConsent(),
+    });
+    await vi.advanceTimersByTimeAsync(MARKETING_CONSENT_TIMEOUT_IN_MS);
+    const response = await responsePromise;
+
+    expect(response?.status).toBe(200);
+    await expect(response?.json()).resolves.toMatchObject({ shop: EXPECTED_SHOP });
+    expect(logger.warn).toHaveBeenCalledWith(
+      "account widget marketing consent query failed",
+      expect.objectContaining({ scope: "customer-account", error: expect.any(Error) }),
+    );
+  });
+
+  it("doesn't log a marketing consent failure when the visitor leaves during the unstable request", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const visitor = new AbortController();
+
+    const responsePromise = requestWidgetData({
+      storefrontFetch: storefrontFetchWithHangingMarketingConsent(),
+      signal: visitor.signal,
+    });
+    await vi.advanceTimersByTimeAsync(MARKETING_CONSENT_TIMEOUT_IN_MS / 2);
+    visitor.abort();
+    await responsePromise;
+
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it("still attaches the cart after a token refresh when the unstable request hangs", async () => {
+    const storefrontFetch = storefrontFetchWithHangingMarketingConsent();
+
+    const responsePromise = requestWidgetData({
+      sessionManager: new TestSessionManager(
+        validSessionData({ tokens: { expiresAt: NOW_IN_MS } }),
+      ),
+      storefrontFetch,
+      withCart: true,
+    });
+    await vi.advanceTimersByTimeAsync(MARKETING_CONSENT_TIMEOUT_IN_MS);
+    const response = await responsePromise;
+
+    expect(response?.status).toBe(200);
+    expect(getCartMutations(storefrontFetch)).toMatchObject([
+      { cartId: CART_GID, buyerIdentity: { customerAccessToken: NEW_ACCESS_TOKEN } },
+    ]);
+  });
+
+  it("still detaches the cart and keeps the cart cookie after a 401 when the unstable request hangs", async () => {
+    const storefrontFetch = storefrontFetchWithHangingMarketingConsent();
+
+    const responsePromise = requestWidgetData({
+      sessionManager: new TestSessionManager(validSessionData()),
+      fetch: vi.fn(() => Promise.resolve(new Response(null, { status: 401 }))),
+      storefrontFetch,
+      withCart: true,
+    });
+    await vi.advanceTimersByTimeAsync(MARKETING_CONSENT_TIMEOUT_IN_MS);
+    const response = await responsePromise;
+
+    expect(response?.status).toBe(200);
+    expect(response?.headers.get("set-cookie")).toBe("session=1");
+    expect(getCartMutations(storefrontFetch)).toMatchObject([
+      { cartId: CART_GID, buyerIdentity: { customerAccessToken: null } },
+    ]);
   });
 
   it("returns an empty translation list when the shop has none", async () => {

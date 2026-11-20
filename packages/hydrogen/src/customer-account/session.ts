@@ -165,6 +165,8 @@ export type PrepareLoginUrlOptions = {
   loginHintMode?: string;
   /** The authentication context class to request, sent as the `acr_values` search param. */
   acrValues?: string;
+  /** The customer's choice on the sign-in form's marketing consent checkbox, sent as the `marketing_consent` search param. Shopify subscribes a consenting customer to email marketing when the shop collects marketing consent at sign-in, and ignores the value otherwise. */
+  marketingConsent?: boolean;
 };
 
 /**
@@ -264,7 +266,7 @@ export type CustomerAccountServerHandlers<
     typeof CUSTOMER_ACCOUNT_AUTHORIZE_PATH,
     "GET"
   >;
-  /** Starts sign-in at `/account/login` and redirects the customer to Shopify's login page. Accepts `GET`. Pass `return_to`, `locale`, `acr_values`, `login_hint`, and `login_hint_mode` as search params. The route sends the request context's country to Shopify. */
+  /** Starts sign-in at `/account/login` and redirects the customer to Shopify's login page. Accepts `GET`. Pass `return_to`, `locale`, `acr_values`, `login_hint`, `login_hint_mode`, and `marketing_consent` as search params. The route forwards `marketing_consent` only when the value is `true` or `false`. The route sends the request context's country to Shopify. */
   login: CallableRouteHandler<
     TContext,
     CustomerAccountRouteResult,
@@ -290,9 +292,9 @@ export type CustomerAccountServerHandlers<
     "GET"
   >;
   /**
-   * Returns the data for `<shopify-account account-data-url>` at `/account/widget-data`: the signed-in customer's name and email, or `null` for signed-out visitors, plus the shop's sign-in providers and account sheet translations for the request's locale. Accepts `GET`. The customer's access token stays on the server. Under a locale path prefix, point `account-data-url` at the prefixed path, such as `/fr-ca/account/widget-data`, to get that locale's translations.
+   * Returns the data for `<shopify-account account-data-url>` at `/account/widget-data`: the signed-in customer's name and email, or `null` for signed-out visitors, plus the shop's sign-in providers, marketing consent settings, and account sheet translations for the request's locale. Accepts `GET`. The customer's access token stays on the server. Under a locale path prefix, point `account-data-url` at the prefixed path, such as `/fr-ca/account/widget-data`, to get that locale's translations.
    *
-   * The route refreshes an expired access token and commits the session. The response is private and uncacheable. When the Customer Account API rejects the access token with a `401` status, the route refreshes the token once and retries. It clears the stored tokens and returns `customer: null` when the refresh or the retried request is rejected too, or when the API rejects a token the route just refreshed. When the Storefront API or Customer Account API request fails otherwise, or a signed-in customer's token can't be refreshed for a temporary reason, the route returns a `502` error instead of partial data. The token refresh and the API requests share an 8-second deadline, within the component's 10-second timeout. The route needs `storefrontClient` in the handler context, and throws when the customer session doesn't come from `createCustomerSession`.
+   * The route refreshes an expired access token and commits the session. The response is private and uncacheable. When the Customer Account API rejects the access token with a `401` status, the route refreshes the token once and retries. It clears the stored tokens and returns `customer: null` when the refresh or the retried request is rejected too, or when the API rejects a token the route just refreshed. When the Storefront API or Customer Account API request fails otherwise, or a signed-in customer's token can't be refreshed for a temporary reason, the route returns a `502` error instead of partial data. The marketing consent settings come from the `unstable` Storefront API, and the route turns them off when that request fails or takes longer than 2 seconds. The token refresh and the API requests share an 8-second deadline, within the component's 10-second timeout. The route needs `storefrontClient` in the handler context, and throws when the customer session doesn't come from `createCustomerSession`.
    */
   widgetData: CallableRouteHandler<
     TContext & Pick<ShopifyRouteHandlerContext, "storefrontClient">,
@@ -827,6 +829,7 @@ async function handleLoginRoute(
     acrValues: getOptionalSearchParam(requestUrl, "acr_values"),
     loginHint: getOptionalSearchParam(requestUrl, "login_hint"),
     loginHintMode: getOptionalSearchParam(requestUrl, "login_hint_mode"),
+    marketingConsent: getMarketingConsentSearchParam(requestUrl),
   });
   return redirectResult(loginUrl, await commitSession(sessionManager));
 }
@@ -1256,6 +1259,13 @@ async function getResolvedOrigin(
 
 function getOptionalSearchParam(url: URL, name: string): string | undefined {
   return url.searchParams.get(name) ?? undefined;
+}
+
+function getMarketingConsentSearchParam(url: URL): boolean | undefined {
+  const value = url.searchParams.get("marketing_consent");
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return undefined;
 }
 
 function redirectResult(location: string, headers?: HeadersInit): ShopifyRouteRedirectResult {
@@ -1871,6 +1881,9 @@ function setOptionalLoginParams(loginUrl: URL, options: PrepareLoginUrlOptions):
   if (options.locale) loginUrl.searchParams.set("locale", options.locale);
   if (options.countryCode) loginUrl.searchParams.set("region_country", options.countryCode);
   if (options.acrValues) loginUrl.searchParams.set("acr_values", options.acrValues);
+  if (options.marketingConsent !== undefined) {
+    loginUrl.searchParams.set("marketing_consent", String(options.marketingConsent));
+  }
   if (!options.loginHint) return;
 
   loginUrl.searchParams.set("login_hint", options.loginHint);
