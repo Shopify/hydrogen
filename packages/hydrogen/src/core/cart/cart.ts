@@ -277,6 +277,10 @@ type TransactionDefinition<TPayload> = {
   getPendingKeys?(state: CartState, payload: TPayload): KeyResult;
   getErrorKeys?(state: CartState, payload: TPayload): KeyResult;
   removeSupersededPayload?(older: TPayload, successful: TPayload): TPayload | undefined;
+  // A held payload that restates cart data was built on the settled cart `from`. When the store
+  // adopts the cart `to` before sending it, this moves the payload onto `to`. Without it, the
+  // payload replays unchanged.
+  rebasePayload?(payload: TPayload, from: CartState, to: CartState): TPayload;
 };
 
 function defineTransactionTypes<const TPayloads extends Record<string, unknown>>(definitions: {
@@ -321,6 +325,12 @@ type PendingTransaction = {
     requestRevalidation: () => void,
   ): CartState;
   trimAfter(successful: PendingTransaction): PendingTransaction | undefined;
+  rebaseOnto(from: CartState, to: CartState): PendingTransaction;
+  send(
+    signal: AbortSignal,
+    updateCart: UpdateCartTransport,
+    cartId?: string,
+  ): Promise<UpdateCartResult>;
 };
 
 type ProjectedError = {
@@ -365,11 +375,6 @@ type HeldTransport = {
   // An add made while the store had no cart ID. It must not start while another add is creating
   // the cart, and it joins the cart the store has by then.
   awaitsCartId: boolean;
-  send(
-    signal: AbortSignal,
-    updateCart: UpdateCartTransport,
-    cartId?: string,
-  ): Promise<UpdateCartResult>;
 };
 
 type TransportGate = {
@@ -1491,6 +1496,19 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       return { ...state, data: { ...data, discountCodes: cart.discountCodes } };
     },
     getSignalKeys: () => DISCOUNT_CODES_KEY,
+    // The list replaces the cart's codes, so keep what the change did to the codes it saw.
+    rebasePayload: (payload, from, to): SetDiscountCodesPayload => {
+      const fromCodes = from.data.discountCodes.map(({ code }) => code);
+      const removed = fromCodes.filter((code) => !payload.discountCodes.includes(code));
+      const kept = to.data.discountCodes
+        .map(({ code }) => code)
+        .filter((code) => !removed.includes(code));
+      // The loaded cart can already have a code the shopper applied before they could see it.
+      const added = payload.discountCodes.filter(
+        (code) => !fromCodes.includes(code) && !kept.includes(code),
+      );
+      return { discountCodes: [...kept, ...added] };
+    },
     getPendingKeys: (state, payload) => {
       const current = new Set(state.data.discountCodes.map((discount) => discount.code));
       const next = new Set(payload.discountCodes);
@@ -1648,19 +1666,31 @@ function createPendingTransaction<TType extends TransactionType>(
         definition,
         payload,
         promise,
-        {
-          id,
-          sequence: transaction.sequence,
-          generation,
-          owner,
-          signalKeys,
-          pendingKeys,
-          errorKeys,
-          requiresRevalidation: transaction.requiresRevalidation,
-        },
+        currentIdentity(),
         successful,
       ),
+    rebaseOnto: (from, to) => {
+      if (!definition.rebasePayload) return transaction;
+      const rebased = definition.rebasePayload(payload, from, to);
+      return createPendingTransaction(store, type, definition, rebased, promise, undefined, {
+        ...currentIdentity(),
+        ...getTransactionProjectionKeys(definition, to, rebased, signalKeys),
+      });
+    },
+    send: (signal, updateCart, cartId) => definition.transport(payload, signal, updateCart, cartId),
   };
+  function currentIdentity(): TransactionIdentity {
+    return {
+      id,
+      sequence: transaction.sequence,
+      generation,
+      owner,
+      signalKeys,
+      pendingKeys,
+      errorKeys,
+      requiresRevalidation: transaction.requiresRevalidation,
+    };
+  }
   return transaction;
 }
 
@@ -1990,8 +2020,6 @@ async function dispatchTransaction<TType extends TransactionType>(
     generation: store.generation,
     owner: reservation.owner,
     awaitsCartId,
-    send: (signal, updateCart, cartId) =>
-      getTransactionDefinition(type).transport(payload, signal, updateCart, cartId),
   };
   // A newer change to the same key replaces this one before its request exists. A subscriber can
   // make that change while this one is published, so listen and hold before enqueueing.
@@ -2048,22 +2076,26 @@ function startHeldTransport(
   { updateCart }: ShopifyStandardActions,
   cartId?: string,
 ): void {
-  if (held.generation !== store.generation || held.owner?.controller.signal.aborted) {
-    held.deferred.reject(createAbortError());
-    return;
-  }
   const transaction = store.transactions.find(
     (candidate) => candidate.promise === held.deferred.promise,
   );
+  if (
+    !transaction ||
+    held.generation !== store.generation ||
+    held.owner?.controller.signal.aborted
+  ) {
+    held.deferred.reject(createAbortError());
+    return;
+  }
   // Requests reach the server in the order they are sent, not the order they were made.
-  if (transaction) transaction.sequence = store.nextTransactionId++;
+  transaction.sequence = store.nextTransactionId++;
   const eventToken = createTransactionEventToken();
   const expectedEvent = { token: eventToken };
   store.expectedEvents.push(expectedEvent);
   let transport: Promise<UpdateCartResult>;
   try {
     // The timeout starts here, so time spent held does not count against the request.
-    transport = held.send(
+    transport = transaction.send(
       createTransactionSignal(store, held.owner),
       withTransactionEventToken(updateCart, eventToken),
       cartId,
@@ -2298,9 +2330,9 @@ function isHeldTransaction(store: CartStoreContext, transaction: PendingTransact
 }
 
 /**
- * Makes `data` the settled cart and returns whether it did. Held changes stay and replay on it.
- * It declines the cart the store already has, and any cart while a request is in flight: that
- * request targets the current cart.
+ * Makes `data` the settled cart and returns whether it did. Held changes move onto it and replay
+ * there. It declines the cart the store already has, and any cart while a request is in flight:
+ * that request targets the current cart.
  */
 function adoptCart(store: CartStoreContext, data: CartData): boolean {
   const current = store.settled;
@@ -2309,6 +2341,9 @@ function adoptCart(store: CartStoreContext, data: CartData): boolean {
     return false;
   }
   store.settled = createCartState(data);
+  store.transactions = store.transactions.map((transaction) =>
+    transaction.rebaseOnto(current, store.settled),
+  );
   store.projectedErrors = [];
   // A running revalidation started before this cart was read, so the cart supersedes it. A
   // revalidation requested since then still runs.
