@@ -45,7 +45,7 @@ export const storefrontMiddleware: Route.MiddlewareFunction = async (
   context.set(storefrontContext, client);
 
   const response = await next();
-  requestContext.applyResponseHeaders(response.headers);
+  requestContext.applyResponseHeaders(response.headers, response.status);
   return response;
 };
 ```

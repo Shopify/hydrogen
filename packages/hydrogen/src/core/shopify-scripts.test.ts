@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, beforeEach, vi } from "vitest";
 
+import { configureLogging } from "./logging";
 import { SHOPIFY_STOREFRONT_STANDARD_EVENTS_INSPECTOR_SCRIPT } from "./shopify-scripts/constants";
 import {
   getShopifyScriptTags,
@@ -22,7 +23,7 @@ import {
 import { getPerfKitScript } from "./shopify-scripts/perfkit";
 import type { ShopifyScriptTagsOptions } from "./shopify-scripts/types";
 import { defineShopifyRouteTemplates } from "./standard-routes/index";
-import { assert } from "./test-utils";
+import { assert, createTestLogger } from "./test-utils";
 import { loadScript } from "./utils/load-script";
 
 vi.mock("./utils/load-script", () => ({
@@ -169,6 +170,31 @@ describe("shopify scripts", () => {
 
     expect(assign).toHaveBeenCalledWith("/p/snowboard");
     expect(window.Shopify?.navigate).toBe(shopifyNavigate);
+  });
+
+  // The check warns once per document and this file shares one document, so this has to stay
+  // the only test here that leaves a locale path prefix through `history`.
+  it("warns in development when a navigation leaves the page's locale path prefix", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    (window as any).Shopify = { routes: { root: "/fr-ca/" } };
+    window.history.replaceState({}, "", "/fr-ca");
+
+    try {
+      await initializeShopifyScripts({ routes: emptyRouteTemplates, webMcp: false });
+
+      window.history.pushState({}, "", "/fr-ca/products/snowboard");
+      expect(logger.warn).not.toHaveBeenCalled();
+
+      window.history.pushState({}, "", "/products/snowboard");
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('"/products/snowboard"'), {
+        scope: "i18n",
+      });
+    } finally {
+      configureLogging({});
+      delete (window as any).Shopify;
+      window.history.replaceState({}, "", "/");
+    }
   });
 
   it("sets Shopify navigation without replacing existing route state", async () => {

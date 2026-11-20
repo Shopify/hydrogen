@@ -1,8 +1,10 @@
 import { initializeCustomConsent } from "../analytics/custom-consent";
 import { getLogger } from "../logging";
 import { configureShopifyRouting } from "./global";
+import { warnOnLocaleChangingNavigation } from "./locale-checks";
 import { initializeShopifyPageViewEvents } from "./page-view";
 import type { InitializeShopifyScriptsOptions } from "./types";
+import { observeNavigation } from "./utils/navigation";
 import { loadShopifyWebMcpTools } from "./webmcp";
 
 const log = getLogger("consent");
@@ -31,6 +33,7 @@ export function initializeShopifyScripts({
 }: InitializeShopifyScriptsOptions): Promise<boolean | void> {
   configureShopifyRouting({ navigate, routes });
   initializeShopifyPageViewEvents();
+  if (__DEV__) observeNavigation(warnOnLocaleChangingNavigation);
 
   if (consent?.mode === "custom-banner") {
     if (typeof consent.setup !== "function") {

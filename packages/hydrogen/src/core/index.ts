@@ -3,6 +3,7 @@ export { createShopifyRouteTemplates, defineShopifyRouteTemplates } from "./stan
 export type { ShopifyRouteTemplates } from "./standard-routes/index";
 export {
   defineShopifyI18n,
+  getHtmlLang,
   getLocalePathSegment,
   getLocalizedHref,
   getSupportedLocales,
@@ -51,6 +52,7 @@ export type {
 export { Cache, createFetchWithCache, createRunWithCache } from "./cache";
 export type { CacheInstance, CacheOptions, CachingStrategy } from "./cache";
 export { StorefrontApiError, StorefrontTimeoutError } from "../client/errors";
+export { withStorefrontRateLimit } from "./storefront-rate-limit";
 export { gql } from "../graphql";
 export type {
   I18nConfig,
@@ -153,6 +155,7 @@ export type {
   CartLineCost,
   CartLineMerchandise,
   CartCost,
+  CartBuyerIdentity,
   DiscountCode,
   Attribute,
 } from "./cart";

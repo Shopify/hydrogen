@@ -14,6 +14,7 @@ import {
 import { getCustomerSessionHandlers } from "@/lib/customer-session-handlers";
 import { i18n } from "@/lib/i18n";
 import { predictiveSearchHandlers } from "@/lib/predictive-search-handlers";
+import { applyProxyResponseHeaders } from "@/lib/proxy-response-headers";
 import { routeTemplates } from "@/lib/route-templates";
 import { createRequestStorefrontClient } from "@/lib/storefront-client";
 import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/storefront-config";
@@ -30,7 +31,8 @@ import { isCustomerAccountsAvailable, resolveStorefrontConfig } from "@/lib/stor
  * `not-found.tsx` and locale resolution in `lib/storefront.ts`; without it every
  * Server Component request context silently resolves to the default locale).
  * SFAPI response headers are merged onto the forwarded response via
- * `requestContext.applyResponseHeaders`.
+ * `applyProxyResponseHeaders`, which leaves `Link` to the route so Next.js does
+ * not replace a route handler's own `Link` header.
  *
  * mock.shop fallback: when no `PRIVATE_STOREFRONT_API_TOKEN` is present, the
  * shared `resolveStorefrontConfig()` falls back to `mock.shop` with tokenless
@@ -105,7 +107,7 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
   requestHeaders.delete("Content-Security-Policy");
   requestHeaders.delete("Content-Security-Policy-Report-Only");
   const response = NextResponse.next({ request: { headers: requestHeaders } });
-  requestContext.applyResponseHeaders(response.headers);
+  applyProxyResponseHeaders(requestContext, response.headers);
   csp.applyResponseHeaders(response.headers);
   return response;
 }

@@ -1,0 +1,26 @@
+{
+  "name": "@shopify/agentic-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "oxlint .",
+    "typecheck": "tsc --noEmit",
+    "cli": "node src/cli.ts",
+    "browser:install": "playwright-core install --no-shell chromium",
+    "test": "pnpm run test:unit",
+    "test:unit": "vitest run --dir src --exclude \"**/*.integration.test.ts\"",
+    "test:integration": "vitest run --dir src .integration.test.ts"
+  },
+  "dependencies": {
+    "@browserbasehq/stagehand": "3.7.3",
+    "@shopify/hydrogen": "workspace:*",
+    "playwright-core": "1.59.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "typescript": "catalog:",
+    "vitest": "^3.0.0"
+  }
+}

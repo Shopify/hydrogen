@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useInsertionEffect,
   useMemo,
   useRef,
   useSyncExternalStore,
@@ -16,8 +17,9 @@ import {
 import { trackCartAnalytics } from "../core/analytics/cart-tracker";
 import { attachQuantityInput } from "../core/cart/attach-quantity-input";
 import {
-  configureCartEndpoint as configureCoreCartEndpoint,
+  configureCartRequests,
   createCartStore,
+  getCartEndpoint,
   type CreateCartStoreOptions,
   type CartActions,
   type CartStore,
@@ -25,25 +27,23 @@ import {
 import { createCartFormRegister, type CartFormRegister } from "../core/cart/form";
 import type { CartDataFromHandlers } from "../core/cart/server-handlers";
 import { type CartData, type CartState } from "../core/cart/state";
-
-const DEFAULT_CART_ENDPOINT = "/api/cart";
-
-let cartEndpoint = DEFAULT_CART_ENDPOINT;
+import { useLocalePathPrefix } from "./locale";
 
 interface CartContextValue {
   store: CartStore;
   hydrationSnapshot: CartState;
+  /** The URL that the provider sends cart requests to, which cart forms post to as well. */
+  endpoint: string;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-export function configureCartEndpoint(endpoint: string): void {
-  cartEndpoint = endpoint;
-  configureCoreCartEndpoint(endpoint);
-}
-
-export function getCartEndpoint(): string {
-  return cartEndpoint;
+/**
+ * The URL that a cart form posts to: the endpoint of the cart provider above the form, which is
+ * where that provider sends cart requests. Outside a provider, the configured endpoint.
+ */
+export function useCartEndpoint(): string {
+  return useContext(CartContext)?.endpoint ?? getCartEndpoint(undefined);
 }
 
 /**
@@ -51,7 +51,7 @@ export function getCartEndpoint(): string {
  */
 type TypedCartProviderProps<TData extends CartData> = {
   /**
-   * The `data` property of the cart GET handler's result, or a promise of that data. Without initial data, the store loads the cart from `/api/cart` after the provider mounts, and the server-rendered page shows an empty cart. The provider creates its store from the first value and ignores later changes.
+   * The `data` property of the cart GET handler's result, or a promise of that data. Without initial data, the store loads the cart from the cart endpoint after the provider mounts, and the server-rendered page shows an empty cart. The provider creates its store from the first value and ignores later changes.
    */
   initialData?: CartInitialData<TData>;
   /** Content that can read the cart through the cart hooks. */
@@ -123,7 +123,7 @@ type TypedCartComponents<TData extends CartData> = {
  * Returns a cart provider and cart hooks typed to the cart fragment in your cart server handlers.
  * Pass `typeof cartServerHandlers` as the `THandlers` type argument. Every hook's cart state then includes your custom cart fields.
  *
- * On mount, the provider sends cart requests to `/api/cart` and connects the store. Every hook except `useOptionalCart` throws when you call it outside the provider.
+ * On mount, the provider connects the store and sends cart requests to `/api/cart`, or to the endpoint from `configureCartEndpoint`. Inside `LocaleProvider`, the requests go under the locale's path prefix. Every hook except `useOptionalCart` throws when you call it outside the provider.
  *
  * @returns The cart provider, the cart state hooks, and the cart actions and form hooks.
  *
@@ -203,7 +203,7 @@ function useOptionalCartContext(): CartContextValue | null {
 /**
  * Creates a cart store and shares the store with the cart hooks inside the provider.
  *
- * Render every cart hook inside the provider. On mount, the provider sends cart requests to `/api/cart` and connects the store. On unmount, the provider destroys the store. The provider creates its store from the first initial data and ignores later changes.
+ * Render every cart hook inside the provider. On mount, the provider connects the store and sends cart requests to `/api/cart`, or to the endpoint from `configureCartEndpoint`. Inside `LocaleProvider`, the requests go under the locale's path prefix. On unmount, the provider destroys the store. The provider creates its store from the first initial data and ignores later changes.
  *
  * @example
  * ```tsx
@@ -223,16 +223,25 @@ export function CartProvider({
   initialData?: CartInitialData;
   children?: ReactNode;
 }) {
-  const context = useMemo(() => {
+  const pathPrefix = useLocalePathPrefix();
+  const endpoint = getCartEndpoint(pathPrefix);
+  const storeContext = useMemo(() => {
     const store = createCartStore({ initialData });
     // Plain consumers must hydrate from the state used for SSR, even if the live store settles first.
     return { store, hydrationSnapshot: store.getState() };
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- provider initialData seeds one store for its lifetime
   }, []);
-  const { store } = context;
+  const { store } = storeContext;
+  const context = useMemo(() => ({ ...storeContext, endpoint }), [storeContext, endpoint]);
+
+  // A child can load the cart in its own mount effect, and child effects run before this
+  // provider's. Insertion effects run before every layout and passive effect in the commit, so
+  // that first request already goes under the locale path prefix.
+  useInsertionEffect(() => {
+    configureCartRequests(pathPrefix);
+  }, [pathPrefix]);
 
   useEffect(() => {
-    configureCoreCartEndpoint(cartEndpoint);
     store.connect();
     return () => {
       store.destroy();
@@ -477,7 +486,7 @@ function useSuspenseCartSelector<TData extends CartData, S>(
  * @publicDocs
  */
 export function useCartForm(): CartFormBindings {
-  const store = useCartStore("useCartForm");
+  const { store, endpoint } = useCartContext("useCartForm");
   const coreRegister = useMemo(() => createCartFormRegister(), []);
 
   const register = useMemo(() => {
@@ -514,7 +523,7 @@ export function useCartForm(): CartFormBindings {
       opts?.afterSubmit?.(e);
     },
     method: "post",
-    action: cartEndpoint,
+    action: endpoint,
   });
 
   return { formProps, register };

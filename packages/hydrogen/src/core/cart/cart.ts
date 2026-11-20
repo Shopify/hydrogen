@@ -23,6 +23,7 @@ import {
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "../shopify-scripts/index";
+import { applyI18nPathPrefix } from "../standard-routes/path";
 import { getCartAttributeFormEntries } from "./form";
 import { DEFAULT_MINIMUM_QUANTITY, sanitizeQuantity } from "./quantity";
 import type {
@@ -86,6 +87,7 @@ const FNV1A_OFFSET_BASIS = 0x811c9dc5;
 const FNV1A_PRIME = 0x01000193;
 const CART_REVALIDATION_ERROR_MESSAGE =
   "Something went wrong refreshing your cart. Please try again.";
+const DEFAULT_CART_ENDPOINT = "/api/cart";
 
 /** The timeout in milliseconds for cart loads and mutations. */
 export const STANDARD_ACTION_TIMEOUT_IN_MS = 30_000;
@@ -413,7 +415,14 @@ type CartEventHandlers = {
   attributes: EventListener;
 };
 
+// The cart route as the app configured it: without a locale prefix under the framework cart
+// providers, already prefixed without them. Requests go to `getCartRequestUrl()`.
 let configuredCartEndpoint: string | null = null;
+// The locale path prefix of the document. The framework cart providers set it in the browser
+// only, so server renders for different locales never share it. A document has one cart
+// provider, as it has one Standard Actions `updateCart` handler: the last provider to mount
+// decides where the document's cart requests go.
+let cartPathPrefix: string | undefined;
 let hasConfiguredUpdateCart = false;
 let standardActionsPromise: Promise<ShopifyStandardActions> | null = null;
 const connectedCartStores = new Set<CartStoreContext>();
@@ -663,13 +672,16 @@ function projectVisibleState(store: CartStoreContext): CartState {
 function publishVisibleState(store: CartStoreContext): void {
   const previous = store.observable.state;
   const next = reuseVisibleReferences(previous, projectVisibleState(store));
-  if (configuredCartEndpoint && previous !== next) {
+  // The server publishes state too, when streamed initial data resolves, and has no inputs to sync.
+  const cartRequestUrl =
+    previous === next || typeof document === "undefined" ? null : getCartRequestUrl();
+  if (cartRequestUrl) {
     const previousLines = new Map(getLines(previous.data).map((line) => [line.id, line]));
     const changedQuantities = getLines(next.data)
       .filter((line) => previousLines.get(line.id)?.quantity !== line.quantity)
       .map((line) => ({ id: line.id, quantity: line.quantity }));
     if (changedQuantities.length > 0) {
-      syncQuantityInputs(changedQuantities, configuredCartEndpoint);
+      syncQuantityInputs(changedQuantities, cartRequestUrl);
     }
   }
   store.observable.setState(next);
@@ -1212,23 +1224,44 @@ function projectLineQuantity(state: CartState, payload: ChangeLineQuantityPayloa
 }
 
 // A response can return a line under another ID (Standard Actions may add a `?cart=` suffix), so a
-// missing line only means removal for a removal. Otherwise keep it and revalidate.
+// missing line only means removal for a removal. Otherwise revalidate to pick up its new ID. Until
+// then, a line the server accepted keeps its requested quantity, since the response's totals already
+// include it. A line the response reports a problem for keeps its previous quantity, because the
+// server may have rejected or adjusted the change.
 function settleLineQuantity(
   state: CartState,
   serverLines: CartLine[],
   payload: ChangeLineQuantityPayload,
   requestRevalidation: () => void,
+  accepted: boolean,
 ): CartState {
   const previous = getLines(state.data);
   const matching = serverLines.find((line) => line.id === payload.lineId);
   if (!matching && payload.quantity > 0) {
     requestRevalidation();
-    return state;
+    return accepted ? projectLineQuantity(state, payload) : state;
   }
   const lines = matching
     ? previous.map((line) => (line.id === payload.lineId ? mergeServerLine(line, matching) : line))
     : previous.filter((line) => line.id !== payload.lineId);
   return { ...state, data: reconcileCartLines(state.data, lines) };
+}
+
+// Whether a batch's response confirms that the server applied a line's requested quantity. An
+// error or warning for the line, or one the store can't tie to a requested line (cart-level, or
+// targeting a renamed line), means the server may have rejected or adjusted it.
+function getAcceptedLineCheck(
+  result: CartActionFailure,
+  lineIds: string[],
+): (lineId: string) => boolean {
+  if (!hasProjectedErrors(result)) return () => true;
+  const grouped = groupLineErrors(result, lineIds);
+  const hasUnscopedProblem =
+    grouped.cart.userErrors.length > 0 ||
+    grouped.cart.warnings.length > 0 ||
+    [...grouped.lines.keys()].some((lineId) => !lineIds.includes(lineId));
+  if (hasUnscopedProblem) return () => false;
+  return (lineId) => !grouped.lines.has(lineId);
 }
 
 export const CART_TRANSACTION_TYPES = defineTransactionTypes({
@@ -1332,18 +1365,7 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
     payload: {} as ChangeLineQuantityPayload,
     transport: (payload, signal, updateCart) =>
       updateCart({ lines: [{ id: payload.lineId, quantity: payload.quantity }] }, { signal }),
-    projectPayload: (state, payload) => {
-      const previous = getLines(state.data);
-      const existing = previous.find((line) => line.id === payload.lineId);
-      if (!existing) return state;
-      const lines =
-        payload.quantity === 0
-          ? previous.filter((line) => line.id !== payload.lineId)
-          : previous.map((line) =>
-              line.id === payload.lineId ? { ...line, quantity: payload.quantity } : line,
-            );
-      return { ...state, data: reconcileCartLines(state.data, lines) };
-    },
+    projectPayload: (state, payload) => projectLineQuantity(state, payload),
     projectPromise: (state, result, payload, addError, options) => {
       if (hasProjectedErrors(result)) {
         addError((current, timestampMs) =>
@@ -1402,8 +1424,19 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       if (!result.cart) return state;
 
       const serverLines = getLines(cartResponseFromStandardEvent(result.cart));
+      const isAccepted = getAcceptedLineCheck(
+        result,
+        payload.lines.map(({ lineId }) => lineId),
+      );
       return owned.reduce(
-        (current, line) => settleLineQuantity(current, serverLines, line, requestRevalidation),
+        (current, line) =>
+          settleLineQuantity(
+            current,
+            serverLines,
+            line,
+            requestRevalidation,
+            isAccepted(line.lineId),
+          ),
         state,
       );
     },
@@ -1843,10 +1876,18 @@ function observeMutationTransport(
 ): void {
   if (store.activeMutationTransports.has(promise)) return;
   store.activeMutationTransports.add(promise);
+  let released = false;
+  // Teardown keeps observing requests the store doesn't own, so revalidation waits for them after a
+  // reconnect. A request that never settles would block it forever, so stop waiting once it has
+  // outlived the timeout the store gives its own requests.
   const releaseTransport = () => {
+    if (released) return;
+    released = true;
+    clearTimeout(timeout);
     store.activeMutationTransports.delete(promise);
     revalidateCartWhenIdle(store);
   };
+  const timeout = setTimeout(releaseTransport, STANDARD_ACTION_TIMEOUT_IN_MS);
   promise.then(releaseTransport, releaseTransport);
 }
 
@@ -2504,7 +2545,9 @@ function getLineQuantityPayload(
   const rawQuantity = Number(formData.get("quantity"));
   const explicitQuantity = Number.isNaN(rawQuantity) ? DEFAULT_MINIMUM_QUANTITY : rawQuantity;
   if (explicitQuantity <= 0) return { lineId, quantity: 0 };
-  const maxQuantity = line?.merchandise?.quantityAvailable ?? undefined;
+  const quantityAvailable = line?.merchandise?.quantityAvailable;
+  const maxQuantity =
+    typeof quantityAvailable === "number" && quantityAvailable > 0 ? quantityAvailable : undefined;
   return {
     lineId,
     quantity: sanitizeQuantity(explicitQuantity, {
@@ -2607,7 +2650,11 @@ async function handleFormSubmitInStore(
 /**
  * Sends every cart load and cart change on the page to your cart endpoint. Without an endpoint, Standard Actions handles cart requests with its default handler.
  *
- * Call the function before you connect a cart store. The first cart load then goes to your endpoint. A later call with a different endpoint replaces the first endpoint and logs a warning. In React, `CartProvider` sets the endpoint to `/api/cart` when the provider mounts.
+ * Call the function before you connect a cart store. The first cart load then goes to your endpoint. A later call with a different endpoint replaces the first endpoint and logs a warning.
+ *
+ * The React and Vue cart providers use `/api/cart` unless you set an endpoint first. They render the endpoint as the cart form action and put a path that starts with `/` under the locale path prefix from `LocaleProvider`. With those providers, pass the path without a locale prefix, and call the function at module scope in code that runs on the server and in the browser, so the server-rendered form action matches.
+ *
+ * Without those providers, call the function in the browser only and include the page's locale path prefix in the endpoint, such as `/fr-ca/api/cart`.
  *
  * @param endpoint The URL path of your cart route.
  * @returns Nothing. Later cart loads and changes on the page go to the endpoint.
@@ -2625,6 +2672,28 @@ export function configureCartEndpoint(endpoint: string): void {
     );
   }
   configuredCartEndpoint = endpoint;
+}
+
+/**
+ * The URL that cart forms post to under a locale path prefix: the configured endpoint, or
+ * `/api/cart`. The framework cart providers render it as the form action.
+ */
+export function getCartEndpoint(pathPrefix: string | undefined): string {
+  return applyI18nPathPrefix(configuredCartEndpoint ?? DEFAULT_CART_ENDPOINT, pathPrefix);
+}
+
+/**
+ * Sends the document's cart requests to the cart route under its locale path prefix. The
+ * framework cart providers call it when they mount, which also moves cart requests from the
+ * Standard Actions default handler to `/api/cart` unless the app configured an endpoint.
+ */
+export function configureCartRequests(pathPrefix: string | undefined): void {
+  configuredCartEndpoint ??= DEFAULT_CART_ENDPOINT;
+  cartPathPrefix = pathPrefix;
+}
+
+function getCartRequestUrl(): string | null {
+  return configuredCartEndpoint === null ? null : getCartEndpoint(cartPathPrefix);
 }
 
 async function postCartUpdateToEndpoint(
@@ -2649,8 +2718,9 @@ function configureUpdateCartOnce(actions: ShopifyStandardActions): void {
   const configured = actions.updateCart.configure({
     eventTarget: () => document,
     handler: (defaultHandler, payload, options) => {
-      if (!configuredCartEndpoint || !payload) return defaultHandler();
-      return postCartUpdateToEndpoint(configuredCartEndpoint, payload, options);
+      const cartRequestUrl = getCartRequestUrl();
+      if (!cartRequestUrl || !payload) return defaultHandler();
+      return postCartUpdateToEndpoint(cartRequestUrl, payload, options);
     },
   });
   if (configured === false) {
@@ -2666,10 +2736,14 @@ function hasShopifyStandardActionsScript(): boolean {
   );
 }
 
+function getStandardActionsGlobal(): ShopifyStandardActions | undefined {
+  return typeof window === "undefined" ? undefined : window.Shopify?.actions;
+}
+
 export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
   return (standardActionsPromise ??= new Promise<ShopifyStandardActions>((resolve, reject) => {
     const configure = () => {
-      const actions = typeof window === "undefined" ? undefined : window.Shopify?.actions;
+      const actions = getStandardActionsGlobal();
       if (actions?.updateCart) {
         configureUpdateCartOnce(actions);
         resolve(actions);
@@ -2681,15 +2755,30 @@ export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
       reject(new Error(message));
     };
 
-    if (typeof document !== "undefined" && document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", configure, {
-        once: true,
-      });
+    // Deferred scripts run after readyState turns "interactive" but before DOMContentLoaded.
+    // If DOMContentLoaded already fired, the script has failed and window load only ends the wait.
+    if (
+      typeof document !== "undefined" &&
+      (document.readyState === "loading" ||
+        (document.readyState === "interactive" && !getStandardActionsGlobal()?.updateCart))
+    ) {
+      const listeners = new AbortController();
+      const onReady = () => {
+        listeners.abort();
+        try {
+          configure();
+        } catch (error) {
+          reject(error);
+        }
+      };
+      document.addEventListener("DOMContentLoaded", onReady, { signal: listeners.signal });
+      window.addEventListener("load", onReady, { signal: listeners.signal });
       return;
     }
     configure();
-  }).catch((error) => {
+  }).catch((error: unknown) => {
     standardActionsPromise = null;
+    log.error("standard actions setup failed", { error });
     throw error;
   }));
 }
@@ -2697,6 +2786,7 @@ export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
 /** @internal */
 export function resetStandardActionsForTests(): void {
   configuredCartEndpoint = null;
+  cartPathPrefix = undefined;
   hasConfiguredUpdateCart = false;
   standardActionsPromise = null;
 }
@@ -2711,8 +2801,9 @@ async function fetchCart(
 ): Promise<{ cart: CartResponse | null }> {
   const timeoutSignal = AbortSignal.timeout(STANDARD_ACTION_TIMEOUT_IN_MS);
   const signal = callerSignal ? AbortSignal.any([callerSignal, timeoutSignal]) : timeoutSignal;
-  if (configuredCartEndpoint) {
-    const response = await fetch(configuredCartEndpoint, {
+  const cartRequestUrl = getCartRequestUrl();
+  if (cartRequestUrl) {
+    const response = await fetch(cartRequestUrl, {
       cache: "no-store",
       signal,
     });

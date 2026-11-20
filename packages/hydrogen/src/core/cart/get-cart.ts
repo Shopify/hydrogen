@@ -52,16 +52,16 @@ type CartQueryGraphql = (
   options: { variables: { id: string } },
 ) => Promise<CartQueryResult>;
 
-/** A request, or a request context with a `Cookie` header and a URL. */
-type CartIdSource = Request | Pick<ShopifyRequestContext, "cookie" | "url">;
+/** A request, or a request context with a `Cookie` header. */
+type CartIdSource = Request | Pick<ShopifyRequestContext, "cookie">;
 
 /**
- * Reads the cart ID from a request.
+ * Reads the cart ID from the `cart` cookie of a request.
  *
- * The function checks the `cartId` search parameter first, then the `cart` cookie. The function returns a search parameter value unchanged and adds the `gid://shopify/Cart/` prefix to a cookie value.
+ * The function adds the `gid://shopify/Cart/` prefix to the cookie value.
  *
- * @param input The request or request context that carries the cart ID.
- * @returns The cart ID, or `null` when neither the search parameter nor the cookie has one.
+ * @param input The request or request context that carries the cart cookie.
+ * @returns The cart ID, or `null` when the request has no `cart` cookie.
  * @example
  * ```ts
  * // In a framework loader
@@ -73,12 +73,6 @@ type CartIdSource = Request | Pick<ShopifyRequestContext, "cookie" | "url">;
  * @publicDocs
  */
 export function getCartId(input: CartIdSource): string | null {
-  if (input.url) {
-    const parsedUrl = new URL(input.url, "https://hydrogen.local");
-    const cartId = parsedUrl.searchParams.get("cartId");
-    if (cartId) return cartId;
-  }
-
   return getCartIdFromCookie(input);
 }
 

@@ -1,9 +1,37 @@
 import type {
   ShopifyDomainLocale,
+  ShopifyLanguageCode,
   ShopifyLocale,
   ShopifyMatchedLocale,
   ShopifyPathnameLocale,
 } from "./types";
+
+const HTML_LANG_SCRIPT_TAGS: Partial<Record<ShopifyLanguageCode, string>> = {
+  ZH_CN: "zh-Hans",
+  ZH_TW: "zh-Hant",
+};
+
+/**
+ * Converts a Shopify language code into the BCP 47 tag for the `<html lang>` attribute:
+ * `EN` → `en`, `PT_BR` → `pt-BR`, `ZH_TW` → `zh-Hant`.
+ *
+ * The attribute names the language the page is written in, so it takes the language code only,
+ * not the market country: Portuguese content sold in Canada is still `pt-BR`. Use the market
+ * country for `hreflang` instead, where the region names the targeted audience.
+ *
+ * @example
+ * ```tsx
+ * <html lang={getHtmlLang(requestContext.locale.language)}>
+ * ```
+ *
+ * @publicDocs
+ */
+export function getHtmlLang(language: ShopifyLanguageCode): string {
+  return (
+    HTML_LANG_SCRIPT_TAGS[language] ??
+    language.toLowerCase().replace(/_(\w+)$/, (_, region: string) => `-${region.toUpperCase()}`)
+  );
+}
 
 export function isSameLocale(a: ShopifyLocale, b: ShopifyLocale): boolean {
   return a.language === b.language && a.country === b.country;

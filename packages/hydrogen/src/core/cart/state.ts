@@ -1,4 +1,8 @@
-import type { CartErrorCode, CartWarningCode } from "../../graphql/generated/storefront-api-types";
+import type {
+  CartErrorCode,
+  CartWarningCode,
+  CountryCode,
+} from "../../graphql/generated/storefront-api-types";
 
 /** A monetary value from the Storefront API. */
 export interface Money {
@@ -53,7 +57,7 @@ export interface CartLineMerchandise {
     height?: number | null;
     [key: string]: unknown;
   } | null;
-  /** Units available for sale. When your cart fragment selects the field, the store caps the quantity of a `set` submission at this number. */
+  /** Units available for sale. When your cart fragment selects the field and the value is positive, the store caps the quantity of a `set` submission at this number. Zero and negative values (untracked or oversold inventory) set no cap. */
   quantityAvailable?: number | null;
   /** Extra variant fields from your custom cart fragment, unchanged. */
   [key: string]: unknown;
@@ -135,6 +139,18 @@ export interface CartNetworkEntry {
   message: string;
   /** The HTTP status code, when the endpoint returned a non-2xx response. */
   status?: number;
+}
+
+/** The buyer that the cart belongs to. The Storefront API prices the cart for the buyer's country. */
+export interface CartBuyerIdentity {
+  /** The country that the cart is priced for. A country without a market on the shop gets the shop's default currency. The cart GET handler resets the country to the request's country when the two differ, except on a B2B cart. */
+  countryCode?: CountryCode | null;
+  /** The buyer's email address. */
+  email?: string | null;
+  /** The buyer's phone number. */
+  phone?: string | null;
+  /** The B2B company location that the customer buys for, or `null` for a non-B2B cart. */
+  purchasingCompany?: { location: { id: string } } | null;
 }
 
 /** A key-value pair attached to the cart or to an individual cart line. */
@@ -244,6 +260,8 @@ export interface CartData {
   lines: CartLineConnection;
   /** Discount codes applied to the cart, with their applicability. */
   discountCodes: DiscountCode[];
+  /** The buyer that the cart belongs to. Absent until the first server response. */
+  buyerIdentity?: CartBuyerIdentity | null;
   /** Extra cart fields from your custom cart fragment, unchanged. */
   [key: string]: unknown;
 }

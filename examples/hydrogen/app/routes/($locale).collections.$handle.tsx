@@ -5,6 +5,7 @@ import { PaginatedResourceSection } from "~/components/PaginatedResourceSection"
 import { ProductItem } from "~/components/ProductItem";
 import type { ProductItemData } from "~/components/ProductItem";
 import { CollectionView } from "~/lib/analytics";
+import { localizePath } from "~/lib/locale-path";
 import { getPaginationVariables } from "~/lib/pagination";
 import { redirectIfHandleIsLocalized } from "~/lib/redirect";
 
@@ -36,7 +37,7 @@ async function loadCriticalData({ context, params, request }: Route.LoaderArgs) 
   });
 
   if (!handle) {
-    throw redirect("/collections");
+    throw redirect(localizePath("/collections", storefront.locale.pathPrefix));
   }
 
   const { collection } = await storefront.query(COLLECTION_QUERY, {

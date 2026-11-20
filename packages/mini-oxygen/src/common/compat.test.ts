@@ -1,5 +1,18 @@
 import {describe, expect, it} from 'vitest';
-import {capCompatibilityDate, toRuntimeCompatibilityDate} from './compat.js';
+import {
+  capCompatibilityDate,
+  getOxygenCompatibilityDate,
+  toRuntimeCompatibilityDate,
+} from './compat.js';
+
+describe('getOxygenCompatibilityDate', () => {
+  it('is the bundled Workers runtime date', () => {
+    // This date is written to oxygen.json, so it's the production date too.
+    // Before a Miniflare upgrade changes it, confirm Oxygen supports the new
+    // date, and call out the production date change in the changeset.
+    expect(getOxygenCompatibilityDate()).toBe('2026-07-30');
+  });
+});
 
 describe('capCompatibilityDate', () => {
   const runtimeDate = '2026-07-30';
