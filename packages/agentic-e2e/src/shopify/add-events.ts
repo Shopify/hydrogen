@@ -2,6 +2,8 @@ import type { Page } from "playwright-core";
 import { z } from "zod";
 
 export const ADD_EVENT_NAME = "shopify:cart:lines-update";
+export const COLLECTION_VIEW_EVENT_NAME = "shopify:collection:view";
+export const PRODUCT_VIEW_EVENT_NAME = "shopify:product:view";
 const BINDING = "__agenticE2eAddEvent";
 export const MAX_LINES = 50;
 export const MAX_STRING = 200;
@@ -23,6 +25,10 @@ export type ScriptLimits = { binding: string; maxLines: number; maxString: numbe
  * `userErrors` or `warningCodes` is `null` when that field is present but not an array. It does not
  * dispatch events or throw into the page. Its rejection handler marks a native `event.promise` as
  * handled, so the storefront may not get an `unhandledrejection` for it.
+ *
+ * It also listens, the same way, for `shopify:collection:view` and `shopify:product:view`, which
+ * have no promise. For each it sends one message: a bounded copy of `collection.handle`, or of
+ * `context` and `product.handle`.
  */
 export function recordAddEvents({ binding, maxLines, maxString }: ScriptLimits): void {
   const send: unknown = Reflect.get(globalThis, binding);
@@ -109,23 +115,39 @@ export function recordAddEvents({ binding, maxLines, maxString }: ScriptLimits):
       () => post({ name: event.type, phase: "failed", id }),
     );
   };
-  document.addEventListener(
-    "shopify:cart:lines-update",
-    (event) => {
-      try {
-        record(event);
-      } catch {
-        // Never throw into the page.
-      }
-    },
-    true,
-  );
+  const recordCollectionView = (event: Event): void => {
+    post({ name: event.type, handle: text(field(field(event, "collection"), "handle")) });
+  };
+  const recordProductView = (event: Event): void => {
+    post({
+      name: event.type,
+      context: text(field(event, "context")),
+      handle: text(field(field(event, "product"), "handle")),
+    });
+  };
+  // oxlint-disable-next-line unicorn/consistent-function-scoping -- addInitScript sends only this function to the page.
+  const listen = (type: string, handler: (event: Event) => void): void => {
+    document.addEventListener(
+      type,
+      (event) => {
+        try {
+          handler(event);
+        } catch {
+          // Never throw into the page.
+        }
+      },
+      true,
+    );
+  };
+  listen("shopify:cart:lines-update", record);
+  listen("shopify:collection:view", recordCollectionView);
+  listen("shopify:product:view", recordProductView);
 }
 
 const id = z.string().min(1).max(64);
 const name = z.literal(ADD_EVENT_NAME);
 const text = z.string().max(MAX_STRING).nullable();
-const messageSchema = z.discriminatedUnion("phase", [
+const cartMessageSchema = z.discriminatedUnion("phase", [
   z.object({
     name,
     phase: z.literal("input"),
@@ -151,10 +173,18 @@ const messageSchema = z.discriminatedUnion("phase", [
   }),
   z.object({ name, phase: z.literal("failed"), id }),
 ]);
+const messageSchema = z.discriminatedUnion("name", [
+  cartMessageSchema,
+  z.object({ name: z.literal(COLLECTION_VIEW_EVENT_NAME), handle: text }),
+  // `context` is any bounded string, also one that the Standard Events contract does not list.
+  z.object({ name: z.literal(PRODUCT_VIEW_EVENT_NAME), context: text, handle: text }),
+]);
 
 /**
- * One recorded message. `order` is its receive order in Node, from 0. A line `id` can hold the
- * cart token: keep it in memory only, never in a result, a reason, or a progress line.
+ * One recorded message: a cart message (`shopify:cart:lines-update`, with a `phase`), or a
+ * collection or product view. `order` is its receive order in Node, from 0, shared by every kind.
+ * A line `id` can hold the cart token: keep it in memory only, never in a result, a reason, or a
+ * progress line.
  */
 export type AddEvent = z.infer<typeof messageSchema> & { order: number };
 
@@ -171,7 +201,10 @@ export function parseAddEventMessage(message: unknown, order: number): AddEvent 
   return parsed.success ? { ...parsed.data, order } : undefined;
 }
 
-/** The in-memory list of add event messages from the main page, in receive order. */
+/**
+ * The in-memory list of recorded Standard Event messages from the main page (cart messages and
+ * collection and product views), in receive order.
+ */
 export class AddEventLog {
   readonly events: AddEvent[] = [];
   readonly #listeners = new Set<() => void>();
@@ -191,7 +224,11 @@ export class AddEventLog {
     this.onceWhen(
       () =>
         this.events.some(
-          (event) => event.order >= from && event.phase === "input" && event.action === "add",
+          (event) =>
+            event.order >= from &&
+            event.name === ADD_EVENT_NAME &&
+            event.phase === "input" &&
+            event.action === "add",
         ),
       listener,
     );

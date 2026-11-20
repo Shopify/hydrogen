@@ -1,10 +1,19 @@
+import assert from "node:assert/strict";
+
 import { describe, expect, it, vi } from "vitest";
 
-import { ADD_EVENT_NAME, type AddEvent } from "./shopify/add-events.ts";
+import {
+  ADD_EVENT_NAME,
+  type AddEvent,
+  COLLECTION_VIEW_EVENT_NAME,
+  PRODUCT_VIEW_EVENT_NAME,
+} from "./shopify/add-events.ts";
 import {
   cartLineChangesDecided,
+  firstProductPageView,
   followCartLine,
   verifyAdd,
+  verifyBrowseFromCollection,
   verifyCartLineChanges,
 } from "./verdict.ts";
 
@@ -733,5 +742,188 @@ describe("followCartLine and cartLineChangesDecided", () => {
     const events = log(change("old", 2), failed("old"), ...added());
 
     expect(cartLineChangesDecided(events, 2)).toBe(false);
+  });
+});
+
+const COLLECTION = "frontpage";
+const PRODUCT = "board";
+const BROWSE_PASS =
+  "The collection page dispatched shopify:collection:view for the pinned collection, and then the pinned product's page dispatched shopify:product:view.";
+const NO_PAGE_VIEW =
+  'No shopify:product:view event with context "page" was recorded by the time Stagehand was disconnected.';
+const CLAIMED_PAGE_VIEW =
+  'The agent reports that it opened the product page, but no shopify:product:view event with context "page" was dispatched.';
+const WRONG_PRODUCT = "The product page that opened is not the pinned product.";
+const NO_COLLECTION_VIEW =
+  "No shopify:collection:view event for the pinned collection was dispatched before the product page opened.";
+
+function collectionView(handle: string | null = COLLECTION): Message {
+  return { name: COLLECTION_VIEW_EVENT_NAME, handle };
+}
+
+function productView(context: string | null, handle: string | null = PRODUCT): Message {
+  return { name: PRODUCT_VIEW_EVENT_NAME, context, handle };
+}
+
+/** The pinned collection and product. The agent started at `agentStart`, 0 by default. */
+function verifyBrowse(events: AddEvent[], { agentStart = 0, agentCompleted = false } = {}) {
+  return verifyBrowseFromCollection({
+    events,
+    agentStart,
+    collectionHandle: COLLECTION,
+    productHandle: PRODUCT,
+    agentCompleted,
+  });
+}
+
+describe("verifyBrowseFromCollection", () => {
+  it("passes when the pinned collection view comes before the pinned product's page view", () => {
+    expect(verifyBrowse(log(collectionView(), productView("page")))).toEqual({
+      status: "pass",
+      reason: BROWSE_PASS,
+    });
+  });
+
+  // Rule 1.
+  it("is indeterminate without a product page view when the agent did not confirm completion", () => {
+    expect(verifyBrowse(log(collectionView()))).toEqual({
+      status: "indeterminate",
+      reason: NO_PAGE_VIEW,
+    });
+  });
+
+  it("fails without a product page view when the agent confirmed completion", () => {
+    expect(verifyBrowse(log(collectionView()), { agentCompleted: true })).toEqual({
+      status: "fail",
+      reason: CLAIMED_PAGE_VIEW,
+    });
+  });
+
+  // Rule 2.
+  it.each([
+    { case: "another product", handle: "tee" },
+    { case: "a null handle", handle: null },
+  ])("fails when the product page view is for $case", ({ handle }) => {
+    expect(verifyBrowse(log(collectionView(), productView("page", handle)))).toEqual({
+      status: "fail",
+      reason: WRONG_PRODUCT,
+    });
+  });
+
+  // Rule 2 before rule 3: a wrong product with no collection view is the wrong product.
+  it("checks the product before the collection view", () => {
+    expect(verifyBrowse(log(productView("page", "tee")))).toEqual({
+      status: "fail",
+      reason: WRONG_PRODUCT,
+    });
+  });
+
+  // Rule 1 before rule 2: the first page view decides, a later one for the pinned product does not.
+  it("uses only the first product page view", () => {
+    expect(
+      verifyBrowse(log(collectionView(), productView("page", "tee"), productView("page"))),
+    ).toEqual({ status: "fail", reason: WRONG_PRODUCT });
+  });
+
+  // Rule 3.
+  it.each([
+    { case: "no collection view", messages: [productView("page")] },
+    {
+      case: "a collection view for another collection",
+      messages: [collectionView("sale"), productView("page")],
+    },
+    {
+      case: "a collection view with a null handle",
+      messages: [collectionView(null), productView("page")],
+    },
+    {
+      case: "a collection view only after the product page view",
+      messages: [productView("page"), collectionView()],
+    },
+  ])("fails with $case", ({ messages }) => {
+    expect(verifyBrowse(log(...messages))).toEqual({ status: "fail", reason: NO_COLLECTION_VIEW });
+  });
+
+  it("counts a collection view recorded before the agent started", () => {
+    // The collection page load dispatches it before the agent starts at order 1.
+    expect(verifyBrowse(log(collectionView(), productView("page")), { agentStart: 1 })).toEqual({
+      status: "pass",
+      reason: BROWSE_PASS,
+    });
+  });
+
+  it.each(["collection", "recommendation", "dialog", "search", null])(
+    "does not count a product view with context %j for the pinned product, and does not fail for it",
+    (context) => {
+      expect(verifyBrowse(log(collectionView(), productView(context)))).toEqual({
+        status: "indeterminate",
+        reason: NO_PAGE_VIEW,
+      });
+      expect(
+        verifyBrowse(log(collectionView(), productView(context, "tee"), productView("page"))),
+      ).toEqual({ status: "pass", reason: BROWSE_PASS });
+    },
+  );
+
+  it("ignores a product page view recorded before the agent started", () => {
+    const events = log(collectionView(), productView("page"));
+
+    expect(verifyBrowse(events, { agentStart: 2 })).toEqual({
+      status: "indeterminate",
+      reason: NO_PAGE_VIEW,
+    });
+    expect(verifyBrowse(events, { agentStart: 2, agentCompleted: true })).toEqual({
+      status: "fail",
+      reason: CLAIMED_PAGE_VIEW,
+    });
+  });
+
+  it("ignores cart events", () => {
+    const events = log(collectionView(), add("a"), settled("a"), productView("page"));
+
+    expect(verifyBrowse(events)).toEqual({ status: "pass", reason: BROWSE_PASS });
+  });
+});
+
+describe("firstProductPageView", () => {
+  it("returns the first product view with context page at or after the agent start", () => {
+    const events = log(
+      productView("page", "before"),
+      productView("collection", "card"),
+      productView("page", "first"),
+      productView("page", "second"),
+    );
+
+    expect(firstProductPageView(events, 1)).toEqual({ ...productView("page", "first"), order: 2 });
+    expect(firstProductPageView(events, 4)).toBeUndefined();
+  });
+});
+
+describe("cart verdicts with view messages", () => {
+  it("ignore collection and product views between cart events", async () => {
+    const views = [collectionView(), productView("page"), productView("collection")];
+    const [first, ...rest] = fullRun();
+    assert(first, "fullRun has an add.");
+    const events = log(...views, first, ...views, ...rest, ...views);
+
+    await expect(verifyChanges(events)).resolves.toEqual({ status: "pass", reason: LINE_PASS });
+    expect(followCartLine(events, 0)).toEqual({ status: "steps", steps: [1, 2, 1, 0] });
+    expect(cartLineChangesDecided(events, 0)).toBe(true);
+    await expect(verify(log(...views, add("a"), ...views, settled("a")))).resolves.toEqual({
+      status: "pass",
+      reason: PASS,
+    });
+  });
+
+  it("do not count views as add events", async () => {
+    const views = log(collectionView(), productView("page"));
+
+    await expect(verify(views)).resolves.toEqual({ status: "indeterminate", reason: NO_ADD });
+    await expect(verifyChanges(views)).resolves.toEqual({
+      status: "indeterminate",
+      reason: NO_ADD,
+    });
+    expect(followCartLine(views, 0)).toEqual({ status: "waiting" });
+    expect(cartLineChangesDecided(views, 0)).toBe(false);
   });
 });

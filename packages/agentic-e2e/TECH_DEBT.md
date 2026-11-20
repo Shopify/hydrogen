@@ -10,7 +10,7 @@ Ship the basic tests using the default locale that the Storefront API reports. D
 
 - [`storefront.ts`](./src/shopify/storefront.ts) sends one `localization` query without `@inContext`. It reads the country and language codes, the country name, the language's own name (`endonymName`, such as `Français`), and the currency that the API makes active by default. It sends no buyer-IP header, but a proxy at the origin can add one. The command uses the returned context as the run's target; it does not establish that this is the shop's primary market.
 - [`catalog.ts`](./src/shopify/catalog.ts) pins the variant with `@inContext` set to that country code and language code.
-- The CLI accepts only the storefront root URL, so locale routes such as `/en-ca` are not supported. It opens `<origin>/products/<handle>` in a fresh browser profile. It sets no locale cookie, no `--lang` flag, and no market.
+- The CLI accepts only the storefront root URL, so locale routes such as `/en-ca` are not supported. It opens `<origin>/products/<handle>` (or `<origin>/collections/<handle>` for `browse-from-collection`) in a fresh browser profile. It sets no locale cookie, no `--lang` flag, and no market.
 - [`objective.ts`](./src/agent/objective.ts) names the target country name, language name (not the code), and currency in the task. It tells the agent to switch if the store shows another country, language, or currency. The [system prompt](./src/agent/stagehand-agent.ts) tells it to keep the store's country, language, and currency unless the task asks for a change.
 - The status comes from add events, not from the agent's report. Nothing checks the market or the language in the browser, and the cart is not read.
 
@@ -19,7 +19,7 @@ The language prompt, with the language's own name, is done (PR review: [target l
 ### Open issues
 
 1. **API and browser can differ.** Geo-IP, locale routes, and browser request settings can make the page show another market than the API context. The effect of a buyer-IP header from a proxy is not confirmed ([review](https://github.com/Shopify/hydrogen/pull/4357#discussion_r4551172909)).
-2. **Translated labels.** The product title and option names and values come from the pinned context. The country name is in the API's language. The language name is its own name, but a selector can show another label, such as a code. The visible page can use other strings, so the agent may not find a match.
+2. **Translated labels.** The product title and option names and values come from the pinned context. The country name is in the API's language. The language name is its own name, but a selector can show another label, such as a code. The visible page can use other strings, so the agent may not find a match. `browse-from-collection` also compares the collection handle and the product handle of the events with the pinned handles: if the page shows another market or language with translated handles, a correct run can give `fail`.
 3. **No usable selector.** A store can have no locale or country selector, or one that the agent cannot use. The agent can then add the item in another market, and the add event can still give `pass` ([review](https://github.com/Shopify/hydrogen/pull/4357#discussion_r4551172927)).
 4. **Reliable browser locale evidence.** There is no chosen source for the locale that the browser shows. Candidates to investigate, not confirmed to work:
    - Read the locale from the HTML response, without JavaScript.
@@ -58,3 +58,19 @@ The add check trusts the add event's promise result: `cart`, `userErrors`, and s
 ### Done when
 
 A decision on whether themes are in scope is recorded here, and either a rule fails this case or the README states that themes that resolve declined adds without `userErrors` are not supported.
+
+## Custom routes
+
+### Current behavior
+
+The command opens Shopify's standard routes: `/products/<handle>` for the cart tests and `/collections/<handle>` for `browse-from-collection` ([`catalog.ts`](./src/shopify/catalog.ts)). A storefront with a custom collection or product route and no redirect from the standard route usually ends `indeterminate` (an HTTP error, or a page that cannot be observed).
+
+### Decision
+
+Recorded by the team: in the future, read the storefront's route templates from the Hydrogen manifest (`<origin>/__shopify/hydrogen/manifest.json`, `routes.collection` and `routes.product`) and build the start URLs from them.
+
+Not every Hydrogen storefront serves the manifest today. Seen: `skeleton.hydrogen.shop` serves it; `react-router.hydrogen.shop` returned 404.
+
+### Done when
+
+The start URLs come from the manifest when it exists, with the standard routes as the fallback.

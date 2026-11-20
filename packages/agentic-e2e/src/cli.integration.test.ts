@@ -93,8 +93,22 @@ const LINE_PASS =
 const CART_TOKEN = "fixture-cart-token";
 const CART_LINE = `gid://shopify/CartLine/fixture-line?cart=${CART_TOKEN}`;
 const CART_CONTROLS = ["button: Increase quantity", "button: Decrease quantity", "button: Remove"];
+/** What browse-from-collection pins: the fixture collection and the board in it. */
+const BROWSE_PINNED = {
+  collectionHandle: "fixture-collection",
+  productHandle: PINNED.productHandle,
+  productTitle: PINNED.productTitle,
+};
+/** The `agent` field of a browse-from-collection run that the product page view stopped. */
+const STOPPED_AT_PRODUCT = {
+  completed: false,
+  reason: "Stopped by the command after the product page opened.",
+};
+const BROWSE_PASS =
+  "The collection page dispatched shopify:collection:view for the pinned collection, and then the pinned product's page dispatched shopify:product:view.";
 
 type ApiRequest = { query: string; variables: Record<string, unknown> };
+type CollectionProduct = { handle: string; title: string; availableForSale: boolean };
 /** The products that the catalog query returns, or an HTTP status for every API request. */
 type Catalog = { products: unknown[] } | { status: number };
 
@@ -113,6 +127,10 @@ type StoreMode = {
   plusChangesCart: boolean;
   /** The highest quantity of a line that the fixture's `cartCreate` accepts. */
   stock: number;
+  /** The collection page dispatches `shopify:collection:view` when it loads. */
+  collectionView: boolean;
+  /** Each product page dispatches `shopify:product:view` with context "page" when it loads. */
+  productView: boolean;
 };
 
 type ModelRequest = {
@@ -136,6 +154,8 @@ let modelRequests: ModelRequest[];
 let reply: Reply;
 let held: ServerResponse[];
 let catalog: Catalog;
+/** The collections that the collections query returns, and that have a collection page. */
+let collections: Array<{ handle: string; products: { nodes: CollectionProduct[] } }>;
 let apiRequests: ApiRequest[];
 let mode: StoreMode;
 /** Store events in order: adds, releases, and cart line changes. */
@@ -146,6 +166,8 @@ let cartQuantity: number;
 let addedVariants: string[];
 /** The path of each product page request. */
 let productPageRequests: string[];
+/** The path of each collection page request. */
+let collectionPageRequests: string[];
 /** The `cookie` header of each product page and add request, in order. */
 let storeCookies: Array<{ path: string; cookie: string | undefined }>;
 /** Each product page sets a new session cookie with this count. */
@@ -180,6 +202,7 @@ beforeEach(async () => {
   children = [];
   reply = () => undefined;
   catalog = { products: [eligibleProduct(PINNED.productHandle)] };
+  collections = [fixtureCollection()];
   apiRequests = [];
   mode = {
     addEvent: "with-promise",
@@ -187,11 +210,14 @@ beforeEach(async () => {
     holdAdd: false,
     plusChangesCart: true,
     stock: 2,
+    collectionView: true,
+    productView: true,
   };
   storeLog = [];
   cartQuantity = 0;
   addedVariants = [];
   productPageRequests = [];
+  collectionPageRequests = [];
   storeCookies = [];
   sessionCookies = 0;
   heldAdds = [];
@@ -762,6 +788,177 @@ describe("main with change-quantity-and-remove", () => {
   });
 });
 
+describe("main with browse-from-collection", () => {
+  const ARGS = () => [origin, "--test", "browse-from-collection", "--json"];
+  const BOARD_LINK = `link: ${PINNED.productTitle}`;
+  const TEE_LINK = `link: ${TEE_PINNED.productTitle}`;
+
+  it("opens the collection page, stops the agent when the pinned product's page opens, and passes", async () => {
+    // After the click, the script holds the next model request: only the command's stop can end
+    // the run.
+    reply = clickThenHold(BOARD_LINK);
+
+    await expect(main(ARGS())).resolves.toBe(0);
+
+    expect(results()).toEqual([
+      {
+        test: "browse-from-collection",
+        status: "pass",
+        reason: BROWSE_PASS,
+        context: CONTEXT,
+        pinned: BROWSE_PINNED,
+        agent: STOPPED_AT_PRODUCT,
+      },
+    ]);
+    expect(collectionPageRequests).toEqual(["/collections/fixture-collection"]);
+    expect(productPageRequests).toEqual(["/products/fixture-board"]);
+    expect(stderr).toContain(`Opening ${origin}/collections/fixture-collection\n`);
+    // A planning request and the `act` request of the click. A next planning request can start
+    // before the stop: it is held, never answered, so only the stop ended the run.
+    expect(modelRequests.length - held.length).toBe(2);
+    expect(held.length).toBeLessThanOrEqual(1);
+    // The pin: one request in the discovered context, after the context read.
+    expect(apiRequests.map(({ query }) => /^query (\w+)/.exec(query)?.[1])).toEqual([
+      "AgenticE2ELocalization",
+      "AgenticE2ECollectionProduct",
+    ]);
+    expect(apiRequests[1]?.variables).toEqual({
+      collections: 20,
+      products: 50,
+      storefrontCountry: "CA",
+      storefrontLanguage: "FR",
+    });
+    const [planning] = modelRequests;
+    expect(planning?.body).toContain(
+      String.raw`Open the product page of the product titled \"Fixture Board\" by using a link or card on this page.`,
+    );
+    expect(planning?.body).toContain("Do not use search, do not type a URL");
+    expect(planning?.tools).not.toContain("goto");
+    expectStagehandDetached();
+  });
+
+  it("fails with exit 1 when the agent opens another product's page", async () => {
+    reply = clickThenHold(TEE_LINK);
+
+    await expect(main(ARGS())).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        test: "browse-from-collection",
+        status: "fail",
+        reason: "The product page that opened is not the pinned product.",
+        context: CONTEXT,
+        pinned: BROWSE_PINNED,
+        agent: STOPPED_AT_PRODUCT,
+      },
+    ]);
+    expect(productPageRequests).toEqual(["/products/fixture-tee"]);
+    expectStagehandDetached();
+  });
+
+  it("fails when the collection page dispatches no shopify:collection:view", async () => {
+    mode.collectionView = false;
+    reply = clickThenHold(BOARD_LINK);
+
+    await expect(main(ARGS())).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        test: "browse-from-collection",
+        status: "fail",
+        reason:
+          "No shopify:collection:view event for the pinned collection was dispatched before the product page opened.",
+        context: CONTEXT,
+        pinned: BROWSE_PINNED,
+        agent: STOPPED_AT_PRODUCT,
+      },
+    ]);
+    expectStagehandDetached();
+  });
+
+  it("fails when the product page dispatches no shopify:product:view and the agent reports done", async () => {
+    mode.productView = false;
+    reply = click(BOARD_LINK);
+
+    await expect(main(ARGS())).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        test: "browse-from-collection",
+        status: "fail",
+        reason:
+          'The agent reports that it opened the product page, but no shopify:product:view event with context "page" was dispatched.',
+        context: CONTEXT,
+        pinned: BROWSE_PINNED,
+        // Nothing stopped the agent: it opened the page and reported done by itself.
+        agent: { completed: true, summary: "Added 1 unit." },
+      },
+    ]);
+    expect(productPageRequests).toEqual(["/products/fixture-board"]);
+    expectStagehandDetached();
+  });
+
+  it("is indeterminate when the product page dispatches no shopify:product:view and the agent reaches the step limit", async () => {
+    mode.productView = false;
+    const clicks = clickThen([BOARD_LINK], scroll);
+    reply = (request) => (isFinalAssessment(request.tools) ? done(true) : clicks(request));
+
+    await expect(main(ARGS())).resolves.toBe(2);
+
+    expect(results()).toEqual([
+      {
+        test: "browse-from-collection",
+        status: "indeterminate",
+        reason:
+          'No shopify:product:view event with context "page" was recorded by the time Stagehand was disconnected.',
+        context: CONTEXT,
+        pinned: BROWSE_PINNED,
+        agent: {
+          completed: false,
+          reason: `The agent reached the ${MAX_STEPS}-step limit.`,
+          message: expect.any(String),
+        },
+      },
+    ]);
+    expect(productPageRequests).toEqual(["/products/fixture-board"]);
+    expectStagehandDetached();
+  });
+
+  it("reports skipped when no collection has an eligible product, exits 3, and starts no browser", async () => {
+    collections = [
+      {
+        handle: "sold-out",
+        products: {
+          nodes: [{ handle: "fixture-board", title: "Fixture Board", availableForSale: false }],
+        },
+      },
+      {
+        handle: "duplicates",
+        products: {
+          nodes: [
+            { handle: "a", title: "Same", availableForSale: true },
+            { handle: "b", title: "Same", availableForSale: true },
+          ],
+        },
+      },
+    ];
+
+    await expect(main(ARGS())).resolves.toBe(3);
+
+    expect(results()).toEqual([
+      {
+        test: "browse-from-collection",
+        status: "skipped",
+        reason:
+          "No collection has a product that is available for sale and has a unique title among its first 50 products (2 collections searched).",
+        context: CONTEXT,
+      },
+    ]);
+    expect(collectionPageRequests).toEqual([]);
+    expectNoBrowser();
+  });
+});
+
 describe("main with every test", () => {
   it("runs every test in list order, each in a new browser session, and exits 0", async () => {
     catalog = suiteCatalog();
@@ -769,6 +966,7 @@ describe("main with every test", () => {
       clickAdd(),
       click("button: Large", "button: Add to cart"),
       clickThenHold("button: Add to cart", ...CART_CONTROLS),
+      clickThenHold(`link: ${PINNED.productTitle}`),
     );
 
     await expect(main([origin, "--json"])).resolves.toBe(0);
@@ -798,24 +996,35 @@ describe("main with every test", () => {
         pinned: PINNED,
         agent: STOPPED_AFTER_CHANGES,
       },
+      {
+        test: "browse-from-collection",
+        status: "pass",
+        reason: BROWSE_PASS,
+        context: CONTEXT,
+        pinned: BROWSE_PINNED,
+        agent: STOPPED_AT_PRODUCT,
+      },
     ]);
     expect(stderr.filter((line) => line.startsWith("Running test "))).toEqual([
       "Running test add-to-cart\n",
       "Running test choose-a-variant\n",
       "Running test change-quantity-and-remove\n",
+      "Running test browse-from-collection\n",
     ]);
     // One context read, then the pin requests of each test: the third test reads the catalog,
-    // then checks the stock of its candidate.
+    // then checks the stock of its candidate. The fourth reads the collections.
     expect(apiRequests.map(({ query }) => /^(?:query|mutation) (\w+)/.exec(query)?.[1])).toEqual([
       "AgenticE2ELocalization",
       "AgenticE2ECatalog",
       "AgenticE2EVariantChoice",
       "AgenticE2ECatalog",
       "AgenticE2EStockCheck",
+      "AgenticE2ECollectionProduct",
     ]);
     expect(addedVariants).toEqual([PINNED.variantId, TEE_PINNED.variantId, PINNED.variantId]);
     // Each test starts from an empty session: its product page request has no cookie, and its add
-    // sends only the cookie that its own page set.
+    // sends only the cookie that its own page set. The fourth test opens the product page from
+    // the collection page, which sets no cookie.
     expect(storeCookies).toEqual([
       { path: "/products/fixture-board", cookie: undefined },
       { path: "/cart/add", cookie: "fixture-session=1" },
@@ -823,11 +1032,14 @@ describe("main with every test", () => {
       { path: "/cart/add", cookie: "fixture-session=2" },
       { path: "/products/fixture-board", cookie: undefined },
       { path: "/cart/add", cookie: "fixture-session=3" },
+      { path: "/products/fixture-board", cookie: undefined },
     ]);
-    expect(createBrowserSession).toHaveBeenCalledTimes(3);
+    expect(collectionPageRequests).toEqual(["/collections/fixture-collection"]);
+    expect(createBrowserSession).toHaveBeenCalledTimes(4);
     // Each test attached Stagehand once and detached it before its browser closed.
-    expect(Stagehand.prototype.init).toHaveBeenCalledTimes(3);
+    expect(Stagehand.prototype.init).toHaveBeenCalledTimes(4);
     expect(stagehandCloses).toEqual([
+      { browserRunning: true },
       { browserRunning: true },
       { browserRunning: true },
       { browserRunning: true },
@@ -839,10 +1051,12 @@ describe("main with every test", () => {
     catalog = suiteCatalog();
     // choose-a-variant: the agent adds the default variant without a selection.
     // change-quantity-and-remove: the agent ends after the plus without a confirmed done.
+    // browse-from-collection: the agent opens the other product's page.
     reply = perRun(
       clickAdd(),
       clickAdd(),
       clickThen(["button: Add to cart", "button: Increase quantity"], () => done(false)),
+      clickThenHold(`link: ${TEE_PINNED.productTitle}`),
     );
 
     await expect(main([origin])).resolves.toBe(1);
@@ -852,13 +1066,15 @@ describe("main with every test", () => {
         "  pass           add-to-cart",
         "  fail           choose-a-variant             An add event did not hold exactly 1 unit of the pinned variant.",
         "  indeterminate  change-quantity-and-remove   The cart line went 1, 2 by the time Stagehand was disconnected. Expected 1, 2, 1, removed.",
+        "  fail           browse-from-collection       The product page that opened is not the pinned product.",
         "",
       ].join("\n"),
     );
     expect(stderr).toEqual([]);
     expect(addedVariants).toEqual([PINNED.variantId, TEE_DEFAULT.id, PINNED.variantId]);
-    expect(createBrowserSession).toHaveBeenCalledTimes(3);
+    expect(createBrowserSession).toHaveBeenCalledTimes(4);
     expect(stagehandCloses).toEqual([
+      { browserRunning: true },
       { browserRunning: true },
       { browserRunning: true },
       { browserRunning: true },
@@ -867,6 +1083,7 @@ describe("main with every test", () => {
 
   it("prints one skipped line for each test, exits 3, and starts no browser", async () => {
     catalog = { products: [] };
+    collections = [];
 
     await expect(main([origin, "--json"])).resolves.toBe(3);
 
@@ -879,9 +1096,16 @@ describe("main with every test", () => {
         reason: "No eligible variant: the catalog was searched to the end.",
         context: CONTEXT,
       },
+      {
+        test: "browse-from-collection",
+        status: "skipped",
+        reason:
+          "No collection has a product that is available for sale and has a unique title among its first 50 products (0 collections searched).",
+        context: CONTEXT,
+      },
     ]);
     // No candidate: no stock check.
-    expect(apiRequests).toHaveLength(4);
+    expect(apiRequests).toHaveLength(5);
     expectNoBrowser();
   });
 });
@@ -995,6 +1219,7 @@ describe("createBrowserSession", () => {
 function onStoreRequest(request: IncomingMessage, response: ServerResponse) {
   const path = new URL(request.url ?? "/", "http://fixture").pathname;
   if (path.startsWith("/products/")) productPageRequests.push(path);
+  if (path.startsWith("/collections/")) collectionPageRequests.push(path);
   if (path.startsWith("/products/") || path === "/cart/add") {
     storeCookies.push({ path, cookie: request.headers.cookie });
   }
@@ -1004,7 +1229,9 @@ function onStoreRequest(request: IncomingMessage, response: ServerResponse) {
     // Never answers, so a run cannot finish before the interrupt.
   } else if (path.endsWith("/products/fixture-board")) {
     const variants = [{ id: PINNED.variantId, size: "Medium" }];
-    response.writeHead(200, productPageHeaders()).end(productPage(PINNED.productTitle, variants));
+    response
+      .writeHead(200, productPageHeaders())
+      .end(productPage(PINNED.productHandle, PINNED.productTitle, variants));
   } else if (path.endsWith("/products/fixture-tee")) {
     // The default variant first: the page selects it before any choice.
     const variants = [
@@ -1013,7 +1240,9 @@ function onStoreRequest(request: IncomingMessage, response: ServerResponse) {
     ];
     response
       .writeHead(200, productPageHeaders())
-      .end(productPage(TEE_PINNED.productTitle, variants));
+      .end(productPage(TEE_PINNED.productHandle, TEE_PINNED.productTitle, variants));
+  } else if (path.startsWith("/collections/") && collectionPage(path) !== undefined) {
+    response.writeHead(200, { "content-type": "text/html" }).end(collectionPage(path));
   } else if (path === "/cart/add" && request.method === "POST") {
     onAddRequest(request, response);
   } else if (path === "/cart/change" && request.method === "POST") {
@@ -1084,6 +1313,32 @@ function onChangeRequest(request: IncomingMessage, response: ServerResponse) {
 }
 
 /**
+ * The page of the collection at `path`, or `undefined` when there is no such collection: a link
+ * to each of its products. By default it dispatches `shopify:collection:view` on its heading when
+ * it loads, so the event bubbles to the document, like a Hydrogen storefront.
+ */
+function collectionPage(path: string): string | undefined {
+  const handle = decodeURIComponent(path.slice("/collections/".length));
+  const collection = collections.find((candidate) => candidate.handle === handle);
+  if (collection === undefined) return undefined;
+  const view = {
+    id: "gid://shopify/Collection/1",
+    handle,
+    productsCount: collection.products.nodes.length,
+  };
+  const dispatch = mode.collectionView
+    ? `document.querySelector("h1").dispatchEvent(Object.assign(new Event("shopify:collection:view", { bubbles: true }), { collection: ${JSON.stringify(view)} }));`
+    : "";
+  const links = collection.products.nodes
+    .map((product) => `<li><a href="/products/${product.handle}">${product.title}</a></li>`)
+    .join("");
+  return `<!doctype html><title>Fixture Collection</title>
+<h1>Fixture Collection</h1>
+<ul>${links}</ul>
+<script>${dispatch}</script>`;
+}
+
+/**
  * A product page with an Add to cart button. The page first selects the first variant. With more
  * than one variant, a button for each size selects that variant. The add posts the selected
  * variant to `/cart/add`. By default the click dispatches `shopify:cart:lines-update` on the
@@ -1092,10 +1347,20 @@ function onChangeRequest(request: IncomingMessage, response: ServerResponse) {
  * storefront, with the line quantity and Increase quantity, Decrease quantity, and Remove buttons.
  * Each button posts the new absolute quantity of the line to `/cart/change` and dispatches one
  * `update` event (`remove` for 0, also for Decrease at 1) with the line ID and the promise.
+ * By default, the page dispatches `shopify:product:view` with context "page" on its heading when
+ * it loads.
  */
-function productPage(title: string, variants: Array<{ id: string; size: string }>): string {
+function productPage(
+  handle: string,
+  title: string,
+  variants: Array<{ id: string; size: string }>,
+): string {
   const [first] = variants;
   assert(first, "A product page needs a variant.");
+  const product = { id: "gid://shopify/Product/1", title, handle, selectedVariant: null };
+  const productView = mode.productView
+    ? `document.querySelector("h1").dispatchEvent(Object.assign(new Event("shopify:product:view", { bubbles: true }), { context: "page", product: ${JSON.stringify(product)} }));`
+    : "";
   const promise = mode.addEvent === "with-promise" ? ", promise" : "";
   const dispatch =
     mode.addEvent === "none"
@@ -1117,6 +1382,7 @@ ${sizeButtons}
 <button id="add" type="button">Add to cart</button>
 <p id="status"></p>
 <script>
+${productView}
 let variantId = ${JSON.stringify(first.id)};
 for (const button of document.querySelectorAll("[data-variant]")) {
   button.addEventListener("click", () => {
@@ -1202,12 +1468,14 @@ function onApiRequest(request: IncomingMessage, response: ServerResponse) {
         }
       : body.query.includes("cartCreate")
         ? stockCheckAnswer(body.variables)
-        : {
-            products: {
-              pageInfo: { hasNextPage: false, endCursor: null },
-              nodes: catalog.products,
-            },
-          };
+        : body.query.includes("collections(")
+          ? { collections: { nodes: collections } }
+          : {
+              products: {
+                pageInfo: { hasNextPage: false, endCursor: null },
+                nodes: catalog.products,
+              },
+            };
     response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ data }));
   });
 }
@@ -1224,6 +1492,23 @@ function stockCheckAnswer(variables: Record<string, unknown>) {
     cartCreate: {
       cart: { lines: { nodes: [{ quantity, merchandise: { id: line.merchandiseId } }] } },
       userErrors: [],
+    },
+  };
+}
+
+/** The fixture collection: the board (the browse pin), then the tee. Both are available. */
+function fixtureCollection() {
+  return {
+    handle: BROWSE_PINNED.collectionHandle,
+    products: {
+      nodes: [
+        { handle: PINNED.productHandle, title: PINNED.productTitle, availableForSale: true },
+        {
+          handle: TEE_PINNED.productHandle,
+          title: TEE_PINNED.productTitle,
+          availableForSale: true,
+        },
+      ],
     },
   };
 }

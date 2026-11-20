@@ -5,14 +5,15 @@ import type { Page } from "playwright-core";
 
 import { shopifyProxyModel, type ModelConfig } from "./agent/model-config.ts";
 import {
+  buildBrowseObjective,
   buildChangeQuantityObjective,
   buildObjective,
-  type ObjectiveInput,
 } from "./agent/objective.ts";
 import {
   attachStagehand,
   STOPPED_AFTER_CART_CHANGES,
   STOPPED_AT_ADD,
+  STOPPED_AT_PRODUCT_PAGE,
   type AgentOutcome,
   type StagehandAgent,
 } from "./agent/stagehand-agent.ts";
@@ -21,11 +22,13 @@ import { createBrowserSession } from "./browser/session.ts";
 import { withInterruptSignals } from "./interrupt.ts";
 import { observeAddEvents, type AddEventLog } from "./shopify/add-events.ts";
 import {
+  collectionUrl,
+  pinCollectionProduct,
   pinNonDefaultVariant,
   pinVariant,
   pinVariantWithTwoUnits,
   productUrl,
-  type CatalogPin,
+  type PinnedCollectionProduct,
   type PinnedVariant,
 } from "./shopify/catalog.ts";
 import { discoverContext, type StorefrontContext } from "./shopify/storefront.ts";
@@ -33,7 +36,9 @@ import { canAnimate, createSpinner, SILENT_SPINNER } from "./spinner.ts";
 import {
   ADD_WAIT_MS,
   cartLineChangesDecided,
+  firstProductPageView,
   verifyAdd,
+  verifyBrowseFromCollection,
   verifyCartLineChanges,
   type Verdict,
   type VerifyAddInput,
@@ -48,18 +53,32 @@ export const TEST_NAMES = [
   "add-to-cart",
   "choose-a-variant",
   "change-quantity-and-remove",
+  "browse-from-collection",
 ] as const;
 export type TestName = (typeof TEST_NAMES)[number];
+/** What each test pins in the active context. */
+type PinnedByTest = {
+  "add-to-cart": PinnedVariant;
+  "choose-a-variant": PinnedVariant;
+  "change-quantity-and-remove": PinnedVariant;
+  "browse-from-collection": PinnedCollectionProduct;
+};
+/** The `pinned` field of a result. */
+type Pinned = PinnedByTest[TestName];
 
 export const USAGE = `Usage: pnpm agentic-e2e <url> [--test <name>] [--json]
 
 Runs every test in the list below, in order, one at a time. With --test, runs only that test.
 Each test asks the Storefront API at the origin of <url> for the active country and language,
-pins one eligible variant, opens its product page in a new headless browser session, asks an AI
-agent to add exactly 1 unit of that variant to the cart (and, in change-quantity-and-remove, to
-change its quantity and remove it), checks the cart Standard Events in code (it does not read
-the cart), and prints one result line when it ends. Each test is one agent run (one paid model
-run). Requires SHOPIFY_PROXY_KEY.
+pins the store data that it needs, opens a page in a new headless browser session, asks an AI
+agent to do one task, checks Shopify Standard Events in code, and prints one result line when it
+ends. The cart tests pin one
+eligible variant, open its product page, and ask the agent to add exactly 1 unit of that variant
+to the cart (and, in change-quantity-and-remove, to change its quantity and remove it). They
+check the cart events and do not read the cart. browse-from-collection pins a collection and a
+product in it, opens the collection page, and asks the agent to open that product's page. Each
+test is one agent run (one paid model run), so a run without --test makes four agent runs.
+Requires SHOPIFY_PROXY_KEY.
 
 Output: one table line for each test, with the status, the test name, and the reason when the
 status is not pass:
@@ -71,7 +90,7 @@ When stdout and stderr are both an interactive terminal and CI is not set, a spi
 stderr shows the test that is running. Its result line then replaces it. Never with --json.
 
 With --json, one JSON result line for each test on stdout instead (with the context, the pinned
-variant, and the agent outcome), and the progress lines on stderr.
+data, and the agent outcome), and the progress lines on stderr.
 
 <url> must be the storefront root URL, such as https://your-storefront.example/. A path such
 as /en-ca is not supported.
@@ -86,10 +105,16 @@ Tests:
                               checked, and each check leaves one unused cart on the shop). The
                               agent adds 1 unit, changes the quantity to 2 and back to 1 in the
                               cart, and removes the item.
+  browse-from-collection      Pins, among the first 20 collections, the first one that has a
+                              product available for sale whose title is unique among its first 50
+                              products, and that product. Opens /collections/<handle>. The agent
+                              opens the product's page from the collection page. Passes when the
+                              page dispatched shopify:collection:view for the collection, and then
+                              shopify:product:view with context "page" for the product.
 
 Options:
-  --test <name>  Run only this test: add-to-cart, choose-a-variant, or change-quantity-and-remove.
-                 Default: every test.
+  --test <name>  Run only this test: add-to-cart, choose-a-variant, change-quantity-and-remove,
+                 or browse-from-collection. Default: every test.
   --json         Print JSON result lines and the progress lines, for scripts and triage.
   -h, --help     Show this help.
 
@@ -109,7 +134,7 @@ type Indeterminate = {
   status: "indeterminate";
   reason: string;
   context?: StorefrontContext;
-  pinned?: PinnedVariant;
+  pinned?: Pinned;
   agent?: AgentOutcome;
 };
 
@@ -117,8 +142,8 @@ type AddRun =
   | { status: "pass" | "fail"; reason: string; agent: AgentOutcome }
   | { status: "indeterminate"; reason: string; agent?: AgentOutcome };
 
-type StorefrontPin =
-  | { status: "pinned"; context: StorefrontContext; pinned: PinnedVariant }
+type StorefrontPin<P extends Pinned> =
+  | { status: "pinned"; context: StorefrontContext; pinned: P }
   | { status: "skipped"; reason: string; context: StorefrontContext }
   | Indeterminate;
 
@@ -131,7 +156,7 @@ export type RunResult =
       status: "pass" | "fail";
       reason: string;
       context: StorefrontContext;
-      pinned: PinnedVariant;
+      pinned: Pinned;
       agent: AgentOutcome;
     }
   | { status: "skipped"; reason: string; context: StorefrontContext }
@@ -307,19 +332,27 @@ async function runTests(url: URL, tests: readonly TestName[], json: boolean): Pr
   return suiteExitCode(statuses.length < tests.length ? [...statuses, "indeterminate"] : statuses);
 }
 
-async function runTest(
+async function runTest<T extends TestName>(
   url: URL,
-  test: TestName,
+  test: T,
   model: ModelConfig,
   readContext: () => Promise<StorefrontContext>,
   interrupt: AbortSignal,
   progress: Log,
   warn: Log,
 ): Promise<RunResult> {
-  const storefront = await pinFromStorefront(url, test, readContext, interrupt, progress);
+  const definition: TestDefinition<PinnedByTest[T]> = TESTS[test];
+  const storefront = await pinFromStorefront(
+    url,
+    test,
+    definition,
+    readContext,
+    interrupt,
+    progress,
+  );
   if (storefront.status !== "pinned") return storefront;
   const { context, pinned } = storefront;
-  const run = await runAgent(url, test, context, pinned, model, interrupt, progress, warn);
+  const run = await runAgent(url, definition, context, pinned, model, interrupt, progress, warn);
   if (run.status === "indeterminate") {
     return { status: run.status, reason: run.reason, context, pinned, ...agentField(run.agent) };
   }
@@ -327,27 +360,28 @@ async function runTest(
 }
 
 /**
- * Reads the active context, then pins one variant in it for `test`. No browser runs here. Each
+ * Reads the active context, then pins the store data of `test` in it. No browser runs here. Each
  * request has Hydrogen's client deadline, and the interrupt cancels the request in flight.
  */
-async function pinFromStorefront(
+async function pinFromStorefront<P extends Pinned>(
   url: URL,
   test: TestName,
+  definition: TestDefinition<P>,
   readContext: () => Promise<StorefrontContext>,
   interrupt: AbortSignal,
   progress: Log,
-): Promise<StorefrontPin> {
+): Promise<StorefrontPin<P>> {
   let step = "Storefront API localization";
   try {
     const context = await untilAborted(readContext(), interrupt);
     progress(`Storefront API context: ${context.country} ${context.language}`);
     step = "Storefront API catalog pin";
-    const pin = await untilAborted(TESTS[test].pin(url, context, interrupt), interrupt);
+    const pin = await untilAborted(definition.pin(url, context, interrupt), interrupt);
     if (pin.status === "skipped") {
       progress(`Skipped: ${pin.reason}`);
       return { status: "skipped", reason: pin.reason, context };
     }
-    progress(`Pinned variant ${pin.pinned.variantId} of ${pin.pinned.productHandle} for ${test}`);
+    progress(`${definition.pinnedLine(pin.pinned)} for ${test}`);
     return { status: "pinned", context, pinned: pin.pinned };
   } catch (error) {
     if (interrupt.aborted) return indeterminate(errorMessage(interrupt.reason), progress);
@@ -355,65 +389,111 @@ async function pinFromStorefront(
   }
 }
 
-/** The steps that differ between tests. The browser and agent steps are the same for every test. */
-type TestDefinition = {
-  /** Pins one variant in the active context. */
-  pin: (url: URL, context: StorefrontContext, signal: AbortSignal) => Promise<CatalogPin>;
+/** What every verdict reads. The pin of the test adds the rest. */
+type VerifyInput = Omit<VerifyAddInput, "variantId">;
+
+/**
+ * The steps that differ between tests, for a test that pins `P`. The browser and agent steps are
+ * the same for every test.
+ */
+type TestDefinition<P extends Pinned> = {
+  /** Pins the store data of the test in the active context. */
+  pin: (
+    url: URL,
+    context: StorefrontContext,
+    signal: AbortSignal,
+  ) => Promise<{ status: "pinned"; pinned: P } | { status: "skipped"; reason: string }>;
+  /** The progress line of the pin, without the test name. */
+  pinnedLine: (pinned: P) => string;
+  /** The page that the browser opens before the agent starts. */
+  startUrl: (storefrontUrl: URL, pinned: P) => URL;
   /** The task that the agent gets. */
-  task: (input: ObjectiveInput) => string;
+  task: (input: { pinned: P; context: StorefrontContext }) => string;
   /** The `reason` of the agent outcome when the command stops the agent run. */
   stopReason: string;
   /** Calls `stop` once, when the events of the agent run decide the test. */
   stopWhen: (log: AddEventLog, agentStart: number, stop: () => void) => void;
-  /** Decides the verdict from the cart events. */
-  verify: (input: VerifyAddInput) => Promise<Verdict>;
+  /** Decides the verdict from the recorded events. */
+  verify: (input: VerifyInput, pinned: P) => Promise<Verdict>;
 };
 
-const TESTS = {
+const variantLine = (pinned: PinnedVariant): string =>
+  `Pinned variant ${pinned.variantId} of ${pinned.productHandle}`;
+const productPage = (storefrontUrl: URL, pinned: PinnedVariant): URL =>
+  productUrl(storefrontUrl, pinned.productHandle);
+
+const TESTS: { [T in TestName]: TestDefinition<PinnedByTest[T]> } = {
   "add-to-cart": {
     pin: pinVariant,
+    pinnedLine: variantLine,
+    startUrl: productPage,
     task: buildObjective,
     stopReason: STOPPED_AT_ADD,
     stopWhen: (log, agentStart, stop) => log.onFirstAdd(agentStart, stop),
-    verify: verifyAdd,
+    verify: (input, pinned) => verifyAdd({ ...input, variantId: pinned.variantId }),
   },
   "choose-a-variant": {
     pin: pinNonDefaultVariant,
+    pinnedLine: variantLine,
+    startUrl: productPage,
     task: buildObjective,
     stopReason: STOPPED_AT_ADD,
     stopWhen: (log, agentStart, stop) => log.onFirstAdd(agentStart, stop),
-    verify: verifyAdd,
+    verify: (input, pinned) => verifyAdd({ ...input, variantId: pinned.variantId }),
   },
   "change-quantity-and-remove": {
     pin: pinVariantWithTwoUnits,
+    pinnedLine: variantLine,
+    startUrl: productPage,
     task: buildChangeQuantityObjective,
     stopReason: STOPPED_AFTER_CART_CHANGES,
     stopWhen: (log, agentStart, stop) =>
       log.onceWhen(() => cartLineChangesDecided(log.events, agentStart), stop),
-    verify: verifyCartLineChanges,
+    verify: (input, pinned) => verifyCartLineChanges({ ...input, variantId: pinned.variantId }),
   },
-} satisfies Record<TestName, TestDefinition>;
+  "browse-from-collection": {
+    pin: pinCollectionProduct,
+    pinnedLine: (pinned) =>
+      `Pinned product ${pinned.productHandle} in collection ${pinned.collectionHandle}`,
+    startUrl: (storefrontUrl, pinned) => collectionUrl(storefrontUrl, pinned.collectionHandle),
+    task: buildBrowseObjective,
+    stopReason: STOPPED_AT_PRODUCT_PAGE,
+    stopWhen: (log, agentStart, stop) =>
+      log.onceWhen(() => firstProductPageView(log.events, agentStart) !== undefined, stop),
+    // No promise to wait for: `waitForOutcomes` is not used.
+    verify: async (input, pinned) =>
+      verifyBrowseFromCollection({
+        events: input.events,
+        agentStart: input.agentStart,
+        agentCompleted: input.agentCompleted,
+        collectionHandle: pinned.collectionHandle,
+        productHandle: pinned.productHandle,
+      }),
+  },
+};
 
 /**
- * Starts the browser, records cart events and attaches Stagehand before the first navigation,
- * opens the product page, and runs the task of `test`. The stop rule of the test stops the agent
- * run: the first add event, or, for `change-quantity-and-remove`, the cart line changes. Then it
- * confirms the Stagehand detach: after that the agent cannot act, but a tool call already in
- * progress at the stop can finish before it. Then code decides the verdict from the cart events,
- * and, when they cannot decide alone, from whether the agent confirmed completion. Always detaches
- * Stagehand and closes the browser before it returns.
+ * Starts the browser, records Standard Events and attaches Stagehand before the first navigation,
+ * opens the start page of the test (the product page, or, for `browse-from-collection`, the
+ * collection page), and runs the task of the test. The stop rule of the test stops the agent run:
+ * the first add event, for `change-quantity-and-remove` the cart line changes, or, for
+ * `browse-from-collection`, the first product page view. Then it confirms the Stagehand detach:
+ * after that the agent cannot act, but a tool call already in progress at the stop can finish
+ * before it. Then code decides the verdict from the recorded events, and, when they cannot decide
+ * alone, from whether the agent confirmed completion. Always detaches Stagehand and closes the
+ * browser before it returns.
  */
-async function runAgent(
+async function runAgent<P extends Pinned>(
   storefrontUrl: URL,
-  test: TestName,
+  definition: TestDefinition<P>,
   context: StorefrontContext,
-  pinned: PinnedVariant,
+  pinned: P,
   model: ModelConfig,
   interrupt: AbortSignal,
   progress: Log,
   warn: Log,
 ): Promise<AddRun> {
-  const url = productUrl(storefrontUrl, pinned.productHandle);
+  const url = definition.startUrl(storefrontUrl, pinned);
   progress(`Opening ${url.href}`);
   const starting = createBrowserSession(undefined, { signal: interrupt });
   let attaching: Promise<StagehandAgent> | undefined;
@@ -429,7 +509,6 @@ async function runAgent(
     const agentStart = log.events.length;
     // The stop rule of the test stops the agent. This is separate from the interrupt.
     const stop = new AbortController();
-    const definition = TESTS[test];
     definition.stopWhen(log, agentStart, () => stop.abort());
     // An early end (step limit, deadline, error) still goes to the verdict. An interrupt throws.
     agentOutcome = await agent.run({
@@ -448,14 +527,16 @@ async function runAgent(
     // An interrupt during the detach ends the run here: no wait.
     interrupt.throwIfAborted();
     const verdict = await untilAborted(
-      definition.verify({
-        events: log.events,
-        agentStart,
-        variantId: pinned.variantId,
-        agentCompleted: agentOutcome.completed,
-        // The 5-second limit starts here, after the confirmed detach.
-        waitForOutcomes: async (done) => log.waitFor(done, ADD_WAIT_MS, interrupt),
-      }),
+      definition.verify(
+        {
+          events: log.events,
+          agentStart,
+          agentCompleted: agentOutcome.completed,
+          // The 5-second limit starts here, after the confirmed detach.
+          waitForOutcomes: async (done) => log.waitFor(done, ADD_WAIT_MS, interrupt),
+        },
+        pinned,
+      ),
       interrupt,
     );
     if (verdict.status === "indeterminate") {
