@@ -76,7 +76,7 @@ export function parseCollectionParams(searchParams: URLSearchParams): Collection
  *
  * The result holds only the `filter.*` and `sort_by` keys. The function leaves out `sort_by` for the collection's default sort.
  *
- * Category filters convert to `filter.p.category`, which `parseCollectionParams` doesn't read. A price filter with a minimum and a maximum produces two params. To build a filter checkbox, parse a filter value's `input` string and convert the parsed filter. The resulting entries give the checkbox name and value.
+ * Category filters convert to `filter.p.category`. A price filter with a minimum and a maximum produces two params. To build a filter checkbox, parse a filter value's `input` string and convert the parsed filter. The resulting entries give the checkbox name and value.
  *
  * @param state - The filters, sort key, and sort direction to convert.
  * @returns URL search params that hold the filters and sort.
@@ -269,6 +269,10 @@ function parseProductFilters(searchParams: URLSearchParams): ProductFilter[] {
 
   for (const tag of searchParams.getAll("filter.p.tag")) {
     filters.push({ tag });
+  }
+
+  for (const category of searchParams.getAll("filter.p.category")) {
+    filters.push({ category: { id: category } });
   }
 
   for (const [key, value] of searchParams) {
