@@ -168,6 +168,7 @@ describe("defineProductView", () => {
         context: "page",
       })["view-event-payload"],
     );
+    await nextTask();
     expect(events).toHaveLength(1);
 
     const otherProduct = { ...product, id: "gid://shopify/Product/2", handle: "pants" };
@@ -175,6 +176,7 @@ describe("defineProductView", () => {
       "view-event-payload",
       getProductViewAttributes({ product: otherProduct, context: "page" })["view-event-payload"],
     );
+    await nextTask();
     expect(events).toHaveLength(2);
     expect(events[1]?.target).toBe(element);
     expect(events[1]?.detail).toMatchObject({ product: { id: otherProduct.id, handle: "pants" } });

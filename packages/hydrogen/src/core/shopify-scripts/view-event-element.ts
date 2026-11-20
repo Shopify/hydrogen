@@ -3,7 +3,6 @@ import { importStandardEventsFromCDN } from "./standard-events";
 
 const PAYLOAD = "view-event-payload";
 const TRIGGER = "view-event-trigger";
-const INTERSECT_THRESHOLD = 0.5;
 
 type ViewEventElementClass = (new () => HTMLElement &
   ViewEventElement & {
@@ -44,53 +43,7 @@ function sendAgainOnKeyChange<Payload>(
   Base: ViewEventElementClass,
   getKey: (payload: Payload) => unknown,
 ) {
-  let observer: IntersectionObserver | undefined;
-  const pending = new Map<Element, () => void>();
-
-  const unobserve = (element: Element) => {
-    if (!pending.delete(element)) return;
-    observer?.unobserve(element);
-    if (pending.size === 0) {
-      observer?.disconnect();
-      observer = undefined;
-    }
-  };
-
-  const observeWhenVisible = (element: Element, dispatch: () => void) => {
-    if (typeof IntersectionObserver === "undefined") {
-      dispatch();
-      return;
-    }
-    pending.set(element, dispatch);
-    observer ??= new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting || entry.intersectionRatio < INTERSECT_THRESHOLD) continue;
-          const send = pending.get(entry.target);
-          unobserve(entry.target);
-          send?.();
-        }
-      },
-      { threshold: INTERSECT_THRESHOLD },
-    );
-    observer.observe(element);
-  };
-
-  const dispatchForTrigger = (element: HTMLElement, dispatch: () => void) => {
-    const trigger = element.getAttribute(TRIGGER);
-    if (trigger === "manual") return;
-    if (trigger === "intersect") {
-      observeWhenVisible(element, dispatch);
-      return;
-    }
-    const dialog = getDialog(element);
-    if (trigger === "dialog" || dialog !== null) {
-      if (dialog?.open) dispatch();
-      return;
-    }
-    dispatch();
-  };
-
+  // Payloads that are missing, don't parse, or have no key return undefined.
   const keyOf = (value: string | null) => {
     if (value === null) return undefined;
     try {
@@ -123,8 +76,10 @@ function sendAgainOnKeyChange<Payload>(
       const key = this.isConnected ? keyOf(this.getAttribute(PAYLOAD)) : undefined;
       if (key != null) {
         const dialogOpen = getDialog(this)?.open === true;
-        // The base element also sends on the `toggle` event that `showModal()` queues.
-        if (dialogOpen && this.#dialogDispatchedKey === key) return;
+        // Re-arming and a dialog's queued `toggle` can both ask to send the item that was just
+        // sent. Dialogs send once per opening; other triggers send once per item.
+        const sentKey = dialogOpen ? this.#dialogDispatchedKey : this.#lastDispatchedKey;
+        if (key === sentKey && this.getAttribute(TRIGGER) !== "manual") return;
         this.#lastDispatchedKey = key;
         if (dialogOpen) this.#dialogDispatchedKey = key;
       }
@@ -135,7 +90,6 @@ function sendAgainOnKeyChange<Payload>(
       this.#dialogAbort?.abort();
       this.#dialogAbort = undefined;
       this.#dialogDispatchedKey = undefined;
-      unobserve(this);
       this.#lastDispatchedKey = undefined;
       super.disconnectedCallback?.();
     }
@@ -147,12 +101,12 @@ function sendAgainOnKeyChange<Payload>(
       if (this.#lastDispatchedKey === undefined) return;
 
       const key = keyOf(newValue);
-      if (key == null || key === this.#lastDispatchedKey) {
-        unobserve(this);
-        return;
-      }
+      if (key == null || key === this.#lastDispatchedKey) return;
 
-      dispatchForTrigger(this, () => this.dispatchViewEvent());
+      // A new item: restart the base element's own trigger, so it sends the new payload at the
+      // same moment it sent the first one (on connect, when half visible, or when the dialog opens).
+      super.disconnectedCallback?.();
+      super.connectedCallback?.();
     }
   };
 }
