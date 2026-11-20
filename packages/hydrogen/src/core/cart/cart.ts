@@ -2736,10 +2736,14 @@ function hasShopifyStandardActionsScript(): boolean {
   );
 }
 
+function getStandardActionsGlobal(): ShopifyStandardActions | undefined {
+  return typeof window === "undefined" ? undefined : window.Shopify?.actions;
+}
+
 export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
   return (standardActionsPromise ??= new Promise<ShopifyStandardActions>((resolve, reject) => {
     const configure = () => {
-      const actions = typeof window === "undefined" ? undefined : window.Shopify?.actions;
+      const actions = getStandardActionsGlobal();
       if (actions?.updateCart) {
         configureUpdateCartOnce(actions);
         resolve(actions);
@@ -2751,15 +2755,30 @@ export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
       reject(new Error(message));
     };
 
-    if (typeof document !== "undefined" && document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", configure, {
-        once: true,
-      });
+    // Deferred scripts run after readyState turns "interactive" but before DOMContentLoaded.
+    // If DOMContentLoaded already fired, the script has failed and window load only ends the wait.
+    if (
+      typeof document !== "undefined" &&
+      (document.readyState === "loading" ||
+        (document.readyState === "interactive" && !getStandardActionsGlobal()?.updateCart))
+    ) {
+      const listeners = new AbortController();
+      const onReady = () => {
+        listeners.abort();
+        try {
+          configure();
+        } catch (error) {
+          reject(error);
+        }
+      };
+      document.addEventListener("DOMContentLoaded", onReady, { signal: listeners.signal });
+      window.addEventListener("load", onReady, { signal: listeners.signal });
       return;
     }
     configure();
-  }).catch((error) => {
+  }).catch((error: unknown) => {
     standardActionsPromise = null;
+    log.error("standard actions setup failed", { error });
     throw error;
   }));
 }

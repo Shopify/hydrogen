@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, onTestFinished } from "vitest";
 
 import type { CartActionError } from "../../../vendor/standard-actions";
 import { configureLogging } from "../logging";
@@ -2649,6 +2649,8 @@ describe("CartStore.handleFormSubmit — error handling", () => {
   });
 
   it("throws descriptive error when Standard Actions not available", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
     Object.defineProperty(window, "Shopify", {
       value: {},
       configurable: true,
@@ -2658,6 +2660,10 @@ describe("CartStore.handleFormSubmit — error handling", () => {
 
     const event = submitForm({ lineId: "line-1" }, "intent", "increase");
     await expect(store.handleFormSubmit(event)).rejects.toThrow("Standard Actions not available");
+    expect(logger.error).toHaveBeenCalledWith("standard actions setup failed", {
+      scope: "cart",
+      error: expect.any(Error),
+    });
   });
 
   it("throws for missing lineId", async () => {
@@ -3525,6 +3531,8 @@ describe("CartStore.fetch", () => {
   });
 
   it("throws when Standard Actions not available", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
     Object.defineProperty(window, "Shopify", {
       value: { actions: undefined },
       configurable: true,
@@ -3534,6 +3542,10 @@ describe("CartStore.fetch", () => {
 
     await expect(store.fetch()).rejects.toThrow("Standard Actions not available");
     expect(store.getState().loading).toBe(false);
+    expect(logger.error).toHaveBeenCalledWith("standard actions setup failed", {
+      scope: "cart",
+      error: expect.any(Error),
+    });
   });
 
   it("fetches from configured endpoint instead of getCart", async () => {
@@ -6596,6 +6608,18 @@ describe("CartStore.handleFormSubmit — add intent", () => {
 // Standard Actions readiness
 // ---------------------------------------------------------------------------
 
+const flushMicrotasks = () => new Promise((resolve) => setTimeout(resolve));
+
+function setShopify(value: object) {
+  Object.defineProperty(window, "Shopify", { value, configurable: true, writable: true });
+}
+
+function exposeActions() {
+  const updateCart = createStandardActionsMock();
+  setShopify({ actions: { updateCart, getCart: vi.fn() } });
+  return updateCart;
+}
+
 describe("getShopifyStandardActions", () => {
   afterEach(() => {
     Object.defineProperty(document, "readyState", {
@@ -6605,6 +6629,8 @@ describe("getShopifyStandardActions", () => {
   });
 
   it("explains how to add the Standard Actions script when the tag is missing", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
     Object.defineProperty(window, "Shopify", {
       value: {},
       configurable: true,
@@ -6615,9 +6641,15 @@ describe("getShopifyStandardActions", () => {
     await expect(getShopifyStandardActions()).rejects.toThrow(
       `include ${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}`,
     );
+    expect(logger.error).toHaveBeenCalledWith("standard actions setup failed", {
+      scope: "cart",
+      error: expect.any(Error),
+    });
   });
 
   it("explains that Standard Actions has not loaded when the script tag is present", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
     Object.defineProperty(window, "Shopify", {
       value: {},
       configurable: true,
@@ -6632,6 +6664,10 @@ describe("getShopifyStandardActions", () => {
     await expect(getShopifyStandardActions()).rejects.toThrow(
       "Ensure the Shopify script tag has loaded before calling cart actions.",
     );
+    expect(logger.error).toHaveBeenCalledWith("standard actions setup failed", {
+      scope: "cart",
+      error: expect.any(Error),
+    });
   });
 
   it("waits for DOMContentLoaded before configuring Standard Actions", async () => {
@@ -6657,6 +6693,116 @@ describe("getShopifyStandardActions", () => {
 
     await expect(actionsPromise).resolves.toBe(window.Shopify?.actions);
     expect(updateCart.configure).toHaveBeenCalledTimes(1);
+  });
+
+  it("logs a failed Standard Actions setup once, however many stores connect", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    setShopify({});
+    resetStandardActionsForTests();
+    const stores = [createCartStore(), createCartStore()];
+    onTestFinished(() => stores.forEach((localStore) => localStore.destroy()));
+
+    // StrictMode-style connect -> destroy -> connect, plus a second store.
+    stores[0].connect();
+    stores[0].destroy();
+    stores[0].connect();
+    stores[1].connect();
+    await flushMicrotasks();
+
+    const setupFailures = logger.error.mock.calls.filter(
+      ([message]) => message === "standard actions setup failed",
+    );
+    expect(setupFailures).toEqual([
+      [
+        "standard actions setup failed",
+        {
+          scope: "cart",
+          error: expect.objectContaining({
+            message: expect.stringContaining(
+              `include ${SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT}`,
+            ),
+          }),
+        },
+      ],
+    ]);
+  });
+
+  describe("while the document is interactive", () => {
+    beforeEach(() => {
+      Object.defineProperty(document, "readyState", { value: "interactive", configurable: true });
+      setShopify({});
+      resetStandardActionsForTests();
+    });
+
+    it("configures Standard Actions that run before DOMContentLoaded", async () => {
+      const actionsPromise = getShopifyStandardActions();
+      const settled = vi.fn();
+      void actionsPromise.then(settled, settled);
+      await flushMicrotasks();
+      expect(settled).not.toHaveBeenCalled();
+
+      const updateCart = exposeActions();
+      document.dispatchEvent(new Event("DOMContentLoaded"));
+
+      await expect(actionsPromise).resolves.toBe(window.Shopify?.actions);
+      expect(updateCart.configure).toHaveBeenCalledTimes(1);
+    });
+
+    it("rejects when updateCart can't be configured once the script has run", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      const actionsPromise = getShopifyStandardActions();
+      const updateCart = exposeActions();
+      updateCart.configure.mockReturnValueOnce(false);
+      document.dispatchEvent(new Event("DOMContentLoaded"));
+
+      await expect(actionsPromise).rejects.toThrow(
+        "Standard Actions updateCart could not be configured.",
+      );
+      expect(logger.error).toHaveBeenCalledWith("standard actions setup failed", {
+        scope: "cart",
+        error: expect.objectContaining({
+          message: "Standard Actions updateCart could not be configured.",
+        }),
+      });
+      const retry = getShopifyStandardActions();
+      expect(retry).not.toBe(actionsPromise);
+      await expect(retry).resolves.toBe(window.Shopify?.actions);
+    });
+
+    it("configures Standard Actions that already ran without waiting", async () => {
+      const updateCart = exposeActions();
+
+      await expect(getShopifyStandardActions()).resolves.toBe(window.Shopify?.actions);
+      expect(updateCart.configure).toHaveBeenCalledTimes(1);
+    });
+
+    it("rejects when the script still has not run at window load", async () => {
+      const logger = createTestLogger();
+      configureLogging({ logger });
+      const script = document.createElement("script");
+      script.type = "application/json";
+      script.src = SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT;
+      document.head.append(script);
+      onTestFinished(() => script.remove());
+
+      const actionsPromise = getShopifyStandardActions();
+      const settled = vi.fn();
+      void actionsPromise.then(settled, settled);
+      await flushMicrotasks();
+      expect(settled).not.toHaveBeenCalled();
+
+      window.dispatchEvent(new Event("load"));
+
+      await expect(actionsPromise).rejects.toThrow(
+        "Ensure the Shopify script tag has loaded before calling cart actions.",
+      );
+      expect(logger.error).toHaveBeenCalledWith("standard actions setup failed", {
+        scope: "cart",
+        error: expect.any(Error),
+      });
+    });
   });
 
   it("form submissions wait for configured Standard Actions", async () => {
