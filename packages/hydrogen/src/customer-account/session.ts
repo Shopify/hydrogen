@@ -1017,11 +1017,16 @@ async function getWidgetCustomer(
     return { customer: { status: "fulfilled", value: null }, cartCustomerAccessToken };
   }
 
+  const { accessToken } = tokenResult;
+  // Creating the client throws for a non-HTTPS request URL, and a throw here would skip
+  // committing the tokens the refresh just wrote.
   const customer = await settle(
-    queryAccountWidgetCustomer(
-      internal.createCustomerAccountClient(requestContext),
-      tokenResult.accessToken,
-      options.signal,
+    Promise.resolve().then(() =>
+      queryAccountWidgetCustomer(
+        internal.createCustomerAccountClient(requestContext),
+        accessToken,
+        options.signal,
+      ),
     ),
   );
   if (customer.status === "rejected" && isRejectedAccessToken(customer.reason)) {

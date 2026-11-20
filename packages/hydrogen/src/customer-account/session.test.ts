@@ -1637,7 +1637,9 @@ describe("account widget data route", () => {
     storefrontFetch = storefrontFetchReturning(),
     customerSession,
     withCart = false,
+    url = WIDGET_DATA_URL,
   }: {
+    url?: string;
     sessionManager?: TestSessionManager;
     fetch?: ReturnType<typeof vi.fn>;
     storefrontFetch?: ReturnType<typeof vi.fn>;
@@ -1646,7 +1648,7 @@ describe("account widget data route", () => {
   } = {}) {
     const brandedSession = createSession({ fetch });
     return handleShopifyRoutes({
-      request: new Request(WIDGET_DATA_URL, withCart ? { headers: { cookie: CART_COOKIE } } : {}),
+      request: new Request(url, withCart ? { headers: { cookie: CART_COOKIE } } : {}),
       sessionManager,
       storefrontFetch,
       handlers: [
@@ -1922,6 +1924,22 @@ describe("account widget data route", () => {
     });
     expect(sessionManager.data?.tokens?.accessToken).toBe(ACCESS_TOKEN);
     expect(getCartMutations(storefrontFetch)).toEqual([]);
+  });
+
+  it("commits refreshed tokens when the Customer Account client can't be created", async () => {
+    const sessionManager = new TestSessionManager(
+      validSessionData({ tokens: { expiresAt: NOW_IN_MS } }),
+    );
+
+    // The client requires an HTTPS request URL, while the refresh uses the session's origin.
+    const response = await requestWidgetData({
+      sessionManager,
+      url: `http://shop.example${CUSTOMER_ACCOUNT_WIDGET_DATA_PATH}`,
+    });
+
+    expect(response?.status).toBe(502);
+    expect(response?.headers.get("set-cookie")).toBe("session=1");
+    expect(sessionManager.data?.tokens?.accessToken).toBe(NEW_ACCESS_TOKEN);
   });
 
   it("attaches the cart to the customer after a token refresh", async () => {
