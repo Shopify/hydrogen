@@ -375,6 +375,49 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     DEVELOPMENT_TYPES_TIMEOUT_MS,
   );
 
+  it.each([
+    { build: "default", conditions: [] },
+    { build: "development", conditions: ["--conditions=development"] },
+  ])(
+    "sends the account widget's marketing consent query to the unstable API with a client from the $build build",
+    ({ conditions }) => {
+      const script = `
+        import { createShopifyRequestContext, createStorefrontClient } from "@shopify/hydrogen";
+        import { queryAccountWidgetShop } from "./dist/customer-account/widget-data.mjs";
+
+        const urls = [];
+        const shop = { id: "gid://shopify/Shop/1", socialLoginProviders: [], customerAccountTranslations: [] };
+        const fetch = async (url) => {
+          urls.push(String(url));
+          return new Response(JSON.stringify({ data: { shop } }), {
+            headers: { "content-type": "application/json" },
+          });
+        };
+        const requestContext = createShopifyRequestContext({
+          request: new Request("https://example.com/"),
+          i18n: { defaultLocale: { country: "US", language: "EN" } },
+          buyerIp: "127.0.0.1",
+        });
+        const storefrontClient = createStorefrontClient({
+          type: "private",
+          requestContext,
+          config: { storeDomain: "test-store.myshopify.com", privateStorefrontToken: "token", fetch },
+        });
+        await queryAccountWidgetShop(storefrontClient, new AbortController().signal);
+        process.stdout.write(JSON.stringify(urls));
+      `;
+      const urls: string[] = JSON.parse(
+        execFileSync(process.execPath, [...conditions, "--input-type=module", "-e", script], {
+          cwd: PACKAGE_ROOT,
+          encoding: "utf8",
+          env: { ...process.env, NODE_OPTIONS: undefined },
+        }),
+      );
+
+      expect(urls.filter((url) => url.includes("/api/unstable/"))).toHaveLength(1);
+    },
+  );
+
   it("only includes the standard events inspector in the development build", () => {
     const productionShopifyScripts = readFileSync(
       resolve(PACKAGE_ROOT, "dist/core/shopify-scripts/index.mjs"),
