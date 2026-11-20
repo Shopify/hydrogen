@@ -127,6 +127,7 @@
     "react-dom": "^19.2.5",
     "tsdown": "^0.21.10",
     "typescript": "catalog:",
+    "typescript-native": "npm:typescript@7.0.2",
     "vite": "^8.0.7",
     "vitest": "^3.0.0"
   },
