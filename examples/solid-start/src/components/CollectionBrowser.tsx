@@ -14,6 +14,7 @@ import {
 import { A, useBeforeLeave, useIsRouting, useLocation, useNavigate } from "@solidjs/router";
 import { batch, createEffect, createMemo, createSignal, For, on, onCleanup, Show } from "solid-js";
 
+import { CollectionView } from "./CollectionView";
 import { ProductCard, type ProductCardData } from "./ProductCard";
 
 const SORT_OPTIONS = [
@@ -74,6 +75,7 @@ function visibleFilters(filters: AvailableFilter[]) {
 export function CollectionBrowser(props: {
   title: string;
   description: string | null;
+  id: string;
   handle: string;
   dataSearch: string;
   products: ProductCardData[];
@@ -424,31 +426,37 @@ export function CollectionBrowser(props: {
             </div>
           </Show>
 
-          <section
-            class={
-              isLoading()
-                ? "mt-8 grid grid-cols-2 gap-x-6 gap-y-12 opacity-50 transition-opacity duration-200 md:grid-cols-3"
-                : "mt-8 grid grid-cols-2 gap-x-6 gap-y-12 opacity-100 transition-opacity duration-200 md:grid-cols-3"
-            }
+          <CollectionView
+            collection={{ id: props.id, handle: props.handle }}
+            productsCount={props.products.length}
+            class="block"
           >
-            <For each={props.products}>
-              {(product) => <ProductCard product={product} context="collection" />}
-            </For>
-          </section>
+            <section
+              class={
+                isLoading()
+                  ? "mt-8 grid grid-cols-2 gap-x-6 gap-y-12 opacity-50 transition-opacity duration-200 md:grid-cols-3"
+                  : "mt-8 grid grid-cols-2 gap-x-6 gap-y-12 opacity-100 transition-opacity duration-200 md:grid-cols-3"
+              }
+            >
+              <For each={props.products}>
+                {(product) => <ProductCard product={product} context="collection" />}
+              </For>
+            </section>
 
-          <Show when={props.products.length === 0 && !isLoading()}>
-            <div class="mt-16 text-center">
-              <p class="text-lg text-black/60">No products found matching your filters.</p>
-              <Show when={hasActiveFilters()}>
-                <A
-                  href={collectionPath()}
-                  class="mt-4 inline-block text-sm font-semibold underline"
-                >
-                  Clear all filters
-                </A>
-              </Show>
-            </div>
-          </Show>
+            <Show when={props.products.length === 0 && !isLoading()}>
+              <div class="mt-16 text-center">
+                <p class="text-lg text-black/60">No products found matching your filters.</p>
+                <Show when={hasActiveFilters()}>
+                  <A
+                    href={collectionPath()}
+                    class="mt-4 inline-block text-sm font-semibold underline"
+                  >
+                    Clear all filters
+                  </A>
+                </Show>
+              </div>
+            </Show>
+          </CollectionView>
         </div>
       </form>
     </main>
