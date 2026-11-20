@@ -1,6 +1,17 @@
 import assert from "node:assert/strict";
+import { registerHooks } from "node:module";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+
+// The route config imports its app modules extensionless, as Vite resolves them.
+const APP_ROOT = new URL("../app/", import.meta.url);
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    const isAppImport = specifier.startsWith("./") && context.parentURL?.startsWith(APP_ROOT.href);
+    if (!isAppImport || /\.[cm]?[jt]sx?$/.test(specifier)) return nextResolve(specifier, context);
+    return nextResolve(`${specifier}.ts`, context);
+  },
+});
 
 import { loader } from "../app/routes/robots[.]txt.ts";
 

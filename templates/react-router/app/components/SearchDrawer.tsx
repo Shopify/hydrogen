@@ -2,6 +2,7 @@ import { getPredictiveSearchItemUrl, getSearchResultUrl } from "@shopify/hydroge
 import type { PredictiveSearchProductItem, PredictiveSearchState } from "@shopify/hydrogen";
 import {
   PredictiveSearchProvider,
+  useLocale,
   usePredictiveSearch,
   usePredictiveSearchActions,
   usePredictiveSearchForm,
@@ -10,6 +11,7 @@ import { useRef } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { SEARCH_DRAWER_ID, closeSearchDrawer } from "~/lib/cart-drawer";
+import { useLocalizePath } from "~/lib/locale";
 import { formatPrice } from "~/lib/money";
 import { describeSuggestions } from "~/lib/predictive-search";
 import { routeTemplates } from "~/lib/route-templates";
@@ -29,6 +31,7 @@ export function SearchDrawer() {
 
 function SearchDialog() {
   const navigate = useNavigate();
+  const localizePath = useLocalizePath();
   const { clear } = usePredictiveSearchActions();
   const { formProps, register } = usePredictiveSearchForm();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -60,7 +63,9 @@ function SearchDialog() {
               onSubmit: (event, term) => {
                 event.preventDefault();
                 closeSearchDrawer();
-                void navigate(getSearchResultUrl({ baseUrl: SEARCH_PAGE_PATH, term }));
+                void navigate(
+                  getSearchResultUrl({ baseUrl: localizePath(SEARCH_PAGE_PATH), term }),
+                );
               },
             })}
           >
@@ -109,6 +114,7 @@ function SearchDialog() {
 
 function SearchSuggestions() {
   const state = usePredictiveSearch();
+  const localizePath = useLocalizePath();
   const { status, result, term } = state;
 
   return (
@@ -119,7 +125,7 @@ function SearchSuggestions() {
       <SuggestionsBody status={status} result={result} />
       {term.length > 0 ? (
         <Link
-          to={getSearchResultUrl({ baseUrl: SEARCH_PAGE_PATH, term })}
+          to={getSearchResultUrl({ baseUrl: localizePath(SEARCH_PAGE_PATH), term })}
           className="text-on-surface focus-visible:outline-accent mt-4 inline-flex min-h-11 items-center text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
           onClick={() => closeSearchDrawer()}
         >
@@ -174,12 +180,13 @@ function SuggestionList({ products, term, stale = false }: SuggestionListProps) 
 }
 
 function SuggestionLink({ product, term }: { product: PredictiveSearchProductItem; term: string }) {
+  const { pathPrefix } = useLocale();
   const variant = product.selectedOrFirstAvailableVariant;
   const image = variant?.image ?? null;
 
   return (
     <Link
-      to={getPredictiveSearchItemUrl(product, { routes: routeTemplates, term })}
+      to={getPredictiveSearchItemUrl(product, { routes: routeTemplates, term, pathPrefix })}
       className="hover:bg-surface-secondary focus-visible:outline-accent flex items-center gap-3 rounded p-2 no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors"
       onClick={() => closeSearchDrawer()}
     >

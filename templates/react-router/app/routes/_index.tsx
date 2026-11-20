@@ -9,6 +9,7 @@ import {
 import { HomeHero } from "~/components/HomeHero";
 import { ProductCard, PRODUCT_CARD_FRAGMENT, type ProductCardData } from "~/components/ProductCard";
 import { selectHomeHero } from "~/lib/home-hero";
+import { useLocalizePath } from "~/lib/locale";
 import { storefrontClientContext } from "~/lib/storefront";
 import {
   FALLBACK_SHOP_NAME,
@@ -88,6 +89,8 @@ export const loader = withStorefrontRateLimit(async ({ context }: Route.LoaderAr
 });
 
 function NewArrivals({ products }: { products: readonly ProductCardData[] }) {
+  const localizePath = useLocalizePath();
+
   return (
     <section className="bg-surface w-full pt-20 pb-12" aria-labelledby="new-arrivals-heading">
       <div className="max-w-page px-margin mx-auto mb-4 flex items-center justify-between gap-4">
@@ -95,7 +98,7 @@ function NewArrivals({ products }: { products: readonly ProductCardData[] }) {
           New arrivals
         </h2>
         <Link
-          to="/collections"
+          to={localizePath("/collections")}
           className="min-h-touch-target text-on-surface focus-visible:outline-accent inline-flex items-center gap-1 rounded-sm text-sm font-normal no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
         >
           <span>Collections</span>

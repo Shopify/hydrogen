@@ -25,7 +25,18 @@ export const storefrontConfig = {
 } as const;
 
 // Single-locale storefront: every request resolves to the default locale. Add
-// `routing` here to serve more locales by path prefix or hostname.
+// `routing` here to serve more locales by path prefix or hostname; the routes,
+// links, and header locale picker follow it with no other change. The picker
+// names each locale with Intl.DisplayNames; set `countryName` or `languageName`
+// on an entry to override either name:
+//
+//   routing: {
+//     type: "pathname", // `/fr-ca/products/x`; the default stays unprefixed
+//     locales: [
+//       { language: "EN", country: "CA" },
+//       { language: "FR", country: "CA", languageName: "Français canadien" },
+//     ],
+//   },
 export const i18n = defineShopifyI18n({
   defaultLocale: { country: "US", language: "EN" },
 });

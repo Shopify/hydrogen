@@ -1,6 +1,7 @@
 import { gql, type StorefrontApi } from "@shopify/hydrogen";
 import { Link } from "react-router";
 
+import { useLocalizePath } from "~/lib/locale";
 import { compareMoney, formatPrice } from "~/lib/money";
 
 export const PRODUCT_CARD_FRAGMENT = gql(`
@@ -50,6 +51,7 @@ type ProductCardProps = {
 };
 
 export function ProductCard({ product, priority = false }: ProductCardProps) {
+  const localizePath = useLocalizePath();
   const primaryImage = product.featuredImage ?? product.images.nodes[0] ?? null;
   const hoverImage = product.images.nodes[1] ?? null;
   const price = product.priceRange.minVariantPrice;
@@ -96,7 +98,10 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       </div>
       <div className="flex flex-col gap-0.5 text-left">
         <h3 className="type-body-sm text-on-surface line-clamp-2 font-medium">
-          <Link to={`/products/${product.handle}`} className="card-link text-on-surface">
+          <Link
+            to={localizePath(`/products/${product.handle}`)}
+            className="card-link text-on-surface"
+          >
             {product.title}
           </Link>
         </h3>

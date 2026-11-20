@@ -1,6 +1,8 @@
 import { gql, type StorefrontApi } from "@shopify/hydrogen";
 import { Link } from "react-router";
 
+import { useLocalizePath } from "~/lib/locale";
+
 export const COLLECTION_CARD_PRODUCT_COUNT_LIMIT = 100;
 
 export const COLLECTION_CARD_FRAGMENT = gql(`
@@ -67,6 +69,7 @@ export function CollectionCard({
   productCount,
   useProductImageFallback = true,
 }: CollectionCardProps) {
+  const localizePath = useLocalizePath();
   const fallbackImage = useProductImageFallback
     ? (collection.products.nodes[0]?.featuredImage ?? null)
     : null;
@@ -76,7 +79,7 @@ export function CollectionCard({
 
   return (
     <Link
-      to={`/collections/${collection.handle}`}
+      to={localizePath(`/collections/${collection.handle}`)}
       className="card group rounded-card focus-visible:outline-accent relative block overflow-hidden no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
       aria-label={collection.title}
       data-testid="collection-card"

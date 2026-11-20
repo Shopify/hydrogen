@@ -1,8 +1,11 @@
 import { Link } from "react-router";
 
 import { closeMobileNavDrawer, MOBILE_NAV_DRAWER_ID, openDialogFallback } from "~/lib/cart-drawer";
+import { useLocalizePath } from "~/lib/locale";
 
 export function MobileNav() {
+  const localizePath = useLocalizePath();
+
   return (
     <dialog
       id={MOBILE_NAV_DRAWER_ID}
@@ -36,7 +39,7 @@ export function MobileNav() {
             <ul role="list" className="flex flex-col">
               <li>
                 <Link
-                  to="/collections"
+                  to={localizePath("/collections")}
                   className="min-h-touch-target text-on-surface flex items-center rounded-sm text-xl font-normal no-underline hover:opacity-70 motion-safe:transition-opacity"
                   onClick={() => closeMobileNavDrawer()}
                 >

@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Link } from "react-router";
 
 import type { HomeHeroData } from "~/lib/home-hero";
+import { useLocalizePath } from "~/lib/locale";
 
 export function HomeHero({ hero }: { hero: HomeHeroData }) {
+  const localizePath = useLocalizePath();
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
   const image = hero.image && hero.image.url !== failedImageUrl ? hero.image : null;
 
@@ -39,7 +41,7 @@ export function HomeHero({ hero }: { hero: HomeHeroData }) {
             </p>
           ) : null}
           <Link
-            to={hero.to}
+            to={localizePath(hero.to)}
             className="rounded-button button-primary focus-visible:outline-accent mt-6 inline-flex h-11 shrink-0 items-center justify-center gap-2 px-5 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
           >
             Shop now
