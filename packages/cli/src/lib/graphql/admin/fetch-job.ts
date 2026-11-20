@@ -28,20 +28,35 @@ export interface JobSchema {
   };
 }
 
-export async function fetchJob(adminSession: AdminSession, jobId: string) {
+export async function fetchJob(
+  adminSession: AdminSession,
+  jobId: string,
+  signal?: AbortSignal,
+) {
   const {hydrogenStorefrontJob} = await adminRequest<JobSchema>(
     FetchJobQuery,
     adminSession,
     {id: jobId},
+    signal,
   );
 
   return hydrogenStorefrontJob;
 }
 
-export async function waitForJob(adminSession: AdminSession, jobId: string) {
+export async function waitForJob(
+  adminSession: AdminSession,
+  jobId: string,
+  signal?: AbortSignal,
+) {
+  signal?.throwIfAborted();
   while (true) {
-    await setTimeout(500);
-    const job = await fetchJob(adminSession, jobId);
+    try {
+      await setTimeout(500, undefined, {signal});
+    } catch (error) {
+      signal?.throwIfAborted();
+      throw error;
+    }
+    const job = await fetchJob(adminSession, jobId, signal);
     if (job.errors.length > 0) {
       throw new AbortError(
         `Storefront setup failed: ${job.errors.map(({message, code}) => message || code).join(', ')}`,

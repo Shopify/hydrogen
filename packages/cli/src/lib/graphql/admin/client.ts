@@ -4,6 +4,8 @@ import {
   type GraphQLVariables,
 } from '@shopify/cli-kit/node/api/graphql';
 import type {AdminSession} from '../../auth.js';
+import {requestMode} from '@shopify/cli-kit/node/http';
+import {abandonOnAbort} from '../../abort.js';
 
 export type {AdminSession};
 
@@ -75,19 +77,41 @@ export async function adminRequest<T>(
   query: string,
   session: AdminSession,
   variables?: GraphQLVariables,
+  signal?: AbortSignal,
 ): Promise<T> {
+  signal?.throwIfAborted();
   const api = 'Admin';
   const url = `https://${session.storeFqdn}/admin/api/unstable/graphql.json`;
+  const behaviour = requestMode('default');
 
   try {
-    return await graphqlRequest({
-      query,
-      api,
-      url,
-      token: session.token,
-      variables,
-    });
+    return await abandonOnAbort(
+      () =>
+        graphqlRequest<T>({
+          query,
+          api,
+          url,
+          token: session.token,
+          variables,
+          preferredBehaviour: signal
+            ? {
+                ...behaviour,
+                useAbortSignal: () => {
+                  signal.throwIfAborted();
+                  return behaviour.useAbortSignal === true
+                    ? AbortSignal.any([
+                        signal,
+                        AbortSignal.timeout(behaviour.timeoutMs),
+                      ])
+                    : signal;
+                },
+              }
+            : undefined,
+        }),
+      signal,
+    );
   } catch (error: any) {
+    if (signal?.aborted && error === signal.reason) throw error;
     const errors: GraphqlError[] = error.errors;
 
     for (const {pattern, abort} of KNOWN_USER_ERRORS) {

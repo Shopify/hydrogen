@@ -26,6 +26,8 @@ import {importLocal} from '../import-utils.js';
 
 export async function startWorkerdServer({
   root,
+  registerCleanup,
+  logRequestLine: writeRequestLine = logRequestLine,
   appPort,
   inspectorPort: publicInspectorPort,
   assetsPort,
@@ -70,7 +72,7 @@ export async function startWorkerdServer({
     port: appPort,
     host: 'localhost',
     liveReload: watch,
-    requestHook: logRequestLine,
+    requestHook: writeRequestLine,
     inspectorPort: publicInspectorPort,
     inspectWorkerName: mainWorkerName,
     assets: {port: assetsPort, directory: buildPathClient},
@@ -120,7 +122,15 @@ export async function startWorkerdServer({
     ],
   });
 
-  const {workerUrl, inspectorUrl} = await miniOxygen.ready;
+  let closing: Promise<void> | undefined;
+  const close = () => (closing ??= miniOxygen.dispose());
+  registerCleanup?.(close);
+  const {workerUrl, inspectorUrl} = await miniOxygen.ready.catch(
+    async (error: unknown) => {
+      await close();
+      throw error;
+    },
+  );
 
   return {
     port: Number(workerUrl.port),
@@ -172,8 +182,6 @@ export async function startWorkerdServer({
 
       console.log('');
     },
-    async close() {
-      await miniOxygen.dispose();
-    },
+    close,
   };
 }

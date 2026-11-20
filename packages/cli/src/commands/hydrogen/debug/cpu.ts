@@ -182,6 +182,7 @@ export async function runDebugCpuWatch(
     entry,
     directory,
     watch: true,
+    rebuildServerOnClientChange: true,
     sourcemap: true,
     disableRouteWarning: true,
     lockfileCheck: false,

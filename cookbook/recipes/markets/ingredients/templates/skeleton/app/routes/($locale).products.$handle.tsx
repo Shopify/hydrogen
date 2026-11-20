@@ -14,6 +14,7 @@ import {ProductForm} from '~/components/ProductForm';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import type {WithLocale} from '~/lib/i18n';
 import {DEFAULT_LOCALE} from '~/lib/i18n';
+import {sanitizeHtml} from '~/lib/sanitizeHtml';
 
 export const meta: Route.MetaFunction = (args) => {
   const rootMatch = args.matches.at(0) ?? null;
@@ -48,11 +49,7 @@ export async function loader(args: Route.LoaderArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({
-  context,
-  params,
-  request,
-}: Route.LoaderArgs) {
+async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   const {handle} = params;
   const {storefront} = context;
 
@@ -80,7 +77,11 @@ async function loadCriticalData({
   redirectIfHandleIsLocalized(request, {handle, data: product});
 
   return {
-    product,
+    // Product descriptions are merchant-managed HTML: sanitize before rendering it raw.
+    product: {
+      ...product,
+      descriptionHtml: sanitizeHtml(product.descriptionHtml),
+    },
   };
 }
 
