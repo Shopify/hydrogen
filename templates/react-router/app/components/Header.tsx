@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 
 import { useCart } from "~/lib/cart";
@@ -19,8 +19,34 @@ function displayCount(count: number) {
   return count > 99 ? "99+" : String(count);
 }
 
+// Outside /cart the count fills in after the first browser load, so the live region stays silent
+// until the shopper changes the count, instead of announcing the loaded count on every page. A
+// change made during the load counts: the first loaded count already includes it.
+function useCartCountAnnouncement(totalQuantity: number, loading: boolean): string {
+  const mountedQuantity = useRef(totalQuantity);
+  const loadedQuantity = useRef<number | null>(null);
+  const changedDuringLoad = useRef(false);
+  const [changed, setChanged] = useState(false);
+  useEffect(() => {
+    if (loading) {
+      if (totalQuantity !== mountedQuantity.current) changedDuringLoad.current = true;
+      return;
+    }
+    if (loadedQuantity.current === null) {
+      loadedQuantity.current = totalQuantity;
+      if (changedDuringLoad.current) setChanged(true);
+    } else if (totalQuantity !== loadedQuantity.current) {
+      setChanged(true);
+    }
+  }, [loading, totalQuantity]);
+  return changed ? liveCartCountLabel(totalQuantity) : "";
+}
+
 export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
   const totalQuantity = useCart((state) => state.data.totalQuantity);
+  // During the first load the count covers only changes made so far, so show none.
+  const loading = useCart((state) => state.loading);
+  const cartCountAnnouncement = useCartCountAnnouncement(totalQuantity, loading);
   const [failedLogoUrl, setFailedLogoUrl] = useState<string | null>(null);
   const logo = shopInfo.logo;
 
@@ -94,7 +120,7 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
           <Link
             to="/cart"
             className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
-            aria-label={cartCountLabel(totalQuantity)}
+            aria-label={loading ? "Cart" : cartCountLabel(totalQuantity)}
             aria-controls={CART_DRAWER_ID}
             aria-haspopup="dialog"
             data-testid="cart-trigger"
@@ -105,7 +131,7 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
               aria-hidden="true"
             >
               <img src="/icons/icon-cart.svg" alt="" className="size-5" />
-              {totalQuantity > 0 ? (
+              {!loading && totalQuantity > 0 ? (
                 <span className="bg-interactive text-interactive-text absolute end-0 top-0 flex h-5 min-w-5 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full px-1 text-xs font-medium">
                   {displayCount(totalQuantity)}
                 </span>
@@ -113,7 +139,7 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
             </span>
           </Link>
           <span aria-live="polite" aria-atomic="true" className="sr-only">
-            {liveCartCountLabel(totalQuantity)}
+            {cartCountAnnouncement}
           </span>
         </div>
       </div>

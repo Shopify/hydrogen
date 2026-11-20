@@ -1,13 +1,23 @@
+import { withStorefrontRateLimit } from "@shopify/hydrogen";
 import { ShopPayButton } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
 
 import { publishCartViewed } from "~/components/AnalyticsTrackers";
 import { CartLineItem } from "~/components/CartDrawer";
 import { useCart } from "~/lib/cart";
+import { cartHandlers } from "~/lib/cart-handlers";
 import { formatPrice } from "~/lib/money";
+import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
 import type { Route } from "./+types/cart";
+
+// Renders the cart without JavaScript. The root CartProvider seeds from this data.
+export const loader = withStorefrontRateLimit(async ({ context, request }: Route.LoaderArgs) => {
+  const storefrontClient = context.get(storefrontClientContext);
+  const { data } = await cartHandlers.get({ storefrontClient, request });
+  return { cartData: data };
+});
 
 export function meta({ matches }: Route.MetaArgs) {
   return [{ title: formatPageTitle("Cart", getShopNameFromRootMatch(matches[0])) }];

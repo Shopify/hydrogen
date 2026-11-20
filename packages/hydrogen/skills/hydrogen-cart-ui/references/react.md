@@ -16,7 +16,7 @@ import { createCartComponents } from "@shopify/hydrogen/react";
 
 ## Root Setup
 
-Wrap the app in `<CartProvider>`. Keep cart server handlers in a server-only module, separate from React bindings. If the framework can fetch the cart on the server, pass `initialData` so the cart does not depend on a separate client bootstrap. When the framework can preserve streamed promises, pass the unresolved cart promise instead of awaiting it; this keeps the shell non-blocking while `useSuspenseCart()` suspends hydrated cart content. Use the request-scoped private `storefrontClient` created by the request setup. In React Router, the usual shape is:
+Wrap the app in `<CartProvider>`. Keep cart server handlers in a server-only module, separate from React bindings. Read the cart in the cart route's server loader, not the root loader, so non-cart routes' data responses stay cacheable (`cartHandlers.get()` marks every response that calls it as personalized). The root `CartProvider` seeds from the cart route's data via `useRouteLoaderData`. On non-cart routes `initialData` is `undefined` and the store fetches `/api/cart` after hydration. In React Router, the usual shape is:
 
 ```tsx
 // app/lib/cart-handlers.ts
@@ -36,28 +36,40 @@ export const { CartProvider, useCart, useSuspenseCart, useCartActions, useCartFo
 ```
 
 ```tsx
-// app/root.tsx
-import { storefrontClientContext } from "~/lib/storefront";
-import { CartProvider } from "~/lib/cart";
+// app/routes/cart.tsx
 import { cartHandlers } from "~/lib/cart-handlers";
+import { storefrontClientContext } from "~/lib/storefront";
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ context, request }: Route.LoaderArgs) {
   const storefrontClient = context.get(storefrontClientContext);
-  const cartData = cartHandlers.get({ storefrontClient }).then(({ data }) => data);
-
-  return { cartData };
+  const { data } = await cartHandlers.get({ storefrontClient, request });
+  return { cartData: data };
 }
+```
 
-export default function App({ loaderData }: Route.ComponentProps) {
+```tsx
+// app/root.tsx
+import { useRouteLoaderData } from "react-router";
+import { CartProvider } from "~/lib/cart";
+
+import type { loader as cartLoader } from "./routes/cart";
+
+export default function App() {
+  // Only /cart reads the cart on the server, so other routes don't mark their
+  // responses as personalized.
+  const cartRoute = useRouteLoaderData<typeof cartLoader>("routes/cart");
+
   return (
-    <CartProvider initialData={loaderData.cartData}>
+    <CartProvider initialData={cartRoute?.cartData}>
       <Outlet />
     </CartProvider>
   );
 }
 ```
 
-Pass the full handler data envelope (`{cart, errors?}`) to `initialData`. Do not unwrap to `data.cart`: `{cart: null}` tells the client the server already checked and found no usable cart, while omitted `initialData` tells the client to fetch `/api/cart` after hydration. The cart server handlers log returned cart errors on the server, so do not throw just to force a route error. `cartHandlers.get()` marks the request context personalized on every call, before it fetches, so `requestContext.applyResponseHeaders()` keeps the page out of shared caches whether the loader awaits or streams the cart.
+The string passed to `useRouteLoaderData` is the cart route's ID, which React Router builds from the route file's path under `app/`: `routes/cart` for `app/routes/cart.tsx`, or `routes/($locale).cart` for `app/routes/($locale).cart.tsx` with flat routes. Nothing checks the string, and a wrong ID returns `undefined`, so the store quietly falls back to fetching `/api/cart`.
+
+Pass the full handler data envelope (`{cart, errors?}`) to `initialData`. Do not unwrap to `data.cart`: `{cart: null}` tells the client the server already checked and found no usable cart, while omitted `initialData` tells the client to fetch `/api/cart` after hydration. The cart server handlers log returned cart errors on the server, so do not throw just to force a route error. `cartHandlers.get()` marks the request context personalized on every call, before it fetches, so `requestContext.applyResponseHeaders()` makes the cart route's responses private. Other routes' data responses stay cacheable because their loaders never call it.
 
 If there is no server cart fetch yet, still wrap with `<CartProvider>`; it will fetch `/api/cart` after hydration. Register the `cartHandlers` from the server-only module in the app's central `handleShopifyRoutes` wiring; use the `hydrogen-request-handlers` skill for the full framework-specific setup.
 
@@ -65,7 +77,7 @@ When the storefront serves locales under a path prefix (`/fr-ca`), render `<Loca
 
 > Next.js App Router has its own cart binding shape — see `references/nextjs.md`.
 
-Seed `initialData` from the server data path on every framework that can (React Router loader, Next.js server layout/page). Prefer promise `initialData` where the framework supports it and the cart UI is wrapped in local Suspense; the Next.js reference is the main template for that pattern. Reserve the no-`initialData`, fetch-after-hydration path for runtimes with no server cart read.
+In React Router, seed `initialData` from the cart route's loader data via `useRouteLoaderData`. Non-cart routes receive `undefined` and the store fetches after hydration. In Next.js App Router, prefer promise `initialData` where the framework supports it and the cart UI is wrapped in local Suspense; the Next.js reference is the main template for that pattern. Reserve the no-`initialData`, fetch-after-hydration path for non-cart routes or runtimes with no server cart read.
 
 Under `cacheComponents: true`, route segment configs (`export const dynamic`/`revalidate`) are replaced by `use cache`/`cacheLife` (remove them), and `headers()`/`cookies()`/`connection()` outside `<Suspense>` are rejected as runtime/uncached data, so the root layout must be a **static shell wrapping an async cart-seeding child in `<Suspense>`** (use `await connection()` from `next/server` to opt into dynamic rendering inside that child).
 
@@ -175,7 +187,7 @@ function CartContentBody() {
 }
 ```
 
-Keep using `useCart(selector)` for non-blocking UI such as cart counts, pending states, and optimistic controls.
+Keep using `useCart(selector)` for non-blocking UI such as cart counts, pending states, and optimistic controls. A `useSuspenseCart` view stays suspended while a change made during the first load waits for that load, so it shows the change only once the load lands.
 
 ## Refreshing Cart State
 

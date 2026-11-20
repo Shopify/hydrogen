@@ -56,7 +56,7 @@ export function CartLineItems(props: { emptyHeadingLevel?: "h2" | "h3"; errorIdP
 
   return (
     <Show
-      when={!loading()}
+      when={!loading() || lines().length > 0}
       fallback={
         <div
           ref={setCartLinesRegion}
@@ -165,6 +165,7 @@ export function CartLineItems(props: { emptyHeadingLevel?: "h2" | "h3"; errorIdP
                             line.merchandise?.product.title ?? "cart item"
                           }`}
                           {...register("decrease")}
+                          disabled={line.id.startsWith("optimistic:")}
                           class="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-sm hover:border-black"
                         >
                           -
@@ -172,6 +173,7 @@ export function CartLineItems(props: { emptyHeadingLevel?: "h2" | "h3"; errorIdP
 
                         <input
                           {...register("quantity", { value: line.quantity, interactive: true })}
+                          disabled={line.id.startsWith("optimistic:")}
                           aria-label={`Quantity for ${line.merchandise?.product.title ?? "cart item"}`}
                           aria-invalid={Boolean(lineError())}
                           class={
@@ -187,6 +189,7 @@ export function CartLineItems(props: { emptyHeadingLevel?: "h2" | "h3"; errorIdP
                             line.merchandise?.product.title ?? "cart item"
                           }`}
                           {...register("increase")}
+                          disabled={line.id.startsWith("optimistic:")}
                           class="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-sm hover:border-black"
                         >
                           +
@@ -199,6 +202,7 @@ export function CartLineItems(props: { emptyHeadingLevel?: "h2" | "h3"; errorIdP
                           line.merchandise?.product.title ?? "cart item"
                         } from cart`}
                         {...register("remove")}
+                        disabled={line.id.startsWith("optimistic:")}
                         class="min-h-6 py-1 text-sm text-red-600 underline hover:text-red-800"
                       >
                         Remove
@@ -218,6 +222,10 @@ export function CartLineItems(props: { emptyHeadingLevel?: "h2" | "h3"; errorIdP
             }}
           </For>
         </ul>
+        {/* A change made during the first load shows before the rest of the cart arrives. */}
+        <Show when={loading()}>
+          <p class="mt-4 text-sm text-black/60">Loading the rest of your cart…</p>
+        </Show>
       </Show>
     </Show>
   );

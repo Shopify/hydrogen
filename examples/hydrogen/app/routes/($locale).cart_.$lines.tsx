@@ -3,7 +3,7 @@ import { redirect } from "react-router";
 
 import { localizePath } from "~/lib/locale-path";
 
-import type { Route } from "./+types/($locale).cart.$lines";
+import type { Route } from "./+types/($locale).cart_.$lines";
 
 /**
  * Automatically creates a new cart based on the URL and redirects straight to checkout.

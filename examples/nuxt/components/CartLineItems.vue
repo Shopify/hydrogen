@@ -152,6 +152,7 @@ function errorIdForLine(lineId: string) {
               type="submit"
               :aria-label="`Decrease quantity for ${line.merchandise?.product.title ?? 'cart item'}`"
               v-bind="register('decrease')"
+              :disabled="line.id.startsWith('optimistic:')"
               class="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-sm hover:border-black"
             >
               -
@@ -160,6 +161,7 @@ function errorIdForLine(lineId: string) {
             <input
               v-quantity-input
               v-bind="register('quantity', { value: line.quantity, interactive: true })"
+              :disabled="line.id.startsWith('optimistic:')"
               :aria-label="`Quantity for ${line.merchandise?.product.title ?? 'cart item'}`"
               :aria-invalid="
                 Boolean(
@@ -174,6 +176,7 @@ function errorIdForLine(lineId: string) {
               type="submit"
               :aria-label="`Increase quantity for ${line.merchandise?.product.title ?? 'cart item'}`"
               v-bind="register('increase')"
+              :disabled="line.id.startsWith('optimistic:')"
               class="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-sm hover:border-black"
             >
               +
@@ -184,6 +187,7 @@ function errorIdForLine(lineId: string) {
             type="submit"
             :aria-label="`Remove ${line.merchandise?.product.title ?? 'cart item'} from cart`"
             v-bind="register('remove')"
+            :disabled="line.id.startsWith('optimistic:')"
             class="min-h-6 py-1 text-sm text-red-600 underline hover:text-red-800"
           >
             Remove
