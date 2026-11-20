@@ -8,6 +8,7 @@ import {
   parseCollectionParams,
   serializeCollectionParams,
 } from "@shopify/hydrogen";
+import { SearchUpdates } from "@shopify/hydrogen/vue";
 
 import type { ProductCardData } from "~/components/ProductCard.vue";
 import { useCollection, useCollectionForm } from "~/storefront/collection";
@@ -227,159 +228,168 @@ function visibleFilters(filters: AvailableFilter[]) {
     <!-- Empty state: no term -->
     <p v-if="!term" class="mt-12 text-lg text-black/60">Enter a search term to find products.</p>
 
-    <!-- Browse form (with filters/sort/grid) -->
-    <form
-      v-else
-      v-bind="fProps"
-      method="get"
-      class="mt-12 flex gap-12"
-      @submit.capture="cancelPriceSubmit"
-    >
-      <input type="hidden" name="q" :value="term" />
+    <!-- Wraps the browse form and its empty state, so search update events come from the element that contains the controls. -->
+    <SearchUpdates v-else :query="term" :total-count="totalCount">
+      <!-- Browse form (with filters/sort/grid) -->
+      <form
+        v-bind="fProps"
+        method="get"
+        class="mt-12 flex gap-12"
+        @submit.capture="cancelPriceSubmit"
+      >
+        <input type="hidden" name="q" :value="term" />
 
-      <!-- Filter sidebar -->
-      <aside v-if="availableFilters.length > 0" class="hidden w-60 shrink-0 md:block">
-        <h2 class="text-sm font-semibold tracking-wider text-black/50 uppercase">Filters</h2>
-        <div class="mt-6 space-y-8">
-          <fieldset
-            v-for="filter in visibleFilters(availableFilters)"
-            :key="filter.id"
-            :aria-busy="isLoading"
-            :class="isLoading ? 'opacity-60' : undefined"
-          >
-            <legend class="text-sm font-semibold">{{ filter.label }}</legend>
-            <div v-if="filter.type === 'PRICE_RANGE'" class="mt-3 flex items-center gap-2">
-              <input
-                type="number"
-                name="filter.v.price.gte"
-                min="0"
-                step="any"
-                placeholder="Min"
-                aria-label="Minimum price"
-                :value="priceDraft.min"
-                class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
-                @input="onPriceInput($event, 'min')"
-              />
-              <span class="text-sm text-black/40">to</span>
-              <input
-                type="number"
-                name="filter.v.price.lte"
-                min="0"
-                step="any"
-                placeholder="Max"
-                aria-label="Maximum price"
-                :value="priceDraft.max"
-                class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
-                @input="onPriceInput($event, 'max')"
-              />
-            </div>
-            <div v-else-if="visibleValues(filter).length > 0" class="mt-3 space-y-2">
-              <label
-                v-for="value in visibleValues(filter)"
-                :key="value.id"
-                class="flex cursor-pointer items-center gap-2 text-sm"
-              >
+        <!-- Filter sidebar -->
+        <aside v-if="availableFilters.length > 0" class="hidden w-60 shrink-0 md:block">
+          <h2 class="text-sm font-semibold tracking-wider text-black/50 uppercase">Filters</h2>
+          <div class="mt-6 space-y-8">
+            <fieldset
+              v-for="filter in visibleFilters(availableFilters)"
+              :key="filter.id"
+              :aria-busy="isLoading"
+              :class="isLoading ? 'opacity-60' : undefined"
+            >
+              <legend class="text-sm font-semibold">{{ filter.label }}</legend>
+              <div v-if="filter.type === 'PRICE_RANGE'" class="mt-3 flex items-center gap-2">
                 <input
-                  type="checkbox"
-                  :name="filterInputToParamEntries(value.input)[0]?.name"
-                  :value="filterInputToParamEntries(value.input)[0]?.value"
-                  :checked="isFilterInputActive(state.filters, value.input)"
-                  class="h-4 w-4 rounded border-black/20 disabled:cursor-not-allowed"
-                  @change="onFilterChange($event, filter)"
+                  type="number"
+                  name="filter.v.price.gte"
+                  min="0"
+                  step="any"
+                  placeholder="Min"
+                  aria-label="Minimum price"
+                  :value="priceDraft.min"
+                  class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
+                  @input="onPriceInput($event, 'min')"
                 />
-                <span :class="isFilterInputActive(state.filters, value.input) ? 'font-medium' : ''">
-                  {{ value.label }}
-                </span>
-                <span class="ml-auto text-xs text-black/40">({{ value.count }})</span>
-              </label>
-            </div>
-          </fieldset>
-        </div>
-        <noscript>
-          <button
-            type="submit"
-            class="mt-8 w-full rounded bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/80"
-          >
-            Apply
-          </button>
-        </noscript>
-      </aside>
+                <span class="text-sm text-black/40">to</span>
+                <input
+                  type="number"
+                  name="filter.v.price.lte"
+                  min="0"
+                  step="any"
+                  placeholder="Max"
+                  aria-label="Maximum price"
+                  :value="priceDraft.max"
+                  class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
+                  @input="onPriceInput($event, 'max')"
+                />
+              </div>
+              <div v-else-if="visibleValues(filter).length > 0" class="mt-3 space-y-2">
+                <label
+                  v-for="value in visibleValues(filter)"
+                  :key="value.id"
+                  class="flex cursor-pointer items-center gap-2 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    :name="filterInputToParamEntries(value.input)[0]?.name"
+                    :value="filterInputToParamEntries(value.input)[0]?.value"
+                    :checked="isFilterInputActive(state.filters, value.input)"
+                    class="h-4 w-4 rounded border-black/20 disabled:cursor-not-allowed"
+                    @change="onFilterChange($event, filter)"
+                  />
+                  <span
+                    :class="isFilterInputActive(state.filters, value.input) ? 'font-medium' : ''"
+                  >
+                    {{ value.label }}
+                  </span>
+                  <span class="ml-auto text-xs text-black/40">({{ value.count }})</span>
+                </label>
+              </div>
+            </fieldset>
+          </div>
+          <noscript>
+            <button
+              type="submit"
+              class="mt-8 w-full rounded bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/80"
+            >
+              Apply
+            </button>
+          </noscript>
+        </aside>
 
-      <!-- Main content -->
-      <div class="flex-1">
-        <!-- Toolbar -->
-        <div class="flex items-center justify-between border-b border-black/10 pb-4">
-          <div class="flex items-center gap-4">
+        <!-- Main content -->
+        <div class="flex-1">
+          <!-- Toolbar -->
+          <div class="flex items-center justify-between border-b border-black/10 pb-4">
+            <div class="flex items-center gap-4">
+              <NuxtLink
+                v-if="hasActiveFilters"
+                :to="searchPath"
+                @click="restoreHistoryPrice"
+                class="text-sm text-black/60 underline hover:text-black"
+              >
+                Clear all
+              </NuxtLink>
+              <span
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                class="text-sm text-black/40"
+              >
+                {{ isLoading ? "Updating..." : "" }}
+              </span>
+            </div>
+
+            <label class="flex items-center gap-2 text-sm">
+              <span class="text-black/60">Sort by</span>
+              <select
+                name="sort_by"
+                :value="currentSortValue"
+                :aria-busy="isLoading"
+                :class="isLoading ? 'opacity-50' : undefined"
+                class="rounded border border-black/15 bg-white px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+                @change="onSortChange"
+              >
+                <option v-for="option in SORT_OPTIONS" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </label>
+          </div>
+
+          <!-- Active filter chips -->
+          <div v-if="hasActiveFilters" class="mt-4 flex flex-wrap gap-2">
+            <NuxtLink
+              v-for="filter in state.filters"
+              :key="JSON.stringify(filter)"
+              :to="filterRemovalHref(filter)"
+              @click="restoreHistoryPrice"
+              class="inline-flex items-center gap-1.5 rounded-full bg-black/5 px-3 py-1 text-sm hover:bg-black/10"
+            >
+              {{ describeFilter(filter) }}
+              <span aria-hidden="true">&times;</span>
+            </NuxtLink>
+          </div>
+
+          <!-- Product grid -->
+          <section
+            class="mt-8 grid grid-cols-2 gap-x-6 gap-y-12 transition-opacity duration-200 md:grid-cols-3"
+            :class="isLoading ? 'opacity-50' : 'opacity-100'"
+          >
+            <ProductCard
+              v-for="product in products"
+              :key="product.handle"
+              :product="product"
+              context="search"
+            />
+          </section>
+
+          <!-- Empty state: no results -->
+          <div v-if="products.length === 0 && !isLoading" class="mt-16 text-center">
+            <p class="text-lg text-black/60">No products found for "{{ term }}".</p>
             <NuxtLink
               v-if="hasActiveFilters"
               :to="searchPath"
               @click="restoreHistoryPrice"
-              class="text-sm text-black/60 underline hover:text-black"
+              class="mt-4 inline-block text-sm font-semibold underline"
             >
-              Clear all
+              Clear all filters
             </NuxtLink>
-            <span role="status" aria-live="polite" aria-atomic="true" class="text-sm text-black/40">
-              {{ isLoading ? "Updating..." : "" }}
-            </span>
           </div>
-
-          <label class="flex items-center gap-2 text-sm">
-            <span class="text-black/60">Sort by</span>
-            <select
-              name="sort_by"
-              :value="currentSortValue"
-              :aria-busy="isLoading"
-              :class="isLoading ? 'opacity-50' : undefined"
-              class="rounded border border-black/15 bg-white px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
-              @change="onSortChange"
-            >
-              <option v-for="option in SORT_OPTIONS" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-          </label>
         </div>
-
-        <!-- Active filter chips -->
-        <div v-if="hasActiveFilters" class="mt-4 flex flex-wrap gap-2">
-          <NuxtLink
-            v-for="filter in state.filters"
-            :key="JSON.stringify(filter)"
-            :to="filterRemovalHref(filter)"
-            @click="restoreHistoryPrice"
-            class="inline-flex items-center gap-1.5 rounded-full bg-black/5 px-3 py-1 text-sm hover:bg-black/10"
-          >
-            {{ describeFilter(filter) }}
-            <span aria-hidden="true">&times;</span>
-          </NuxtLink>
-        </div>
-
-        <!-- Product grid -->
-        <section
-          class="mt-8 grid grid-cols-2 gap-x-6 gap-y-12 transition-opacity duration-200 md:grid-cols-3"
-          :class="isLoading ? 'opacity-50' : 'opacity-100'"
-        >
-          <ProductCard
-            v-for="product in products"
-            :key="product.handle"
-            :product="product"
-            context="search"
-          />
-        </section>
-
-        <!-- Empty state: no results -->
-        <div v-if="products.length === 0 && !isLoading" class="mt-16 text-center">
-          <p class="text-lg text-black/60">No products found for "{{ term }}".</p>
-          <NuxtLink
-            v-if="hasActiveFilters"
-            :to="searchPath"
-            @click="restoreHistoryPrice"
-            class="mt-4 inline-block text-sm font-semibold underline"
-          >
-            Clear all filters
-          </NuxtLink>
-        </div>
-      </div>
-    </form>
+      </form>
+    </SearchUpdates>
   </main>
 </template>
