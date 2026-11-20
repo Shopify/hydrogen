@@ -10,6 +10,7 @@
     "dev:https": "shopify hydrogen dev --customer-account-push",
     "preview": "shopify hydrogen preview --build",
     "typecheck": "react-router typegen && tsc --noEmit",
+    "test": "node --test __test__/*.test.ts",
     "e2e": "playwright test",
     "e2e:new-cookies": "playwright test --project=new-cookies",
     "e2e:smoke": "playwright test --project=smoke"
