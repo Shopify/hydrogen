@@ -6,6 +6,13 @@ import { minifyGraphQLLiterals } from "./plugins/minify-graphql-literals.ts";
 
 const plugins = () => [minifyGraphQLLiterals(), inlineScriptImports({ version: pkg.version })];
 
+// Declarations are emitted by the native TypeScript 7 compiler instead of the in-process
+// TypeScript 5 compiler. gql.tada's inferred document types made the in-process emit need
+// ~2.5 GB of JS heap, which out-grew CI runners; the native compiler runs outside the V8 heap.
+// `tsgo` comes from `@typescript/native-preview` rather than `typescript@7`, whose `tsc` bin would
+// shadow the TypeScript 5 `tsc` that `typecheck` and `test:types` run.
+const dts = { tsgo: true };
+
 export default defineConfig([
   {
     entry: [
@@ -16,7 +23,7 @@ export default defineConfig([
       "src/vue/index.ts",
     ],
     format: "esm",
-    dts: true,
+    dts,
     hash: false,
     minify: false,
     sourcemap: true,
@@ -33,7 +40,7 @@ export default defineConfig([
     entry: ["src/core/development.ts", "src/react/index.ts", "src/vue/index.ts"],
     format: "esm",
     outDir: "dist/development",
-    dts: true,
+    dts,
     hash: false,
     minify: false,
     sourcemap: true,
