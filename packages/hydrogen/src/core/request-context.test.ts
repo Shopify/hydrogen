@@ -445,6 +445,44 @@ describe("createShopifyRequestContext", () => {
     expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
   });
 
+  /**
+   * @see https://github.com/Shopify/hydrogen/issues/4281
+   */
+  it("captures and replays cookies when Headers.getSetCookie is missing", () => {
+    const context = createTestRequestContext(
+      new Request("https://example.com", {
+        method: "POST",
+        headers: {
+          cookie: "_shopify_essential=established; _shopify_analytics=1; _shopify_marketing=1",
+        },
+      }),
+    );
+    const subrequestHeaders = {
+      get(name: string) {
+        return name.toLowerCase() === "set-cookie"
+          ? "_shopify_y=collected-y; Path=/; Secure"
+          : null;
+      },
+    } as Headers;
+
+    expect(() => context.captureSubrequestHeaders(subrequestHeaders)).not.toThrow();
+
+    const headers = new Headers({
+      "cache-control": "public, max-age=60",
+      "content-type": "application/json",
+    });
+    Object.defineProperty(headers, "getSetCookie", {
+      value: undefined,
+      configurable: true,
+    });
+
+    expect(() => context.applyResponseHeaders(headers)).not.toThrow();
+
+    delete (headers as { getSetCookie?: unknown }).getSetCookie;
+    expect(headers.getSetCookie()).toEqual(["_shopify_y=collected-y; Path=/; Secure"]);
+    expect(headers.get("cache-control")).toBe("private, no-store, max-age=0, must-revalidate");
+  });
+
   it("does not return captured Shopify cookies or disable caching for GET requests", () => {
     const context = createTestRequestContext(
       new Request("https://example.com/api/data", {
