@@ -105,6 +105,7 @@
     "postcodegen": "node scripts/postprocess-tada-env.ts && oxfmt src/graphql/generated/*.d.ts src/graphql/generated/*.json"
   },
   "dependencies": {
+    "cookie-es": "3.1.1",
     "cross-spawn": "7.0.6",
     "gql.tada": "1.9.2"
   },
