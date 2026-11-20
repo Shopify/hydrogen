@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import { posix } from "node:path";
 
 const STOREFRONT_SCHEMA_FILE_NAME = "storefront.schema.json";
 const CUSTOMER_ACCOUNT_SCHEMA_FILE_NAME = "customer-account.schema.json";
@@ -11,12 +11,12 @@ export function createGraphQLPluginConfig(schemaDirectory: string) {
     schemas: [
       {
         name: "storefront",
-        schema: join(schemaDirectory, STOREFRONT_SCHEMA_FILE_NAME),
+        schema: posix.join(schemaDirectory, STOREFRONT_SCHEMA_FILE_NAME),
         tadaOutputLocation: STOREFRONT_OUTPUT_FILE_NAME,
       },
       {
         name: "customer-account",
-        schema: join(schemaDirectory, CUSTOMER_ACCOUNT_SCHEMA_FILE_NAME),
+        schema: posix.join(schemaDirectory, CUSTOMER_ACCOUNT_SCHEMA_FILE_NAME),
         tadaOutputLocation: CUSTOMER_ACCOUNT_OUTPUT_FILE_NAME,
       },
     ],

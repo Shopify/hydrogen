@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join, parse, resolve } from "node:path";
+import { dirname, join, parse, relative, resolve, sep } from "node:path";
 import { parseArgs } from "node:util";
 
 import { createGraphQLPluginConfig } from "../graphql/plugin-config";
@@ -91,6 +91,13 @@ function parseCheckArgs(args: string[]) {
   return values;
 }
 
+function getTsconfigRelativeSchemaDirectory(
+  tsconfigDirectory: string,
+  packageRoot: string,
+): string {
+  return relative(tsconfigDirectory, join(packageRoot, "dist")).split(sep).join("/");
+}
+
 export async function checkGraphQL(options: CheckGraphQLOptions = {}): Promise<void> {
   const cwd = options.cwd ?? process.cwd();
   const packageRoot = options.packageRoot ?? getPackageRoot();
@@ -98,11 +105,14 @@ export async function checkGraphQL(options: CheckGraphQLOptions = {}): Promise<v
   const runCommand = options.runCommand ?? spawnRunCommand;
   const values = parseCheckArgs(options.args ?? []);
   const tsconfigPath = findTsconfig(cwd, values.tsconfig);
+  const tsconfigDirectory = dirname(tsconfigPath);
   const temporaryTsconfigPath = join(
-    dirname(tsconfigPath),
+    tsconfigDirectory,
     `${TEMPORARY_TSCONFIG_PREFIX}${randomUUID()}.json`,
   );
-  const pluginConfig = createGraphQLPluginConfig(join(packageRoot, "dist"));
+  const pluginConfig = createGraphQLPluginConfig(
+    getTsconfigRelativeSchemaDirectory(tsconfigDirectory, packageRoot),
+  );
 
   writeFileSync(
     temporaryTsconfigPath,
