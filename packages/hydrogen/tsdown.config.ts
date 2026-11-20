@@ -1,3 +1,5 @@
+import { resolve } from "node:path";
+
 import { defineConfig } from "tsdown";
 
 import pkg from "./package.json" with { type: "json" };
@@ -18,10 +20,13 @@ const productionEntries = [
   "src/vue/index.ts",
 ];
 const developmentEntries = ["src/core/development.ts", "src/react/index.ts", "src/vue/index.ts"];
-const productionOutDir = "dist";
 const developmentOnlyEntries = developmentEntries.filter(
   (entry) => !productionEntries.includes(entry),
 );
+// tsdown resolves `entry` and `outDir` from this file's directory, so the
+// plugins get absolute paths and the build does not depend on the cwd.
+const fromPackage = (path: string) => resolve(import.meta.dirname, path);
+const productionOutDir = fromPackage("dist");
 
 export default defineConfig([
   {
@@ -38,7 +43,7 @@ export default defineConfig([
       __HYDROGEN_VERSION__: JSON.stringify(pkg.version),
       __DEV__: "false",
     },
-    plugins: [...plugins(), declarationsOnly(developmentOnlyEntries)],
+    plugins: [...plugins(), declarationsOnly(developmentOnlyEntries.map(fromPackage))],
     deps: { neverBundle: ["gql.tada", "react", "vue"] },
   },
   {
