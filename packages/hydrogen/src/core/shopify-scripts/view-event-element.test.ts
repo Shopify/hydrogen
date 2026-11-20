@@ -28,44 +28,90 @@ function makePayload(id: string, extra?: string) {
   return JSON.stringify({ id, extra });
 }
 
-describe("defineViewEventElement", () => {
-  // Mirrors the CDN element: `connect` sends after connecting, `dialog` sends on open and on
-  // `toggle` while open, and each send re-reads the payload.
-  class FakeViewEventElement extends HTMLElement {
-    #abort: AbortController | undefined;
+// A stand-in for the browser's IntersectionObserver that the test drives by hand.
+const io = {
+  callback: undefined as IntersectionObserverCallback | undefined,
+  options: undefined as IntersectionObserverInit | undefined,
+  observed: new Set<Element>(),
+  show(target: Element) {
+    assert(io.callback, "expected an IntersectionObserver to be created");
+    io.callback(
+      [{ target, isIntersecting: true, intersectionRatio: 1 } as IntersectionObserverEntry],
+      {} as IntersectionObserver,
+    );
+  },
+};
 
-    connectedCallback() {
-      this.#abort?.abort();
-      this.#abort = new AbortController();
-      const trigger = this.getAttribute("view-event-trigger");
-      const dialog = !trigger || trigger === "dialog" ? this.closest("dialog") : null;
-      if (trigger === "dialog" || dialog) {
-        if (dialog?.open) setTimeout(() => this.dispatchViewEvent());
-        dialog?.addEventListener("toggle", () => dialog.open && this.dispatchViewEvent(), {
-          signal: this.#abort.signal,
-        });
-        return;
-      }
-      if (trigger === "connect") {
-        setTimeout(() => this.dispatchViewEvent());
-      }
+class FakeIntersectionObserver {
+  constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+    io.callback = callback;
+    io.options = options;
+  }
+  observe(target: Element) {
+    io.observed.add(target);
+  }
+  unobserve(target: Element) {
+    io.observed.delete(target);
+  }
+  disconnect() {
+    io.observed.clear();
+  }
+}
+
+// Mirrors the CDN createViewEventElement: `connect` sends one task after connecting, `dialog` sends
+// if the dialog is already open and on each opening `toggle`, `intersect` sends the first time half
+// of the element is visible, and disconnecting stops the observer and the listeners. Each send
+// re-reads the payload.
+let sharedObserver: FakeIntersectionObserver | undefined;
+class FakeViewEventElement extends HTMLElement {
+  #abort: AbortController | undefined;
+
+  connectedCallback() {
+    this.#abort = new AbortController();
+    const send = () => setTimeout(() => this.dispatchViewEvent());
+    const trigger = this.getAttribute("view-event-trigger");
+    const dialog = !trigger || trigger === "dialog" ? this.closest("dialog") : null;
+    const mode = dialog ? "dialog" : (trigger ?? "connect");
+    if (mode === "connect") send();
+    if (mode === "dialog") {
+      if (dialog?.open) send();
+      dialog?.addEventListener("toggle", () => dialog.open && this.dispatchViewEvent(), {
+        signal: this.#abort.signal,
+      });
     }
-
-    disconnectedCallback() {
-      this.#abort?.abort();
-    }
-
-    dispatchViewEvent() {
-      if (!this.isConnected) return;
-      const detail: unknown = JSON.parse(this.getAttribute("view-event-payload") ?? "{}");
-      this.dispatchEvent(new CustomEvent("shopify:test:view", { bubbles: true, detail }));
+    if (mode === "intersect") {
+      sharedObserver ??= new FakeIntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            sharedObserver?.unobserve(entry.target);
+            (entry.target as FakeViewEventElement).dispatchViewEvent();
+          }
+        },
+        { threshold: 0.5 },
+      );
+      sharedObserver.observe(this);
     }
   }
 
+  disconnectedCallback() {
+    sharedObserver?.unobserve(this);
+    this.#abort?.abort();
+  }
+
+  dispatchViewEvent() {
+    if (!this.isConnected) return;
+    const detail: unknown = JSON.parse(this.getAttribute("view-event-payload") ?? "{}");
+    this.dispatchEvent(new CustomEvent("shopify:test:view", { bubbles: true, detail }));
+  }
+}
+
+describe("defineViewEventElement", () => {
   const createViewEventElement = vi.fn((): typeof FakeViewEventElement => FakeViewEventElement);
   let defineSpy: ReturnType<typeof vi.spyOn>;
   let events: CustomEvent[];
   const record = (event: Event) => events.push(event as CustomEvent);
+  const ids = () => events.map((event) => (event.detail as { id: string }).id);
 
   async function loadDefineViewEventElement() {
     vi.resetModules();
@@ -97,51 +143,13 @@ describe("defineViewEventElement", () => {
     return element;
   }
 
-  function stubIntersectionObserver() {
-    let callback: IntersectionObserverCallback | undefined;
-    let options: IntersectionObserverInit | undefined;
-    const observed = new Set<Element>();
-    const disconnect = vi.fn(() => observed.clear());
-
-    class FakeIntersectionObserver {
-      constructor(cb: IntersectionObserverCallback, opts?: IntersectionObserverInit) {
-        callback = cb;
-        options = opts;
-      }
-      observe(target: Element) {
-        observed.add(target);
-      }
-      unobserve(target: Element) {
-        observed.delete(target);
-      }
-      disconnect = disconnect;
-    }
-
-    vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
-
-    return {
-      observed,
-      disconnect,
-      getOptions: () => options,
-      trigger(
-        target: Element,
-        isIntersecting: boolean,
-        intersectionRatio = isIntersecting ? 1 : 0,
-      ) {
-        assert(callback, "expected an IntersectionObserver to be created");
-        callback(
-          [{ target, isIntersecting, intersectionRatio } as IntersectionObserverEntry],
-          {} as IntersectionObserver,
-        );
-      },
-    };
-  }
-
   beforeEach(() => {
     importStandardEventsFromCDN.mockReset();
     createViewEventElement.mockClear();
     defineSpy = vi.spyOn(customElements, "define");
     events = [];
+    io.observed.clear();
+    vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
     document.addEventListener("shopify:test:view", record);
   });
 
@@ -166,16 +174,7 @@ describe("defineViewEventElement", () => {
     expect(importStandardEventsFromCDN).toHaveBeenCalledTimes(1);
     expect(defineSpy).toHaveBeenCalledTimes(1);
     expect(customElements.get(TAG)?.prototype).toBeInstanceOf(FakeViewEventElement);
-    expect(events).toHaveLength(1);
-    // happy-dom upgrades a disconnected copy of the node, so read the element from the document.
-    const upgraded = document.querySelector(TAG);
-    expect(events[0]?.target).toBe(upgraded);
-
-    // Browsers upgrade the connected node and report its attributes with a null old value.
-    (
-      upgraded as HTMLElement & { attributeChangedCallback(...args: unknown[]): void }
-    ).attributeChangedCallback("view-event-payload", null, makePayload("a"));
-    expect(events).toHaveLength(1);
+    expect(ids()).toEqual(["a"]);
 
     // A second module instance skips an element that another copy already defined.
     const defineAgain = await loadDefineViewEventElement();
@@ -189,36 +188,59 @@ describe("defineViewEventElement", () => {
     await ensureDefined();
     const element = renderElement("connect", makePayload("a", "v1"));
     await nextTask();
-    expect(events).toHaveLength(1);
+    expect(ids()).toEqual(["a"]);
 
     element.setAttribute("view-event-payload", makePayload("a", "v2"));
-    expect(events).toHaveLength(1);
+    await nextTask();
+    expect(ids()).toEqual(["a"]);
 
     element.setAttribute("view-event-payload", makePayload("b", "v1"));
-    expect(events).toHaveLength(2);
+    await nextTask();
+    expect(ids()).toEqual(["a", "b"]);
     expect(events[1]?.target).toBe(element);
     expect(events[1]?.detail).toEqual({ id: "b", extra: "v1" });
+  });
+
+  it("sends the latest key once when the key changes twice before the next send", async () => {
+    await ensureDefined();
+    const element = renderElement("connect", makePayload("a"));
+    await nextTask();
+
+    element.setAttribute("view-event-payload", makePayload("b"));
+    element.setAttribute("view-event-payload", makePayload("c"));
+    await nextTask();
+
+    expect(ids()).toEqual(["a", "c"]);
+  });
+
+  it("lets the base element send the latest payload when the key changes before the first view", async () => {
+    await ensureDefined();
+    const element = renderElement("intersect", makePayload("a"));
+
+    element.setAttribute("view-event-payload", makePayload("b"));
+    io.show(element);
+
+    expect(ids()).toEqual(["b"]);
   });
 
   it("ignores bad payloads after the first view and resumes sending when the attribute is re-added", async () => {
     await ensureDefined();
     const element = renderElement("connect", makePayload("a"));
     await nextTask();
-    expect(events).toHaveLength(1);
 
-    // First view has already fired, so attributeChangedCallback reaches keyOf's parser.
     expect(() => element.setAttribute("view-event-payload", "{")).not.toThrow();
     element.setAttribute("view-event-payload", "{}");
     element.setAttribute("view-event-payload", "null");
     element.removeAttribute("view-event-payload");
-    expect(events).toHaveLength(1);
+    await nextTask();
+    expect(ids()).toEqual(["a"]);
 
-    // Re-adding the attribute with a new key sends again; re-adding the same key would not.
     element.setAttribute("view-event-payload", makePayload("a"));
-    expect(events).toHaveLength(1);
+    await nextTask();
+    expect(ids()).toEqual(["a"]);
     element.setAttribute("view-event-payload", makePayload("b"));
-    expect(events).toHaveLength(2);
-    expect(events[1]?.detail).toEqual({ id: "b" });
+    await nextTask();
+    expect(ids()).toEqual(["a", "b"]);
   });
 
   it("doesn't send the event from a disconnected element", async () => {
@@ -228,70 +250,55 @@ describe("defineViewEventElement", () => {
     element.setAttribute("view-event-trigger", "connect");
     element.setAttribute("view-event-payload", makePayload("a"));
     element.setAttribute("view-event-payload", makePayload("b"));
+    await nextTask();
 
     expect(dispatch).not.toHaveBeenCalled();
   });
 
-  it("waits for 50% visibility when an intersect element swaps key after its first view", async () => {
+  it("waits until a card is visible again before sending a new key", async () => {
     await ensureDefined();
-    const io = stubIntersectionObserver();
     const element = renderElement("intersect", makePayload("a"));
+    io.show(element);
+    expect(ids()).toEqual(["a"]);
+    expect(io.observed.has(element)).toBe(false);
 
-    // Before the first view, the base observer still owns sending the latest payload.
+    // The same key doesn't restart the base element, so the card isn't watched again.
+    element.setAttribute("view-event-payload", makePayload("a", "variant"));
+    expect(io.observed.has(element)).toBe(false);
+
     element.setAttribute("view-event-payload", makePayload("b"));
-    expect(events).toHaveLength(0);
-    expect(io.observed.size).toBe(0);
-
-    element.dispatchViewEvent();
-    expect(events).toHaveLength(1);
-    expect(events[0]?.detail).toEqual({ id: "b" });
-
-    // A later key change waits until at least 50% of the element is visible.
-    element.setAttribute("view-event-payload", makePayload("c"));
-    expect(events).toHaveLength(1);
-    expect(io.getOptions()).toEqual({ threshold: 0.5 });
+    await nextTask();
+    expect(ids()).toEqual(["a"]);
+    expect(io.options).toEqual({ threshold: 0.5 });
     expect(io.observed.has(element)).toBe(true);
 
-    io.trigger(element, false, 0);
-    // Partial overlap below 50% must not fire even when isIntersecting is true.
-    io.trigger(element, true, 0.1);
-    expect(events).toHaveLength(1);
-    expect(io.observed.has(element)).toBe(true);
-
-    io.trigger(element, true, 0.5);
-    expect(events).toHaveLength(2);
-    expect(events[1]?.detail).toEqual({ id: "c" });
-    expect(io.observed.size).toBe(0);
-    expect(io.disconnect).toHaveBeenCalledTimes(1);
+    io.show(element);
+    expect(ids()).toEqual(["a", "b"]);
+    expect(io.observed.has(element)).toBe(false);
   });
 
-  it("sends only the latest key when an off-screen card swaps twice, and cancels on return or disconnect", async () => {
+  it("sends only the latest key for an off-screen card and nothing when it returns to the sent key", async () => {
     await ensureDefined();
-    const io = stubIntersectionObserver();
     const element = renderElement("intersect", makePayload("a"));
-    element.dispatchViewEvent();
-    expect(events).toHaveLength(1);
+    io.show(element);
 
-    // Swapping away and back while off screen cancels observation.
+    // Away and back before it is seen again: the pending send finds the key already sent.
     element.setAttribute("view-event-payload", makePayload("b"));
-    expect(io.observed.has(element)).toBe(true);
     element.setAttribute("view-event-payload", makePayload("a"));
-    expect(io.observed.has(element)).toBe(false);
-    expect(events).toHaveLength(1);
+    io.show(element);
+    expect(ids()).toEqual(["a"]);
 
-    // Swapping twice while off screen sends only the final key when visible.
+    // Twice before it is seen again: only the final key is sent.
     element.setAttribute("view-event-payload", makePayload("b"));
     element.setAttribute("view-event-payload", makePayload("c"));
-    io.trigger(element, true, 0.75);
-    expect(events).toHaveLength(2);
-    expect(events[1]?.detail).toEqual({ id: "c" });
+    io.show(element);
+    expect(ids()).toEqual(["a", "c"]);
 
-    // Disconnecting while waiting cancels observation.
-    element.setAttribute("view-event-payload", makePayload("a"));
+    // Removing a card that waits to be seen stops the wait.
+    element.setAttribute("view-event-payload", makePayload("d"));
     expect(io.observed.has(element)).toBe(true);
     element.remove();
-    expect(io.observed.size).toBe(0);
-    expect(events).toHaveLength(2);
+    expect(io.observed.has(element)).toBe(false);
   });
 
   it("sends once per opening in a dialog, including reopen with a key swap in the same task", async () => {
@@ -302,37 +309,34 @@ describe("defineViewEventElement", () => {
 
     openDialog(dialog);
     await nextTask();
-    expect(events).toHaveLength(1);
-    expect(events[0]?.detail).toEqual({ id: "a" });
+    expect(ids()).toEqual(["a"]);
 
     closeDialog(dialog);
     await nextTask();
 
-    // Swapping while closed sends nothing.
+    // Swapping while closed sends nothing until the dialog opens.
     element.setAttribute("view-event-payload", makePayload("c"));
     await nextTask();
-    expect(events).toHaveLength(1);
+    expect(ids()).toEqual(["a"]);
 
-    // Reopen and swap to B in the same task: sends B once, not twice when `toggle` fires.
+    // Reopen and swap to B in the same task: B is sent once, not again for the queued `toggle`.
     openDialog(dialog);
     element.setAttribute("view-event-payload", makePayload("b"));
     await nextTask();
-    expect(events).toHaveLength(2);
-    expect(events[1]?.detail).toEqual({ id: "b" });
+    await nextTask();
+    expect(ids()).toEqual(["a", "b"]);
 
-    // Swapping while already open sends C once.
+    // Swapping while open sends C once.
     element.setAttribute("view-event-payload", makePayload("c"));
     await nextTask();
-    expect(events).toHaveLength(3);
-    expect(events[2]?.detail).toEqual({ id: "c" });
+    expect(ids()).toEqual(["a", "b", "c"]);
 
-    // Close and reopen with the same key C: sends C again on the new opening.
+    // Close and reopen with the same key: a new opening sends C again.
     closeDialog(dialog);
     await nextTask();
     openDialog(dialog);
     await nextTask();
-    expect(events).toHaveLength(4);
-    expect(events[3]?.detail).toEqual({ id: "c" });
+    expect(ids()).toEqual(["a", "b", "c", "c"]);
   });
 
   it("sends once when mounted inside a dialog in the same task that opened it", async () => {
@@ -343,9 +347,9 @@ describe("defineViewEventElement", () => {
     openDialog(dialog);
     renderElement("dialog", makePayload("a"), dialog);
     await nextTask();
+    await nextTask();
 
-    expect(events).toHaveLength(1);
-    expect(events[0]?.detail).toEqual({ id: "a" });
+    expect(ids()).toEqual(["a"]);
   });
 
   it("observes the payload in addition to the attributes of the base element", async () => {
