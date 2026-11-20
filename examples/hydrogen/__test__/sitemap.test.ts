@@ -90,6 +90,7 @@ test("a sitemap page lists each resource with its localized alternates", async (
 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("content-type"), "application/xml");
+  assert.equal(response.headers.get("cache-control"), "max-age=86400");
   assert.deepEqual(calls[0]?.variables, { page: 2, type: "PRODUCT" });
   assert.match(body, /<loc>https:\/\/shop\.example\/products\/snowboard<\/loc>/);
   assert.match(body, /<lastmod>2026-11-01T00:00:00Z<\/lastmod>/);
@@ -97,6 +98,22 @@ test("a sitemap page lists each resource with its localized alternates", async (
     body,
     /<xhtml:link rel="alternate" hreflang="fr-CA" href="https:\/\/shop\.example\/fr-CA\/products\/snowboard" \/>/,
   );
+});
+
+test("an unknown sitemap type answers an uncacheable 404", async () => {
+  const { calls, storefront } = createStorefront(() => ({}));
+
+  const response = await createSitemapResponse({
+    storefront,
+    request: new Request("https://shop.example/sitemap/unknown/1.xml"),
+    params: { type: "unknown", page: "1" },
+    locales: [],
+    getLink: ({ baseUrl }) => baseUrl,
+  });
+
+  assert.equal(response.status, 404);
+  assert.equal(response.headers.get("cache-control"), null);
+  assert.equal(calls.length, 0);
 });
 
 test("the sitemap index answers an uncacheable 503 when any page count read fails", async () => {
@@ -123,6 +140,7 @@ test("the sitemap index links every page of every sitemap type", async () => {
   );
 
   assert.equal(response.status, 200);
+  assert.equal(response.headers.get("cache-control"), "max-age=86400");
   assert.deepEqual(locations, [
     "https://shop.example/sitemap/products/1.xml",
     "https://shop.example/sitemap/products/2.xml",

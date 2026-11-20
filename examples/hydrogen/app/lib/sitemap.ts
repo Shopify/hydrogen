@@ -6,6 +6,7 @@ import type { StorefrontClient } from "~/lib/storefront-client";
 const CHANGE_FREQUENCY = "weekly";
 const FIRST_SITEMAP_PAGE = 1;
 const XML_CONTENT_TYPE = "application/xml";
+const SITEMAP_CACHE_CONTROL = "max-age=86400";
 const THROTTLED_CODE = "THROTTLED";
 // The Storefront API throttles `sitemap.resources` per shop over a 20 second sliding window.
 const THROTTLED_RETRY_AFTER_SECONDS = "30";
@@ -199,7 +200,7 @@ function getBaseUrl(request: Request) {
 
 function xmlResponse(body: string) {
   return new Response(body, {
-    headers: { "Content-Type": XML_CONTENT_TYPE },
+    headers: { "Content-Type": XML_CONTENT_TYPE, "Cache-Control": SITEMAP_CACHE_CONTROL },
   });
 }
 
