@@ -10,11 +10,17 @@ export function PaginatedResourceSection<NodesType>({
   children,
   ariaLabel,
   resourcesClassName,
+  wrapResources = (resources) => resources,
 }: {
   connection: PaginationConnection<NodesType>;
   children: (args: { node: NodesType; index: number }) => ReactNode;
   ariaLabel?: string;
   resourcesClassName?: string;
+  /**
+   * Wraps the rendered resources. `nodes` holds every loaded node, including the earlier pages that
+   * `Pagination` restores on Back or reload, not just the page the loader returned.
+   */
+  wrapResources?: (resources: ReactNode, nodes: NodesType[]) => ReactNode;
 }) {
   return (
     <Pagination connection={connection}>
@@ -32,16 +38,19 @@ export function PaginatedResourceSection<NodesType>({
                 </span>
               )}
             </PreviousLink>
-            {resourcesClassName ? (
-              <div
-                aria-label={ariaLabel}
-                className={resourcesClassName}
-                role={ariaLabel ? "region" : undefined}
-              >
-                {resourcesMarkup}
-              </div>
-            ) : (
-              resourcesMarkup
+            {wrapResources(
+              resourcesClassName ? (
+                <div
+                  aria-label={ariaLabel}
+                  className={resourcesClassName}
+                  role={ariaLabel ? "region" : undefined}
+                >
+                  {resourcesMarkup}
+                </div>
+              ) : (
+                resourcesMarkup
+              ),
+              nodes,
             )}
             <NextLink>
               {isLoading ? (
