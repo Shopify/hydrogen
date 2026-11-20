@@ -1,4 +1,4 @@
-import { gql, type StorefrontApi } from "@shopify/hydrogen";
+import { gql, type GraphQLFormattedError, type StorefrontApi } from "@shopify/hydrogen";
 import type { SitemapType } from "@shopify/hydrogen/storefront-api-types";
 
 import type { StorefrontClient } from "~/lib/storefront-client";
@@ -6,6 +6,9 @@ import type { StorefrontClient } from "~/lib/storefront-client";
 const CHANGE_FREQUENCY = "weekly";
 const FIRST_SITEMAP_PAGE = 1;
 const XML_CONTENT_TYPE = "application/xml";
+const THROTTLED_CODE = "THROTTLED";
+// The Storefront API throttles `sitemap.resources` per shop over a 20 second sliding window.
+const THROTTLED_RETRY_AFTER_SECONDS = "30";
 
 const SITEMAP_ROUTE_TYPES = [
   "products",
@@ -50,8 +53,26 @@ export async function createSitemapIndexResponse({
   request: Request;
   storefront: StorefrontClient;
 }) {
+  const pageCounts = await Promise.all(
+    SITEMAP_ROUTE_TYPES.map(async (type) => ({
+      type,
+      result: await storefront.query(SITEMAP_INDEX_QUERY, {
+        variables: { type: SITEMAP_API_TYPE_BY_ROUTE_TYPE[type] },
+      }),
+    })),
+  );
+  const errorResponse = sitemapErrorResponse(
+    pageCounts.flatMap(({ result }) => result.errors ?? []),
+  );
+  if (errorResponse) return errorResponse;
+
   const baseUrl = getBaseUrl(request);
-  const sitemapLocations = await getSitemapLocations({ baseUrl, storefront });
+  const sitemapLocations = pageCounts.flatMap(({ type, result }) =>
+    Array.from(
+      { length: result.sitemap.pagesCount?.count ?? FIRST_SITEMAP_PAGE },
+      (_, pageIndex) => `${baseUrl}/sitemap/${type}/${pageIndex + FIRST_SITEMAP_PAGE}.xml`,
+    ),
+  );
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${sitemapLocations.map((location) => `  <sitemap><loc>${escapeXml(location)}</loc></sitemap>`).join("\n")}
@@ -77,8 +98,19 @@ export async function createSitemapResponse({
     return new Response("Sitemap not found", { status: 404 });
   }
 
-  const page = parseSitemapPage(params.page);
-  const entries = await querySitemapEntries({ page, storefront, type: params.type });
+  const routeType = params.type;
+  const result = await storefront.query(SITEMAP_RESOURCES_QUERY, {
+    variables: {
+      page: parseSitemapPage(params.page),
+      type: SITEMAP_API_TYPE_BY_ROUTE_TYPE[routeType],
+    },
+  });
+  const errorResponse = sitemapErrorResponse(result.errors);
+  if (errorResponse) return errorResponse;
+
+  const entries = (result.sitemap.resources?.items ?? []).map((resource) =>
+    toSitemapEntry(resource, routeType),
+  );
   const baseUrl = getBaseUrl(request);
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
@@ -92,56 +124,21 @@ function isSitemapRouteType(value: string | undefined): value is SitemapRouteTyp
   return SITEMAP_ROUTE_TYPES.some((type) => type === value);
 }
 
-async function getSitemapLocations({
-  baseUrl,
-  storefront,
-}: {
-  baseUrl: string;
-  storefront: StorefrontClient;
-}) {
-  const locations = await Promise.all(
-    SITEMAP_ROUTE_TYPES.map(async (type) => getSitemapTypeLocations({ baseUrl, storefront, type })),
-  );
-  return locations.flat();
-}
+// A failed read must not become an empty sitemap: crawlers would drop every URL it used to list.
+function sitemapErrorResponse(errors: GraphQLFormattedError[] | undefined): Response | undefined {
+  if (!errors?.length) return undefined;
 
-async function getSitemapTypeLocations({
-  baseUrl,
-  storefront,
-  type,
-}: {
-  baseUrl: string;
-  storefront: StorefrontClient;
-  type: SitemapRouteType;
-}) {
-  const pageCount = await querySitemapPageCount(storefront, type);
-  return Array.from(
-    { length: pageCount },
-    (_, pageIndex) => `${baseUrl}/sitemap/${type}/${pageIndex + FIRST_SITEMAP_PAGE}.xml`,
-  );
-}
+  if (errors.some((error) => error.extensions?.code === THROTTLED_CODE)) {
+    return new Response("Too many sitemap requests. Please try again later.", {
+      status: 429,
+      headers: { "Cache-Control": "no-store", "Retry-After": THROTTLED_RETRY_AFTER_SECONDS },
+    });
+  }
 
-async function querySitemapPageCount(storefront: StorefrontClient, type: SitemapRouteType) {
-  const { sitemap } = await storefront.query(SITEMAP_INDEX_QUERY, {
-    variables: { type: SITEMAP_API_TYPE_BY_ROUTE_TYPE[type] },
+  return new Response("Sitemap unavailable. Please try again later.", {
+    status: 503,
+    headers: { "Cache-Control": "no-store" },
   });
-  return sitemap.pagesCount?.count ?? FIRST_SITEMAP_PAGE;
-}
-
-async function querySitemapEntries({
-  page,
-  storefront,
-  type,
-}: {
-  page: number;
-  storefront: StorefrontClient;
-  type: SitemapRouteType;
-}) {
-  const { sitemap } = await storefront.query(SITEMAP_RESOURCES_QUERY, {
-    variables: { page, type: SITEMAP_API_TYPE_BY_ROUTE_TYPE[type] },
-  });
-  const resources = sitemap.resources?.items ?? [];
-  return resources.map((resource) => toSitemapEntry(resource, type));
 }
 
 function toSitemapEntry(resource: SitemapResource, routeType: SitemapRouteType): SitemapEntry {

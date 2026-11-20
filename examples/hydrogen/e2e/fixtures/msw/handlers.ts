@@ -473,6 +473,57 @@ scenarios.set("subscriptions-logged-in", {
   mocksCustomerAccountApi: true,
 });
 
+/** Sitemap page numbers the `sitemapReads` scenario answers with an error. */
+export const SITEMAP_PAGES = { throttled: 1, failed: 2, listed: 3 } as const;
+export const SITEMAP_LISTED_PRODUCT_HANDLE = "e2e-sitemap-snowboard";
+
+scenarios.set(MSW_SCENARIOS.sitemapReads, {
+  handlers: [
+    graphql.query("SitemapIndex", () => {
+      return HttpResponse.json({ data: { sitemap: { pagesCount: { count: 1 } } } });
+    }),
+    graphql.query("SitemapResources", ({ variables }) => {
+      if (variables.page === SITEMAP_PAGES.throttled) {
+        // The Storefront API's answer once a shop makes more than 80 `sitemap.resources` calls in
+        // 20 seconds: HTTP 200 with a field error.
+        return HttpResponse.json({
+          data: { sitemap: { resources: null } },
+          errors: [
+            {
+              message: "Sitemaps are currently not available. Please try again later.",
+              path: ["sitemap", "resources"],
+              extensions: { code: "THROTTLED" },
+            },
+          ],
+        });
+      }
+      if (variables.page === SITEMAP_PAGES.failed) {
+        return HttpResponse.json({
+          data: { sitemap: { resources: null } },
+          errors: [{ message: "Internal error", path: ["sitemap", "resources"] }],
+        });
+      }
+      return HttpResponse.json({
+        data: {
+          sitemap: {
+            resources: {
+              items: [
+                {
+                  __typename: "SitemapResource",
+                  handle: SITEMAP_LISTED_PRODUCT_HANDLE,
+                  updatedAt: "2026-11-01T00:00:00Z",
+                },
+              ],
+            },
+          },
+        },
+      });
+    }),
+  ],
+  mocksCustomerAccountApi: false,
+  mocksLegacyCustomerAuth: false,
+});
+
 function isMswScenario(scenario: string): scenario is MswScenario {
   return scenarios.has(scenario);
 }
