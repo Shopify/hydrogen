@@ -42,7 +42,7 @@ jobs:
           # deployment matches the pushed code. Empty on push, which checks out the branch.
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
         with:
           version: 10.33.0
 
