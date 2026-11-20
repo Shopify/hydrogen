@@ -1264,7 +1264,7 @@ function settleLineQuantity(
 ): CartState {
   const previous = getLines(state.data);
   const matching = serverLines.find((line) => line.id === payload.lineId);
-  if (!matching && payload.quantity > 0) {
+  if (!matching && (payload.quantity > 0 || !accepted)) {
     requestRevalidation();
     return accepted ? projectLineQuantity(state, payload) : state;
   }
