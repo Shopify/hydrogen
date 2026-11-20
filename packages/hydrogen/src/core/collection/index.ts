@@ -37,4 +37,4 @@ export {
   defineCollectionView,
   getCollectionViewAttributes,
 } from "./collection-view";
-export type { CollectionViewOptions } from "./collection-view";
+export type { CollectionViewCollection, CollectionViewOptions } from "./collection-view";

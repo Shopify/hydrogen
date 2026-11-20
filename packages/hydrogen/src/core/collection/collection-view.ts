@@ -10,13 +10,22 @@ import { defineViewEventElement } from "../shopify-scripts/view-event-element";
  */
 export const COLLECTION_VIEW_TAG_NAME = "shopify-collection-view";
 
+/**
+ * Collection fields that the collection view event needs from your Storefront API query.
+ *
+ * Pass your full query type, which can include more fields.
+ */
+export interface CollectionViewCollection {
+  /** Collection ID, or `null` for a page without a collection record, such as an all-products page. */
+  id: string | null;
+  /** Collection handle. The element sends the event again when it changes. */
+  handle: string;
+}
+
 /** The collection that the page shows, and the number of its products that the page loaded. */
 export interface CollectionViewOptions {
-  /**
-   * Collection fields from your Storefront API query. Pass your full query type, which can include
-   * more fields. Pass `id: null` for a page without a collection record, such as an all-products page.
-   */
-  collection: { id: string | null; handle: string };
+  /** Collection fields from your Storefront API query. */
+  collection: CollectionViewCollection;
   /**
    * The Storefront API has no product total for a collection, so pass the number of products that
    * the page loaded.
