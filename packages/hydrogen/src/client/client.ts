@@ -72,7 +72,9 @@ const REQUEST_IDENTITY_HEADERS = new Set([
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const CACHE_ENABLED_GRAPHQL_CLIENTS = new WeakSet<StorefrontClient["graphql"]>();
 const SHOULD_CACHE_RESULT = Symbol();
-const API_VERSION = Symbol();
+// A registered symbol, because the `development` build has its own copy of this module. A client
+// from `@shopify/hydrogen` and an option set by `@shopify/hydrogen/customer-account` must agree.
+const API_VERSION = Symbol.for("shopify.hydrogen.storefront-api-version");
 const PRIVATE_RESPONSE_DIRECTIVES = new Set(["private", "no-store"]);
 const STOREFRONT_PRIVATE_RESPONSE_PERSONALIZATION_REASON = "storefront-api-private-response";
 
