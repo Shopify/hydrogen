@@ -1,3 +1,4 @@
+export { ShopifyAccount } from "./account";
 export { createCartComponents, useCartAnalytics } from "./cart";
 export type { CartActions } from "./cart";
 export type { ShopifyGlobal } from "../globals";
