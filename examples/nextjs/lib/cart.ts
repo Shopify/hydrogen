@@ -9,5 +9,5 @@ import type { cartHandlers } from "./cart-handlers";
  * `references/react.md`. Do not unwrap to `data.cart`: `{cart: null}` tells the
  * client the server already checked.
  */
-export const { CartProvider, useCart, useSuspenseCart, useCartForm } =
+export const { CartProvider, useCart, useCartStatus, useSuspenseCart, useCartForm } =
   createCartComponents<typeof cartHandlers>();

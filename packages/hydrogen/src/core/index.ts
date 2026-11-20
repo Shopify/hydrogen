@@ -150,6 +150,7 @@ export type {
   CartUserError,
   CartWarning,
   CartNetworkEntry,
+  CartLoadStatus,
   CartLine,
   CartLineConnection,
   CartLineCost,
@@ -161,6 +162,7 @@ export type {
 export {
   EMPTY_CART_DATA,
   EMPTY_CART_STATE,
+  getCartLoadStatus,
   createEmptyCartErrors,
   createEmptyErrorGroup,
 } from "./cart";

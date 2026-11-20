@@ -388,6 +388,28 @@ export function createEmptyCartState({ loading = true }: { loading?: boolean } =
 }
 
 /**
+ * PROTOTYPE: where the cart is in its load lifecycle.
+ *
+ * - `loading`: the store hasn't heard from the server yet.
+ * - `failed`: the store couldn't load the cart and has no cart to show. `retrying` is `true` while a retry runs.
+ * - `ready`: the server returned the cart, or confirmed that no cart exists.
+ *
+ * Cart data is only meaningful when the status is `ready`.
+ */
+export type CartLoadStatus =
+  | { status: "loading" }
+  | { status: "failed"; error: CartNetworkEntry; retrying: boolean }
+  | { status: "ready" };
+
+/** PROTOTYPE: derives the load lifecycle from a cart state. Use it with a cart store outside React. */
+export function getCartLoadStatus(state: CartState): CartLoadStatus {
+  if (state.loadError) {
+    return { status: "failed", error: state.loadError, retrying: state.revalidating === true };
+  }
+  return state.loading ? { status: "loading" } : { status: "ready" };
+}
+
+/**
  * Shared empty cart state backed by the empty cart data, with loading set to `true`.
  *
  * @publicDocs

@@ -2,7 +2,7 @@ import { ShopPayButton } from "@shopify/hydrogen/react";
 import { useEffect, useMemo, useState, type SubmitEvent } from "react";
 import { Link } from "react-router";
 
-import { useCart, useCartActions, useCartForm } from "~/lib/cart";
+import { useCart, useCartForm, useCartStatus } from "~/lib/cart";
 import { closeCartDrawer, configureOpenCartAction, CART_DRAWER_ID } from "~/lib/cart-drawer";
 import { formatPrice } from "~/lib/money";
 
@@ -40,32 +40,28 @@ function CartErrorBanner() {
   );
 }
 
-export function CartLoadErrorMessage() {
-  const { refresh } = useCartActions();
-  const revalidating = useCart((state) => state.revalidating === true);
-  const hasAddedLines = useCart(
-    (state) => state.data.lines.nodes.length > 0 && state.pending.lines.size === 0,
-  );
-
+export function CartLoadErrorMessage({
+  retry,
+  retrying,
+}: {
+  retry: () => void;
+  retrying: boolean;
+}) {
   return (
     <div className="grid justify-items-start gap-3">
       <p
-        className={revalidating ? "text-on-surface-secondary" : "text-on-surface font-medium"}
+        className={retrying ? "text-on-surface-secondary" : "text-on-surface font-medium"}
         aria-live="polite"
         aria-atomic="true"
       >
-        {revalidating
-          ? "Loading your cart…"
-          : hasAddedLines
-            ? "Your item was added, but we couldn't load the rest of your cart."
-            : "We couldn't load your cart."}
+        {retrying ? "Loading your cart…" : "We couldn't load your cart."}
       </p>
       <button
         type="button"
         className="button-outline rounded-button focus-visible:outline-accent inline-flex h-11 cursor-pointer items-center justify-center px-6 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 aria-disabled:cursor-default aria-disabled:opacity-50 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
-        aria-disabled={revalidating}
+        aria-disabled={retrying}
         onClick={() => {
-          if (!revalidating) refresh();
+          if (!retrying) retry();
         }}
       >
         Try again
@@ -82,11 +78,10 @@ function hasPendingCost(pending: {
   return pending.cost ?? (pending.lines.size > 0 || pending.discountCodes.size > 0);
 }
 
-function useCartStatusMessage(): string {
+function CartTotalsStatusMessage() {
   const pending = useCart((state) => state.pending);
   const revalidating = useCart((state) => "revalidating" in state && state.revalidating === true);
   const networkErrors = useCart((state) => state.errors.network);
-  const hasLoadError = useCart((state) => state.loadError !== undefined);
   const isPending = hasPendingCost(pending) || revalidating;
   const [sawPending, setSawPending] = useState(false);
 
@@ -94,10 +89,9 @@ function useCartStatusMessage(): string {
     if (isPending) setSawPending(true);
   }, [isPending]);
 
-  if (hasLoadError) return "";
   if (isPending) return "Updating cart totals";
   if (sawPending && networkErrors.length === 0) return "Cart totals updated";
-  return "";
+  return null;
 }
 
 type CartLineView = {
@@ -240,15 +234,7 @@ export function CartLineItem({
 }
 
 function CartLines() {
-  const loading = useCart((state) => state.loading);
-  const hasLoadError = useCart((state) => state.loadError !== undefined);
   const lines = useCart((state) => state.data.lines.nodes);
-
-  if (loading) {
-    return <p className="text-on-surface-secondary type-body-sm">Loading cart…</p>;
-  }
-
-  if (hasLoadError) return <CartLoadErrorMessage />;
 
   if (lines.length === 0) {
     return (
@@ -274,11 +260,10 @@ function CartFooter() {
   const cart = useCart((state) => state.data);
   const pending = useCart((state) => state.pending);
   const revalidating = useCart((state) => "revalidating" in state && state.revalidating === true);
-  const hasLoadError = useCart((state) => state.loadError !== undefined);
   const hasLines = cart.lines.nodes.length > 0;
   const isPending = hasPendingCost(pending) || revalidating;
 
-  if (!hasLines || hasLoadError) return null;
+  if (!hasLines) return null;
 
   return (
     <div className="border-border shrink-0 border-t p-4">
@@ -313,22 +298,36 @@ function CartFooter() {
   );
 }
 
-export function CartDrawer() {
+function CartCountBadge() {
   const totalQuantity = useCart((state) => state.data.totalQuantity);
-  const hasLoadError = useCart((state) => state.loadError !== undefined);
+  return <span className="cart-count-badge">{totalQuantity}</span>;
+}
+
+function CartViewedOnOpen() {
   const cart = useCart((state) => state.data);
-  const statusMessage = useCartStatusMessage();
 
   useEffect(() => {
-    configureOpenCartAction();
     const dialog = document.getElementById(CART_DRAWER_ID);
     if (!(dialog instanceof HTMLDialogElement)) return;
     const handleToggle = () => {
-      if (dialog.open && !hasLoadError) publishCartViewed(cart);
+      if (dialog.open) publishCartViewed(cart);
     };
     dialog.addEventListener("toggle", handleToggle);
     return () => dialog.removeEventListener("toggle", handleToggle);
-  }, [cart, hasLoadError]);
+  }, [cart]);
+
+  return null;
+}
+
+// PROTOTYPE: `useCart` throws until the cart is ready, so this is the one place the drawer reads
+// the load lifecycle. Everything that calls `useCart` renders under the `ready` branch.
+export function CartDrawer() {
+  const cartStatus = useCartStatus();
+  const ready = cartStatus.status === "ready";
+
+  useEffect(() => {
+    configureOpenCartAction();
+  }, []);
 
   return (
     <>
@@ -339,7 +338,7 @@ export function CartDrawer() {
         aria-atomic="true"
         data-cart-status
       >
-        {statusMessage}
+        {ready ? <CartTotalsStatusMessage /> : null}
       </span>
       <dialog
         id={CART_DRAWER_ID}
@@ -358,7 +357,7 @@ export function CartDrawer() {
               >
                 Cart
               </h2>
-              {hasLoadError ? null : <span className="cart-count-badge">{totalQuantity}</span>}
+              {ready ? <CartCountBadge /> : null}
             </div>
             <button
               type="button"
@@ -371,11 +370,22 @@ export function CartDrawer() {
               <img src="/icons/icon-x.svg" alt="" className="size-5" aria-hidden="true" />
             </button>
           </div>
-          <CartErrorBanner />
+          {ready ? <CartErrorBanner /> : null}
           <div className="flex-1 overflow-y-auto p-4">
-            <CartLines />
+            {cartStatus.status === "loading" ? (
+              <p className="text-on-surface-secondary type-body-sm">Loading cart…</p>
+            ) : null}
+            {cartStatus.status === "failed" ? (
+              <CartLoadErrorMessage retry={cartStatus.retry} retrying={cartStatus.retrying} />
+            ) : null}
+            {ready ? <CartLines /> : null}
           </div>
-          <CartFooter />
+          {ready ? (
+            <>
+              <CartFooter />
+              <CartViewedOnOpen />
+            </>
+          ) : null}
         </div>
       </dialog>
     </>

@@ -26,7 +26,12 @@ import {
 } from "../core/cart/cart";
 import { createCartFormRegister, type CartFormRegister } from "../core/cart/form";
 import type { CartDataFromHandlers } from "../core/cart/server-handlers";
-import { type CartData, type CartState } from "../core/cart/state";
+import {
+  getCartLoadStatus,
+  type CartData,
+  type CartNetworkEntry,
+  type CartState,
+} from "../core/cart/state";
 import { useLocalePathPrefix } from "./locale";
 
 interface CartContextValue {
@@ -104,10 +109,10 @@ type TypedCartComponents<TData extends CartData> = {
   /** Creates the cart store and shares the store with the cart hooks inside the provider. The provider connects the store on mount and destroys the store on unmount. */
   CartProvider: (props: TypedCartProviderProps<TData>) => ReactNode;
   /**
-   * Returns the slice of cart state that the selector picks. The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update.
+   * Returns the slice of cart state that the selector picks. Throws until the cart is ready, so check `useCartStatus()` in a parent component first. The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update.
    */
   useCart: CartStateHook<TData>;
-  /** Suspends while the full cart loads, then returns the slice of cart state that the selector picks. Wrap the component in a `Suspense` boundary. */
+  /** Suspends while the full cart loads, then returns the slice of cart state that the selector picks. Throws to the nearest error boundary when the cart failed to load. Wrap the component in a `Suspense` boundary and an error boundary. */
   useSuspenseCart: CartStateHook<TData>;
   /**
    * Returns the slice of cart state that the selector picks, or `undefined` outside the provider. Use the hook in a component that also renders above the provider, such as a cart badge on an error page.
@@ -115,6 +120,8 @@ type TypedCartComponents<TData extends CartData> = {
   useOptionalCart: OptionalCartStateHook<TData>;
   /** Returns the `refresh()` action. Call `refresh()` after a server-side cart change that skips cart forms. */
   useCartActions: typeof useCartActions;
+  /** Returns where the cart is in its load lifecycle. Never throws inside the provider. Check for `ready` here before rendering a component that calls `useCart`. */
+  useCartStatus: typeof useCartStatus;
   /** Returns form props and a register function for cart forms. */
   useCartForm: typeof useCartForm;
 };
@@ -182,6 +189,7 @@ export function createCartComponents<THandlers>(): TypedCartComponents<
     useSuspenseCart,
     useOptionalCart: useTypedOptionalCart,
     useCartActions,
+    useCartStatus,
     useCartForm,
   } as const;
 }
@@ -256,9 +264,12 @@ export function CartProvider({
  *
  * The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update.
  *
+ * The hook throws until the cart is ready. Read `useCartStatus()` in a parent component, and render the component that calls `useCart` only when the status is `ready`.
+ *
  * @param selector The function that picks a value from the cart state.
  * @param isEqual The function that compares the previous and next selected values. Return `true` to skip the re-render.
  * @returns The selected value.
+ * @throws {Error} If the cart is still loading or failed to load.
  *
  * @example
  * ```tsx
@@ -281,7 +292,73 @@ export function useCart<TData extends CartData = CartData, S = unknown>(
   isEqual?: (a: S, b: S) => boolean,
 ): S {
   const { store, hydrationSnapshot } = useCartContext();
-  return useCartSelector(store, hydrationSnapshot, selector, isEqual) as S;
+  const ready = useCartSelector(store, hydrationSnapshot, isCartReady);
+  const selected = useCartSelector(store, hydrationSnapshot, selector, isEqual) as S;
+  // PROTOTYPE: before the cart is ready the state holds an empty placeholder cart, so returning
+  // it would show "no cart" for a cart that is loading or failed to load.
+  if (!ready) throw new Error(CART_NOT_READY_MESSAGE);
+  return selected;
+}
+
+const CART_NOT_READY_MESSAGE =
+  'useCart was called before the cart was ready. Read useCartStatus() in a parent component and only render this component when the status is "ready".';
+
+function isCartReady(state: CartState): boolean {
+  return getCartLoadStatus(state).status === "ready";
+}
+
+function getCartLoadStatusName(state: CartState): CartStatus["status"] {
+  return getCartLoadStatus(state).status;
+}
+
+function getCartLoadError(state: CartState): CartNetworkEntry | undefined {
+  return state.loadError;
+}
+
+function isCartRetrying(state: CartState): boolean {
+  return state.loadError !== undefined && state.revalidating === true;
+}
+
+/**
+ * PROTOTYPE: where the cart is in its load lifecycle.
+ *
+ * When `failed`, `retry()` reloads the cart and `retrying` is `true` until that reload settles.
+ */
+export type CartStatus =
+  | { status: "loading" }
+  | { status: "failed"; error: CartNetworkEntry; retrying: boolean; retry: () => void }
+  | { status: "ready" };
+
+/**
+ * PROTOTYPE: returns where the cart is in its load lifecycle. The hook never throws inside the provider.
+ *
+ * `useCart` throws until the status is `ready`, so read the status in a parent component and
+ * render the components that call `useCart` only when the cart is ready.
+ *
+ * @example
+ * ```tsx
+ * function Cart() {
+ *   const cartStatus = useCartStatus();
+ *   if (cartStatus.status === "loading") return <CartSkeleton />;
+ *   if (cartStatus.status === "failed") {
+ *     return <button onClick={cartStatus.retry}>Try again</button>;
+ *   }
+ *   return <CartLines />; // calls useCart
+ * }
+ * ```
+ */
+export function useCartStatus(): CartStatus {
+  const { store, hydrationSnapshot } = useCartContext("useCartStatus");
+  const status = useCartSelector(store, hydrationSnapshot, getCartLoadStatusName);
+  const error = useCartSelector(store, hydrationSnapshot, getCartLoadError);
+  const retrying = useCartSelector(store, hydrationSnapshot, isCartRetrying);
+
+  return useMemo(() => {
+    if (status === "failed" && error) {
+      return { status, error, retrying, retry: store.refresh };
+    }
+    return status === "loading" ? { status } : { status: "ready" };
+  }, [status, error, retrying, store]);
 }
 
 /**
@@ -407,6 +484,7 @@ function selectCartSnapshot<TData extends CartData, S>(
 
 type SuspenseSnapshot<S> =
   | { status: "pending"; promise: PromiseLike<void> }
+  | { status: "failed"; error: CartNetworkEntry }
   | { status: "ready"; value: S };
 
 interface SuspenseSelectorCache<S> {
@@ -430,6 +508,13 @@ function useSuspenseCartSelector<TData extends CartData, S>(
       return cacheRef.current.snapshot;
     }
 
+    // PROTOTYPE: a failed load goes to the nearest error boundary instead of returning the placeholder cart.
+    if (state.loadError) {
+      const snapshot: SuspenseSnapshot<S> = { status: "failed", error: state.loadError };
+      cacheRef.current = { state, selector, snapshot };
+      return snapshot;
+    }
+
     if (state.readyPromise) {
       const snapshot: SuspenseSnapshot<S> = { status: "pending", promise: state.readyPromise };
       cacheRef.current = { state, selector, snapshot };
@@ -451,6 +536,9 @@ function useSuspenseCartSelector<TData extends CartData, S>(
 
   const snapshot = useSyncExternalStore(store.subscribe, getSnapshot, getSnapshot);
   if (snapshot.status === "pending") throw snapshot.promise;
+  if (snapshot.status === "failed") {
+    throw new Error("The cart failed to load.", { cause: snapshot.error });
+  }
   return snapshot.value;
 }
 

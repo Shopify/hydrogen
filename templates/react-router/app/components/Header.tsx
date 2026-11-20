@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 
-import { useCart } from "~/lib/cart";
+import { useCart, useCartStatus } from "~/lib/cart";
 import { CART_DRAWER_ID, SEARCH_DRAWER_ID, openDialogFromLinkClick } from "~/lib/cart-drawer";
 import type { StorefrontShop } from "~/lib/storefront-shop";
 
@@ -19,9 +19,46 @@ function displayCount(count: number) {
   return count > 99 ? "99+" : String(count);
 }
 
-export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
+// PROTOTYPE: `useCart` throws until the cart is ready, so the count lives in its own component and
+// the header renders the trigger without a count while the cart is loading or failed to load.
+function ReadyCartTrigger() {
   const totalQuantity = useCart((state) => state.data.totalQuantity);
-  const hasLoadError = useCart((state) => state.loadError !== undefined);
+  return <CartTrigger totalQuantity={totalQuantity} />;
+}
+
+function CartTrigger({ totalQuantity }: { totalQuantity: number | null }) {
+  return (
+    <>
+      <Link
+        to="/cart"
+        className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
+        aria-label={totalQuantity === null ? "Cart" : cartCountLabel(totalQuantity)}
+        aria-controls={CART_DRAWER_ID}
+        aria-haspopup="dialog"
+        data-testid="cart-trigger"
+        onClick={(event) => openDialogFromLinkClick(event, CART_DRAWER_ID)}
+      >
+        <span
+          className="relative inline-flex size-5 shrink-0 items-center justify-center"
+          aria-hidden="true"
+        >
+          <img src="/icons/icon-cart.svg" alt="" className="size-5" />
+          {totalQuantity !== null && totalQuantity > 0 ? (
+            <span className="bg-interactive text-interactive-text absolute end-0 top-0 flex h-5 min-w-5 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full px-1 text-xs font-medium">
+              {displayCount(totalQuantity)}
+            </span>
+          ) : null}
+        </span>
+      </Link>
+      <span aria-live="polite" aria-atomic="true" className="sr-only">
+        {totalQuantity === null ? null : liveCartCountLabel(totalQuantity)}
+      </span>
+    </>
+  );
+}
+
+export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
+  const cartStatus = useCartStatus();
   const [failedLogoUrl, setFailedLogoUrl] = useState<string | null>(null);
   const logo = shopInfo.logo;
 
@@ -92,30 +129,11 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
           >
             <img src="/icons/icon-user.svg" alt="" className="size-5" aria-hidden="true" />
           </Link>
-          <Link
-            to="/cart"
-            className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
-            aria-label={hasLoadError ? "Cart" : cartCountLabel(totalQuantity)}
-            aria-controls={CART_DRAWER_ID}
-            aria-haspopup="dialog"
-            data-testid="cart-trigger"
-            onClick={(event) => openDialogFromLinkClick(event, CART_DRAWER_ID)}
-          >
-            <span
-              className="relative inline-flex size-5 shrink-0 items-center justify-center"
-              aria-hidden="true"
-            >
-              <img src="/icons/icon-cart.svg" alt="" className="size-5" />
-              {!hasLoadError && totalQuantity > 0 ? (
-                <span className="bg-interactive text-interactive-text absolute end-0 top-0 flex h-5 min-w-5 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full px-1 text-xs font-medium">
-                  {displayCount(totalQuantity)}
-                </span>
-              ) : null}
-            </span>
-          </Link>
-          <span aria-live="polite" aria-atomic="true" className="sr-only">
-            {hasLoadError ? null : liveCartCountLabel(totalQuantity)}
-          </span>
+          {cartStatus.status === "ready" ? (
+            <ReadyCartTrigger />
+          ) : (
+            <CartTrigger totalQuantity={null} />
+          )}
         </div>
       </div>
       <MobileNav />
