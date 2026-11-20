@@ -1894,13 +1894,16 @@ describe("account widget data route", () => {
   it("signs the customer out when the Customer Account API rejects the access token and the refresh", async () => {
     const sessionManager = new TestSessionManager(validSessionData());
     const storefrontFetch = storefrontFetchReturning();
+    const fetch = vi.fn(() => Promise.resolve(unauthorized()));
 
     const response = await requestWidgetData({
       sessionManager,
-      fetch: vi.fn(() => Promise.resolve(new Response(null, { status: 401 }))),
+      fetch,
       storefrontFetch,
       withCart: true,
     });
+
+    expect(getTokenCalls(fetch)).toHaveLength(1);
 
     expect(response?.status).toBe(200);
     expect(response?.headers.get("set-cookie")).toBe("session=1");
@@ -1968,10 +1971,10 @@ describe("account widget data route", () => {
     await expect(response?.json()).resolves.toMatchObject({ customer: null });
     expect(getTokenCalls(fetch)).toHaveLength(1);
     expect(sessionManager.data?.tokens).toBeUndefined();
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("signed the customer out"),
-      expect.anything(),
-    );
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("signed the customer out"), {
+      reason: "retry_rejected",
+      scope: "customer-account",
+    });
   });
 
   it("returns a 502 and keeps the stored tokens when the refresh after a 401 fails temporarily", async () => {

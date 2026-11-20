@@ -292,7 +292,7 @@ export type CustomerAccountServerHandlers<
   /**
    * Returns the data for `<shopify-account account-data-url>` at `/account/widget-data`: the signed-in customer's name and email, or `null` for signed-out visitors, plus the shop's sign-in providers and account sheet translations for the request's locale. Accepts `GET`. The customer's access token stays on the server. Under a locale path prefix, point `account-data-url` at the prefixed path, such as `/fr-ca/account/widget-data`, to get that locale's translations.
    *
-   * The route refreshes an expired access token and commits the session. The response is private and uncacheable. When the Customer Account API rejects the access token with a `401` status, the route refreshes the token once and retries. It clears the stored tokens and returns `customer: null` when the refresh or the retried request is rejected too. When the Storefront API or Customer Account API request fails otherwise, or a signed-in customer's token can't be refreshed for a temporary reason, the route returns a `502` error instead of partial data. The token refresh and the API requests share an 8-second deadline, within the component's 10-second timeout. The route needs `storefrontClient` in the handler context, and throws when the customer session doesn't come from `createCustomerSession`.
+   * The route refreshes an expired access token and commits the session. The response is private and uncacheable. When the Customer Account API rejects the access token with a `401` status, the route refreshes the token once and retries. It clears the stored tokens and returns `customer: null` when the refresh or the retried request is rejected too, or when the API rejects a token the route just refreshed. When the Storefront API or Customer Account API request fails otherwise, or a signed-in customer's token can't be refreshed for a temporary reason, the route returns a `502` error instead of partial data. The token refresh and the API requests share an 8-second deadline, within the component's 10-second timeout. The route needs `storefrontClient` in the handler context, and throws when the customer session doesn't come from `createCustomerSession`.
    */
   widgetData: CallableRouteHandler<
     TContext & Pick<ShopifyRouteHandlerContext, "storefrontClient">,
@@ -1027,7 +1027,9 @@ async function getWidgetCustomer(
   );
   if (!isRejectedAccessTokenResult(customer)) return { customer, cartCustomerAccessToken };
   // A token refreshed for this request was rejected too, so another refresh wouldn't help.
-  if (tokenResult.tokensChanged) return signOutWidgetCustomer(sessionManager);
+  if (tokenResult.tokensChanged) {
+    return signOutWidgetCustomer(sessionManager, "refreshed_token_rejected");
+  }
 
   // The access token can be revoked or rejected before it expires while the refresh token is
   // still good, so one refresh comes before signing the customer out.
@@ -1039,7 +1041,7 @@ async function getWidgetCustomer(
     const reason = new Error("The access token refresh failed temporarily");
     return { customer: { status: "rejected", reason }, cartCustomerAccessToken: undefined };
   }
-  if (!retry.accessToken) return signOutWidgetCustomer(sessionManager);
+  if (!retry.accessToken) return signOutWidgetCustomer(sessionManager, "refresh_rejected");
 
   const retried = await queryWidgetCustomer(
     internal,
@@ -1047,7 +1049,9 @@ async function getWidgetCustomer(
     retry.accessToken,
     options.signal,
   );
-  if (isRejectedAccessTokenResult(retried)) return signOutWidgetCustomer(sessionManager);
+  if (isRejectedAccessTokenResult(retried)) {
+    return signOutWidgetCustomer(sessionManager, "retry_rejected");
+  }
   return { customer: retried, cartCustomerAccessToken: retry.accessToken };
 }
 
@@ -1070,9 +1074,13 @@ function queryWidgetCustomer(
   );
 }
 
-async function signOutWidgetCustomer(sessionManager: WritableCustomerSessionManager) {
+async function signOutWidgetCustomer(
+  sessionManager: WritableCustomerSessionManager,
+  reason: "refreshed_token_rejected" | "refresh_rejected" | "retry_rejected",
+) {
   log.warn(
     "account widget signed the customer out after the Customer Account API rejected the access token",
+    { reason },
   );
   await clearTokens(sessionManager);
   return {
