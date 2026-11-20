@@ -5936,7 +5936,7 @@
     "src/core/shopify-scripts/initialize.ts": {
       "filePath": "src/core/shopify-scripts/initialize.ts",
       "name": "InitializeShopifyScriptsGeneratedType",
-      "description": "Starts Shopify's scripts in the browser for frameworks without a Hydrogen binding. Call it after hydration, with the consent configuration that you passed to `getShopifyScriptTags`.\n\nThe function sets up `window.Shopify.routes`, and sends a page view event on load and after each navigation that changes the path or query. In the custom banner consent mode, Hydrogen calls your setup callback after the Customer Privacy API loads. A custom banner configuration without a setup callback logs a warning, and analytics events stay blocked. When the browser supports WebMCP, the function also loads Shopify's WebMCP tools. Set `webMcp` to `false` to skip them.",
+      "description": "Starts Shopify's scripts in the browser for frameworks without a Hydrogen binding. Call it after hydration, with the consent configuration that you passed to `getShopifyScriptTags`.\n\nThe function sets up `window.Shopify.routes`, and sends a page view event on load and after each navigation that changes the path or query. A history replacement that keeps the path, such as a selected variant written into the URL, doesn't send one. In the custom banner consent mode, Hydrogen calls your setup callback after the Customer Privacy API loads. A custom banner configuration without a setup callback logs a warning, and analytics events stay blocked. When the browser supports WebMCP, the function also loads Shopify's WebMCP tools. Set `webMcp` to `false` to skip them.",
       "isPublicDocs": true,
       "params": [
         {
