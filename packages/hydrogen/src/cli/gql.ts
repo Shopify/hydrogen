@@ -2,7 +2,8 @@ import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join, parse, resolve } from "node:path";
+import { dirname, join, parse, relative, resolve } from "node:path";
+import type * as NodePath from "node:path";
 import { parseArgs } from "node:util";
 
 import { createGraphQLPluginConfig } from "../graphql/plugin-config";
@@ -91,6 +92,24 @@ function parseCheckArgs(args: string[]) {
   return values;
 }
 
+type PathApi = Pick<typeof NodePath, "dirname" | "join" | "relative">;
+
+/**
+ * gql.tada tries `new URL(schema)` before falling back to a file read. On Windows an absolute
+ * path such as `C:\\x\\y.json` parses as a URL (protocol `c:`), so the schema would be fetched
+ * over the network. A relative path is not a valid URL and is read from disk instead.
+ */
+export function getSchemaDirectory(
+  temporaryTsconfigPath: string,
+  packageRoot: string,
+  pathApi: PathApi = { dirname, join, relative },
+): string {
+  return pathApi.relative(
+    pathApi.dirname(temporaryTsconfigPath),
+    pathApi.join(packageRoot, "dist"),
+  );
+}
+
 export async function checkGraphQL(options: CheckGraphQLOptions = {}): Promise<void> {
   const cwd = options.cwd ?? process.cwd();
   const packageRoot = options.packageRoot ?? getPackageRoot();
@@ -102,7 +121,9 @@ export async function checkGraphQL(options: CheckGraphQLOptions = {}): Promise<v
     dirname(tsconfigPath),
     `${TEMPORARY_TSCONFIG_PREFIX}${randomUUID()}.json`,
   );
-  const pluginConfig = createGraphQLPluginConfig(join(packageRoot, "dist"));
+  const pluginConfig = createGraphQLPluginConfig(
+    getSchemaDirectory(temporaryTsconfigPath, packageRoot),
+  );
 
   writeFileSync(
     temporaryTsconfigPath,
