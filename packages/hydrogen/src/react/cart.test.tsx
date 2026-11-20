@@ -399,7 +399,7 @@ describe("useCart", () => {
       render(createElement(CartProvider, null, createElement(Consumer)));
 
       act(() => {
-        latestStore.setState(makeCartState({ totalQuantity: 5 }));
+        latestStore.setState(makeCartState({ totalQuantity: 5, loading: false }));
       });
 
       const warned = errorSpy.mock.calls.some(

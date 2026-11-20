@@ -1,7 +1,24 @@
 ---
-"@shopify/hydrogen": minor
+"@shopify/hydrogen": major
 ---
 
-A failed cart read no longer looks like an empty cart. When the cart GET handler returns a `null` cart with errors, such as a throttled Storefront API read in the root loader, `createCartStore` and `CartProvider` now set the new `loadError` field on the cart state instead of showing "no cart", for both resolved and streamed `initialData`. The store doesn't retry on its own: show a "couldn't load your cart" message with a button that calls `refresh()`, and hide the cart's lines, totals, and counts while `loadError` is set. A successful `refresh()` clears it, and a failed one replaces it.
+PROTOTYPE: `useCart` now throws until the cart is ready, and the new `useCartStatus` hook reports where the cart is in its load lifecycle.
 
-The store also sets `loadError` when its first load, or a load after `reset()`, fails before it has a cart ID, and the browser cart load now treats a `{cart: null, errors}` response from your cart endpoint as a failure. `trackCartAnalytics` now updates its baseline when the cart's lines change without a new `updatedAt`, so a later change no longer reports lines that were already in the cart as added.
+A failed cart read no longer looks like an empty cart. Before the cart is ready, the cart state holds an empty placeholder cart, so a component that read it showed "Your cart is empty" while the cart was loading or after the server failed to read it. `useCart` now throws in both cases instead of returning the placeholder.
+
+Read `useCartStatus()` in a parent component, and render the components that call `useCart` only when the status is `ready`:
+
+```tsx
+function Cart() {
+  const cartStatus = useCartStatus();
+  if (cartStatus.status === "loading") return <CartSkeleton />;
+  if (cartStatus.status === "failed") {
+    return <button onClick={cartStatus.retry}>Try again</button>;
+  }
+  return <CartLines />; // calls useCart
+}
+```
+
+`useCartStatus()` returns `{status: "loading"}`, `{status: "failed", error, retrying, retry}`, or `{status: "ready"}`, and never throws inside `CartProvider`. `useSuspenseCart` still suspends while the cart loads, and now throws to the nearest error boundary when the cart failed to load. Outside React, `getCartLoadStatus(store.getState())` returns the same lifecycle.
+
+A cart change from the failed state, such as an add to cart, now reloads the full cart in the background, and only that reload moves the cart to `ready`. `trackCartAnalytics` now updates its baseline when the cart's lines change without a new `updatedAt`, so that reload doesn't report lines that were already in the cart as added.

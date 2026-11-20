@@ -11812,7 +11812,7 @@
         "name": "TypedCartComponents<\n  CartDataFromHandlers<THandlers>\n>",
         "value": "TypedCartComponents<\n  CartDataFromHandlers<THandlers>\n>"
       },
-      "value": "export function createCartComponents<THandlers>(): TypedCartComponents<\n  CartDataFromHandlers<THandlers>\n> {\n  type TData = CartDataFromHandlers<THandlers>;\n\n  function TypedCartProvider({ initialData, children }: TypedCartProviderProps<TData>) {\n    return (\n      <CartProvider initialData={initialData as CartInitialData | undefined}>\n        {children}\n      </CartProvider>\n    );\n  }\n\n  function useTypedCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    return useCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useTypedOptionalCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S | undefined {\n    return useOptionalCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useSuspenseCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    return useSuspenseCartSelector(selector, isEqual);\n  }\n\n  return {\n    CartProvider: TypedCartProvider,\n    useCart: useTypedCart,\n    useSuspenseCart,\n    useOptionalCart: useTypedOptionalCart,\n    useCartActions,\n    useCartForm,\n  } as const;\n}",
+      "value": "export function createCartComponents<THandlers>(): TypedCartComponents<\n  CartDataFromHandlers<THandlers>\n> {\n  type TData = CartDataFromHandlers<THandlers>;\n\n  function TypedCartProvider({ initialData, children }: TypedCartProviderProps<TData>) {\n    return (\n      <CartProvider initialData={initialData as CartInitialData | undefined}>\n        {children}\n      </CartProvider>\n    );\n  }\n\n  function useTypedCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    return useCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useTypedOptionalCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S | undefined {\n    return useOptionalCart<CartData, S>((state) => selector(state as CartState<TData>), isEqual);\n  }\n\n  function useSuspenseCart<S>(\n    selector: (state: CartState<TData>) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ): S {\n    return useSuspenseCartSelector(selector, isEqual);\n  }\n\n  return {\n    CartProvider: TypedCartProvider,\n    useCart: useTypedCart,\n    useSuspenseCart,\n    useOptionalCart: useTypedOptionalCart,\n    useCartActions,\n    useCartStatus,\n    useCartForm,\n  } as const;\n}",
       "examples": [
         {
           "title": "Example",
@@ -11832,7 +11832,7 @@
       "filePath": "src/react/cart.tsx",
       "syntaxKind": "TypeAliasDeclaration",
       "name": "TypedCartComponents",
-      "value": "{\n  /** Creates the cart store and shares the store with the cart hooks inside the provider. The provider connects the store on mount and destroys the store on unmount. */\n  CartProvider: (props: TypedCartProviderProps<TData>) => ReactNode;\n  /**\n   * Returns the slice of cart state that the selector picks. The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update.\n   */\n  useCart: CartStateHook<TData>;\n  /** Suspends while the full cart loads, then returns the slice of cart state that the selector picks. Wrap the component in a `Suspense` boundary. */\n  useSuspenseCart: CartStateHook<TData>;\n  /**\n   * Returns the slice of cart state that the selector picks, or `undefined` outside the provider. Use the hook in a component that also renders above the provider, such as a cart badge on an error page.\n   */\n  useOptionalCart: OptionalCartStateHook<TData>;\n  /** Returns the `refresh()` action. Call `refresh()` after a server-side cart change that skips cart forms. */\n  useCartActions: typeof useCartActions;\n  /** Returns form props and a register function for cart forms. */\n  useCartForm: typeof useCartForm;\n}",
+      "value": "{\n  /** Creates the cart store and shares the store with the cart hooks inside the provider. The provider connects the store on mount and destroys the store on unmount. */\n  CartProvider: (props: TypedCartProviderProps<TData>) => ReactNode;\n  /**\n   * Returns the slice of cart state that the selector picks. Throws until the cart is ready, so check `useCartStatus()` in a parent component first. The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update.\n   */\n  useCart: CartStateHook<TData>;\n  /** Suspends while the full cart loads, then returns the slice of cart state that the selector picks. Throws to the nearest error boundary when the cart failed to load. Wrap the component in a `Suspense` boundary and an error boundary. */\n  useSuspenseCart: CartStateHook<TData>;\n  /**\n   * Returns the slice of cart state that the selector picks, or `undefined` outside the provider. Use the hook in a component that also renders above the provider, such as a cart badge on an error page.\n   */\n  useOptionalCart: OptionalCartStateHook<TData>;\n  /** Returns the `refresh()` action. Call `refresh()` after a server-side cart change that skips cart forms. */\n  useCartActions: typeof useCartActions;\n  /** Returns where the cart is in its load lifecycle. Never throws inside the provider. Check for `ready` here before rendering a component that calls `useCart`. */\n  useCartStatus: typeof useCartStatus;\n  /** Returns form props and a register function for cart forms. */\n  useCartForm: typeof useCartForm;\n}",
       "description": "The cart provider and hooks that `createCartComponents` returns, typed with the custom cart fields from your cart server handlers.",
       "members": [
         {
@@ -11847,7 +11847,7 @@
           "syntaxKind": "PropertySignature",
           "name": "useCart",
           "value": "CartStateHook<TData>",
-          "description": "Returns the slice of cart state that the selector picks. The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update."
+          "description": "Returns the slice of cart state that the selector picks. Throws until the cart is ready, so check `useCartStatus()` in a parent component first. The component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update."
         },
         {
           "filePath": "src/react/cart.tsx",
@@ -11866,6 +11866,13 @@
         {
           "filePath": "src/react/cart.tsx",
           "syntaxKind": "PropertySignature",
+          "name": "useCartStatus",
+          "value": "() => CartStatus",
+          "description": "Returns where the cart is in its load lifecycle. Never throws inside the provider. Check for `ready` here before rendering a component that calls `useCart`."
+        },
+        {
+          "filePath": "src/react/cart.tsx",
+          "syntaxKind": "PropertySignature",
           "name": "useOptionalCart",
           "value": "OptionalCartStateHook<TData>",
           "description": "Returns the slice of cart state that the selector picks, or `undefined` outside the provider. Use the hook in a component that also renders above the provider, such as a cart badge on an error page."
@@ -11875,7 +11882,7 @@
           "syntaxKind": "PropertySignature",
           "name": "useSuspenseCart",
           "value": "CartStateHook<TData>",
-          "description": "Suspends while the full cart loads, then returns the slice of cart state that the selector picks. Wrap the component in a `Suspense` boundary."
+          "description": "Suspends while the full cart loads, then returns the slice of cart state that the selector picks. Throws to the nearest error boundary when the cart failed to load. Wrap the component in a `Suspense` boundary and an error boundary."
         }
       ]
     }
@@ -12004,6 +12011,15 @@
       "value": "interface CartFormPropsOptions {\n  /** Runs before the cart store handles the submission. Call `event.preventDefault()` to skip the cart submission. */\n  beforeSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;\n  /** Runs as soon as the cart change starts, before the server responds. */\n  afterSubmit?: (e: SubmitEvent<HTMLFormElement>) => void;\n}"
     }
   },
+  "CartStatus": {
+    "src/react/cart.tsx": {
+      "filePath": "src/react/cart.tsx",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "CartStatus",
+      "value": "{ status: \"loading\" } | { status: \"failed\"; error: CartNetworkEntry; retrying: boolean; retry: () => void } | { status: \"ready\" }",
+      "description": "PROTOTYPE: where the cart is in its load lifecycle.\n\nWhen `failed`, `retry()` reloads the cart and `retrying` is `true` until that reload settles."
+    }
+  },
   "OptionalCartStateHook": {
     "src/react/cart.tsx": {
       "filePath": "src/react/cart.tsx",
@@ -12081,7 +12097,7 @@
     "src/react/cart.tsx": {
       "filePath": "src/react/cart.tsx",
       "name": "UseCartGeneratedType",
-      "description": "Returns the slice of cart state that the selector picks.\n\nThe component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update.",
+      "description": "Returns the slice of cart state that the selector picks.\n\nThe component re-renders when the selected value changes by reference, or when your `isEqual` function reports a change. A selector that returns the full state re-renders on every cart update.\n\nThe hook throws until the cart is ready. Read `useCartStatus()` in a parent component, and render the component that calls `useCart` only when the status is `ready`.",
       "isPublicDocs": true,
       "params": [
         {
@@ -12104,7 +12120,7 @@
         "name": "S = unknown",
         "value": "S = unknown"
       },
-      "value": "export function useCart<TData extends CartData = CartData, S = unknown>(\n  selector: (state: CartState<TData>) => S,\n  isEqual?: (a: S, b: S) => boolean,\n): S {\n  const { store, hydrationSnapshot } = useCartContext();\n  return useCartSelector(store, hydrationSnapshot, selector, isEqual) as S;\n}",
+      "value": "export function useCart<TData extends CartData = CartData, S = unknown>(\n  selector: (state: CartState<TData>) => S,\n  isEqual?: (a: S, b: S) => boolean,\n): S {\n  const { store, hydrationSnapshot } = useCartContext();\n  const ready = useCartSelector(store, hydrationSnapshot, isCartReady);\n  const selected = useCartSelector(store, hydrationSnapshot, selector, isEqual) as S;\n  // PROTOTYPE: before the cart is ready the state holds an empty placeholder cart, so returning\n  // it would show \"no cart\" for a cart that is loading or failed to load.\n  if (!ready) throw new Error(CART_NOT_READY_MESSAGE);\n  return selected;\n}",
       "examples": [
         {
           "title": "Example",

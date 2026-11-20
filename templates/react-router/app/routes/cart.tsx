@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 import { publishCartViewed } from "~/components/AnalyticsTrackers";
 import { CartLineItem, CartLoadErrorMessage } from "~/components/CartDrawer";
-import { useCart } from "~/lib/cart";
+import { useCart, useCartStatus } from "~/lib/cart";
 import { formatPrice } from "~/lib/money";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
@@ -13,15 +13,10 @@ export function meta({ matches }: Route.MetaArgs) {
   return [{ title: formatPageTitle("Cart", getShopNameFromRootMatch(matches[0])) }];
 }
 
+// PROTOTYPE: `useCart` throws until the cart is ready, so the route reads the load lifecycle here
+// and only renders `CartContents` under the `ready` branch.
 export default function CartRoute() {
-  const cart = useCart((state) => state.data);
-  const loading = useCart((state) => state.loading);
-  const hasLoadError = useCart((state) => state.loadError !== undefined);
-  const lines = cart.lines.nodes;
-
-  useEffect(() => {
-    if (!hasLoadError) publishCartViewed(cart);
-  }, [cart, hasLoadError]);
+  const cartStatus = useCartStatus();
 
   return (
     <main
@@ -32,9 +27,28 @@ export default function CartRoute() {
       <h1 id="cart-page-title" tabIndex={-1} className="type-display text-on-surface mb-8">
         Cart
       </h1>
-      {loading ? <p className="text-on-surface-secondary">Loading cart…</p> : null}
-      {!loading && hasLoadError ? <CartLoadErrorMessage /> : null}
-      {!loading && !hasLoadError && lines.length === 0 ? (
+      {cartStatus.status === "loading" ? (
+        <p className="text-on-surface-secondary">Loading cart…</p>
+      ) : null}
+      {cartStatus.status === "failed" ? (
+        <CartLoadErrorMessage retry={cartStatus.retry} retrying={cartStatus.retrying} />
+      ) : null}
+      {cartStatus.status === "ready" ? <CartContents /> : null}
+    </main>
+  );
+}
+
+function CartContents() {
+  const cart = useCart((state) => state.data);
+  const lines = cart.lines.nodes;
+
+  useEffect(() => {
+    publishCartViewed(cart);
+  }, [cart]);
+
+  return (
+    <>
+      {lines.length === 0 ? (
         <div>
           <p className="text-on-surface font-medium">Your cart is empty.</p>
           <p className="text-on-surface-secondary mt-2 text-sm">
@@ -42,7 +56,7 @@ export default function CartRoute() {
           </p>
         </div>
       ) : null}
-      {!hasLoadError && lines.length > 0 ? (
+      {lines.length > 0 ? (
         <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
           <ul role="list" className="divide-border divide-y">
             {lines.map((line) => (
@@ -73,6 +87,6 @@ export default function CartRoute() {
           </aside>
         </div>
       ) : null}
-    </main>
+    </>
   );
 }

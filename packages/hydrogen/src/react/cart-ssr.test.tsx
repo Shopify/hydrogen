@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest";
 
 import type { CartData } from "../core/cart/state";
 import { EMPTY_CART_DATA } from "../core/cart/state";
-import { CartProvider, createCartComponents, useCart } from "./cart";
+import { CartProvider, createCartComponents, useCart, useCartStatus } from "./cart";
 import { LocaleProvider, type LocaleProviderProps } from "./locale";
 
 function CartTotalQuantity() {
@@ -21,13 +21,13 @@ function CartItemCount() {
 }
 
 function CartLoadingState() {
-  const loading = useCart((s) => s.loading);
-  return createElement("span", { "data-testid": "loading" }, String(loading));
+  const { status } = useCartStatus();
+  return createElement("span", { "data-testid": "loading" }, String(status === "loading"));
 }
 
 function CartLoadErrorState() {
-  const failed = useCart((s) => s.loadError !== undefined);
-  return createElement("span", { "data-testid": "load-error" }, String(failed));
+  const { status } = useCartStatus();
+  return createElement("span", { "data-testid": "load-error" }, String(status === "failed"));
 }
 
 const typedCart = createCartComponents<{
@@ -40,9 +40,9 @@ const failableCart = createCartComponents<{
   get: () => Promise<{ data: FailedCartRead }>;
 }>();
 
-function SuspenseCartLoadErrorState() {
-  const failed = failableCart.useSuspenseCart((s) => s.loadError !== undefined);
-  return createElement("span", { "data-testid": "load-error" }, String(failed));
+function SuspenseCartTotalQuantityFromFailableCart() {
+  const qty = failableCart.useSuspenseCart((s) => s.data.totalQuantity);
+  return createElement("span", { "data-testid": "qty" }, qty);
 }
 
 function SuspenseCartTotalQuantity() {
@@ -113,12 +113,22 @@ describe("CartProvider SSR", () => {
     expect(html).toContain(">2<");
   });
 
-  it("renders zero when no initialData is provided", () => {
-    const html = renderToString(
-      createElement(CartProvider, null, createElement(CartTotalQuantity)),
-    );
+  it("throws from useCart while the cart is loading instead of rendering an empty cart", () => {
+    expect(() =>
+      renderToString(createElement(CartProvider, null, createElement(CartTotalQuantity))),
+    ).toThrow(/before the cart was ready/);
+  });
 
-    expect(html).toContain(">0<");
+  it("throws from useCart when the cart failed to load instead of rendering an empty cart", () => {
+    expect(() =>
+      renderToString(
+        createElement(
+          CartProvider,
+          { initialData: { cart: null, errors: [{ message: "Throttled" }] } },
+          createElement(CartTotalQuantity),
+        ),
+      ),
+    ).toThrow(/before the cart was ready/);
   });
 
   it("renders loading=true when initialData is omitted (no server data)", () => {
@@ -209,7 +219,7 @@ describe("CartProvider SSR", () => {
     expect(html).not.toContain("Loading cart");
   });
 
-  it("streams the load error when streamed initialData reports a failed cart read", async () => {
+  it("throws from useSuspenseCart to the nearest boundary when streamed initialData reports a failed cart read", async () => {
     let resolveInitialData: ((value: FailedCartRead) => void) | undefined;
     const initialData = new Promise<FailedCartRead>((resolve) => {
       resolveInitialData = resolve;
@@ -220,16 +230,15 @@ describe("CartProvider SSR", () => {
       createElement(
         Suspense,
         { fallback: createElement("span", null, "Loading cart") },
-        createElement(SuspenseCartLoadErrorState),
+        createElement(SuspenseCartTotalQuantityFromFailableCart),
       ),
     );
 
-    const html = await streamToString(tree, () =>
-      resolveInitialData?.({ cart: null, errors: [{ message: "Throttled" }] }),
-    );
-
-    expect(html).toContain('data-testid="load-error">true<');
-    expect(html).not.toContain("Loading cart");
+    await expect(
+      streamToString(tree, () =>
+        resolveInitialData?.({ cart: null, errors: [{ message: "Throttled" }] }),
+      ),
+    ).rejects.toThrow("The cart failed to load.");
   });
 });
 

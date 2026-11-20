@@ -1796,6 +1796,14 @@ function fulfillTransaction(
   if (result.cart) trimOlderRelativeTransactions(store, transaction);
   releaseSignalKeys(store, transaction);
   publishVisibleState(store);
+  // PROTOTYPE: a cart change from the failed state only merges its own lines, so the store reloads
+  // the full cart and only that reload clears `loadError`. Cart analytics skips states that are
+  // revalidating, so the change publishes first: analytics reports the added line, then adopts the
+  // reloaded cart as its baseline instead of reporting every existing line as added.
+  if (store.settled.loadError && result.cart) {
+    requestCartRevalidation(store);
+    publishVisibleState(store);
+  }
   revalidateCartWhenIdle(store);
 }
 

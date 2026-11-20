@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { CartData } from "../core/cart/state";
 import { assert } from "../core/test-utils";
-import { CartProvider, createCartComponents, useCart, useCartActions } from "./cart";
+import { CartProvider, createCartComponents, useCart, useCartStatus } from "./cart";
 
 const CART: CartData = {
   id: "gid://shopify/Cart/123",
@@ -45,9 +45,14 @@ function createDeferred<T>(): Deferred<T> {
 }
 
 function CartSummary() {
-  const loading = useCart((state) => state.loading);
+  const { status } = useCartStatus();
+  if (status === "ready") return createElement(CartQuantity);
+  return createElement("span", { "data-testid": "cart-summary" }, "Loading");
+}
+
+function CartQuantity() {
   const quantity = useCart((state) => state.data.totalQuantity);
-  return createElement("span", { "data-testid": "cart-summary" }, loading ? "Loading" : quantity);
+  return createElement("span", { "data-testid": "cart-summary" }, quantity);
 }
 
 const typedCart = createCartComponents<{
@@ -125,10 +130,9 @@ describe("CartProvider hydration", () => {
       .mockResolvedValue(Response.json({ cart: CART }));
 
     function RetryableCartSummary() {
-      const loadError = useCart((state) => state.loadError);
-      const { refresh } = useCartActions();
-      if (!loadError) return createElement(CartSummary);
-      return createElement("button", { type: "button", onClick: refresh }, "Try again");
+      const cartStatus = useCartStatus();
+      if (cartStatus.status !== "failed") return createElement(CartSummary);
+      return createElement("button", { type: "button", onClick: cartStatus.retry }, "Try again");
     }
 
     function App() {

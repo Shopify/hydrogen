@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 
-import { useCart } from "@/lib/cart";
+import { useCart, useCartStatus } from "@/lib/cart";
 import {
   CART_DRAWER_ID,
   getCartDrawerOpen,
@@ -19,14 +19,26 @@ import { cartIconLabel, cartItemCount } from "@/lib/content";
  * when the drawer is unavailable.
  */
 export function CartTrigger() {
+  // PROTOTYPE: `useCart` throws until the cart is ready, and this trigger renders while the
+  // streamed cart is still loading, so the count is read in a child component.
+  const { status } = useCartStatus();
+  return status === "ready" ? <ReadyCartTrigger /> : <CartTriggerButton totalQuantity={null} />;
+}
+
+function ReadyCartTrigger() {
   const totalQuantity = useCart((state) => state.data.totalQuantity);
+  return <CartTriggerButton totalQuantity={totalQuantity} />;
+}
+
+function CartTriggerButton({ totalQuantity }: { totalQuantity: number | null }) {
   const cartDrawerOpen = useSyncExternalStore(
     subscribeCartDrawerOpen,
     getCartDrawerOpen,
     () => false,
   );
-  const cartLabel = cartIconLabel(totalQuantity);
-  const countDisplay = totalQuantity > 99 ? "99+" : String(totalQuantity);
+  const count = totalQuantity ?? 0;
+  const cartLabel = totalQuantity === null ? "Cart" : cartIconLabel(totalQuantity);
+  const countDisplay = count > 99 ? "99+" : String(count);
 
   return (
     <>
@@ -39,10 +51,10 @@ export function CartTrigger() {
         className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded bg-transparent p-0 hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
         aria-label={cartLabel}
       >
-        <CartIcon count={totalQuantity} display={countDisplay} />
+        <CartIcon count={count} display={countDisplay} />
       </button>
       <span aria-live="polite" aria-atomic="true" className="sr-only">
-        {cartItemCount(totalQuantity)}
+        {totalQuantity === null ? null : cartItemCount(totalQuantity)}
       </span>
     </>
   );

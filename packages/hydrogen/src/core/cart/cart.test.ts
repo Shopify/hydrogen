@@ -7209,7 +7209,7 @@ describe("loadError", () => {
     failedStore.destroy();
   });
 
-  it("publishes one add from the failed state, then adopts the full cart on refresh() without events", async () => {
+  it("reloads the full cart after an add from the failed state and publishes one add", async () => {
     localStorage.clear();
     const publish = vi.fn();
     Object.assign(window.Shopify as object, {
@@ -7239,15 +7239,12 @@ describe("loadError", () => {
       ),
     );
     await vi.waitFor(() => expect(updateDeferreds).toHaveLength(1));
+    mockGetCart.mockResolvedValueOnce({ cart: fullCart });
     resolveUpdate(0, { cart: fullCart });
     await addPromise;
 
-    expect(addEvents()).toHaveLength(1);
-    expect(failedStore.getState().loadError).toEqual({ message: "Throttled" });
-    expect(getCartLines(failedStore.getState().data).map((line) => line.id)).toEqual(["line-3"]);
-
-    mockGetCart.mockResolvedValueOnce({ cart: fullCart });
-    await settleRefresh(failedStore);
+    // PROTOTYPE: the add from the failed state starts a full reload, and only that reload clears loadError.
+    await vi.waitFor(() => expect(failedStore.getState().revalidating).toBeUndefined());
 
     expect("loadError" in failedStore.getState()).toBe(false);
     expect(getCartLines(failedStore.getState().data).map((line) => line.id)).toEqual([

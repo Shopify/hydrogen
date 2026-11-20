@@ -5,5 +5,5 @@ import type { cartHandlers } from "~/lib/cart-handlers";
 
 export type CartData = CartDataFromHandlers<typeof cartHandlers>;
 
-export const { CartProvider, useCart, useCartActions, useCartForm } =
+export const { CartProvider, useCart, useCartStatus, useCartForm } =
   createCartComponents<typeof cartHandlers>();
