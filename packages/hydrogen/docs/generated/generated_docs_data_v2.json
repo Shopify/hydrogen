@@ -5965,8 +5965,8 @@
           "filePath": "src/core/collection/collection-view.ts",
           "syntaxKind": "PropertySignature",
           "name": "collection",
-          "value": "{ id: string; handle: string; }",
-          "description": "Collection fields from your Storefront API query. Pass your full query type, which can include more fields. Pass `id: null` for a page without a collection record, such as an all-products page."
+          "value": "CollectionViewCollection",
+          "description": "Collection fields from your Storefront API query."
         },
         {
           "filePath": "src/core/collection/collection-view.ts",
@@ -5976,7 +5976,31 @@
           "description": "The Storefront API has no product total for a collection, so pass the number of products that the page loaded."
         }
       ],
-      "value": "export interface CollectionViewOptions {\n  /**\n   * Collection fields from your Storefront API query. Pass your full query type, which can include\n   * more fields. Pass `id: null` for a page without a collection record, such as an all-products page.\n   */\n  collection: { id: string | null; handle: string };\n  /**\n   * The Storefront API has no product total for a collection, so pass the number of products that\n   * the page loaded.\n   */\n  productsCount: number;\n}"
+      "value": "export interface CollectionViewOptions {\n  /** Collection fields from your Storefront API query. */\n  collection: CollectionViewCollection;\n  /**\n   * The Storefront API has no product total for a collection, so pass the number of products that\n   * the page loaded.\n   */\n  productsCount: number;\n}"
+    }
+  },
+  "CollectionViewCollection": {
+    "src/core/collection/collection-view.ts": {
+      "filePath": "src/core/collection/collection-view.ts",
+      "name": "CollectionViewCollection",
+      "description": "Collection fields that the collection view event needs from your Storefront API query.\n\nPass your full query type, which can include more fields.",
+      "members": [
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "handle",
+          "value": "string",
+          "description": "Collection handle. The element sends the event again when it changes."
+        },
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "id",
+          "value": "string | null",
+          "description": "Collection ID, or `null` for a page without a collection record, such as an all-products page."
+        }
+      ],
+      "value": "export interface CollectionViewCollection {\n  /** Collection ID, or `null` for a page without a collection record, such as an all-products page. */\n  id: string | null;\n  /** Collection handle. The element sends the event again when it changes. */\n  handle: string;\n}"
     }
   },
   "DefineCollectionViewGeneratedType": {

@@ -217,7 +217,7 @@ export {
   defineCollectionView,
   getCollectionViewAttributes,
 } from "./collection";
-export type { CollectionViewOptions } from "./collection";
+export type { CollectionViewCollection, CollectionViewOptions } from "./collection";
 
 export {
   canAddToCart,
