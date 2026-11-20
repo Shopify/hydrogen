@@ -73,25 +73,29 @@ export default function Collection() {
     <div className="collection">
       <h1>{collection.title}</h1>
       <p className="collection-description">{collection.description}</p>
-      <ShopifyCollectionView
-        collection={collection}
-        productsCount={collection.products.nodes.length}
-        className="block"
+      <PaginatedResourceSection<ProductItemData>
+        connection={collection.products}
+        resourcesClassName="products-grid"
+        wrapResources={(resources, nodes) => (
+          // Count `nodes`: it includes the pages that Pagination restores on Back or reload.
+          <ShopifyCollectionView
+            collection={collection}
+            productsCount={nodes.length}
+            className="block"
+          >
+            {resources}
+          </ShopifyCollectionView>
+        )}
       >
-        <PaginatedResourceSection<ProductItemData>
-          connection={collection.products}
-          resourcesClassName="products-grid"
-        >
-          {({ node: product, index }) => (
-            <ProductItem
-              key={product.id}
-              product={product}
-              context="collection"
-              loading={index < 8 ? "eager" : undefined}
-            />
-          )}
-        </PaginatedResourceSection>
-      </ShopifyCollectionView>
+        {({ node: product, index }) => (
+          <ProductItem
+            key={product.id}
+            product={product}
+            context="collection"
+            loading={index < 8 ? "eager" : undefined}
+          />
+        )}
+      </PaginatedResourceSection>
       <CollectionView
         collection={{
           id: collection.id,
