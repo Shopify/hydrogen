@@ -5,9 +5,6 @@ import { createSitemapResponse } from "~/lib/sitemap";
 
 import type { Route } from "./+types/($locale).sitemap.$type.$page[.xml]";
 
-const SITEMAP_MAX_AGE_SECONDS = 86_400;
-const SITEMAP_CACHE_CONTROL = `max-age=${SITEMAP_MAX_AGE_SECONDS}`;
-
 // Declared before `LOCALES_BY_HREFLANG`, which calls `toHreflang` at module load.
 const HREFLANG_LANGUAGE_OVERRIDES: Partial<Record<ShopifyLocale["language"], string>> = {
   ZH_CN: "zh-Hans",
@@ -20,7 +17,7 @@ const LOCALES_BY_HREFLANG = new Map(
 );
 
 export async function loader({ request, params, context: { storefront } }: Route.LoaderArgs) {
-  const response = await createSitemapResponse({
+  return createSitemapResponse({
     storefront,
     request,
     params,
@@ -34,10 +31,6 @@ export async function loader({ request, params, context: { storefront } }: Route
       return new URL(href, baseUrl).toString();
     },
   });
-
-  if (response.ok) response.headers.set("Cache-Control", SITEMAP_CACHE_CONTROL);
-
-  return response;
 }
 
 // BCP 47 allows one region subtag. Shopify's regional language codes (`PT_BR`, `ZH_TW`) already

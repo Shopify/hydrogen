@@ -473,7 +473,7 @@ scenarios.set("subscriptions-logged-in", {
   mocksCustomerAccountApi: true,
 });
 
-/** Sitemap page numbers the `sitemapReads` scenario answers with an error. */
+/** Sitemap page numbers and how the `sitemapReads` scenario answers each. */
 export const SITEMAP_PAGES = { throttled: 1, failed: 2, listed: 3 } as const;
 export const SITEMAP_LISTED_PRODUCT_HANDLE = "e2e-sitemap-snowboard";
 
