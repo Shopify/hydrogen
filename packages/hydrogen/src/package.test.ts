@@ -406,10 +406,13 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     const developmentOnlyModules = readdirSync(resolve(PACKAGE_ROOT, "dist"), {
       encoding: "utf8",
       recursive: true,
-    }).filter((file) => /(?:^|[/\\])(?:development|graphiql)\.mjs$/.test(file));
+    }).filter((file) =>
+      /(?:^|[/\\])(?:development|graphiql|[^/\\]+\.development)\.mjs$/.test(file),
+    );
 
     expect(developmentOnlyModules.toSorted()).toEqual([
       join("development", "core", "development.mjs"),
+      join("development", "core", "request-routing", "handle-shopify-routes.development.mjs"),
       join("development", "core", "request-routing", "interceptors", "graphiql.mjs"),
     ]);
   });
