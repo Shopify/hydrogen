@@ -189,7 +189,8 @@ async function queryMarketingConsent(
         marketingConsentSigninEnabled && shop.marketingConsentPreselected === true,
     };
   } catch (error) {
-    // An abort is the visitor leaving or the route's deadline, not a failed query.
+    // The route's signal aborts here only when the visitor leaves, which isn't a failed query. This
+    // query's own timeout fires long before the route's deadline, and does log.
     if (!signal.aborted) log.warn("account widget marketing consent query failed", { error });
     return MARKETING_CONSENT_OFF;
   } finally {

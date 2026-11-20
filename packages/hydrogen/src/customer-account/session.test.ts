@@ -1660,8 +1660,10 @@ describe("account widget data route", () => {
     customerSession,
     withCart = false,
     url = WIDGET_DATA_URL,
+    signal,
   }: {
     url?: string;
+    signal?: AbortSignal;
     sessionManager?: TestSessionManager;
     fetch?: ReturnType<typeof vi.fn>;
     storefrontFetch?: ReturnType<typeof vi.fn>;
@@ -1670,7 +1672,10 @@ describe("account widget data route", () => {
   } = {}) {
     const brandedSession = createSession({ fetch });
     return handleShopifyRoutes({
-      request: new Request(url, withCart ? { headers: { cookie: CART_COOKIE } } : {}),
+      request: new Request(url, {
+        signal,
+        headers: withCart ? { cookie: CART_COOKIE } : undefined,
+      }),
       sessionManager,
       storefrontFetch,
       handlers: [
@@ -1958,6 +1963,22 @@ describe("account widget data route", () => {
       "account widget marketing consent query failed",
       expect.objectContaining({ scope: "customer-account", error: expect.any(Error) }),
     );
+  });
+
+  it("doesn't log a marketing consent failure when the visitor leaves during the unstable request", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    const visitor = new AbortController();
+
+    const responsePromise = requestWidgetData({
+      storefrontFetch: storefrontFetchWithHangingMarketingConsent(),
+      signal: visitor.signal,
+    });
+    await vi.advanceTimersByTimeAsync(MARKETING_CONSENT_TIMEOUT_IN_MS / 2);
+    visitor.abort();
+    await responsePromise;
+
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it("still attaches the cart after a token refresh when the unstable request hangs", async () => {
