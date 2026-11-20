@@ -24,7 +24,6 @@ import {
   type ProductFilter,
 } from "@shopify/hydrogen";
 import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
-import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
 import { useEffect, useRef } from "react";
 ```
 
@@ -63,8 +62,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
     variables: {
       handle: params.handle,
       first: 24,
-      filters:
-        browse.filters.length > 0 ? (browse.filters as StorefrontApiProductFilter[]) : undefined,
+      filters: browse.filters.length > 0 ? browse.filters : undefined,
       sortKey: browse.sortKey,
       reverse: browse.reverse || undefined,
     },
@@ -390,18 +388,7 @@ function ActiveFilterChip({ collectionPath, filter, state }: Props) {
 }
 ```
 
-When passing `browse.filters` into a `gql()` query variable typed from Storefront API introspection, match the app's established pattern. The Hydrogen examples cast the parsed filters to the generated Storefront API `ProductFilter` type at the query variable boundary:
-
-```ts
-import type { ProductFilter as StorefrontApiProductFilter } from "@shopify/hydrogen/storefront-api-types";
-
-variables: {
-  filters:
-    browse.filters.length > 0 ? (browse.filters as StorefrontApiProductFilter[]) : undefined,
-}
-```
-
-Keep this as a generated-type cast scoped to the query variable boundary.
+`browse.filters` uses Hydrogen's generated Storefront API `ProductFilter` type, so it can be passed to a typed query variable directly.
 
 ## Search Pages
 
