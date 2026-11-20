@@ -30,8 +30,8 @@ export type { CollectionActions, CollectionData };
 const CollectionStoreKey: InjectionKey<ShallowRef<CollectionStore>> = Symbol("CollectionStore");
 
 /**
- * Provides the filter and sort changes of the nearest collection provider. `CollectionView`
- * injects it to send `shopify:collection:update` events.
+ * Provides the filter and sort changes of the nearest collection provider. `CollectionView` and
+ * `SearchUpdates` inject it to send `shopify:collection:update` and `shopify:search:update` events.
  *
  * @internal
  */
