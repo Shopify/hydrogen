@@ -2089,6 +2089,7 @@ function startHeldTransport(
 function releaseHeldTransports(store: CartStoreContext): void {
   if (store.activeCartLoad) return;
   const gate = store.transportGate;
+  if (gate.held.length === 0) return;
   const actions = standardActions;
   if (!actions) {
     void getShopifyStandardActions().then(
