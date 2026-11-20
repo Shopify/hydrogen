@@ -108,6 +108,7 @@ describe("CollectionView", () => {
     const element = wrapper.find(COLLECTION_VIEW_TAG_NAME).element;
 
     await wrapper.setProps({ collection: { ...collection }, productsCount: 16 });
+    await new Promise((resolve) => setTimeout(resolve, 0));
     expect(events).toHaveLength(1);
     expect(payloadOf(element).collection.productsCount).toBe(16);
 
