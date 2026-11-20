@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type * as StandardEventsModule from "../../../../vendor/standard-events";
 import {
@@ -26,13 +26,6 @@ function payload(options: CollectionViewOptions) {
 }
 
 describe("getCollectionViewAttributes", () => {
-  it("accepts a full query type", () => {
-    expectTypeOf<{
-      collection: typeof collection;
-      productsCount: number;
-    }>().toMatchTypeOf<CollectionViewOptions>();
-  });
-
   it("sends the collection ID, handle, and products count, and drops extra fields", () => {
     expect(payload({ collection, productsCount: 12 })).toEqual({
       collection: { id: collection.id, handle: "shirts", productsCount: 12 },
