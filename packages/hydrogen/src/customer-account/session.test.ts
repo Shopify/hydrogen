@@ -1569,6 +1569,7 @@ describe("account widget data route", () => {
   const CUSTOMER_ACCOUNT_API_URL_PREFIX = `https://shopify.com/${SHOP_ID}/account/customer/api/`;
   const WIDGET_DATA_URL = `${ORIGIN}${CUSTOMER_ACCOUNT_WIDGET_DATA_PATH}`;
   const PRIVATE_CACHE_CONTROL = "private, no-store, max-age=0, must-revalidate";
+  const MARKETING_CONSENT_TIMEOUT_IN_MS = 2_000;
   const SHOP = {
     id: "gid://shopify/Shop/1",
     socialLoginProviders: [{ handle: "Shop" }],
@@ -1929,10 +1930,9 @@ describe("account widget data route", () => {
     },
   );
 
-  it("responds with marketing consent off, without a warning, when the unstable request outlasts the deadline", async () => {
-    const logger = createTestLogger();
-    configureLogging({ logger });
-    const storefrontFetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+  function storefrontFetchWithHangingMarketingConsent() {
+    return vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      if (isCartMutation(init)) return Promise.resolve(cartMutationResponse());
       if (!String(input).includes("/api/unstable/")) {
         return Promise.resolve(jsonResponse({ data: { shop: SHOP } }));
       }
@@ -1940,14 +1940,62 @@ describe("account widget data route", () => {
         init?.signal?.addEventListener("abort", () => reject(init.signal?.reason));
       });
     });
+  }
 
-    const responsePromise = requestWidgetData({ storefrontFetch });
-    await vi.advanceTimersByTimeAsync(8_000);
+  it("turns marketing consent off with a warning when the unstable request outlasts its timeout", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+
+    const responsePromise = requestWidgetData({
+      storefrontFetch: storefrontFetchWithHangingMarketingConsent(),
+    });
+    await vi.advanceTimersByTimeAsync(MARKETING_CONSENT_TIMEOUT_IN_MS);
     const response = await responsePromise;
 
     expect(response?.status).toBe(200);
     await expect(response?.json()).resolves.toMatchObject({ shop: EXPECTED_SHOP });
-    expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      "account widget marketing consent query failed",
+      expect.objectContaining({ scope: "customer-account", error: expect.any(Error) }),
+    );
+  });
+
+  it("still attaches the cart after a token refresh when the unstable request hangs", async () => {
+    const storefrontFetch = storefrontFetchWithHangingMarketingConsent();
+
+    const responsePromise = requestWidgetData({
+      sessionManager: new TestSessionManager(
+        validSessionData({ tokens: { expiresAt: NOW_IN_MS } }),
+      ),
+      storefrontFetch,
+      withCart: true,
+    });
+    await vi.advanceTimersByTimeAsync(MARKETING_CONSENT_TIMEOUT_IN_MS);
+    const response = await responsePromise;
+
+    expect(response?.status).toBe(200);
+    expect(getCartMutations(storefrontFetch)).toMatchObject([
+      { cartId: CART_GID, buyerIdentity: { customerAccessToken: NEW_ACCESS_TOKEN } },
+    ]);
+  });
+
+  it("still detaches the cart and keeps the cart cookie after a 401 when the unstable request hangs", async () => {
+    const storefrontFetch = storefrontFetchWithHangingMarketingConsent();
+
+    const responsePromise = requestWidgetData({
+      sessionManager: new TestSessionManager(validSessionData()),
+      fetch: vi.fn(() => Promise.resolve(new Response(null, { status: 401 }))),
+      storefrontFetch,
+      withCart: true,
+    });
+    await vi.advanceTimersByTimeAsync(MARKETING_CONSENT_TIMEOUT_IN_MS);
+    const response = await responsePromise;
+
+    expect(response?.status).toBe(200);
+    expect(response?.headers.get("set-cookie")).toBe("session=1");
+    expect(getCartMutations(storefrontFetch)).toMatchObject([
+      { cartId: CART_GID, buyerIdentity: { customerAccessToken: null } },
+    ]);
   });
 
   it("returns an empty translation list when the shop has none", async () => {
