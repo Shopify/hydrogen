@@ -1,5 +1,6 @@
 import type { StorefrontClient } from "../client";
 import { withStorefrontApiVersion, withStorefrontClientCache } from "../client/client";
+import { StorefrontTimeoutError } from "../client/errors";
 import { Cache } from "../core/cache";
 import { getLogger } from "../core/logging";
 import type { ShopifyRequestContext } from "../core/request-context";
@@ -47,6 +48,10 @@ const MARKETING_CONSENT_OFF: AccountWidgetMarketingConsent = {
   marketingConsentSigninEnabled: false,
   marketingConsentPreselected: false,
 };
+
+// Short, so a slow `unstable` request can't hold the response until the route's deadline, which
+// would leave no time to sync the cart's customer.
+const MARKETING_CONSENT_TIMEOUT_IN_MS = 2_000;
 
 const log = getLogger("customer-account");
 
@@ -112,7 +117,7 @@ export async function queryAccountWidgetShop(
   signal: AbortSignal,
 ): Promise<AccountWidgetShop> {
   // The response waits for both requests, so a slow marketing consent request delays the account
-  // sheet until the route's deadline.
+  // sheet until that request's timeout.
   const [result, marketingConsent] = await Promise.all([
     storefrontClient.graphql(
       ACCOUNT_WIDGET_SHOP_QUERY,
@@ -146,18 +151,26 @@ export async function queryAccountWidgetShop(
 
 /**
  * Reads the shop's marketing consent settings from the `unstable` Storefront API. Resolves to
- * both settings off when the request fails, so the account sheet still renders without the
- * checkbox.
+ * both settings off when the request fails or takes longer than 2 seconds, so the account sheet
+ * still renders without the checkbox.
  */
 async function queryMarketingConsent(
   storefrontClient: StorefrontClient,
   signal: AbortSignal,
 ): Promise<AccountWidgetMarketingConsent> {
+  const timeout = new AbortController();
+  const timeoutId = setTimeout(() => {
+    timeout.abort(new StorefrontTimeoutError(MARKETING_CONSENT_TIMEOUT_IN_MS));
+  }, MARKETING_CONSENT_TIMEOUT_IN_MS);
   try {
     const result = await storefrontClient.graphql(
       ACCOUNT_WIDGET_MARKETING_CONSENT_QUERY,
       withStorefrontApiVersion(
-        withStorefrontClientCache(storefrontClient, { signal }, Cache.long()),
+        withStorefrontClientCache(
+          storefrontClient,
+          { signal: AbortSignal.any([signal, timeout.signal]) },
+          Cache.long(),
+        ),
         "unstable",
       ),
     );
@@ -179,6 +192,8 @@ async function queryMarketingConsent(
     // An abort is the visitor leaving or the route's deadline, not a failed query.
     if (!signal.aborted) log.warn("account widget marketing consent query failed", { error });
     return MARKETING_CONSENT_OFF;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
