@@ -117,6 +117,7 @@
     "@types/cross-spawn": "6.0.6",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@vue/test-utils": "^2.4.0",
     "graphql": "^16.13.2",
     "happy-dom": "^20.9.0",
@@ -127,7 +128,6 @@
     "react-dom": "^19.2.5",
     "tsdown": "^0.21.10",
     "typescript": "catalog:",
-    "typescript-native": "npm:typescript@7.0.2",
     "vite": "^8.0.7",
     "vitest": "^3.0.0"
   },

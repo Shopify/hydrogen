@@ -9,11 +9,9 @@ const plugins = () => [minifyGraphQLLiterals(), inlineScriptImports({ version: p
 // Declarations are emitted by the native TypeScript 7 compiler instead of the in-process
 // TypeScript 5 compiler. gql.tada's inferred document types made the in-process emit need
 // ~2.5 GB of JS heap, which out-grew CI runners; the native compiler runs outside the V8 heap.
-// `typescript-native` aliases `typescript@7`, whose package exports hide `getExePath`.
-const { default: getTsgoPath } = await import(
-  new URL("lib/getExePath.js", import.meta.resolve("typescript-native/package.json")).href
-);
-const dts = { tsgo: { path: getTsgoPath() } };
+// `tsgo` comes from `@typescript/native-preview` rather than `typescript@7`, whose `tsc` bin would
+// shadow the TypeScript 5 `tsc` that `typecheck` and `test:types` run.
+const dts = { tsgo: true };
 
 export default defineConfig([
   {
