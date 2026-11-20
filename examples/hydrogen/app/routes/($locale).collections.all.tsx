@@ -61,6 +61,7 @@ export default function Collection() {
           <ProductItem
             key={product.id}
             product={product}
+            context="collection"
             loading={index < 8 ? "eager" : undefined}
           />
         )}

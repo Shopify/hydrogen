@@ -45,7 +45,7 @@
 			<h2 class="mt-4 text-6xl font-black tracking-tight md:text-8xl">Spring '26</h2>
 			<div class="mt-16 grid grid-cols-1 gap-8 text-left md:grid-cols-3">
 				{#each data.products as product (product.handle)}
-					<ProductCard {product} />
+					<ProductCard {product} context="collection" />
 				{/each}
 			</div>
 		</div>

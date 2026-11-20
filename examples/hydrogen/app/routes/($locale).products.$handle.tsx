@@ -1,6 +1,6 @@
 import { getSelectedProductOptions } from "@shopify/hydrogen";
 import { gql } from "@shopify/hydrogen";
-import { useLocale } from "@shopify/hydrogen/react";
+import { ProductView as ShopifyProductView, useLocale } from "@shopify/hydrogen/react";
 import { redirect, useLoaderData, useLocation, useNavigate } from "react-router";
 
 import { ProductForm } from "~/components/ProductForm";
@@ -131,7 +131,7 @@ function ProductDetails() {
   const analyticsVariant = selectedVariant ?? product.selectedOrFirstAvailableVariant;
 
   return (
-    <div className="product">
+    <ShopifyProductView product={product} context="page" className="product">
       <ProductImage image={selectedVariant?.image ?? null} />
       <div className="product-main">
         <h1>{title}</h1>
@@ -165,7 +165,7 @@ function ProductDetails() {
           ]}
         />
       ) : null}
-    </div>
+    </ShopifyProductView>
   );
 }
 
