@@ -58,6 +58,43 @@ class FakeIntersectionObserver {
   }
 }
 
+// A stand-in for the browser's ResizeObserver and `checkVisibility()`, driven by hand. `hide` and
+// `show` toggle what `checkVisibility()` returns and report the change like the browser does when
+// an ancestor switches to and from `display: none`.
+const ro = {
+  callback: undefined as ResizeObserverCallback | undefined,
+  observed: new Set<Element>(),
+  hidden: new Set<Element>(),
+  notify(target: Element) {
+    if (!ro.observed.has(target)) return;
+    assert(ro.callback, "expected a ResizeObserver to be created");
+    ro.callback([{ target } as ResizeObserverEntry], {} as ResizeObserver);
+  },
+  hide(target: Element) {
+    ro.hidden.add(target);
+    ro.notify(target);
+  },
+  show(target: Element) {
+    ro.hidden.delete(target);
+    ro.notify(target);
+  },
+};
+
+class FakeResizeObserver {
+  constructor(callback: ResizeObserverCallback) {
+    ro.callback = callback;
+  }
+  observe(target: Element) {
+    ro.observed.add(target);
+  }
+  unobserve(target: Element) {
+    ro.observed.delete(target);
+  }
+  disconnect() {
+    ro.observed.clear();
+  }
+}
+
 // Mirrors the CDN createViewEventElement: `connect` sends one task after connecting, `dialog` sends
 // if the dialog is already open and on each opening `toggle`, `intersect` sends the first time half
 // of the element is visible, and disconnecting stops the observer and the listeners. Each send
@@ -149,12 +186,22 @@ describe("defineViewEventElement", () => {
     defineSpy = vi.spyOn(customElements, "define");
     events = [];
     io.observed.clear();
+    ro.observed.clear();
+    ro.hidden.clear();
     vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
+    vi.stubGlobal("ResizeObserver", FakeResizeObserver);
+    Object.defineProperty(HTMLElement.prototype, "checkVisibility", {
+      configurable: true,
+      value(this: HTMLElement) {
+        return !ro.hidden.has(this);
+      },
+    });
     document.addEventListener("shopify:test:view", record);
   });
 
   afterEach(() => {
     document.removeEventListener("shopify:test:view", record);
+    Reflect.deleteProperty(HTMLElement.prototype, "checkVisibility");
     document.body.innerHTML = "";
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -299,6 +346,63 @@ describe("defineViewEventElement", () => {
     expect(io.observed.has(element)).toBe(true);
     element.remove();
     expect(io.observed.has(element)).toBe(false);
+  });
+
+  // Next.js `cacheComponents` keeps the page you leave in a hidden <Activity>: the element stays
+  // connected, or reconnects, under a `display: none` ancestor.
+  it("doesn't send from a hidden connect element and sends once it is shown", async () => {
+    await ensureDefined();
+    const element = document.createElement(TAG);
+    ro.hidden.add(element);
+    element.setAttribute("view-event-trigger", "connect");
+    element.setAttribute("view-event-payload", makePayload("a"));
+    document.body.append(element);
+    await nextTask();
+    expect(ids()).toEqual([]);
+
+    // A key change while hidden waits too, and the showing sends the latest payload.
+    element.setAttribute("view-event-payload", makePayload("b"));
+    await nextTask();
+    expect(ids()).toEqual([]);
+
+    ro.show(element);
+    expect(ids()).toEqual(["b"]);
+    expect(events[0]?.target).toBe(element);
+
+    // A resize while shown is not a new view.
+    ro.notify(element);
+    await nextTask();
+    expect(ids()).toEqual(["b"]);
+  });
+
+  it("sends again when a connected element is shown after it was hidden", async () => {
+    await ensureDefined();
+    const element = renderElement("connect", makePayload("a"));
+    await nextTask();
+    expect(ids()).toEqual(["a"]);
+
+    ro.hide(element);
+    await nextTask();
+    expect(ids()).toEqual(["a"]);
+
+    ro.show(element);
+    expect(ids()).toEqual(["a", "a"]);
+
+    // Removing the element stops watching it.
+    element.remove();
+    expect(ro.observed.has(element)).toBe(false);
+  });
+
+  it("watches only connect elements for visibility", async () => {
+    await ensureDefined();
+    const dialog = document.createElement("dialog");
+    document.body.append(dialog);
+    renderElement("intersect", makePayload("a"));
+    renderElement("dialog", makePayload("b"), dialog);
+    renderElement("manual", makePayload("c"));
+    const page = renderElement("connect", makePayload("d"));
+
+    expect([...ro.observed]).toEqual([page]);
   });
 
   it("sends once per opening in a dialog, including reopen with a key swap in the same task", async () => {
