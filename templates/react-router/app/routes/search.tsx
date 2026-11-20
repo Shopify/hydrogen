@@ -4,7 +4,7 @@ import {
   getSortByValue,
   withStorefrontRateLimit,
 } from "@shopify/hydrogen";
-import { CollectionProvider } from "@shopify/hydrogen/react";
+import { CollectionProvider, SearchUpdates } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
 import { Link, useLocation, useNavigate, useNavigation, useSearchParams } from "react-router";
 
@@ -293,7 +293,14 @@ export default function SearchRoute({ loaderData }: Route.ComponentProps) {
           <BreadcrumbJsonLd origin={loaderData.origin} />
           <Breadcrumb />
           <SearchHeader term={loaderData.searchTerm} />
-          {loaderData.performed ? <SearchResults loaderData={loaderData} /> : null}
+          {loaderData.performed ? (
+            // Wraps the filters, the results, and the empty state, so the search update events come
+            // from the element that contains the filter and sort controls, and a filter that
+            // matches no products still resolves with a count of 0.
+            <SearchUpdates query={loaderData.searchTerm} totalCount={loaderData.totalCount}>
+              <SearchResults loaderData={loaderData} />
+            </SearchUpdates>
+          ) : null}
         </div>
       </main>
     </CollectionProvider>
