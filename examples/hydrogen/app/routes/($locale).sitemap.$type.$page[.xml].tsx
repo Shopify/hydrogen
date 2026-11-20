@@ -35,7 +35,7 @@ export async function loader({ request, params, context: { storefront } }: Route
     },
   });
 
-  response.headers.set("Cache-Control", SITEMAP_CACHE_CONTROL);
+  if (response.ok) response.headers.set("Cache-Control", SITEMAP_CACHE_CONTROL);
 
   return response;
 }
