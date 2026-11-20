@@ -30,7 +30,12 @@ export default defineConfig([
     deps: { neverBundle: ["gql.tada", "react", "vue"] },
   },
   {
-    entry: ["src/core/development.ts", "src/react/index.ts", "src/vue/index.ts"],
+    entry: [
+      "src/core/development.ts",
+      "src/customer-account/index.ts",
+      "src/react/index.ts",
+      "src/vue/index.ts",
+    ],
     format: "esm",
     outDir: "dist/development",
     dts: true,
