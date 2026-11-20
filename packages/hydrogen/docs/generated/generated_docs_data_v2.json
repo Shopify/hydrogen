@@ -5932,6 +5932,93 @@
       "members": []
     }
   },
+  "GetCollectionViewAttributesGeneratedType": {
+    "src/core/collection/collection-view.ts": {
+      "filePath": "src/core/collection/collection-view.ts",
+      "name": "GetCollectionViewAttributesGeneratedType",
+      "description": "Returns the attributes of the collection view element. Render the attributes on a `COLLECTION_VIEW_TAG_NAME` element on a framework without a Hydrogen binding.\n\nThe element sends the `shopify:collection:view` event when it connects. It sends the event again when the collection handle in `view-event-payload` changes, but not when only `productsCount` changes. Set the values as HTML attributes, such as with `attr:` on Solid, because the element doesn't read properties.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "input1",
+          "description": "The collection and the number of products that the page loaded.",
+          "value": "CollectionViewOptions",
+          "filePath": "src/core/collection/collection-view.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/collection/collection-view.ts",
+        "description": "The `view-event-trigger` and `view-event-payload` attributes.",
+        "name": "Record<\"view-event-trigger\" | \"view-event-payload\", string>",
+        "value": "Record<\"view-event-trigger\" | \"view-event-payload\", string>"
+      },
+      "value": "export function getCollectionViewAttributes({\n  collection,\n  productsCount,\n}: CollectionViewOptions): Record<\"view-event-trigger\" | \"view-event-payload\", string> {\n  const payload: StandardEvents.CollectionViewPayload = {\n    collection: { id: collection.id, handle: collection.handle, productsCount },\n  };\n\n  return {\n    \"view-event-trigger\": \"connect\",\n    \"view-event-payload\": JSON.stringify(payload),\n  };\n}"
+    }
+  },
+  "CollectionViewOptions": {
+    "src/core/collection/collection-view.ts": {
+      "filePath": "src/core/collection/collection-view.ts",
+      "name": "CollectionViewOptions",
+      "description": "The collection that the page shows, and the number of its products that the page loaded.",
+      "members": [
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "collection",
+          "value": "CollectionViewCollection",
+          "description": "Collection fields from your Storefront API query."
+        },
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "productsCount",
+          "value": "number",
+          "description": "The Storefront API has no product total for a collection, so pass the number of products that the page loaded."
+        }
+      ],
+      "value": "export interface CollectionViewOptions {\n  /** Collection fields from your Storefront API query. */\n  collection: CollectionViewCollection;\n  /**\n   * The Storefront API has no product total for a collection, so pass the number of products that\n   * the page loaded.\n   */\n  productsCount: number;\n}"
+    }
+  },
+  "CollectionViewCollection": {
+    "src/core/collection/collection-view.ts": {
+      "filePath": "src/core/collection/collection-view.ts",
+      "name": "CollectionViewCollection",
+      "description": "Collection fields that the collection view event needs from your Storefront API query.\n\nPass your full query type, which can include more fields.",
+      "members": [
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "handle",
+          "value": "string",
+          "description": "Collection handle. The element sends the event again when it changes."
+        },
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "id",
+          "value": "string | null",
+          "description": "Collection ID, or `null` for a page without a collection record, such as an all-products page."
+        }
+      ],
+      "value": "export interface CollectionViewCollection {\n  /** Collection ID, or `null` for a page without a collection record, such as an all-products page. */\n  id: string | null;\n  /** Collection handle. The element sends the event again when it changes. */\n  handle: string;\n}"
+    }
+  },
+  "DefineCollectionViewGeneratedType": {
+    "src/core/collection/collection-view.ts": {
+      "filePath": "src/core/collection/collection-view.ts",
+      "name": "DefineCollectionViewGeneratedType",
+      "description": "Registers the collection view custom element in the browser. The function loads Shopify's Standard Events module and does nothing on the server. `initializeShopifyScripts` and the `ShopifyScripts` component call it for you.",
+      "isPublicDocs": true,
+      "params": [],
+      "returns": {
+        "filePath": "src/core/collection/collection-view.ts",
+        "description": "",
+        "name": "void",
+        "value": "void"
+      },
+      "value": "export function defineCollectionView(): void {\n  defineViewEventElement<StandardEvents.CollectionViewPayload>(\n    COLLECTION_VIEW_TAG_NAME,\n    (payload) => payload.collection.handle,\n  );\n}"
+    }
+  },
   "GetProductViewAttributesGeneratedType": {
     "src/core/product/product-view.ts": {
       "filePath": "src/core/product/product-view.ts",
@@ -6099,7 +6186,7 @@
     "src/core/shopify-scripts/initialize.ts": {
       "filePath": "src/core/shopify-scripts/initialize.ts",
       "name": "InitializeShopifyScriptsGeneratedType",
-      "description": "Starts Shopify's scripts in the browser for frameworks without a Hydrogen binding. Call it after hydration, with the consent configuration that you passed to `getShopifyScriptTags`.\n\nThe function sets up `window.Shopify.routes`, registers the product view element, and sends a page view event on load and after each navigation that changes the path or query. In the custom banner consent mode, Hydrogen calls your setup callback after the Customer Privacy API loads. A custom banner configuration without a setup callback logs a warning, and analytics events stay blocked. When the browser supports WebMCP, the function also loads Shopify's WebMCP tools. Set `webMcp` to `false` to skip them.",
+      "description": "Starts Shopify's scripts in the browser for frameworks without a Hydrogen binding. Call it after hydration, with the consent configuration that you passed to `getShopifyScriptTags`.\n\nThe function sets up `window.Shopify.routes`, registers the product and collection view elements, and sends a page view event on load and after each navigation that changes the path or query. In the custom banner consent mode, Hydrogen calls your setup callback after the Customer Privacy API loads. A custom banner configuration without a setup callback logs a warning, and analytics events stay blocked. When the browser supports WebMCP, the function also loads Shopify's WebMCP tools. Set `webMcp` to `false` to skip them.",
       "isPublicDocs": true,
       "params": [
         {
@@ -6115,7 +6202,7 @@
         "name": "Promise<boolean | void>",
         "value": "Promise<boolean | void>"
       },
-      "value": "export function initializeShopifyScripts({\n  consent,\n  navigate,\n  nonce,\n  routes,\n  webMcp = true,\n}: InitializeShopifyScriptsOptions): Promise<boolean | void> {\n  configureShopifyRouting({ navigate, routes });\n  initializeShopifyPageViewEvents();\n  defineProductView();\n  if (__DEV__) observeNavigation(warnOnLocaleChangingNavigation);\n\n  if (consent?.mode === \"custom-banner\") {\n    if (typeof consent.setup !== \"function\") {\n      log.warn(\n        \"custom-banner requires a consent.setup callback; analytics delivery remains blocked until setup completes\",\n      );\n    } else {\n      try {\n        initializeCustomConsent(consent.setup);\n      } catch (error) {\n        log.error(\"custom consent initialization failed\", { error });\n      }\n    }\n  }\n\n  if (!webMcp) return Promise.resolve();\n\n  return loadShopifyWebMcpTools(nonce);\n}"
+      "value": "export function initializeShopifyScripts({\n  consent,\n  navigate,\n  nonce,\n  routes,\n  webMcp = true,\n}: InitializeShopifyScriptsOptions): Promise<boolean | void> {\n  configureShopifyRouting({ navigate, routes });\n  initializeShopifyPageViewEvents();\n  defineProductView();\n  defineCollectionView();\n  if (__DEV__) observeNavigation(warnOnLocaleChangingNavigation);\n\n  if (consent?.mode === \"custom-banner\") {\n    if (typeof consent.setup !== \"function\") {\n      log.warn(\n        \"custom-banner requires a consent.setup callback; analytics delivery remains blocked until setup completes\",\n      );\n    } else {\n      try {\n        initializeCustomConsent(consent.setup);\n      } catch (error) {\n        log.error(\"custom consent initialization failed\", { error });\n      }\n    }\n  }\n\n  if (!webMcp) return Promise.resolve();\n\n  return loadShopifyWebMcpTools(nonce);\n}"
     }
   },
   "GetShopifyScriptTagsGeneratedType": {
@@ -12386,6 +12473,39 @@
           ]
         }
       ]
+    }
+  },
+  "CollectionViewProps": {
+    "src/react/collection-view.tsx": {
+      "filePath": "src/react/collection-view.tsx",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "CollectionViewProps",
+      "value": "CollectionViewOptions & HTMLAttributes<HTMLElement>",
+      "description": "Props for the `CollectionView` component: the collection, the number of products that the page loaded, and HTML attributes such as `className` for the element.",
+      "isPublicDocs": true
+    }
+  },
+  "CollectionViewGeneratedType": {
+    "src/react/collection-view.tsx": {
+      "filePath": "src/react/collection-view.tsx",
+      "name": "CollectionViewGeneratedType",
+      "description": "Sends the `shopify:collection:view` event when the collection page renders. Wrap the product grid of the collection page. `ShopifyScripts` registers the element.\n\nThe Storefront API has no product total for a collection, so pass the number of products that the page loaded as `productsCount`. The element sends the event again when the collection handle changes, but not when filters, sorting, or pagination change the products.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "input1",
+          "description": "The collection, the products count, the children, and HTML attributes for the element.",
+          "value": "CollectionViewProps",
+          "filePath": "src/react/collection-view.tsx"
+        }
+      ],
+      "returns": {
+        "filePath": "src/react/collection-view.tsx",
+        "description": "The collection view element.",
+        "name": "ReactElement",
+        "value": "ReactElement"
+      },
+      "value": "export function CollectionView({\n  collection,\n  productsCount,\n  children,\n  className,\n  ...rest\n}: CollectionViewProps): ReactElement {\n  return createElement(\n    COLLECTION_VIEW_TAG_NAME,\n    // React 18 sets `className` on custom elements as a `classname` attribute, so pass `class`.\n    { ...rest, class: className, ...getCollectionViewAttributes({ collection, productsCount }) },\n    children,\n  );\n}"
     }
   },
   "CollectionProviderGeneratedType": {

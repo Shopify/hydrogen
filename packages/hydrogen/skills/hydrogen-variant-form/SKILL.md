@@ -102,7 +102,7 @@ Returns `{ name: "add-to-cart", type: "submit" }` for the add-to-cart submit but
 
 When creating a product detail page, use the app's existing route convention when present; otherwise create `/products/{handle}`. Keep variant selection in query params on that product route.
 
-Wrap the product page content in `<ProductView product={product} context="page">` so Shopify receives the product view event. See the product view element section of `hydrogen-analytics`.
+Wrap the product page content in `<ProductView product={product} context="page">` so Shopify receives the product view event. See the product and collection view elements section of `hydrogen-analytics`.
 
 ## Framework References
 
