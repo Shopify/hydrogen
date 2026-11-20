@@ -3,8 +3,11 @@ import { Link } from "react-router";
 
 import { useCart } from "~/lib/cart";
 import { CART_DRAWER_ID, SEARCH_DRAWER_ID, openDialogFromLinkClick } from "~/lib/cart-drawer";
+import { type LocaleOption, useLocalizePath } from "~/lib/locale";
+import { i18n } from "~/lib/shop";
 import type { StorefrontShop } from "~/lib/storefront-shop";
 
+import { LocalePicker } from "./LocalePicker";
 import { MobileNav, MobileNavTrigger } from "./MobileNav";
 
 function cartCountLabel(count: number) {
@@ -42,7 +45,14 @@ function useCartCountAnnouncement(totalQuantity: number, loading: boolean): stri
   return changed ? liveCartCountLabel(totalQuantity) : "";
 }
 
-export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
+export function Header({
+  shopInfo,
+  localeOptions,
+}: {
+  shopInfo: StorefrontShop;
+  localeOptions: readonly LocaleOption[];
+}) {
+  const localizePath = useLocalizePath();
   const totalQuantity = useCart((state) => state.data.totalQuantity);
   // During the first load the count covers only changes made so far, so show none.
   const loading = useCart((state) => state.loading);
@@ -61,7 +71,7 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
             <MobileNavTrigger />
           </div>
           <Link
-            to="/"
+            to={localizePath("/")}
             aria-label={shopInfo.name}
             title={shopInfo.name}
             className="text-on-surface focus-visible:outline-accent inline-flex max-w-48 min-w-0 items-center rounded-sm text-lg font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
@@ -91,7 +101,7 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
           data-desktop-nav
         >
           <Link
-            to="/collections"
+            to={localizePath("/collections")}
             className="text-on-surface focus-visible:outline-accent shrink-0 rounded-sm text-sm font-normal whitespace-nowrap no-underline hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
           >
             Collections
@@ -99,8 +109,9 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
         </nav>
 
         <div className="flex shrink-0 items-center gap-0">
+          <LocalePicker i18n={i18n} options={localeOptions} />
           <Link
-            to="/search"
+            to={localizePath("/search")}
             className="button-icon focus-visible:outline-accent inline-flex h-11 w-11 cursor-pointer items-center justify-center gap-2 rounded font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
             aria-label="Search"
             aria-controls={SEARCH_DRAWER_ID}
@@ -111,14 +122,14 @@ export function Header({ shopInfo }: { shopInfo: StorefrontShop }) {
             <img src="/icons/icon-search.svg" alt="" className="size-5" aria-hidden="true" />
           </Link>
           <Link
-            to="/account"
+            to={localizePath("/account")}
             className="text-on-surface focus-visible:outline-accent inline-flex h-11 w-11 items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-opacity"
             aria-label="Account"
           >
             <img src="/icons/icon-user.svg" alt="" className="size-5" aria-hidden="true" />
           </Link>
           <Link
-            to="/cart"
+            to={localizePath("/cart")}
             className="text-on-surface focus-visible:outline-accent relative inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition motion-safe:active:scale-[0.97]"
             aria-label={loading ? "Cart" : cartCountLabel(totalQuantity)}
             aria-controls={CART_DRAWER_ID}

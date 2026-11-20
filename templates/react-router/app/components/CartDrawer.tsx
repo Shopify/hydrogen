@@ -4,6 +4,7 @@ import { Link } from "react-router";
 
 import { useCart, useCartForm } from "~/lib/cart";
 import { closeCartDrawer, configureOpenCartAction, CART_DRAWER_ID } from "~/lib/cart-drawer";
+import { useLocalizePath } from "~/lib/locale";
 import { formatPrice } from "~/lib/money";
 
 import { publishCartViewed } from "./AnalyticsTrackers";
@@ -84,6 +85,7 @@ export function CartLineItem({
   line: CartLineView;
   emptyCartFocusId: string;
 }) {
+  const localizePath = useLocalizePath();
   const { formProps, register } = useCartForm();
   const pendingLines = useCart((state) => state.pending.lines);
   const lineError = useCart((state) => state.errors.lines.get(line.id));
@@ -137,7 +139,10 @@ export function CartLineItem({
       <div className="min-w-0 flex-1">
         <p className="type-body-sm text-on-surface font-medium">
           {product?.handle ? (
-            <Link to={`/products/${product.handle}`} className="text-on-surface no-underline">
+            <Link
+              to={localizePath(`/products/${product.handle}`)}
+              className="text-on-surface no-underline"
+            >
               {product.title ?? merchandise?.title ?? "Product"}
             </Link>
           ) : (

@@ -14,6 +14,7 @@ import {
 } from "~/components/CollectionBrowse";
 import { ProductCard } from "~/components/ProductCard";
 import { loadCollectionPage } from "~/lib/collection";
+import { useLocalizePath } from "~/lib/locale";
 import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
@@ -57,6 +58,7 @@ function CollectionViewedTracker({ collection }: { collection: CollectionData })
 }
 
 function BreadcrumbJsonLd({ collection, origin }: { collection: CollectionData; origin: string }) {
+  const localizePath = useLocalizePath();
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -65,13 +67,13 @@ function BreadcrumbJsonLd({ collection, origin }: { collection: CollectionData; 
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: `${origin}/`,
+        item: `${origin}${localizePath("/")}`,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: collection.title,
-        item: `${origin}/collections/${collection.handle}`,
+        item: `${origin}${localizePath(`/collections/${collection.handle}`)}`,
       },
     ],
   };
@@ -80,12 +82,14 @@ function BreadcrumbJsonLd({ collection, origin }: { collection: CollectionData; 
 }
 
 function Breadcrumb({ collection }: { collection: CollectionData }) {
+  const localizePath = useLocalizePath();
+
   return (
     <nav aria-label="Breadcrumb" className="mb-6">
       <ol className="text-on-surface-secondary flex items-center gap-1.5 text-sm">
         <li>
           <Link
-            to="/"
+            to={localizePath("/")}
             className="hover:text-on-surface rounded-sm py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current motion-safe:transition-colors"
           >
             Home
@@ -174,13 +178,14 @@ function EmptyState({ collectionPath }: { collectionPath: string }) {
 }
 
 function CollectionResults({ loaderData }: { loaderData: Route.ComponentProps["loaderData"] }) {
+  const localizePath = useLocalizePath();
   const location = useLocation();
   const navigation = useNavigation();
   const isUpdating =
     navigation.state === "loading" &&
     navigation.location?.pathname === location.pathname &&
     navigation.location.search !== location.search;
-  const collectionPath = `/collections/${loaderData.collection.handle}`;
+  const collectionPath = localizePath(`/collections/${loaderData.collection.handle}`);
   const { nodes, pageInfo, isLoading, loadMore } = useLoadMore(
     loaderData.products,
     loaderData.pageInfo,

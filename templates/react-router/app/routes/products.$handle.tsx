@@ -13,6 +13,7 @@ import { Link, useLocation, useNavigate } from "react-router";
 
 import { ProductCard, PRODUCT_CARD_FRAGMENT } from "~/components/ProductCard";
 import { openCartDrawer } from "~/lib/cart-drawer";
+import { useLocalizePath } from "~/lib/locale";
 import { formatPrice, salePercent } from "~/lib/money";
 import { ProductProvider, useProductForm } from "~/lib/product";
 import { storefrontClientContext } from "~/lib/storefront";
@@ -190,10 +191,6 @@ type SwatchValue = {
   color?: string | null;
   imageUrl?: string | null;
 };
-
-function toRouterLocation(url: string) {
-  return url;
-}
 
 function variantUrl(
   product: { handle: string; options: Array<{ name: string }> },
@@ -437,6 +434,7 @@ function isPlainActivation(event: MouseEvent<HTMLAnchorElement>) {
 }
 
 function VariantOptions({ product }: { product: ProductData }) {
+  const localizePath = useLocalizePath();
   const { options, register } = useProductForm();
   const swatches = useMemo(() => buildSwatchLookup(product), [product]);
   const location = useLocation();
@@ -533,7 +531,7 @@ function VariantOptions({ product }: { product: ProductData }) {
                 return (
                   <Link
                     key={valueName}
-                    to={toRouterLocation(linkTarget)}
+                    to={localizePath(linkTarget)}
                     replace={!isCrossProduct}
                     preventScrollReset
                     className={className}
@@ -794,12 +792,13 @@ export default function ProductRoute({ loaderData }: Route.ComponentProps) {
   const { product, relatedProducts } = loaderData;
   const navigate = useNavigate();
   const location = useLocation();
+  const localizePath = useLocalizePath();
 
   return (
     <ProductProvider
       product={product}
       onSelect={(result) => {
-        const url = toRouterLocation(
+        const url = localizePath(
           variantUrl(
             product,
             result.selectedOptions,

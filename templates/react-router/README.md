@@ -117,6 +117,37 @@ const ANNOUNCEMENTS: Announcement[] = [
 You can connect metafields or a CMS later with your own data loading and rendering.
 No specific metafield format is required.
 
+## Markets (optional)
+
+The template serves one locale. To serve more, add `routing` to the `i18n`
+definition in `app/lib/shop.ts`:
+
+```ts
+export const i18n = defineShopifyI18n({
+  defaultLocale: { country: "US", language: "EN" },
+  routing: {
+    type: "pathname",
+    locales: [
+      { language: "EN", country: "CA" },
+      { language: "FR", country: "CA" },
+    ],
+  },
+});
+```
+
+- With `type: "pathname"`, every page is also served under each locale's prefix
+  (`/fr-ca/products/x`) and the default locale stays unprefixed. `app/routes.ts`
+  adds the prefixed routes, so an unknown or default-locale prefix (`/xx/...`,
+  `/en-us/...`) is a 404. With `type: "domain"`, each locale is served from its own
+  `hostname` and the routes don't change.
+- The header shows a locale picker: plain links to the same page in each locale. It
+  works without JavaScript, and picking a locale is a full page load, because
+  Shopify's scripts and the cart read the locale once per page.
+- Names come from `Intl.DisplayNames`, in each locale's own language. Set
+  `countryName` or `languageName` on a locale entry to override them.
+- Build your own links with `useLocalizePath()` from `app/lib/locale.ts`
+  (`localizePath("/collections")`), so they stay under the current prefix.
+
 ## Storefront rate limits
 
 When the Storefront API rate limits a page loader, this template returns HTTP `429`, not `500`.

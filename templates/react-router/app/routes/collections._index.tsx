@@ -3,6 +3,7 @@ import { Link } from "react-router";
 
 import { CollectionCard } from "~/components/CollectionCard";
 import { loadCollectionsPage } from "~/lib/collections";
+import { useLocalizePath } from "~/lib/locale";
 import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
@@ -27,6 +28,7 @@ export const loader = withStorefrontRateLimit(async ({ context, url }: Route.Loa
 type CollectionNode = Route.ComponentProps["loaderData"]["collections"]["nodes"][number];
 
 function BreadcrumbJsonLd({ origin }: { origin: string }) {
+  const localizePath = useLocalizePath();
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -35,13 +37,13 @@ function BreadcrumbJsonLd({ origin }: { origin: string }) {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: `${origin}/`,
+        item: `${origin}${localizePath("/")}`,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "Collections",
-        item: `${origin}/collections`,
+        item: `${origin}${localizePath("/collections")}`,
       },
     ],
   };
@@ -50,12 +52,14 @@ function BreadcrumbJsonLd({ origin }: { origin: string }) {
 }
 
 function Breadcrumb() {
+  const localizePath = useLocalizePath();
+
   return (
     <nav aria-label="Breadcrumb" className="mb-6">
       <ol className="text-on-surface-secondary flex items-center gap-1.5 text-sm">
         <li>
           <Link
-            to="/"
+            to={localizePath("/")}
             className="hover:text-on-surface rounded-sm py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current motion-safe:transition-colors"
           >
             Home
