@@ -351,7 +351,7 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
           target: ts.ScriptTarget.ES2024,
           strict: true,
           noEmit: true,
-          skipLibCheck: true,
+          skipLibCheck: false,
           jsx: ts.JsxEmit.ReactJSX,
           customConditions,
         };
