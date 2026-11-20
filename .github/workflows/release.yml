@@ -74,7 +74,7 @@ jobs:
         # "New tag:" stdout lines that v3 no longer prints. With v1.7.0 the
         # `published` output stayed "false" after a successful npm publish,
         # which skipped compile-preview-templates and the tag/release push
-        uses: changesets/action@198f833dd7d863100ea6e28967bc9a9fdefadb0a # v2.1.0
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
           # Runs `changeset version`, then rewrites Hydrogen's semver bump to CalVer
           version-script: pnpm run version-packages
