@@ -173,7 +173,7 @@ function EmptyState({ collectionPath }: { collectionPath: string }) {
   );
 }
 
-function CollectionResults({ loaderData }: { loaderData: Route.ComponentProps["loaderData"] }) {
+function CollectionBody({ loaderData }: { loaderData: Route.ComponentProps["loaderData"] }) {
   const location = useLocation();
   const navigation = useNavigation();
   const isUpdating =
@@ -190,23 +190,34 @@ function CollectionResults({ loaderData }: { loaderData: Route.ComponentProps["l
   const defaultSortValue = getSortByValue("COLLECTION_DEFAULT", false);
 
   return (
-    <>
-      <Toolbar
-        countText={countText}
-        sortOptions={COLLECTION_SORT_OPTIONS}
-        defaultSortValue={defaultSortValue}
-      />
-      <ActiveFilterChips
-        basePath={collectionPath}
-        clearAllTo={collectionPath}
-        currencyCode={loaderData.currencyCode}
-      />
-      <h2 className="sr-only">Products</h2>
-      <CollectionView
-        collection={loaderData.collection}
-        productsCount={nodes.length}
-        className="block"
-      >
+    // Wraps the filters and the results, so the collection update events come from the element
+    // that contains the filter and sort controls.
+    <CollectionView
+      collection={loaderData.collection}
+      productsCount={nodes.length}
+      className="block lg:grid lg:grid-cols-[15rem_1fr] lg:gap-10"
+    >
+      <aside className="hidden lg:block" aria-label="Filters">
+        <div className="sticky top-8">
+          <h2 className="type-heading-sm text-on-surface mb-2">Filters</h2>
+          <FacetForm
+            availableFilters={loaderData.availableFilters}
+            currencyCode={loaderData.currencyCode}
+          />
+        </div>
+      </aside>
+      <div>
+        <Toolbar
+          countText={countText}
+          sortOptions={COLLECTION_SORT_OPTIONS}
+          defaultSortValue={defaultSortValue}
+        />
+        <ActiveFilterChips
+          basePath={collectionPath}
+          clearAllTo={collectionPath}
+          currencyCode={loaderData.currencyCode}
+        />
+        <h2 className="sr-only">Products</h2>
         <div
           aria-busy={isUpdating}
           className={`motion-safe:transition-opacity motion-safe:duration-150 ${isUpdating ? "opacity-60" : "opacity-100"}`}
@@ -217,19 +228,19 @@ function CollectionResults({ loaderData }: { loaderData: Route.ComponentProps["l
             <EmptyState collectionPath={collectionPath} />
           )}
         </div>
-      </CollectionView>
-      <LoadMore
-        pageInfo={pageInfo}
-        loadedCount={nodes.length}
-        countLabel={`Showing ${nodes.length} products`}
-        isLoading={isLoading}
-        onLoad={loadMore}
-      />
-      <FilterDrawer
-        availableFilters={loaderData.availableFilters}
-        currencyCode={loaderData.currencyCode}
-      />
-    </>
+        <LoadMore
+          pageInfo={pageInfo}
+          loadedCount={nodes.length}
+          countLabel={`Showing ${nodes.length} products`}
+          isLoading={isLoading}
+          onLoad={loadMore}
+        />
+        <FilterDrawer
+          availableFilters={loaderData.availableFilters}
+          currencyCode={loaderData.currencyCode}
+        />
+      </div>
+    </CollectionView>
   );
 }
 
@@ -259,21 +270,8 @@ export default function CollectionRoute({ loaderData }: Route.ComponentProps) {
           <BreadcrumbJsonLd collection={loaderData.collection} origin={loaderData.origin} />
           <Breadcrumb collection={loaderData.collection} />
           <CollectionHeader collection={loaderData.collection} />
-          <div className="lg:grid lg:grid-cols-[15rem_1fr] lg:gap-10">
-            <aside className="hidden lg:block" aria-label="Filters">
-              <div className="sticky top-8">
-                <h2 className="type-heading-sm text-on-surface mb-2">Filters</h2>
-                <FacetForm
-                  availableFilters={loaderData.availableFilters}
-                  currencyCode={loaderData.currencyCode}
-                />
-              </div>
-            </aside>
-            <div>
-              {/* Key by handle so the loaded products and the collection view count reset with the collection. */}
-              <CollectionResults key={loaderData.collection.handle} loaderData={loaderData} />
-            </div>
-          </div>
+          {/* Key by handle so the loaded products and the collection view count reset with the collection. */}
+          <CollectionBody key={loaderData.collection.handle} loaderData={loaderData} />
         </div>
       </main>
     </CollectionProvider>
