@@ -4,24 +4,6 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 
 ---
 
-## No `shopify:search:update` Standard Event
-
-**Status:** Open
-**Added:** 2026-11-17
-
-**What:** `CollectionView` sends `shopify:collection:update` for filter and sort changes on collection pages, but search pages send no `shopify:search:update`. Hydrogen search pages reuse the collection store and `CollectionProvider` with a handle such as `search:<term>`, and they don't render `CollectionView`, so nothing sends an update event there. Shopify's Horizon theme sends `search:update` from the same filter form code as `collection:update`, with `{ search: { query, productFilters?, sortKey? }, promise }`, and resolves the promise with `{ totalCount }`.
-
-**Why it matters:** Standard Events consumers see filter and sort changes on collection pages but not on search pages, so search refinement is missing from analytics.
-
-**Possible approaches:**
-1. Reuse the collection update emitter (`connectCollectionUpdates`) with a search mode: a `SearchView`-like element, or a mode prop, that sends `SearchUpdateEvent` with the query instead of the collection.
-2. Resolve the promise with the search `totalCount`. Unlike collections, the Storefront API search query returns `totalCount`, so the page passes it instead of a loaded-products count.
-3. Map the sort key for search: search pages sort by `RELEVANCE` by default, and the Standard Events `getSortKey` helper maps `price-*` values to `PRICE` and other values to `RELEVANCE`. Decide whether to omit the default relevance sort the way `collection:update` omits the collection default.
-
-**Done when:** A filter or sort change on a search page sends one `shopify:search:update` event with the query, filters, and sort key, and its promise resolves with the new `totalCount`, with tests and the `hydrogen-analytics` skill updated.
-
----
-
 ## `defineShopifyI18n` cannot detect `pathSegment` colliding with app routes
 
 **Status:** Open

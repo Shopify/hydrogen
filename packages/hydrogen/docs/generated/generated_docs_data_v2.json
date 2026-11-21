@@ -12505,7 +12505,7 @@
         "name": "ReactElement",
         "value": "ReactElement"
       },
-      "value": "export function CollectionView({\n  collection,\n  productsCount,\n  children,\n  className,\n  ...rest\n}: CollectionViewProps): ReactElement {\n  const ref = useRef<HTMLElement>(null);\n  const source = useCollectionUpdateSource();\n  const connection = useRef<CollectionUpdateConnection | null>(null);\n  const view = { collection, productsCount };\n  const viewRef = useRef(view);\n  viewRef.current = view;\n  // Renders again when the store settles, so the update promises resolve with the rendered count.\n  const status = useSyncExternalStore(\n    source?.store.subscribe ?? noSubscribe,\n    () => source?.store.getState().status,\n    () => undefined,\n  );\n\n  useEffect(() => {\n    if (!source || !ref.current) return;\n    const current = connectCollectionUpdates(source, ref.current, viewRef.current);\n    connection.current = current;\n    return () => {\n      connection.current = null;\n      current.disconnect();\n    };\n  }, [source]);\n\n  useEffect(() => {\n    connection.current?.update(viewRef.current);\n  }, [source, collection.id, collection.handle, productsCount, status]);\n\n  return createElement(\n    COLLECTION_VIEW_TAG_NAME,\n    // React 18 sets `className` on custom elements as a `classname` attribute, so pass `class`.\n    {\n      ...rest,\n      class: className,\n      ...getCollectionViewAttributes(view),\n      ref,\n    },\n    children,\n  );\n}"
+      "value": "export function CollectionView({\n  collection,\n  productsCount,\n  children,\n  className,\n  ...rest\n}: CollectionViewProps): ReactElement {\n  const ref = useRef<HTMLElement>(null);\n  const view = { collection, productsCount };\n  useUpdateEvents(useCollectionUpdateSource(), ref, view, connectCollectionUpdates);\n\n  return createElement(\n    COLLECTION_VIEW_TAG_NAME,\n    // React 18 sets `className` on custom elements as a `classname` attribute, so pass `class`.\n    {\n      ...rest,\n      class: className,\n      ...getCollectionViewAttributes(view),\n      ref,\n    },\n    children,\n  );\n}"
     }
   },
   "CollectionProviderGeneratedType": {
@@ -13443,6 +13443,63 @@
         "value": "UseProductFormResult<ProductInput>"
       },
       "value": "(\n    store: ProductFormStore,\n    options?: UseProductFormOptions<ProductInput>,\n  ) => UseProductFormResult<ProductInput>"
+    }
+  },
+  "SearchUpdatesProps": {
+    "src/react/search-updates.tsx": {
+      "filePath": "src/react/search-updates.tsx",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "SearchUpdatesProps",
+      "value": "SearchUpdatesOptions & HTMLAttributes<HTMLDivElement>",
+      "description": "Props for the `SearchUpdates` component: the search term, the total number of results, and HTML attributes such as `className` for the element.",
+      "isPublicDocs": true
+    }
+  },
+  "SearchUpdatesOptions": {
+    "src/core/collection/search-update.ts": {
+      "filePath": "src/core/collection/search-update.ts",
+      "name": "SearchUpdatesOptions",
+      "description": "The search term that the page shows results for, and the total number of results.",
+      "members": [
+        {
+          "filePath": "src/core/collection/search-update.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "query",
+          "value": "string",
+          "description": "Search term of the results. The search update events send it as `search.query`."
+        },
+        {
+          "filePath": "src/core/collection/search-update.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "totalCount",
+          "value": "number",
+          "description": "Total number of results, from the `totalCount` field of the Storefront API `search` query."
+        }
+      ],
+      "value": "export interface SearchUpdatesOptions {\n  /** Search term of the results. The search update events send it as `search.query`. */\n  query: string;\n  /** Total number of results, from the `totalCount` field of the Storefront API `search` query. */\n  totalCount: number;\n}"
+    }
+  },
+  "SearchUpdatesGeneratedType": {
+    "src/react/search-updates.tsx": {
+      "filePath": "src/react/search-updates.tsx",
+      "name": "SearchUpdatesGeneratedType",
+      "description": "Sends a `shopify:search:update` event for each filter or sort change that the customer makes on the search page. Render the component inside the search page's `CollectionProvider`, and wrap the filters, the results, and the empty state, so that the element stays on the page when a filter matches no products.\n\nThe event has the search term, the active filters, and the sort key. Its promise resolves with the `totalCount` of the new results, or rejects with an `AbortError` when the search term changes or the element unmounts first. A new search, back and forward navigation, and pagination don't send the event. The component throws outside `CollectionProvider`.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "input1",
+          "description": "The search term, the total number of results, the children, and HTML attributes for the element.",
+          "value": "SearchUpdatesProps",
+          "filePath": "src/react/search-updates.tsx"
+        }
+      ],
+      "returns": {
+        "filePath": "src/react/search-updates.tsx",
+        "description": "A `div` element that sends the events.",
+        "name": "ReactElement",
+        "value": "ReactElement"
+      },
+      "value": "export function SearchUpdates({\n  query,\n  totalCount,\n  children,\n  ...rest\n}: SearchUpdatesProps): ReactElement {\n  const ref = useRef<HTMLDivElement>(null);\n  const source = useCollectionUpdateSource();\n  useUpdateEvents(source, ref, { query, totalCount }, connectSearchUpdates);\n  if (!source) throw new Error(\"SearchUpdates must be used inside a <CollectionProvider>.\");\n\n  return createElement(\"div\", { ...rest, ref }, children);\n}"
     }
   },
   "ShopPayButtonProps": {

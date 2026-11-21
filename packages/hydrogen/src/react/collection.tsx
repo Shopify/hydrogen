@@ -119,7 +119,8 @@ export function CollectionProvider({
 
 /**
  * Returns the filter and sort changes of the nearest `CollectionProvider`, or `null` outside a
- * provider. `CollectionView` uses it to send `shopify:collection:update` events.
+ * provider. `CollectionView` and `SearchUpdates` use it to send `shopify:collection:update` and
+ * `shopify:search:update` events.
  *
  * @internal
  */

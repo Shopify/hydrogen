@@ -1,13 +1,12 @@
 import type * as StandardEvents from "../../../vendor/standard-events";
-import { importStandardEventsFromCDN } from "../shopify-scripts/standard-events";
 import type { CollectionStore } from "./collection";
 import type { CollectionViewOptions } from "./collection-view";
 import type { CollectionState } from "./state";
-import { filtersEqual } from "./url";
+import { connectUpdateEvents, type UpdateEventConnection } from "./update-events";
 
 /**
  * A collection store and the filter and sort changes that the customer makes in it. The collection
- * providers create one per store, and `CollectionView` connects to it.
+ * providers create one per store, and `CollectionView` and `SearchUpdates` connect to it.
  *
  * @internal
  */
@@ -35,27 +34,14 @@ export function createCollectionUpdateSource(store: CollectionStore): Collection
 }
 
 /** @internal */
-export type CollectionUpdateConnection = {
-  /**
-   * Call after each render with the rendered collection and products count. When the store is
-   * idle, pending update promises resolve with the products count. A new collection handle rejects
-   * them with an `AbortError`.
-   */
-  update(view: CollectionViewOptions): void;
-  /** Stops the events and rejects pending update promises with an `AbortError`. */
-  disconnect(): void;
-};
+export type CollectionUpdateConnection = UpdateEventConnection<CollectionViewOptions>;
 
 type UpdatePayload = Omit<StandardEvents.CollectionUpdatePayload, "promise">;
-type Settlers = Pick<
-  ReturnType<typeof StandardEvents.CollectionUpdateEvent.createPromise>,
-  "resolve" | "reject"
->;
 
 /**
  * Sends a `shopify:collection:update` event from the element for each customer filter or sort
  * change in the source's store. Each event's promise resolves with the products count of the first
- * render after the store settles.
+ * render after the store settles. A new collection handle rejects pending promises.
  *
  * @internal
  */
@@ -64,82 +50,13 @@ export function connectCollectionUpdates(
   element: HTMLElement,
   initialView: CollectionViewOptions,
 ): CollectionUpdateConnection {
-  let view = initialView;
-  let module: typeof StandardEvents | undefined;
-  let connected = true;
-  let pending: Settlers[] = [];
-  // Products count of the latest render with an idle store, for events that send after the module loads.
-  let settledCount: number | undefined;
-  let previous = source.store.getState();
-  let current = previous;
-
-  const loading = importStandardEventsFromCDN().then(
-    (loaded) => {
-      module = loaded;
-    },
-    () => {},
-  );
-
-  const settle = (productsCount: number) => {
-    for (const { resolve } of pending) resolve({ productsCount });
-    pending = [];
-  };
-
-  const abort = () => {
-    for (const { reject } of pending) {
-      reject(
-        new DOMException(
-          "The collection changed or its view disconnected before the update finished.",
-          "AbortError",
-        ),
-      );
-    }
-    pending = [];
-  };
-
-  const dispatch = (payload: UpdatePayload) => {
-    if (!connected || !module) return;
-    const { promise, resolve, reject } = module.CollectionUpdateEvent.createPromise();
-    // Listeners still see the rejection. The empty handler keeps an AbortError without listeners
-    // from being reported as an unhandled rejection.
-    promise.catch(() => {});
-    pending.push({ resolve, reject });
-    element.dispatchEvent(new module.CollectionUpdateEvent({ ...payload, promise }));
-    if (settledCount !== undefined) settle(settledCount);
-  };
-
-  const unsubscribeStore = source.store.subscribe((state) => {
-    previous = current;
-    current = state;
+  return connectUpdateEvents(source, element, initialView, {
+    getEventClass: (module) => module.CollectionUpdateEvent,
+    createPayload,
+    getResult: ({ productsCount }) => ({ productsCount }),
+    getKey: ({ collection }) => collection.handle,
+    abortMessage: "The collection changed or its view disconnected before the update finished.",
   });
-
-  const unsubscribeSource = source.subscribe(() => {
-    if (sameBrowseState(previous, current)) return;
-    settledCount = undefined;
-    const payload = createPayload(view, current);
-    if (module) dispatch(payload);
-    else void loading.then(() => dispatch(payload));
-  });
-
-  return {
-    update(nextView) {
-      // Updates for the previous collection never finish when the collection changes.
-      if (nextView.collection.handle !== view.collection.handle) abort();
-      view = nextView;
-      settledCount = source.store.getState().status === "idle" ? nextView.productsCount : undefined;
-      if (settledCount !== undefined) settle(settledCount);
-    },
-    disconnect() {
-      connected = false;
-      unsubscribeStore();
-      unsubscribeSource();
-      abort();
-    },
-  };
-}
-
-function sameBrowseState(a: CollectionState, b: CollectionState): boolean {
-  return a.sortKey === b.sortKey && a.reverse === b.reverse && filtersEqual(a.filters, b.filters);
 }
 
 function createPayload(
