@@ -548,7 +548,7 @@ function metafieldEquals(
   return a.namespace === b.namespace && a.key === b.key && (a.value ?? "") === (b.value ?? "");
 }
 
-function filtersEqual(a: ProductFilter[], b: ProductFilter[]): boolean {
+export function filtersEqual(a: ProductFilter[], b: ProductFilter[]): boolean {
   if (a.length !== b.length) return false;
 
   const remaining = [...b];
