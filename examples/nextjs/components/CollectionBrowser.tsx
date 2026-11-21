@@ -10,6 +10,7 @@ import {
 import {
   CollectionProvider,
   CollectionView,
+  SearchUpdates,
   useCollection,
   useCollectionForm,
 } from "@shopify/hydrogen/react";
@@ -298,102 +299,108 @@ function SearchPage(props: SearchPageProps) {
         ) : null}
       </form>
 
-      {!term ? null : products.length === 0 ? (
-        <div className="py-12 text-center">
-          <p className="type-body text-on-surface">
-            {content.search.noResults.replace("{{ terms }}", `\u201c${term}\u201d`)}
-          </p>
-          <p className="text-on-surface-secondary mt-2 text-sm">
-            {content.search.noResultsSuggestion}
-          </p>
-        </div>
-      ) : (
-        <form
-          {...formProps()}
-          method="get"
-          action="/search"
-          className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8"
-          key={`search-${term}`}
-        >
-          <input key="q" type="hidden" name="q" value={term} />
+      {/* Wraps the filters, the results, and the empty state, so the search update events come from
+          the element that contains the filter and sort controls. */}
+      {!term ? null : (
+        <SearchUpdates query={term} totalCount={totalCount}>
+          {products.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="type-body text-on-surface">
+                {content.search.noResults.replace("{{ terms }}", `\u201c${term}\u201d`)}
+              </p>
+              <p className="text-on-surface-secondary mt-2 text-sm">
+                {content.search.noResultsSuggestion}
+              </p>
+            </div>
+          ) : (
+            <form
+              {...formProps()}
+              method="get"
+              action="/search"
+              className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8"
+              key={`search-${term}`}
+            >
+              <input key="q" type="hidden" name="q" value={term} />
 
-          {/* A SINGLE filter subtree (one set of inputs) so filter params are
+              {/* A SINGLE filter subtree (one set of inputs) so filter params are
               never duplicated. Desktop: `<summary>` hidden, `<details open>`
               shows groups as a static sidebar. Mobile: collapsible disclosure,
               reachable without JS (F4). */}
-          <details
-            key="filters"
-            open
-            className="lg:flex lg:flex-col lg:gap-6"
-            aria-labelledby="search-filters-heading"
-          >
-            <summary className="marker-hidden rounded-button button-outline focus-visible:outline-accent min-h-touch-target mb-4 inline-flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 lg:hidden">
-              {content.collection.filters}
-            </summary>
-            <div className="flex flex-col gap-6 lg:mb-0">
-              <h2
-                id="search-filters-heading"
-                className="type-heading-sm text-on-surface font-medium"
+              <details
+                key="filters"
+                open
+                className="lg:flex lg:flex-col lg:gap-6"
+                aria-labelledby="search-filters-heading"
               >
-                {content.collection.filters}
-              </h2>
-              {availableFilters.map((filter) => (
-                <FilterGroup
-                  key={filter.id}
-                  filter={filter}
-                  activeFilters={state.filters}
-                  isLoading={isLoading}
-                  currencyCode={currencyCode}
-                />
-              ))}
-            </div>
-          </details>
+                <summary className="marker-hidden rounded-button button-outline focus-visible:outline-accent min-h-touch-target mb-4 inline-flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 lg:hidden">
+                  {content.collection.filters}
+                </summary>
+                <div className="flex flex-col gap-6 lg:mb-0">
+                  <h2
+                    id="search-filters-heading"
+                    className="type-heading-sm text-on-surface font-medium"
+                  >
+                    {content.collection.filters}
+                  </h2>
+                  {availableFilters.map((filter) => (
+                    <FilterGroup
+                      key={filter.id}
+                      filter={filter}
+                      activeFilters={state.filters}
+                      isLoading={isLoading}
+                      currencyCode={currencyCode}
+                    />
+                  ))}
+                </div>
+              </details>
 
-          <div key="results" className="flex flex-col gap-4">
-            <div className="flex items-center justify-between gap-4">
-              <p className="type-body-sm text-on-surface-secondary" aria-live="polite">
-                {content.search.resultsFor
-                  .replace("{{ count }}", String(totalCount))
-                  .replace("{{ terms }}", `\u201c${term}\u201d`)}
-              </p>
-              <SortSelect isLoading={isLoading} options={SEARCH_SORT_OPTIONS} />
-            </div>
+              <div key="results" className="flex flex-col gap-4">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="type-body-sm text-on-surface-secondary" aria-live="polite">
+                    {content.search.resultsFor
+                      .replace("{{ count }}", String(totalCount))
+                      .replace("{{ terms }}", `\u201c${term}\u201d`)}
+                  </p>
+                  <SortSelect isLoading={isLoading} options={SEARCH_SORT_OPTIONS} />
+                </div>
 
-            <ul
-              role="list"
-              className="grid grid-cols-2 gap-x-1 gap-y-10 contain-paint lg:grid-cols-3"
-            >
-              {products.map((product, index) => (
-                <li key={product.id} className={isLoading ? "opacity-60" : ""}>
-                  <ProductCard
-                    product={product}
-                    context="search"
-                    loading={index < 3 ? "eager" : "lazy"}
-                    fetchPriority={index === 0 ? "high" : "auto"}
-                  />
-                </li>
-              ))}
-            </ul>
-
-            {pageInfo.hasNextPage ? (
-              <div className="mt-8 text-center">
-                <Link
-                  href={`/search?q=${encodeURIComponent(term)}&after=${encodeURIComponent(pageInfo.endCursor ?? "")}`}
-                  onClick={onNavigate}
-                  className="rounded-button button-outline inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline"
+                <ul
+                  role="list"
+                  className="grid grid-cols-2 gap-x-1 gap-y-10 contain-paint lg:grid-cols-3"
                 >
-                  {content.search.loadMore}
-                </Link>
-              </div>
-            ) : null}
+                  {products.map((product, index) => (
+                    <li key={product.id} className={isLoading ? "opacity-60" : ""}>
+                      <ProductCard
+                        product={product}
+                        context="search"
+                        loading={index < 3 ? "eager" : "lazy"}
+                        fetchPriority={index === 0 ? "high" : "auto"}
+                      />
+                    </li>
+                  ))}
+                </ul>
 
-            <noscript>
-              <button type="submit" className="rounded-button button-primary h-11 px-4">
-                {content.collection.showResults}
-              </button>
-            </noscript>
-          </div>
-        </form>
+                {pageInfo.hasNextPage ? (
+                  <div className="mt-8 text-center">
+                    <Link
+                      href={`/search?q=${encodeURIComponent(term)}&after=${encodeURIComponent(pageInfo.endCursor ?? "")}`}
+                      onClick={onNavigate}
+                      className="rounded-button button-outline inline-flex h-11 items-center justify-center px-5 text-sm font-medium no-underline"
+                    >
+                      {content.search.loadMore}
+                    </Link>
+                  </div>
+                ) : null}
+
+                <noscript>
+                  <button type="submit" className="rounded-button button-primary h-11 px-4">
+                    {content.collection.showResults}
+                  </button>
+                </noscript>
+              </div>
+            </form>
+          )}
+        </SearchUpdates>
       )}
     </div>
   );
