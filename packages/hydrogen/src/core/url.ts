@@ -1,4 +1,4 @@
-import { trimTrailingSlashes } from "./standard-routes/path";
+import { stripI18nPathPrefix, trimTrailingSlashes } from "./standard-routes/path";
 
 export const SFAPI_RE = /^\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
 export const SHOPIFY_API_PROXY_PREFIX = "/__shopify";
@@ -30,12 +30,13 @@ const CUSTOMER_ACCOUNT_HANDOFF_PATHS: ReadonlySet<string> = new Set(
  * Keep this aligned with the routes intercepted before framework routing. API and protocol
  * interceptors are intentionally excluded because they are not browser navigation destinations.
  */
-export function isHydrogenServerHandoffPath(pathname: string): boolean {
+export function isHydrogenServerHandoffPath(pathname: string, pathPrefix?: string): boolean {
   return (
     CHECKOUT_RE.test(pathname) ||
     CART_PERMALINK_RE.test(pathname) ||
     BUY_PERMALINK_RE.test(pathname) ||
-    DISCOUNT_LINK_RE.test(pathname) ||
+    // The server matches discount links under the request's locale prefix too.
+    DISCOUNT_LINK_RE.test(stripI18nPathPrefix(pathname, pathPrefix)) ||
     CUSTOMER_ACCOUNT_HANDOFF_PATHS.has(pathname)
   );
 }

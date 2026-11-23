@@ -70,6 +70,15 @@ describe("isHydrogenServerHandoffPath", () => {
       expect(isHydrogenServerHandoffPath(pathname)).toBe(false);
     },
   );
+
+  it.each([
+    ["/fr-ca/discount/SUMMER20", true],
+    ["/FR-CA/discount/SUMMER20", true],
+    ["/fr-ca/discount", false],
+    ["/en-us/discount/SUMMER20", false],
+  ])("under the /fr-ca/ prefix, hands %s off: %s", (pathname, expected) => {
+    expect(isHydrogenServerHandoffPath(pathname, "/fr-ca/")).toBe(expected);
+  });
 });
 describe("normalizeStoreDomain", () => {
   it("prepends https:// when missing", () => {
@@ -125,6 +134,7 @@ describe("getSameOriginPath", () => {
     ["/./\t/evil.example/p"],
     // A `blob:` URL reports the origin of the URL it wraps, and its path is that whole URL.
     [`blob:${origin}/p`],
+    ["https://user@shop.example/p"],
   ])("rejects %s", (target) => {
     expect(getSameOriginPath(target, origin)).toBeUndefined();
   });

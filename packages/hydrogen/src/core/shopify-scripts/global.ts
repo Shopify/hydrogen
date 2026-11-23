@@ -91,7 +91,7 @@ export function configureShopifyRouting({
 
   const navigateTo = navigate ?? documentNavigate;
   shopify.routes.navigate = (url) => {
-    if (shouldHandoff(url)) {
+    if (shouldHandoff(url, shopify.routes?.root)) {
       return documentNavigate(url);
     }
 
@@ -105,12 +105,13 @@ function documentNavigate(url: string): void {
   window.location.assign(url);
 }
 
-function shouldHandoff(url: string): boolean {
+function shouldHandoff(url: string, pathPrefix: string | undefined): boolean {
   try {
     const parsedUrl = new URL(url, window.location.href);
 
     return (
-      parsedUrl.origin === window.location.origin && isHydrogenServerHandoffPath(parsedUrl.pathname)
+      parsedUrl.origin === window.location.origin &&
+      isHydrogenServerHandoffPath(parsedUrl.pathname, pathPrefix)
     );
   } catch {
     return false;

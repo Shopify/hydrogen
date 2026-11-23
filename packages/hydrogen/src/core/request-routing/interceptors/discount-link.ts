@@ -2,7 +2,7 @@ import { findCartDiscountLink } from "../../cart/discount-link";
 import { applyPrivateResponseCacheHeaders } from "../../headers";
 import { matchLocale } from "../../i18n/match";
 import type { ShopifyRequestContext } from "../../request-context";
-import { stripI18nPathPrefix } from "../../standard-routes/path";
+import { prependPathPrefix, stripI18nPathPrefix } from "../../standard-routes/path";
 import { DISCOUNT_LINK_RE, getSameOriginPath } from "../../url";
 import type { HydrogenRouteInterceptor } from "../route-types";
 
