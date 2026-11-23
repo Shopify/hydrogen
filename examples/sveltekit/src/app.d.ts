@@ -1,16 +1,16 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 
-import type {
-  RequestScopedPrivateStorefrontClient,
-  ShopifyRequestContext,
-} from "@shopify/hydrogen";
+import type { ModeStorefrontClient } from "@shared/storefront-client";
+import type { StorefrontMode } from "@shared/storefront-mode";
+import type { ShopifyRequestContext } from "@shopify/hydrogen";
 
 declare global {
   namespace App {
     // interface Error {}
     interface Locals {
-      storefrontClient: RequestScopedPrivateStorefrontClient;
+      storefront: StorefrontMode;
+      storefrontClient: ModeStorefrontClient;
       shopifyRequestContext: ShopifyRequestContext;
     }
     // interface PageData {}

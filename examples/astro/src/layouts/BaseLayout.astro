@@ -1,6 +1,6 @@
 ---
 import "../styles/global.css";
-import { analyticsConsent, defaultI18n, shop } from "@shared/config";
+import { defaultI18n } from "@shared/config";
 import { HEADER_COLLECTIONS_QUERY, normalizeHeaderCollections } from "@shared/header";
 import { renderShopifyScriptTags } from "@shopify/hydrogen";
 import Header from "../components/Header.astro";
@@ -14,9 +14,8 @@ const { title } = Astro.props;
 const { data: headerData } = await Astro.locals.storefrontClient.graphql(HEADER_COLLECTIONS_QUERY);
 const headerCollections = normalizeHeaderCollections(headerData?.collections?.nodes);
 const shopifyScriptTagsHtml = renderShopifyScriptTags({
-  consent: analyticsConsent,
+  ...Astro.locals.storefront.shopIdentity,
   i18n: defaultI18n,
-  shop,
 }).join("\n");
 ---
 

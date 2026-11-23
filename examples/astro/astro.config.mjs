@@ -5,7 +5,10 @@ import tailwindcss from "@tailwindcss/vite";
 // @ts-check
 import { defineConfig } from "astro/config";
 
-import { storefrontConfig } from "../shared/config.ts";
+import { readConfigEnv } from "../shared/config-env.ts";
+import { resolveStorefrontMode } from "../shared/storefront-mode.ts";
+
+const { storeDomain } = resolveStorefrontMode(readConfigEnv(new URL("./", import.meta.url)));
 
 const {
   scriptSrc,
@@ -13,7 +16,7 @@ const {
   scriptSrcAttr: _scriptSrcAttr,
   styleSrc,
   ...shopifyDirectives
-} = getShopifyCspDirectives({ storeDomain: storefrontConfig.storeDomain });
+} = getShopifyCspDirectives({ storeDomain });
 
 const enabled = process.env.npm_lifecycle_event === "dev:https";
 const httpsOptions = { enabled };
