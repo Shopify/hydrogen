@@ -97,8 +97,12 @@ export type ValidProductSelectionResult<TProduct extends ProductInput = ProductI
 
 /** Options for creating a product form store. */
 export type CreateProductFormStoreOptions = {
-  /** Selection to start from when the product has no selected or first available variant. */
+  /** Selection to start from when the product has no selected or first available variant. With `requireSelection`, the selection to start from. */
   selectedOptions?: SelectedOption[];
+  /**
+   * Makes the customer choose each option that has more than one value. The store starts from `selectedOptions` and the options that have one value, instead of from the product's selected or first available variant, and `hydrate()` does the same. Pass the selection from the URL, such as from `getSelectedProductOptions()`, as `selectedOptions`.
+   */
+  requireSelection?: boolean;
 };
 
 /** Tracks the customer's option selection for one product and adds the selected variant to the cart. */
@@ -205,6 +209,7 @@ type ProductFormStoreContext<TProduct extends ProductInput> = {
   currentProduct: TProduct;
   initialProduct: TProduct;
   initialSelectedOptions: SelectedOption[];
+  requireSelection: boolean;
   decodedVariantCache: DecodedVariantCache;
   destroyed: boolean;
   unsubCart: () => void;
@@ -221,8 +226,8 @@ type ProductFormStoreContext<TProduct extends ProductInput> = {
  *
  * @param product The product from your Storefront API query.
  * @param cartStore The cart store that the form adds variants to and reads cart errors from.
- * @param options The selection to start from when the product has no selected or first available variant.
- * @returns A product form store. The starting selection comes from the product's selected or first available variant, or else from the selection in the options.
+ * @param options The selection to start from when the product has no selected or first available variant, and whether the customer must choose each option that has more than one value.
+ * @returns A product form store. The starting selection comes from the product's selected or first available variant, or else from the selection in the options. With `requireSelection`, it comes from the selection in the options and the options that have one value.
  * @example
  * ```ts
  * const store = createProductFormStore(product, cartStore);
@@ -241,7 +246,12 @@ export function createProductFormStore<TProduct extends ProductInput>(
   options: CreateProductFormStoreOptions = {},
 ): ProductFormStore<TProduct, ProductVariantFrom<TProduct>> {
   const decodedVariantCache: DecodedVariantCache = new Map();
-  const initialSelectedOptions = resolveSelectedOptions(product, options.selectedOptions);
+  const requireSelection = options.requireSelection ?? false;
+  const initialSelectedOptions = resolveSelectedOptions(
+    product,
+    options.selectedOptions,
+    requireSelection,
+  );
 
   const variantState = buildVariantState(product, initialSelectedOptions, decodedVariantCache);
 
@@ -251,6 +261,7 @@ export function createProductFormStore<TProduct extends ProductInput>(
     currentProduct: product,
     initialProduct: product,
     initialSelectedOptions,
+    requireSelection,
     decodedVariantCache,
     destroyed: false,
     unsubCart: () => {},
@@ -319,9 +330,19 @@ function deriveFullState<TProduct extends ProductInput>(
 
 function resolveSelectedOptions<TProduct extends ProductInput>(
   product: TProduct,
-  requested?: SelectedOption[],
+  requested: SelectedOption[] | undefined,
+  requireSelection: boolean,
 ): SelectedOption[] {
-  return product.selectedOrFirstAvailableVariant?.selectedOptions ?? requested ?? [];
+  if (!requireSelection) {
+    return product.selectedOrFirstAvailableVariant?.selectedOptions ?? requested ?? [];
+  }
+  // The customer can't choose an option that has one value, so it counts as chosen.
+  const selectedOptionMap = selectedOptionsToMap(requested ?? []);
+  for (const option of product.options) {
+    const [onlyValue, ...otherValues] = option.optionValues;
+    if (onlyValue && !otherValues.length) selectedOptionMap[option.name] ??= onlyValue.name;
+  }
+  return selectedOptionsFromMap(product, selectedOptionMap);
 }
 
 // ---------------------------------------------------------------------------
@@ -377,10 +398,11 @@ function hydrate<TProduct extends ProductInput>(
 ): void {
   context.currentProduct = product;
   context.decodedVariantCache.clear();
-  const selectedOptions =
-    product.selectedOrFirstAvailableVariant?.selectedOptions ??
-    opts.selectedOptions ??
-    context.observable.state.selectedOptions;
+  const selectedOptions = resolveSelectedOptions(
+    product,
+    opts.selectedOptions ?? context.observable.state.selectedOptions,
+    context.requireSelection,
+  );
   const variantState = buildVariantState(product, selectedOptions, context.decodedVariantCache);
   context.observable.setState(deriveFullState(variantState, context.cartStore.getState()));
 }
@@ -522,8 +544,8 @@ export type CreateProductFormStoreForDocs =
   /**
    * @param product - The product from your Storefront API query.
    * @param cartStore - The cart store that the form adds variants to and reads cart errors from.
-   * @param options - The selection to start from when the product has no selected or first available variant.
-   * @returns A product form store. The starting selection comes from the product's selected or first available variant, or else from the selection in the options.
+   * @param options - The selection to start from when the product has no selected or first available variant, and whether the customer must choose each option that has more than one value.
+   * @returns A product form store. The starting selection comes from the product's selected or first available variant, or else from the selection in the options. With `requireSelection`, it comes from the selection in the options and the options that have one value.
    */
   (
     product: ProductInput,
