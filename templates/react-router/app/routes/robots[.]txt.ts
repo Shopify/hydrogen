@@ -4,6 +4,7 @@ Disallow: /cart
 Disallow: /account
 Disallow: /checkout
 Disallow: /buy/
+Disallow: /discount/
 Disallow: /api/
 Disallow: /__shopify
 Disallow: /search

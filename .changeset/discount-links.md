@@ -2,4 +2,6 @@
 "@shopify/hydrogen": minor
 ---
 
-Apply Shopify discount links (`/discount/{code}`) from `handleShopifyRoutes`. The code is added to the shopper's cart, or a new cart is created with it, and the shopper is redirected with a 303 to the same-origin `redirect` or `return_to` path (default `/`). In-app navigation to a discount link through `Shopify.routes.navigate` becomes a document navigation so the handler can run.
+Apply Shopify discount links (`/discount/{code}`) from `handleShopifyRoutes` when the cart handlers from `createCartServerHandlers()` are registered. The code is added to the shopper's cart, or a new cart is created with it and attached to the logged-in customer when the cart handlers have a `customerSession`. The shopper is then redirected with a 303 to the same-origin `redirect` or `return_to` path (default `/`), keeping the link's other query params such as `utm_*`. `HEAD` requests get the redirect without changing the cart. In-app navigation to a discount link through `Shopify.routes.navigate` becomes a document navigation so the handler can run.
+
+Hydrogen now handles `/discount/{code}` before framework routing, as the Online Store does. If your app has its own `/discount/$code` route, such as the one the previous skeleton template shipped, you can delete it.

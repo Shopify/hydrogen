@@ -24,6 +24,7 @@ Disallow: /cart
 Disallow: /account
 Disallow: /checkout
 Disallow: /buy/
+Disallow: /discount/
 Disallow: /api/
 Disallow: /__shopify
 Disallow: /search
@@ -44,6 +45,7 @@ Disallow: /search
 | `/cart` | Buyer-specific. The prefix also covers cart permalinks (`/cart/{variantId}:{quantity}`) and AJAX cart URLs (`/cart.js`, `/cart/add.js`). |
 | `/account` | Customer account pages and the login, logout, and OAuth handlers. |
 | `/checkout`, `/buy/` | Checkout redirect and UCP buy permalinks. They redirect into Shopify checkout and aren't content. |
+| `/discount/` | Discount links apply a code to the visitor's cart and redirect. A crawler that follows one creates a cart. |
 | `/api/` | Storefront API proxy, registered handlers such as `/api/cart`, and the agent endpoints `/api/mcp` and `/api/ucp/mcp`. Agents discover those through `/.well-known/ucp`, which stays reachable. |
 | `/__shopify` | The generic Shopify API proxy. |
 | `/search` | Search result pages are thin, unbounded duplicates of catalog pages. |
