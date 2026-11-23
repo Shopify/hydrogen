@@ -46,8 +46,9 @@ function getRedirectLocation(url: URL, requestContext: ShopifyRequestContext): s
   // A target without a locale stays in the link's locale. A target that names one keeps it.
   const { pathPrefix } = requestContext.locale;
   if (pathPrefix && !namesLocale(location, pathPrefix, requestContext.i18nDefinition)) {
+    // The locale root is `/fr-ca`, not `/fr-ca/`, so it has one canonical URL.
     location.pathname =
-      location.pathname === "/" ? pathPrefix : `${pathPrefix}${location.pathname}`;
+      location.pathname === "/" ? pathPrefix : prependPathPrefix(location.pathname, pathPrefix);
   }
   const targetKeys = new Set(location.searchParams.keys());
 

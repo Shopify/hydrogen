@@ -292,6 +292,22 @@ describe("shopify scripts", () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
+  it.each(["/discount/SAVE10?redirect=%2Fcollections", "/fr-ca/discount/SAVE10"])(
+    "uses document navigation for discount link %s under the /fr-ca/ root",
+    async (url) => {
+      const navigate = vi.fn();
+      const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+      (window as any).Shopify = { routes: { root: "/fr-ca/" } };
+
+      await initializeShopifyScripts({ navigate, routes: emptyRouteTemplates, webMcp: false });
+
+      window.Shopify?.routes.navigate?.(url);
+
+      expect(assign).toHaveBeenCalledWith(url);
+      expect(navigate).not.toHaveBeenCalled();
+    },
+  );
+
   it("keeps the cart page SPA-navigable and resolves its custom route", async () => {
     const navigate = vi.fn();
     const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
