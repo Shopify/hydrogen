@@ -2,8 +2,8 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCustomerAccountPageData } from "../lib/customer-account";
 
-const available = Astro.locals.storefront.customerAccountsEnabled;
-const { customer, error, headers, loginFailed } = available
+const isCustomerAccountAvailable = Astro.locals.storefront.customerAccountsEnabled;
+const { customer, error, headers, loginFailed } = isCustomerAccountAvailable
   ? await getCustomerAccountPageData({ request: Astro.request })
   : { customer: null, error: null, headers: new Headers(), loginFailed: false };
 
@@ -15,7 +15,7 @@ const name = [customer?.firstName, customer?.lastName].filter(Boolean).join(" ")
   <main id="main-content" tabindex="-1" class="mx-auto max-w-3xl px-6 py-16" aria-labelledby="account-heading">
     <h1 id="account-heading" class="text-4xl font-black tracking-tight">Account</h1>
     {
-      available ? (
+      isCustomerAccountAvailable ? (
         <p class="mt-4 max-w-xl text-black/70">
           Sign in with Shopify Customer Accounts to view your basic account identity.
         </p>
@@ -30,7 +30,7 @@ const name = [customer?.firstName, customer?.lastName].filter(Boolean).join(" ")
     {error ? <p role="alert" class="mt-8 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-900">{error}</p> : null}
 
     {
-      !available ? null : customer ? (
+      !isCustomerAccountAvailable ? null : customer ? (
         <section class="bg-paper mt-8 rounded-3xl border border-black/10 p-8" aria-labelledby="identity-heading">
           <h2 id="identity-heading" class="text-sm font-semibold tracking-[0.2em] text-black/55 uppercase">
             Customer identity

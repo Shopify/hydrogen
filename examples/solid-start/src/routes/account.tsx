@@ -13,7 +13,7 @@ const loadAccount = query(async () => {
   const event = getRequestEvent();
   if (!event) throw new Error("Request event was not created for this server request.");
   if (!event.locals.storefront?.customerAccountsEnabled) {
-    return { available: false, customer: null, error: null, loginFailed: false };
+    return { isCustomerAccountAvailable: false, customer: null, error: null, loginFailed: false };
   }
 
   const { customerAccountClient, customerSessionManager, shopifyRequestContext } =
@@ -24,7 +24,7 @@ const loadAccount = query(async () => {
     sessionManager: customerSessionManager,
     customerAccount: customerAccountClient,
   });
-  return { available: true, ...accountData };
+  return { isCustomerAccountAvailable: true, ...accountData };
 }, "account");
 
 export default function AccountPage() {
@@ -46,7 +46,7 @@ export default function AccountPage() {
         Account
       </h1>
       <Show
-        when={accountData()?.available !== false}
+        when={accountData()?.isCustomerAccountAvailable !== false}
         fallback={
           <p class="mt-4 max-w-xl text-black/70">
             Customer accounts are not available in this demo store. You can still browse products

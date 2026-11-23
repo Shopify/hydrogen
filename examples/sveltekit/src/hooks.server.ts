@@ -3,12 +3,11 @@ import { createCustomerSessionManager, customerSessionHandlers } from "$lib/cust
 import { routeTemplates } from "$lib/route-templates";
 import { getRuntimeEnv } from "@shared/private-env";
 import { createRequestSessionManager } from "@shared/request-session";
+import { createRequestStorefront } from "@shared/request-storefront";
 import {
   STOREFRONT_CACHE_MAX_ENTRIES,
   createStorefrontCacheAdapter,
 } from "@shared/storefront-cache";
-import { createModeStorefrontClient } from "@shared/storefront-client";
-import { resolveStorefrontMode } from "@shared/storefront-mode";
 import {
   createCartServerHandlers,
   handleShopifyRedirects,
@@ -23,9 +22,8 @@ const storefrontCache = createStorefrontCacheAdapter(
 );
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const storefront = resolveStorefrontMode(getRuntimeEnv(env));
-  const { requestContext, storefrontClient } = createModeStorefrontClient({
-    storefront,
+  const { requestContext, storefrontClient, storefront } = createRequestStorefront({
+    env: getRuntimeEnv(env),
     request: event.request,
     cache: storefrontCache,
   });

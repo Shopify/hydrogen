@@ -8,7 +8,7 @@
 
 <main id="main-content" tabindex="-1" class="mx-auto max-w-3xl px-6 py-16" aria-labelledby="account-heading">
 	<h1 id="account-heading" class="text-4xl font-black tracking-tight">Account</h1>
-	{#if data.available}
+	{#if data.isCustomerAccountAvailable}
 		<p class="mt-4 max-w-xl text-black/70">
 			Sign in with Shopify Customer Accounts to view your basic account identity.
 		</p>

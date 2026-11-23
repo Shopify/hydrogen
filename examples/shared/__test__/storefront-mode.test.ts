@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { analyticsConsent, shop, storefrontConfig } from "../config.ts";
-import { resolveStorefrontMode } from "../storefront-mode.ts";
+import { resolveStorefrontMode, toStorefrontModeView } from "../storefront-mode.ts";
 
 const PRIVATE_TOKEN = "private-test-token";
 
@@ -80,4 +80,12 @@ test("private mode always uses the shared private store", () => {
       PRIVATE_DEFAULT,
     );
   }
+});
+
+test("the mode view never carries the private token", () => {
+  const view = toStorefrontModeView(
+    resolveStorefrontMode({ PRIVATE_STOREFRONT_API_TOKEN: PRIVATE_TOKEN }),
+  );
+  assert.equal("privateStorefrontToken" in view, false);
+  assert.equal(JSON.stringify(view).includes(PRIVATE_TOKEN), false);
 });

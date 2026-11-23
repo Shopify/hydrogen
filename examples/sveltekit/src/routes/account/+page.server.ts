@@ -5,7 +5,7 @@ import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, request, setHeaders }) => {
   if (!locals.storefront.customerAccountsEnabled) {
-    return { available: false, customer: null, error: null, loginFailed: false };
+    return { isCustomerAccountAvailable: false, customer: null, error: null, loginFailed: false };
   }
 
   const accountData = await getCustomerAccountPageData({
@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ locals, request, setHeaders }) => {
   }
 
   return {
-    available: true,
+    isCustomerAccountAvailable: true,
     customer: accountData.customer,
     error: accountData.error,
     loginFailed: accountData.loginFailed,

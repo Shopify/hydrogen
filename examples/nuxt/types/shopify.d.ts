@@ -1,10 +1,6 @@
+import type { RequestStorefrontClient } from "@shared/request-storefront";
 import type { StorefrontModeConfig } from "@shared/storefront-mode";
-import type {
-  ContentSecurityPolicy,
-  PublicStorefrontClient,
-  RequestScopedPrivateStorefrontClient,
-  ShopifyRequestContext,
-} from "@shopify/hydrogen";
+import type { ContentSecurityPolicy, ShopifyRequestContext } from "@shopify/hydrogen";
 import type {
   CustomerAccountClient,
   WritableCustomerSessionManager,
@@ -12,7 +8,7 @@ import type {
 
 declare module "h3" {
   interface H3EventContext {
-    storefrontClient: PublicStorefrontClient | RequestScopedPrivateStorefrontClient;
+    storefrontClient: RequestStorefrontClient;
     storefrontConfig: StorefrontModeConfig;
     shopifyRequestContext?: ShopifyRequestContext;
     csp?: ContentSecurityPolicy;

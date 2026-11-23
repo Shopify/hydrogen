@@ -1,14 +1,11 @@
 import node from "@astrojs/node";
-import { getShopifyCspDirectives, getShopifyScriptHashes } from "@shopify/hydrogen";
+import { getShopifyScriptHashes } from "@shopify/hydrogen";
 import { LOCAL_HTTPS_DEFAULTS, localHttps } from "@shopify/hydrogen/vite";
 import tailwindcss from "@tailwindcss/vite";
 // @ts-check
 import { defineConfig } from "astro/config";
 
-import { readConfigEnv } from "../shared/config-env.ts";
-import { resolveStorefrontMode } from "../shared/storefront-mode.ts";
-
-const { storeDomain } = resolveStorefrontMode(readConfigEnv(new URL("./", import.meta.url)));
+import { getExampleShopifyCspDirectives } from "../shared/csp.ts";
 
 const {
   scriptSrc,
@@ -16,7 +13,7 @@ const {
   scriptSrcAttr: _scriptSrcAttr,
   styleSrc,
   ...shopifyDirectives
-} = getShopifyCspDirectives({ storeDomain });
+} = getExampleShopifyCspDirectives();
 
 const enabled = process.env.npm_lifecycle_event === "dev:https";
 const httpsOptions = { enabled };

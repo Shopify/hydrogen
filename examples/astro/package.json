@@ -13,6 +13,7 @@
   "dependencies": {
     "@astrojs/node": "^10.0.6",
     "@shopify/hydrogen": "workspace:*",
+    "@shopify/hydrogen-examples-shared": "workspace:*",
     "astro": "^6.1.10",
     "lru-cache": "^11.3.6"
   },

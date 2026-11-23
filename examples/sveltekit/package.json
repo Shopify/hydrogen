@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@shopify/hydrogen": "workspace:*",
+    "@shopify/hydrogen-examples-shared": "workspace:*",
     "lru-cache": "^11.3.6"
   },
   "devDependencies": {

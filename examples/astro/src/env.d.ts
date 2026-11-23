@@ -1,14 +1,14 @@
 /// <reference types="astro/client" />
 
-import type { ModeStorefrontClient } from "@shared/storefront-client";
-import type { StorefrontMode } from "@shared/storefront-mode";
+import type { RequestStorefrontClient } from "@shared/request-storefront";
+import type { StorefrontModeView } from "@shared/storefront-mode";
 import type { ShopifyRequestContext } from "@shopify/hydrogen";
 
 declare global {
   namespace App {
     interface Locals {
-      storefront: StorefrontMode;
-      storefrontClient: ModeStorefrontClient;
+      storefront: StorefrontModeView;
+      storefrontClient: RequestStorefrontClient;
       shopifyRequestContext: ShopifyRequestContext;
     }
   }

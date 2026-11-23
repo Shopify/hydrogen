@@ -1,11 +1,10 @@
 import { getRuntimeEnv } from "@shared/private-env";
 import { createRequestSessionManager } from "@shared/request-session";
+import { createRequestStorefront } from "@shared/request-storefront";
 import {
   STOREFRONT_CACHE_MAX_ENTRIES,
   createStorefrontCacheAdapter,
 } from "@shared/storefront-cache";
-import { createModeStorefrontClient } from "@shared/storefront-client";
-import { resolveStorefrontMode } from "@shared/storefront-mode";
 import { createCartServerHandlers, handleShopifyRoutes } from "@shopify/hydrogen";
 import { createMiddleware } from "@solidjs/start/middleware";
 import { LRUCache } from "lru-cache";
@@ -33,9 +32,8 @@ const storefrontCache = createStorefrontCacheAdapter(
 export default createMiddleware({
   onRequest: [
     async (event) => {
-      const storefront = resolveStorefrontMode(getRuntimeEnv());
-      const { requestContext, storefrontClient } = createModeStorefrontClient({
-        storefront,
+      const { requestContext, storefrontClient, storefront } = createRequestStorefront({
+        env: getRuntimeEnv(),
         request: event.request,
         cache: storefrontCache,
       });

@@ -1,11 +1,8 @@
-import { getShopifyCspDirectives } from "@shopify/hydrogen";
 import adapter from "@sveltejs/adapter-node";
 
-import { readConfigEnv } from "../shared/config-env.ts";
-import { resolveStorefrontMode } from "../shared/storefront-mode.ts";
+import { getExampleShopifyCspDirectives } from "../shared/csp.ts";
 
-const { storeDomain } = resolveStorefrontMode(readConfigEnv(new URL("./", import.meta.url)));
-const shopifyDirectives = getShopifyCspDirectives({ storeDomain }, { hashes: true });
+const shopifyDirectives = getExampleShopifyCspDirectives({ hashes: true });
 // SvelteKit quotes CSP keywords and hashes itself.
 const unquote = (source) => source.replace(/^'|'$/g, "");
 const directives = Object.fromEntries(

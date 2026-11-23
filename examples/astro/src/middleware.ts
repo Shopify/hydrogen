@@ -1,11 +1,10 @@
 import { getRuntimeEnv } from "@shared/private-env";
 import { createRequestSessionManager } from "@shared/request-session";
+import { createRequestStorefront } from "@shared/request-storefront";
 import {
   STOREFRONT_CACHE_MAX_ENTRIES,
   createStorefrontCacheAdapter,
 } from "@shared/storefront-cache";
-import { createModeStorefrontClient } from "@shared/storefront-client";
-import { resolveStorefrontMode } from "@shared/storefront-mode";
 import {
   createCartServerHandlers,
   handleShopifyRedirects,
@@ -23,9 +22,8 @@ const storefrontCache = createStorefrontCacheAdapter(
 );
 
 export const onRequest = defineMiddleware(async ({ locals, request }, next) => {
-  const storefront = resolveStorefrontMode(getRuntimeEnv());
-  const { requestContext, storefrontClient } = createModeStorefrontClient({
-    storefront,
+  const { requestContext, storefrontClient, storefront } = createRequestStorefront({
+    env: getRuntimeEnv(),
     request,
     cache: storefrontCache,
   });

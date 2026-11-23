@@ -42,7 +42,7 @@ The example runs with no setup against `mock.shop`. `examples/shared/storefront-
 - **Mock mode** uses `mock.shop` when `PRIVATE_STOREFRONT_API_TOKEN` is absent, `MOCK_SHOP=1`, or `PUBLIC_STORE_DOMAIN` is a `mock.shop` domain. Customer Account and Shopify analytics are off, and `/account` says accounts are unavailable. The server logs one warning when it falls back.
 - **Private mode** uses the shared store from `examples/shared/config.ts`. Authorized developers with the ejson key can run `pnpm run examples:secrets:decrypt` to write the token to the Git-ignored `examples/sveltekit/.env`.
 
-The Content-Security-Policy is built in the framework config, so it uses the mode from the environment (and `.env`) at build time. Build with the same environment you start the server with.
+The Content-Security-Policy is fixed in the framework config, so it allows both the shared store and `mock.shop`.
 
 ## Customer Account setup
 

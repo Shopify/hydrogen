@@ -2,7 +2,7 @@ import type { ShopifyScriptTagsOptions } from "@shopify/hydrogen";
 
 import { analyticsConsent, shop, storefrontConfig } from "./config.ts";
 
-const MOCK_SHOP_DOMAIN = "mock.shop";
+export const MOCK_SHOP_DOMAIN = "mock.shop";
 
 type RuntimeEnv = Record<string, string | undefined>;
 
@@ -31,6 +31,23 @@ export type StorefrontMode =
       shopIdentity: ShopIdentity;
       customerAccountsEnabled: true;
     };
+
+/** Everything mode-dependent that request handlers and views need, without the private token. */
+export type StorefrontModeView = {
+  mode: StorefrontMode["mode"];
+  storeDomain: string;
+  shopIdentity: ShopIdentity;
+  customerAccountsEnabled: boolean;
+};
+
+export function toStorefrontModeView(storefront: StorefrontMode): StorefrontModeView {
+  return {
+    mode: storefront.mode,
+    storeDomain: storefront.storeDomain,
+    shopIdentity: storefront.shopIdentity,
+    customerAccountsEnabled: storefront.customerAccountsEnabled,
+  };
+}
 
 export function resolveStorefrontMode(env: RuntimeEnv): StorefrontMode {
   const configuredDomain = env.PUBLIC_STORE_DOMAIN;

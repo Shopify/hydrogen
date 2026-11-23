@@ -1,6 +1,5 @@
 import { createRequestSessionManager } from "@shared/request-session";
-import { createModeStorefrontClient } from "@shared/storefront-client";
-import { resolveStorefrontMode } from "@shared/storefront-mode";
+import { createRequestStorefront } from "@shared/request-storefront";
 import { handleShopifyRoutes } from "@shopify/hydrogen";
 
 import { cartHandlers } from "../../storefront/cart-handlers";
@@ -14,12 +13,14 @@ import { routeTemplates } from "../../utils/route-templates";
 
 export default defineEventHandler(async (event) => {
   const request = toWebRequest(event);
-  const storefront = resolveStorefrontMode(process.env);
+  const { requestContext, storefrontClient, storefront } = createRequestStorefront({
+    env: process.env,
+    request,
+  });
   event.context.storefrontConfig = {
     mode: storefront.mode,
     storeDomain: storefront.storeDomain,
   };
-  const { requestContext, storefrontClient } = createModeStorefrontClient({ storefront, request });
   const { customerAccountsEnabled } = storefront;
   const sessionManager = customerAccountsEnabled
     ? await createCustomerSessionManager(request)

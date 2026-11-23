@@ -9,21 +9,38 @@ import {
 
 import { getBuyerIp } from "./buyer-ip.ts";
 import { i18n } from "./config.ts";
-import type { StorefrontMode } from "./storefront-mode.ts";
+import {
+  resolveStorefrontMode,
+  toStorefrontModeView,
+  type StorefrontModeView,
+} from "./storefront-mode.ts";
 
-export type ModeStorefrontClient = PublicStorefrontClient | RequestScopedPrivateStorefrontClient;
+export type RequestStorefrontClient = PublicStorefrontClient | RequestScopedPrivateStorefrontClient;
+
+export type RequestStorefront = {
+  requestContext: ShopifyRequestContext;
+  storefrontClient: RequestStorefrontClient;
+  /** Safe to keep on request locals: it never carries the private token. */
+  storefront: StorefrontModeView;
+};
 
 let warnedAboutMockShop = false;
 
-export function createModeStorefrontClient({
-  storefront,
+/**
+ * Picks mock.shop or the private store from `env` and creates the request's Storefront client.
+ * The private token stays inside this function.
+ */
+export function createRequestStorefront({
+  env,
   request,
   cache,
 }: {
-  storefront: StorefrontMode;
+  env: Record<string, string | undefined>;
   request: Request;
   cache?: CacheInstance;
-}): { requestContext: ShopifyRequestContext; storefrontClient: ModeStorefrontClient } {
+}): RequestStorefront {
+  const storefront = resolveStorefrontMode(env);
+
   if (storefront.mode === "mock") {
     warnAboutMockShop(storefront.storeDomain);
     const requestContext = createShopifyRequestContext({ request, i18n });
@@ -32,7 +49,7 @@ export function createModeStorefrontClient({
       requestContext,
       config: { storeDomain: storefront.storeDomain, cache },
     });
-    return { requestContext, storefrontClient };
+    return { requestContext, storefrontClient, storefront: toStorefrontModeView(storefront) };
   }
 
   const requestContext = createShopifyRequestContext({
@@ -49,7 +66,7 @@ export function createModeStorefrontClient({
       cache,
     },
   });
-  return { requestContext, storefrontClient };
+  return { requestContext, storefrontClient, storefront: toStorefrontModeView(storefront) };
 }
 
 function warnAboutMockShop(storeDomain: string) {

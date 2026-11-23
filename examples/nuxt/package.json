@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@shopify/hydrogen": "workspace:*",
+    "@shopify/hydrogen-examples-shared": "workspace:*",
     "nuxt": "^3.17.0",
     "vue": "^3.5.0",
     "vue-router": "^4.5.0"
