@@ -88,8 +88,9 @@ type ShopifyPrivacyBannerOptions = {
 };
 
 type ShopifyPrivacyBanner = {
-  showPreferences: (options?: ShopifyPrivacyBannerOptions) => Promise<void>;
-  showBanner: (options?: ShopifyPrivacyBannerOptions) => Promise<void>;
+  // Overloads rather than an optional parameter keep these assignable to callbacks such as `onClick`.
+  showPreferences: { (): Promise<void>; (options: ShopifyPrivacyBannerOptions): Promise<void> };
+  showBanner: { (): Promise<void>; (options: ShopifyPrivacyBannerOptions): Promise<void> };
 };
 
 declare global {

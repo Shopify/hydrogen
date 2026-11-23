@@ -1,3 +1,4 @@
+import type { MouseEventHandler } from "react";
 import { describe, expectTypeOf, it } from "vitest";
 
 import type { ConsentConfig, ConsentPreferences, ConsentSetup, ShopifyGlobal, StorefrontAnalyticsConfig } from "./index";
@@ -44,6 +45,19 @@ export function privacyBannerTypes(banner: NonNullable<Window["privacyBanner"]>)
   void banner.showBanner({ storefrontAccessToken: 123 });
   // @ts-expect-error locale must be a string
   void banner.showPreferences({ locale: 123 });
+
+  // Handing the methods straight to click handlers compiled before the options were added.
+  const reactProps: { onClick: MouseEventHandler<HTMLButtonElement> } = {
+    onClick: banner.showPreferences,
+  };
+  void reactProps;
+  document.querySelector("button")?.addEventListener("click", banner.showBanner);
+
+  const mockBanner: NonNullable<Window["privacyBanner"]> = {
+    showBanner: async () => {},
+    showPreferences: async () => {},
+  };
+  void mockBanner;
 }
 
 export function shopifyScriptOptionTypes() {
