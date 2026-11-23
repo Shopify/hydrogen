@@ -24,13 +24,8 @@
  */
 
 import {execFileSync} from 'node:child_process';
-import {existsSync, readFileSync, readdirSync} from 'node:fs';
+import {existsSync, readFileSync} from 'node:fs';
 import {join} from 'node:path';
-
-// Directories whose immediate children can be workspace packages. Anything not
-// listed here (for example `docs/preview`) never publishes, so it never needs a
-// release either.
-const WORKSPACE_ROOTS = ['packages', 'templates', 'apps'];
 
 const NOT_FOUND = /404|not found/i;
 
@@ -46,7 +41,18 @@ function main() {
 
   const packageDirs = mapPackageNameToDirectory();
   for (const {name, version} of published) {
-    createRelease(packageDirs, name, version);
+    try {
+      createRelease(packageDirs, name, version);
+    } catch (error) {
+      // A re-run of the job publishes nothing new, so `published-packages` comes
+      // back empty and cannot fill the gap. Releases that already exist are
+      // skipped, so re-running with the full list is safe.
+      console.error(
+        `Failed on ${name}@${version}. From the repo root at this commit, with gh authenticated, re-run:\n` +
+          `PUBLISHED_PACKAGES='${JSON.stringify(published)}' GITHUB_REPOSITORY=${repo} node scripts/create-backfix-github-releases.mjs`,
+      );
+      throw error;
+    }
   }
 }
 
@@ -65,22 +71,14 @@ function readPublishedPackages() {
 }
 
 function mapPackageNameToDirectory() {
-  const byName = new Map();
-  for (const root of WORKSPACE_ROOTS) {
-    if (!existsSync(root)) continue;
-    for (const entry of readdirSync(root, {withFileTypes: true})) {
-      if (!entry.isDirectory()) continue;
-      const dir = join(root, entry.name);
-      const manifestPath = join(dir, 'package.json');
-      if (!existsSync(manifestPath)) continue;
-      byName.set(readManifest(manifestPath).name, dir);
-    }
-  }
-  return byName;
-}
-
-function readManifest(path) {
-  return JSON.parse(readFileSync(path, 'utf8'));
+  // pnpm already knows every workspace package, so there is no hardcoded list
+  // of directories to drift from pnpm-workspace.yaml.
+  const workspace = JSON.parse(
+    execFileSync('pnpm', ['-r', 'ls', '--json', '--depth', '-1'], {
+      encoding: 'utf8',
+    }),
+  );
+  return new Map(workspace.map(({name, path}) => [name, path]));
 }
 
 function createRelease(packageDirs, packageName, version) {
@@ -122,6 +120,9 @@ function createRelease(packageDirs, packageName, version) {
     '-',
     // The whole point of this script.
     '--latest=false',
+    // Without this, a missing tag would be created from the default branch,
+    // pointing a back-fix release at `main`.
+    '--verify-tag',
   ];
   if (version.includes('-')) {
     args.push('--prerelease');
@@ -159,8 +160,8 @@ function releaseExists(tag) {
 
 /**
  * Mirrors changesets/action's `getChangelogEntry`, including skipping code
- * blocks so a `#` comment inside one is not mistaken for a heading and matching
- * the closing heading at the same depth as the closing heading.
+ * blocks so a `#` comment inside one is not mistaken for a heading and ending
+ * the entry at the next heading with the same depth as the version heading.
  */
 function changelogEntry(changelog, version, tag) {
   let entryStart;
