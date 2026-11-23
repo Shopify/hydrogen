@@ -14,6 +14,7 @@ export {
   CUSTOMER_ACCOUNT_LOGIN_PATH,
   CUSTOMER_ACCOUNT_LOGOUT_PATH,
   CUSTOMER_ACCOUNT_REFRESH_PATH,
+  CUSTOMER_ACCOUNT_WIDGET_DATA_PATH,
 } from "./session";
 export type {
   CreateCustomerAccountClientOptions,
