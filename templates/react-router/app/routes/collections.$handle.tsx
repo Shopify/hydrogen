@@ -3,6 +3,7 @@ import { CollectionProvider } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
 import { Link, useLocation, useNavigate, useNavigation, useSearchParams } from "react-router";
 
+import { BreadcrumbJsonLd } from "~/components/BreadcrumbJsonLd";
 import {
   ActiveFilterChips,
   COLLECTION_SORT_OPTIONS,
@@ -54,29 +55,6 @@ function CollectionViewedTracker({ collection }: { collection: CollectionData })
   }, [collection.id, collection.handle]);
 
   return null;
-}
-
-function BreadcrumbJsonLd({ collection, origin }: { collection: CollectionData; origin: string }) {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: `${origin}/`,
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: collection.title,
-        item: `${origin}/collections/${collection.handle}`,
-      },
-    ],
-  };
-
-  return <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>;
 }
 
 function Breadcrumb({ collection }: { collection: CollectionData }) {
@@ -250,7 +228,16 @@ export default function CollectionRoute({ loaderData }: Route.ComponentProps) {
       <CollectionViewedTracker collection={loaderData.collection} />
       <main className="flex-1" id="main-content" tabIndex={-1}>
         <div className="max-w-page px-margin mx-auto w-full py-8 md:py-12">
-          <BreadcrumbJsonLd collection={loaderData.collection} origin={loaderData.origin} />
+          <BreadcrumbJsonLd
+            origin={loaderData.origin}
+            items={[
+              { name: "Home", path: "/" },
+              {
+                name: loaderData.collection.title,
+                path: `/collections/${loaderData.collection.handle}`,
+              },
+            ]}
+          />
           <Breadcrumb collection={loaderData.collection} />
           <CollectionHeader collection={loaderData.collection} />
           <div className="lg:grid lg:grid-cols-[15rem_1fr] lg:gap-10">

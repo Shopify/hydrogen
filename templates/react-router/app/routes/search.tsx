@@ -8,6 +8,7 @@ import { CollectionProvider } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
 import { Link, useLocation, useNavigate, useNavigation, useSearchParams } from "react-router";
 
+import { BreadcrumbJsonLd } from "~/components/BreadcrumbJsonLd";
 import {
   ActiveFilterChips,
   FacetForm,
@@ -60,29 +61,6 @@ function SearchViewedTracker({
   }, [searchTerm, totalCount]);
 
   return null;
-}
-
-function BreadcrumbJsonLd({ origin }: { origin: string }) {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: `${origin}/`,
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Search",
-        item: `${origin}/search`,
-      },
-    ],
-  };
-
-  return <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>;
 }
 
 function Breadcrumb() {
@@ -290,7 +268,13 @@ export default function SearchRoute({ loaderData }: Route.ComponentProps) {
       ) : null}
       <main className="flex-1" id="main-content" tabIndex={-1}>
         <div className="max-w-page px-margin mx-auto w-full py-8 md:py-12">
-          <BreadcrumbJsonLd origin={loaderData.origin} />
+          <BreadcrumbJsonLd
+            origin={loaderData.origin}
+            items={[
+              { name: "Home", path: "/" },
+              { name: "Search", path: "/search" },
+            ]}
+          />
           <Breadcrumb />
           <SearchHeader term={loaderData.searchTerm} />
           {loaderData.performed ? <SearchResults loaderData={loaderData} /> : null}
