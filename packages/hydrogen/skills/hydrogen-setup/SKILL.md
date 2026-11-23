@@ -29,8 +29,8 @@ The Hydrogen repository on GitHub has working storefront examples for several fr
 
 These are reference implementations, not starter kits: read them for how Hydrogen APIs are wired into a framework's request lifecycle, routing, and data loading, then follow the conventions of the app you are setting up. Do not copy their structure wholesale, and do not treat every pattern in them as production-ready.
 
-- They track the latest Hydrogen release. If an example uses an export or signature that the installed `@shopify/hydrogen` does not have, the installed package's types win.
-- `@shared/*` imports resolve to https://github.com/Shopify/hydrogen/tree/main/examples/shared. It holds the examples' development store config and session helpers: take the patterns, never the values.
+- They build against unreleased Hydrogen source on `main`, so they can be ahead of any published version. If an example uses an export or signature that the installed `@shopify/hydrogen` does not have, the installed package's types win.
+- `@shared/*` and relative `shared/` imports resolve to https://github.com/Shopify/hydrogen/tree/main/examples/shared. It holds the examples' development store config and session helpers: take the patterns, never the values.
 - If no row matches the app's framework, or GitHub is unreachable, continue from the generic instructions.
 
 ## Verification Discipline
