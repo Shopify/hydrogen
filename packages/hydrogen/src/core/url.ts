@@ -71,7 +71,9 @@ export function getSameOriginPath(
     // Parse absolute URLs without a base so scheme-relative forms like `https:evil.example`
     // resolve to their own host, as a browser would, instead of onto `origin`.
     const url = target.startsWith("/") ? new URL(target, origin) : new URL(target);
-    if (url.origin !== origin) return undefined;
+    // Compare the URL itself and not just `url.origin`: a `blob:` URL reports the origin of the
+    // URL it wraps.
+    if (url.origin !== origin || !url.href.startsWith(`${origin}/`)) return undefined;
     const path = `${url.pathname}${url.search}${url.hash}`;
     // The parsed pathname can itself start with `//` (e.g. from `/x/..//evil`),
     // which a redirect would resolve as a protocol-relative URL to another host.

@@ -123,6 +123,8 @@ describe("getSameOriginPath", () => {
     ["/x/..//evil.example/p"],
     ["/x/../\\evil.example/p"],
     ["/./\t/evil.example/p"],
+    // A `blob:` URL reports the origin of the URL it wraps, and its path is that whole URL.
+    [`blob:${origin}/p`],
   ])("rejects %s", (target) => {
     expect(getSameOriginPath(target, origin)).toBeUndefined();
   });
