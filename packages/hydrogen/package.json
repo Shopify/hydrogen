@@ -95,7 +95,7 @@
   "scripts": {
     "build": "tsdown && node scripts/copy-generated-graphql-assets.ts",
     "build-docs": "sh ./docs/build-docs.sh",
-    "dev": "tsdown --watch ./src",
+    "dev": "tsdown --watch ./src --no-clean",
     "typecheck": "tsc --noEmit",
     "libcheck": "node scripts/libcheck-package.ts",
     "test": "pnpm run build && vitest run",
