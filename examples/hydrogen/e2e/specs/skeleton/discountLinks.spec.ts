@@ -20,6 +20,13 @@ const OFF_SITE_TARGETS = [
   "\u0001/\\evil.example",
 ];
 
+// Hydrogen sends an absolute `Location` on the request's origin, so compare the on-site path.
+function sitePath(location: string | undefined, baseURL: string | undefined): string | undefined {
+  if (!location || !baseURL) return location;
+  const url = new URL(location, baseURL);
+  return url.origin === new URL(baseURL).origin ? `${url.pathname}${url.search}` : url.href;
+}
+
 test.describe("Discount links", () => {
   test("redirect to the home page when the target leaves the site", async ({
     request,
@@ -38,26 +45,31 @@ test.describe("Discount links", () => {
         maxRedirects: 0,
       });
 
-      expect(response.headers().location, `redirect=${target}`).toBe("/");
+      expect(sitePath(response.headers().location, baseURL), `redirect=${target}`).toBe("/");
     }
   });
 
-  test("redirect to a target on the site and keep the other params", async ({ request }) => {
+  test("redirect to a target on the site and keep the other params", async ({
+    request,
+    baseURL,
+  }) => {
     const response = await request.get(DISCOUNT_LINK, {
       params: { redirect: "/collections?sort_by=price", utm_source: "newsletter" },
       maxRedirects: 0,
     });
 
-    expect(response.headers().location).toBe("/collections?sort_by=price&utm_source=newsletter");
+    expect(sitePath(response.headers().location, baseURL)).toBe(
+      "/collections?sort_by=price&utm_source=newsletter",
+    );
   });
 
-  test("read the target from return_to with the same check", async ({ request }) => {
+  test("read the target from return_to with the same check", async ({ request, baseURL }) => {
     const getRedirect = async (target: string) => {
       const response = await request.get(DISCOUNT_LINK, {
         params: { return_to: target },
         maxRedirects: 0,
       });
-      return response.headers().location;
+      return sitePath(response.headers().location, baseURL);
     };
 
     expect(await getRedirect("/collections")).toBe("/collections");

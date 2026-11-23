@@ -18,8 +18,9 @@ export type CartDiscountLinkContext = {
  */
 export type CartDiscountLink = (context: CartDiscountLinkContext, code: string) => Promise<Headers>;
 
-// A WeakMap rather than a property so the capability never registers as a route in
-// handleShopifyRoutes and stays unreachable outside Hydrogen wiring.
+// Keyed by handler group rather than stored on it like `cartBuyerIdentitySync`: handleShopifyRoutes
+// only sees groups as string-keyed records, and reading a symbol off those needs a type assertion.
+// Either way the capability never registers as a route and stays unreachable outside Hydrogen.
 const discountLinks = new WeakMap<object, CartDiscountLink>();
 
 export function registerCartDiscountLink(handlers: object, apply: CartDiscountLink): void {

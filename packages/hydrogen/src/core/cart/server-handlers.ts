@@ -482,7 +482,6 @@ async function applyDiscountLinkCode(
       const result = await storefrontClient.graphql(queries.cartDiscountCodesUpdate, {
         variables: { cartId: existing.cart.id, discountCodes: [...codes, code] },
       });
-      appendSetCookies(headers, result.headers);
       warnDiscountLinkUserErrors(assertMutationData(result, "cartDiscountCodesUpdate").userErrors);
       return headers;
     }
@@ -500,7 +499,6 @@ async function applyDiscountLinkCode(
         },
       },
     });
-    appendSetCookies(headers, result.headers);
     const { cart, userErrors } = assertMutationData(result, "cartCreate");
     warnDiscountLinkUserErrors(userErrors);
     if (cart) headers.append("set-cookie", createCartCookie(cart.id));
@@ -509,10 +507,6 @@ async function applyDiscountLinkCode(
     log.error("discount link could not apply code", { error });
     return headers;
   }
-}
-
-function appendSetCookies(headers: Headers, upstreamHeaders: Headers): void {
-  for (const setCookie of upstreamHeaders.getSetCookie()) headers.append("set-cookie", setCookie);
 }
 
 // The shopper never sees these errors on a redirect, so warn to keep a failing link visible to

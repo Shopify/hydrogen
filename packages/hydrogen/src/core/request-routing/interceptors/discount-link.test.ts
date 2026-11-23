@@ -208,14 +208,14 @@ describe("handleDiscountLinkRedirect", () => {
     });
   });
 
-  it("forwards Storefront API cookies on the redirect", async () => {
+  it("leaves Storefront API cookies to the request context's cookie policy", async () => {
     mockFetch.mockResolvedValueOnce(
       cartCreateData([], { "set-cookie": "_shopify_essential=abc; Path=/" }),
     );
 
     const response = await resolveDiscountLink(discountRequest("/discount/SUMMER20"));
 
-    expectRedirect(response, "/", ["_shopify_essential=abc; Path=/", CREATED_CART_COOKIE]);
+    expectRedirect(response, "/", [CREATED_CART_COOKIE]);
   });
 
   it("merges the code into the existing cart's codes", async () => {
