@@ -154,7 +154,9 @@ jobs:
           commit-message: '[ci] release ${{ env.latestVersion }}'
           pr-title: '[ci] release ${{ env.latestVersion }}'
           # v2 pushes release commits and tags through the GitHub API by default.
-          # Keep the Git CLI so this upgrade does not also change how commits land.
+          # Keep the Git CLI so commits land the same way. The pusher still
+          # changes: v2 pushes with `github-token`, where v1 effectively pushed
+          # as the built-in GITHUB_TOKEN, so these pushes now trigger workflows.
           push-with-git-cli: true
           github-token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
 
@@ -305,7 +307,11 @@ jobs:
           commit-message: '[ci] back-fix release ${{ github.ref_name }}'
           pr-title: '[ci] back-fix release ${{ github.ref_name }}'
           # v2 pushes release commits and tags through the GitHub API by default.
-          # Keep the Git CLI so this upgrade does not also change how commits land.
+          # Keep the Git CLI so commits land the same way. The pusher still
+          # changes: v1's token lost to the built-in GITHUB_TOKEN that checkout
+          # persists, so its pushes triggered no workflows. v2 pushes with
+          # `github-token`, so the release branch and each package tag now trigger
+          # workflows, including deploy.yml's unfiltered `on: [push]`.
           push-with-git-cli: true
           github-token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
 
