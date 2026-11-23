@@ -7940,7 +7940,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CartPostResult",
       "value": "ShopifyRouteJsonResult<Record<string, unknown>> | ShopifyRouteRedirectResult | ShopifyRouteErrorResult<CartError>",
-      "description": "The route result that the cart POST handler returns. Check `type` to tell the results apart:\n- `json` answers a JSON request. The result's `data` holds the mutation's `cart`, `userErrors`, and `warnings`.\n- `redirect` answers a form submission with a `303` redirect to the referring page.\n- `error` holds a cart error with a code that identifies the failure. A rate-limited form submission gets an error result with `format: \"text\"`, so the browser shows the message and the `429` status.",
+      "description": "The route result that the cart POST handler returns. Check `type` to tell the results apart:\n- `json` answers a JSON request. The result's `data` holds the mutation's `cart`, `userErrors`, and `warnings`.\n- `redirect` answers a form submission with a `303` redirect to the same-origin `return_to` search param, or else to the referring page.\n- `error` holds a cart error with a code that identifies the failure. A rate-limited form submission gets an error result with `format: \"text\"`, so the browser shows the message and the `429` status.",
       "isPublicDocs": true
     }
   },
@@ -7948,7 +7948,7 @@
     "src/core/cart/server-handlers.ts": {
       "filePath": "src/core/cart/server-handlers.ts",
       "name": "CreateCartServerHandlersGeneratedType",
-      "description": "Creates the handlers for the `/api/cart` route, which loads and changes the customer's cart.\n\nThe handlers read the cart ID from the `cart` cookie and set the cookie when they create a cart. A JSON request gets a JSON response, and a form submission gets a `303` redirect to the referring page. With `rateLimitHandling: \"response\"`, a Storefront API rate limit returns `cart_mutation_failed` with status `429`, `Cache-Control: no-store`, and a valid `Retry-After` header. The body is a JSON error for a JSON request. For a form submission, the body is a plain-text message, because the browser shows that response as a page.\n\nPass `customerSession` to connect carts to the logged-in customer. The handlers then need `sessionManager` and `requestContext` in their context.",
+      "description": "Creates the handlers for the `/api/cart` route, which loads and changes the customer's cart.\n\nThe handlers read the cart ID from the `cart` cookie and set the cookie when they create a cart. A JSON request gets a JSON response, and a form submission gets a `303` redirect to the referring page. To send the customer elsewhere, add a same-origin `return_to` search param to the form's action, such as `/api/cart?return_to=/cart`. With `rateLimitHandling: \"response\"`, a Storefront API rate limit returns `cart_mutation_failed` with status `429`, `Cache-Control: no-store`, and a valid `Retry-After` header. The body is a JSON error for a JSON request. For a form submission, the body is a plain-text message, because the browser shows that response as a page.\n\nPass `customerSession` to connect carts to the logged-in customer. The handlers then need `sessionManager` and `requestContext` in their context.",
       "isPublicDocs": true,
       "params": [
         {

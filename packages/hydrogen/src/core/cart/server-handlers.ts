@@ -89,7 +89,7 @@ export interface CartError extends ShopifyRouteError {
 /**
  * The route result that the cart POST handler returns. Check `type` to tell the results apart:
  * - `json` answers a JSON request. The result's `data` holds the mutation's `cart`, `userErrors`, and `warnings`.
- * - `redirect` answers a form submission with a `303` redirect to the referring page.
+ * - `redirect` answers a form submission with a `303` redirect to the same-origin `return_to` search param, or else to the referring page.
  * - `error` holds a cart error with a code that identifies the failure. A rate-limited form submission gets an error result with `format: "text"`, so the browser shows the message and the `429` status.
  *
  * @publicDocs
@@ -293,7 +293,7 @@ type CartServerHandlersForOptions<TOptions> = TOptions extends {
 /**
  * Creates the handlers for the `/api/cart` route, which loads and changes the customer's cart.
  *
- * The handlers read the cart ID from the `cart` cookie and set the cookie when they create a cart. A JSON request gets a JSON response, and a form submission gets a `303` redirect to the referring page. With `rateLimitHandling: "response"`, a Storefront API rate limit returns `cart_mutation_failed` with status `429`, `Cache-Control: no-store`, and a valid `Retry-After` header. The body is a JSON error for a JSON request. For a form submission, the body is a plain-text message, because the browser shows that response as a page.
+ * The handlers read the cart ID from the `cart` cookie and set the cookie when they create a cart. A JSON request gets a JSON response, and a form submission gets a `303` redirect to the referring page. To send the customer elsewhere, add a same-origin `return_to` search param to the form's action, such as `/api/cart?return_to=/cart`. With `rateLimitHandling: "response"`, a Storefront API rate limit returns `cart_mutation_failed` with status `429`, `Cache-Control: no-store`, and a valid `Retry-After` header. The body is a JSON error for a JSON request. For a form submission, the body is a plain-text message, because the browser shows that response as a page.
  *
  * Pass `customerSession` to connect carts to the logged-in customer. The handlers then need `sessionManager` and `requestContext` in their context.
  *
@@ -613,7 +613,15 @@ function appendHeaders(headers: Headers, headersToAppend: Headers | undefined) {
 }
 
 function safeRedirectTarget(request: Request): string {
-  return getSameOriginPath(request.headers.get("referer"), new URL(request.url).origin) ?? "/";
+  const url = new URL(request.url);
+  const referer = getSameOriginPath(request.headers.get("referer"), url.origin);
+  return (
+    getSameOriginPath(url.searchParams.get("return_to"), url.origin) ??
+    // A client router that commits the URL before it fetches sends the cart endpoint as the referer.
+    // Redirecting there would show the cart JSON as the page.
+    (referer && new URL(referer, url.origin).pathname !== url.pathname ? referer : undefined) ??
+    "/"
+  );
 }
 
 type MutationResult = {
