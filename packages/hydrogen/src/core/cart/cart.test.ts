@@ -7808,6 +7808,30 @@ describe("configureCartEndpoint", () => {
     );
   });
 
+  it("handler rejects with the user errors when a refused first add returns no cart", async () => {
+    configureCartEndpoint("/api/cart");
+    const handler = extractConfiguredHandler();
+    const userErrors = [
+      {
+        code: "INVALID_MERCHANDISE_LINE",
+        field: ["input", "lines", "0", "merchandiseId"],
+        message: "The merchandise with id gid://shopify/ProductVariant/1 does not exist.",
+      },
+    ];
+    mockFetch.mockResolvedValueOnce(
+      new Response(JSON.stringify({ cart: null, userErrors, warnings: [] }), { status: 200 }),
+    );
+
+    const result = handler(vi.fn(), {
+      lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }],
+    });
+
+    await expect(result).rejects.toThrow(userErrors[0].message);
+    await expect(result).rejects.toMatchObject({
+      cause: { cartId: null, userErrors, warnings: [] },
+    });
+  });
+
   it("same endpoint is a no-op", () => {
     const logger = createTestLogger();
     configureLogging({ logger });
