@@ -16,6 +16,85 @@ permissions:
   contents: read
 
 jobs:
+  # Examples must run against mock.shop with no secrets or .env file.
+  mock-shop-examples:
+    name: ${{ matrix.example.name }} (mock.shop, no secrets)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      npm_config_registry: https://registry.npmjs.org/
+      TURBO_TELEMETRY_DISABLED: "1"
+    strategy:
+      fail-fast: false
+      matrix:
+        example:
+          - name: Astro
+            package: "@shopify/hydrogen-example-astro"
+            port: 4211
+          - name: Nuxt
+            package: "@shopify/hydrogen-example-nuxt"
+            port: 4212
+          - name: SolidStart
+            package: "@shopify/hydrogen-example-solid-start"
+            port: 4213
+          - name: SvelteKit
+            package: "@shopify/hydrogen-example-sveltekit"
+            port: 4214
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm run build:pkgs
+
+      - name: Build ${{ matrix.example.name }}
+        run: pnpm --filter ${{ matrix.example.package }} build
+
+      - name: Start ${{ matrix.example.name }} server
+        env:
+          HOST: localhost
+          PORT: ${{ matrix.example.port }}
+        run: |
+          pnpm --filter ${{ matrix.example.package }} start > example.log 2>&1 &
+          echo $! > example.pid
+
+      - name: Wait for ${{ matrix.example.name }}
+        run: |
+          node -e "const url='http://localhost:${{ matrix.example.port }}/'; const deadline=Date.now()+60000; (async()=>{let last; while(Date.now()<deadline){try{const r=await fetch(url); console.log(url+' ready: '+r.status); return;}catch(e){last=e;} await new Promise(r=>setTimeout(r,1000));} throw last;})()"
+
+      - name: Fetch storefront pages
+        run: node scripts/examples-mock-smoke.ts http://localhost:${{ matrix.example.port }}/
+
+      - name: Check mock.shop fallback warning
+        run: grep -q "Using mock.shop" example.log
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f example.pid ]; then
+            kill "$(cat example.pid)" 2>/dev/null || true
+          fi
+
+      - name: Upload example log
+        if: failure()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: mock-shop-example-log-${{ matrix.example.port }}
+          path: example.log
+          if-no-files-found: ignore
+          retention-days: 7
+
   templates:
     name: ${{ matrix.template.name }}
     runs-on: ubuntu-latest
