@@ -506,7 +506,9 @@ async function handlePost(
   );
   if (result.type !== "mutation") return result.response;
 
-  const headers = createProxyResponseHeaders(result.headers);
+  const headers = isFormRequest
+    ? createFormRedirectHeaders(result.headers)
+    : createProxyResponseHeaders(result.headers);
   appendHeaders(headers, customerSessionHeaders);
 
   // Only persist carts the browser already owns, including newly-created carts.
@@ -610,6 +612,15 @@ function appendHeaders(headers: Headers, headersToAppend: Headers | undefined) {
   for (const setCookie of headersToAppend.getSetCookie()) {
     headers.append("set-cookie", setCookie);
   }
+}
+
+// The Storefront API's other headers, such as its CSP and JSON content type, describe the API
+// response, not the page that the redirect leads to. Only its cookies apply.
+function createFormRedirectHeaders(upstreamHeaders: Headers): Headers {
+  const headers = new Headers();
+  for (const cookie of upstreamHeaders.getSetCookie()) headers.append("set-cookie", cookie);
+  applyPrivateResponseCacheHeaders(headers);
+  return headers;
 }
 
 function safeRedirectTarget(request: Request): string {

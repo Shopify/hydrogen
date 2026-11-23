@@ -1921,6 +1921,40 @@ describe("createCartServerHandlers", () => {
       expect(result.headers.get("set-cookie")).toContain("_shopify_y=unique");
     });
 
+    it("keeps only cookies and cache headers from the Storefront API on the redirect", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse(
+          { cartCreate: { cart: MOCK_CART, userErrors: [] } },
+          {
+            "set-cookie": "_shopify_y=unique; Path=/; Secure",
+            "content-security-policy": "default-src 'none'; form-action 'none'",
+            "access-control-allow-origin": "*",
+            "x-request-id": "req-1",
+          },
+        ),
+      );
+
+      const result = await handleCartRequest(
+        createFormPostRequest(
+          { merchandiseId: "gid://shopify/ProductVariant/42", quantity: "1" },
+          { referer: "https://my-app.com/products/widget" },
+        ),
+        defaultConfig,
+      );
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(303);
+      expect(result.headers.getSetCookie()).toEqual([
+        "_shopify_y=unique; Path=/; Secure",
+        expect.stringContaining("cart="),
+      ]);
+      expect(result.headers.get("cache-control")).toContain("no-store");
+      expect(result.headers.get("content-type")).toBeNull();
+      expect(result.headers.get("content-security-policy")).toBeNull();
+      expect(result.headers.get("access-control-allow-origin")).toBeNull();
+      expect(result.headers.get("x-request-id")).toBeNull();
+    });
+
     it("FormData intent=add without cart cookie creates cart and sets cookie", async () => {
       mockFetch.mockResolvedValueOnce(
         mockGqlResponse({ cartCreate: { cart: MOCK_CART, userErrors: [] } }),
