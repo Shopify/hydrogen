@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createStorefrontClient } from "../../../client/client";
 import type { CustomerSession } from "../../../customer-account/session";
 import { createCartServerHandlers } from "../../cart/server-handlers";
+import { defineShopifyI18n } from "../../i18n/define";
 import { configureLogging } from "../../logging";
 import { createShopifyRequestContext } from "../../request-context";
 import { assert, createTestLogger } from "../../test-utils";
@@ -317,6 +318,61 @@ describe("handleDiscountLinkRedirect", () => {
       ],
     ])("%s redirects to %s", async (search, expectedPath) => {
       const response = await resolveDiscountLink(discountRequest(`/discount/SUMMER20${search}`));
+
+      expectRedirect(response, expectedPath, [CREATED_CART_COOKIE]);
+    });
+  });
+
+  describe("under a locale path prefix", () => {
+    function resolveLocalizedDiscountLink(path: string) {
+      const request = discountRequest(path);
+      const storefrontClient = createStorefrontClient({
+        type: "private",
+        requestContext: createShopifyRequestContext({
+          request,
+          i18n: defineShopifyI18n({
+            defaultLocale: { language: "EN", country: "US" },
+            routing: { type: "pathname", locales: [{ language: "FR", country: "CA" }] },
+          }),
+          buyerIp: "127.0.0.1",
+        }),
+        config: {
+          storeDomain: "test-store.myshopify.com",
+          privateStorefrontToken: "test-private-token",
+        },
+      });
+      const result = handleDiscountLinkRedirect(new URL(request.url), {
+        request,
+        requestContext: storefrontClient.requestContext,
+        storefrontClient,
+        handlers: [createCartServerHandlers()],
+      });
+      assert(result, "discount link interceptor should match a locale-prefixed link");
+      return result;
+    }
+
+    beforeEach(() => {
+      mockFetch.mockImplementation(() => Promise.resolve(cartCreateData()));
+    });
+
+    it("applies the code in the link's locale", async () => {
+      await resolveLocalizedDiscountLink("/fr-ca/discount/SUMMER20");
+
+      expect(sentOperations()).toEqual([
+        {
+          operation: "CartCreate",
+          variables: { input: { discountCodes: ["SUMMER20"] }, country: "CA", language: "FR" },
+        },
+      ]);
+    });
+
+    it.each([
+      ["", "/fr-ca"],
+      ["?redirect=/products/tee&utm_source=email", "/fr-ca/products/tee?utm_source=email"],
+      ["?redirect=/fr-ca/products/tee", "/fr-ca/products/tee"],
+      ["?redirect=https://evil.example/x", "/fr-ca"],
+    ])("%s redirects to %s", async (search, expectedPath) => {
+      const response = await resolveLocalizedDiscountLink(`/fr-ca/discount/SUMMER20${search}`);
 
       expectRedirect(response, expectedPath, [CREATED_CART_COOKIE]);
     });
