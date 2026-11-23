@@ -13,7 +13,7 @@ Port of the canonical `examples/core` design to [Nuxt 3](https://nuxt.com/) with
 
 ## Storefront mode
 
-`storefront/storefront-config.ts` selects the mode for each request from server environment variables:
+`examples/shared/storefront-mode.ts` selects the mode for each request from server environment variables. The Astro, SolidStart, and SvelteKit examples use the same module:
 
 - **Mock mode** uses `mock.shop`. The example uses it when `PRIVATE_STOREFRONT_API_TOKEN` is absent or empty, when `MOCK_SHOP=1`, or when `PUBLIC_STORE_DOMAIN` is `mock.shop` or a `*.mock.shop` subdomain (even if a token is set). A supported `mock.shop` subdomain in `PUBLIC_STORE_DOMAIN` stays selected in all of these cases.
 - **Private mode** uses the shared store from `examples/shared/config.ts` with that store's private Storefront API token in `PRIVATE_STOREFRONT_API_TOKEN`. A `PUBLIC_STORE_DOMAIN` that is not a `mock.shop` domain is ignored, because the token, Customer Account, and Shopify script identity all belong to the shared store.

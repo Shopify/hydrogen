@@ -1,3 +1,4 @@
+import type { StorefrontModeConfig } from "@shared/storefront-mode";
 import type {
   ContentSecurityPolicy,
   PublicStorefrontClient,
@@ -8,8 +9,6 @@ import type {
   CustomerAccountClient,
   WritableCustomerSessionManager,
 } from "@shopify/hydrogen/customer-account";
-
-import type { StorefrontModeConfig } from "../storefront/storefront-config";
 
 declare module "h3" {
   interface H3EventContext {
