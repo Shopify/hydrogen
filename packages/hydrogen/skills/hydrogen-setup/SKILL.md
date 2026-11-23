@@ -16,20 +16,18 @@ Read each step file and complete it fully before opening the next. Every step en
 
 ## Example Storefronts On GitHub
 
-The Hydrogen repository ships working storefront examples for several frameworks, including frameworks with no official Shopify template. Read the matching one when a step leaves a framework-specific choice open — especially when the `hydrogen-*` skill has no `references/` file for the detected framework:
-
-https://github.com/Shopify/hydrogen/tree/preview/examples
+The Hydrogen repository on GitHub has working storefront examples for several frameworks. Read the matching one when a step leaves a framework-specific choice open — especially when the `hydrogen-*` skill has no `references/` file for the detected framework:
 
 | Framework | Reference implementation |
 | --- | --- |
-| Astro | `examples/astro/` |
-| Nuxt | `examples/nuxt/` |
-| SolidStart | `examples/solid-start/` |
-| SvelteKit | `examples/sveltekit/` |
-| React Router | `templates/react-router/`, plus `examples/hydrogen/` |
-| Next.js | `templates/nextjs/` |
+| Astro | https://github.com/Shopify/hydrogen/tree/main/examples/astro |
+| Next.js | https://github.com/Shopify/hydrogen/tree/main/examples/nextjs |
+| Nuxt | https://github.com/Shopify/hydrogen/tree/main/examples/nuxt |
+| React Router | https://github.com/Shopify/hydrogen/tree/main/templates/react-router |
+| SolidStart | https://github.com/Shopify/hydrogen/tree/main/examples/solid-start |
+| SvelteKit | https://github.com/Shopify/hydrogen/tree/main/examples/sveltekit |
 
-The examples are reference implementations, not starter kits: read them for how Hydrogen APIs are wired into a framework's request lifecycle, routing, and data loading, then follow the conventions of the app you are setting up. Do not copy their structure wholesale, and do not treat every pattern in them as production-ready. The supported starters are the ones under `templates/`.
+These are reference implementations, not starter kits: read them for how Hydrogen APIs are wired into a framework's request lifecycle, routing, and data loading, then follow the conventions of the app you are setting up. Do not copy their structure wholesale, and do not treat every pattern in them as production-ready.
 
 ## Verification Discipline
 
