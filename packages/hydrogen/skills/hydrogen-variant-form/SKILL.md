@@ -86,6 +86,8 @@ Accepts `{ value: number }` for a controlled input or `{ defaultValue: number }`
 
 Requires `{ optionName, value }`. Returns `{ name, value, onChange, onClick }` — form identity plus activation handlers. Derive caller-owned UI props from the matching option value state, such as `value.exists`, `value.available`, and `value.selected`.
 
+With the store directly, `createProductFormRegister(selectedVariant)` without a select function returns `{ name, value }` only. Use it in frameworks whose renderer drops `onChange`/`onClick` function props, such as Remix 3, and call `store.selectOption(name, value)` from the framework's own event listener.
+
 ### `register("attributeValue", opts)`
 
 Requires `{ key: string; value: string }` (controlled) or `{ key: string; defaultValue: string }` (uncontrolled). Returns `{ name: "attributes.<key>", value }` — a hidden input that attaches a line-item attribute to the add-to-cart submission. Use for per-line metadata like engraving text, gift messages, or custom options. Multiple `attributeValue` fields can be registered for different keys. The `key` must be non-empty (throws `TypeError` otherwise). Attributes with keys starting with `_` are conventionally internal/private and should not be set from the storefront UI.

@@ -23,6 +23,7 @@ export type {
   ProductAttributeValueProps,
   ProductFormRegister,
   ProductMerchandiseIdProps,
+  ProductOptionValueAttributes,
   ProductOptionValueProps,
   ProductQuantityDefaultProps,
   ProductQuantityProps,

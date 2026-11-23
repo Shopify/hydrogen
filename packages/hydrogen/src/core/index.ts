@@ -241,6 +241,7 @@ export type {
   ProductVariantFrom,
   ProductVariantInput,
   ProductMerchandiseIdProps,
+  ProductOptionValueAttributes,
   ProductOptionValueProps,
   ProductQuantityDefaultProps,
   ProductQuantityProps,
