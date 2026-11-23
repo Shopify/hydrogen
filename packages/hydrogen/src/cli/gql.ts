@@ -1,18 +1,20 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { existsSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join, parse, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, parse, relative, resolve } from "node:path";
 import type * as NodePath from "node:path";
 import { parseArgs } from "node:util";
 
-import { createGraphQLPluginConfig } from "../graphql/plugin-config";
+import { createGraphQLPluginConfig, GRAPHQL_SCHEMA_FILE_NAMES } from "../graphql/plugin-config";
 
 const GQL_TADA_CLI_PATH_FROM_PACKAGE_ROOT = "bin/cli.js";
 const PACKAGE_ROOT_FROM_CLI_MODULE = "../../";
 const SUCCESS_EXIT_CODE = 0;
 const TSCONFIG_FILE_NAME = "tsconfig.json";
 const TEMPORARY_TSCONFIG_PREFIX = ".hydrogen-gql-";
+const TEMPORARY_SCHEMA_DIRECTORY_SUFFIX = "-schemas";
+const PACKAGE_SCHEMA_DIRECTORY = "dist";
 const CHECK_LEVELS = new Set(["info", "warn", "error"]);
 
 interface RunCommandOptions {
@@ -92,7 +94,9 @@ function parseCheckArgs(args: string[]) {
   return values;
 }
 
-type PathApi = Pick<typeof NodePath, "dirname" | "join" | "relative">;
+type PathApi = Pick<typeof NodePath, "basename" | "dirname" | "isAbsolute" | "join" | "relative">;
+
+const nodePathApi: PathApi = { basename, dirname, isAbsolute, join, relative };
 
 /**
  * gql.tada tries `new URL(schema)` before falling back to a file read. On Windows an absolute
@@ -102,12 +106,47 @@ type PathApi = Pick<typeof NodePath, "dirname" | "join" | "relative">;
 export function getSchemaDirectory(
   temporaryTsconfigPath: string,
   packageRoot: string,
-  pathApi: PathApi = { dirname, join, relative },
+  pathApi: PathApi = nodePathApi,
 ): string {
   return pathApi.relative(
     pathApi.dirname(temporaryTsconfigPath),
-    pathApi.join(packageRoot, "dist"),
+    pathApi.join(packageRoot, PACKAGE_SCHEMA_DIRECTORY),
   );
+}
+
+interface SchemaLocation {
+  /** The schema directory to give gql.tada, relative to the temporary tsconfig. */
+  schemaDirectory: string;
+  /** Whether the schemas must first be copied to `temporarySchemaDirectoryPath`. */
+  copySchemas: boolean;
+}
+
+/**
+ * `path.relative` cannot go from one Windows drive to another, so when the project and the
+ * Hydrogen package are on different drives the schema directory stays absolute, and gql.tada
+ * would fetch it as a URL. In that case the schemas are copied next to the temporary tsconfig
+ * and referenced by the relative name of their temporary directory.
+ */
+export function getSchemaLocation(
+  temporaryTsconfigPath: string,
+  packageRoot: string,
+  temporarySchemaDirectoryPath: string,
+  pathApi: PathApi = nodePathApi,
+): SchemaLocation {
+  const schemaDirectory = getSchemaDirectory(temporaryTsconfigPath, packageRoot, pathApi);
+  if (!pathApi.isAbsolute(schemaDirectory)) return { schemaDirectory, copySchemas: false };
+
+  return { schemaDirectory: pathApi.basename(temporarySchemaDirectoryPath), copySchemas: true };
+}
+
+function copySchemas(packageRoot: string, temporarySchemaDirectoryPath: string): void {
+  mkdirSync(temporarySchemaDirectoryPath);
+  for (const fileName of GRAPHQL_SCHEMA_FILE_NAMES) {
+    copyFileSync(
+      join(packageRoot, PACKAGE_SCHEMA_DIRECTORY, fileName),
+      join(temporarySchemaDirectoryPath, fileName),
+    );
+  }
 }
 
 export async function checkGraphQL(options: CheckGraphQLOptions = {}): Promise<void> {
@@ -117,36 +156,46 @@ export async function checkGraphQL(options: CheckGraphQLOptions = {}): Promise<v
   const runCommand = options.runCommand ?? spawnRunCommand;
   const values = parseCheckArgs(options.args ?? []);
   const tsconfigPath = findTsconfig(cwd, values.tsconfig);
-  const temporaryTsconfigPath = join(
+  const temporaryPathPrefix = join(
     dirname(tsconfigPath),
-    `${TEMPORARY_TSCONFIG_PREFIX}${randomUUID()}.json`,
+    `${TEMPORARY_TSCONFIG_PREFIX}${randomUUID()}`,
   );
-  const pluginConfig = createGraphQLPluginConfig(
-    getSchemaDirectory(temporaryTsconfigPath, packageRoot),
-  );
-
-  writeFileSync(
+  const temporaryTsconfigPath = `${temporaryPathPrefix}.json`;
+  const temporarySchemaDirectoryPath = `${temporaryPathPrefix}${TEMPORARY_SCHEMA_DIRECTORY_SUFFIX}`;
+  const schemaLocation = getSchemaLocation(
     temporaryTsconfigPath,
-    JSON.stringify({
-      extends: tsconfigPath,
-      compilerOptions: { plugins: [pluginConfig] },
-    }),
-    { flag: "wx" },
+    packageRoot,
+    temporarySchemaDirectoryPath,
   );
+  const pluginConfig = createGraphQLPluginConfig(schemaLocation.schemaDirectory);
 
-  const cliArgs = [
-    gqlTadaCliPath,
-    "check",
-    "--tsconfig",
-    temporaryTsconfigPath,
-    "--level",
-    values.level,
-  ];
-  if (values["fail-on-warn"]) cliArgs.push("--fail-on-warn");
-
-  const cleanup = () => rmSync(temporaryTsconfigPath, { force: true });
+  const cleanup = () => {
+    rmSync(temporaryTsconfigPath, { force: true });
+    rmSync(temporarySchemaDirectoryPath, { recursive: true, force: true });
+  };
   process.once("exit", cleanup);
   try {
+    if (schemaLocation.copySchemas) copySchemas(packageRoot, temporarySchemaDirectoryPath);
+
+    writeFileSync(
+      temporaryTsconfigPath,
+      JSON.stringify({
+        extends: tsconfigPath,
+        compilerOptions: { plugins: [pluginConfig] },
+      }),
+      { flag: "wx" },
+    );
+
+    const cliArgs = [
+      gqlTadaCliPath,
+      "check",
+      "--tsconfig",
+      temporaryTsconfigPath,
+      "--level",
+      values.level,
+    ];
+    if (values["fail-on-warn"]) cliArgs.push("--fail-on-warn");
+
     await runCommand(process.execPath, cliArgs, { cwd });
   } finally {
     process.off("exit", cleanup);

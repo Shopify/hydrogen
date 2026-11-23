@@ -4,7 +4,7 @@ import { dirname, isAbsolute, join, relative, win32 } from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { checkGraphQL, getSchemaDirectory } from "./gql";
+import { checkGraphQL, getSchemaDirectory, getSchemaLocation } from "./gql";
 
 const TSCONFIG_PATH_ARGUMENT_INDEX = 3;
 const tempDirectories: string[] = [];
@@ -146,7 +146,7 @@ describe("getSchemaDirectory (Windows paths)", () => {
     expect(win32.isAbsolute(result)).toBe(false);
   });
 
-  it("KNOWN LIMITATION: stays absolute when the project and package are on different drives", () => {
+  it("stays absolute when the project and package are on different drives", () => {
     const result = getSchemaDirectory("D:\\proj\\.t.json", "C:\\pkg", win32);
 
     expect(result).toBe("C:\\pkg\\dist");
@@ -157,5 +157,38 @@ describe("getSchemaDirectory (Windows paths)", () => {
   it("returns a relative POSIX path on POSIX", () => {
     const result = getSchemaDirectory("/proj/.t.json", "/pkg");
     expect(isAbsolute(result)).toBe(false);
+  });
+});
+
+describe("getSchemaLocation", () => {
+  it("uses the package schemas in place when a relative path exists (same drive)", () => {
+    const result = getSchemaLocation(
+      "C:\\proj\\app\\.hydrogen-gql-1.json",
+      "C:\\proj\\node_modules\\@shopify\\hydrogen",
+      "C:\\proj\\app\\.hydrogen-gql-1-schemas",
+      win32,
+    );
+
+    expect(result).toEqual({
+      schemaDirectory: "..\\node_modules\\@shopify\\hydrogen\\dist",
+      copySchemas: false,
+    });
+  });
+
+  it("copies the schemas next to the temporary tsconfig across drives", () => {
+    const result = getSchemaLocation(
+      "D:\\proj\\.hydrogen-gql-1.json",
+      "C:\\pkg",
+      "D:\\proj\\.hydrogen-gql-1-schemas",
+      win32,
+    );
+
+    expect(result).toEqual({ schemaDirectory: ".hydrogen-gql-1-schemas", copySchemas: true });
+    expect(isUrl(win32.join(result.schemaDirectory, "storefront.schema.json"))).toBe(false);
+  });
+
+  it("never copies the schemas on POSIX", () => {
+    const result = getSchemaLocation("/proj/.t.json", "/pkg", "/proj/.t-schemas");
+    expect(result.copySchemas).toBe(false);
   });
 });
