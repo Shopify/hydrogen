@@ -12,6 +12,7 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 import packageJson from "../package.json" with { type: "json" };
@@ -22,6 +23,8 @@ const PACKAGE_ROOT = resolve(import.meta.dirname, "..");
 const TS_PLUGIN_EXPORT_PATH = "./ts-plugin";
 // pack + tar + spawn on a cold CI runner can exceed vitest's 5s default.
 const TS_PLUGIN_PACK_TIMEOUT_MS = 30_000;
+// Type-checking a consumer loads every published declaration, gql.tada's included.
+const DEVELOPMENT_TYPES_TIMEOUT_MS = 30_000;
 const STANDARD_EVENTS_SCRIPT_URL = "https://cdn.shopify.com/storefront/standard-events.js";
 const URL_IMPORT = /\bimport\((?:\s|\/\*.*?\*\/|\/\/[^\n]*)*["'`]https?:[^)]*\)/gs;
 const STANDARD_EVENTS_INSPECTOR_ID = "shopify-standard-events-inspector";
@@ -329,6 +332,49 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     expect(scriptSrc).not.toMatch(/unsafe-inline|unsafe-eval/);
   });
 
+  it(
+    "types the development condition's entries, including the GraphiQL route option",
+    () => {
+      const consumerPath = resolve(PACKAGE_ROOT, "development-types-consumer.ts");
+      const consumer = `
+        import { handleShopifyRoutes } from "@shopify/hydrogen";
+        import { ShopifyScripts as ReactShopifyScripts } from "@shopify/hydrogen/react";
+        import { ShopifyScripts as VueShopifyScripts } from "@shopify/hydrogen/vue";
+        export type Entries = [typeof ReactShopifyScripts, typeof VueShopifyScripts];
+        type RouteOptions = Parameters<typeof handleShopifyRoutes>[0];
+        export const hasGraphiqlOption: "graphiql" extends keyof RouteOptions ? true : false = true;
+      `;
+      const typeErrors = (customConditions: string[]) => {
+        const options: ts.CompilerOptions = {
+          module: ts.ModuleKind.ESNext,
+          moduleResolution: ts.ModuleResolutionKind.Bundler,
+          target: ts.ScriptTarget.ES2024,
+          strict: true,
+          noEmit: true,
+          skipLibCheck: false,
+          jsx: ts.JsxEmit.ReactJSX,
+          customConditions,
+        };
+        const host = ts.createCompilerHost(options);
+        const { fileExists, readFile, getSourceFile } = host;
+        host.fileExists = (file) => file === consumerPath || fileExists(file);
+        host.readFile = (file) => (file === consumerPath ? consumer : readFile(file));
+        host.getSourceFile = (file, languageVersion, ...rest) =>
+          file === consumerPath
+            ? ts.createSourceFile(file, consumer, languageVersion)
+            : getSourceFile(file, languageVersion, ...rest);
+        const program = ts.createProgram([consumerPath], options, host);
+        return ts
+          .getPreEmitDiagnostics(program)
+          .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
+      };
+
+      expect(typeErrors(["development"])).toEqual([]);
+      expect(typeErrors([])).toEqual([`Type 'true' is not assignable to type 'false'.`]);
+    },
+    DEVELOPMENT_TYPES_TIMEOUT_MS,
+  );
+
   it("only includes the standard events inspector in the development build", () => {
     const productionShopifyScripts = readFileSync(
       resolve(PACKAGE_ROOT, "dist/core/shopify-scripts/index.mjs"),
@@ -352,6 +398,22 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
 
     expect(localeCheckModules).toEqual([
       join("development", "core", "shopify-scripts", "locale-checks.mjs"),
+    ]);
+  });
+
+  it("only ships the development entry's JavaScript in the development build", () => {
+    // The production build types the development entry but must not emit its code.
+    const developmentOnlyModules = readdirSync(resolve(PACKAGE_ROOT, "dist"), {
+      encoding: "utf8",
+      recursive: true,
+    }).filter((file) =>
+      /(?:^|[/\\])(?:development|graphiql|[^/\\]+\.development)\.mjs$/.test(file),
+    );
+
+    expect(developmentOnlyModules.toSorted()).toEqual([
+      join("development", "core", "development.mjs"),
+      join("development", "core", "request-routing", "handle-shopify-routes.development.mjs"),
+      join("development", "core", "request-routing", "interceptors", "graphiql.mjs"),
     ]);
   });
 
