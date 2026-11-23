@@ -246,11 +246,15 @@ describe('<Image />', () => {
       render(<Image {...defaultProps} data={data} width="250" />);
 
       const img = screen.getByTestId<HTMLImageElement>('test-element');
-      expect(img.srcset).toContain('width=250');
-      expect(img.srcset).toContain('1x');
-      expect(img.srcset).toContain('2x');
-      expect(img.srcset).toContain('3x');
-      expect(img.srcset).not.toContain('width=200');
+      const candidates = img.srcset.split(', ').map((candidate) => {
+        const [url, descriptor] = candidate.split(' ');
+        return [new URL(url).searchParams.get('width'), descriptor];
+      });
+      expect(candidates).toEqual([
+        ['250', '1x'],
+        ['500', '2x'],
+        ['750', '3x'],
+      ]);
     });
 
     it('does not create srcset with greater dimensions than source image when using aspect-ratio', () => {
