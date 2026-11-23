@@ -54,6 +54,7 @@ Common root-level fingerprints:
 | SvelteKit | `svelte.config.js` / `svelte.config.ts` at root | `sveltekit.md` |
 | SolidStart | `app.config.ts` at root with `@solidjs/start` | `solidstart.md` |
 | Marko | `marko.config.js` / `marko.config.ts` at root, or `@marko/run` | `marko.md` |
+| Remix 3 | `remix` 3.x in dependencies, with a router from `remix/router` (often `app/router.ts`) | `remix.md` |
 
 Do not hard block just because no reference file exists. Continue when the app has a real server request lifecycle where Hydrogen can run before routing and handle 404 redirects after routing. Stop only when the app is clearly browser-only, static-only, or has no way to run server code.
 
