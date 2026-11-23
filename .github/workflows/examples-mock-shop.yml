@@ -9,6 +9,8 @@ on:
       - "packages/hydrogen/**"
       - ".github/workflows/examples-mock-shop.yml"
       - "scripts/examples-mock-smoke.ts"
+      - "package.json"
+      - "pnpm-lock.yaml"
   pull_request:
     branches: [main]
     paths:
@@ -16,6 +18,8 @@ on:
       - "packages/hydrogen/**"
       - ".github/workflows/examples-mock-shop.yml"
       - "scripts/examples-mock-smoke.ts"
+      - "package.json"
+      - "pnpm-lock.yaml"
 
 concurrency:
   group: examples-mock-shop-${{ github.ref }}
