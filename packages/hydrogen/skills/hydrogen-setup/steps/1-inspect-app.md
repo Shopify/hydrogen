@@ -39,7 +39,9 @@ If multiple signals appear, prefer the one the app already uses for layout and c
 
 ## Framework specific references
 
-Every skill prefixed with `hydrogen-` *may* ship a framework-specific instruction file under its own `references/`. After detecting the framework, check that skill's `references/` for the matching file and read it before making framework-specific choices. If no matching reference exists, continue from the generic instructions and follow the app's existing conventions.
+Every skill prefixed with `hydrogen-` *may* ship a framework-specific instruction file under its own `references/`. After detecting the framework, check that skill's `references/` for the matching file and read it before making framework-specific choices.
+
+If no matching reference exists, read the example storefront for the same framework listed under "Example Storefronts On GitHub" in `SKILL.md` before improvising, then continue from the generic instructions and follow the app's existing conventions.
 
 Inspect dependencies, configuration files, server entry points, route directories, and existing request lifecycle code. Identify whether the app has a framework that can run server code and expose request handlers, middleware, loaders, server functions, or route handlers.
 
