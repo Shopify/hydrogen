@@ -37,7 +37,7 @@ import {
 } from '../utils/request';
 import {getCallerStackLine, withSyncStack} from '../utils/callsites';
 import {
-  getRedirectUrl,
+  getRedirectPathFromSearchParams,
   ensureLocalRedirectUrl,
   getSameOriginPath,
 } from '../utils/get-redirect-url';
@@ -452,9 +452,9 @@ export function createCustomerAccountClient({
         state,
         nonce,
         redirectPath:
-          getRedirectUrl(request.url) ||
           // The same HTTPS origin the OAuth `redirect_uri` uses, so an http
           // `request.url` still matches the https pages customers browse.
+          getRedirectPathFromSearchParams(request.url, httpsOrigin) ||
           getSameOriginPath(getHeader(request, 'Referer'), httpsOrigin) ||
           defaultRedirectPath,
       });
