@@ -1,18 +1,25 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createStorefrontClient } from "../../../client/client";
+import type { CustomerSession } from "../../../customer-account/session";
+import { createCartServerHandlers } from "../../cart/server-handlers";
 import { configureLogging } from "../../logging";
 import { createShopifyRequestContext } from "../../request-context";
 import { assert, createTestLogger } from "../../test-utils";
 import { handleShopifyRoutes } from "../handle-shopify-routes";
+import type { ShopifyRouteHandlerGroup } from "../route-types";
 import { handleDiscountLinkRedirect } from "./discount-link";
 
 const ORIGIN = "https://my-app.com";
 const EXISTING_CART_ID = "gid://shopify/Cart/existing";
 const CREATED_CART_ID = "gid://shopify/Cart/created";
 const CREATED_CART_COOKIE = "cart=created; Path=/; SameSite=Lax; Max-Age=1209600";
+const LOCALE_VARIABLES = { country: "US", language: "EN" };
 
-function createOptions(request: Request) {
+function createOptions(
+  request: Request,
+  handlers: ShopifyRouteHandlerGroup[] = [createCartServerHandlers()],
+) {
   const storefrontClient = createStorefrontClient({
     type: "private",
     requestContext: createShopifyRequestContext({
@@ -31,6 +38,7 @@ function createOptions(request: Request) {
     requestContext: storefrontClient.requestContext,
     sessionManager: createTestSessionManager(request),
     storefrontClient,
+    handlers,
   };
 }
 
@@ -50,6 +58,17 @@ function createTestSessionManager(request: Request) {
   };
 }
 
+function createLoggedInCustomerSession(accessToken: string): CustomerSession {
+  return {
+    getAccessToken: vi.fn().mockResolvedValue(accessToken),
+    getOrRefreshAccessToken: vi.fn().mockResolvedValue(accessToken),
+    prepareLoginUrl: vi.fn(),
+    handleOAuthCallback: vi.fn(),
+    logout: vi.fn(),
+    isLoggedIn: vi.fn().mockResolvedValue(true),
+  } as unknown as CustomerSession;
+}
+
 function discountRequest(path: string, init: RequestInit & { cartCookie?: string } = {}) {
   const { cartCookie, ...requestInit } = init;
   const headers = new Headers(requestInit.headers);
@@ -57,12 +76,12 @@ function discountRequest(path: string, init: RequestInit & { cartCookie?: string
   return new Request(`${ORIGIN}${path}`, { ...requestInit, headers });
 }
 
-function interceptDiscountLink(request: Request) {
-  return handleDiscountLinkRedirect(new URL(request.url), createOptions(request));
+function interceptDiscountLink(request: Request, handlers?: ShopifyRouteHandlerGroup[]) {
+  return handleDiscountLinkRedirect(new URL(request.url), createOptions(request, handlers));
 }
 
-async function resolveDiscountLink(request: Request) {
-  const result = interceptDiscountLink(request);
+async function resolveDiscountLink(request: Request, handlers?: ShopifyRouteHandlerGroup[]) {
+  const result = interceptDiscountLink(request, handlers);
   assert(result, "discount link interceptor should match");
   return result;
 }
@@ -70,15 +89,16 @@ async function resolveDiscountLink(request: Request) {
 function expectRedirect(response: Response, path: string, cookies: string[] = []) {
   expect(response.status).toBe(303);
   expect(response.headers.get("location")).toBe(`${ORIGIN}${path}`);
-  expect(response.headers.get("cache-control")).toBe("no-store");
+  expect(response.headers.get("cache-control")).toBe(
+    "private, no-store, max-age=0, must-revalidate",
+  );
   expect(response.headers.getSetCookie()).toEqual(cookies);
 }
 
-function gqlResponse(body: unknown): Response {
-  return new Response(JSON.stringify(body), {
-    status: 200,
-    headers: { "content-type": "application/json" },
-  });
+function gqlResponse(body: unknown, headers?: HeadersInit): Response {
+  const responseHeaders = new Headers(headers);
+  responseHeaders.set("content-type", "application/json");
+  return new Response(JSON.stringify(body), { status: 200, headers: responseHeaders });
 }
 
 function cartData(discountCodes: string[]) {
@@ -89,20 +109,24 @@ function cartData(discountCodes: string[]) {
   });
 }
 
-function cartCreateData() {
-  return gqlResponse({
-    data: { cartCreate: { cart: { id: CREATED_CART_ID }, userErrors: [] } },
-  });
+function cartCreateData(userErrors: Array<{ message: string }> = [], headers?: HeadersInit) {
+  return gqlResponse(
+    { data: { cartCreate: { cart: { id: CREATED_CART_ID }, userErrors, warnings: [] } } },
+    headers,
+  );
 }
 
-function discountUpdateData() {
+function discountUpdateData(userErrors: Array<{ message: string }> = []) {
   return gqlResponse({
-    data: { cartDiscountCodesUpdate: { cart: { id: EXISTING_CART_ID }, userErrors: [] } },
+    data: {
+      cartDiscountCodesUpdate: { cart: { id: EXISTING_CART_ID }, userErrors, warnings: [] },
+    },
   });
 }
 
 describe("handleDiscountLinkRedirect", () => {
   let mockFetch: ReturnType<typeof vi.fn>;
+  let logger: ReturnType<typeof createTestLogger>;
 
   function sentOperations(): Array<{ operation: string; variables: unknown }> {
     return mockFetch.mock.calls.map(([, init]) => {
@@ -118,6 +142,8 @@ describe("handleDiscountLinkRedirect", () => {
   beforeEach(() => {
     mockFetch = vi.fn();
     vi.stubGlobal("fetch", mockFetch);
+    logger = createTestLogger();
+    configureLogging({ logger });
   });
 
   afterEach(() => {
@@ -132,17 +158,27 @@ describe("handleDiscountLinkRedirect", () => {
     },
   );
 
-  it.each(["POST", "HEAD"])(
-    "rejects %s with 405 without calling the Storefront API",
-    async (method) => {
-      const response = await resolveDiscountLink(
-        discountRequest("/discount/SUMMER20", { method, cartCookie: "existing" }),
-      );
+  it("leaves discount links to the app when no cart handlers are registered", () => {
+    expect(interceptDiscountLink(discountRequest("/discount/SUMMER20"), [])).toBeNull();
+  });
 
-      expect(response.status).toBe(405);
-      expect(mockFetch).not.toHaveBeenCalled();
-    },
-  );
+  it("rejects POST with 405 without calling the Storefront API", async () => {
+    const response = await resolveDiscountLink(
+      discountRequest("/discount/SUMMER20", { method: "POST", cartCookie: "existing" }),
+    );
+
+    expect(response.status).toBe(405);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("redirects HEAD without applying the code", async () => {
+    const response = await resolveDiscountLink(
+      discountRequest("/discount/SUMMER20?redirect=/products/tee", { method: "HEAD" }),
+    );
+
+    expect(mockFetch).not.toHaveBeenCalled();
+    expectRedirect(response, "/products/tee");
+  });
 
   it("creates a cart with the code when there is no cart cookie", async () => {
     mockFetch.mockResolvedValueOnce(cartCreateData());
@@ -151,11 +187,35 @@ describe("handleDiscountLinkRedirect", () => {
 
     expect(sentOperations()).toEqual([
       {
-        operation: "DiscountLinkCartCreate",
-        variables: { discountCodes: ["SUMMER20"], country: "US", language: "EN" },
+        operation: "CartCreate",
+        variables: { input: { discountCodes: ["SUMMER20"] }, ...LOCALE_VARIABLES },
       },
     ]);
     expectRedirect(response, "/", [CREATED_CART_COOKIE]);
+  });
+
+  it("attaches the logged-in customer to the cart it creates", async () => {
+    mockFetch.mockResolvedValueOnce(cartCreateData());
+    const handlers = [
+      createCartServerHandlers({ customerSession: createLoggedInCustomerSession("token") }),
+    ];
+
+    await resolveDiscountLink(discountRequest("/discount/SUMMER20"), handlers);
+
+    expect(sentOperations()[0]?.variables).toEqual({
+      input: { discountCodes: ["SUMMER20"], buyerIdentity: { customerAccessToken: "token" } },
+      ...LOCALE_VARIABLES,
+    });
+  });
+
+  it("forwards Storefront API cookies on the redirect", async () => {
+    mockFetch.mockResolvedValueOnce(
+      cartCreateData([], { "set-cookie": "_shopify_essential=abc; Path=/" }),
+    );
+
+    const response = await resolveDiscountLink(discountRequest("/discount/SUMMER20"));
+
+    expectRedirect(response, "/", ["_shopify_essential=abc; Path=/", CREATED_CART_COOKIE]);
   });
 
   it("merges the code into the existing cart's codes", async () => {
@@ -166,10 +226,14 @@ describe("handleDiscountLinkRedirect", () => {
     );
 
     expect(sentOperations()).toEqual([
-      { operation: "DiscountLinkCart", variables: { id: EXISTING_CART_ID } },
+      { operation: "Cart", variables: { id: EXISTING_CART_ID, ...LOCALE_VARIABLES } },
       {
-        operation: "DiscountLinkCartDiscountCodesUpdate",
-        variables: { cartId: EXISTING_CART_ID, discountCodes: ["A", "SUMMER20"] },
+        operation: "CartDiscountCodesUpdate",
+        variables: {
+          cartId: EXISTING_CART_ID,
+          discountCodes: ["A", "SUMMER20"],
+          ...LOCALE_VARIABLES,
+        },
       },
     ]);
     expectRedirect(response, "/");
@@ -182,9 +246,7 @@ describe("handleDiscountLinkRedirect", () => {
       discountRequest("/discount/SUMMER20?redirect=/products/tee", { cartCookie: "existing" }),
     );
 
-    expect(sentOperations()).toEqual([
-      { operation: "DiscountLinkCart", variables: { id: EXISTING_CART_ID } },
-    ]);
+    expect(sentOperations().map(({ operation }) => operation)).toEqual(["Cart"]);
     expectRedirect(response, "/products/tee");
   });
 
@@ -197,13 +259,7 @@ describe("handleDiscountLinkRedirect", () => {
       discountRequest("/discount/SUMMER20", { cartCookie: "existing" }),
     );
 
-    expect(sentOperations()).toEqual([
-      { operation: "DiscountLinkCart", variables: { id: EXISTING_CART_ID } },
-      {
-        operation: "DiscountLinkCartCreate",
-        variables: { discountCodes: ["SUMMER20"], country: "US", language: "EN" },
-      },
-    ]);
+    expect(sentOperations().map(({ operation }) => operation)).toEqual(["Cart", "CartCreate"]);
     expectRedirect(response, "/", [CREATED_CART_COOKIE]);
   });
 
@@ -214,7 +270,7 @@ describe("handleDiscountLinkRedirect", () => {
       discountRequest("/discount/SUMMER20?cartId=gid://shopify/Cart/from-param"),
     );
 
-    expect(sentOperations().map(({ operation }) => operation)).toEqual(["DiscountLinkCartCreate"]);
+    expect(sentOperations().map(({ operation }) => operation)).toEqual(["CartCreate"]);
   });
 
   it("decodes a percent-encoded code", async () => {
@@ -223,9 +279,8 @@ describe("handleDiscountLinkRedirect", () => {
     await resolveDiscountLink(discountRequest("/discount/SUMMER%2020"));
 
     expect(sentOperations()[0]?.variables).toEqual({
-      discountCodes: ["SUMMER 20"],
-      country: "US",
-      language: "EN",
+      input: { discountCodes: ["SUMMER 20"] },
+      ...LOCALE_VARIABLES,
     });
   });
 
@@ -268,13 +323,6 @@ describe("handleDiscountLinkRedirect", () => {
   });
 
   describe("when applying the code fails", () => {
-    let logger: ReturnType<typeof createTestLogger>;
-
-    beforeEach(() => {
-      logger = createTestLogger();
-      configureLogging({ logger });
-    });
-
     it.each([
       {
         name: "a GraphQL error on the cart query",
@@ -284,38 +332,7 @@ describe("handleDiscountLinkRedirect", () => {
             gqlResponse({ data: null, errors: [{ message: "Throttled" }] }),
           );
         },
-        operations: ["DiscountLinkCart"],
-      },
-      {
-        name: "userErrors from cartDiscountCodesUpdate",
-        cartCookie: "existing",
-        mockResponses: () => {
-          mockFetch.mockResolvedValueOnce(cartData(["A"])).mockResolvedValueOnce(
-            gqlResponse({
-              data: {
-                cartDiscountCodesUpdate: {
-                  cart: null,
-                  userErrors: [{ message: "Cart is locked" }],
-                },
-              },
-            }),
-          );
-        },
-        operations: ["DiscountLinkCart", "DiscountLinkCartDiscountCodesUpdate"],
-      },
-      {
-        name: "userErrors from cartCreate",
-        cartCookie: undefined,
-        mockResponses: () => {
-          mockFetch.mockResolvedValueOnce(
-            gqlResponse({
-              data: {
-                cartCreate: { cart: { id: CREATED_CART_ID }, userErrors: [{ message: "No" }] },
-              },
-            }),
-          );
-        },
-        operations: ["DiscountLinkCartCreate"],
+        operations: ["Cart"],
       },
       {
         name: "a thrown fetch",
@@ -323,7 +340,7 @@ describe("handleDiscountLinkRedirect", () => {
         mockResponses: () => {
           mockFetch.mockRejectedValueOnce(new TypeError("network down"));
         },
-        operations: ["DiscountLinkCartCreate"],
+        operations: ["CartCreate"],
       },
     ])(
       "logs $name and still redirects without a cookie",
@@ -338,11 +355,28 @@ describe("handleDiscountLinkRedirect", () => {
         expect(logger.error).toHaveBeenCalledTimes(1);
         expect(logger.error).toHaveBeenCalledWith(
           "discount link could not apply code",
-          expect.objectContaining({ scope: "discount-link", error: expect.any(Error) }),
+          expect.objectContaining({ scope: "cart-api", error: expect.any(Error) }),
         );
         expectRedirect(response, "/products/tee");
       },
     );
+
+    it("warns about userErrors from cartDiscountCodesUpdate and still redirects", async () => {
+      mockFetch
+        .mockResolvedValueOnce(cartData(["A"]))
+        .mockResolvedValueOnce(discountUpdateData([{ message: "Cart is locked" }]));
+
+      const response = await resolveDiscountLink(
+        discountRequest("/discount/SUMMER20?redirect=/products/tee", { cartCookie: "existing" }),
+      );
+
+      expect(logger.error).not.toHaveBeenCalled();
+      expect(logger.warn).toHaveBeenCalledWith("discount link code was rejected", {
+        scope: "cart-api",
+        userErrors: ["Cart is locked"],
+      });
+      expectRedirect(response, "/products/tee");
+    });
   });
 
   it("is registered with handleShopifyRoutes", async () => {
@@ -352,9 +386,7 @@ describe("handleDiscountLinkRedirect", () => {
     const response = await handleShopifyRoutes(createOptions(request));
 
     assert(response, "handleShopifyRoutes should handle discount links");
-    expect(response.status).toBe(303);
-    expect(response.headers.get("location")).toBe(`${ORIGIN}/products/tee`);
-    expect(response.headers.getSetCookie()).toContain(CREATED_CART_COOKIE);
-    expect(sentOperations().map(({ operation }) => operation)).toEqual(["DiscountLinkCartCreate"]);
+    expectRedirect(response, "/products/tee", [CREATED_CART_COOKIE]);
+    expect(sentOperations().map(({ operation }) => operation)).toEqual(["CartCreate"]);
   });
 });

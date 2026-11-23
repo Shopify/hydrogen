@@ -32,6 +32,7 @@ import {
   type CartBuyerIdentitySyncContext,
 } from "./buyer-identity-sync";
 import { getCartIdFromCookie, createCartCookie, createExpiredCartCookie } from "./cookie";
+import { registerCartDiscountLink, type CartDiscountLinkContext } from "./discount-link";
 import { getCart, getCartId, type CartDataFromQuery } from "./get-cart";
 import {
   cartQueries,
@@ -347,6 +348,9 @@ export function createCartServerHandlers(
   };
 
   Object.defineProperty(handlers, cartServerHandlersCartQuery, { value: queries.cart });
+  registerCartDiscountLink(handlers, (context, code) =>
+    applyDiscountLinkCode(context, code, runtimeQueries, customerSession),
+  );
   if (customerSession) {
     // Symbol-keyed and non-enumerable so the capability never registers as a
     // route in handleShopifyRoutes and stays uncallable outside Hydrogen wiring.
@@ -456,6 +460,70 @@ async function reconcileBuyerCountry(
   }
 }
 
+async function applyDiscountLinkCode(
+  context: CartDiscountLinkContext,
+  code: string,
+  queries: RuntimeCartQueries,
+  customerSession?: CartCustomerSession,
+): Promise<Headers> {
+  const { request, storefrontClient } = context;
+  const headers = new Headers();
+  try {
+    const existing = await getCart(getCartIdFromCookie(request), storefrontClient, queries.cart);
+    // A failed read (throttling, an outage) must not create a cart that replaces the shopper's cookie.
+    if (existing.errors) throw new Error(existing.errors.map(({ message }) => message).join("\n"));
+
+    if (existing.cart) {
+      const codes = existing.cart.discountCodes.map(({ code: existingCode }) => existingCode);
+      const normalizedCode = code.toLowerCase();
+      if (codes.some((existingCode) => existingCode.toLowerCase() === normalizedCode)) {
+        return headers;
+      }
+      const result = await storefrontClient.graphql(queries.cartDiscountCodesUpdate, {
+        variables: { cartId: existing.cart.id, discountCodes: [...codes, code] },
+      });
+      appendSetCookies(headers, result.headers);
+      warnDiscountLinkUserErrors(assertMutationData(result, "cartDiscountCodesUpdate").userErrors);
+      return headers;
+    }
+
+    const customerAccess = await getCartCreateCustomerAccess(true, context, customerSession);
+    if (customerAccess.commitSession)
+      appendHeaders(headers, await getCustomerSessionHeaders(context));
+    const result = await storefrontClient.graphql(queries.cartCreate, {
+      variables: {
+        input: {
+          discountCodes: [code],
+          ...(customerAccess.accessToken && {
+            buyerIdentity: { customerAccessToken: customerAccess.accessToken },
+          }),
+        },
+      },
+    });
+    appendSetCookies(headers, result.headers);
+    const { cart, userErrors } = assertMutationData(result, "cartCreate");
+    warnDiscountLinkUserErrors(userErrors);
+    if (cart) headers.append("set-cookie", createCartCookie(cart.id));
+    return headers;
+  } catch (error) {
+    log.error("discount link could not apply code", { error });
+    return headers;
+  }
+}
+
+function appendSetCookies(headers: Headers, upstreamHeaders: Headers): void {
+  for (const setCookie of upstreamHeaders.getSetCookie()) headers.append("set-cookie", setCookie);
+}
+
+// The shopper never sees these errors on a redirect, so warn to keep a failing link visible to
+// the merchant. Unknown or expired codes aren't user errors: the cart keeps them as not applicable.
+function warnDiscountLinkUserErrors(userErrors: ReadonlyArray<{ message: string }>): void {
+  if (userErrors.length === 0) return;
+  log.warn("discount link code was rejected", {
+    userErrors: userErrors.map(({ message }) => message),
+  });
+}
+
 function logCartErrors(errors: CartGetData["errors"]): void {
   if (!errors?.length) return;
   log.error(errors.map(({ message }) => message).join("\n"));
@@ -486,8 +554,7 @@ async function handlePost(
 
   const { action } = parsedCartRequest;
   const customerAccess = await getCartCreateCustomerAccess(
-    parsedCartRequest.action,
-    cartId,
+    action.intent === "add" && !cartId,
     context,
     customerSession,
   );
@@ -755,12 +822,11 @@ async function executeAdd(
 }
 
 async function getCartCreateCustomerAccess(
-  action: CartAction,
-  cartId: string | null,
+  createsCart: boolean,
   context: Partial<CartCustomerSessionWriteContext>,
   customerSession?: CartCustomerSession,
 ): Promise<CartCustomerAccessTokenResult> {
-  if (action.intent !== "add" || cartId || !customerSession) {
+  if (!createsCart || !customerSession) {
     return { commitSession: false };
   }
 
