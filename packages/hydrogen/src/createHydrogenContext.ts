@@ -100,6 +100,11 @@ export type HydrogenContextOptions<
      * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) in the documentation.
      */
     customMethods?: TCustomMethods;
+    /**
+     * Assign the buyer to the shop's checkout rollouts before the cart is created or lines are added.
+     * See the `assignRollouts` option of createCartHandler.
+     */
+    assignRollouts?: CartHandlerOptions['assignRollouts'];
   };
   buyerIdentity?: CartBuyerIdentityInput;
 };
@@ -239,6 +244,7 @@ export function createHydrogenContext<
       customMethods: cartOptions.customMethods,
     }),
     buyerIdentity,
+    assignRollouts: cartOptions.assignRollouts,
 
     // defaults
     storefront,
@@ -390,6 +396,11 @@ export type HydrogenContextOptionsForDocs<
      * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) in the documentation.
      */
     customMethods?: Record<string, Function>;
+    /**
+     * Assign the buyer to the shop's checkout rollouts before the cart is created or lines are added.
+     * See the `assignRollouts` option of createCartHandler.
+     */
+    assignRollouts?: boolean;
   };
   /**
    * Buyer identity. Default buyer identity is passed to cartCreate.

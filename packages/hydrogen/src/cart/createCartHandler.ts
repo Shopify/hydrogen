@@ -1,4 +1,5 @@
 import {Storefront} from '../storefront';
+import {assignRollouts} from '../utils/rollouts-assign';
 import type {CustomerAccount} from '../customer/types';
 import {type CartGetFunction, cartGetDefault} from './queries/cartGetDefault';
 import {
@@ -91,6 +92,7 @@ export type CartHandlerOptions = {
   cartQueryFragment?: string;
   cartMutateFragment?: string;
   buyerIdentity?: CartBuyerIdentityInput;
+  assignRollouts?: boolean;
 };
 
 export type CustomMethodsBase = Record<string, Function>;
@@ -276,6 +278,9 @@ export function createCartHandler<
 
   let cartId = _getCartId();
 
+  const assignRolloutsBeforeWrite = () =>
+    options.assignRollouts ? assignRollouts(storefront) : Promise.resolve();
+
   const getCartId = () => cartId || _getCartId();
 
   const mutateOptions = {
@@ -295,6 +300,7 @@ export function createCartHandler<
       ...args[0].buyerIdentity,
     };
 
+    await assignRolloutsBeforeWrite();
     const result = await _cartCreate(...args);
 
     if (
@@ -340,9 +346,15 @@ export function createCartHandler<
         };
       });
 
-      return cartId || optionalParams?.cartId
-        ? await cartLinesAddDefault<TCart>(mutateOptions)(lines, optionalParams)
-        : await cartCreate({lines, buyerIdentity}, optionalParams);
+      if (!cartId && !optionalParams?.cartId) {
+        return await cartCreate({lines, buyerIdentity}, optionalParams);
+      }
+
+      await assignRolloutsBeforeWrite();
+      return await cartLinesAddDefault<TCart>(mutateOptions)(
+        lines,
+        optionalParams,
+      );
     },
     updateLines: cartLinesUpdateDefault<TCart>(mutateOptions),
     removeLines: cartLinesRemoveDefault<TCart>(mutateOptions),
@@ -454,6 +466,11 @@ export type CartHandlerOptionsForDocs<
    * Buyer identity. Default buyer identity is passed to cartCreate.
    */
   buyerIdentity?: CartBuyerIdentityInput;
+
+  /**
+   * Assign the buyer to the shop's checkout rollouts before the cart is created or lines are added. The handler calls the `rolloutsAssign` mutation on the `unstable` Storefront API version once per request, only with a private Storefront API token, and waits at most one second. Later Storefront API calls in the request send the session cookie that the assignment returns, and the response forwards the assignment's cookies. A failed assignment never blocks the cart write.
+   */
+  assignRollouts?: boolean;
 };
 
 /**

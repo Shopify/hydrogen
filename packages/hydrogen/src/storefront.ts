@@ -41,6 +41,13 @@ import type {
   GenericVariables,
 } from '@shopify/hydrogen-codegen';
 import {warnOnce} from './utils/warning';
+import {
+  ROLLOUTS_ASSIGN_API_VERSION,
+  ROLLOUTS_ASSIGN_MUTATION,
+  ROLLOUTS_ASSIGN_TIMEOUT_IN_MS,
+  replaceEssentialCookie,
+  setRolloutsAssigner,
+} from './utils/rollouts-assign';
 import {LIB_VERSION} from './version';
 import {
   minifyQuery,
@@ -232,6 +239,8 @@ const defaultI18n: I18nBase = {
   country: 'US' as CountryCode,
 };
 
+const H2_ROLLOUTS_WARN = '[h2:warn:createCartHandler] rolloutsAssign';
+
 /**
  *  This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/2026-04/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
  *
@@ -326,7 +335,56 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     | undefined
     | {
         setCookie: string[];
+        sentAfterRolloutsAssignment: boolean;
       };
+  let rolloutsSetCookies: string[] = [];
+  let rolloutsAssignment: Promise<void> | undefined;
+  let rolloutsAssigned = false;
+
+  async function assignRolloutsForRequest() {
+    try {
+      const response = await fetch(
+        getStorefrontApiUrl({
+          storefrontApiVersion: ROLLOUTS_ASSIGN_API_VERSION,
+        }),
+        {
+          method: 'POST',
+          headers: {...defaultHeaders},
+          body: JSON.stringify({query: ROLLOUTS_ASSIGN_MUTATION}),
+          signal: AbortSignal.timeout(ROLLOUTS_ASSIGN_TIMEOUT_IN_MS),
+        },
+      );
+
+      if (!response.ok) {
+        console.warn(`${H2_ROLLOUTS_WARN} responded with ${response.status}`);
+        return;
+      }
+
+      const body = (await response.json()) as {
+        data?: {rolloutsAssign?: {userErrors?: {code?: string}[]}};
+        errors?: {message?: string}[];
+      };
+      const userErrors = body.data?.rolloutsAssign?.userErrors ?? [];
+      if (body.errors?.length || userErrors.length) {
+        console.warn(
+          `${H2_ROLLOUTS_WARN} returned errors`,
+          body.errors?.map(({message}) => message) ?? [],
+          userErrors.map(({code}) => code),
+        );
+        return;
+      }
+
+      rolloutsAssigned = true;
+      rolloutsSetCookies = response.headers.getSetCookie();
+      const cookie = replaceEssentialCookie(
+        defaultHeaders['cookie'] ?? '',
+        rolloutsSetCookies,
+      );
+      if (cookie) defaultHeaders['cookie'] = cookie;
+    } catch (error) {
+      console.warn(`${H2_ROLLOUTS_WARN} failed`, error);
+    }
+  }
 
   // Remove any headers that are identifiable to the user or request
   const cacheKeyHeader = JSON.stringify({
@@ -397,6 +455,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         }
       : undefined;
 
+    const sentAfterRolloutsAssignment = rolloutsAssigned;
     const [body, response] = await fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions || CacheDefault(),
@@ -423,6 +482,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         // might not be used if subrequests are not over before the main response is sent.
         collectedSubrequestHeaders ??= {
           setCookie: headers.getSetCookie(),
+          sentAfterRolloutsAssignment,
         };
       },
     });
@@ -478,7 +538,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     return formatAPIResult(data, gqlErrors);
   }
 
-  return {
+  const client: StorefrontClient<TI18n> = {
     storefront: {
       /**
        * Sends a GraphQL query to the Storefront API.
@@ -709,14 +769,26 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
       setCollectedSubrequestHeaders: (response: {headers: Headers}) => {
         // Forward cookies from the first fresh subrequest response
-        if (collectedSubrequestHeaders) {
-          for (const value of collectedSubrequestHeaders.setCookie) {
-            response.headers.append('Set-Cookie', value);
-          }
+        const collected = collectedSubrequestHeaders?.setCookie ?? [];
+        const setCookies =
+          collectedSubrequestHeaders?.sentAfterRolloutsAssignment
+            ? [...rolloutsSetCookies, ...collected]
+            : [...collected, ...rolloutsSetCookies];
+        for (const value of setCookies) {
+          response.headers.append('Set-Cookie', value);
         }
       },
     },
   };
+
+  if (clientOptions.privateStorefrontToken) {
+    setRolloutsAssigner(
+      client.storefront,
+      () => (rolloutsAssignment ??= assignRolloutsForRequest()),
+    );
+  }
+
+  return client;
 }
 
 const getStackOffset =
