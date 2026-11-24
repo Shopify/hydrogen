@@ -1,5 +1,5 @@
-import { gql } from "@shopify/hydrogen";
-import { CollectionView as ShopifyCollectionView } from "@shopify/hydrogen/react";
+import { COLLECTION_VIEW_TAG_NAME, getCollectionViewAttributes, gql } from "@shopify/hydrogen";
+import { createElement } from "react";
 import { redirect, useLoaderData } from "react-router";
 
 import { PaginatedResourceSection } from "~/components/PaginatedResourceSection";
@@ -76,16 +76,19 @@ export default function Collection() {
       <PaginatedResourceSection<ProductItemData>
         connection={collection.products}
         resourcesClassName="products-grid"
-        wrapResources={(resources, nodes) => (
+        wrapResources={(resources, nodes) =>
           // Count `nodes`: it includes the pages that Pagination restores on Back or reload.
-          <ShopifyCollectionView
-            collection={collection}
-            productsCount={nodes.length}
-            className="block"
-          >
-            {resources}
-          </ShopifyCollectionView>
-        )}
+          // The page has no filters or sort, so it renders the view element without
+          // `CollectionProvider`, which the `CollectionView` component needs.
+          createElement(
+            COLLECTION_VIEW_TAG_NAME,
+            {
+              class: "block",
+              ...getCollectionViewAttributes({ collection, productsCount: nodes.length }),
+            },
+            resources,
+          )
+        }
       >
         {({ node: product, index }) => (
           <ProductItem

@@ -43,10 +43,23 @@ async function handleChange(search: string) {
     await navigateTo(`${route.path}${search}`, { replace: urlSearch.value.length > 0 });
     await props.refreshCollection(search);
   } finally {
-    urlSearchOverride.value = null;
-    props.setQueryWatchSuppressed(false);
+    // A newer change or Back/Forward may own the override now.
+    if (urlSearchOverride.value === normalizedSearch) {
+      urlSearchOverride.value = null;
+      props.setQueryWatchSuppressed(false);
+    }
   }
 }
+
+// Back/Forward during a change: release the pinned target so the provider syncs to the new URL,
+// which aborts the pending update events. The page's query watch then refetches, which cancels the
+// request for the abandoned target, so its result can't settle the store.
+function releaseOverride() {
+  urlSearchOverride.value = null;
+  props.setQueryWatchSuppressed(false);
+}
+onMounted(() => window.addEventListener("popstate", releaseOverride));
+onBeforeUnmount(() => window.removeEventListener("popstate", releaseOverride));
 </script>
 
 <template>
