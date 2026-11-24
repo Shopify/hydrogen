@@ -474,8 +474,10 @@ scenarios.set("subscriptions-logged-in", {
 });
 
 /** Sitemap page numbers and how the `sitemapReads` scenario answers each. */
-export const SITEMAP_PAGES = { throttled: 1, failed: 2, listed: 3 } as const;
+export const SITEMAP_PAGES = { throttled: 1, failed: 2, listed: 3, http429: 4 } as const;
 export const SITEMAP_LISTED_PRODUCT_HANDLE = "e2e-sitemap-snowboard";
+// Differs from the throttled page's fixed `30`, so the specs prove the routes forward this value.
+export const SITEMAP_RATE_LIMIT_RETRY_AFTER = "7";
 
 scenarios.set(MSW_SCENARIOS.sitemapReads, {
   handlers: [
@@ -503,6 +505,12 @@ scenarios.set(MSW_SCENARIOS.sitemapReads, {
           errors: [{ message: "Internal error", path: ["sitemap", "resources"] }],
         });
       }
+      if (variables.page === SITEMAP_PAGES.http429) {
+        return new HttpResponse(null, {
+          status: 429,
+          headers: { "Retry-After": SITEMAP_RATE_LIMIT_RETRY_AFTER },
+        });
+      }
       return HttpResponse.json({
         data: {
           sitemap: {
@@ -517,6 +525,19 @@ scenarios.set(MSW_SCENARIOS.sitemapReads, {
             },
           },
         },
+      });
+    }),
+  ],
+  mocksCustomerAccountApi: false,
+  mocksLegacyCustomerAuth: false,
+});
+
+scenarios.set(MSW_SCENARIOS.sitemapIndexRateLimited, {
+  handlers: [
+    graphql.query("SitemapIndex", () => {
+      return new HttpResponse(null, {
+        status: 429,
+        headers: { "Retry-After": SITEMAP_RATE_LIMIT_RETRY_AFTER },
       });
     }),
   ],

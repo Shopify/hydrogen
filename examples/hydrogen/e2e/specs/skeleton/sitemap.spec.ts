@@ -1,5 +1,9 @@
 import { setTestStore, test, expect, MSW_SCENARIOS } from "../../fixtures";
-import { SITEMAP_LISTED_PRODUCT_HANDLE, SITEMAP_PAGES } from "../../fixtures/msw/handlers";
+import {
+  SITEMAP_LISTED_PRODUCT_HANDLE,
+  SITEMAP_PAGES,
+  SITEMAP_RATE_LIMIT_RETRY_AFTER,
+} from "../../fixtures/msw/handlers";
 
 setTestStore("mockShop", {
   mock: { scenario: MSW_SCENARIOS.sitemapReads },
@@ -18,6 +22,16 @@ test.describe("Sitemap", () => {
 
     expect(response.status()).toBe(429);
     expect(response.headers()["retry-after"]).toBe("30");
+    expect(response.headers()["cache-control"]).toBe("no-store");
+  });
+
+  test("a page read that gets an HTTP 429 answers 429 with the Storefront API's Retry-After instead of a 500", async ({
+    request,
+  }) => {
+    const response = await request.get(`/sitemap/products/${SITEMAP_PAGES.http429}.xml`);
+
+    expect(response.status()).toBe(429);
+    expect(response.headers()["retry-after"]).toBe(SITEMAP_RATE_LIMIT_RETRY_AFTER);
     expect(response.headers()["cache-control"]).toBe("no-store");
   });
 

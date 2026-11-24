@@ -184,7 +184,7 @@ async function finalizeHydrogenResponse(
     await routerContext.customerAccount.sessionManager.commit?.(),
     mutableResponse.headers,
   );
-  shopifyRequestContext.applyResponseHeaders(mutableResponse.headers);
+  shopifyRequestContext.applyResponseHeaders(mutableResponse.headers, mutableResponse.status);
 
   return mutableResponse;
 }
