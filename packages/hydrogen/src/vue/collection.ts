@@ -20,10 +20,19 @@ import {
   type CollectionStore,
 } from "../core/collection";
 import type { CollectionState } from "../core/collection";
+import { getLogger } from "../core/logging";
 
 export type { CollectionActions, CollectionData };
 
+const log = getLogger("collection");
+
 const CollectionStoreKey: InjectionKey<ShallowRef<CollectionStore>> = Symbol("CollectionStore");
+
+/** Adds a function that runs before each navigation of the provider. Returns a function that removes it. */
+type RegisterBrowseChangeListener = (listener: () => void) => () => void;
+
+const BrowseChangeKey: InjectionKey<RegisterBrowseChangeListener> =
+  Symbol("CollectionBrowseChange");
 
 /**
  * Creates a collection store and keeps its filters and sort in sync with the URL.
@@ -90,7 +99,27 @@ export const CollectionProvider = defineComponent({
       },
       readUrlSearch(),
     );
-    initialStore.setOnBrowseChange(() => reconciler.handleBrowseChange());
+
+    // `CollectionView` adds its update events here, so they start before the navigation.
+    const browseChangeListeners = new Set<() => void>();
+    provide(BrowseChangeKey, (listener) => {
+      browseChangeListeners.add(listener);
+      return () => {
+        browseChangeListeners.delete(listener);
+      };
+    });
+    const onBrowseChange = () => {
+      for (const listener of browseChangeListeners) {
+        // Analytics must never stop the navigation.
+        try {
+          listener();
+        } catch (error) {
+          log.error("collection browse change listener failed", { error });
+        }
+      }
+      reconciler.handleBrowseChange();
+    };
+    initialStore.setOnBrowseChange(onBrowseChange);
 
     function resetStore() {
       storeRef.value.setOnBrowseChange(null);
@@ -100,7 +129,7 @@ export const CollectionProvider = defineComponent({
       });
       storeRef.value = store;
       reconciler.reset(readUrlSearch());
-      store.setOnBrowseChange(() => reconciler.handleBrowseChange());
+      store.setOnBrowseChange(onBrowseChange);
     }
 
     watch(
@@ -111,12 +140,15 @@ export const CollectionProvider = defineComponent({
       },
     );
 
+    // Watch the values, not the `data` object. A parent that renders a new `data` object with the
+    // same values sets it before `urlSearch`, and the sync watcher would reconcile the new URL's
+    // store against the old URL in between, and settle it.
     watch(
-      () => [readUrlSearch(), props.data] as const,
+      [readUrlSearch, () => props.data.handle, () => props.data.dataSearch],
       () => {
         reconciler.reconcile(readUrlSearch(), props.data.dataSearch);
       },
-      { flush: "sync", immediate: true, deep: true },
+      { flush: "sync", immediate: true },
     );
 
     onUnmounted(() => {
@@ -127,12 +159,35 @@ export const CollectionProvider = defineComponent({
   },
 });
 
-function useRequiredStoreRef(composableName: string): ShallowRef<CollectionStore> {
+/**
+ * Returns a shallow ref of the nearest collection provider's store. The ref follows the new store
+ * when the provider replaces the store. Throws outside a provider, with the name of the caller in
+ * the message.
+ *
+ * @internal
+ */
+export function useRequiredStoreRef(composableName: string): ShallowRef<CollectionStore> {
   const storeRef = inject(CollectionStoreKey, null);
   if (!storeRef) {
     throw new Error(`${composableName} must be used inside a <CollectionProvider>.`);
   }
   return storeRef;
+}
+
+/**
+ * Returns the function that adds a listener for the filter and sort changes of the nearest
+ * collection provider. The provider calls each listener before it navigates.
+ *
+ * @internal
+ */
+export function useRegisterBrowseChangeListener(
+  composableName: string,
+): RegisterBrowseChangeListener {
+  const register = inject(BrowseChangeKey, null);
+  if (!register) {
+    throw new Error(`${composableName} must be used inside a <CollectionProvider>.`);
+  }
+  return register;
 }
 
 /**

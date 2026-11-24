@@ -27,6 +27,7 @@ export type CollectionReconciler = {
    * Builds the next search string from the store's filters and sort, and passes the string to `emitChange`. Register the method as the store's browse change callback.
    *
    * The new search string keeps every URL param that the store doesn't manage and drops the `before` and `after` pagination cursors.
+   * When the new filters and sort match the current URL and the last `dataSearch`, such as after a filter is turned on and off before the URL changes, the method also settles the store.
    */
   handleBrowseChange(): void;
   /**
@@ -54,17 +55,30 @@ export function createCollectionReconciler(
   let pendingFilter: string | null = null;
   let pendingUrls = new Set<string>();
   let prevUrlSearch = initialPrevUrlSearch;
+  // The `dataSearch` of the last `reconcile()` call.
+  let lastDataSearch: string | null = null;
 
   return {
     handleBrowseChange() {
       const store = callbacks.getStore();
-      const merged = mergeCollectionParams(
-        new URLSearchParams(callbacks.readUrlSearch()),
-        store.getState(),
-      );
+      const urlSearch = callbacks.readUrlSearch();
+      const merged = mergeCollectionParams(new URLSearchParams(urlSearch), store.getState());
       const searchString = merged.toString();
-      pendingFilter = searchString;
-      pendingUrls.add(searchString);
+      // A change back to the current URL, such as a filter turned on and off before the URL
+      // changed, gives no new URL or data, so no `reconcile()` call settles the store. The loaded
+      // data already matches, so settle now. The navigation still runs, to cancel the pending one.
+      if (
+        lastDataSearch !== null &&
+        collectionSearchEqual(searchString, urlSearch) &&
+        collectionSearchEqual(lastDataSearch, urlSearch)
+      ) {
+        pendingFilter = null;
+        pendingUrls.clear();
+        store.settle();
+      } else {
+        pendingFilter = searchString;
+        pendingUrls.add(searchString);
+      }
       callbacks.emitChange(searchString ? `?${searchString}` : "");
     },
 
@@ -99,6 +113,7 @@ export function createCollectionReconciler(
     // pendingFilter tracks the latest target; pendingUrls tracks every URL
     // dispatched in the chain so intermediates can be distinguished from external navs.
     reconcile(urlSearch: string, dataSearch: string) {
+      lastDataSearch = dataSearch;
       const store = callbacks.getStore();
 
       const pendingSearchEquals = (search: string): boolean =>

@@ -108,4 +108,27 @@ describe("CollectionProvider integration", () => {
     expect(result.current.state.status).toBe("idle");
     expect(collectionParamsMatchState(new URLSearchParams(BEIGE), result.current.state)).toBe(true);
   });
+
+  it("settles when a filter is turned on and off before the URL changes", () => {
+    const onChange = vi.fn();
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(
+        CollectionProvider,
+        { data: { handle: "freestyle", dataSearch: "" }, urlSearch: "", onChange },
+        children,
+      );
+    const { result } = renderHook(
+      () => ({ state: useCollection(), actions: useCollectionActions() }),
+      { wrapper },
+    );
+
+    act(() => result.current.actions.toggleFilter({ available: true }));
+    expect(result.current.state.status).toBe("loading");
+
+    // The router still shows the first URL and its data, so neither prop changes.
+    act(() => result.current.actions.toggleFilter({ available: true }));
+
+    expect(onChange).toHaveBeenLastCalledWith("");
+    expect(result.current.state).toMatchObject({ status: "idle", filters: [] });
+  });
 });

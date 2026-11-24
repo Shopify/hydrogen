@@ -132,13 +132,9 @@ export function mergeCollectionParams(
 
 /** Returns `true` when two router search strings describe the same collection filters and sort. */
 export function collectionSearchEqual(a: string, b: string): boolean {
-  const parsedA = parseCollectionParams(new URLSearchParams(normalizeCollectionSearch(a)));
-  const parsedB = parseCollectionParams(new URLSearchParams(normalizeCollectionSearch(b)));
-
-  return (
-    parsedA.sortKey === parsedB.sortKey &&
-    parsedA.reverse === parsedB.reverse &&
-    filtersEqual(parsedA.filters, parsedB.filters)
+  return browseStateEqual(
+    parseCollectionParams(new URLSearchParams(normalizeCollectionSearch(a))),
+    parseCollectionParams(new URLSearchParams(normalizeCollectionSearch(b))),
   );
 }
 
@@ -147,13 +143,15 @@ export function collectionParamsMatchState(
   searchParams: URLSearchParams,
   state: Pick<CollectionState, "filters" | "sortKey" | "reverse">,
 ): boolean {
-  const parsed = parseCollectionParams(searchParams);
+  return browseStateEqual(parseCollectionParams(searchParams), state);
+}
 
-  return (
-    parsed.sortKey === state.sortKey &&
-    parsed.reverse === state.reverse &&
-    filtersEqual(parsed.filters, state.filters)
-  );
+/** Returns `true` when two browse states have the same filters and sort. */
+export function browseStateEqual(
+  a: Pick<CollectionState, "filters" | "sortKey" | "reverse">,
+  b: Pick<CollectionState, "filters" | "sortKey" | "reverse">,
+): boolean {
+  return a.sortKey === b.sortKey && a.reverse === b.reverse && filtersEqual(a.filters, b.filters);
 }
 
 /**
