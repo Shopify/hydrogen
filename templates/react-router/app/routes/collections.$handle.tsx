@@ -1,5 +1,5 @@
 import { AnalyticsEvent, getSortByValue, withStorefrontRateLimit } from "@shopify/hydrogen";
-import { CollectionProvider, CollectionView } from "@shopify/hydrogen/react";
+import { CollectionProvider, CollectionView, useCollectionActions } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
 import { Link, useLocation, useNavigate, useNavigation, useSearchParams } from "react-router";
 
@@ -9,6 +9,7 @@ import {
   FacetForm,
   FilterDrawer,
   LoadMore,
+  onPlainClick,
   Toolbar,
   useLoadMore,
 } from "~/components/CollectionBrowse";
@@ -156,6 +157,7 @@ function ProductGrid({ products }: { products: readonly ProductNode[] }) {
 }
 
 function EmptyState({ collectionPath }: { collectionPath: string }) {
+  const { reset } = useCollectionActions();
   return (
     <div className="border-border bg-surface-secondary rounded-card border p-8 text-center">
       <h2 className="type-heading-md text-on-surface">No products found</h2>
@@ -165,6 +167,7 @@ function EmptyState({ collectionPath }: { collectionPath: string }) {
       <Link
         to={collectionPath}
         preventScrollReset
+        onClick={onPlainClick(reset)}
         className="rounded-button button-primary focus-visible:outline-accent mt-6 inline-flex h-11 items-center justify-center px-4 text-sm font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
       >
         Clear all filters
@@ -173,7 +176,7 @@ function EmptyState({ collectionPath }: { collectionPath: string }) {
   );
 }
 
-function CollectionResults({ loaderData }: { loaderData: Route.ComponentProps["loaderData"] }) {
+function CollectionBody({ loaderData }: { loaderData: Route.ComponentProps["loaderData"] }) {
   const location = useLocation();
   const navigation = useNavigation();
   const isUpdating =
@@ -190,23 +193,34 @@ function CollectionResults({ loaderData }: { loaderData: Route.ComponentProps["l
   const defaultSortValue = getSortByValue("COLLECTION_DEFAULT", false);
 
   return (
-    <>
-      <Toolbar
-        countText={countText}
-        sortOptions={COLLECTION_SORT_OPTIONS}
-        defaultSortValue={defaultSortValue}
-      />
-      <ActiveFilterChips
-        basePath={collectionPath}
-        clearAllTo={collectionPath}
-        currencyCode={loaderData.currencyCode}
-      />
-      <h2 className="sr-only">Products</h2>
-      <CollectionView
-        collection={loaderData.collection}
-        productsCount={nodes.length}
-        className="block"
-      >
+    // Wraps the filter and sort controls, the results, and the empty state, because the collection
+    // update events start at this element.
+    <CollectionView
+      collection={loaderData.collection}
+      productsCount={nodes.length}
+      className="block lg:grid lg:grid-cols-[15rem_1fr] lg:gap-10"
+    >
+      <aside className="hidden lg:block" aria-label="Filters">
+        <div className="sticky top-8">
+          <h2 className="type-heading-sm text-on-surface mb-2">Filters</h2>
+          <FacetForm
+            availableFilters={loaderData.availableFilters}
+            currencyCode={loaderData.currencyCode}
+          />
+        </div>
+      </aside>
+      <div>
+        <Toolbar
+          countText={countText}
+          sortOptions={COLLECTION_SORT_OPTIONS}
+          defaultSortValue={defaultSortValue}
+        />
+        <ActiveFilterChips
+          basePath={collectionPath}
+          clearAllTo={collectionPath}
+          currencyCode={loaderData.currencyCode}
+        />
+        <h2 className="sr-only">Products</h2>
         <div
           aria-busy={isUpdating}
           className={`motion-safe:transition-opacity motion-safe:duration-150 ${isUpdating ? "opacity-60" : "opacity-100"}`}
@@ -217,19 +231,19 @@ function CollectionResults({ loaderData }: { loaderData: Route.ComponentProps["l
             <EmptyState collectionPath={collectionPath} />
           )}
         </div>
-      </CollectionView>
-      <LoadMore
-        pageInfo={pageInfo}
-        loadedCount={nodes.length}
-        countLabel={`Showing ${nodes.length} products`}
-        isLoading={isLoading}
-        onLoad={loadMore}
-      />
-      <FilterDrawer
-        availableFilters={loaderData.availableFilters}
-        currencyCode={loaderData.currencyCode}
-      />
-    </>
+        <LoadMore
+          pageInfo={pageInfo}
+          loadedCount={nodes.length}
+          countLabel={`Showing ${nodes.length} products`}
+          isLoading={isLoading}
+          onLoad={loadMore}
+        />
+        <FilterDrawer
+          availableFilters={loaderData.availableFilters}
+          currencyCode={loaderData.currencyCode}
+        />
+      </div>
+    </CollectionView>
   );
 }
 
@@ -259,21 +273,8 @@ export default function CollectionRoute({ loaderData }: Route.ComponentProps) {
           <BreadcrumbJsonLd collection={loaderData.collection} origin={loaderData.origin} />
           <Breadcrumb collection={loaderData.collection} />
           <CollectionHeader collection={loaderData.collection} />
-          <div className="lg:grid lg:grid-cols-[15rem_1fr] lg:gap-10">
-            <aside className="hidden lg:block" aria-label="Filters">
-              <div className="sticky top-8">
-                <h2 className="type-heading-sm text-on-surface mb-2">Filters</h2>
-                <FacetForm
-                  availableFilters={loaderData.availableFilters}
-                  currencyCode={loaderData.currencyCode}
-                />
-              </div>
-            </aside>
-            <div>
-              {/* Key by handle so the loaded products and the collection view count reset with the collection. */}
-              <CollectionResults key={loaderData.collection.handle} loaderData={loaderData} />
-            </div>
-          </div>
+          {/* Key by handle so the loaded products and the collection view count reset with the collection. */}
+          <CollectionBody key={loaderData.collection.handle} loaderData={loaderData} />
         </div>
       </main>
     </CollectionProvider>

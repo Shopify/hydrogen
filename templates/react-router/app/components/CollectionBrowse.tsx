@@ -9,8 +9,16 @@ import {
   type MoneyV2,
   type ProductFilter,
 } from "@shopify/hydrogen";
-import { useCollection, useCollectionForm } from "@shopify/hydrogen/react";
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCollection, useCollectionActions, useCollectionForm } from "@shopify/hydrogen/react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 import { Link, useFetcher, useLocation } from "react-router";
 
 import { DEFAULT_MONEY_LOCALE, formatPrice } from "~/lib/money";
@@ -684,6 +692,7 @@ export function ActiveFilterChips({
   currencyCode: string;
 }) {
   const state: CollectionState = useCollection();
+  const { toggleFilter, reset } = useCollectionActions();
   if (state.filters.length === 0) return null;
 
   const currentParams = serializeCollectionParams(state);
@@ -706,6 +715,7 @@ export function ActiveFilterChips({
             preventScrollReset
             className="chip-filled hover:bg-border min-h-touch-target inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-sm no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current motion-safe:transition-[color,background-color,border-color,transform] motion-safe:active:scale-[0.97]"
             aria-label={`Remove ${label} filter`}
+            onClick={onPlainClick(() => toggleFilter(filter))}
           >
             {label}
             <span
@@ -717,11 +727,31 @@ export function ActiveFilterChips({
           </Link>
         );
       })}
-      <Link to={clearAllTo} preventScrollReset className="text-accent text-sm hover:underline">
+      <Link
+        to={clearAllTo}
+        preventScrollReset
+        className="text-accent text-sm hover:underline"
+        onClick={onPlainClick(reset)}
+      >
         Clear all
       </Link>
     </div>
   );
+}
+
+/**
+ * Returns a link click handler that runs a collection action instead of following the link, so the
+ * change counts as a customer change and sends an update event. The link still works without
+ * JavaScript, and a click with a modifier key or another button goes to the link as usual.
+ */
+export function onPlainClick(action: () => void) {
+  return (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    event.preventDefault();
+    action();
+  };
 }
 
 export function useLoadMore<T>(
@@ -730,14 +760,21 @@ export function useLoadMore<T>(
   dataSearch: string,
 ) {
   const fetcher = useFetcher();
-  const [nodes, setNodes] = useState<readonly T[]>(initialNodes);
-  const [pageInfo, setPageInfo] = useState<BrowsePageInfo>(initialPageInfo);
+  const [loaded, setLoaded] = useState({
+    initialNodes,
+    nodes: initialNodes,
+    pageInfo: initialPageInfo,
+  });
   const requestedSearch = useRef<string | null>(null);
   const appendedSearches = useRef(new Set<string>());
 
+  // Reset during render, not in an effect, so the loaded products never lag behind new results.
+  // CollectionView reports this count when a filter or sort change finishes.
+  if (loaded.initialNodes !== initialNodes) {
+    setLoaded({ initialNodes, nodes: initialNodes, pageInfo: initialPageInfo });
+  }
+
   useEffect(() => {
-    setNodes(initialNodes);
-    setPageInfo(initialPageInfo);
     requestedSearch.current = null;
     appendedSearches.current.clear();
   }, [dataSearch, initialNodes, initialPageInfo]);
@@ -749,13 +786,16 @@ export function useLoadMore<T>(
 
     appendedSearches.current.add(data.dataSearch);
     requestedSearch.current = null;
-    setNodes((current) => [...current, ...data.products]);
-    setPageInfo(data.pageInfo);
+    setLoaded((previous) => ({
+      ...previous,
+      nodes: [...previous.nodes, ...data.products],
+      pageInfo: data.pageInfo,
+    }));
   }, [fetcher.data]);
 
   return {
-    nodes,
-    pageInfo,
+    nodes: loaded.nodes,
+    pageInfo: loaded.pageInfo,
     isLoading: fetcher.state !== "idle",
     loadMore: (href: string, nextDataSearch: string) => {
       requestedSearch.current = nextDataSearch;
