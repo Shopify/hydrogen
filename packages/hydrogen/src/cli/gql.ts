@@ -139,8 +139,7 @@ export function getSchemaLocation(
   return { schemaDirectory: pathApi.basename(temporarySchemaDirectoryPath), copySchemas: true };
 }
 
-function copySchemas(packageRoot: string, temporarySchemaDirectoryPath: string): void {
-  mkdirSync(temporarySchemaDirectoryPath);
+function copySchemaFiles(packageRoot: string, temporarySchemaDirectoryPath: string): void {
   for (const fileName of GRAPHQL_SCHEMA_FILE_NAMES) {
     copyFileSync(
       join(packageRoot, PACKAGE_SCHEMA_DIRECTORY, fileName),
@@ -169,13 +168,22 @@ export async function checkGraphQL(options: CheckGraphQLOptions = {}): Promise<v
   );
   const pluginConfig = createGraphQLPluginConfig(schemaLocation.schemaDirectory);
 
+  // Only remove what this run created, so a name clash never deletes someone else's files.
+  let createdTsconfig = false;
+  let createdSchemaDirectory = false;
   const cleanup = () => {
-    rmSync(temporaryTsconfigPath, { force: true });
-    rmSync(temporarySchemaDirectoryPath, { recursive: true, force: true });
+    if (createdTsconfig) rmSync(temporaryTsconfigPath, { force: true });
+    if (createdSchemaDirectory) {
+      rmSync(temporarySchemaDirectoryPath, { recursive: true, force: true });
+    }
   };
   process.once("exit", cleanup);
   try {
-    if (schemaLocation.copySchemas) copySchemas(packageRoot, temporarySchemaDirectoryPath);
+    if (schemaLocation.copySchemas) {
+      mkdirSync(temporarySchemaDirectoryPath);
+      createdSchemaDirectory = true;
+      copySchemaFiles(packageRoot, temporarySchemaDirectoryPath);
+    }
 
     writeFileSync(
       temporaryTsconfigPath,
@@ -185,6 +193,7 @@ export async function checkGraphQL(options: CheckGraphQLOptions = {}): Promise<v
       }),
       { flag: "wx" },
     );
+    createdTsconfig = true;
 
     const cliArgs = [
       gqlTadaCliPath,

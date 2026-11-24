@@ -1,12 +1,42 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, isAbsolute, join, relative, win32 } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, win32 } from "node:path";
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { checkGraphQL, getSchemaDirectory, getSchemaLocation } from "./gql";
 
+const mockState = vi.hoisted(() => ({
+  crossDrive: false,
+  uuid: undefined as string | undefined,
+}));
+
+// `path.relative` returns the absolute target when the two paths are on different Windows
+// drives. Doing the same here runs the schema copy branch on any platform.
+vi.mock("node:path", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:path")>();
+  return {
+    ...actual,
+    relative: (from: string, to: string) =>
+      mockState.crossDrive ? actual.resolve(to) : actual.relative(from, to),
+  };
+});
+
+vi.mock("node:crypto", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:crypto")>();
+  return { ...actual, randomUUID: () => mockState.uuid ?? actual.randomUUID() };
+});
+
 const TSCONFIG_PATH_ARGUMENT_INDEX = 3;
+const SCHEMA_FILE_NAMES = ["storefront.schema.json", "customer-account.schema.json"];
 const tempDirectories: string[] = [];
 
 function createTempDirectory(): string {
@@ -15,7 +45,24 @@ function createTempDirectory(): string {
   return directory;
 }
 
+function createPackageRoot(schemaFileNames: string[] = SCHEMA_FILE_NAMES): string {
+  const packageRoot = createTempDirectory();
+  mkdirSync(join(packageRoot, "dist"));
+  for (const fileName of schemaFileNames) {
+    writeFileSync(join(packageRoot, "dist", fileName), `{"name":"${fileName}"}`);
+  }
+  return packageRoot;
+}
+
+function createProject(): string {
+  const cwd = createTempDirectory();
+  writeFileSync(join(cwd, "tsconfig.json"), "{}");
+  return cwd;
+}
+
 afterEach(() => {
+  mockState.crossDrive = false;
+  mockState.uuid = undefined;
   for (const directory of tempDirectories.splice(0)) {
     rmSync(directory, { recursive: true, force: true });
   }
@@ -117,6 +164,88 @@ describe("checkGraphQL", () => {
     await expect(checkGraphQL({ args: ["--level", "verbose"] })).rejects.toThrow(
       "Invalid diagnostic level: verbose",
     );
+  });
+
+  it("does not remove a temporary tsconfig it did not create", async () => {
+    const cwd = createProject();
+    const packageRoot = createPackageRoot();
+    const existingPath = join(cwd, ".hydrogen-gql-fixed.json");
+    mockState.uuid = "fixed";
+    writeFileSync(existingPath, "not ours");
+
+    await expect(
+      checkGraphQL({ cwd, packageRoot, gqlTadaCliPath: "gql-tada.js", runCommand: vi.fn() }),
+    ).rejects.toThrow("EEXIST");
+
+    expect(readFileSync(existingPath, "utf8")).toBe("not ours");
+  });
+});
+
+describe("checkGraphQL across drives", () => {
+  it("copies the schemas next to the temporary tsconfig and removes both afterwards", async () => {
+    mockState.crossDrive = true;
+    const cwd = createProject();
+    const packageRoot = createPackageRoot();
+    let temporaryTsconfigPath = "";
+    let schemaDirectory = "";
+
+    await checkGraphQL({
+      cwd,
+      packageRoot,
+      gqlTadaCliPath: "gql-tada.js",
+      runCommand: async (_command, args) => {
+        temporaryTsconfigPath = args[TSCONFIG_PATH_ARGUMENT_INDEX];
+        const config = JSON.parse(readFileSync(temporaryTsconfigPath, "utf8"));
+        const schemas = config.compilerOptions.plugins[0].schemas;
+        schemaDirectory = dirname(schemas[0].schema);
+
+        expect(schemaDirectory).toBe(`${basename(temporaryTsconfigPath, ".json")}-schemas`);
+        for (const schema of schemas) {
+          expect(isAbsolute(schema.schema)).toBe(false);
+          expect(readFileSync(join(cwd, schema.schema), "utf8")).toBe(
+            `{"name":"${basename(schema.schema)}"}`,
+          );
+        }
+      },
+    });
+
+    expect(temporaryTsconfigPath).not.toBe("");
+    expect(existsSync(temporaryTsconfigPath)).toBe(false);
+    expect(existsSync(join(cwd, schemaDirectory))).toBe(false);
+  });
+
+  it("removes the copied schemas when gql.tada fails", async () => {
+    mockState.crossDrive = true;
+    const cwd = createProject();
+    const packageRoot = createPackageRoot();
+
+    await expect(
+      checkGraphQL({
+        cwd,
+        packageRoot,
+        gqlTadaCliPath: "gql-tada.js",
+        runCommand: async () => {
+          expect(readdirSync(cwd)).toHaveLength(3);
+          throw new Error("gql.tada failed");
+        },
+      }),
+    ).rejects.toThrow("gql.tada failed");
+
+    expect(readdirSync(cwd)).toEqual(["tsconfig.json"]);
+  });
+
+  it("removes a partially copied schema directory when a copy fails", async () => {
+    mockState.crossDrive = true;
+    const cwd = createProject();
+    const packageRoot = createPackageRoot(SCHEMA_FILE_NAMES.slice(0, 1));
+    const runCommand = vi.fn();
+
+    await expect(
+      checkGraphQL({ cwd, packageRoot, gqlTadaCliPath: "gql-tada.js", runCommand }),
+    ).rejects.toThrow("ENOENT");
+
+    expect(runCommand).not.toHaveBeenCalled();
+    expect(readdirSync(cwd)).toEqual(["tsconfig.json"]);
   });
 });
 
