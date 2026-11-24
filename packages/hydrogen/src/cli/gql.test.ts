@@ -247,6 +247,24 @@ describe("checkGraphQL across drives", () => {
     expect(runCommand).not.toHaveBeenCalled();
     expect(readdirSync(cwd)).toEqual(["tsconfig.json"]);
   });
+
+  it("does not remove a schema directory it did not create", async () => {
+    mockState.crossDrive = true;
+    mockState.uuid = "fixed";
+    const cwd = createProject();
+    const packageRoot = createPackageRoot();
+    const existingDirectory = join(cwd, ".hydrogen-gql-fixed-schemas");
+    const runCommand = vi.fn();
+    mkdirSync(existingDirectory);
+    writeFileSync(join(existingDirectory, "keep.txt"), "not ours");
+
+    await expect(
+      checkGraphQL({ cwd, packageRoot, gqlTadaCliPath: "gql-tada.js", runCommand }),
+    ).rejects.toThrow("EEXIST");
+
+    expect(runCommand).not.toHaveBeenCalled();
+    expect(readFileSync(join(existingDirectory, "keep.txt"), "utf8")).toBe("not ours");
+  });
 });
 
 function isUrl(value: string): boolean {
