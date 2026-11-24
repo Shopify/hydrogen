@@ -75,6 +75,8 @@ const SHOULD_CACHE_RESULT = Symbol();
 // A registered symbol, because the `development` build has its own copy of this module. A client
 // from `@shopify/hydrogen` and an option set by `@shopify/hydrogen/customer-account` must agree.
 const API_VERSION = Symbol.for("shopify.hydrogen.storefront-api-version");
+const REQUEST_COOKIE = Symbol();
+const SKIP_HEADER_CAPTURE = Symbol();
 const PRIVATE_RESPONSE_DIRECTIVES = new Set(["private", "no-store"]);
 const STOREFRONT_PRIVATE_RESPONSE_PERSONALIZATION_REASON = "storefront-api-private-response";
 
@@ -103,6 +105,19 @@ export function withStorefrontApiVersion<TOptions extends object>(
   apiVersion: string,
 ): TOptions {
   return { ...options, [API_VERSION]: apiVersion };
+}
+
+export function withStorefrontRequestCookie<TOptions extends object>(
+  options: TOptions,
+  cookie: string,
+): TOptions {
+  return { ...options, [REQUEST_COOKIE]: cookie };
+}
+
+export function withoutStorefrontHeaderCapture<TOptions extends object>(
+  options: TOptions,
+): TOptions {
+  return { ...options, [SKIP_HEADER_CAPTURE]: true };
 }
 
 /**
@@ -240,6 +255,8 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       cache?: CachingStrategy;
       [SHOULD_CACHE_RESULT]?: ShouldCacheResult;
       [API_VERSION]?: string;
+      [REQUEST_COOKIE]?: string;
+      [SKIP_HEADER_CAPTURE]?: boolean;
     };
     const requestUrl = opts[API_VERSION]
       ? `${storeUrl}/api/${opts[API_VERSION]}/graphql.json`
@@ -289,9 +306,11 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
     }
 
     try {
+      const headers = new Headers(requestHeaders);
+      if (opts[REQUEST_COOKIE]) headers.set("cookie", opts[REQUEST_COOKIE]);
       const init: PlainRequestInit = {
         method: "POST",
-        headers: new Headers(requestHeaders),
+        headers,
         body: JSON.stringify({ query: queryText, variables }),
         // Never follow redirects: runtimes forward custom Shopify credential headers across
         // origins, so a 3xx fails closed through the redirect check below.
@@ -335,7 +354,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       }
 
       const hydrogenCacheStatus = getHydrogenCacheStatus(responseHeaders);
-      if (hydrogenCacheStatus !== "hit") {
+      if (hydrogenCacheStatus !== "hit" && !opts[SKIP_HEADER_CAPTURE]) {
         requestContext.captureSubrequestHeaders(responseHeaders);
       }
       if (isPrivateResponse(responseHeaders)) {

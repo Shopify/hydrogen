@@ -64,7 +64,7 @@ type RequestLocale<TI18n extends ShopifyI18n | I18nConfig> = TI18n extends Shopi
     ? NormalizedI18nConfig<TI18n>
     : never;
 
-const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
+export const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
 
 /** The incoming request's headers, plus its method, abort signal, and URL when the framework provides them. */
 type StorefrontRequest = Pick<Request, "headers"> &
@@ -562,7 +562,7 @@ function isDocumentRequest(request: StorefrontRequest): boolean {
   return request.headers.get("accept")?.includes("text/html") ?? false;
 }
 
-function parseCookieHeader(cookieHeader: string | undefined): Map<string, string> {
+export function parseCookieHeader(cookieHeader: string | undefined): Map<string, string> {
   const cookies = new Map<string, string>();
   if (!cookieHeader) return cookies;
 

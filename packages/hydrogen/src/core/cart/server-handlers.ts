@@ -1,4 +1,5 @@
 import type { GraphQLFormattedError, StorefrontClient } from "../../client";
+import { withStorefrontRequestCookie } from "../../client/client";
 import type {
   CustomerSession,
   ReadonlyCustomerSessionManager,
@@ -40,6 +41,7 @@ import {
   type CartQueriesForOptions,
   type CreateCartQueriesOptions,
 } from "./queries";
+import { assignRollouts, type RolloutsAssignment } from "./rollouts-assign";
 import type { CartData } from "./state";
 const log = getLogger("cart-api");
 
@@ -72,7 +74,7 @@ export type CartGetData<TCart = CartData> = {
 export type CartGetResult<TCart = CartData> = ShopifyRouteJsonResult<CartGetData<TCart>>;
 
 /**
- * Error codes that the cart POST handler returns. Invalid JSON requests return `invalid_cart_request`; changes without a cart ID return `missing_cart`. With `customerSession`, a mutation failure after a token refresh returns `cart_mutation_failed`. With `rateLimitHandling: "response"`, Storefront API rate limits also return `cart_mutation_failed`, with status `429`.
+ * Error codes that the cart POST handler returns. Invalid JSON requests return `invalid_cart_request`; changes without a cart ID return `missing_cart`. With `customerSession`, a mutation failure after a token refresh returns `cart_mutation_failed`. With `assignRollouts`, so does a mutation failure after an assignment that set cookies. With `rateLimitHandling: "response"`, Storefront API rate limits also return `cart_mutation_failed`, with status `429`.
  */
 export type CartErrorCode = "invalid_cart_request" | "missing_cart" | "cart_mutation_failed";
 
@@ -256,6 +258,10 @@ interface CartServerHandlersBaseOptions<
    * The option covers mutations only. Cart reads (`get`) still throw. When you set only `rateLimitHandling` on `handleShopifyRoutes`, the router maps a thrown rate limit to a JSON error with the code `rate_limited`, also for a native form submission, which then shows a raw JSON page. Set this option as well to keep `cart_mutation_failed` and the plain-text form response.
    */
   readonly rateLimitHandling?: "response";
+  /**
+   * Assign the buyer to the shop's checkout rollouts before an add creates a cart or adds lines. The handler calls the `rolloutsAssign` mutation on the `unstable` Storefront API version, only with a private client and for buyers who already have a Shopify session, and waits at most one second. The cart write sends the session cookie that the assignment returns, and the response forwards the assignment's cookies. When the cart write then fails, the handler returns `cart_mutation_failed` with status `500` and those cookies. A failed assignment never blocks the cart write.
+   */
+  readonly assignRollouts?: boolean;
 }
 
 /** Options for cart server handlers that attach the logged-in customer to new carts. */
@@ -342,7 +348,13 @@ export function createCartServerHandlers(
       CART_API_PATH,
       CART_POST_METHOD,
       (context: CartPostHandlerContext & Partial<CartCustomerSessionWriteContext>) =>
-        handlePost(context, runtimeQueries, customerSession, options?.rateLimitHandling),
+        handlePost(
+          context,
+          runtimeQueries,
+          customerSession,
+          options?.rateLimitHandling,
+          options?.assignRollouts,
+        ),
     ),
   };
 
@@ -467,6 +479,7 @@ async function handlePost(
   queries: RuntimeCartQueries,
   customerSession?: CartCustomerSession,
   rateLimitHandling?: "response",
+  shouldAssignRollouts?: boolean,
 ): Promise<CartPostResult> {
   const { request, storefrontClient } = context;
   const isFormRequest = !request.headers.get("content-type")?.includes("application/json");
@@ -495,19 +508,22 @@ async function handlePost(
   const customerSessionHeaders = customerAccess.commitSession
     ? await getCustomerSessionHeaders(context)
     : undefined;
+  const assignment = await assignRolloutsBeforeAdd(action, storefrontClient, shouldAssignRollouts);
   const result = await executeCartMutation(
     action,
     cartId,
-    storefrontClient,
+    withRequestCookie(storefrontClient, assignment.cookie),
     queries,
     customerAccess.accessToken,
     customerSessionHeaders,
+    assignment.setCookies,
     isFormRequest,
     rateLimitHandling,
   );
   if (result.type !== "mutation") return result.response;
 
   const headers = createProxyResponseHeaders(result.headers);
+  prependSetCookies(headers, assignment.setCookies);
   appendHeaders(headers, customerSessionHeaders);
 
   // Only persist carts the browser already owns, including newly-created carts.
@@ -550,10 +566,11 @@ function getMissingCartResponse(
 async function executeCartMutation(
   action: CartAction,
   cartId: string | null,
-  storefrontClient: StorefrontClient,
+  storefrontClient: CartMutationClient,
   queries: RuntimeCartQueries,
   customerAccessToken: string | undefined,
   customerSessionHeaders: Headers | undefined,
+  assignmentSetCookies: string[],
   isFormRequest: boolean,
   rateLimitHandling: "response" | undefined,
 ): Promise<
@@ -565,12 +582,14 @@ async function executeCartMutation(
       ...(await executeMutation(action, cartId, storefrontClient, queries, customerAccessToken)),
     };
   } catch (error) {
-    if (rateLimitHandling === "response" && isStorefrontRateLimitError(error)) {
+    const preservedHeaders = appendSetCookies(customerSessionHeaders, assignmentSetCookies);
+    const isRateLimited = isStorefrontRateLimitError(error);
+    if (rateLimitHandling === "response" && isRateLimited) {
       log.error("storefront api rate limited the cart mutation", { error });
       const response = errorResult(
         "cart_mutation_failed",
         CART_RATE_LIMITED_MESSAGE,
-        createRateLimitResponseHeaders(error, customerSessionHeaders),
+        createRateLimitResponseHeaders(error, preservedHeaders),
         RATE_LIMITED_STATUS,
       );
       // The browser shows the response to a native form submission as a page. A redirect would
@@ -580,14 +599,14 @@ async function executeCartMutation(
         response: isFormRequest ? { ...response, format: "text" } : response,
       };
     }
-    if (!customerSessionHeaders) throw error;
+    if (!customerSessionHeaders && (!preservedHeaders || isRateLimited)) throw error;
     log.error("cart mutation failed", { error });
     return {
       type: "response",
       response: errorResult(
         "cart_mutation_failed",
         CART_MUTATION_FAILED_MESSAGE,
-        customerSessionHeaders,
+        preservedHeaders,
         CART_MUTATION_FAILED_STATUS,
       ),
     };
@@ -611,6 +630,45 @@ function appendHeaders(headers: Headers, headersToAppend: Headers | undefined) {
   for (const setCookie of headersToAppend.getSetCookie()) {
     headers.append("set-cookie", setCookie);
   }
+}
+
+function assignRolloutsBeforeAdd(
+  action: CartAction,
+  storefrontClient: StorefrontClient,
+  shouldAssignRollouts: boolean | undefined,
+): Promise<RolloutsAssignment> {
+  if (!shouldAssignRollouts || action.intent !== "add") return Promise.resolve({ setCookies: [] });
+  return assignRollouts(storefrontClient);
+}
+
+function appendSetCookies(headers: Headers | undefined, setCookies: string[]): Headers | undefined {
+  if (setCookies.length === 0) return headers;
+  const merged = new Headers(headers);
+  for (const setCookie of setCookies) merged.append("set-cookie", setCookie);
+  return merged;
+}
+
+function prependSetCookies(headers: Headers, setCookies: string[]) {
+  if (setCookies.length === 0) return;
+  const later = headers.getSetCookie();
+  headers.delete("set-cookie");
+  for (const setCookie of [...setCookies, ...later]) {
+    headers.append("set-cookie", setCookie);
+  }
+}
+
+function withRequestCookie(
+  storefrontClient: StorefrontClient,
+  cookie: string | undefined,
+): CartMutationClient {
+  if (!cookie) return storefrontClient;
+  return {
+    graphql: ((doc: string, options?: object) =>
+      storefrontClient.graphql(
+        doc,
+        withStorefrontRequestCookie(options ?? {}, cookie),
+      )) as StorefrontClient["graphql"],
+  };
 }
 
 function safeRedirectTarget(request: Request): string {
