@@ -148,6 +148,8 @@ export type ShopifyRoutesOptions = {
 export interface InitializeShopifyScriptsOptions extends ShopifyRoutesOptions {
   /** The consent configuration that you passed to the script tags. The bus runs the setup callback once. */
   consent?: ConsentConfig;
+  /** The document's CSP nonce, also used for scripts loaded during browser initialization. */
+  nonce?: string;
   /** Loads Shopify WebMCP tools when the browser supports WebMCP. Defaults to `true`. */
   webMcp?: boolean;
 }

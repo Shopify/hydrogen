@@ -17,7 +17,7 @@ import { loadCollectionPage } from "~/lib/collection";
 import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
 
-import type { Route } from "./+types/collection";
+import type { Route } from "./+types/collections.$handle";
 
 export function meta({ matches }: Route.MetaArgs) {
   const shopName = getShopNameFromRootMatch(matches[0]);
@@ -31,12 +31,12 @@ export function meta({ matches }: Route.MetaArgs) {
 }
 
 export const loader = withStorefrontRateLimit(
-  async ({ context, params, request }: Route.LoaderArgs) => {
+  async ({ context, params, url }: Route.LoaderArgs) => {
     const handle = params.handle;
     if (!handle) throw new Response("Not Found", { status: 404 });
 
     const storefrontClient = context.get(storefrontClientContext);
-    return loadCollectionPage({ storefrontClient, handle, request });
+    return loadCollectionPage({ storefrontClient, handle, url });
   },
 );
 

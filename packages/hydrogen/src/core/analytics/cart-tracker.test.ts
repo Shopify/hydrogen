@@ -5,11 +5,11 @@ import { join } from "node:path";
 import { buildSchema, graphql } from "graphql";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createCartStore } from "../cart/cart";
+import { createCartStore, resetStandardActionsForTests } from "../cart/cart";
 import type { CartStore } from "../cart/cart";
 import { getCart } from "../cart/get-cart";
 import type { CartData } from "../cart/state";
-import { assert } from "../test-utils";
+import { assert, createStandardActionsStub } from "../test-utils";
 import { trackCartAnalytics } from "./cart-tracker";
 import { AnalyticsEvent } from "./events";
 import type { AnalyticsCart, CartUpdatePayload, ShopAnalytics, StorefrontAnalytics } from "./types";
@@ -130,7 +130,7 @@ function createTestAnalytics(customData?: Record<string, unknown>) {
 }
 
 function setGlobalAnalytics(analytics: Pick<StorefrontAnalytics, "publish" | "getConfig">) {
-  (window as any).Shopify = { analytics };
+  (window as any).Shopify = { analytics, actions: createStandardActionsStub() };
 }
 
 function createCartDataFromAnalyticsCart(cart: AnalyticsCart): CartData {
@@ -243,6 +243,12 @@ const SERVER_CART = {
     ],
   },
   discountCodes: [],
+  buyerIdentity: {
+    countryCode: "US",
+    email: null,
+    phone: null,
+    purchasingCompany: null,
+  },
 };
 
 const storefrontSchema = buildSchema(
@@ -347,6 +353,7 @@ describe("trackCartAnalytics", () => {
     installLocalStorageShim();
     localStorage.clear();
     delete (window as any).Shopify;
+    resetStandardActionsForTests();
   });
 
   it("publishes product_added_to_cart with cart and shop when quantity increases", async () => {

@@ -87,6 +87,10 @@ function createDeferred<T = unknown>(): Deferred<T> {
   };
 }
 
+function macrotask(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve));
+}
+
 function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
   return (
     value !== null &&
@@ -479,6 +483,101 @@ describe("useSuspenseCart", () => {
     });
 
     expect(screen.getByTestId("qty").textContent).toBe("8");
+  });
+
+  it("keeps the suspense fallback through a click during the first load", async () => {
+    const actual = await vi.importActual<typeof import("../core/cart/cart")>("../core/cart/cart");
+    const typedCart = createCartComponents<{
+      get: () => Promise<{ data: { cart: CartData } }>;
+    }>();
+    const cartResponse = createDeferred<Response>();
+    const merchandiseId = "gid://shopify/ProductVariant/1";
+    let realStore: CartStore | undefined;
+    const updateCart = Object.assign(
+      vi.fn(() => new Promise(() => {})),
+      { configure: vi.fn(() => true), isDefault: vi.fn(() => false) },
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => cartResponse.promise),
+    );
+    vi.stubGlobal("Shopify", { actions: { updateCart } });
+    actual.resetStandardActionsForTests();
+    vi.mocked(createCartStore).mockImplementation((options) => {
+      realStore = actual.createCartStore(options);
+      return realStore;
+    });
+
+    function Consumer() {
+      const qty = typedCart.useSuspenseCart((s) => s.data.totalQuantity);
+      return createElement("span", { "data-testid": "qty" }, qty);
+    }
+
+    const form = document.createElement("form");
+    const input = Object.assign(document.createElement("input"), {
+      type: "hidden",
+      name: "merchandiseId",
+      value: merchandiseId,
+    });
+    const button = Object.assign(document.createElement("button"), {
+      type: "submit",
+      name: "intent",
+      value: "add",
+    });
+    form.append(input, button);
+    document.body.append(form);
+    let submitEvent: SubmitEvent | undefined;
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      submitEvent = event;
+    });
+
+    const view = render(
+      createElement(
+        CartProvider,
+        null,
+        createElement(
+          Suspense,
+          { fallback: createElement("span", { "data-testid": "fallback" }, "Loading") },
+          createElement(Consumer),
+        ),
+      ),
+    );
+
+    try {
+      await act(macrotask);
+      expect(screen.getByTestId("fallback").textContent).toBe("Loading");
+
+      await act(async () => {
+        button.click();
+        assert(realStore, "Expected CartProvider to create the store");
+        assert(submitEvent, "Expected the add form to submit");
+        void realStore.handleFormSubmit(submitEvent, {
+          products: [{ id: merchandiseId, title: "Small", product: { title: "T-Shirt" } }],
+        });
+        await macrotask();
+      });
+      assert(realStore, "Expected CartProvider to create the store");
+      expect(realStore.getState().data.totalQuantity).toBe(1);
+      expect(screen.getByTestId("fallback").textContent).toBe("Loading");
+      expect(updateCart).not.toHaveBeenCalled();
+
+      await act(async () => {
+        cartResponse.resolve(Response.json({ cart: makeCartData({ totalQuantity: 3 }) }));
+        await macrotask();
+      });
+      expect(screen.getByTestId("qty").textContent).toBe("4");
+      expect(updateCart).toHaveBeenCalledTimes(1);
+      expect(updateCart).toHaveBeenCalledWith(
+        expect.objectContaining({ cartId: "gid://shopify/Cart/123" }),
+        expect.anything(),
+      );
+    } finally {
+      view.unmount();
+      form.remove();
+      vi.unstubAllGlobals();
+      actual.resetStandardActionsForTests();
+    }
   });
 
   it("returns selected cart state when no readyPromise is visible", () => {

@@ -35,9 +35,9 @@ export function meta({ matches }: Route.MetaArgs) {
   ];
 }
 
-export const loader = withStorefrontRateLimit(async ({ context, request }: Route.LoaderArgs) => {
+export const loader = withStorefrontRateLimit(async ({ context, url }: Route.LoaderArgs) => {
   const storefrontClient = context.get(storefrontClientContext);
-  return loadSearchPage({ storefrontClient, request });
+  return loadSearchPage({ storefrontClient, url });
 });
 
 type PerformedSearchData = Extract<SearchPageData, { performed: true }>;

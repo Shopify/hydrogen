@@ -1,14 +1,36 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { attachStagehand, type AgentOutcome, type AgentRunInput } from "./agent/stagehand-agent.ts";
+import {
+  attachStagehand,
+  STOPPED_AFTER_CART_CHANGES,
+  type AgentOutcome,
+  type AgentRunInput,
+} from "./agent/stagehand-agent.ts";
 import { createBrowserSession } from "./browser/session.ts";
-import { main, parseCliArgs, USAGE } from "./cli.ts";
+import {
+  formatResultLine,
+  main,
+  parseCliArgs,
+  suiteExitCode,
+  TEST_NAMES,
+  USAGE,
+  type RunResult,
+} from "./cli.ts";
 import { ADD_EVENT_NAME, AddEventLog, observeAddEvents } from "./shopify/add-events.ts";
-import { pinNonDefaultVariant, pinVariant, type PinnedVariant } from "./shopify/catalog.ts";
+import {
+  pinNonDefaultVariant,
+  pinVariant,
+  pinVariantWithTwoUnits,
+  type PinnedVariant,
+} from "./shopify/catalog.ts";
 import { discoverContext, type StorefrontContext } from "./shopify/storefront.ts";
+import { SPINNER_INTERVAL_MS } from "./spinner.ts";
 
 vi.mock("./browser/session.ts", () => ({ createBrowserSession: vi.fn() }));
-vi.mock("./agent/stagehand-agent.ts", () => ({ attachStagehand: vi.fn() }));
+vi.mock("./agent/stagehand-agent.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./agent/stagehand-agent.ts")>()),
+  attachStagehand: vi.fn(),
+}));
 vi.mock("./shopify/add-events.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./shopify/add-events.ts")>()),
   observeAddEvents: vi.fn(),
@@ -18,6 +40,7 @@ vi.mock("./shopify/catalog.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./shopify/catalog.ts")>()),
   pinVariant: vi.fn(),
   pinNonDefaultVariant: vi.fn(),
+  pinVariantWithTwoUnits: vi.fn(),
 }));
 
 const KEY = "sk-secret-proxy-key-123";
@@ -34,9 +57,23 @@ const PINNED: PinnedVariant = {
   variantId: "gid://shopify/ProductVariant/1",
   selectedOptions: [{ name: "Size", value: "M" }],
 };
+/** A second pin, different in every field, for the second test of a suite run. */
+const OTHER_PINNED: PinnedVariant = {
+  productHandle: "tee",
+  productTitle: "Tee",
+  variantId: "gid://shopify/ProductVariant/2",
+  selectedOptions: [{ name: "Color", value: "Red" }],
+};
+/** A third pin, different in every field from the others, for the third test of a suite run. */
+const THIRD_PINNED: PinnedVariant = {
+  productHandle: "mug",
+  productTitle: "Mug",
+  variantId: "gid://shopify/ProductVariant/3",
+  selectedOptions: [{ name: "Material", value: "Ceramic" }],
+};
 const PASS_REASON =
   "One add event held exactly 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings.";
-const VALID_TESTS = "Valid tests: add-to-cart, choose-a-variant.";
+const VALID_TESTS = "Valid tests: add-to-cart, choose-a-variant, change-quantity-and-remove.";
 const NO_ADD = "No add Standard Event was recorded by the time Stagehand was disconnected.";
 const CLAIMED_ADD =
   "The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.";
@@ -45,9 +82,20 @@ const STOPPED: AgentOutcome = {
   completed: false,
   reason: "Stopped by the command after the add event.",
 };
+/** The `agent` field of a change-quantity-and-remove run that the cart changes stopped. */
+const STOPPED_AFTER_CHANGES: AgentOutcome = {
+  completed: false,
+  reason: "Stopped by the command after the cart changes.",
+};
+const LINE_PASS_REASON =
+  "The cart line went 1, 2, 1, removed, and every cart event resolved without cart user errors.";
+/** A Hydrogen-shaped cart line ID: it holds the cart token. */
+const LINE_ID = "gid://shopify/CartLine/1?cart=secret-cart-token";
 
 let stdout: string[];
 let stderr: string[];
+/** Every stdout and stderr write in order, to check the order across the two streams. */
+let writes: Array<[stream: "stdout" | "stderr", chunk: string]>;
 /** Calls in order, to check the order of work. */
 let calls: string[];
 /** The add event log of the current run. */
@@ -73,22 +121,32 @@ beforeEach(() => {
     calls.push("pin non-default");
     return { status: "pinned", pinned: PINNED };
   });
+  vi.mocked(pinVariantWithTwoUnits).mockImplementation(async () => {
+    calls.push("pin two units");
+    return { status: "pinned", pinned: PINNED };
+  });
   vi.mocked(observeAddEvents).mockImplementation(async () => {
     calls.push("observe");
     log = new AddEventLog();
     return log;
   });
+  writes = [];
   vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
     stdout.push(String(chunk));
+    writes.push(["stdout", String(chunk)]);
     return true;
   });
   vi.spyOn(process.stderr, "write").mockImplementation((chunk) => {
     stderr.push(String(chunk));
+    writes.push(["stderr", String(chunk)]);
     return true;
   });
+  // Not an interactive terminal unless a test says so: no spinner.
+  setTty({ stdout: false, stderr: false });
 });
 
 afterEach(() => {
+  restoreTty();
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
   vi.mocked(createBrowserSession).mockReset();
@@ -96,6 +154,7 @@ afterEach(() => {
   vi.mocked(discoverContext).mockReset();
   vi.mocked(pinVariant).mockReset();
   vi.mocked(pinNonDefaultVariant).mockReset();
+  vi.mocked(pinVariantWithTwoUnits).mockReset();
   vi.mocked(observeAddEvents).mockReset();
 });
 
@@ -112,29 +171,61 @@ describe("parseCliArgs", () => {
     }
   });
 
-  it("runs the add-to-cart test when --test is absent", () => {
+  it("runs every test in list order when --test is absent", () => {
     expect(parseCliArgs(["https://shop.example"])).toEqual({
       kind: "run",
       url: new URL("https://shop.example"),
-      test: "add-to-cart",
+      tests: ["add-to-cart", "choose-a-variant", "change-quantity-and-remove"],
+      json: false,
     });
+  });
+
+  it("runs only change-quantity-and-remove for --test change-quantity-and-remove", () => {
+    const parsed = parseCliArgs(["https://shop.example", "--test", "change-quantity-and-remove"]);
+    expect(parsed.kind === "run" && parsed.tests).toEqual(["change-quantity-and-remove"]);
   });
 
   it.each([
     ["https://shop.example", "--test", "choose-a-variant"],
     ["--test", "choose-a-variant", "https://shop.example"],
     ["https://shop.example", "--test=choose-a-variant"],
-  ])("accepts the test name in %j", (...argv) => {
+  ])("runs only the test named in %j", (...argv) => {
     expect(parseCliArgs(argv)).toEqual({
       kind: "run",
       url: new URL("https://shop.example"),
-      test: "choose-a-variant",
+      tests: ["choose-a-variant"],
+      json: false,
     });
   });
 
-  it("accepts --test add-to-cart", () => {
+  it.each([
+    ["https://shop.example", "--json"],
+    ["--json", "https://shop.example"],
+  ])("selects JSON output for %j", (...argv) => {
+    expect(parseCliArgs(argv)).toEqual({
+      kind: "run",
+      url: new URL("https://shop.example"),
+      tests: ["add-to-cart", "choose-a-variant", "change-quantity-and-remove"],
+      json: true,
+    });
+  });
+
+  it("selects JSON output with --test", () => {
+    expect(parseCliArgs(["https://shop.example", "--test", "add-to-cart", "--json"])).toEqual({
+      kind: "run",
+      url: new URL("https://shop.example"),
+      tests: ["add-to-cart"],
+      json: true,
+    });
+  });
+
+  it("rejects a value for --json", () => {
+    expect(parseCliArgs(["https://shop.example", "--json=yes"]).kind).toBe("error");
+  });
+
+  it("runs only add-to-cart for --test add-to-cart", () => {
     const parsed = parseCliArgs(["https://shop.example", "--test", "add-to-cart"]);
-    expect(parsed.kind === "run" && parsed.test).toBe("add-to-cart");
+    expect(parsed.kind === "run" && parsed.tests).toEqual(["add-to-cart"]);
   });
 
   it.each([
@@ -190,6 +281,62 @@ describe("parseCliArgs", () => {
   });
 });
 
+describe("formatResultLine", () => {
+  it("starts the reason in the same column for every test name and status", () => {
+    const columns = TEST_NAMES.flatMap((test) =>
+      (["fail", "indeterminate", "skipped"] as const).map((status) =>
+        formatResultLine(test, { status, reason: "Reason." }).indexOf("Reason."),
+      ),
+    );
+    // 2 indent + 15 status + the longest name (26) + 3.
+    expect(new Set(columns)).toEqual(new Set([46]));
+  });
+
+  it("puts a multi-line reason on one line, without changing its words", () => {
+    const reason = "  net::ERR_NAME_NOT_RESOLVED\nCall log:\n\t- navigating to  x  \r\n";
+    expect(formatResultLine("add-to-cart", { status: "indeterminate", reason })).toBe(
+      "  indeterminate  add-to-cart                  net::ERR_NAME_NOT_RESOLVED Call log: - navigating to x",
+    );
+  });
+
+  it("replaces terminal control characters in a reason with spaces", () => {
+    // A screen clear, then an OSC 8 hyperlink: ESC (\u001b) and BEL (\u0007) must not reach the terminal.
+    const reason =
+      "Timeout\u001b[2J\u001b[H\u001b]8;;https://evil.example\u0007Open log\u001b]8;;\u0007.";
+    expect(formatResultLine("add-to-cart", { status: "fail", reason })).toBe(
+      "  fail           add-to-cart                  Timeout [2J [H ]8;;https://evil.example Open log ]8;; .",
+    );
+  });
+
+  it("writes no trailing spaces, also for an empty reason", () => {
+    for (const status of ["pass", "fail", "indeterminate", "skipped"] as const) {
+      for (const reason of ["", " \n ", "Reason. "]) {
+        expect(formatResultLine("add-to-cart", { status, reason })).not.toMatch(/\s$/);
+      }
+    }
+  });
+});
+
+describe("suiteExitCode", () => {
+  it.each<{ statuses: RunResult["status"][]; code: number }>([
+    { statuses: ["pass"], code: 0 },
+    { statuses: ["fail"], code: 1 },
+    { statuses: ["indeterminate"], code: 2 },
+    { statuses: ["skipped"], code: 3 },
+    { statuses: ["pass", "skipped"], code: 0 },
+    { statuses: ["skipped", "skipped"], code: 3 },
+    { statuses: ["pass", "fail"], code: 1 },
+    { statuses: ["skipped", "fail"], code: 1 },
+    { statuses: ["fail", "indeterminate"], code: 1 },
+    { statuses: ["pass", "indeterminate"], code: 2 },
+    { statuses: ["skipped", "indeterminate"], code: 2 },
+    // No result decides nothing.
+    { statuses: [], code: 2 },
+  ])("gives $code for $statuses", ({ statuses, code }) => {
+    expect(suiteExitCode(statuses)).toBe(code);
+  });
+});
+
 describe("main", () => {
   it("prints help on stdout and exits 0 without a browser", async () => {
     await expect(main(["--help"])).resolves.toBe(0);
@@ -241,7 +388,9 @@ describe("main", () => {
   it("stops the agent at the first add event, then detaches, waits for the outcome, and passes", async () => {
     const { session, agent } = fakes({ settle: "in-wait" });
 
-    await expect(main(["https://shop.example/?x=1#top"])).resolves.toBe(0);
+    await expect(
+      main(["https://shop.example/?x=1#top", "--test", "add-to-cart", "--json"]),
+    ).resolves.toBe(0);
 
     expect(results()).toEqual([
       {
@@ -287,6 +436,7 @@ describe("main", () => {
       }),
       interrupt: expect.any(AbortSignal),
       stop: expect.any(AbortSignal),
+      stopReason: "Stopped by the command after the add event.",
     });
     // The task names the run's market from the Storefront API context.
     expect(agent.run).toHaveBeenCalledWith(
@@ -308,7 +458,9 @@ describe("main", () => {
   it("pins with pinNonDefaultVariant for --test choose-a-variant and prints test first", async () => {
     const { agent } = fakes();
 
-    await expect(main(["https://shop.example", "--test", "choose-a-variant"])).resolves.toBe(0);
+    await expect(
+      main(["https://shop.example", "--test", "choose-a-variant", "--json"]),
+    ).resolves.toBe(0);
 
     expect(results()).toEqual([
       {
@@ -344,7 +496,9 @@ describe("main", () => {
       "No product with at least 2 variants available for sale: the catalog was searched to the end.";
     vi.mocked(pinNonDefaultVariant).mockResolvedValue({ status: "skipped", reason });
 
-    await expect(main(["https://shop.example", "--test", "choose-a-variant"])).resolves.toBe(3);
+    await expect(
+      main(["https://shop.example", "--test", "choose-a-variant", "--json"]),
+    ).resolves.toBe(3);
 
     expect(results()).toEqual([
       { test: "choose-a-variant", status: "skipped", reason, context: CONTEXT },
@@ -352,10 +506,114 @@ describe("main", () => {
     expect(createBrowserSession).not.toHaveBeenCalled();
   });
 
+  it("pins with pinVariantWithTwoUnits for change-quantity-and-remove, stops after the cart changes, and passes", async () => {
+    const { session, agent } = fakes();
+    const run = main(["https://shop.example", "--test", "change-quantity-and-remove", "--json"]);
+
+    await expect(run).resolves.toBe(0);
+
+    expect(results()).toEqual([
+      {
+        test: "change-quantity-and-remove",
+        status: "pass",
+        reason: LINE_PASS_REASON,
+        context: CONTEXT,
+        pinned: PINNED,
+        agent: STOPPED_AFTER_CHANGES,
+      },
+    ]);
+    expect(pinVariantWithTwoUnits).toHaveBeenCalledWith(
+      new URL("https://shop.example"),
+      CONTEXT,
+      expect.any(AbortSignal),
+    );
+    expect(pinVariant).not.toHaveBeenCalled();
+    expect(pinNonDefaultVariant).not.toHaveBeenCalled();
+    // The add does not stop this test: the remove result does.
+    expect(calls).toEqual([
+      "context",
+      "pin two units",
+      "observe",
+      "attach",
+      "goto",
+      "ready",
+      "run",
+      "add",
+      "settled",
+      "change 2",
+      "change 1",
+      "change 0",
+      "stop",
+      "detach",
+      "wait",
+      "detach",
+      "close",
+    ]);
+    expect(agent.run).toHaveBeenCalledWith({
+      page: session.page,
+      task: expect.stringContaining(
+        "Then remove the item with the cart's remove control, not by decreasing the quantity.",
+      ),
+      model: expect.objectContaining({ apiKey: KEY }),
+      interrupt: expect.any(AbortSignal),
+      stop: expect.any(AbortSignal),
+      stopReason: "Stopped by the command after the cart changes.",
+    });
+    const task = agent.run.mock.calls[0]?.[0].task;
+    expect(task).toContain('Shop in the "Canada" store (language "Français", prices in "CAD")');
+    expect(task).not.toContain("Do not open the cart");
+    expect(waits).toHaveLength(1);
+    // The cart line ID holds the cart token: it is never printed.
+    expect(stdout.join("") + stderr.join("")).not.toContain("secret-cart-token");
+  });
+
+  it.each([
+    {
+      completed: true,
+      code: 1,
+      status: "fail",
+      reason:
+        "The agent reports that it completed the task, but the cart line went only 1, 2. Expected 1, 2, 1, removed.",
+    },
+    {
+      completed: false,
+      code: 2,
+      status: "indeterminate",
+      reason:
+        "The cart line went 1, 2 by the time Stagehand was disconnected. Expected 1, 2, 1, removed.",
+    },
+  ])(
+    "gives $status for change-quantity-and-remove when the agent ends after the plus with completed $completed",
+    async ({ completed, code, status, reason }) => {
+      const outcome: AgentOutcome = completed
+        ? { completed: true, summary: "Done." }
+        : { completed: false, reason: "The agent did not confirm that it completed the task." };
+      fakes({ cartSteps: [2], outcome });
+
+      await expect(
+        main(["https://shop.example", "--test", "change-quantity-and-remove", "--json"]),
+      ).resolves.toBe(code);
+
+      expect(results()).toEqual([
+        {
+          test: "change-quantity-and-remove",
+          status,
+          reason,
+          context: CONTEXT,
+          pinned: PINNED,
+          agent: outcome,
+        },
+      ]);
+      expect(calls).not.toContain("stop");
+    },
+  );
+
   it("fails with exit 1 when the add promise was rejected", async () => {
     fakes({ settle: "rejected" });
 
-    await expect(main(["https://shop.example"])).resolves.toBe(1);
+    await expect(main(["https://shop.example", "--test", "add-to-cart", "--json"])).resolves.toBe(
+      1,
+    );
 
     expect(results()).toEqual([
       {
@@ -372,7 +630,9 @@ describe("main", () => {
   it("fails with exit 1 when the agent confirms completion but no add event was dispatched", async () => {
     const { agent } = fakes({ adds: false });
 
-    await expect(main(["https://shop.example"])).resolves.toBe(1);
+    await expect(main(["https://shop.example", "--test", "add-to-cart", "--json"])).resolves.toBe(
+      1,
+    );
 
     expect(results()).toEqual([
       {
@@ -395,7 +655,9 @@ describe("main", () => {
     };
     const { agent } = fakes({ adds: false, outcome });
 
-    await expect(main(["https://shop.example"])).resolves.toBe(2);
+    await expect(main(["https://shop.example", "--test", "add-to-cart", "--json"])).resolves.toBe(
+      2,
+    );
 
     expect(results()).toEqual([
       {
@@ -423,7 +685,9 @@ describe("main", () => {
       recordOutcome("failed");
     });
 
-    await expect(main(["https://shop.example"])).resolves.toBe(1);
+    await expect(main(["https://shop.example", "--test", "add-to-cart", "--json"])).resolves.toBe(
+      1,
+    );
 
     expect(results()).toEqual([
       {
@@ -448,7 +712,9 @@ describe("main", () => {
     });
 
     // The early add does not count: the agent's completion then meets no add event.
-    await expect(main(["https://shop.example"])).resolves.toBe(1);
+    await expect(main(["https://shop.example", "--test", "add-to-cart", "--json"])).resolves.toBe(
+      1,
+    );
 
     expect(results()).toEqual([
       {
@@ -466,7 +732,9 @@ describe("main", () => {
   it("reports a missing SHOPIFY_PROXY_KEY with the test name for choose-a-variant", async () => {
     vi.stubEnv("SHOPIFY_PROXY_KEY", undefined);
 
-    await expect(main(["https://shop.example", "--test", "choose-a-variant"])).resolves.toBe(2);
+    await expect(
+      main(["https://shop.example", "--test", "choose-a-variant", "--json"]),
+    ).resolves.toBe(2);
 
     expect(stdout).toEqual([
       `${JSON.stringify({ test: "choose-a-variant", status: "indeterminate", reason: "SHOPIFY_PROXY_KEY is not set." })}\n`,
@@ -477,7 +745,9 @@ describe("main", () => {
   it("reports a missing SHOPIFY_PROXY_KEY before the browser starts", async () => {
     vi.stubEnv("SHOPIFY_PROXY_KEY", undefined);
 
-    await expect(main(["https://shop.example"])).resolves.toBe(2);
+    await expect(main(["https://shop.example", "--test", "add-to-cart", "--json"])).resolves.toBe(
+      2,
+    );
 
     expect(stdout).toEqual([
       `${JSON.stringify({ test: "add-to-cart", status: "indeterminate", reason: "SHOPIFY_PROXY_KEY is not set." })}\n`,
@@ -490,7 +760,9 @@ describe("main", () => {
     const reason = "No eligible variant: the catalog was searched to the end.";
     vi.mocked(pinVariant).mockResolvedValue({ status: "skipped", reason });
 
-    await expect(main(["https://shop.example"])).resolves.toBe(3);
+    await expect(main(["https://shop.example", "--test", "add-to-cart", "--json"])).resolves.toBe(
+      3,
+    );
 
     expect(results()).toEqual([
       { test: "add-to-cart", status: "skipped", reason, context: CONTEXT },
@@ -513,7 +785,9 @@ describe("main", () => {
   ])("reports a $step error as indeterminate and starts no browser", async ({ fail, reason }) => {
     fail();
 
-    await expect(main(["https://shop.example"])).resolves.toBe(2);
+    await expect(main(["https://shop.example", "--test", "add-to-cart", "--json"])).resolves.toBe(
+      2,
+    );
 
     expect(results()).toEqual([{ test: "add-to-cart", status: "indeterminate", reason }]);
     expect(createBrowserSession).not.toHaveBeenCalled();
@@ -528,7 +802,7 @@ describe("main", () => {
       return new Promise(() => undefined);
     });
 
-    const run = main(["https://shop.example"]);
+    const run = main(["https://shop.example", "--test", "add-to-cart", "--json"]);
     await requesting;
     process.emit("SIGINT", "SIGINT");
 
@@ -561,7 +835,9 @@ describe("main", () => {
   ])("reports $cause as indeterminate without running the agent", async ({ page, reason }) => {
     const { session, agent } = fakes({ page });
 
-    await expect(main(["https://shop.example"])).resolves.toBe(2);
+    await expect(main(["https://shop.example", "--test", "add-to-cart", "--json"])).resolves.toBe(
+      2,
+    );
 
     expect(results()).toEqual([
       { test: "add-to-cart", status: "indeterminate", reason, context: CONTEXT, pinned: PINNED },
@@ -577,7 +853,9 @@ describe("main", () => {
       new Error("Failed to attach Stagehand: no connection in 15000 ms"),
     );
 
-    await expect(main(["https://shop.example"])).resolves.toBe(2);
+    await expect(main(["https://shop.example", "--test", "add-to-cart", "--json"])).resolves.toBe(
+      2,
+    );
 
     expect(results()).toEqual([
       {
@@ -598,7 +876,9 @@ describe("main", () => {
       new Error("Stagehand did not release the browser: no confirmation in 2000 ms"),
     );
 
-    await expect(main(["https://shop.example"])).resolves.toBe(2);
+    await expect(main(["https://shop.example", "--test", "add-to-cart", "--json"])).resolves.toBe(
+      2,
+    );
 
     expect(results()).toEqual([
       {
@@ -622,7 +902,9 @@ describe("main", () => {
       process.emit("SIGINT", "SIGINT");
     });
 
-    await expect(main(["https://shop.example"])).resolves.toBe(2);
+    await expect(main(["https://shop.example", "--test", "add-to-cart", "--json"])).resolves.toBe(
+      2,
+    );
 
     expect(results()).toEqual([
       {
@@ -652,7 +934,7 @@ describe("main", () => {
       });
       const listenersBefore = process.listenerCount(signal);
 
-      const run = main(["https://shop.example"]);
+      const run = main(["https://shop.example", "--test", "add-to-cart", "--json"]);
       await running;
       process.emit(signal, signal);
 
@@ -683,7 +965,7 @@ describe("main", () => {
       },
     });
 
-    const run = main(["https://shop.example"]);
+    const run = main(["https://shop.example", "--test", "add-to-cart", "--json"]);
     await navigating;
     process.emit("SIGINT", "SIGINT");
 
@@ -711,7 +993,7 @@ describe("main", () => {
     );
     const listenersBefore = process.listenerCount("SIGTERM");
 
-    const run = main(["https://shop.example"]);
+    const run = main(["https://shop.example", "--test", "add-to-cart", "--json"]);
     await vi.waitFor(() => expect(createBrowserSession).toHaveBeenCalledOnce());
     const options = vi.mocked(createBrowserSession).mock.calls[0]?.[1];
     expect(options?.signal?.aborted).toBe(false);
@@ -734,29 +1016,587 @@ describe("main", () => {
     const { session } = fakes();
     session.close.mockRejectedValue(new Error("profile is busy"));
 
-    await expect(main(["https://shop.example"])).resolves.toBe(0);
+    await expect(main(["https://shop.example", "--test", "add-to-cart", "--json"])).resolves.toBe(
+      0,
+    );
 
     expect(results()).toEqual([expect.objectContaining({ test: "add-to-cart", status: "pass" })]);
     expect(stderr.join("")).toContain("Cleanup failed: profile is busy");
   });
 });
 
+describe("main with every test", () => {
+  const SUITE = ["https://shop.example", "--json"];
+  /** The pass line of `test` with the fake pin and agent. */
+  const passLine = (test: string, pinned = PINNED) =>
+    test === "change-quantity-and-remove"
+      ? {
+          test,
+          status: "pass",
+          reason: LINE_PASS_REASON,
+          context: CONTEXT,
+          pinned,
+          agent: STOPPED_AFTER_CHANGES,
+        }
+      : { test, status: "pass", reason: PASS_REASON, context: CONTEXT, pinned, agent: STOPPED };
+
+  it("runs every test in list order, each with its own pin and browser session, and reads the context once", async () => {
+    // Each run adds its own pinned variant, as the page of that pin would.
+    const { session, agent } = fakes({
+      addedVariants: [PINNED.variantId, OTHER_PINNED.variantId, THIRD_PINNED.variantId],
+    });
+    const listenersBefore = process.listenerCount("SIGINT");
+    const listenersInRun: number[] = [];
+    let printedBeforeSecondPin: unknown[] = [];
+    let printedBeforeThirdPin: unknown[] = [];
+    vi.mocked(pinVariant).mockImplementation(async () => {
+      calls.push("pin");
+      listenersInRun.push(process.listenerCount("SIGINT"));
+      return { status: "pinned", pinned: PINNED };
+    });
+    vi.mocked(pinNonDefaultVariant).mockImplementation(async () => {
+      calls.push("pin non-default");
+      listenersInRun.push(process.listenerCount("SIGINT"));
+      printedBeforeSecondPin = results();
+      return { status: "pinned", pinned: OTHER_PINNED };
+    });
+    vi.mocked(pinVariantWithTwoUnits).mockImplementation(async () => {
+      calls.push("pin two units");
+      listenersInRun.push(process.listenerCount("SIGINT"));
+      printedBeforeThirdPin = results();
+      return { status: "pinned", pinned: THIRD_PINNED };
+    });
+
+    await expect(main(SUITE)).resolves.toBe(0);
+
+    // Each test uses its own pin end to end: the result line, the product page, and the task.
+    expect(results()).toEqual([
+      passLine("add-to-cart"),
+      passLine("choose-a-variant", OTHER_PINNED),
+      passLine("change-quantity-and-remove", THIRD_PINNED),
+    ]);
+    expect(session.page.goto).toHaveBeenCalledTimes(3);
+    expect(session.page.goto).toHaveBeenNthCalledWith(
+      1,
+      "https://shop.example/products/board",
+      expect.anything(),
+    );
+    expect(session.page.goto).toHaveBeenNthCalledWith(
+      2,
+      "https://shop.example/products/tee",
+      expect.anything(),
+    );
+    expect(session.page.goto).toHaveBeenNthCalledWith(
+      3,
+      "https://shop.example/products/mug",
+      expect.anything(),
+    );
+    const [firstTask, secondTask, thirdTask] = agent.run.mock.calls.map(([input]) => input.task);
+    expect(firstTask).toContain('the product titled "Board"');
+    expect(firstTask).not.toContain('the product titled "Tee"');
+    expect(firstTask).not.toContain('the product titled "Mug"');
+    expect(secondTask).toContain('the product titled "Tee"');
+    expect(secondTask).not.toContain('the product titled "Board"');
+    expect(secondTask).not.toContain('the product titled "Mug"');
+    expect(secondTask).toContain(JSON.stringify(OTHER_PINNED.selectedOptions));
+    expect(thirdTask).toContain('the product titled "Mug"');
+    expect(thirdTask).not.toContain('the product titled "Board"');
+    expect(thirdTask).not.toContain('the product titled "Tee"');
+    expect(thirdTask).toContain(JSON.stringify(THIRD_PINNED.selectedOptions));
+    expect(stdout.join("")).toMatch(
+      /^\{"test":"add-to-cart","status":"pass",.*\n\{"test":"choose-a-variant","status":"pass",.*\n\{"test":"change-quantity-and-remove","status":"pass",.*\n$/,
+    );
+    // Each line is printed when its test ends, before the next test starts.
+    expect(printedBeforeSecondPin).toEqual([passLine("add-to-cart")]);
+    expect(printedBeforeThirdPin).toEqual([
+      passLine("add-to-cart"),
+      passLine("choose-a-variant", OTHER_PINNED),
+    ]);
+    // One context read. Each test pins with its own function, in its own browser session, and
+    // each session is closed before the next test starts.
+    expect(
+      calls.filter((call) =>
+        ["context", "pin", "pin non-default", "pin two units", "observe", "close"].includes(call),
+      ),
+    ).toEqual([
+      "context",
+      "pin",
+      "observe",
+      "close",
+      "pin non-default",
+      "observe",
+      "close",
+      "pin two units",
+      "observe",
+      "close",
+    ]);
+    expect(discoverContext).toHaveBeenCalledOnce();
+    expect(pinVariant).toHaveBeenCalledOnce();
+    expect(pinNonDefaultVariant).toHaveBeenCalledOnce();
+    expect(pinVariantWithTwoUnits).toHaveBeenCalledOnce();
+    expect(createBrowserSession).toHaveBeenCalledTimes(3);
+    expect(session.close).toHaveBeenCalledTimes(3);
+    expect(agent.run).toHaveBeenCalledTimes(3);
+    expect(stderr.filter((line) => line.startsWith("Running test "))).toEqual([
+      "Running test add-to-cart\n",
+      "Running test choose-a-variant\n",
+      "Running test change-quantity-and-remove\n",
+    ]);
+    // One set of interrupt handlers for the whole run: every agent run gets the same interrupt.
+    expect(listenersInRun).toEqual([listenersBefore + 1, listenersBefore + 1, listenersBefore + 1]);
+    expect(agent.run.mock.calls[1]?.[0].interrupt).toBe(agent.run.mock.calls[0]?.[0].interrupt);
+    expect(agent.run.mock.calls[2]?.[0].interrupt).toBe(agent.run.mock.calls[0]?.[0].interrupt);
+    expect(process.listenerCount("SIGINT")).toBe(listenersBefore);
+  });
+
+  it("exits 0 when the first test is skipped and the others pass", async () => {
+    const reason = "No eligible variant: the catalog was searched to the end.";
+    fakes();
+    vi.mocked(pinVariant).mockResolvedValue({ status: "skipped", reason });
+
+    await expect(main(SUITE)).resolves.toBe(0);
+
+    expect(results()).toEqual([
+      { test: "add-to-cart", status: "skipped", reason, context: CONTEXT },
+      passLine("choose-a-variant"),
+      passLine("change-quantity-and-remove"),
+    ]);
+    expect(createBrowserSession).toHaveBeenCalledTimes(2);
+  });
+
+  it("prints one indeterminate line for each test without SHOPIFY_PROXY_KEY, with no request and no browser", async () => {
+    vi.stubEnv("SHOPIFY_PROXY_KEY", undefined);
+
+    await expect(main(SUITE)).resolves.toBe(2);
+
+    const reason = "SHOPIFY_PROXY_KEY is not set.";
+    expect(stdout).toEqual([
+      `${JSON.stringify({ test: "add-to-cart", status: "indeterminate", reason })}\n`,
+      `${JSON.stringify({ test: "choose-a-variant", status: "indeterminate", reason })}\n`,
+      `${JSON.stringify({ test: "change-quantity-and-remove", status: "indeterminate", reason })}\n`,
+    ]);
+    expect(discoverContext).not.toHaveBeenCalled();
+    expect(pinVariant).not.toHaveBeenCalled();
+    expect(pinNonDefaultVariant).not.toHaveBeenCalled();
+    expect(pinVariantWithTwoUnits).not.toHaveBeenCalled();
+    expect(createBrowserSession).not.toHaveBeenCalled();
+  });
+
+  it("reads the context again for the second test when the first read failed", async () => {
+    fakes();
+    vi.mocked(discoverContext).mockRejectedValueOnce(new Error("GraphQL errors: Down"));
+
+    await expect(main(SUITE)).resolves.toBe(2);
+
+    expect(results()).toEqual([
+      {
+        test: "add-to-cart",
+        status: "indeterminate",
+        reason: "Storefront API localization failed: GraphQL errors: Down",
+      },
+      passLine("choose-a-variant"),
+      passLine("change-quantity-and-remove"),
+    ]);
+    // The second read succeeded: the third test uses it.
+    expect(discoverContext).toHaveBeenCalledTimes(2);
+    expect(pinVariant).not.toHaveBeenCalled();
+    expect(createBrowserSession).toHaveBeenCalledTimes(2);
+  });
+
+  it("exits 2 when SIGINT after the first verdict stops the run before the second test", async () => {
+    const { session } = fakes();
+    // After the pass verdict, during the browser cleanup of the first test.
+    session.close.mockImplementationOnce(async () => {
+      calls.push("close");
+      process.emit("SIGINT", "SIGINT");
+    });
+
+    await expect(main(SUITE)).resolves.toBe(2);
+
+    expect(results()).toEqual([passLine("add-to-cart")]);
+    expect(stderr).not.toContain("Running test choose-a-variant\n");
+    expect(pinNonDefaultVariant).not.toHaveBeenCalled();
+    expect(createBrowserSession).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the verdict and exit 0 of the only test when SIGINT comes during its cleanup", async () => {
+    const { session } = fakes();
+    session.close.mockImplementationOnce(async () => {
+      calls.push("close");
+      process.emit("SIGINT", "SIGINT");
+    });
+
+    await expect(main(["https://shop.example", "--test", "add-to-cart", "--json"])).resolves.toBe(
+      0,
+    );
+
+    expect(results()).toEqual([passLine("add-to-cart")]);
+    expect(stderr).toContain("Received SIGINT. Stopping the run.\n");
+  });
+
+  it("exits 1 on SIGINT in a test after an earlier test failed", async () => {
+    const { agent } = fakes();
+    agent.run.mockImplementationOnce(async () => {
+      recordAdd();
+      recordOutcome("failed");
+      return STOPPED;
+    });
+    const running = runUntilInterrupted(agent);
+
+    const run = main(SUITE);
+    await running;
+    process.emit("SIGINT", "SIGINT");
+
+    await expect(run).resolves.toBe(1);
+    expect(results()).toEqual([
+      { ...passLine("add-to-cart"), status: "fail", reason: "An add event promise was rejected." },
+      { test: "choose-a-variant", ...INTERRUPTED },
+    ]);
+    expect(pinVariantWithTwoUnits).not.toHaveBeenCalled();
+  });
+});
+
+describe("main without --json", () => {
+  const URL_ONLY = ["https://shop.example"];
+
+  it("prints only the table line of each test, and no progress lines", async () => {
+    const { agent } = fakes();
+    agent.run.mockImplementationOnce(async () => {
+      recordAdd();
+      recordOutcome("failed");
+      return STOPPED;
+    });
+
+    await expect(main(URL_ONLY)).resolves.toBe(1);
+
+    expect(stdout).toEqual([
+      "  fail           add-to-cart                  An add event promise was rejected.\n",
+      "  pass           choose-a-variant\n",
+      "  pass           change-quantity-and-remove\n",
+    ]);
+    expect(stderr).toEqual([]);
+    // The same run as with --json.
+    expect(createBrowserSession).toHaveBeenCalledTimes(3);
+    expect(discoverContext).toHaveBeenCalledOnce();
+  });
+
+  it("prints the skipped and indeterminate reasons in the table", async () => {
+    vi.mocked(pinVariant).mockResolvedValue({ status: "skipped", reason: "No eligible variant." });
+    vi.mocked(pinNonDefaultVariant).mockRejectedValue(new Error("GraphQL errors:\t  Down"));
+    vi.mocked(pinVariantWithTwoUnits).mockResolvedValue({
+      status: "skipped",
+      reason: "No variant could be added to a cart with 2 units.",
+    });
+
+    await expect(main(URL_ONLY)).resolves.toBe(2);
+
+    expect(stdout).toEqual([
+      "  skipped        add-to-cart                  No eligible variant.\n",
+      "  indeterminate  choose-a-variant             Storefront API catalog pin failed: GraphQL errors: Down\n",
+      "  skipped        change-quantity-and-remove   No variant could be added to a cart with 2 units.\n",
+    ]);
+    expect(stderr).toEqual([]);
+  });
+
+  it("prints one table line for each test without SHOPIFY_PROXY_KEY", async () => {
+    vi.stubEnv("SHOPIFY_PROXY_KEY", undefined);
+
+    await expect(main(URL_ONLY)).resolves.toBe(2);
+
+    expect(stdout).toEqual([
+      "  indeterminate  add-to-cart                  SHOPIFY_PROXY_KEY is not set.\n",
+      "  indeterminate  choose-a-variant             SHOPIFY_PROXY_KEY is not set.\n",
+      "  indeterminate  change-quantity-and-remove   SHOPIFY_PROXY_KEY is not set.\n",
+    ]);
+    expect(stderr).toEqual([]);
+  });
+
+  it("still writes the interrupt line on stderr", async () => {
+    const { agent } = fakes();
+    const running = runUntilInterrupted(agent);
+
+    const run = main(URL_ONLY);
+    await running;
+    process.emit("SIGINT", "SIGINT");
+
+    await expect(run).resolves.toBe(2);
+    expect(stdout).toEqual([
+      "  indeterminate  add-to-cart                  Interrupted by SIGINT.\n",
+    ]);
+    expect(stderr).toEqual(["Received SIGINT. Stopping the run.\n"]);
+  });
+
+  it("still writes a cleanup failure on stderr", async () => {
+    const { session } = fakes();
+    session.close.mockRejectedValue(new Error("profile is busy"));
+
+    await expect(main([...URL_ONLY, "--test", "add-to-cart"])).resolves.toBe(0);
+
+    expect(stdout).toEqual(["  pass           add-to-cart\n"]);
+    expect(stderr).toEqual(["Cleanup failed: profile is busy\n"]);
+  });
+});
+
+describe("main on an interactive terminal", () => {
+  const URL_ONLY = ["https://shop.example"];
+
+  beforeEach(() => {
+    setTty({ stdout: true, stderr: true, columns: 80 });
+    vi.stubEnv("CI", "");
+    // Only the spinner timer. The run's other timers stay real.
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("shows a spinner line on stderr while each test runs, and replaces it with the result line", async () => {
+    const { agent } = fakes();
+    const { promise: firstRunning, resolve: firstStarted } = Promise.withResolvers<void>();
+    const { promise: release, resolve: releaseFirst } = Promise.withResolvers<void>();
+    agent.run.mockImplementationOnce(async () => {
+      firstStarted();
+      await release;
+      recordAdd();
+      recordOutcome("settled");
+      return STOPPED;
+    });
+
+    const run = main(URL_ONLY);
+    await firstRunning;
+    expect(writes).toEqual([["stderr", "  ⠋ running      add-to-cart"]]);
+    vi.advanceTimersByTime(SPINNER_INTERVAL_MS * 2);
+    releaseFirst();
+
+    await expect(run).resolves.toBe(0);
+    expect(writes).toEqual([
+      ["stderr", runningLine("add-to-cart")],
+      ["stderr", `${eraseLine("add-to-cart")}${runningLine("add-to-cart", "⠙")}`],
+      ["stderr", `${eraseLine("add-to-cart")}${runningLine("add-to-cart", "⠹")}`],
+      ["stderr", eraseLine("add-to-cart")],
+      ["stdout", "  pass           add-to-cart\n"],
+      ["stderr", runningLine("choose-a-variant")],
+      ["stderr", eraseLine("choose-a-variant")],
+      ["stdout", "  pass           choose-a-variant\n"],
+      ["stderr", runningLine("change-quantity-and-remove")],
+      ["stderr", eraseLine("change-quantity-and-remove")],
+      ["stdout", "  pass           change-quantity-and-remove\n"],
+    ]);
+    // The test name is in the same column as in the result line.
+    expect(runningLine("add-to-cart").indexOf("add-to-cart")).toBe(
+      "  pass           add-to-cart".indexOf("add-to-cart"),
+    );
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("cuts the spinner line to fit a 20-column terminal and its resize, and prints full result lines", async () => {
+    setTty({ stdout: true, stderr: true, columns: 20 });
+    const { agent } = fakes();
+    const { promise: firstRunning, resolve: firstStarted } = Promise.withResolvers<void>();
+    const { promise: release, resolve: releaseFirst } = Promise.withResolvers<void>();
+    agent.run.mockImplementationOnce(async () => {
+      firstStarted();
+      await release;
+      recordAdd();
+      recordOutcome("failed");
+      return STOPPED;
+    });
+
+    const run = main(URL_ONLY);
+    await firstRunning;
+    // The terminal gets narrower after the first frame.
+    setTty({ stdout: true, stderr: true, columns: 12 });
+    vi.advanceTimersByTime(SPINNER_INTERVAL_MS);
+    setTty({ stdout: true, stderr: true, columns: 20 });
+    releaseFirst();
+
+    await expect(run).resolves.toBe(1);
+    expect(writes).toEqual([
+      ["stderr", "  ⠋ running      ad"],
+      ["stderr", `\r${" ".repeat(11)}\r  ⠙ running`],
+      ["stderr", `\r${" ".repeat(11)}\r`],
+      [
+        "stdout",
+        "  fail           add-to-cart                  An add event promise was rejected.\n",
+      ],
+      ["stderr", "  ⠋ running      ch"],
+      ["stderr", `\r${" ".repeat(19)}\r`],
+      ["stdout", "  pass           choose-a-variant\n"],
+      ["stderr", "  ⠋ running      ch"],
+      ["stderr", `\r${" ".repeat(19)}\r`],
+      ["stdout", "  pass           change-quantity-and-remove\n"],
+    ]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("erases the spinner line before the interrupt line and the result line, and runs no later test", async () => {
+    const { agent } = fakes();
+    const agentRunning = runUntilInterrupted(agent);
+    const listenersBefore = process.listenerCount("SIGINT");
+
+    const run = main(URL_ONLY);
+    await agentRunning;
+    process.emit("SIGINT", "SIGINT");
+    // The next frame draws the line again below the interrupt line, while the cleanup runs.
+    vi.advanceTimersByTime(SPINNER_INTERVAL_MS);
+
+    await expect(run).resolves.toBe(2);
+    expect(writes).toEqual([
+      ["stderr", runningLine("add-to-cart")],
+      ["stderr", eraseLine("add-to-cart")],
+      ["stderr", "Received SIGINT. Stopping the run.\n"],
+      ["stderr", runningLine("add-to-cart", "⠙")],
+      ["stderr", eraseLine("add-to-cart")],
+      ["stdout", "  indeterminate  add-to-cart                  Interrupted by SIGINT.\n"],
+    ]);
+    expect(pinNonDefaultVariant).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+    expect(process.listenerCount("SIGINT")).toBe(listenersBefore);
+  });
+
+  it("erases the spinner line before a cleanup failure", async () => {
+    const { session } = fakes();
+    session.close.mockRejectedValue(new Error("profile is busy"));
+
+    await expect(main([...URL_ONLY, "--test", "add-to-cart"])).resolves.toBe(0);
+
+    expect(writes).toEqual([
+      ["stderr", runningLine("add-to-cart")],
+      ["stderr", eraseLine("add-to-cart")],
+      ["stderr", "Cleanup failed: profile is busy\n"],
+      ["stdout", "  pass           add-to-cart\n"],
+    ]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("stops the spinner and erases its line when a test throws", async () => {
+    vi.mocked(createBrowserSession).mockImplementation(() => {
+      throw new Error("Unexpected error.");
+    });
+    const listenersBefore = process.listenerCount("SIGINT");
+
+    await expect(main(URL_ONLY)).rejects.toThrow("Unexpected error.");
+
+    expect(writes).toEqual([
+      ["stderr", runningLine("add-to-cart")],
+      ["stderr", eraseLine("add-to-cart")],
+    ]);
+    expect(vi.getTimerCount()).toBe(0);
+    expect(process.listenerCount("SIGINT")).toBe(listenersBefore);
+  });
+
+  it.each([
+    { when: "stdout is redirected", tty: { stdout: false, stderr: true }, ci: "", argv: [] },
+    { when: "stderr is redirected", tty: { stdout: true, stderr: false }, ci: "", argv: [] },
+    { when: "CI is set", tty: { stdout: true, stderr: true }, ci: "true", argv: [] },
+    { when: "--json is set", tty: { stdout: true, stderr: true }, ci: "", argv: ["--json"] },
+  ])("shows no spinner when $when", async ({ tty, ci, argv }) => {
+    fakes();
+    setTty(tty);
+    vi.stubEnv("CI", ci);
+
+    await expect(main([...URL_ONLY, ...argv])).resolves.toBe(0);
+
+    expect(stderr.join("")).not.toMatch(/\r| running /);
+    expect(stdout).toHaveLength(3);
+    expect(vi.getTimerCount()).toBe(0);
+    if (argv.length === 0) {
+      expect(stdout).toEqual([
+        "  pass           add-to-cart\n",
+        "  pass           choose-a-variant\n",
+        "  pass           change-quantity-and-remove\n",
+      ]);
+      expect(stderr).toEqual([]);
+    }
+  });
+});
+
+/** The spinner line of `test` with `frame`. */
+function runningLine(test: string, frame = "⠋"): string {
+  return `  ${frame} running      ${test}`;
+}
+
+/** Erases the spinner line of `test`. */
+function eraseLine(test: string): string {
+  return `\r${" ".repeat(runningLine(test).length)}\r`;
+}
+
+/** The own stubbed properties of each stream before the test, to restore after it. */
+const streamPropsBefore = new Map<
+  [NodeJS.WriteStream, "isTTY" | "columns"],
+  PropertyDescriptor | undefined
+>();
+
+function stubStream(stream: NodeJS.WriteStream, key: "isTTY" | "columns", value: unknown): void {
+  const saved = [...streamPropsBefore.keys()].some(([s, k]) => s === stream && k === key);
+  if (!saved) streamPropsBefore.set([stream, key], Object.getOwnPropertyDescriptor(stream, key));
+  Object.defineProperty(stream, key, { value, configurable: true, writable: true });
+}
+
+/** Makes stdout and stderr look like an interactive terminal or not, with the stderr width. */
+function setTty(tty: { stdout: boolean; stderr: boolean; columns?: number }): void {
+  stubStream(process.stdout, "isTTY", tty.stdout);
+  stubStream(process.stderr, "isTTY", tty.stderr);
+  if (tty.columns !== undefined) stubStream(process.stderr, "columns", tty.columns);
+}
+
+function restoreTty(): void {
+  for (const [[stream, key], descriptor] of streamPropsBefore) {
+    if (descriptor === undefined) Reflect.deleteProperty(stream, key);
+    else Object.defineProperty(stream, key, descriptor);
+  }
+  streamPropsBefore.clear();
+}
+
+/** The result fields of a test that SIGINT stopped during the agent run. */
+const INTERRUPTED = {
+  status: "indeterminate",
+  reason: "Interrupted by SIGINT.",
+  context: CONTEXT,
+  pinned: PINNED,
+};
+
+/**
+ * Queues, after the agent runs already queued, a run that ends only through its interrupt, like
+ * the real agent module. Resolves when that run starts.
+ */
+async function runUntilInterrupted(agent: ReturnType<typeof fakes>["agent"]): Promise<void> {
+  const { promise: running, resolve: runStarted } = Promise.withResolvers<void>();
+  agent.run.mockImplementationOnce(async ({ interrupt }) => {
+    runStarted();
+    return new Promise((_resolve, reject) => {
+      interrupt.addEventListener("abort", () => reject(interrupt.reason));
+    });
+  });
+  return running;
+}
+
 /**
  * Fake browser session and agent. With `adds`, the agent run records one 1-unit add of the
- * pinned variant, as the page would; the command's stop then ends the run with the fixed outcome,
- * like the real agent module. `settle` tells when and how the add's promise ends.
+ * pinned variant, as the page would; the command's stop then ends the run with the stop reason of
+ * the run input, like the real agent module. `settle` tells when and how the add's promise ends.
+ * In a change-quantity-and-remove run (the stop reason tells it), the add resolves with one cart
+ * line, then the run records one resolved change of that line to each quantity in `cartSteps`
+ * (default: 2, 1, then its remove).
+ * `addedVariants` is the variant that each run adds, in run order. Default: `PINNED`.
  */
 function fakes({
   page: pageOverrides = {},
   outcome = { completed: true, summary: "Added." },
   adds = true,
   settle = "in-run",
+  addedVariants = [],
+  cartSteps = [2, 1, 0],
 }: {
   page?: Record<string, unknown>;
   outcome?: AgentOutcome;
   adds?: boolean;
   settle?: "in-run" | "in-wait" | "rejected";
+  addedVariants?: string[];
+  cartSteps?: number[];
 } = {}) {
+  let runs = 0;
   const track =
     <T>(name: string, value: T) =>
     async () => {
@@ -788,14 +1628,19 @@ function fakes({
     return log;
   });
   const agent = {
-    run: vi.fn<(input: AgentRunInput) => Promise<AgentOutcome>>(async ({ stop }) => {
+    run: vi.fn<(input: AgentRunInput) => Promise<AgentOutcome>>(async ({ stop, stopReason }) => {
       calls.push("run");
       if (!adds) return outcome;
       stop.addEventListener("abort", () => calls.push("stop"), { once: true });
-      recordAdd();
-      if (settle === "in-run") recordOutcome("settled");
-      if (settle === "rejected") recordOutcome("failed");
-      return stop.aborted ? STOPPED : outcome;
+      recordAdd(addedVariants[runs++] ?? PINNED.variantId);
+      if (stopReason === STOPPED_AFTER_CART_CHANGES) {
+        recordOutcome("settled", [{ id: LINE_ID, quantity: 1 }]);
+        for (const [index, quantity] of cartSteps.entries()) recordChange(`c-${index}`, quantity);
+      } else {
+        if (settle === "in-run") recordOutcome("settled");
+        if (settle === "rejected") recordOutcome("failed");
+      }
+      return stop.aborted ? { completed: false, reason: stopReason } : outcome;
     }),
     detach: vi.fn(track("detach", undefined)),
   };
@@ -809,10 +1654,10 @@ function fakes({
   return { session, agent };
 }
 
-/** Records one 1-unit add input of the pinned variant in the current log, as the page would. */
-function recordAdd(): void {
+/** Records one 1-unit add input of `variantId` in the current log, as the page would. */
+function recordAdd(variantId = PINNED.variantId): void {
   calls.push("add");
-  const lines = [{ merchandiseId: PINNED.variantId, quantity: 1 }];
+  const lines = [{ id: null, merchandiseId: variantId, quantity: 1 }];
   log.receive(
     JSON.stringify({
       name: ADD_EVENT_NAME,
@@ -825,10 +1670,35 @@ function recordAdd(): void {
   );
 }
 
-function recordOutcome(phase: "settled" | "failed"): void {
+function recordOutcome(
+  phase: "settled" | "failed",
+  lines: Array<{ id: string; quantity: number }> | null = null,
+): void {
   calls.push(phase);
-  const result = { isObject: true, hasCart: true, userErrors: 0, warningCodes: [] };
+  const result = { isObject: true, hasCart: true, userErrors: 0, warningCodes: [], lines };
   log.receive(JSON.stringify({ name: ADD_EVENT_NAME, id: "a-1", phase, ...result }));
+}
+
+/** Records one change of `LINE_ID` to `quantity` (0 removes it), and its resolved result. */
+function recordChange(id: string, quantity: number): void {
+  calls.push(`change ${quantity}`);
+  const action = quantity === 0 ? "remove" : "update";
+  const lines = [{ id: LINE_ID, merchandiseId: null, quantity }];
+  log.receive(
+    JSON.stringify({ name: ADD_EVENT_NAME, id, phase: "input", action, lines, hasPromise: true }),
+  );
+  log.receive(
+    JSON.stringify({
+      name: ADD_EVENT_NAME,
+      id,
+      phase: "settled",
+      isObject: true,
+      hasCart: true,
+      userErrors: 0,
+      warningCodes: [],
+      lines: quantity === 0 ? [] : [{ id: LINE_ID, quantity }],
+    }),
+  );
 }
 
 function results(): unknown[] {

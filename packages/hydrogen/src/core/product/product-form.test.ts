@@ -816,6 +816,145 @@ describe("createProductFormStore", () => {
         },
       ]);
       expect(thinStore.selectOption("Strap", "Thin").status).toBe("invalid");
+
+      const unencodedStore = createStore({
+        ...thinQuery,
+        encodedVariantExistence: null,
+        encodedVariantAvailability: null,
+      });
+
+      expect(unencodedStore.getState().options[2]).toMatchObject({
+        name: "Strap",
+        values: [
+          { name: "Thin", exists: false, available: false },
+          { name: "Wide", exists: false, available: false },
+        ],
+      });
+      expect(unencodedStore.selectOption("Strap", "Thin").status).toBe("invalid");
+    });
+
+    it("treats a sibling child's option axis as non-existent when it is ordered before a shared axis", () => {
+      const redS = makeVariant({
+        id: "v-red-s",
+        title: "S",
+        selectedOptions: [
+          { name: "Color", value: "Red" },
+          { name: "Size", value: "S" },
+        ],
+        product: { handle: "phantom-helmet-red" },
+      });
+      const greenThinS = makeVariant({
+        id: "v-green-thin-s",
+        title: "Thin / S",
+        selectedOptions: [
+          { name: "Color", value: "Green" },
+          { name: "Strap", value: "Thin" },
+          { name: "Size", value: "S" },
+        ],
+        product: { handle: "phantom-helmet-green" },
+      });
+      const greenWideS = makeVariant({
+        id: "v-green-wide-s",
+        title: "Wide / S",
+        selectedOptions: [
+          { name: "Color", value: "Green" },
+          { name: "Strap", value: "Wide" },
+          { name: "Size", value: "S" },
+        ],
+        product: { handle: "phantom-helmet-green" },
+      });
+      const redChild: ProductInput = {
+        id: "gid://shopify/Product/red",
+        title: "Phantom Helmet Red",
+        handle: "phantom-helmet-red",
+        encodedVariantExistence: "v1_0:0-1,1:0:0,1:0,,",
+        encodedVariantAvailability: "v1_0:0-1,1:0:0,1:0,,",
+        options: [
+          {
+            name: "Color",
+            optionValues: [
+              { name: "Red", firstSelectableVariant: redS },
+              { name: "Green", firstSelectableVariant: greenThinS },
+            ],
+          },
+          {
+            name: "Strap",
+            optionValues: [
+              { name: "Thin", firstSelectableVariant: greenThinS },
+              { name: "Wide", firstSelectableVariant: greenWideS },
+            ],
+          },
+          {
+            name: "Size",
+            optionValues: [
+              { name: "S", firstSelectableVariant: redS },
+              { name: "M", firstSelectableVariant: null },
+            ],
+          },
+        ],
+        selectedOrFirstAvailableVariant: redS,
+        adjacentVariants: [greenThinS, greenWideS],
+      };
+
+      expect(createStore(redChild).getState().options[1]).toMatchObject({
+        name: "Strap",
+        values: [
+          { name: "Thin", exists: true, available: true, handle: "phantom-helmet-green" },
+          { name: "Wide", exists: true, available: true, handle: "phantom-helmet-green" },
+        ],
+      });
+
+      const thinQuery: ProductInput = {
+        ...redChild,
+        options: redChild.options.map((option) => ({
+          name: option.name,
+          optionValues: option.optionValues.map((value) => ({ name: value.name })),
+        })),
+        adjacentVariants: [],
+      };
+      const thinStore = createStore(thinQuery);
+
+      expect(thinStore.getState().options).toMatchObject([
+        {
+          name: "Color",
+          values: [
+            { name: "Red", exists: true },
+            { name: "Green", exists: true },
+          ],
+        },
+        {
+          name: "Strap",
+          values: [
+            { name: "Thin", exists: false, available: false },
+            { name: "Wide", exists: false, available: false },
+          ],
+        },
+        {
+          name: "Size",
+          values: [
+            { name: "S", exists: true },
+            { name: "M", exists: true },
+          ],
+        },
+      ]);
+      expect(thinStore.selectOption("Strap", "Thin").status).toBe("invalid");
+
+      // With no encoded fields there is nothing to decode, so the loaded variant decides: it
+      // has no Strap, which rules Strap out on this child instead of falling back to "exists".
+      const unencodedStore = createStore({
+        ...thinQuery,
+        encodedVariantExistence: null,
+        encodedVariantAvailability: null,
+      });
+
+      expect(unencodedStore.getState().options[1]).toMatchObject({
+        name: "Strap",
+        values: [
+          { name: "Thin", exists: false, available: false },
+          { name: "Wide", exists: false, available: false },
+        ],
+      });
+      expect(unencodedStore.selectOption("Strap", "Thin").status).toBe("invalid");
     });
 
     it("starts with empty selectedOptions when no variant and no selectedOptions provided", () => {
@@ -1560,6 +1699,21 @@ describe("createProductFormStore", () => {
   // ---------------------------------------------------------------------------
 
   describe("cross-store reactivity", () => {
+    it("does not notify listeners when cart changes do not affect the product form", () => {
+      const cartStore = createMockCartStore();
+      const store = createStore(makeSingleOptionProduct(RED), cartStore);
+      const listener = vi.fn();
+      store.subscribe(listener);
+
+      cartStore._setState((prev) => ({ ...prev, pending: { ...prev.pending, note: true } }));
+      cartStore._setState((prev) => ({
+        ...prev,
+        data: { ...prev.data, lines: { nodes: [makeCartLine("v-other")] } },
+      }));
+
+      expect(listener).not.toHaveBeenCalled();
+    });
+
     it("recomputes state when cart store changes", () => {
       const cartStore = createMockCartStore();
       const store = createStore(makeSingleOptionProduct(RED), cartStore);
@@ -1580,6 +1734,8 @@ describe("createProductFormStore", () => {
       const cartLine = makeCartLine("v-red", "line-1");
       const cartStore = createMockCartStore({ lines: [cartLine] });
       const store = createStore(makeSingleOptionProduct(RED), cartStore);
+      const listener = vi.fn();
+      store.subscribe(listener);
 
       expect(store.getState().errors.userErrors).toEqual([]);
 
@@ -1592,6 +1748,59 @@ describe("createProductFormStore", () => {
 
       expect(store.getState().errors.userErrors).toEqual([
         { code: null, message: "Quantity limit" },
+      ]);
+      expect(listener).toHaveBeenCalledTimes(1);
+
+      cartStore._setState((prev) => ({
+        ...prev,
+        errors: {
+          ...prev.errors,
+          lines: new Map([
+            [
+              "line-1",
+              {
+                userErrors: [{ code: null, message: "Another limit" }],
+                warnings: [],
+              },
+            ],
+          ]),
+        },
+      }));
+
+      expect(listener).toHaveBeenCalledTimes(2);
+      expect(store.getState().errors.userErrors).toEqual([
+        { code: null, message: "Another limit" },
+      ]);
+    });
+
+    it("notifies listeners when cart warnings change", () => {
+      const cartStore = createMockCartStore();
+      const store = createStore(makeSingleOptionProduct(RED), cartStore);
+      const listener = vi.fn();
+      store.subscribe(listener);
+
+      cartStore._setState((prev) => ({
+        ...prev,
+        errors: {
+          ...prev.errors,
+          cart: {
+            ...prev.errors.cart,
+            warnings: [
+              {
+                code: "DISCOUNT_CURRENTLY_INACTIVE",
+                message: "Cart warning",
+              },
+            ],
+          },
+        },
+      }));
+
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(store.getState().errors.warnings).toEqual([
+        {
+          code: "DISCOUNT_CURRENTLY_INACTIVE",
+          message: "Cart warning",
+        },
       ]);
     });
   });

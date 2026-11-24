@@ -140,10 +140,12 @@ function CartBadge({
   cart,
   pending,
   revalidating,
+  loading,
 }: {
   cart: CartData;
   pending: CartPending;
   revalidating?: boolean;
+  loading: boolean;
 }) {
   const { open } = useAside();
   const analytics = useAnalytics();
@@ -164,14 +166,24 @@ function CartBadge({
         });
       }}
     >
-      Cart <span aria-label={`(items: ${cart.totalQuantity})`}>{cart.totalQuantity}</span>
+      Cart {/* During the first load the count covers only changes made so far, so show none. */}
+      {loading ? null : (
+        <span aria-label={`(items: ${cart.totalQuantity})`}>{cart.totalQuantity}</span>
+      )}
     </a>
   );
 }
 
 function CartToggle() {
   const cart = useCart((cart) => cart);
-  return <CartBadge cart={cart.data} pending={cart.pending} revalidating={cart.revalidating} />;
+  return (
+    <CartBadge
+      cart={cart.data}
+      pending={cart.pending}
+      revalidating={cart.revalidating}
+      loading={cart.loading}
+    />
+  );
 }
 
 const FALLBACK_HEADER_MENU = {

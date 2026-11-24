@@ -8,7 +8,7 @@ import type { CartData } from "../core/cart/state";
 import { EMPTY_CART_DATA } from "../core/cart/state";
 import type { ShopifyMatchedLocale } from "../core/i18n/types";
 import { configureLogging } from "../core/logging";
-import { assert, createTestLogger } from "../core/test-utils";
+import { assert, createStandardActionsStub, createTestLogger } from "../core/test-utils";
 import { CartProvider, useCartActions, useCartForm } from "./cart";
 import { LocaleProvider } from "./locale";
 
@@ -61,6 +61,7 @@ function mountLocalizedCart(
 beforeEach(() => {
   fetchMock = vi.fn(async () => Response.json({ cart: CART }));
   vi.stubGlobal("fetch", fetchMock);
+  (window as { Shopify?: unknown }).Shopify = { actions: createStandardActionsStub() };
 });
 
 afterEach(() => {
@@ -135,7 +136,10 @@ describe("CartProvider without LocaleProvider", () => {
   it("warns in development on a page served under a locale path prefix", () => {
     const logger = createTestLogger();
     configureLogging({ logger });
-    (window as { Shopify?: unknown }).Shopify = { routes: { root: "/fr-ca/" } };
+    (window as { Shopify?: unknown }).Shopify = {
+      actions: createStandardActionsStub(),
+      routes: { root: "/fr-ca/" },
+    };
 
     mount(CartProvider, { props: { initialData: { cart: null } } });
 

@@ -7,7 +7,7 @@ import type { cartHandlers } from "./cart-handlers";
 
 export const { CartProvider, useCart, useCartForm } = createCartComponents<typeof cartHandlers>();
 
-/** Fetches the cart during server rendering, and marks a page that embeds a buyer's cart as private. */
+/** Fetches the cart during server rendering, and marks every page that embeds the result as private. */
 export async function useServerRenderedCart() {
   // Nuxt loses the composable context after an await, so read the page's event first.
   const event = import.meta.server ? useRequestEvent() : undefined;
@@ -16,8 +16,11 @@ export async function useServerRenderedCart() {
     { key: "cart" },
   );
 
-  // `useFetch` runs `/api/cart` as its own request, so the cart route's private headers never reach this page.
-  if (event && data.value?.cart) {
+  // `useFetch` runs `/api/cart` as its own request with its own request context, so neither the
+  // cart route's private headers nor the cart handler's personalized mark reach this page.
+  // An empty result is per-buyer too: a cached page carrying `{ cart: null }` tells
+  // `CartProvider` not to fetch, so a buyer who has a cart would see it empty.
+  if (event) {
     const { shopifyRequestContext } = event.context;
     if (!shopifyRequestContext) {
       throw new Error("Shopify request context was not created for this server request.");

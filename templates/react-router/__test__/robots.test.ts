@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
-import routes from "../app/routes.ts";
-import { loader } from "../app/routes/robots.ts";
+import { loader } from "../app/routes/robots[.]txt.ts";
 
 async function readRobotsTxt() {
   const response = loader();
@@ -27,10 +27,17 @@ async function readRobotsTxt() {
   return { response, groups };
 }
 
-test("registers the route at /robots.txt", () => {
+test("registers the route at /robots.txt", async () => {
+  // flatRoutes() reads the app directory React Router's config loader normally sets.
+  Object.assign(globalThis, {
+    __reactRouterAppDirectory: fileURLToPath(new URL("../app", import.meta.url)),
+  });
+  const { default: routes } = await import("../app/routes.ts");
   assert.ok(
-    routes.some((route) => route.path === "robots.txt" && route.file === "routes/robots.ts"),
-    "routes.ts must register routes/robots.ts at robots.txt",
+    (await routes).some(
+      (route) => route.path === "robots.txt" && route.file === "routes/robots[.]txt.ts",
+    ),
+    "routes/robots[.]txt.ts must be registered at robots.txt",
   );
 });
 

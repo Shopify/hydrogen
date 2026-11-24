@@ -392,13 +392,16 @@ function buildEncodingConstraints<TProduct extends ProductInput>(
   product: TProduct,
   optionValueIndex = buildOptionValueIndex(product),
   encodedOptionIndex?: Map<string, number>,
-): EncodedVariantConstraint[] {
+): EncodedVariantConstraint[] | null {
   const constraints: EncodedVariantConstraint[] = [];
 
   for (const [productOptionIndex, option] of product.options.entries()) {
     const selectedValue = selectedOptionMap[option.name];
     if (selectedValue === undefined) continue;
-    const optionIndex = encodedOptionIndex?.get(option.name) ?? productOptionIndex;
+    const optionIndex = encodedOptionIndex
+      ? encodedOptionIndex.get(option.name)
+      : productOptionIndex;
+    if (optionIndex === undefined) return null;
     const valueIndex = optionValueIndex.get(option.name)?.get(selectedValue);
     if (valueIndex === undefined) continue;
     constraints.push({ optionIndex, valueIndex });
@@ -409,10 +412,11 @@ function buildEncodingConstraints<TProduct extends ProductInput>(
 
 function resolveEncodedStatus(
   encodedField: string | null | undefined,
-  constraints: EncodedVariantConstraint[],
+  constraints: EncodedVariantConstraint[] | null,
   fallback: boolean,
   cache?: DecodedVariantCache,
 ): boolean {
+  if (!constraints) return false;
   if (!encodedField) return fallback;
   return isAnyEncodedVariantMatchingConstraints(constraints, encodedField, cache);
 }

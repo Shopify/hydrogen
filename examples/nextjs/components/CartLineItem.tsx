@@ -31,6 +31,8 @@ export function CartLineItem({
   const { formProps, register } = useCartForm();
   const pendingLines = useCart((state) => state.pending.lines);
   const isPending = pendingLines.has(line.id);
+  // A line the store shows before the server creates it has no server ID to change yet.
+  const unconfirmed = line.id.startsWith("optimistic:");
 
   const merchandise = line.merchandise;
   const productTitle = merchandise?.product?.title ?? merchandise?.title ?? "Product";
@@ -92,7 +94,7 @@ export function CartLineItem({
             <button
               type="submit"
               {...register("decrease")}
-              disabled={line.quantity <= 1}
+              disabled={unconfirmed || line.quantity <= 1}
               className="button-icon h-8 w-9 rounded-s disabled:opacity-40"
               aria-label={`Decrease quantity: ${productTitle}`}
             >
@@ -100,12 +102,14 @@ export function CartLineItem({
             </button>
             <input
               {...register("quantity", { value: line.quantity, interactive: true })}
+              disabled={unconfirmed}
               className="number-reset h-8 w-12 text-center text-sm"
               aria-label={`Quantity: ${productTitle}`}
             />
             <button
               type="submit"
               {...register("increase")}
+              disabled={unconfirmed}
               className="button-icon h-8 w-9 rounded-e"
               aria-label={`Increase quantity: ${productTitle}`}
             >
@@ -120,6 +124,7 @@ export function CartLineItem({
         <button
           type="submit"
           {...register("remove")}
+          disabled={unconfirmed}
           onClick={onRemoveIntent}
           className="button-icon self-start rounded"
           aria-label={`Remove: ${productTitle}`}

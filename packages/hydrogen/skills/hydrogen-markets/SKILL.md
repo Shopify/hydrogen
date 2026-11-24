@@ -141,19 +141,23 @@ With the React or Vue bindings, pass the request's locale through loader data an
 
 ```tsx
 // root loader
-return { locale: requestContext.locale, cartData };
+return { locale: requestContext.locale };
 
 // root component
 import { LocaleProvider } from "@shopify/hydrogen/react"; // or "@shopify/hydrogen/vue"
 
+// The cart route's loader reads the cart; see the `hydrogen-cart-ui` skill.
+// import type { loader as cartLoader } from "./routes/($locale).cart";
+const cartRoute = useRouteLoaderData<typeof cartLoader>("routes/($locale).cart");
+
 <LocaleProvider locale={loaderData.locale}>
-  <CartProvider initialData={loaderData.cartData}>
+  <CartProvider initialData={cartRoute?.cartData}>
     <Outlet />
   </CartProvider>
 </LocaleProvider>;
 ```
 
-- Inside the provider, the cart provider sends its requests to `{pathPrefix}/api/cart` and cart and product forms post there. `PredictiveSearchProvider` requests `{pathPrefix}/api/predictive-search` and its form submits to `{pathPrefix}/search`. A custom cart endpoint, `predictiveSearchEndpoint`, or `searchAction` that starts with `/` gets the prefix too, so pass those without one. Absolute URLs are used as they are.
+- Inside the provider, the cart provider sends its requests to `{pathPrefix}/api/cart` and cart and product forms post there. `PredictiveSearchProvider` requests `{pathPrefix}/api/predictive-search` and its form submits to `{pathPrefix}/search`. `ShopifyAccount` reads `{pathPrefix}/account/widget-data` and signs in through `{pathPrefix}/account/login`. A custom cart endpoint, `predictiveSearchEndpoint`, or `searchAction` that starts with `/` gets the prefix too, so pass those without one. Absolute URLs are used as they are.
 - `useLocale()` returns the same `{ language, country, pathPrefix }` (a ref in Vue). Build the app's own links and requests with it: `` `${pathPrefix}/collections` `` for a link, `` `${pathPrefix}/api/cart/metafields` `` for a request to an app-owned route, and `getPredictiveSearchItemUrl(item, { routes, term, pathPrefix })` for a search result. For the home link use `pathPrefix || "/"`.
 - Menu item URLs from the Storefront API can carry the Online Store's own locale prefix for the query's language, such as `/fr/collections`. Remove that prefix before adding the app's `pathPrefix`.
 - The prefixed requests have to reach their handlers. `handleShopifyRoutes` matches registered handlers with the prefix stripped; a cart or search route the app serves itself has to exist under each prefix.

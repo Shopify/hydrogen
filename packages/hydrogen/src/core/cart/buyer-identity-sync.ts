@@ -10,6 +10,8 @@ export type CartBuyerIdentitySyncContext = {
   request: Request;
   /** The Storefront API client that updates the cart's buyer identity. */
   storefrontClient: StorefrontClient;
+  /** Cancels the cart update. */
+  signal?: AbortSignal;
 };
 
 /**

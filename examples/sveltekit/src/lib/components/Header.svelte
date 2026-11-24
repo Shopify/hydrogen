@@ -9,10 +9,14 @@
 	let { collections }: { collections: HeaderCollection[] } = $props();
 
 	const totalQuantity = cartState((s) => s.data.totalQuantity);
+	// During the first load the count covers only changes made so far, so show none.
+	const loading = cartState((s) => s.loading);
 	let hasHydrated = $state(false);
 	const rendersCartPage = $derived(page.url.pathname === '/cart');
 	const cartLabel = $derived(
-		$totalQuantity === 0
+		$loading
+			? 'Cart'
+			: $totalQuantity === 0
 			? 'Cart, empty'
 			: `Cart, ${$totalQuantity > 99 ? '99 or more' : $totalQuantity} ${
 					$totalQuantity === 1 ? 'item' : 'items'
@@ -62,7 +66,7 @@
 					<path d="M5 7h14l-1.5 12a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8L5 7Z" />
 					<path d="M9 7V5a3 3 0 0 1 6 0v2" />
 				</svg>
-				{#if $totalQuantity > 0}
+				{#if !$loading && $totalQuantity > 0}
 					<span
 						class="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center rounded-full bg-black px-1 text-[11px] font-bold text-white"
 					>
@@ -85,7 +89,7 @@
 					<path d="M5 7h14l-1.5 12a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8L5 7Z" />
 					<path d="M9 7V5a3 3 0 0 1 6 0v2" />
 				</svg>
-				{#if $totalQuantity > 0}
+				{#if !$loading && $totalQuantity > 0}
 					<span
 						class="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center rounded-full bg-black px-1 text-[11px] font-bold text-white"
 					>
