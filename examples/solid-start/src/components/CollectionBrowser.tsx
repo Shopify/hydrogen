@@ -1,5 +1,6 @@
 import type { AvailableFilter, ProductFilter } from "@shopify/hydrogen";
 import {
+  connectCollectionUpdates,
   createCollectionReconciler,
   createCollectionStore,
   getFilterRemovalUrl,
@@ -10,9 +11,20 @@ import {
   type CollectionData,
   type CollectionState,
   type CollectionStore,
+  type CollectionUpdates,
 } from "@shopify/hydrogen";
 import { A, useBeforeLeave, useIsRouting, useLocation, useNavigate } from "@solidjs/router";
-import { batch, createEffect, createMemo, createSignal, For, on, onCleanup, Show } from "solid-js";
+import {
+  batch,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  on,
+  onCleanup,
+  Show,
+  untrack,
+} from "solid-js";
 
 import { CollectionView } from "./CollectionView";
 import { ProductCard, type ProductCardData } from "./ProductCard";
@@ -45,6 +57,21 @@ function uncheckSiblings(checkbox: HTMLInputElement) {
       el.checked = false;
     }
   }
+}
+
+/**
+ * Returns a link click handler that runs a collection action instead of following the link, so the
+ * change counts as a customer change and sends an update event. The link still works without
+ * JavaScript, and a click with a modifier key or another button goes to the link as usual.
+ */
+function onPlainClick(action: () => void) {
+  return (event: MouseEvent) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    event.preventDefault();
+    action();
+  };
 }
 
 function describeFilter(filter: ProductFilter): string {
@@ -100,6 +127,8 @@ export function CollectionBrowser(props: {
   const priceMax = createMemo(
     () => state().filters.find((filter) => filter.price)?.price?.max ?? "",
   );
+  const [viewElement, setViewElement] = createSignal<HTMLElement>();
+  let updates: CollectionUpdates | undefined;
   let priceTimer: ReturnType<typeof setTimeout> | undefined;
   let isBrowseNavigation = false;
 
@@ -108,12 +137,19 @@ export function CollectionBrowser(props: {
     priceTimer = undefined;
   }
 
-  useBeforeLeave(() => {
-    if (!isBrowseNavigation) {
-      cancelPriceSubmit();
-      reconciler.reset(location.search);
-      setUrlSearchOverride(null);
+  useBeforeLeave((event) => {
+    if (isBrowseNavigation) return;
+    cancelPriceSubmit();
+    // A link to another page replaces or removes the store, which aborts pending collection update
+    // events. A reset here would first settle the store with the results of this page.
+    if (
+      typeof event.to === "string" &&
+      new URL(event.to, window.location.href).pathname !== location.pathname
+    ) {
+      return;
     }
+    reconciler.reset(location.search);
+    setUrlSearchOverride(null);
   });
   onCleanup(cancelPriceSubmit);
 
@@ -128,7 +164,13 @@ export function CollectionBrowser(props: {
     readUrlSearch(),
   );
 
-  store().setOnBrowseChange(() => reconciler.handleBrowseChange());
+  function onBrowseChange() {
+    // Send the update event before the navigation, with the products count before the change.
+    updates?.notify();
+    reconciler.handleBrowseChange();
+  }
+
+  store().setOnBrowseChange(onBrowseChange);
 
   createEffect(() => {
     const nextHandle = props.handle;
@@ -139,9 +181,31 @@ export function CollectionBrowser(props: {
       data: collectionData(),
       urlSearch: readUrlSearch(),
     });
-    nextStore.setOnBrowseChange(() => reconciler.handleBrowseChange());
+    nextStore.setOnBrowseChange(onBrowseChange);
     reconciler.reset(readUrlSearch());
     setStore(nextStore);
+  });
+
+  // Reconnect when the store changes. Disconnecting the old store aborts its pending updates.
+  createEffect(() => {
+    const target = viewElement();
+    const currentStore = store();
+    if (!target) return;
+    const connection = connectCollectionUpdates(currentStore, {
+      target,
+      // The store settles in an effect after the new props arrive, so this reads the new count.
+      // Untracked, so the effect that settles the store doesn't depend on the props.
+      getView: () =>
+        untrack(() => ({
+          collection: { id: props.id, handle: props.handle },
+          productsCount: props.products.length,
+        })),
+    });
+    updates = connection;
+    onCleanup(() => {
+      connection.disconnect();
+      if (updates === connection) updates = undefined;
+    });
   });
 
   createEffect(() => {
@@ -198,6 +262,16 @@ export function CollectionBrowser(props: {
         store().handleFormSubmit(event);
       },
     };
+  }
+
+  function removeFilter(filter: ProductFilter) {
+    cancelPriceSubmit();
+    store().toggleFilter(filter);
+  }
+
+  function clearAll() {
+    cancelPriceSubmit();
+    store().reset();
   }
 
   function onFilterChange(event: Event, filter: AvailableFilter) {
@@ -272,165 +346,178 @@ export function CollectionBrowser(props: {
         </p>
       </header>
 
-      <form {...formProps()} method="get" action={collectionPath()} class="mt-12 flex gap-12">
-        <Show when={props.availableFilters.length > 0}>
-          <aside class="hidden w-60 shrink-0 md:block">
-            <h2 class="text-sm font-semibold tracking-wider text-black/50 uppercase">Filters</h2>
-            <div class="mt-6 space-y-8">
-              <For each={visibleFilters(props.availableFilters).map((filter) => filter.id)}>
-                {(filterId) => (
-                  <Show when={props.availableFilters.find((filter) => filter.id === filterId)}>
-                    {(filter) => (
-                      <fieldset
-                        aria-busy={isLoading()}
-                        class={isLoading() ? "opacity-60" : undefined}
-                      >
-                        <legend class="text-sm font-semibold">{filter().label}</legend>
-                        <Show
-                          when={filter().type === "PRICE_RANGE"}
-                          fallback={
-                            <div class="mt-3 space-y-2">
-                              <For each={visibleValues(filter()).map((value) => value.id)}>
-                                {(valueId) => (
-                                  <Show
-                                    when={filter().values.find((value) => value.id === valueId)}
-                                  >
-                                    {(value) => (
-                                      <Show when={filterInputToParamEntries(value().input)[0]}>
-                                        {(filterEntry) => (
-                                          <label class="flex cursor-pointer items-center gap-2 text-sm">
-                                            <input
-                                              type="checkbox"
-                                              name={filterEntry().name}
-                                              value={filterEntry().value}
-                                              checked={isFilterInputActive(
-                                                state().filters,
-                                                value().input,
-                                              )}
-                                              class="h-4 w-4 rounded border-black/20"
-                                              onChange={(event) => onFilterChange(event, filter())}
-                                            />
-                                            <span
-                                              class={
-                                                isFilterInputActive(state().filters, value().input)
-                                                  ? "font-medium"
-                                                  : ""
-                                              }
-                                            >
-                                              {value().label}
-                                            </span>
-                                            <span class="ml-auto text-xs text-black/40">
-                                              ({value().count})
-                                            </span>
-                                          </label>
-                                        )}
-                                      </Show>
-                                    )}
-                                  </Show>
-                                )}
-                              </For>
-                            </div>
-                          }
+      {/* Wraps the filter and sort controls, the results, and the empty state, because the
+          collection update events start at this element. */}
+      <CollectionView
+        ref={setViewElement}
+        collection={{ id: props.id, handle: props.handle }}
+        productsCount={props.products.length}
+        class="mt-12 block"
+      >
+        <form {...formProps()} method="get" action={collectionPath()} class="flex gap-12">
+          <Show when={props.availableFilters.length > 0}>
+            <aside class="hidden w-60 shrink-0 md:block">
+              <h2 class="text-sm font-semibold tracking-wider text-black/50 uppercase">Filters</h2>
+              <div class="mt-6 space-y-8">
+                <For each={visibleFilters(props.availableFilters).map((filter) => filter.id)}>
+                  {(filterId) => (
+                    <Show when={props.availableFilters.find((filter) => filter.id === filterId)}>
+                      {(filter) => (
+                        <fieldset
+                          aria-busy={isLoading()}
+                          class={isLoading() ? "opacity-60" : undefined}
                         >
-                          <div class="mt-3 flex items-center gap-2">
-                            <input
-                              type="number"
-                              name="filter.v.price.gte"
-                              min="0"
-                              step="any"
-                              placeholder="Min"
-                              aria-label="Minimum price"
-                              value={activePriceValue("min")}
-                              class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
-                              onInput={onPriceInput}
-                            />
-                            <span class="text-sm text-black/40">to</span>
-                            <input
-                              type="number"
-                              name="filter.v.price.lte"
-                              min="0"
-                              step="any"
-                              placeholder="Max"
-                              aria-label="Maximum price"
-                              value={activePriceValue("max")}
-                              class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
-                              onInput={onPriceInput}
-                            />
-                          </div>
-                        </Show>
-                      </fieldset>
-                    )}
-                  </Show>
-                )}
-              </For>
-            </div>
-            <noscript>
-              <button
-                type="submit"
-                class="mt-8 w-full rounded bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/80"
-              >
-                Apply
-              </button>
-            </noscript>
-          </aside>
-        </Show>
-
-        <div class="flex-1">
-          <div class="flex items-center justify-between border-b border-black/10 pb-4">
-            <div class="flex items-center gap-4">
-              <Show when={hasActiveFilters()}>
-                <A href={collectionPath()} class="text-sm text-black/60 underline hover:text-black">
-                  Clear all
-                </A>
-              </Show>
-              <span
-                role="status"
-                aria-live="polite"
-                aria-atomic="true"
-                class="text-sm text-black/40"
-              >
-                {isLoading() ? "Updating..." : ""}
-              </span>
-            </div>
-
-            <label class="flex items-center gap-2 text-sm">
-              <span class="text-black/60">Sort by</span>
-              <select
-                name="sort_by"
-                value={currentSortValue()}
-                aria-busy={isLoading()}
-                class="rounded border border-black/15 bg-white px-3 py-1.5 text-sm font-medium"
-                classList={{ "opacity-50": isLoading() }}
-                onChange={onSortChange}
-              >
-                <For each={SORT_OPTIONS}>
-                  {(option) => <option value={option.value}>{option.label}</option>}
+                          <legend class="text-sm font-semibold">{filter().label}</legend>
+                          <Show
+                            when={filter().type === "PRICE_RANGE"}
+                            fallback={
+                              <div class="mt-3 space-y-2">
+                                <For each={visibleValues(filter()).map((value) => value.id)}>
+                                  {(valueId) => (
+                                    <Show
+                                      when={filter().values.find((value) => value.id === valueId)}
+                                    >
+                                      {(value) => (
+                                        <Show when={filterInputToParamEntries(value().input)[0]}>
+                                          {(filterEntry) => (
+                                            <label class="flex cursor-pointer items-center gap-2 text-sm">
+                                              <input
+                                                type="checkbox"
+                                                name={filterEntry().name}
+                                                value={filterEntry().value}
+                                                checked={isFilterInputActive(
+                                                  state().filters,
+                                                  value().input,
+                                                )}
+                                                class="h-4 w-4 rounded border-black/20"
+                                                onChange={(event) =>
+                                                  onFilterChange(event, filter())
+                                                }
+                                              />
+                                              <span
+                                                class={
+                                                  isFilterInputActive(
+                                                    state().filters,
+                                                    value().input,
+                                                  )
+                                                    ? "font-medium"
+                                                    : ""
+                                                }
+                                              >
+                                                {value().label}
+                                              </span>
+                                              <span class="ml-auto text-xs text-black/40">
+                                                ({value().count})
+                                              </span>
+                                            </label>
+                                          )}
+                                        </Show>
+                                      )}
+                                    </Show>
+                                  )}
+                                </For>
+                              </div>
+                            }
+                          >
+                            <div class="mt-3 flex items-center gap-2">
+                              <input
+                                type="number"
+                                name="filter.v.price.gte"
+                                min="0"
+                                step="any"
+                                placeholder="Min"
+                                aria-label="Minimum price"
+                                value={activePriceValue("min")}
+                                class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
+                                onInput={onPriceInput}
+                              />
+                              <span class="text-sm text-black/40">to</span>
+                              <input
+                                type="number"
+                                name="filter.v.price.lte"
+                                min="0"
+                                step="any"
+                                placeholder="Max"
+                                aria-label="Maximum price"
+                                value={activePriceValue("max")}
+                                class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
+                                onInput={onPriceInput}
+                              />
+                            </div>
+                          </Show>
+                        </fieldset>
+                      )}
+                    </Show>
+                  )}
                 </For>
-              </select>
-            </label>
-          </div>
-
-          <Show when={hasActiveFilters()}>
-            <div class="mt-4 flex flex-wrap gap-2">
-              <For each={state().filters}>
-                {(filter) => (
-                  <A
-                    href={filterRemovalHref(filter)}
-                    class="inline-flex items-center gap-1.5 rounded-full bg-black/5 px-3 py-1 text-sm hover:bg-black/10"
-                  >
-                    {describeFilter(filter)}
-                    <span aria-hidden="true">x</span>
-                  </A>
-                )}
-              </For>
-            </div>
+              </div>
+              <noscript>
+                <button
+                  type="submit"
+                  class="mt-8 w-full rounded bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/80"
+                >
+                  Apply
+                </button>
+              </noscript>
+            </aside>
           </Show>
 
-          <CollectionView
-            collection={{ id: props.id, handle: props.handle }}
-            productsCount={props.products.length}
-            class="block"
-          >
+          <div class="flex-1">
+            <div class="flex items-center justify-between border-b border-black/10 pb-4">
+              <div class="flex items-center gap-4">
+                <Show when={hasActiveFilters()}>
+                  <A
+                    href={collectionPath()}
+                    class="text-sm text-black/60 underline hover:text-black"
+                    onClick={onPlainClick(clearAll)}
+                  >
+                    Clear all
+                  </A>
+                </Show>
+                <span
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                  class="text-sm text-black/40"
+                >
+                  {isLoading() ? "Updating..." : ""}
+                </span>
+              </div>
+
+              <label class="flex items-center gap-2 text-sm">
+                <span class="text-black/60">Sort by</span>
+                <select
+                  name="sort_by"
+                  value={currentSortValue()}
+                  aria-busy={isLoading()}
+                  class="rounded border border-black/15 bg-white px-3 py-1.5 text-sm font-medium"
+                  classList={{ "opacity-50": isLoading() }}
+                  onChange={onSortChange}
+                >
+                  <For each={SORT_OPTIONS}>
+                    {(option) => <option value={option.value}>{option.label}</option>}
+                  </For>
+                </select>
+              </label>
+            </div>
+
+            <Show when={hasActiveFilters()}>
+              <div class="mt-4 flex flex-wrap gap-2">
+                <For each={state().filters}>
+                  {(filter) => (
+                    <A
+                      href={filterRemovalHref(filter)}
+                      onClick={onPlainClick(() => removeFilter(filter))}
+                      class="inline-flex items-center gap-1.5 rounded-full bg-black/5 px-3 py-1 text-sm hover:bg-black/10"
+                    >
+                      {describeFilter(filter)}
+                      <span aria-hidden="true">x</span>
+                    </A>
+                  )}
+                </For>
+              </div>
+            </Show>
+
             <section
               class={
                 isLoading()
@@ -450,15 +537,16 @@ export function CollectionBrowser(props: {
                   <A
                     href={collectionPath()}
                     class="mt-4 inline-block text-sm font-semibold underline"
+                    onClick={onPlainClick(clearAll)}
                   >
                     Clear all filters
                   </A>
                 </Show>
               </div>
             </Show>
-          </CollectionView>
-        </div>
-      </form>
+          </div>
+        </form>
+      </CollectionView>
     </main>
   );
 }
