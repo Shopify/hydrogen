@@ -244,7 +244,13 @@ describe("parseCollectionParams", () => {
     it("returns undefined sortKey for a sort_by value that names an Object.prototype property", () => {
       const result = parseCollectionParams(params("sort_by=constructor-descending"));
       expect(result.sortKey).toBeUndefined();
-      expect(result.reverse).toBe(true);
+      expect(result.reverse).toBe(false);
+    });
+
+    it("returns reverse false for an unrecognized -descending sort_by value", () => {
+      const result = parseCollectionParams(params("sort_by=foo-descending"));
+      expect(result.sortKey).toBeUndefined();
+      expect(result.reverse).toBe(false);
     });
   });
 });
@@ -772,10 +778,10 @@ describe("parseSortByValue", () => {
     });
   });
 
-  it("keeps reverse true for an unrecognized -descending value", () => {
+  it("returns reverse false for an unrecognized -descending value", () => {
     expect(parseSortByValue("foo-descending")).toEqual({
       sortKey: undefined,
-      reverse: true,
+      reverse: false,
     });
   });
 
