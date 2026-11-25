@@ -1,4 +1,4 @@
-import { COLLECTION_VIEW_TAG_NAME, getCollectionViewAttributes, gql } from "@shopify/hydrogen";
+import { VIEW_EVENT_TAG_NAME, getCollectionViewAttributes, gql } from "@shopify/hydrogen";
 import { createElement } from "react";
 import { redirect, useLoaderData } from "react-router";
 
@@ -81,7 +81,7 @@ export default function Collection() {
           // The page has no filters or sort, so it renders the view element without
           // `CollectionProvider`, which the `CollectionView` component needs.
           createElement(
-            COLLECTION_VIEW_TAG_NAME,
+            VIEW_EVENT_TAG_NAME,
             {
               class: "block",
               ...getCollectionViewAttributes({ collection, productsCount: nodes.length }),
