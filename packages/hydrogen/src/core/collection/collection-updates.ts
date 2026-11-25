@@ -1,10 +1,11 @@
 import type * as StandardEvents from "../../../vendor/standard-events";
 import { getLogger } from "../logging";
 import { importStandardEventsFromCDN } from "../shopify-scripts/standard-events";
+import { browseStateFromParams } from "./collection";
 import type { CollectionStore } from "./collection";
 import type { CollectionViewOptions } from "./collection-view";
 import type { CollectionState } from "./state";
-import { browseStateEqual, parseCollectionParams, serializeCollectionParams } from "./url";
+import { browseStateEqual, serializeCollectionParams } from "./url";
 
 const log = getLogger("collection");
 
@@ -239,12 +240,13 @@ export function connectCollectionUpdates(
 }
 
 /**
- * Returns the filters and sort that the URL keeps. Some values don't survive the URL, such as sort
- * keys that `parseCollectionParams` doesn't read and category filters. When the store syncs from the
- * new URL, these values go away, which must not look like a change without `notify()`.
+ * Returns the filters and sort that the store keeps after it syncs from the URL of the state. Some
+ * values don't survive the URL, such as sort keys that `parseCollectionParams` doesn't read and
+ * category filters. When the store syncs from the new URL, these values go away, which must not
+ * look like a change without `notify()`.
  */
 function urlBrowseState(state: BrowseState): BrowseState {
-  return parseCollectionParams(serializeCollectionParams(state));
+  return browseStateFromParams(serializeCollectionParams(state));
 }
 
 // Analytics must never stop the navigation or the store updates.

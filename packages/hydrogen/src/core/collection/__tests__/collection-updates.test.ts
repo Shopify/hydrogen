@@ -5,6 +5,7 @@ import { configureLogging } from "../../logging";
 import { assert } from "../../test-utils";
 import { createCollectionStore } from "../collection";
 import { connectCollectionUpdates } from "../collection-updates";
+import { createCollectionReconciler } from "../reconciler";
 import { fakeStandardEvents } from "./fake-standard-events";
 
 const importStandardEventsFromCDN = vi.hoisted(() => vi.fn());
@@ -200,6 +201,46 @@ describe("connectCollectionUpdates", () => {
 
     expect(events).toHaveLength(1);
     expect(eventAt(0).productFilters).toEqual([category, { tag: "sale" }]);
+    await expect(eventAt(0).promise).resolves.toEqual({ productsCount: 3 });
+  });
+
+  it("resolves a change to a descending ID sort when the reconciler settles from the new URL", async () => {
+    const initialSearch = "sort_by=title-ascending";
+    const store = createCollectionStore({
+      data: { handle: "shirts", dataSearch: initialSearch },
+      urlSearch: initialSearch,
+    });
+    const target = document.createElement("div");
+    document.body.append(target);
+    const view = {
+      collection: { id: "gid://shopify/Collection/1", handle: "shirts" },
+      productsCount: 8,
+    };
+    const updates = connectCollectionUpdates(store, { target, getView: () => view });
+    let urlSearch = initialSearch;
+    const reconciler = createCollectionReconciler(
+      {
+        getStore: () => store,
+        readUrlSearch: () => urlSearch,
+        emitChange: (search) => {
+          urlSearch = search;
+        },
+      },
+      initialSearch,
+    );
+    store.setOnBrowseChange(() => {
+      updates.notify();
+      reconciler.handleBrowseChange();
+    });
+    await flush();
+
+    store.setSortKey("ID", true);
+    await flush();
+    view.productsCount = 3;
+    reconciler.reconcile(urlSearch, urlSearch);
+
+    expect(store.getState().status).toBe("idle");
+    expect(events).toHaveLength(1);
     await expect(eventAt(0).promise).resolves.toEqual({ productsCount: 3 });
   });
 
