@@ -9069,7 +9069,7 @@
     "src/core/collection/url.ts": {
       "filePath": "src/core/collection/url.ts",
       "name": "ParseCollectionParamsGeneratedType",
-      "description": "Reads collection filters and sort from URL search params. Pass the result to your Storefront API collection query.\n\nThe function reads Liquid-compatible `filter.p.*` and `filter.v.*` keys and the `sort_by` param.\n\nA URL that sets availability to both in stock and out of stock produces no availability filter. A price bound must be a non-negative number as `<input type=\"number\">` submits it, such as `12.5`; the function ignores any other value, such as `12,50`, the same way on the server and in the browser. The function reads every `sort_by` value that `getSortByValue` writes. For other sort values, the sort key is `undefined`.",
+      "description": "Reads collection filters and sort from URL search params. Pass the result to your Storefront API collection query.\n\nThe function reads Liquid-compatible `filter.p.*` and `filter.v.*` keys and the `sort_by` param.\n\nA URL that sets availability to both in stock and out of stock produces no availability filter. A price bound must be a non-negative number as `<input type=\"number\">` submits it, such as `12.5`; the function ignores any other value, such as `12,50`, the same way on the server and in the browser. The function reads the `sort_by` param with `parseSortByValue`, so it reads every value that `getSortByValue` writes. For unrecognized values, the sort key is `undefined`.",
       "isPublicDocs": true,
       "params": [
         {
@@ -9085,7 +9085,7 @@
         "name": "CollectionParams",
         "value": "CollectionParams"
       },
-      "value": "export function parseCollectionParams(searchParams: URLSearchParams): CollectionParams {\n  const filters = parseProductFilters(searchParams);\n  const rawSortBy = searchParams.get(\"sort_by\");\n  const sortKey = rawSortBy ? WRITTEN_SORT_BY.get(rawSortBy) : undefined;\n  const reverse = rawSortBy?.endsWith(SORT_BY_DESCENDING_SUFFIX) ?? false;\n\n  return { filters, sortKey, reverse };\n}"
+      "value": "export function parseCollectionParams(searchParams: URLSearchParams): CollectionParams {\n  const filters = parseProductFilters(searchParams);\n  const { sortKey, reverse } = parseSortByValue(searchParams.get(\"sort_by\") ?? \"\");\n\n  return { filters, sortKey, reverse };\n}"
     }
   },
   "CollectionParams": {
@@ -9243,7 +9243,7 @@
         "name": "{\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n}",
         "value": "{\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n}"
       },
-      "value": "export function parseSortByValue(value: string): {\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n} {\n  if (value.endsWith(SORT_BY_DESCENDING_SUFFIX)) {\n    const base = value.slice(0, -SORT_BY_DESCENDING_SUFFIX.length);\n    return { sortKey: lookupSortKey(base), reverse: true };\n  }\n\n  if (value.endsWith(SORT_BY_ASCENDING_SUFFIX)) {\n    const base = value.slice(0, -SORT_BY_ASCENDING_SUFFIX.length);\n    return { sortKey: lookupSortKey(base), reverse: false };\n  }\n\n  return { sortKey: lookupSortKey(value), reverse: false };\n}"
+      "value": "export function parseSortByValue(value: string): {\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n} {\n  if (value.endsWith(SORT_BY_DESCENDING_SUFFIX)) {\n    const base = value.slice(0, -SORT_BY_DESCENDING_SUFFIX.length);\n    return { sortKey: SORT_BY_TO_SORT_KEY.get(base), reverse: true };\n  }\n\n  if (value.endsWith(SORT_BY_ASCENDING_SUFFIX)) {\n    const base = value.slice(0, -SORT_BY_ASCENDING_SUFFIX.length);\n    return { sortKey: SORT_BY_TO_SORT_KEY.get(base), reverse: false };\n  }\n\n  return { sortKey: SORT_BY_TO_SORT_KEY.get(value), reverse: false };\n}"
     }
   },
   "FilterEqualsGeneratedType": {

@@ -218,15 +218,6 @@ describe("parseCollectionParams", () => {
       expect(result.reverse).toBe(reverse);
     });
 
-    it.each(["price", "best-selling-descending", "manual-ascending"])(
-      "returns undefined sortKey for %s, which getSortByValue never writes",
-      (sortBy) => {
-        const result = parseCollectionParams(params(`sort_by=${sortBy}`));
-        expect(result.sortKey).toBeUndefined();
-        expect(result.reverse).toBe(sortBy.endsWith("-descending"));
-      },
-    );
-
     it("returns undefined sortKey when sort_by is missing", () => {
       const result = parseCollectionParams(params("filter.p.tag=men"));
       expect(result.sortKey).toBeUndefined();

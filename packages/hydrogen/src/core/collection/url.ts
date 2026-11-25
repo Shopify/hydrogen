@@ -33,26 +33,21 @@ const SORT_KEY_TO_SORT_BY: Record<string, string> = {
   COLLECTION_DEFAULT: "collection-default",
 };
 
-const SORT_BY_TO_SORT_KEY: Record<string, ProductCollectionSortKeys> = Object.fromEntries(
+// A Map, not a plain object, so `sort_by` values such as `constructor` don't match
+// `Object.prototype` members.
+const SORT_BY_TO_SORT_KEY = new Map<string, ProductCollectionSortKeys>(
   Object.entries(SORT_KEY_TO_SORT_BY).map(([key, value]) => [
     value,
     key as ProductCollectionSortKeys,
   ]),
 );
 
-/** Every `sort_by` value that `getSortByValue` writes, mapped to its sort key. */
-const WRITTEN_SORT_BY = new Map<string, ProductCollectionSortKeys>();
-for (const sortKey of Object.keys(SORT_KEY_TO_SORT_BY) as ProductCollectionSortKeys[]) {
-  WRITTEN_SORT_BY.set(getSortByValue(sortKey, false), sortKey);
-  WRITTEN_SORT_BY.set(getSortByValue(sortKey, true), sortKey);
-}
-
 /**
  * Reads collection filters and sort from URL search params. Pass the result to your Storefront API collection query.
  *
  * The function reads Liquid-compatible `filter.p.*` and `filter.v.*` keys and the `sort_by` param.
  *
- * A URL that sets availability to both in stock and out of stock produces no availability filter. A price bound must be a non-negative number as `<input type="number">` submits it, such as `12.5`; the function ignores any other value, such as `12,50`, the same way on the server and in the browser. The function reads every `sort_by` value that `getSortByValue` writes. For other sort values, the sort key is `undefined`.
+ * A URL that sets availability to both in stock and out of stock produces no availability filter. A price bound must be a non-negative number as `<input type="number">` submits it, such as `12.5`; the function ignores any other value, such as `12,50`, the same way on the server and in the browser. The function reads the `sort_by` param with `parseSortByValue`, so it reads every value that `getSortByValue` writes. For unrecognized values, the sort key is `undefined`.
  *
  * @param searchParams - URL search params to read.
  * @returns The filters, sort key, and sort direction from the URL.
@@ -60,9 +55,7 @@ for (const sortKey of Object.keys(SORT_KEY_TO_SORT_BY) as ProductCollectionSortK
  */
 export function parseCollectionParams(searchParams: URLSearchParams): CollectionParams {
   const filters = parseProductFilters(searchParams);
-  const rawSortBy = searchParams.get("sort_by");
-  const sortKey = rawSortBy ? WRITTEN_SORT_BY.get(rawSortBy) : undefined;
-  const reverse = rawSortBy?.endsWith(SORT_BY_DESCENDING_SUFFIX) ?? false;
+  const { sortKey, reverse } = parseSortByValue(searchParams.get("sort_by") ?? "");
 
   return { filters, sortKey, reverse };
 }
@@ -222,20 +215,15 @@ export function parseSortByValue(value: string): {
 } {
   if (value.endsWith(SORT_BY_DESCENDING_SUFFIX)) {
     const base = value.slice(0, -SORT_BY_DESCENDING_SUFFIX.length);
-    return { sortKey: lookupSortKey(base), reverse: true };
+    return { sortKey: SORT_BY_TO_SORT_KEY.get(base), reverse: true };
   }
 
   if (value.endsWith(SORT_BY_ASCENDING_SUFFIX)) {
     const base = value.slice(0, -SORT_BY_ASCENDING_SUFFIX.length);
-    return { sortKey: lookupSortKey(base), reverse: false };
+    return { sortKey: SORT_BY_TO_SORT_KEY.get(base), reverse: false };
   }
 
-  return { sortKey: lookupSortKey(value), reverse: false };
-}
-
-// Own keys only, so `sort_by` values such as `constructor` don't return `Object.prototype` members.
-function lookupSortKey(sortBy: string): ProductCollectionSortKeys | undefined {
-  return Object.hasOwn(SORT_BY_TO_SORT_KEY, sortBy) ? SORT_BY_TO_SORT_KEY[sortBy] : undefined;
+  return { sortKey: SORT_BY_TO_SORT_KEY.get(value), reverse: false };
 }
 
 /**
