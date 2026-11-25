@@ -1,11 +1,10 @@
 import type * as StandardEvents from "../../../vendor/standard-events";
 import { getLogger } from "../logging";
 import { importStandardEventsFromCDN } from "../shopify-scripts/standard-events";
-import { browseStateFromParams } from "./collection";
 import type { CollectionStore } from "./collection";
 import type { CollectionViewOptions } from "./collection-view";
 import type { CollectionState } from "./state";
-import { browseStateEqual, serializeCollectionParams } from "./url";
+import { browseStateEqual } from "./url";
 
 const log = getLogger("collection");
 
@@ -94,9 +93,8 @@ export function connectCollectionUpdates(
   let connected = true;
   let loaded: Pick<typeof StandardEvents, "CollectionUpdateEvent"> | undefined;
   let loadFailed = false;
-  // The filters and sort of the last update, or of the last change without an update, as the URL
-  // keeps them.
-  let notified: BrowseState = urlBrowseState(store.getState());
+  // The filters and sort of the last update, or of the last change without an update.
+  let notified: BrowseState = store.getState();
   let checkScheduled = false;
   // Updates whose promise waits for the store to settle.
   let pending: Update[] = [];
@@ -124,7 +122,7 @@ export function connectCollectionUpdates(
   // A filter or sort change without `notify()`, such as back or forward navigation, leaves the
   // pending changes.
   const checkChangeWithoutNotify = () => {
-    const state = urlBrowseState(store.getState());
+    const state = store.getState();
     if (browseStateEqual(state, notified)) return;
     notified = state;
     abort(pending);
@@ -182,7 +180,7 @@ export function connectCollectionUpdates(
   const unsubscribe = store.subscribe((state) =>
     guard(() => {
       if (pending.length > 0) abortOtherCollections();
-      if (!checkScheduled && !browseStateEqual(urlBrowseState(state), notified)) {
+      if (!checkScheduled && !browseStateEqual(state, notified)) {
         checkScheduled = true;
         queueMicrotask(() => {
           checkScheduled = false;
@@ -201,9 +199,8 @@ export function connectCollectionUpdates(
       if (!connected || loadFailed) return;
       guard(() => {
         const state = store.getState();
-        const urlState = urlBrowseState(state);
-        if (browseStateEqual(urlState, notified)) return;
-        notified = urlState;
+        if (browseStateEqual(state, notified)) return;
+        notified = state;
 
         const { collection, productsCount } = getView();
         const payload: EventPayload = {
@@ -237,16 +234,6 @@ export function connectCollectionUpdates(
       abort(pending);
     },
   };
-}
-
-/**
- * Returns the filters and sort that the store keeps after it syncs from the URL of the state. Some
- * values don't survive the URL, such as sort keys that `parseCollectionParams` doesn't read and
- * category filters. When the store syncs from the new URL, these values go away, which must not
- * look like a change without `notify()`.
- */
-function urlBrowseState(state: BrowseState): BrowseState {
-  return browseStateFromParams(serializeCollectionParams(state));
 }
 
 // Analytics must never stop the navigation or the store updates.

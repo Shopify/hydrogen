@@ -167,43 +167,6 @@ describe("connectCollectionUpdates", () => {
     expect(await rejection(eventAt(0).promise)).toMatchObject({ name: "AbortError" });
   });
 
-  it("resolves when the store syncs from a URL that doesn't keep the sort key", async () => {
-    const { store, view } = setup(8);
-    await flush();
-    store.setSortKey("TITLE");
-    store.settle();
-
-    store.setSortKey("COLLECTION_DEFAULT");
-    await flush();
-    // The reconciler syncs the store from the new URL, where the sort key reads as `undefined`.
-    store.syncFromParams(store.serializeToParams());
-    expect(store.getState().sortKey).toBeUndefined();
-    view.productsCount = 3;
-    store.settle();
-
-    expect(events).toHaveLength(2);
-    expect(eventAt(1).sortKey).toBe("COLLECTION_DEFAULT");
-    await expect(eventAt(1).promise).resolves.toEqual({ productsCount: 3 });
-  });
-
-  it("resolves when the store syncs from a URL that doesn't keep category filters", async () => {
-    const { store, view } = setup(8);
-    await flush();
-    const category = { category: { id: "gid://shopify/TaxonomyCategory/1" } };
-
-    store.setFilters([category, { tag: "sale" }]);
-    await flush();
-    // The reconciler syncs the store from the new URL, which doesn't keep the category filter.
-    store.syncFromParams(store.serializeToParams());
-    expect(store.getState().filters).toEqual([{ tag: "sale" }]);
-    view.productsCount = 3;
-    store.settle();
-
-    expect(events).toHaveLength(1);
-    expect(eventAt(0).productFilters).toEqual([category, { tag: "sale" }]);
-    await expect(eventAt(0).promise).resolves.toEqual({ productsCount: 3 });
-  });
-
   it("resolves a change to a descending ID sort when the reconciler settles from the new URL", async () => {
     const initialSearch = "sort_by=title-ascending";
     const store = createCollectionStore({
@@ -244,7 +207,7 @@ describe("connectCollectionUpdates", () => {
     await expect(eventAt(0).promise).resolves.toEqual({ productsCount: 3 });
   });
 
-  it("still rejects on back navigation after a change to a sort key that the URL doesn't keep", async () => {
+  it("rejects on back navigation after a change to the COLLECTION_DEFAULT sort", async () => {
     const { store } = setup(8);
     await flush();
     store.setSortKey("TITLE");
