@@ -359,8 +359,8 @@
 				</div>
 			{/if}
 
-			<!-- The element sends the event again when the collection handle changes, not when products load. -->
-			<shopify-collection-view
+			<!-- The element sends the event again when its key, the collection handle, changes, not when products load. -->
+			<shopify-view-event
 				{...getCollectionViewAttributes({
 					collection: { id, handle },
 					productsCount: products.length
@@ -387,7 +387,7 @@
 						{/if}
 					</div>
 				{/if}
-			</shopify-collection-view>
+			</shopify-view-event>
 		</div>
 	</form>
 </main>
