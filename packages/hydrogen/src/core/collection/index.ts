@@ -36,4 +36,7 @@ export { getCollectionViewAttributes } from "./collection-view";
 export type { CollectionViewCollection, CollectionViewOptions } from "./collection-view";
 
 export { connectCollectionUpdates } from "./collection-updates";
-export type { CollectionUpdates, ConnectCollectionUpdatesOptions } from "./collection-updates";
+export type {
+  CollectionUpdatesConnection,
+  ConnectCollectionUpdatesOptions,
+} from "./collection-updates";

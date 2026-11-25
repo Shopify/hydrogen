@@ -34,7 +34,7 @@ export interface ConnectCollectionUpdatesOptions {
 }
 
 /** The connection that `connectCollectionUpdates` returns. */
-export interface CollectionUpdates {
+export interface CollectionUpdatesConnection {
   /**
    * Sends one `shopify:collection:update` event for the current filters and sort of the store.
    * Call it in the store's browse change callback, before you navigate. It does nothing when the
@@ -89,7 +89,7 @@ type Update = {
 export function connectCollectionUpdates(
   store: CollectionStore,
   options: ConnectCollectionUpdatesOptions,
-): CollectionUpdates {
+): CollectionUpdatesConnection {
   const { target, getView, afterRender = (callback) => callback() } = options;
   let connected = true;
   let loaded: Pick<typeof StandardEvents, "CollectionUpdateEvent"> | undefined;
