@@ -171,6 +171,23 @@ function describeFilter(filter: ProductFilter, currencyCode: string): string {
   return "Filter";
 }
 
+// Prefer the Storefront API label, such as a category name instead of its taxonomy ID.
+// Price chips keep describeFilter because they show the selected range.
+function filterLabel(
+  filter: ProductFilter,
+  availableFilters: readonly BrowseFilter[],
+  currencyCode: string,
+): string {
+  for (const group of availableFilters) {
+    if (group.type === "PRICE_RANGE") continue;
+    const match = group.values.find(
+      (value) => value.input && isFilterInputActive([filter], value.input),
+    );
+    if (match) return match.label;
+  }
+  return describeFilter(filter, currencyCode);
+}
+
 function activeValueCount(filter: BrowseFilter, state: CollectionState): number {
   if (filter.type === "PRICE_RANGE") return priceFilter(state) ? 1 : 0;
   return filter.values.filter(
@@ -675,10 +692,12 @@ export function FilterDrawer({
 }
 
 export function ActiveFilterChips({
+  availableFilters,
   basePath,
   clearAllTo,
   currencyCode,
 }: {
+  availableFilters: readonly BrowseFilter[];
   basePath: string;
   clearAllTo: string;
   currencyCode: string;
@@ -695,7 +714,7 @@ export function ActiveFilterChips({
       aria-label="Active filters"
     >
       {state.filters.map((filter, index) => {
-        const label = describeFilter(filter, currencyCode);
+        const label = filterLabel(filter, availableFilters, currencyCode);
         const removal = getFilterRemovalUrl(currentParams, filter);
         const to = buildPathWithRemoval(basePath, removal);
 
