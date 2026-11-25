@@ -43,7 +43,7 @@
 </svelte:head>
 
 <main id="main-content" tabindex="-1">
-	<shopify-product-view
+	<shopify-view-event
 		{...getProductViewAttributes({ product: data.product, context: 'page' })}
 		class="block"
 	>
@@ -64,7 +64,7 @@
 
 			<ProductPurchasePanel product={data.product} />
 		</section>
-	</shopify-product-view>
+	</shopify-view-event>
 
 	<section class="border-t border-black/10 px-6 py-16 md:px-10 md:py-20">
 		<h2 class="text-2xl font-black tracking-tight">You may also like</h2>

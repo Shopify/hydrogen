@@ -21,7 +21,7 @@
 	}: { product: ProductCardData; context: 'collection' | 'search' | 'recommendation' } = $props();
 </script>
 
-<shopify-product-view {...getProductViewAttributes({ product, context })} class="block">
+<shopify-view-event {...getProductViewAttributes({ product, context })} class="block">
 	<a href={`/products/${product.handle}`} class="group block">
 		<div class="aspect-square overflow-hidden bg-neutral-100">
 			{#if product.featuredImage}
@@ -37,4 +37,4 @@
 			<p class="mt-1 text-sm font-bold">{formatMoney(product.priceRange.minVariantPrice)}</p>
 		</div>
 	</a>
-</shopify-product-view>
+</shopify-view-event>
