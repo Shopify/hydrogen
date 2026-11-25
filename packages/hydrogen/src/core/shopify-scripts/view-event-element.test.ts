@@ -3,11 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type * as StandardEventsModule from "../../../vendor/standard-events";
 import { assert } from "../test-utils";
+import { VIEW_EVENT_TAG_NAME as TAG } from "./view-event-element";
 
 const importStandardEventsFromCDN = vi.hoisted(() => vi.fn());
 vi.mock("./standard-events", () => ({ importStandardEventsFromCDN }));
 
-const TAG = "test-view-event";
 const nextTask = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 // Matches native dialog.showModal() / dialog.close(): `open` flips synchronously and `toggle` fires in the next task.
@@ -164,18 +164,24 @@ describe("defineViewEventElement", () => {
   async function ensureDefined() {
     if (customElements.get(TAG)) return;
     mockModule();
-    (await loadDefineViewEventElement())<{ id?: string }>(TAG, (p) => p.id);
+    (await loadDefineViewEventElement())();
     await customElements.whenDefined(TAG);
+  }
+
+  // Sets the key, then the payload, of the item with the given ID.
+  function setItem(element: Element, id: string, extra?: string) {
+    element.setAttribute("view-event-key", id);
+    element.setAttribute("view-event-payload", makePayload(id, extra));
   }
 
   function renderElement(
     trigger: string,
-    payload: string,
+    id: string,
     parent: HTMLElement = document.body,
   ): HTMLElement & { dispatchViewEvent(): void } {
     const element = document.createElement(TAG) as HTMLElement & { dispatchViewEvent(): void };
     element.setAttribute("view-event-trigger", trigger);
-    element.setAttribute("view-event-payload", payload);
+    setItem(element, id);
     parent.append(element);
     return element;
   }
@@ -209,12 +215,12 @@ describe("defineViewEventElement", () => {
 
   // Runs first: the registry keeps the element for the other tests.
   it("defines the element once and sends one event for an element that it upgrades", async () => {
-    renderElement("connect", makePayload("a"));
+    renderElement("connect", "a");
     mockModule();
     const defineViewEventElement = await loadDefineViewEventElement();
 
-    defineViewEventElement<{ id?: string }>(TAG, (p) => p.id);
-    defineViewEventElement<{ id?: string }>(TAG, (p) => p.id);
+    defineViewEventElement();
+    defineViewEventElement();
     await customElements.whenDefined(TAG);
     await nextTask();
 
@@ -225,7 +231,7 @@ describe("defineViewEventElement", () => {
 
     // A second module instance skips an element that another copy already defined.
     const defineAgain = await loadDefineViewEventElement();
-    defineAgain<{ id?: string }>(TAG, (p) => p.id);
+    defineAgain();
     await vi.waitFor(() => expect(importStandardEventsFromCDN).toHaveBeenCalledTimes(2));
     await Promise.resolve();
     expect(defineSpy).toHaveBeenCalledTimes(1);
@@ -233,15 +239,15 @@ describe("defineViewEventElement", () => {
 
   it("sends once on connect, ignores same-key updates, and sends again when the key changes", async () => {
     await ensureDefined();
-    const element = renderElement("connect", makePayload("a", "v1"));
+    const element = renderElement("connect", "a");
     await nextTask();
     expect(ids()).toEqual(["a"]);
 
-    element.setAttribute("view-event-payload", makePayload("a", "v2"));
+    setItem(element, "a", "v2");
     await nextTask();
     expect(ids()).toEqual(["a"]);
 
-    element.setAttribute("view-event-payload", makePayload("b", "v1"));
+    setItem(element, "b", "v1");
     await nextTask();
     expect(ids()).toEqual(["a", "b"]);
     expect(events[1]?.target).toBe(element);
@@ -250,42 +256,82 @@ describe("defineViewEventElement", () => {
 
   it("sends the latest key once when the key changes twice before the next send", async () => {
     await ensureDefined();
-    const element = renderElement("connect", makePayload("a"));
+    const element = renderElement("connect", "a");
     await nextTask();
 
-    element.setAttribute("view-event-payload", makePayload("b"));
-    element.setAttribute("view-event-payload", makePayload("c"));
+    setItem(element, "b");
+    setItem(element, "c");
     await nextTask();
 
     expect(ids()).toEqual(["a", "c"]);
   });
 
-  it("lets the base element send the latest payload when the key changes before the first view", async () => {
+  it("sends the new payload once when the key changes before the payload", async () => {
     await ensureDefined();
-    const element = renderElement("intersect", makePayload("a"));
+    const element = renderElement("connect", "a");
+    await nextTask();
+
+    element.setAttribute("view-event-key", "b");
+    element.setAttribute("view-event-payload", makePayload("b", "new"));
+    await nextTask();
+
+    expect(events).toHaveLength(2);
+    expect(events[1]?.detail).toEqual({ id: "b", extra: "new" });
+  });
+
+  it("sends the new payload once when the payload changes before the key", async () => {
+    await ensureDefined();
+    const element = renderElement("connect", "a");
+    await nextTask();
+
+    element.setAttribute("view-event-payload", makePayload("b", "new"));
+    element.setAttribute("view-event-key", "b");
+    await nextTask();
+
+    expect(events).toHaveLength(2);
+    expect(events[1]?.detail).toEqual({ id: "b", extra: "new" });
+  });
+
+  it("sends once on connect without a key and doesn't send again when the payload changes", async () => {
+    await ensureDefined();
+    const element = document.createElement(TAG);
+    element.setAttribute("view-event-trigger", "connect");
+    element.setAttribute("view-event-payload", makePayload("a"));
+    document.body.append(element);
+    await nextTask();
+    expect(ids()).toEqual(["a"]);
 
     element.setAttribute("view-event-payload", makePayload("b"));
+    element.setAttribute("view-event-key", "");
+    await nextTask();
+    expect(ids()).toEqual(["a"]);
+  });
+
+  it("lets the base element send the latest payload when the key changes before the first view", async () => {
+    await ensureDefined();
+    const element = renderElement("intersect", "a");
+
+    setItem(element, "b");
     io.show(element);
 
     expect(ids()).toEqual(["b"]);
   });
 
-  it("ignores bad payloads after the first view and resumes sending when the attribute is re-added", async () => {
+  it("ignores an empty or removed key after the first view and resumes sending when it is re-added", async () => {
     await ensureDefined();
-    const element = renderElement("connect", makePayload("a"));
+    const element = renderElement("connect", "a");
     await nextTask();
 
-    expect(() => element.setAttribute("view-event-payload", "{")).not.toThrow();
-    element.setAttribute("view-event-payload", "{}");
-    element.setAttribute("view-event-payload", "null");
-    element.removeAttribute("view-event-payload");
-    await nextTask();
-    expect(ids()).toEqual(["a"]);
-
-    element.setAttribute("view-event-payload", makePayload("a"));
-    await nextTask();
-    expect(ids()).toEqual(["a"]);
+    element.setAttribute("view-event-key", "");
+    element.removeAttribute("view-event-key");
     element.setAttribute("view-event-payload", makePayload("b"));
+    await nextTask();
+    expect(ids()).toEqual(["a"]);
+
+    setItem(element, "a");
+    await nextTask();
+    expect(ids()).toEqual(["a"]);
+    setItem(element, "b");
     await nextTask();
     expect(ids()).toEqual(["a", "b"]);
   });
@@ -295,8 +341,8 @@ describe("defineViewEventElement", () => {
     const dispatch = vi.spyOn(FakeViewEventElement.prototype, "dispatchViewEvent");
     const element = document.createElement(TAG);
     element.setAttribute("view-event-trigger", "connect");
-    element.setAttribute("view-event-payload", makePayload("a"));
-    element.setAttribute("view-event-payload", makePayload("b"));
+    setItem(element, "a");
+    setItem(element, "b");
     await nextTask();
 
     expect(dispatch).not.toHaveBeenCalled();
@@ -304,16 +350,16 @@ describe("defineViewEventElement", () => {
 
   it("waits until a card is visible again before sending a new key", async () => {
     await ensureDefined();
-    const element = renderElement("intersect", makePayload("a"));
+    const element = renderElement("intersect", "a");
     io.show(element);
     expect(ids()).toEqual(["a"]);
     expect(io.observed.has(element)).toBe(false);
 
     // The same key doesn't restart the base element, so the card isn't watched again.
-    element.setAttribute("view-event-payload", makePayload("a", "variant"));
+    setItem(element, "a", "variant");
     expect(io.observed.has(element)).toBe(false);
 
-    element.setAttribute("view-event-payload", makePayload("b"));
+    setItem(element, "b");
     await nextTask();
     expect(ids()).toEqual(["a"]);
     expect(io.options).toEqual({ threshold: 0.5 });
@@ -326,23 +372,23 @@ describe("defineViewEventElement", () => {
 
   it("sends only the latest key for an off-screen card and nothing when it returns to the sent key", async () => {
     await ensureDefined();
-    const element = renderElement("intersect", makePayload("a"));
+    const element = renderElement("intersect", "a");
     io.show(element);
 
     // Away and back before it is seen again: the pending send finds the key already sent.
-    element.setAttribute("view-event-payload", makePayload("b"));
-    element.setAttribute("view-event-payload", makePayload("a"));
+    setItem(element, "b");
+    setItem(element, "a");
     io.show(element);
     expect(ids()).toEqual(["a"]);
 
     // Twice before it is seen again: only the final key is sent.
-    element.setAttribute("view-event-payload", makePayload("b"));
-    element.setAttribute("view-event-payload", makePayload("c"));
+    setItem(element, "b");
+    setItem(element, "c");
     io.show(element);
     expect(ids()).toEqual(["a", "c"]);
 
     // Removing a card that waits to be seen stops the wait.
-    element.setAttribute("view-event-payload", makePayload("d"));
+    setItem(element, "d");
     expect(io.observed.has(element)).toBe(true);
     element.remove();
     expect(io.observed.has(element)).toBe(false);
@@ -355,13 +401,13 @@ describe("defineViewEventElement", () => {
     const element = document.createElement(TAG);
     ro.hidden.add(element);
     element.setAttribute("view-event-trigger", "connect");
-    element.setAttribute("view-event-payload", makePayload("a"));
+    setItem(element, "a");
     document.body.append(element);
     await nextTask();
     expect(ids()).toEqual([]);
 
     // A key change while hidden waits too, and the showing sends the latest payload.
-    element.setAttribute("view-event-payload", makePayload("b"));
+    setItem(element, "b");
     await nextTask();
     expect(ids()).toEqual([]);
 
@@ -377,7 +423,7 @@ describe("defineViewEventElement", () => {
 
   it("sends again when a connected element is shown after it was hidden", async () => {
     await ensureDefined();
-    const element = renderElement("connect", makePayload("a"));
+    const element = renderElement("connect", "a");
     await nextTask();
     expect(ids()).toEqual(["a"]);
 
@@ -397,10 +443,10 @@ describe("defineViewEventElement", () => {
     await ensureDefined();
     const dialog = document.createElement("dialog");
     document.body.append(dialog);
-    renderElement("intersect", makePayload("a"));
-    renderElement("dialog", makePayload("b"), dialog);
-    renderElement("manual", makePayload("c"));
-    const page = renderElement("connect", makePayload("d"));
+    renderElement("intersect", "a");
+    renderElement("dialog", "b", dialog);
+    renderElement("manual", "c");
+    const page = renderElement("connect", "d");
 
     expect([...ro.observed]).toEqual([page]);
   });
@@ -409,7 +455,7 @@ describe("defineViewEventElement", () => {
     await ensureDefined();
     const dialog = document.createElement("dialog");
     document.body.append(dialog);
-    const element = renderElement("dialog", makePayload("a"), dialog);
+    const element = renderElement("dialog", "a", dialog);
 
     openDialog(dialog);
     await nextTask();
@@ -419,19 +465,19 @@ describe("defineViewEventElement", () => {
     await nextTask();
 
     // Swapping while closed sends nothing until the dialog opens.
-    element.setAttribute("view-event-payload", makePayload("c"));
+    setItem(element, "c");
     await nextTask();
     expect(ids()).toEqual(["a"]);
 
     // Reopen and swap to B in the same task: B is sent once, not again for the queued `toggle`.
     openDialog(dialog);
-    element.setAttribute("view-event-payload", makePayload("b"));
+    setItem(element, "b");
     await nextTask();
     await nextTask();
     expect(ids()).toEqual(["a", "b"]);
 
     // Swapping while open sends C once.
-    element.setAttribute("view-event-payload", makePayload("c"));
+    setItem(element, "c");
     await nextTask();
     expect(ids()).toEqual(["a", "b", "c"]);
 
@@ -449,14 +495,14 @@ describe("defineViewEventElement", () => {
     document.body.append(dialog);
 
     openDialog(dialog);
-    renderElement("dialog", makePayload("a"), dialog);
+    renderElement("dialog", "a", dialog);
     await nextTask();
     await nextTask();
 
     expect(ids()).toEqual(["a"]);
   });
 
-  it("observes the payload in addition to the attributes of the base element", async () => {
+  it("observes the payload and the key in addition to the attributes of the base element", async () => {
     const define = vi.fn();
     vi.stubGlobal("customElements", { get: () => undefined, define });
     class Base extends FakeViewEventElement {
@@ -466,18 +512,18 @@ describe("defineViewEventElement", () => {
       createViewEventElement: () => Base,
     } as Partial<typeof StandardEventsModule>);
 
-    (await loadDefineViewEventElement())<{ id?: string }>(TAG, (p) => p.id);
+    (await loadDefineViewEventElement())();
     await vi.waitFor(() => expect(define).toHaveBeenCalledTimes(1));
 
     const element = define.mock.calls[0]?.[1] as { observedAttributes: string[] };
-    expect(element.observedAttributes).toEqual(["other", "view-event-payload"]);
+    expect(element.observedAttributes).toEqual(["other", "view-event-payload", "view-event-key"]);
   });
 
   it("does nothing on the server", async () => {
     vi.stubGlobal("customElements", undefined);
     const defineViewEventElement = await loadDefineViewEventElement();
 
-    defineViewEventElement<{ id?: string }>(TAG, (p) => p.id);
+    defineViewEventElement();
 
     expect(importStandardEventsFromCDN).not.toHaveBeenCalled();
   });
@@ -487,7 +533,7 @@ describe("defineViewEventElement", () => {
     process.on("unhandledRejection", unhandled);
 
     importStandardEventsFromCDN.mockRejectedValueOnce(new Error("offline"));
-    (await loadDefineViewEventElement())<{ id?: string }>(TAG, (p) => p.id);
+    (await loadDefineViewEventElement())();
     await nextTask();
 
     importStandardEventsFromCDN.mockResolvedValueOnce({
@@ -495,7 +541,7 @@ describe("defineViewEventElement", () => {
         throw new Error("bad CDN factory");
       },
     } as Partial<typeof StandardEventsModule>);
-    (await loadDefineViewEventElement())<{ id?: string }>(TAG, (p) => p.id);
+    (await loadDefineViewEventElement())();
     await nextTask();
 
     process.off("unhandledRejection", unhandled);

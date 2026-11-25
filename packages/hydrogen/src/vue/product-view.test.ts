@@ -5,7 +5,10 @@ import { h } from "vue";
 import { renderToString } from "vue/server-renderer";
 
 import type * as StandardEventsModule from "../../vendor/standard-events";
-import { defineProductView, PRODUCT_VIEW_TAG_NAME } from "../core/product/product-view";
+import {
+  defineViewEventElement,
+  VIEW_EVENT_TAG_NAME,
+} from "../core/shopify-scripts/view-event-element";
 import { ProductView } from "./product-view";
 
 vi.mock("../core/shopify-scripts/standard-events", () => ({
@@ -51,8 +54,8 @@ function payloadOf(element: Element) {
 
 describe("ProductView", () => {
   beforeAll(async () => {
-    defineProductView();
-    await customElements.whenDefined(PRODUCT_VIEW_TAG_NAME);
+    defineViewEventElement();
+    await customElements.whenDefined(VIEW_EVENT_TAG_NAME);
   });
 
   afterEach(() => {
@@ -68,10 +71,11 @@ describe("ProductView", () => {
       attachTo: document.body,
     });
 
-    const element = wrapper.find(PRODUCT_VIEW_TAG_NAME).element;
+    const element = wrapper.find(VIEW_EVENT_TAG_NAME).element;
     expect(element.getAttribute("class")).toBe("card");
     expect(element.id).toBe("card-1");
     expect(element.getAttribute("view-event-trigger")).toBe("intersect");
+    expect(element.getAttribute("view-event-key")).toBe(product.id);
     expect(payloadOf(element)).toMatchObject({ context: "search", product: { id: product.id } });
     expect(element.textContent).toBe("Shirt");
   });
@@ -79,9 +83,10 @@ describe("ProductView", () => {
   it("renders the element and payload on the server", async () => {
     const html = await renderToString(h(ProductView, { product, context: "page", class: "pdp" }));
 
-    expect(html).toContain(`<${PRODUCT_VIEW_TAG_NAME}`);
+    expect(html).toContain(`<${VIEW_EVENT_TAG_NAME}`);
     expect(html).toContain('class="pdp"');
     expect(html).toContain('view-event-trigger="connect"');
+    expect(html).toContain('view-event-key="gid://shopify/Product/1"');
     expect(html).toContain("gid://shopify/Product/1");
   });
 
@@ -97,7 +102,7 @@ describe("ProductView", () => {
     await vi.waitFor(() => expect(events).toHaveLength(1));
     document.removeEventListener("shopify:product:view", listener);
 
-    expect(events[0]?.target).toBe(wrapper.find(PRODUCT_VIEW_TAG_NAME).element);
+    expect(events[0]?.target).toBe(wrapper.find(VIEW_EVENT_TAG_NAME).element);
   });
 
   it("lets the element send the event again only when the product ID changes", async () => {
@@ -110,7 +115,7 @@ describe("ProductView", () => {
       attachTo: document.body,
     });
     await vi.waitFor(() => expect(events).toHaveLength(1));
-    const element = wrapper.find(PRODUCT_VIEW_TAG_NAME).element;
+    const element = wrapper.find(VIEW_EVENT_TAG_NAME).element;
 
     await wrapper.setProps({
       product: {
@@ -125,7 +130,7 @@ describe("ProductView", () => {
     document.removeEventListener("shopify:product:view", listener);
 
     expect(events).toHaveLength(2);
-    expect(wrapper.find(PRODUCT_VIEW_TAG_NAME).element).toBe(element);
+    expect(wrapper.find(VIEW_EVENT_TAG_NAME).element).toBe(element);
     expect(events[1]?.target).toBe(element);
     expect(events[1]?.detail).toMatchObject({ product: { id: otherProduct.id, handle: "pants" } });
   });

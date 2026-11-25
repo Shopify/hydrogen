@@ -2,10 +2,9 @@
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 
 import type * as StandardEventsModule from "../../../vendor/standard-events";
+import { defineViewEventElement, VIEW_EVENT_TAG_NAME } from "../shopify-scripts/view-event-element";
 import {
-  defineProductView,
   getProductViewAttributes,
-  PRODUCT_VIEW_TAG_NAME,
   type ProductViewOptions,
   type ProductViewProduct,
 } from "./product-view";
@@ -110,9 +109,15 @@ describe("getProductViewAttributes", () => {
   ] as const)("maps the %s context to the %s trigger", (context, trigger) => {
     expect(getProductViewAttributes({ product, context })["view-event-trigger"]).toBe(trigger);
   });
+
+  it("uses the product ID as the view event key", () => {
+    expect(getProductViewAttributes({ product, context: "page" })["view-event-key"]).toBe(
+      product.id,
+    );
+  });
 });
 
-describe("defineProductView", () => {
+describe("the view event element with product view attributes", () => {
   class FakeViewEventElement extends HTMLElement {
     connectedCallback() {
       if (this.getAttribute("view-event-trigger") === "connect") {
@@ -133,12 +138,12 @@ describe("defineProductView", () => {
   beforeEach(async () => {
     events = [];
     document.addEventListener("shopify:product:view", record);
-    if (!customElements.get(PRODUCT_VIEW_TAG_NAME)) {
+    if (!customElements.get(VIEW_EVENT_TAG_NAME)) {
       importStandardEventsFromCDN.mockResolvedValue({
         createViewEventElement: () => FakeViewEventElement,
       } as Partial<typeof StandardEventsModule>);
-      defineProductView();
-      await customElements.whenDefined(PRODUCT_VIEW_TAG_NAME);
+      defineViewEventElement();
+      await customElements.whenDefined(VIEW_EVENT_TAG_NAME);
     }
   });
 
@@ -147,35 +152,31 @@ describe("defineProductView", () => {
     document.body.innerHTML = "";
   });
 
-  it("keys re-sends on product.id so variant changes don't re-send and a new product does", async () => {
-    const element = document.createElement(PRODUCT_VIEW_TAG_NAME);
-    for (const [name, value] of Object.entries(
-      getProductViewAttributes({ product, context: "page" }),
-    )) {
+  function setAttributes(element: Element, options: ProductViewOptions) {
+    for (const [name, value] of Object.entries(getProductViewAttributes(options))) {
       element.setAttribute(name, value);
     }
+  }
+
+  it("keys re-sends on product.id so variant changes don't re-send and a new product does", async () => {
+    const element = document.createElement(VIEW_EVENT_TAG_NAME);
+    setAttributes(element, { product, context: "page" });
     document.body.append(element);
     await nextTask();
     expect(events).toHaveLength(1);
 
-    element.setAttribute(
-      "view-event-payload",
-      getProductViewAttributes({
-        product: {
-          ...product,
-          selectedOrFirstAvailableVariant: { ...variant, id: "gid://shopify/ProductVariant/2" },
-        },
-        context: "page",
-      })["view-event-payload"],
-    );
+    setAttributes(element, {
+      product: {
+        ...product,
+        selectedOrFirstAvailableVariant: { ...variant, id: "gid://shopify/ProductVariant/2" },
+      },
+      context: "page",
+    });
     await nextTask();
     expect(events).toHaveLength(1);
 
     const otherProduct = { ...product, id: "gid://shopify/Product/2", handle: "pants" };
-    element.setAttribute(
-      "view-event-payload",
-      getProductViewAttributes({ product: otherProduct, context: "page" })["view-event-payload"],
-    );
+    setAttributes(element, { product: otherProduct, context: "page" });
     await nextTask();
     expect(events).toHaveLength(2);
     expect(events[1]?.target).toBe(element);

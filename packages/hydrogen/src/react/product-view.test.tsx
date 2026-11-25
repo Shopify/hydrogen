@@ -5,7 +5,10 @@ import { renderToString } from "react-dom/server";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import type * as StandardEventsModule from "../../vendor/standard-events";
-import { defineProductView, PRODUCT_VIEW_TAG_NAME } from "../core/product/product-view";
+import {
+  defineViewEventElement,
+  VIEW_EVENT_TAG_NAME,
+} from "../core/shopify-scripts/view-event-element";
 import { assert } from "../core/test-utils";
 import { ProductView, type ProductViewProps } from "./product-view";
 
@@ -47,7 +50,7 @@ const product = {
 const otherProduct = { ...product, id: "gid://shopify/Product/2", handle: "pants" };
 
 function getElement(container: HTMLElement) {
-  const element = container.querySelector(PRODUCT_VIEW_TAG_NAME);
+  const element = container.querySelector(VIEW_EVENT_TAG_NAME);
   assert(element, "expected a product view element");
   return element;
 }
@@ -58,8 +61,8 @@ function payloadOf(element: Element) {
 
 describe("ProductView", () => {
   beforeAll(async () => {
-    defineProductView();
-    await customElements.whenDefined(PRODUCT_VIEW_TAG_NAME);
+    defineViewEventElement();
+    await customElements.whenDefined(VIEW_EVENT_TAG_NAME);
   });
 
   afterEach(() => {
@@ -86,6 +89,7 @@ describe("ProductView", () => {
     expect(element.id).toBe("card-1");
     expect(element.getAttribute("data-testid")).toBe("x");
     expect(element.getAttribute("view-event-trigger")).toBe("intersect");
+    expect(element.getAttribute("view-event-key")).toBe(product.id);
     expect(payloadOf(element)).toMatchObject({
       context: "collection",
       product: { id: product.id },
@@ -111,9 +115,10 @@ describe("ProductView", () => {
       createElement(ProductView, { product, context: "page", className: "pdp" }),
     );
 
-    expect(html).toContain(`<${PRODUCT_VIEW_TAG_NAME}`);
+    expect(html).toContain(`<${VIEW_EVENT_TAG_NAME}`);
     expect(html).toContain('class="pdp"');
     expect(html).toContain('view-event-trigger="connect"');
+    expect(html).toContain('view-event-key="gid://shopify/Product/1"');
     expect(html).toContain("view-event-payload=");
     expect(html).toContain("gid://shopify/Product/1");
   });

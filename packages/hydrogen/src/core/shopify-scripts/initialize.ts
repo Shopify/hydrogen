@@ -1,11 +1,11 @@
 import { initializeCustomConsent } from "../analytics/custom-consent";
 import { getLogger } from "../logging";
-import { defineProductView } from "../product/product-view";
 import { configureShopifyRouting } from "./global";
 import { warnOnLocaleChangingNavigation } from "./locale-checks";
 import { initializeShopifyPageViewEvents } from "./page-view";
 import type { InitializeShopifyScriptsOptions } from "./types";
 import { observeNavigation } from "./utils/navigation";
+import { defineViewEventElement } from "./view-event-element";
 import { loadShopifyWebMcpTools } from "./webmcp";
 
 const log = getLogger("consent");
@@ -14,8 +14,8 @@ const log = getLogger("consent");
  * Starts Shopify's scripts in the browser for frameworks without a Hydrogen binding. Call it after
  * hydration, with the consent configuration that you passed to `getShopifyScriptTags`.
  *
- * The function sets up `window.Shopify.routes`, registers the product view element, and sends a
- * page view event on load and after each navigation that changes the path or query. In the custom
+ * The function sets up `window.Shopify.routes`, registers the `VIEW_EVENT_TAG_NAME` element, and
+ * sends a page view event on load and after each navigation that changes the path or query. In the custom
  * banner consent mode, Hydrogen calls your setup callback after the Customer Privacy API loads. A custom banner configuration without a
  * setup callback logs a warning, and analytics events stay blocked. When the browser supports
  * WebMCP, the function also loads Shopify's WebMCP tools. Set `webMcp` to `false` to skip them.
@@ -34,7 +34,7 @@ export function initializeShopifyScripts({
 }: InitializeShopifyScriptsOptions): Promise<boolean | void> {
   configureShopifyRouting({ navigate, routes });
   initializeShopifyPageViewEvents();
-  defineProductView();
+  defineViewEventElement();
   if (__DEV__) observeNavigation(warnOnLocaleChangingNavigation);
 
   if (consent?.mode === "custom-banner") {

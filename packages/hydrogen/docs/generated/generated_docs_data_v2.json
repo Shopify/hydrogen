@@ -5932,174 +5932,27 @@
       "members": []
     }
   },
-  "GetProductViewAttributesGeneratedType": {
-    "src/core/product/product-view.ts": {
-      "filePath": "src/core/product/product-view.ts",
-      "name": "GetProductViewAttributesGeneratedType",
-      "description": "Returns the attributes of the product view element. Render the attributes on a `PRODUCT_VIEW_TAG_NAME` element on a framework without a Hydrogen binding.\n\nThe element sends the `shopify:product:view` event on connect for `page`, the first time half of a card element is visible, and each time the dialog opens, or on connect if it is already open. It sends the event again when the product ID in `view-event-payload` changes, but not when only the variant changes. Set the values as HTML attributes, such as with `attr:` on Solid, because the element doesn't read properties.",
-      "isPublicDocs": true,
-      "params": [
-        {
-          "name": "options",
-          "description": "The product and where the storefront shows it.",
-          "value": "ProductViewOptions",
-          "filePath": "src/core/product/product-view.ts"
-        }
-      ],
-      "returns": {
-        "filePath": "src/core/product/product-view.ts",
-        "description": "The `view-event-trigger` and `view-event-payload` attributes.",
-        "name": "Record<\"view-event-trigger\" | \"view-event-payload\", string>",
-        "value": "Record<\"view-event-trigger\" | \"view-event-payload\", string>"
-      },
-      "value": "export function getProductViewAttributes(\n  options: ProductViewOptions,\n): Record<\"view-event-trigger\" | \"view-event-payload\", string> {\n  const { product, context } = options;\n  const variant =\n    context === \"page\" || context === \"dialog\" ? product.selectedOrFirstAvailableVariant : null;\n  const selectedOptions =\n    variant?.selectedOptions.map(({ name, value }) => ({ name, value })) ?? [];\n  const payload: StandardEvents.ProductViewPayload = {\n    context,\n    selectedOptions,\n    product: {\n      id: product.id,\n      title: product.title,\n      handle: product.handle,\n      selectedVariant: variant\n        ? {\n            id: variant.id,\n            title: variant.title,\n            availableForSale: variant.availableForSale,\n            price: { amount: variant.price.amount, currencyCode: variant.price.currencyCode },\n            selectedOptions,\n          }\n        : null,\n    },\n  };\n\n  return {\n    \"view-event-trigger\": TRIGGERS[context],\n    \"view-event-payload\": JSON.stringify(payload),\n  };\n}"
-    }
-  },
-  "ProductViewOptions": {
-    "src/core/product/product-view.ts": {
-      "filePath": "src/core/product/product-view.ts",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "ProductViewOptions",
-      "value": "{ context: \"page\" | \"dialog\"; product: ProductViewProduct } | {\n      context: \"collection\" | \"search\" | \"recommendation\";\n      product: Pick<ProductViewProduct, \"id\" | \"title\" | \"handle\">;\n    }",
-      "description": "The product and where the storefront shows it. `page` sends the event on render, `dialog` sends it when the closest dialog opens, and the card contexts send it when half of the element is visible. Card contexts need only the product ID, title, and handle."
-    }
-  },
-  "ProductViewProduct": {
-    "src/core/product/product-view.ts": {
-      "filePath": "src/core/product/product-view.ts",
-      "name": "ProductViewProduct",
-      "description": "Product fields that the product view event needs from your Storefront API query.\n\nPass your full query type, which can include more fields.",
-      "members": [
-        {
-          "filePath": "src/core/product/product-view.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "handle",
-          "value": "string",
-          "description": ""
-        },
-        {
-          "filePath": "src/core/product/product-view.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "id",
-          "value": "string",
-          "description": ""
-        },
-        {
-          "filePath": "src/core/product/product-view.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "selectedOrFirstAvailableVariant",
-          "value": "ProductVariantInput | null",
-          "description": "Variant that the product page or dialog shows, or `null` when none is selected."
-        },
-        {
-          "filePath": "src/core/product/product-view.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "title",
-          "value": "string",
-          "description": ""
-        }
-      ],
-      "value": "export interface ProductViewProduct {\n  id: string;\n  title: string;\n  handle: string;\n  /** Variant that the product page or dialog shows, or `null` when none is selected. */\n  selectedOrFirstAvailableVariant: ProductVariantInput | null;\n}"
-    }
-  },
-  "ProductVariantInput": {
-    "src/core/product/state.ts": {
-      "filePath": "src/core/product/state.ts",
-      "name": "ProductVariantInput",
-      "description": "Variant fields that the product form needs from your Storefront API query.\n\nPass your full query type, which can include more fields.",
-      "members": [
-        {
-          "filePath": "src/core/product/state.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "availableForSale",
-          "value": "boolean",
-          "description": "Whether the customer can buy the variant. Option value availability falls back to this field when your query doesn't select the encoded variant availability."
-        },
-        {
-          "filePath": "src/core/product/state.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "compareAtPrice",
-          "value": "Money | null",
-          "description": "Compare-at price, or `null` when the variant has none.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/product/state.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "id",
-          "value": "string",
-          "description": "Variant ID that the product form adds to the cart."
-        },
-        {
-          "filePath": "src/core/product/state.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "image",
-          "value": "unknown",
-          "description": "Variant image. The cart shows the image on an added line before the server responds.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/product/state.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "price",
-          "value": "Money",
-          "description": "Variant price. The cart shows the price on an added line before the server responds."
-        },
-        {
-          "filePath": "src/core/product/state.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "product",
-          "value": "{ handle: string; title?: string | null } | null",
-          "description": "Handle and title of the variant's product. A handle that differs from the current product marks a variant of another product in a combined listing.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/product/state.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "selectedOptions",
-          "value": "SelectedOption[]",
-          "description": "Option names and values that make up the variant."
-        },
-        {
-          "filePath": "src/core/product/state.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "sku",
-          "value": "string | null",
-          "description": "Variant SKU.",
-          "isOptional": true
-        },
-        {
-          "filePath": "src/core/product/state.ts",
-          "syntaxKind": "PropertySignature",
-          "name": "title",
-          "value": "string",
-          "description": "Variant title. The cart shows the title on an added line before the server responds."
-        }
-      ],
-      "value": "export interface ProductVariantInput {\n  /** Variant ID that the product form adds to the cart. */\n  id: string;\n  /** Variant title. The cart shows the title on an added line before the server responds. */\n  title: string;\n  /** Whether the customer can buy the variant. Option value availability falls back to this field when your query doesn't select the encoded variant availability. */\n  availableForSale: boolean;\n  /** Option names and values that make up the variant. */\n  selectedOptions: SelectedOption[];\n  /** Variant price. The cart shows the price on an added line before the server responds. */\n  price: Money;\n  /** Compare-at price, or `null` when the variant has none. */\n  compareAtPrice?: Money | null;\n  /** Variant image. The cart shows the image on an added line before the server responds. */\n  image?: unknown;\n  /** Handle and title of the variant's product. A handle that differs from the current product marks a variant of another product in a combined listing. */\n  product?: { handle: string; title?: string | null } | null;\n  /** Variant SKU. */\n  sku?: string | null;\n}"
-    }
-  },
-  "DefineProductViewGeneratedType": {
-    "src/core/product/product-view.ts": {
-      "filePath": "src/core/product/product-view.ts",
-      "name": "DefineProductViewGeneratedType",
-      "description": "Registers the product view custom element in the browser. The function loads Shopify's Standard Events module and does nothing on the server. `initializeShopifyScripts` and the `ShopifyScripts` component call it for you.",
+  "DefineViewEventElementGeneratedType": {
+    "src/core/shopify-scripts/view-event-element.ts": {
+      "filePath": "src/core/shopify-scripts/view-event-element.ts",
+      "name": "DefineViewEventElementGeneratedType",
+      "description": "Registers the `VIEW_EVENT_TAG_NAME` custom element in the browser. The function loads Shopify's Standard Events module and does nothing on the server. `initializeShopifyScripts` and the `ShopifyScripts` component call it for you. Call it yourself only when you use neither.\n\nThe element extends Shopify's view event element. It sends the event again when the `view-event-key` attribute changes to a new value. Without a key, it sends once each time it connects. A `connect` element sends only while it is shown, and sends again each time it is shown after it was hidden while connected.",
       "isPublicDocs": true,
       "params": [],
       "returns": {
-        "filePath": "src/core/product/product-view.ts",
+        "filePath": "src/core/shopify-scripts/view-event-element.ts",
         "description": "",
         "name": "void",
         "value": "void"
       },
-      "value": "export function defineProductView(): void {\n  defineViewEventElement<StandardEvents.ProductViewPayload>(\n    PRODUCT_VIEW_TAG_NAME,\n    (payload) => payload.product.id,\n  );\n}"
+      "value": "export function defineViewEventElement(): void {\n  if (typeof customElements === \"undefined\" || defined) return;\n  defined = true;\n  void importStandardEventsFromCDN()\n    .then(({ createViewEventElement }) => {\n      if (!customElements.get(VIEW_EVENT_TAG_NAME)) {\n        customElements.define(VIEW_EVENT_TAG_NAME, sendAgainOnKeyChange(createViewEventElement()));\n      }\n    })\n    .catch(() => {});\n}"
     }
   },
   "InitializeShopifyScriptsGeneratedType": {
     "src/core/shopify-scripts/initialize.ts": {
       "filePath": "src/core/shopify-scripts/initialize.ts",
       "name": "InitializeShopifyScriptsGeneratedType",
-      "description": "Starts Shopify's scripts in the browser for frameworks without a Hydrogen binding. Call it after hydration, with the consent configuration that you passed to `getShopifyScriptTags`.\n\nThe function sets up `window.Shopify.routes`, registers the product view element, and sends a page view event on load and after each navigation that changes the path or query. In the custom banner consent mode, Hydrogen calls your setup callback after the Customer Privacy API loads. A custom banner configuration without a setup callback logs a warning, and analytics events stay blocked. When the browser supports WebMCP, the function also loads Shopify's WebMCP tools. Set `webMcp` to `false` to skip them.",
+      "description": "Starts Shopify's scripts in the browser for frameworks without a Hydrogen binding. Call it after hydration, with the consent configuration that you passed to `getShopifyScriptTags`.\n\nThe function sets up `window.Shopify.routes`, registers the `VIEW_EVENT_TAG_NAME` element, and sends a page view event on load and after each navigation that changes the path or query. In the custom banner consent mode, Hydrogen calls your setup callback after the Customer Privacy API loads. A custom banner configuration without a setup callback logs a warning, and analytics events stay blocked. When the browser supports WebMCP, the function also loads Shopify's WebMCP tools. Set `webMcp` to `false` to skip them.",
       "isPublicDocs": true,
       "params": [
         {
@@ -6115,7 +5968,7 @@
         "name": "Promise<boolean | void>",
         "value": "Promise<boolean | void>"
       },
-      "value": "export function initializeShopifyScripts({\n  consent,\n  navigate,\n  nonce,\n  routes,\n  webMcp = true,\n}: InitializeShopifyScriptsOptions): Promise<boolean | void> {\n  configureShopifyRouting({ navigate, routes });\n  initializeShopifyPageViewEvents();\n  defineProductView();\n  if (__DEV__) observeNavigation(warnOnLocaleChangingNavigation);\n\n  if (consent?.mode === \"custom-banner\") {\n    if (typeof consent.setup !== \"function\") {\n      log.warn(\n        \"custom-banner requires a consent.setup callback; analytics delivery remains blocked until setup completes\",\n      );\n    } else {\n      try {\n        initializeCustomConsent(consent.setup);\n      } catch (error) {\n        log.error(\"custom consent initialization failed\", { error });\n      }\n    }\n  }\n\n  if (!webMcp) return Promise.resolve();\n\n  return loadShopifyWebMcpTools(nonce);\n}"
+      "value": "export function initializeShopifyScripts({\n  consent,\n  navigate,\n  nonce,\n  routes,\n  webMcp = true,\n}: InitializeShopifyScriptsOptions): Promise<boolean | void> {\n  configureShopifyRouting({ navigate, routes });\n  initializeShopifyPageViewEvents();\n  defineViewEventElement();\n  if (__DEV__) observeNavigation(warnOnLocaleChangingNavigation);\n\n  if (consent?.mode === \"custom-banner\") {\n    if (typeof consent.setup !== \"function\") {\n      log.warn(\n        \"custom-banner requires a consent.setup callback; analytics delivery remains blocked until setup completes\",\n      );\n    } else {\n      try {\n        initializeCustomConsent(consent.setup);\n      } catch (error) {\n        log.error(\"custom consent initialization failed\", { error });\n      }\n    }\n  }\n\n  if (!webMcp) return Promise.resolve();\n\n  return loadShopifyWebMcpTools(nonce);\n}"
     }
   },
   "GetShopifyScriptTagsGeneratedType": {
@@ -9954,6 +9807,83 @@
       "value": "export interface ProductOptionValueInput<\n  TVariant extends ProductVariantInput = ProductVariantInput,\n> {\n  /** Option value name, such as \"Small\" or \"Red\". */\n  name: string;\n  /** Variant that combines this value with the lowest-position values of every other option. Include this field in your query. The store uses the variant to resolve option values and to find values that belong to other products in a combined listing. */\n  firstSelectableVariant?: TVariant | null;\n  /** Swatch data from your query. The option value state returns the swatch unchanged. */\n  swatch?: unknown;\n}"
     }
   },
+  "ProductVariantInput": {
+    "src/core/product/state.ts": {
+      "filePath": "src/core/product/state.ts",
+      "name": "ProductVariantInput",
+      "description": "Variant fields that the product form needs from your Storefront API query.\n\nPass your full query type, which can include more fields.",
+      "members": [
+        {
+          "filePath": "src/core/product/state.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "availableForSale",
+          "value": "boolean",
+          "description": "Whether the customer can buy the variant. Option value availability falls back to this field when your query doesn't select the encoded variant availability."
+        },
+        {
+          "filePath": "src/core/product/state.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "compareAtPrice",
+          "value": "Money | null",
+          "description": "Compare-at price, or `null` when the variant has none.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/product/state.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "id",
+          "value": "string",
+          "description": "Variant ID that the product form adds to the cart."
+        },
+        {
+          "filePath": "src/core/product/state.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "image",
+          "value": "unknown",
+          "description": "Variant image. The cart shows the image on an added line before the server responds.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/product/state.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "price",
+          "value": "Money",
+          "description": "Variant price. The cart shows the price on an added line before the server responds."
+        },
+        {
+          "filePath": "src/core/product/state.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "product",
+          "value": "{ handle: string; title?: string | null } | null",
+          "description": "Handle and title of the variant's product. A handle that differs from the current product marks a variant of another product in a combined listing.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/product/state.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "selectedOptions",
+          "value": "SelectedOption[]",
+          "description": "Option names and values that make up the variant."
+        },
+        {
+          "filePath": "src/core/product/state.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "sku",
+          "value": "string | null",
+          "description": "Variant SKU.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/product/state.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "title",
+          "value": "string",
+          "description": "Variant title. The cart shows the title on an added line before the server responds."
+        }
+      ],
+      "value": "export interface ProductVariantInput {\n  /** Variant ID that the product form adds to the cart. */\n  id: string;\n  /** Variant title. The cart shows the title on an added line before the server responds. */\n  title: string;\n  /** Whether the customer can buy the variant. Option value availability falls back to this field when your query doesn't select the encoded variant availability. */\n  availableForSale: boolean;\n  /** Option names and values that make up the variant. */\n  selectedOptions: SelectedOption[];\n  /** Variant price. The cart shows the price on an added line before the server responds. */\n  price: Money;\n  /** Compare-at price, or `null` when the variant has none. */\n  compareAtPrice?: Money | null;\n  /** Variant image. The cart shows the image on an added line before the server responds. */\n  image?: unknown;\n  /** Handle and title of the variant's product. A handle that differs from the current product marks a variant of another product in a combined listing. */\n  product?: { handle: string; title?: string | null } | null;\n  /** Variant SKU. */\n  sku?: string | null;\n}"
+    }
+  },
   "CanAddToCartGeneratedType": {
     "src/core/product/product-form.ts": {
       "filePath": "src/core/product/product-form.ts",
@@ -10436,6 +10366,76 @@
           ]
         }
       ]
+    }
+  },
+  "GetProductViewAttributesGeneratedType": {
+    "src/core/product/product-view.ts": {
+      "filePath": "src/core/product/product-view.ts",
+      "name": "GetProductViewAttributesGeneratedType",
+      "description": "Returns the attributes of the product view element. Render the attributes on a `VIEW_EVENT_TAG_NAME` element on a framework without a Hydrogen binding.\n\nThe element sends the `shopify:product:view` event on connect for `page`, the first time half of a card element is visible, and each time the dialog opens, or on connect if it is already open. The `view-event-key` attribute is the product ID. The element sends the event again when the key changes, but not when only the variant changes. Set the values as HTML attributes, such as with `attr:` on Solid, because the element doesn't read properties.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "options",
+          "description": "The product and where the storefront shows it.",
+          "value": "ProductViewOptions",
+          "filePath": "src/core/product/product-view.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/product/product-view.ts",
+        "description": "The `view-event-trigger`, `view-event-payload`, and `view-event-key` attributes.",
+        "name": "Record<\"view-event-trigger\" | \"view-event-payload\" | \"view-event-key\", string>",
+        "value": "Record<\"view-event-trigger\" | \"view-event-payload\" | \"view-event-key\", string>"
+      },
+      "value": "export function getProductViewAttributes(\n  options: ProductViewOptions,\n): Record<\"view-event-trigger\" | \"view-event-payload\" | \"view-event-key\", string> {\n  const { product, context } = options;\n  const variant =\n    context === \"page\" || context === \"dialog\" ? product.selectedOrFirstAvailableVariant : null;\n  const selectedOptions =\n    variant?.selectedOptions.map(({ name, value }) => ({ name, value })) ?? [];\n  const payload: StandardEvents.ProductViewPayload = {\n    context,\n    selectedOptions,\n    product: {\n      id: product.id,\n      title: product.title,\n      handle: product.handle,\n      selectedVariant: variant\n        ? {\n            id: variant.id,\n            title: variant.title,\n            availableForSale: variant.availableForSale,\n            price: { amount: variant.price.amount, currencyCode: variant.price.currencyCode },\n            selectedOptions,\n          }\n        : null,\n    },\n  };\n\n  return {\n    \"view-event-trigger\": TRIGGERS[context],\n    \"view-event-payload\": JSON.stringify(payload),\n    \"view-event-key\": product.id,\n  };\n}"
+    }
+  },
+  "ProductViewOptions": {
+    "src/core/product/product-view.ts": {
+      "filePath": "src/core/product/product-view.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ProductViewOptions",
+      "value": "{ context: \"page\" | \"dialog\"; product: ProductViewProduct } | {\n      context: \"collection\" | \"search\" | \"recommendation\";\n      product: Pick<ProductViewProduct, \"id\" | \"title\" | \"handle\">;\n    }",
+      "description": "The product and where the storefront shows it. `page` sends the event on render, `dialog` sends it when the closest dialog opens, and the card contexts send it when half of the element is visible. Card contexts need only the product ID, title, and handle."
+    }
+  },
+  "ProductViewProduct": {
+    "src/core/product/product-view.ts": {
+      "filePath": "src/core/product/product-view.ts",
+      "name": "ProductViewProduct",
+      "description": "Product fields that the product view event needs from your Storefront API query.\n\nPass your full query type, which can include more fields.",
+      "members": [
+        {
+          "filePath": "src/core/product/product-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "handle",
+          "value": "string",
+          "description": ""
+        },
+        {
+          "filePath": "src/core/product/product-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "id",
+          "value": "string",
+          "description": ""
+        },
+        {
+          "filePath": "src/core/product/product-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "selectedOrFirstAvailableVariant",
+          "value": "ProductVariantInput | null",
+          "description": "Variant that the product page or dialog shows, or `null` when none is selected."
+        },
+        {
+          "filePath": "src/core/product/product-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "title",
+          "value": "string",
+          "description": ""
+        }
+      ],
+      "value": "export interface ProductViewProduct {\n  id: string;\n  title: string;\n  handle: string;\n  /** Variant that the product page or dialog shows, or `null` when none is selected. */\n  selectedOrFirstAvailableVariant: ProductVariantInput | null;\n}"
     }
   },
   "ProductMerchandiseIdProps": {
@@ -13287,7 +13287,7 @@
     "src/react/product-view.tsx": {
       "filePath": "src/react/product-view.tsx",
       "name": "ProductViewGeneratedType",
-      "description": "Sends the `shopify:product:view` event for a product that the storefront shows. Wrap the product page content with `context=\"page\"`, and each product card with `collection`, `search`, or `recommendation`. `ShopifyScripts` registers the element.\n\nThe element is inline by default. Give card elements a box, such as a class with `display: block`, because card contexts send the event when half of the element is visible. The element sends the event again when the product ID changes, but not when the variant changes.",
+      "description": "Sends the `shopify:product:view` event for a product that the storefront shows. Wrap the product page content with `context=\"page\"`, and each product card with `collection`, `search`, or `recommendation`. It renders a `VIEW_EVENT_TAG_NAME` element, which `ShopifyScripts` registers.\n\nThe element is inline by default. Give card elements a box, such as a class with `display: block`, because card contexts send the event when half of the element is visible. The element sends the event again when the product ID changes, but not when the variant changes.",
       "isPublicDocs": true,
       "params": [
         {
@@ -13303,7 +13303,7 @@
         "name": "ReactElement",
         "value": "ReactElement"
       },
-      "value": "export function ProductView(props: ProductViewProps): ReactElement {\n  const { product: _product, context: _context, children, className, ...rest } = props;\n  return createElement(\n    PRODUCT_VIEW_TAG_NAME,\n    // React 18 doesn't map `className` to `class` on custom elements.\n    { ...rest, class: className, ...getProductViewAttributes(props) },\n    children,\n  );\n}"
+      "value": "export function ProductView(props: ProductViewProps): ReactElement {\n  const { product: _product, context: _context, children, className, ...rest } = props;\n  return createElement(\n    VIEW_EVENT_TAG_NAME,\n    // React 18 doesn't map `className` to `class` on custom elements.\n    { ...rest, class: className, ...getProductViewAttributes(props) },\n    children,\n  );\n}"
     }
   },
   "UseProductFormGeneratedType": {

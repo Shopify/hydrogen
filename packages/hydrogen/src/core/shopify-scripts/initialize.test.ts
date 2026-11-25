@@ -2,8 +2,8 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type * as StandardEventsModule from "../../../vendor/standard-events";
-import { PRODUCT_VIEW_TAG_NAME } from "../product/product-view";
 import { initializeShopifyScripts } from "./initialize";
+import { VIEW_EVENT_TAG_NAME } from "./view-event-element";
 
 vi.mock("./standard-events", () => ({
   importStandardEventsFromCDN: () =>
@@ -18,11 +18,11 @@ vi.mock("./standard-events", () => ({
 }));
 
 describe("initializeShopifyScripts", () => {
-  it("registers the view event elements", async () => {
+  it("registers the view event element", async () => {
     await initializeShopifyScripts({ webMcp: false });
 
     await vi.waitFor(() => {
-      expect(customElements.get(PRODUCT_VIEW_TAG_NAME)).toBeDefined();
+      expect(customElements.get(VIEW_EVENT_TAG_NAME)).toBeDefined();
     });
   });
 });

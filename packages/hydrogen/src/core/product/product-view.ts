@@ -1,15 +1,5 @@
 import type * as StandardEvents from "../../../vendor/standard-events";
-import { defineViewEventElement } from "../shopify-scripts/view-event-element";
 import type { ProductVariantInput } from "./state";
-
-/**
- * Tag name of the product view custom element, `shopify-product-view`.
- *
- * Use the tag with `getProductViewAttributes` on a framework without a Hydrogen binding.
- *
- * @publicDocs
- */
-export const PRODUCT_VIEW_TAG_NAME = "shopify-product-view";
 
 /**
  * Product fields that the product view event needs from your Storefront API query.
@@ -46,21 +36,21 @@ const TRIGGERS = {
 
 /**
  * Returns the attributes of the product view element. Render the attributes on a
- * `PRODUCT_VIEW_TAG_NAME` element on a framework without a Hydrogen binding.
+ * `VIEW_EVENT_TAG_NAME` element on a framework without a Hydrogen binding.
  *
  * The element sends the `shopify:product:view` event on connect for `page`, the first time half of
  * a card element is visible, and each time the dialog opens, or on connect if it is already open.
- * It sends the event again when the product ID in `view-event-payload` changes, but not when only
- * the variant changes. Set the values as HTML attributes, such as with `attr:` on Solid, because the
- * element doesn't read properties.
+ * The `view-event-key` attribute is the product ID. The element sends the event again when the key
+ * changes, but not when only the variant changes. Set the values as HTML attributes, such as with
+ * `attr:` on Solid, because the element doesn't read properties.
  *
  * @param options - The product and where the storefront shows it.
- * @returns The `view-event-trigger` and `view-event-payload` attributes.
+ * @returns The `view-event-trigger`, `view-event-payload`, and `view-event-key` attributes.
  * @publicDocs
  */
 export function getProductViewAttributes(
   options: ProductViewOptions,
-): Record<"view-event-trigger" | "view-event-payload", string> {
+): Record<"view-event-trigger" | "view-event-payload" | "view-event-key", string> {
   const { product, context } = options;
   const variant =
     context === "page" || context === "dialog" ? product.selectedOrFirstAvailableVariant : null;
@@ -88,19 +78,6 @@ export function getProductViewAttributes(
   return {
     "view-event-trigger": TRIGGERS[context],
     "view-event-payload": JSON.stringify(payload),
+    "view-event-key": product.id,
   };
-}
-
-/**
- * Registers the product view custom element in the browser. The function loads Shopify's
- * Standard Events module and does nothing on the server. `initializeShopifyScripts` and the
- * `ShopifyScripts` component call it for you.
- *
- * @publicDocs
- */
-export function defineProductView(): void {
-  defineViewEventElement<StandardEvents.ProductViewPayload>(
-    PRODUCT_VIEW_TAG_NAME,
-    (payload) => payload.product.id,
-  );
 }

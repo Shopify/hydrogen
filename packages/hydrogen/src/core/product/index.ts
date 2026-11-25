@@ -14,7 +14,7 @@ export type {
   VariantSelectionResult,
 } from "./product-form";
 export { getSelectedProductOptions } from "./options";
-export { defineProductView, getProductViewAttributes, PRODUCT_VIEW_TAG_NAME } from "./product-view";
+export { getProductViewAttributes } from "./product-view";
 export type { ProductViewOptions, ProductViewProduct } from "./product-view";
 export { buildProductSelectionSearchParams } from "./url";
 export type { ProductSelectionLinkStyle } from "./url";
