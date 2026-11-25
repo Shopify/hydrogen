@@ -6,6 +6,9 @@ on:
   schedule:
     - cron: "38 16 * * *"
 
+permissions:
+  contents: read
+
 jobs:
   stale:
     runs-on: ubuntu-latest

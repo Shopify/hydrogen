@@ -5,11 +5,17 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     paths: ["packages/*/src/**", "packages/*/package.json", "!*.test.*", "!*.md"]
 
+permissions:
+  contents: read
+
 jobs:
   remind:
     name: Changeset Reminder
     runs-on: ubuntu-latest
     if: ${{ !github.event.pull_request.draft }}
+    permissions:
+      contents: read
+      pull-requests: write # post the reminder, and hide it once a changeset is added
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: mskelton/changelog-reminder-action@7039cd14fb784c0a2b37f6e7a6ade2c9148c2245 # v2.0.0
