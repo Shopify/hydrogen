@@ -32,9 +32,5 @@ export {
 } from "./url";
 export type { CollectionParams } from "./url";
 
-export {
-  COLLECTION_VIEW_TAG_NAME,
-  defineCollectionView,
-  getCollectionViewAttributes,
-} from "./collection-view";
+export { getCollectionViewAttributes } from "./collection-view";
 export type { CollectionViewCollection, CollectionViewOptions } from "./collection-view";

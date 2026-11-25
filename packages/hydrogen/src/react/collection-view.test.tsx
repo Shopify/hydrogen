@@ -5,7 +5,10 @@ import { renderToString } from "react-dom/server";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import type * as StandardEventsModule from "../../vendor/standard-events";
-import { COLLECTION_VIEW_TAG_NAME, defineCollectionView } from "../core/collection/collection-view";
+import {
+  defineViewEventElement,
+  VIEW_EVENT_TAG_NAME,
+} from "../core/shopify-scripts/view-event-element";
 import { assert } from "../core/test-utils";
 import { CollectionView, type CollectionViewProps } from "./collection-view";
 
@@ -42,7 +45,7 @@ const collection = { id: "gid://shopify/Collection/1", handle: "shirts", title: 
 const otherCollection = { id: "gid://shopify/Collection/2", handle: "pants", title: "Pants" };
 
 function getElement(container: HTMLElement) {
-  const element = container.querySelector(COLLECTION_VIEW_TAG_NAME);
+  const element = container.querySelector(VIEW_EVENT_TAG_NAME);
   assert(element, "expected a collection view element");
   return element;
 }
@@ -53,8 +56,8 @@ function payloadOf(element: Element) {
 
 describe("CollectionView", () => {
   beforeAll(async () => {
-    defineCollectionView();
-    await customElements.whenDefined(COLLECTION_VIEW_TAG_NAME);
+    defineViewEventElement();
+    await customElements.whenDefined(VIEW_EVENT_TAG_NAME);
   });
 
   afterEach(() => {
@@ -81,6 +84,7 @@ describe("CollectionView", () => {
     expect(element.id).toBe("results");
     expect(element.getAttribute("data-testid")).toBe("x");
     expect(element.getAttribute("view-event-trigger")).toBe("connect");
+    expect(element.getAttribute("view-event-key")).toBe("shirts");
     expect(payloadOf(element)).toEqual({
       collection: { id: collection.id, handle: "shirts", productsCount: 8 },
     });
@@ -93,7 +97,7 @@ describe("CollectionView", () => {
 
     const props = vi
       .mocked(createElement)
-      .mock.calls.find(([type]) => type === COLLECTION_VIEW_TAG_NAME)?.[1];
+      .mock.calls.find(([type]) => type === VIEW_EVENT_TAG_NAME)?.[1];
     expect(props).toMatchObject({ class: "grid" });
     expect(props).not.toHaveProperty("className");
   });
@@ -103,9 +107,10 @@ describe("CollectionView", () => {
       createElement(CollectionView, { collection, productsCount: 8, className: "grid" }),
     );
 
-    expect(html).toContain(`<${COLLECTION_VIEW_TAG_NAME}`);
+    expect(html).toContain(`<${VIEW_EVENT_TAG_NAME}`);
     expect(html).toContain('class="grid"');
     expect(html).toContain('view-event-trigger="connect"');
+    expect(html).toContain('view-event-key="shirts"');
     expect(html).toContain("view-event-payload=");
     expect(html).toContain("gid://shopify/Collection/1");
   });
