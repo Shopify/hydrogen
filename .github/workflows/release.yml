@@ -9,6 +9,9 @@ on:
   # published from the selected ref, without publishing anything to npm
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   # Hardcoded so a workflow_dispatch from any ref queues behind releases
   # instead of racing their force-push to dist
@@ -20,6 +23,8 @@ concurrency:
   queue: max
 
 jobs:
+  # Publishes only. A release reaches main as a commit that has already consumed its
+  # changesets and bumped versions; this job publishes those versions and opens no PRs.
   release:
     name: Release
     runs-on: ubuntu-latest
@@ -27,18 +32,17 @@ jobs:
     timeout-minutes: 30
     if: github.event_name == 'push' && github.repository_owner == 'shopify'
     permissions:
-      contents: write # push the version branch and create git tags
-      pull-requests: write # open and update the version PR
+      contents: write # create git tags and GitHub releases
       id-token: write # generate an ID token for npm Trusted Publishing
     env:
       npm_config_registry: https://registry.npmjs.org/
       TURBO_TELEMETRY_DISABLED: "1"
     outputs:
-      published: ${{ steps.changesets.outputs.published }}
+      published: ${{ steps.publish.outputs.published }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          # Changesets needs full history to generate changelogs with the correct commits
+          # Changesets reads the existing release tags to decide what still needs one
           fetch-depth: 0
 
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
@@ -53,34 +57,41 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Ensure Hydrogen changesets map onto CalVer
-        run: node scripts/calver.ts check
+      - name: Check for versions to publish
+        id: mode
+        # "publish" when no changesets are pending and a package version isn't on npm yet,
+        # "version" while changesets are pending, "none" otherwise
+        uses: changesets/action/select-mode@198f833dd7d863100ea6e28967bc9a9fdefadb0a # v2.1.0
 
-      - name: Resolve release title
-        id: title
-        # "[ci] release 2026.10.1" when Hydrogen releases, "[ci] release semver" otherwise.
-        # The assignment is separate so a failing `next` fails the step
+      - name: Fail on a version bump with changesets pending
+        if: steps.mode.outputs.mode == 'version'
+        # Publishing that commit would ship changes its changelog doesn't list, and skipping
+        # it quietly would leave main ahead of npm with nothing to show for it
         run: |
-          next=$(node scripts/calver.ts next)
-          echo "title=[ci] release $next" >> "$GITHUB_OUTPUT"
+          pnpm changeset publish-plan --output "$RUNNER_TEMP/publish-plan.json"
+          node -e '
+            const { plan } = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+            const unpublished = plan.flat().filter((release) => release.kind === "publish");
+            if (unpublished.length > 0) {
+              const names = unpublished.map((release) => release.name + "@" + release.version).join(", ");
+              console.log("::error::Changesets are still pending, so nothing was published. Not on npm yet: " + names);
+              process.exit(1);
+            }
+          ' "$RUNNER_TEMP/publish-plan.json"
 
       - name: Build packages
+        if: steps.mode.outputs.mode == 'publish'
         run: pnpm run build:pkgs
 
-      - name: Create release PR or publish
-        id: changesets
-        # v2 of the action is required for changesets v3: it detects published
-        # packages through the CHANGESETS_OUTPUT file instead of parsing the
-        # "New tag:" stdout lines that v3 no longer prints. With v1.7.0 the
-        # `published` output stayed "false" after a successful npm publish,
-        # which skipped compile-preview-templates and the tag/release push
-        uses: changesets/action@198f833dd7d863100ea6e28967bc9a9fdefadb0a # v2.1.0
+      - name: Publish
+        id: publish
+        if: steps.mode.outputs.mode == 'publish'
+        # v2 is required for changesets v3: it reads published packages from the
+        # CHANGESETS_OUTPUT file, which compile-preview-templates and the tag and
+        # GitHub release push depend on
+        uses: changesets/action/publish@198f833dd7d863100ea6e28967bc9a9fdefadb0a # v2.1.0
         with:
-          # Runs `changeset version`, then rewrites Hydrogen's semver bump to CalVer
-          version-script: pnpm run version-packages
-          publish-script: pnpm changeset publish
-          commit-message: ${{ steps.title.outputs.title }}
-          pr-title: ${{ steps.title.outputs.title }}
+          script: pnpm changeset publish
           github-token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
 
   compile-preview-templates:
