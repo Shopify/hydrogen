@@ -224,30 +224,16 @@ function buildInitialState(options: CreateCollectionStoreOptions): CollectionSta
 
   const search = options.urlSearch ?? options.data.dataSearch;
   if (search) {
-    const parsed = browseStateFromParams(new URLSearchParams(search));
+    const parsed = parseCollectionParams(new URLSearchParams(search));
     base.filters = parsed.filters;
     base.sortKey = parsed.sortKey;
-    base.reverse = parsed.reverse;
+    base.reverse = normalizeReverse(parsed.sortKey, parsed.reverse);
   }
 
   return base;
 }
 
-type BrowseState = Pick<CollectionState, "filters" | "sortKey" | "reverse">;
-type BrowseChange = Partial<BrowseState>;
-
-/**
- * Reads the filters and sort from URL params as the store keeps them after a URL sync. Code that
- * compares its state with the store after a URL sync must use this function.
- */
-export function browseStateFromParams(searchParams: URLSearchParams): BrowseState {
-  const parsed = parseCollectionParams(searchParams);
-  return {
-    filters: parsed.filters,
-    sortKey: parsed.sortKey,
-    reverse: normalizeReverse(parsed.sortKey, parsed.reverse),
-  };
-}
+type BrowseChange = Partial<Pick<CollectionState, "filters" | "sortKey" | "reverse">>;
 
 /**
  * Drops `reverse` for sort keys that do not support direction.
@@ -330,11 +316,17 @@ function matchesParams(context: CollectionStoreContext, searchParams: URLSearchP
 function syncFromParams(context: CollectionStoreContext, searchParams: URLSearchParams): void {
   if (matchesParams(context, searchParams)) return;
 
-  const parsed = browseStateFromParams(searchParams);
+  const parsed = parseCollectionParams(searchParams);
 
   // URL caught up to an in-flight browse change — align state without re-entering loading.
   if (context.observable.state.status === "loading") {
-    context.observable.setState((prev) => ({ ...prev, ...parsed, status: "loading" }));
+    context.observable.setState((prev) => ({
+      ...prev,
+      filters: parsed.filters,
+      sortKey: parsed.sortKey,
+      reverse: normalizeReverse(parsed.sortKey, parsed.reverse),
+      status: "loading",
+    }));
     return;
   }
 
@@ -342,7 +334,15 @@ function syncFromParams(context: CollectionStoreContext, searchParams: URLSearch
    * URL already changes, so we don't need to notify to call onBrowseChange
    * again which would cause a double navigate.
    */
-  applyBrowseChange(context, parsed, false);
+  applyBrowseChange(
+    context,
+    {
+      filters: parsed.filters,
+      sortKey: parsed.sortKey,
+      reverse: parsed.reverse,
+    },
+    false,
+  );
 }
 
 function settleStore(context: CollectionStoreContext): void {
