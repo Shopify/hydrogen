@@ -9243,7 +9243,7 @@
         "name": "{\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n}",
         "value": "{\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n}"
       },
-      "value": "export function parseSortByValue(value: string): {\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n} {\n  if (value.endsWith(SORT_BY_DESCENDING_SUFFIX)) {\n    const base = value.slice(0, -SORT_BY_DESCENDING_SUFFIX.length);\n    return { sortKey: SORT_BY_TO_SORT_KEY[base], reverse: true };\n  }\n\n  if (value.endsWith(SORT_BY_ASCENDING_SUFFIX)) {\n    const base = value.slice(0, -SORT_BY_ASCENDING_SUFFIX.length);\n    return { sortKey: SORT_BY_TO_SORT_KEY[base], reverse: false };\n  }\n\n  return { sortKey: SORT_BY_TO_SORT_KEY[value], reverse: false };\n}"
+      "value": "export function parseSortByValue(value: string): {\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n} {\n  if (value.endsWith(SORT_BY_DESCENDING_SUFFIX)) {\n    const base = value.slice(0, -SORT_BY_DESCENDING_SUFFIX.length);\n    return { sortKey: lookupSortKey(base), reverse: true };\n  }\n\n  if (value.endsWith(SORT_BY_ASCENDING_SUFFIX)) {\n    const base = value.slice(0, -SORT_BY_ASCENDING_SUFFIX.length);\n    return { sortKey: lookupSortKey(base), reverse: false };\n  }\n\n  return { sortKey: lookupSortKey(value), reverse: false };\n}"
     }
   },
   "FilterEqualsGeneratedType": {

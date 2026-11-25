@@ -238,6 +238,12 @@ describe("parseCollectionParams", () => {
       expect(result.sortKey).toBeUndefined();
       expect(result.reverse).toBe(false);
     });
+
+    it("returns undefined sortKey for a sort_by value that names an Object.prototype property", () => {
+      const result = parseCollectionParams(params("sort_by=constructor-descending"));
+      expect(result.sortKey).toBeUndefined();
+      expect(result.reverse).toBe(true);
+    });
   });
 });
 

@@ -217,15 +217,20 @@ export function parseSortByValue(value: string): {
 } {
   if (value.endsWith(SORT_BY_DESCENDING_SUFFIX)) {
     const base = value.slice(0, -SORT_BY_DESCENDING_SUFFIX.length);
-    return { sortKey: SORT_BY_TO_SORT_KEY[base], reverse: true };
+    return { sortKey: lookupSortKey(base), reverse: true };
   }
 
   if (value.endsWith(SORT_BY_ASCENDING_SUFFIX)) {
     const base = value.slice(0, -SORT_BY_ASCENDING_SUFFIX.length);
-    return { sortKey: SORT_BY_TO_SORT_KEY[base], reverse: false };
+    return { sortKey: lookupSortKey(base), reverse: false };
   }
 
-  return { sortKey: SORT_BY_TO_SORT_KEY[value], reverse: false };
+  return { sortKey: lookupSortKey(value), reverse: false };
+}
+
+// Own keys only, so `sort_by` values such as `constructor` don't return `Object.prototype` members.
+function lookupSortKey(sortBy: string): ProductCollectionSortKeys | undefined {
+  return Object.hasOwn(SORT_BY_TO_SORT_KEY, sortBy) ? SORT_BY_TO_SORT_KEY[sortBy] : undefined;
 }
 
 /**
