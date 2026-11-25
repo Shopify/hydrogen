@@ -26,9 +26,12 @@ export type CollectionViewProps = CollectionViewOptions;
  * the page loaded as `productsCount`. The view event is sent again when the collection handle
  * changes, but not when filters, sorting, or pagination change the products. Each update event has
  * the products count before the change. Its promise resolves with the new `productsCount` when the
- * new results render, and rejects with an `AbortError` when the collection changes or the
- * component unmounts first. Back and forward navigation send no update event. Attributes such as
- * `class` go on the element.
+ * new results render, and rejects with an `AbortError` when the collection changes, when back or
+ * forward navigation leaves the change, or when the component unmounts first. Back and forward
+ * navigation send no update event. Attributes such as `class` go on the element.
+ *
+ * On a page without filters and without the collection provider, render `VIEW_EVENT_TAG_NAME`
+ * with the attributes from `getCollectionViewAttributes` from `@shopify/hydrogen` instead.
  *
  * @publicDocs
  */
