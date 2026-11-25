@@ -13,6 +13,8 @@ const SESSION_COOKIE = "_shopify_analytics=a; _shopify_essential=old";
 const ASSIGNED_ESSENTIAL = "_shopify_essential=new; Path=/; HttpOnly; Secure; SameSite=Lax";
 const ASSIGNED_ANALYTICS = "_shopify_analytics=b; Path=/; Secure";
 const STALE_ESSENTIAL = "_shopify_essential=stale; Path=/";
+const ASSIGNED_MARKER =
+  "_shopify_rollouts_assigned=1; Max-Age=1800; Path=/; HttpOnly; Secure; SameSite=Lax";
 const ADD_LINES = { lines: [{ merchandiseId: "gid://shopify/ProductVariant/1", quantity: 1 }] };
 const CART = { id: "gid://shopify/Cart/123", checkoutUrl: `${STORE_DOMAIN}/checkout` };
 const I18N = { defaultLocale: { country: "US", language: "EN" } } as const;
@@ -127,6 +129,7 @@ describe("createCartServerHandlers with assignRollouts", () => {
     expect(response.headers.getSetCookie()).toEqual([
       ASSIGNED_ESSENTIAL,
       ASSIGNED_ANALYTICS,
+      ASSIGNED_MARKER,
       "_shopify_essential=newer; Path=/",
       expect.stringMatching(/^cart=123;/),
     ]);
@@ -148,7 +151,7 @@ describe("createCartServerHandlers with assignRollouts", () => {
     expect(cartWrite.headers.get("cookie")).toBe(
       "cart=123; _shopify_marketing=m; _shopify_essential=new",
     );
-    expect(response.headers.getSetCookie()).toEqual([ASSIGNED_ESSENTIAL]);
+    expect(response.headers.getSetCookie()).toEqual([ASSIGNED_ESSENTIAL, ASSIGNED_MARKER]);
   });
 
   it.each([
@@ -181,14 +184,42 @@ describe("createCartServerHandlers with assignRollouts", () => {
     expect(storefrontCall(0).query).toContain("cartCreate");
   });
 
-  it("does not assign a buyer without a Shopify session", async () => {
+  it.each([
+    ["no cookies", undefined],
+    ["only the assigned marker", "_shopify_rollouts_assigned=1"],
+  ])(
+    "assigns a buyer without a Shopify session and sends the new session with %s",
+    async (_cookies, cookie) => {
+      mockFetch
+        .mockResolvedValueOnce(assignResponse())
+        .mockResolvedValueOnce(cartResponse("cartCreate"));
+
+      const response = await handleCartPost(postRequest(ADD_LINES, cookie));
+
+      expect(storefrontCall(0).query).toContain("rolloutsAssign");
+      expect(storefrontCall(0).headers.get("cookie")).toBe(cookie ?? null);
+      expect(storefrontCall(1).headers.get("cookie")).toBe(
+        cookie ? `${cookie}; _shopify_essential=new` : "_shopify_essential=new",
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.getSetCookie()).toEqual([
+        ASSIGNED_ESSENTIAL,
+        expect.stringMatching(/^cart=123;/),
+      ]);
+    },
+  );
+
+  it("skips the assignment for a buyer assigned in the last 30 minutes", async () => {
     mockFetch.mockResolvedValueOnce(cartResponse("cartCreate"));
 
-    const response = await handleCartPost(postRequest(ADD_LINES, "_shopify_analytics=a"));
+    const response = await handleCartPost(
+      postRequest(ADD_LINES, `${SESSION_COOKIE}; _shopify_rollouts_assigned=1`),
+    );
 
     expect(response.status).toBe(200);
     expect(mockFetch).toHaveBeenCalledOnce();
     expect(storefrontCall(0).query).toContain("cartCreate");
+    expect(response.headers.getSetCookie()).toEqual([expect.stringMatching(/^cart=123;/)]);
   });
 
   it.each([
@@ -276,7 +307,20 @@ describe("createCartServerHandlers with assignRollouts", () => {
     expect(await response.json()).toEqual({
       error: { code: "cart_mutation_failed", message: "Cart mutation failed. Please try again." },
     });
-    expect(response.headers.getSetCookie()).toEqual([ASSIGNED_ESSENTIAL]);
+    expect(response.headers.getSetCookie()).toEqual([ASSIGNED_ESSENTIAL, ASSIGNED_MARKER]);
+  });
+
+  it("forwards the assigned marker when the cart write fails after an assignment that set no session cookie", async () => {
+    configureLogging({ logger: createTestLogger() });
+    mockFetch
+      .mockResolvedValueOnce(assignResponse([]))
+      .mockResolvedValueOnce(new Response("Internal error", { status: 500 }));
+
+    const response = await handleCartPost(postRequest(ADD_LINES, SESSION_COOKIE));
+
+    expect(response.status).toBe(500);
+    expect((await response.json()).error.code).toBe("cart_mutation_failed");
+    expect(response.headers.getSetCookie()).toEqual([ASSIGNED_MARKER]);
   });
 
   it("keeps the assignment cookies on a rate-limited cart write", async () => {
@@ -294,7 +338,7 @@ describe("createCartServerHandlers with assignRollouts", () => {
 
     expect(response.status).toBe(429);
     expect(response.headers.get("retry-after")).toBe("3");
-    expect(response.headers.getSetCookie()).toEqual([ASSIGNED_ESSENTIAL]);
+    expect(response.headers.getSetCookie()).toEqual([ASSIGNED_ESSENTIAL, ASSIGNED_MARKER]);
   });
 
   it("lets the router answer a rate-limited cart write with the assignment cookies", async () => {
@@ -314,6 +358,25 @@ describe("createCartServerHandlers with assignRollouts", () => {
 
     expect(response.status).toBe(429);
     expect((await response.json()).error.code).toBe("rate_limited");
+    expect(response.headers.getSetCookie()).toEqual([ASSIGNED_ESSENTIAL]);
+  });
+
+  it("lets the router answer a rate-limited cart write with the new session of a buyer without one", async () => {
+    configureLogging({ logger: createTestLogger() });
+    mockFetch
+      .mockResolvedValueOnce(assignResponse())
+      .mockResolvedValueOnce(
+        new Response("Throttled", { status: 429, headers: { "retry-after": "3" } }),
+      );
+
+    const response = await handleCartPost(
+      postRequest(ADD_LINES),
+      { assignRollouts: true },
+      "private",
+      "response",
+    );
+
+    expect(response.status).toBe(429);
     expect(response.headers.getSetCookie()).toEqual([ASSIGNED_ESSENTIAL]);
   });
 

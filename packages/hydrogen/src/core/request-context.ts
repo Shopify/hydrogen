@@ -175,7 +175,8 @@ type ShopifyRequestContextBase = {
   captureStorefrontRateLimit?(retryAfter: string | undefined): void;
   /**
    * Lets the final response set Shopify cookies before the customer has a Shopify session, and
-   * marks the response as private and uncacheable. The UCP MCP proxy calls the method for you.
+   * marks the response as private and uncacheable. The UCP MCP proxy and the cart POST handler's
+   * rollouts assignment call the method for you.
    * @internal
    */
   markResponseAsSessionEstablishing(reason: string): void;
@@ -397,7 +398,7 @@ export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
         context.documentRequest || (headers.get("content-type")?.startsWith("text/html") ?? false);
 
       // Keep GET and HEAD responses cacheable, and fail closed when the request method is unknown.
-      // Cold sessions may only be established by the explicitly marked consent request.
+      // Cold sessions may only be established by the marked consent request or a session-establishing response.
       const mayReturnShopifyState =
         requestMethod !== undefined &&
         requestMethod !== "GET" &&

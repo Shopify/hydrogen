@@ -259,7 +259,7 @@ interface CartServerHandlersBaseOptions<
    */
   readonly rateLimitHandling?: "response";
   /**
-   * Assign the buyer to the shop's checkout rollouts before an add creates a cart or adds lines. The handler calls the `rolloutsAssign` mutation on the `unstable` Storefront API version, only with a private client and for buyers who already have a Shopify session, and waits at most one second. The cart write sends the session cookie that the assignment returns, and the response forwards the assignment's cookies. When the cart write then fails, the handler returns `cart_mutation_failed` with status `500` and those cookies. A failed assignment never blocks the cart write.
+   * Assign the buyer to the shop's checkout rollouts before an add creates a cart or adds lines. The handler calls the `rolloutsAssign` mutation on the `unstable` Storefront API version, only with a private client, and waits at most one second. A buyer without a Shopify session can get one from the assignment, when the assignment saves the buyer's treatments. The cart write sends the session cookie that the assignment returns, and the response forwards the assignment's cookies. After an assignment for a buyer who already had a session, the response also sets the `_shopify_rollouts_assigned` cookie, and later adds skip the assignment for 30 minutes while the buyer keeps the session. When the cart write then fails, the handler returns `cart_mutation_failed` with status `500` and those cookies. A failed assignment never blocks the cart write.
    */
   readonly assignRollouts?: boolean;
 }

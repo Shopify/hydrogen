@@ -6,6 +6,9 @@ import { isObjectRecord } from "../utils/record";
 
 const ROLLOUTS_ASSIGN_API_VERSION = "unstable";
 const ROLLOUTS_ASSIGN_TIMEOUT_IN_MS = 1_000;
+const ROLLOUTS_ASSIGNED_COOKIE = "_shopify_rollouts_assigned";
+const ROLLOUTS_ASSIGNED_MAX_AGE_IN_SECONDS = 1_800;
+const ROLLOUTS_ASSIGNED_SET_COOKIE = `${ROLLOUTS_ASSIGNED_COOKIE}=1; Max-Age=${ROLLOUTS_ASSIGNED_MAX_AGE_IN_SECONDS}; Path=/; HttpOnly; Secure; SameSite=Lax`;
 const ROLLOUTS_ASSIGN_MUTATION: string = `
   mutation RolloutsAssign {
     rolloutsAssign {
@@ -29,9 +32,11 @@ export async function assignRollouts(
   storefrontClient: StorefrontClient,
 ): Promise<RolloutsAssignment> {
   const { cookie } = storefrontClient.requestContext;
+  const cookies = parseCookieHeader(cookie);
+  const hasSession = cookies.has(SHOPIFY_ESSENTIAL_COOKIE);
   if (
     storefrontClient.type !== "private" ||
-    !parseCookieHeader(cookie).has(SHOPIFY_ESSENTIAL_COOKIE)
+    (hasSession && cookies.has(ROLLOUTS_ASSIGNED_COOKIE))
   ) {
     return { setCookies: [] };
   }
@@ -61,8 +66,11 @@ export async function assignRollouts(
     const essential = setCookies
       .map((setCookie) => setCookie.split(";", 1)[0]?.trim() ?? "")
       .find((pair) => pair.startsWith(prefix) && pair.length > prefix.length);
+    if (essential && !hasSession) {
+      storefrontClient.requestContext.markResponseAsSessionEstablishing("rollouts assignment");
+    }
     return {
-      setCookies,
+      setCookies: hasSession ? [...setCookies, ROLLOUTS_ASSIGNED_SET_COOKIE] : setCookies,
       ...(essential && { cookie: replaceCookie(cookie, SHOPIFY_ESSENTIAL_COOKIE, essential) }),
     };
   } catch (error) {
