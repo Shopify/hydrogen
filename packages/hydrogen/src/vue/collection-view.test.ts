@@ -5,7 +5,10 @@ import { h } from "vue";
 import { renderToString } from "vue/server-renderer";
 
 import type * as StandardEventsModule from "../../vendor/standard-events";
-import { COLLECTION_VIEW_TAG_NAME, defineCollectionView } from "../core/collection/collection-view";
+import {
+  defineViewEventElement,
+  VIEW_EVENT_TAG_NAME,
+} from "../core/shopify-scripts/view-event-element";
 import { CollectionView } from "./collection-view";
 
 vi.mock("../core/shopify-scripts/standard-events", () => ({
@@ -39,8 +42,8 @@ function payloadOf(element: Element) {
 
 describe("CollectionView", () => {
   beforeAll(async () => {
-    defineCollectionView();
-    await customElements.whenDefined(COLLECTION_VIEW_TAG_NAME);
+    defineViewEventElement();
+    await customElements.whenDefined(VIEW_EVENT_TAG_NAME);
   });
 
   afterEach(() => {
@@ -56,10 +59,11 @@ describe("CollectionView", () => {
       attachTo: document.body,
     });
 
-    const element = wrapper.find(COLLECTION_VIEW_TAG_NAME).element;
+    const element = wrapper.find(VIEW_EVENT_TAG_NAME).element;
     expect(element.getAttribute("class")).toBe("grid");
     expect(element.id).toBe("results");
     expect(element.getAttribute("view-event-trigger")).toBe("connect");
+    expect(element.getAttribute("view-event-key")).toBe("shirts");
     expect(payloadOf(element)).toEqual({
       collection: { id: collection.id, handle: "shirts", productsCount: 8 },
     });
@@ -71,9 +75,10 @@ describe("CollectionView", () => {
       h(CollectionView, { collection, productsCount: 8, class: "grid" }),
     );
 
-    expect(html).toContain(`<${COLLECTION_VIEW_TAG_NAME}`);
+    expect(html).toContain(`<${VIEW_EVENT_TAG_NAME}`);
     expect(html).toContain('class="grid"');
     expect(html).toContain('view-event-trigger="connect"');
+    expect(html).toContain('view-event-key="shirts"');
     expect(html).toContain("gid://shopify/Collection/1");
   });
 
@@ -89,7 +94,7 @@ describe("CollectionView", () => {
     await vi.waitFor(() => expect(events).toHaveLength(1));
     document.removeEventListener("shopify:collection:view", listener);
 
-    expect(events[0]?.target).toBe(wrapper.find(COLLECTION_VIEW_TAG_NAME).element);
+    expect(events[0]?.target).toBe(wrapper.find(VIEW_EVENT_TAG_NAME).element);
     expect((events[0] as CustomEvent).detail).toEqual({
       collection: { id: collection.id, handle: "shirts", productsCount: 8 },
     });
@@ -105,7 +110,7 @@ describe("CollectionView", () => {
       attachTo: document.body,
     });
     await vi.waitFor(() => expect(events).toHaveLength(1));
-    const element = wrapper.find(COLLECTION_VIEW_TAG_NAME).element;
+    const element = wrapper.find(VIEW_EVENT_TAG_NAME).element;
 
     await wrapper.setProps({ collection: { ...collection }, productsCount: 16 });
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -117,7 +122,7 @@ describe("CollectionView", () => {
     document.removeEventListener("shopify:collection:view", listener);
 
     expect(events).toHaveLength(2);
-    expect(wrapper.find(COLLECTION_VIEW_TAG_NAME).element).toBe(element);
+    expect(wrapper.find(VIEW_EVENT_TAG_NAME).element).toBe(element);
     expect(events[1]?.target).toBe(element);
     expect(events[1]?.detail).toEqual({
       collection: { id: otherCollection.id, handle: "pants", productsCount: 4 },
