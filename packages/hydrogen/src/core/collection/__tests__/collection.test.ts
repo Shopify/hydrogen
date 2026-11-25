@@ -262,6 +262,23 @@ describe("syncFromParams", () => {
 
     expect(store.getState().reverse).toBe(false);
   });
+
+  it.each([
+    ["COLLECTION_DEFAULT", false],
+    ["ID", true],
+    ["RELEVANCE", false],
+  ] as const)("keeps the %s sort and category filters after the URL syncs", (sortKey, reverse) => {
+    store = createTestStore();
+    const filters = [{ category: { id: "gid://shopify/TaxonomyCategory/1" } }];
+    store.setFilters(filters);
+    store.setSortKey(sortKey, reverse);
+
+    const url = store.serializeToParams();
+    store.syncFromParams(url);
+
+    expect(store.matchesParams(url)).toBe(true);
+    expect(store.getState()).toMatchObject({ filters, sortKey, reverse });
+  });
 });
 
 describe("handleFormSubmit", () => {

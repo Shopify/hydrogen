@@ -9069,7 +9069,7 @@
     "src/core/collection/url.ts": {
       "filePath": "src/core/collection/url.ts",
       "name": "ParseCollectionParamsGeneratedType",
-      "description": "Reads collection filters and sort from URL search params. Pass the result to your Storefront API collection query.\n\nThe function reads Liquid-compatible `filter.p.*` and `filter.v.*` keys and the `sort_by` param.\n\nA URL that sets availability to both in stock and out of stock produces no availability filter. A price bound must be a non-negative number as `<input type=\"number\">` submits it, such as `12.5`; the function ignores any other value, such as `12,50`, the same way on the server and in the browser. The function recognizes the best-selling and manual sort values, plus created, price, and title with an ascending or descending suffix. For other sort values, the sort key is `undefined`. The `parseSortByValue` function also recognizes relevance, collection default, and ID.",
+      "description": "Reads collection filters and sort from URL search params. Pass the result to your Storefront API collection query.\n\nThe function reads Liquid-compatible `filter.p.*` and `filter.v.*` keys and the `sort_by` param.\n\nA URL that sets availability to both in stock and out of stock produces no availability filter. A price bound must be a non-negative number as `<input type=\"number\">` submits it, such as `12.5`; the function ignores any other value, such as `12,50`, the same way on the server and in the browser. The function reads every `sort_by` value that `getSortByValue` writes. For other sort values, the sort key is `undefined`.",
       "isPublicDocs": true,
       "params": [
         {
@@ -9085,7 +9085,7 @@
         "name": "CollectionParams",
         "value": "CollectionParams"
       },
-      "value": "export function parseCollectionParams(searchParams: URLSearchParams): CollectionParams {\n  const filters = parseProductFilters(searchParams);\n  const sortKey = parseCollectionSortKey(searchParams);\n  const rawSortBy = searchParams.get(\"sort_by\");\n  const reverse = rawSortBy?.endsWith(SORT_BY_DESCENDING_SUFFIX) ?? false;\n\n  return { filters, sortKey, reverse };\n}"
+      "value": "export function parseCollectionParams(searchParams: URLSearchParams): CollectionParams {\n  const filters = parseProductFilters(searchParams);\n  const rawSortBy = searchParams.get(\"sort_by\") ?? \"\";\n  const { sortKey, reverse } = parseSortByValue(rawSortBy);\n  // Accept only the exact values that getSortByValue writes, so `price` or\n  // `best-selling-descending` stay unrecognized.\n  const isWrittenValue = sortKey !== undefined && getSortByValue(sortKey, reverse) === rawSortBy;\n\n  return { filters, sortKey: isWrittenValue ? sortKey : undefined, reverse };\n}"
     }
   },
   "CollectionParams": {
@@ -9123,7 +9123,7 @@
     "src/core/collection/url.ts": {
       "filePath": "src/core/collection/url.ts",
       "name": "SerializeCollectionParamsGeneratedType",
-      "description": "Converts collection filters and sort to URL search params with Liquid-compatible keys. Use the result to build collection URLs.\n\nThe result holds only the `filter.*` and `sort_by` keys. The function leaves out `sort_by` for the collection's default sort.\n\nCategory filters convert to `filter.p.category`, which `parseCollectionParams` doesn't read. A price filter with a minimum and a maximum produces two params. To build a filter checkbox, parse a filter value's `input` string and convert the parsed filter. The resulting entries give the checkbox name and value.",
+      "description": "Converts collection filters and sort to URL search params with Liquid-compatible keys. Use the result to build collection URLs.\n\nThe result holds only the `filter.*` and `sort_by` keys. The function leaves out `sort_by` when the sort key is `undefined`. The `COLLECTION_DEFAULT` sort key writes `collection-default`.\n\nA price filter with a minimum and a maximum produces two params. To build a filter checkbox, parse a filter value's `input` string and convert the parsed filter. The resulting entries give the checkbox name and value.",
       "isPublicDocs": true,
       "params": [
         {
