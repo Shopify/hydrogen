@@ -40,6 +40,13 @@ const SORT_BY_TO_SORT_KEY: Record<string, ProductCollectionSortKeys> = Object.fr
   ]),
 );
 
+/** Every `sort_by` value that `getSortByValue` writes, mapped to its sort key. */
+const WRITTEN_SORT_BY = new Map<string, ProductCollectionSortKeys>();
+for (const sortKey of Object.keys(SORT_KEY_TO_SORT_BY) as ProductCollectionSortKeys[]) {
+  WRITTEN_SORT_BY.set(getSortByValue(sortKey, false), sortKey);
+  WRITTEN_SORT_BY.set(getSortByValue(sortKey, true), sortKey);
+}
+
 /**
  * Reads collection filters and sort from URL search params. Pass the result to your Storefront API collection query.
  *
@@ -53,13 +60,11 @@ const SORT_BY_TO_SORT_KEY: Record<string, ProductCollectionSortKeys> = Object.fr
  */
 export function parseCollectionParams(searchParams: URLSearchParams): CollectionParams {
   const filters = parseProductFilters(searchParams);
-  const rawSortBy = searchParams.get("sort_by") ?? "";
-  const { sortKey, reverse } = parseSortByValue(rawSortBy);
-  // Accept only the exact values that getSortByValue writes, so `price` or
-  // `best-selling-descending` stay unrecognized.
-  const isWrittenValue = sortKey !== undefined && getSortByValue(sortKey, reverse) === rawSortBy;
+  const rawSortBy = searchParams.get("sort_by");
+  const sortKey = rawSortBy ? WRITTEN_SORT_BY.get(rawSortBy) : undefined;
+  const reverse = rawSortBy?.endsWith(SORT_BY_DESCENDING_SUFFIX) ?? false;
 
-  return { filters, sortKey: isWrittenValue ? sortKey : undefined, reverse };
+  return { filters, sortKey, reverse };
 }
 
 /**

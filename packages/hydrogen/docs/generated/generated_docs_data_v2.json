@@ -9085,7 +9085,7 @@
         "name": "CollectionParams",
         "value": "CollectionParams"
       },
-      "value": "export function parseCollectionParams(searchParams: URLSearchParams): CollectionParams {\n  const filters = parseProductFilters(searchParams);\n  const rawSortBy = searchParams.get(\"sort_by\") ?? \"\";\n  const { sortKey, reverse } = parseSortByValue(rawSortBy);\n  // Accept only the exact values that getSortByValue writes, so `price` or\n  // `best-selling-descending` stay unrecognized.\n  const isWrittenValue = sortKey !== undefined && getSortByValue(sortKey, reverse) === rawSortBy;\n\n  return { filters, sortKey: isWrittenValue ? sortKey : undefined, reverse };\n}"
+      "value": "export function parseCollectionParams(searchParams: URLSearchParams): CollectionParams {\n  const filters = parseProductFilters(searchParams);\n  const rawSortBy = searchParams.get(\"sort_by\");\n  const sortKey = rawSortBy ? WRITTEN_SORT_BY.get(rawSortBy) : undefined;\n  const reverse = rawSortBy?.endsWith(SORT_BY_DESCENDING_SUFFIX) ?? false;\n\n  return { filters, sortKey, reverse };\n}"
     }
   },
   "CollectionParams": {
