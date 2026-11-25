@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import type { AvailableFilter, CollectionUpdates, ProductFilter } from '@shopify/hydrogen';
+	import type { AvailableFilter, CollectionUpdatesConnection, ProductFilter } from '@shopify/hydrogen';
 	import { onDestroy, untrack } from 'svelte';
 	import {
 		getCollectionViewAttributes,
@@ -68,7 +68,7 @@
 	const priceMin = $derived($browseState.filters.find((filter) => filter.price)?.price?.min ?? '');
 	const priceMax = $derived($browseState.filters.find((filter) => filter.price)?.price?.max ?? '');
 	let viewElement = $state<HTMLElement>();
-	let updates: CollectionUpdates | undefined;
+	let updates: CollectionUpdatesConnection | undefined;
 	let priceTimer: ReturnType<typeof setTimeout> | undefined;
 
 	function cancelPriceSubmit() {

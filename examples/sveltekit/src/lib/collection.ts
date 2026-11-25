@@ -4,7 +4,7 @@ import {
   type CollectionData,
   type CollectionState,
   type CollectionStore,
-  type CollectionUpdates,
+  type CollectionUpdatesConnection,
   type ConnectCollectionUpdatesOptions,
 } from "@shopify/hydrogen";
 import { readable, type Readable } from "svelte/store";
@@ -82,8 +82,8 @@ export function collectionState(controller: CollectionStoreController): Readable
 export function connectControllerUpdates(
   controller: CollectionStoreController,
   options: ConnectCollectionUpdatesOptions,
-): CollectionUpdates {
-  let updates: CollectionUpdates | undefined;
+): CollectionUpdatesConnection {
+  let updates: CollectionUpdatesConnection | undefined;
   const unsubscribe = controller.subscribe((store) => {
     updates?.disconnect();
     updates = connectCollectionUpdates(store, options);

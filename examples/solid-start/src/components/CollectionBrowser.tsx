@@ -11,7 +11,7 @@ import {
   type CollectionData,
   type CollectionState,
   type CollectionStore,
-  type CollectionUpdates,
+  type CollectionUpdatesConnection,
 } from "@shopify/hydrogen";
 import { A, useBeforeLeave, useIsRouting, useLocation, useNavigate } from "@solidjs/router";
 import {
@@ -128,7 +128,7 @@ export function CollectionBrowser(props: {
     () => state().filters.find((filter) => filter.price)?.price?.max ?? "",
   );
   const [viewElement, setViewElement] = createSignal<HTMLElement>();
-  let updates: CollectionUpdates | undefined;
+  let updates: CollectionUpdatesConnection | undefined;
   let priceTimer: ReturnType<typeof setTimeout> | undefined;
   let isBrowseNavigation = false;
 
