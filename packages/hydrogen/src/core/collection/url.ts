@@ -14,7 +14,7 @@ export interface CollectionParams {
   filters: ProductFilter[];
   /** Storefront API sort key from the `sort_by` param, or `undefined` when the param is missing or unrecognized. */
   sortKey: ProductCollectionSortKeys | undefined;
-  /** `true` when the `sort_by` value ends with `-descending`. */
+  /** `true` when the `sort_by` value is a descending price, title, created, or ID sort. For other sort keys, the value is `false`, also when the `sort_by` value ends with `-descending`. */
   reverse: boolean;
 }
 
@@ -206,7 +206,7 @@ export function getSortByValue(sortKey: ProductCollectionSortKeys, reverse: bool
  * For unrecognized values, the sort key is `undefined`.
  *
  * @param value - A `sort_by` value, such as `price-ascending` or `best-selling`.
- * @returns The sort key and `reverse`, which reads `true` for descending values.
+ * @returns The sort key and `reverse`. `reverse` reads `true` for descending price, title, created, and ID values. For other sort keys, such as `best-selling-descending`, `reverse` reads `false`.
  * @publicDocs
  */
 export function parseSortByValue(value: string): {
@@ -214,8 +214,8 @@ export function parseSortByValue(value: string): {
   reverse: boolean;
 } {
   if (value.endsWith(SORT_BY_DESCENDING_SUFFIX)) {
-    const base = value.slice(0, -SORT_BY_DESCENDING_SUFFIX.length);
-    return { sortKey: SORT_BY_TO_SORT_KEY.get(base), reverse: true };
+    const sortKey = SORT_BY_TO_SORT_KEY.get(value.slice(0, -SORT_BY_DESCENDING_SUFFIX.length));
+    return { sortKey, reverse: sortKey === undefined || isDirectionalSortKey(sortKey) };
   }
 
   if (value.endsWith(SORT_BY_ASCENDING_SUFFIX)) {

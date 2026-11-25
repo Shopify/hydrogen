@@ -218,6 +218,17 @@ describe("parseCollectionParams", () => {
       expect(result.reverse).toBe(reverse);
     });
 
+    it.each([
+      ["best-selling-descending", "BEST_SELLING"],
+      ["relevance-descending", "RELEVANCE"],
+      ["manual-descending", "MANUAL"],
+      ["collection-default-descending", "COLLECTION_DEFAULT"],
+    ] as const)("parses %s as reverse false (no direction)", (sortBy, sortKey) => {
+      const result = parseCollectionParams(params(`sort_by=${sortBy}`));
+      expect(result.sortKey).toBe(sortKey);
+      expect(result.reverse).toBe(false);
+    });
+
     it("returns undefined sortKey when sort_by is missing", () => {
       const result = parseCollectionParams(params("filter.p.tag=men"));
       expect(result.sortKey).toBeUndefined();
@@ -745,10 +756,26 @@ describe("parseSortByValue", () => {
     });
   });
 
+  it.each([
+    ["best-selling-descending", "BEST_SELLING"],
+    ["relevance-descending", "RELEVANCE"],
+    ["manual-descending", "MANUAL"],
+    ["collection-default-descending", "COLLECTION_DEFAULT"],
+  ] as const)("parses %s as reverse false (no direction)", (value, sortKey) => {
+    expect(parseSortByValue(value)).toEqual({ sortKey, reverse: false });
+  });
+
   it("returns undefined sortKey for unrecognized value", () => {
     expect(parseSortByValue("unknown")).toEqual({
       sortKey: undefined,
       reverse: false,
+    });
+  });
+
+  it("keeps reverse true for an unrecognized -descending value", () => {
+    expect(parseSortByValue("foo-descending")).toEqual({
+      sortKey: undefined,
+      reverse: true,
     });
   });
 

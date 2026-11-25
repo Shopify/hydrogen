@@ -9106,7 +9106,7 @@
           "syntaxKind": "PropertySignature",
           "name": "reverse",
           "value": "boolean",
-          "description": "`true` when the `sort_by` value ends with `-descending`."
+          "description": "`true` when the `sort_by` value is a descending price, title, created, or ID sort. For other sort keys, the value is `false`, also when the `sort_by` value ends with `-descending`."
         },
         {
           "filePath": "src/core/collection/url.ts",
@@ -9116,7 +9116,7 @@
           "description": "Storefront API sort key from the `sort_by` param, or `undefined` when the param is missing or unrecognized."
         }
       ],
-      "value": "export interface CollectionParams {\n  /**\n   * Active product filters from the `filter.*` URL params.\n   *\n   * The filters use the Storefront Standard Events filter type. When your query variables use generated Storefront API types, cast the filters to the generated filter type where you pass them as variables.\n   */\n  filters: ProductFilter[];\n  /** Storefront API sort key from the `sort_by` param, or `undefined` when the param is missing or unrecognized. */\n  sortKey: ProductCollectionSortKeys | undefined;\n  /** `true` when the `sort_by` value ends with `-descending`. */\n  reverse: boolean;\n}"
+      "value": "export interface CollectionParams {\n  /**\n   * Active product filters from the `filter.*` URL params.\n   *\n   * The filters use the Storefront Standard Events filter type. When your query variables use generated Storefront API types, cast the filters to the generated filter type where you pass them as variables.\n   */\n  filters: ProductFilter[];\n  /** Storefront API sort key from the `sort_by` param, or `undefined` when the param is missing or unrecognized. */\n  sortKey: ProductCollectionSortKeys | undefined;\n  /** `true` when the `sort_by` value is a descending price, title, created, or ID sort. For other sort keys, the value is `false`, also when the `sort_by` value ends with `-descending`. */\n  reverse: boolean;\n}"
     }
   },
   "SerializeCollectionParamsGeneratedType": {
@@ -9239,11 +9239,11 @@
       ],
       "returns": {
         "filePath": "src/core/collection/url.ts",
-        "description": "The sort key and `reverse`, which reads `true` for descending values.",
+        "description": "The sort key and `reverse`. `reverse` reads `true` for descending price, title, created, and ID values. For other sort keys, such as `best-selling-descending`, `reverse` reads `false`.",
         "name": "{\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n}",
         "value": "{\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n}"
       },
-      "value": "export function parseSortByValue(value: string): {\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n} {\n  if (value.endsWith(SORT_BY_DESCENDING_SUFFIX)) {\n    const base = value.slice(0, -SORT_BY_DESCENDING_SUFFIX.length);\n    return { sortKey: SORT_BY_TO_SORT_KEY.get(base), reverse: true };\n  }\n\n  if (value.endsWith(SORT_BY_ASCENDING_SUFFIX)) {\n    const base = value.slice(0, -SORT_BY_ASCENDING_SUFFIX.length);\n    return { sortKey: SORT_BY_TO_SORT_KEY.get(base), reverse: false };\n  }\n\n  return { sortKey: SORT_BY_TO_SORT_KEY.get(value), reverse: false };\n}"
+      "value": "export function parseSortByValue(value: string): {\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n} {\n  if (value.endsWith(SORT_BY_DESCENDING_SUFFIX)) {\n    const sortKey = SORT_BY_TO_SORT_KEY.get(value.slice(0, -SORT_BY_DESCENDING_SUFFIX.length));\n    return { sortKey, reverse: sortKey === undefined || isDirectionalSortKey(sortKey) };\n  }\n\n  if (value.endsWith(SORT_BY_ASCENDING_SUFFIX)) {\n    const base = value.slice(0, -SORT_BY_ASCENDING_SUFFIX.length);\n    return { sortKey: SORT_BY_TO_SORT_KEY.get(base), reverse: false };\n  }\n\n  return { sortKey: SORT_BY_TO_SORT_KEY.get(value), reverse: false };\n}"
     }
   },
   "FilterEqualsGeneratedType": {

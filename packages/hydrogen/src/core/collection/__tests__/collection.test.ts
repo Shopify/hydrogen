@@ -263,6 +263,15 @@ describe("syncFromParams", () => {
     expect(store.getState().reverse).toBe(false);
   });
 
+  it("matches the URL after syncing a non-directional -descending sort", () => {
+    store = createTestStore();
+    const url = new URLSearchParams("sort_by=best-selling-descending");
+
+    store.syncFromParams(url);
+
+    expect(store.matchesParams(url)).toBe(true);
+  });
+
   it.each([
     ["COLLECTION_DEFAULT", false],
     ["ID", true],
