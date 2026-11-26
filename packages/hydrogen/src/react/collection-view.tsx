@@ -36,7 +36,7 @@ export function CollectionView({
 }: CollectionViewProps): ReactElement {
   return createElement(
     VIEW_EVENT_TAG_NAME,
-    // React 18 sets `className` on custom elements as a `classname` attribute, so pass `class`.
+    // React 18 doesn't map `className` to `class` on custom elements.
     { ...rest, class: className, ...getCollectionViewAttributes({ collection, productsCount }) },
     children,
   );
