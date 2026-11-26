@@ -13,7 +13,7 @@ export const VIEW_EVENT_TAG_NAME = "shopify-view-event";
 let defined = false;
 
 /**
- * Registers Shopify's view event element as `VIEW_EVENT_TAG_NAME` in the browser. The function
+ * @internal Registers Shopify's view event element as `VIEW_EVENT_TAG_NAME` in the browser. The function
  * loads Shopify's Standard Events module and does nothing on the server. `initializeShopifyScripts`
  * calls it.
  */
