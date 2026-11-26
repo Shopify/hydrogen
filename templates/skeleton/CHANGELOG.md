@@ -1,5 +1,16 @@
 # skeleton
 
+## 2026.4.10
+
+### Patch Changes
+
+- Update React Router to 7.18. Hydrogen, `@shopify/remix-oxygen` and `@shopify/cli-hydrogen` now accept React Router `~7.18.5`, and new projects default to React Router 7.18.6. ([#4431](https://github.com/Shopify/hydrogen/pull/4431)) by [@fredericoo](https://github.com/fredericoo)
+
+  To upgrade an existing storefront, update `react-router`, `react-router-dom`, `@react-router/dev` and `@react-router/fs-routes` to `7.18.6` (or any later 7.18 patch) alongside Hydrogen.
+
+- Updated dependencies [[`a57f9304f42a3eeebdd1fec722e11b461c54efc9`](https://github.com/Shopify/hydrogen/commit/a57f9304f42a3eeebdd1fec722e11b461c54efc9), [`45f594dc3d16e2c70ac33f89a1ad0733c1464b88`](https://github.com/Shopify/hydrogen/commit/45f594dc3d16e2c70ac33f89a1ad0733c1464b88), [`abce178398bc78721abee7259bc94a46e11d2624`](https://github.com/Shopify/hydrogen/commit/abce178398bc78721abee7259bc94a46e11d2624), [`4edd918cd078ec8ebc1e9e32e47271c2a2392a45`](https://github.com/Shopify/hydrogen/commit/4edd918cd078ec8ebc1e9e32e47271c2a2392a45), [`9f644d42b42a41f0a35395e27270a7a049fe439e`](https://github.com/Shopify/hydrogen/commit/9f644d42b42a41f0a35395e27270a7a049fe439e)]:
+  - @shopify/hydrogen@2026.4.9
+
 ## 2026.4.9
 
 ### Patch Changes
@@ -71,7 +82,7 @@
 - Updated dependencies [[`dc49699c799997d5893bc06e444f888e86a3bc29`](https://github.com/Shopify/hydrogen/commit/dc49699c799997d5893bc06e444f888e86a3bc29), [`50df825c57159757529f5f9f62c258d4de2a4b97`](https://github.com/Shopify/hydrogen/commit/50df825c57159757529f5f9f62c258d4de2a4b97), [`51f1e77fe63be5e5ded4ef0c91942bc304f1abc4`](https://github.com/Shopify/hydrogen/commit/51f1e77fe63be5e5ded4ef0c91942bc304f1abc4)]:
   - @shopify/hydrogen@2026.4.2
 
-## 2026.4.1
+## 2026.4.10
 
 ### Patch Changes
 
