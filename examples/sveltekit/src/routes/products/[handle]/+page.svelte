@@ -43,28 +43,31 @@
 </svelte:head>
 
 <main id="main-content" tabindex="-1">
-	<shopify-view-event
-		{...getProductViewAttributes({ product: data.product, context: 'page' })}
-		class="block"
-	>
-		<section
-			class="grid grid-cols-1 gap-12 px-6 py-10 md:grid-cols-[minmax(0,1fr)_420px] md:gap-16 md:px-10 md:py-12"
+	<!-- SvelteKit reuses this page across products. The key creates a new element for each product, which sends the product view again. -->
+	{#key data.product.id}
+		<shopify-view-event
+			{...getProductViewAttributes({ product: data.product, context: 'page' })}
+			class="block"
 		>
-			<div class="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-2">
-				{#each data.product.images.nodes as image, i (image.url)}
-					<div class="aspect-square overflow-hidden bg-neutral-100">
-						<img
-							src={image.url}
-							alt={image.altText ?? `${data.product.title} — image ${i + 1}`}
-							class="h-full w-full object-cover"
-						/>
-					</div>
-				{/each}
-			</div>
+			<section
+				class="grid grid-cols-1 gap-12 px-6 py-10 md:grid-cols-[minmax(0,1fr)_420px] md:gap-16 md:px-10 md:py-12"
+			>
+				<div class="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-2">
+					{#each data.product.images.nodes as image, i (image.url)}
+						<div class="aspect-square overflow-hidden bg-neutral-100">
+							<img
+								src={image.url}
+								alt={image.altText ?? `${data.product.title} — image ${i + 1}`}
+								class="h-full w-full object-cover"
+							/>
+						</div>
+					{/each}
+				</div>
 
-			<ProductPurchasePanel product={data.product} />
-		</section>
-	</shopify-view-event>
+				<ProductPurchasePanel product={data.product} />
+			</section>
+		</shopify-view-event>
+	{/key}
 
 	<section class="border-t border-black/10 px-6 py-16 md:px-10 md:py-20">
 		<h2 class="text-2xl font-black tracking-tight">You may also like</h2>

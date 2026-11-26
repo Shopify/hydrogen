@@ -3,7 +3,8 @@ import type { JSX } from "solid-js";
 
 /**
  * Renders Hydrogen's view event element, which sends `shopify:product:view`.
- * The element sends the event again when its `view-event-key`, the product ID, changes.
+ * The element sends the event once each time it connects. Key it on the product ID, such as with
+ * `<Show when={product().id} keyed>`, where one component shows different products.
  */
 export function ProductView(props: ProductViewOptions & { class?: string; children: JSX.Element }) {
   const attributes = () => getProductViewAttributes(props);
@@ -13,7 +14,6 @@ export function ProductView(props: ProductViewOptions & { class?: string; childr
     <shopify-view-event
       attr:view-event-trigger={attributes()["view-event-trigger"]}
       attr:view-event-payload={attributes()["view-event-payload"]}
-      attr:view-event-key={attributes()["view-event-key"]}
       class={props.class}
     >
       {props.children}
