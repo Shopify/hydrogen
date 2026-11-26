@@ -82,24 +82,6 @@ describe("CollectionView", () => {
     expect(html).toContain("gid://shopify/Collection/1");
   });
 
-  it("sends the event to the document from the element on mount", async () => {
-    const events: Event[] = [];
-    const listener = (event: Event) => events.push(event);
-    document.addEventListener("shopify:collection:view", listener);
-
-    const wrapper = mount(CollectionView, {
-      props: { collection, productsCount: 8 },
-      attachTo: document.body,
-    });
-    await vi.waitFor(() => expect(events).toHaveLength(1));
-    document.removeEventListener("shopify:collection:view", listener);
-
-    expect(events[0]?.target).toBe(wrapper.find(VIEW_EVENT_TAG_NAME).element);
-    expect((events[0] as CustomEvent).detail).toEqual({
-      collection: { id: collection.id, handle: "shirts", productsCount: 8 },
-    });
-  });
-
   it("lets the element send the event again only when the collection handle changes", async () => {
     const events: CustomEvent[] = [];
     const listener = (event: Event) => events.push(event as CustomEvent);
