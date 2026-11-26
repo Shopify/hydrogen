@@ -319,7 +319,7 @@ node scripts/get-latest-branch.js
 - **Workflow**: `.github/workflows/release.yml` (`backfix-release` job)
 - **Branch**: Uses branch name directly
 - **Version PR Title**: `[ci] back-fix release YYYY-MM`
-- **npm tag**: Branch name (e.g., `2025-01`)
+- **npm tag**: Branch name (e.g., `2025-01`) for packages also released from main (`RELEASED_FROM_MAIN` in `scripts/publish-backfix-release.mjs`), `latest` for the rest
 
 ### 3. Next Release (continuous)
 - **Trigger**: Every push to main

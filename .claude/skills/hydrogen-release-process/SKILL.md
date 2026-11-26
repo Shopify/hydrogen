@@ -107,7 +107,7 @@ How it works:
 ### Back-fix Releases
 
 - Push to calver branches (e.g., `2025-01`) triggers the `backfix-release` job in `release.yml`
-- Publishes with branch name as npm tag
+- Publishes packages also released from main (`RELEASED_FROM_MAIN` in `scripts/publish-backfix-release.mjs`) with the branch name as npm tag, and every other package to `latest`
 - Used for patching previous versions
 - See the detailed step-by-step below
 
@@ -161,7 +161,7 @@ How it works:
 5. **On Push to Calver Branches**
    - `backfix-release` job in `release.yml` runs
    - Back-fix version PR created
-   - Publishes with branch name as npm tag when merged
+   - Publishes when merged, with the npm tag chosen per package as above
 
 ## Standard Release (from main)
 
