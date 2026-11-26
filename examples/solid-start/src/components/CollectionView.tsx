@@ -3,7 +3,8 @@ import type { JSX } from "solid-js";
 
 /**
  * Renders Hydrogen's view event element, which sends `shopify:collection:view`.
- * The element sends the event again when its `view-event-key`, the collection handle, changes.
+ * The element sends the event once each time it connects. Key it on the collection handle, such
+ * as with `<Show when={collection.handle} keyed>`, where one component shows different collections.
  */
 export function CollectionView(
   props: CollectionViewOptions & { class?: string; children: JSX.Element },
@@ -19,7 +20,6 @@ export function CollectionView(
     <shopify-view-event
       attr:view-event-trigger={attributes()["view-event-trigger"]}
       attr:view-event-payload={attributes()["view-event-payload"]}
-      attr:view-event-key={attributes()["view-event-key"]}
       class={props.class}
     >
       {props.children}

@@ -148,15 +148,21 @@ export default function Collection() {
       {(loaded) => (
         <>
           <Title>{loaded().collection.title} — Mock.shop</Title>
-          <CollectionBrowser
-            title={loaded().collection.title}
-            description={loaded().collection.description}
-            id={loaded().collection.id}
-            handle={loaded().collection.handle}
-            dataSearch={loaded().dataSearch}
-            products={loaded().collection.products.nodes}
-            availableFilters={loaded().collection.products.filters}
-          />
+          {/* The route component stays mounted across collections. Keying on the handle creates a
+              new collection view element, which sends the collection view again. */}
+          <Show when={loaded().collection.handle} keyed>
+            {(_handle) => (
+              <CollectionBrowser
+                title={loaded().collection.title}
+                description={loaded().collection.description}
+                id={loaded().collection.id}
+                handle={loaded().collection.handle}
+                dataSearch={loaded().dataSearch}
+                products={loaded().collection.products.nodes}
+                availableFilters={loaded().collection.products.filters}
+              />
+            )}
+          </Show>
         </>
       )}
     </Show>
