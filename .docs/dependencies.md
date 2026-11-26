@@ -52,7 +52,7 @@ When changing how Hydrogen's changeset bumps map onto its `YYYY.Q.P` versions, u
 - `package.json` (`version-packages` runs `scripts/calver.ts version`)
 - `.github/workflows/release.yml` (runs `check`, names the release PR with `next`, and versions with `pnpm run version-packages`)
 - `.github/workflows/ci.yml` (runs `check` on pull requests)
-- `skills/pull-request-standards/SKILL.md` ("Versioning")
+- `.github/PULL_REQUEST_TEMPLATE.md` (the versioning guidance in the "Developer impact" comment)
 
 ## Changesets Tooling
 

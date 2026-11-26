@@ -5,6 +5,7 @@ import {
   type PredictiveSearchStatus,
 } from "@shopify/hydrogen";
 import {
+  useLocale,
   usePredictiveSearchActions,
   usePredictiveSearch as usePredictiveSearchState,
 } from "@shopify/hydrogen/react";
@@ -47,8 +48,13 @@ type SearchResultsPredictiveProps = {
   children: (args: SearchResultsPredictiveArgs) => React.ReactNode;
 };
 
-function getPredictiveSearchResourceUrl(item: PredictiveSearchResourceItem, term: string): string {
+function getPredictiveSearchResourceUrl(
+  item: PredictiveSearchResourceItem,
+  term: string,
+  pathPrefix: string,
+): string {
   return getPredictiveSearchItemUrl(item, {
+    pathPrefix,
     routes: routeTemplates,
     term,
   });
@@ -94,6 +100,7 @@ function SearchResultsPredictiveQueries({
   queries,
   closeSearch,
 }: PartialPredictiveSearchResult<"queries", "closeSearch">) {
+  const { pathPrefix } = useLocale();
   if (!queries.length) return null;
 
   return (
@@ -103,7 +110,7 @@ function SearchResultsPredictiveQueries({
         {queries.map((query) => {
           return (
             <li className="predictive-search-result-item" key={query.text}>
-              <Link onClick={closeSearch} to={getPredictiveSearchItemUrl(query)}>
+              <Link onClick={closeSearch} to={getPredictiveSearchItemUrl(query, { pathPrefix })}>
                 <span>{query.text}</span>
               </Link>
             </li>
@@ -119,6 +126,7 @@ function SearchResultsPredictiveArticles({
   articles,
   closeSearch,
 }: PartialPredictiveSearchResult<"articles">) {
+  const { pathPrefix } = useLocale();
   if (!articles.length) return null;
 
   return (
@@ -130,7 +138,7 @@ function SearchResultsPredictiveArticles({
             <li className="predictive-search-result-item" key={article.id}>
               <Link
                 onClick={closeSearch}
-                to={getPredictiveSearchResourceUrl(article, term.current)}
+                to={getPredictiveSearchResourceUrl(article, term.current, pathPrefix)}
               >
                 {article.image?.url && (
                   <Image
@@ -157,6 +165,7 @@ function SearchResultsPredictiveCollections({
   collections,
   closeSearch,
 }: PartialPredictiveSearchResult<"collections">) {
+  const { pathPrefix } = useLocale();
   if (!collections.length) return null;
 
   return (
@@ -168,7 +177,7 @@ function SearchResultsPredictiveCollections({
             <li className="predictive-search-result-item" key={collection.id}>
               <Link
                 onClick={closeSearch}
-                to={getPredictiveSearchResourceUrl(collection, term.current)}
+                to={getPredictiveSearchResourceUrl(collection, term.current, pathPrefix)}
               >
                 {collection.image?.url && (
                   <Image
@@ -195,6 +204,7 @@ function SearchResultsPredictivePages({
   pages,
   closeSearch,
 }: PartialPredictiveSearchResult<"pages">) {
+  const { pathPrefix } = useLocale();
   if (!pages.length) return null;
 
   return (
@@ -204,7 +214,10 @@ function SearchResultsPredictivePages({
         {pages.map((page) => {
           return (
             <li className="predictive-search-result-item" key={page.id}>
-              <Link onClick={closeSearch} to={getPredictiveSearchResourceUrl(page, term.current)}>
+              <Link
+                onClick={closeSearch}
+                to={getPredictiveSearchResourceUrl(page, term.current, pathPrefix)}
+              >
                 <div>
                   <span>{page.title}</span>
                 </div>
@@ -222,6 +235,7 @@ function SearchResultsPredictiveProducts({
   products,
   closeSearch,
 }: PartialPredictiveSearchResult<"products">) {
+  const { pathPrefix } = useLocale();
   if (!products.length) return null;
 
   return (
@@ -234,7 +248,7 @@ function SearchResultsPredictiveProducts({
           return (
             <li className="predictive-search-result-item" key={product.id}>
               <Link
-                to={getPredictiveSearchResourceUrl(product, term.current)}
+                to={getPredictiveSearchResourceUrl(product, term.current, pathPrefix)}
                 onClick={closeSearch}
               >
                 {image && (

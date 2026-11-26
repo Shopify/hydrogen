@@ -1,5 +1,6 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
 
+import type { ProductCollectionSortKeys } from "../../../graphql/generated/storefront-api-types";
 import type { ProductFilter } from "../state";
 import {
   parseCollectionParams,
@@ -130,6 +131,18 @@ describe("parseCollectionParams", () => {
       ]);
     });
 
+    it("parses category filters", () => {
+      const result = parseCollectionParams(
+        params(
+          "filter.p.category=gid%3A%2F%2Fshopify%2FTaxonomyCategory%2F1&filter.p.category=gid%3A%2F%2Fshopify%2FTaxonomyCategory%2F2",
+        ),
+      );
+      expect(result.filters).toEqual([
+        { category: { id: "gid://shopify/TaxonomyCategory/1" } },
+        { category: { id: "gid://shopify/TaxonomyCategory/2" } },
+      ]);
+    });
+
     it("parses combined filters", () => {
       const result = parseCollectionParams(
         params(
@@ -194,6 +207,28 @@ describe("parseCollectionParams", () => {
       expect(result.reverse).toBe(false);
     });
 
+    it.each([
+      ["collection-default", "COLLECTION_DEFAULT", false],
+      ["id-ascending", "ID", false],
+      ["id-descending", "ID", true],
+      ["relevance", "RELEVANCE", false],
+    ] as const)("parses %s", (sortBy, sortKey, reverse) => {
+      const result = parseCollectionParams(params(`sort_by=${sortBy}`));
+      expect(result.sortKey).toBe(sortKey);
+      expect(result.reverse).toBe(reverse);
+    });
+
+    it.each([
+      ["best-selling-descending", "BEST_SELLING"],
+      ["relevance-descending", "RELEVANCE"],
+      ["manual-descending", "MANUAL"],
+      ["collection-default-descending", "COLLECTION_DEFAULT"],
+    ] as const)("parses %s as reverse false (no direction)", (sortBy, sortKey) => {
+      const result = parseCollectionParams(params(`sort_by=${sortBy}`));
+      expect(result.sortKey).toBe(sortKey);
+      expect(result.reverse).toBe(false);
+    });
+
     it("returns undefined sortKey when sort_by is missing", () => {
       const result = parseCollectionParams(params("filter.p.tag=men"));
       expect(result.sortKey).toBeUndefined();
@@ -204,6 +239,12 @@ describe("parseCollectionParams", () => {
       const result = parseCollectionParams(params("sort_by=unknown-value"));
       expect(result.sortKey).toBeUndefined();
       expect(result.reverse).toBe(false);
+    });
+
+    it("returns undefined sortKey for a sort_by value that names an Object.prototype property", () => {
+      const result = parseCollectionParams(params("sort_by=constructor-descending"));
+      expect(result.sortKey).toBeUndefined();
+      expect(result.reverse).toBe(true);
     });
   });
 });
@@ -382,6 +423,55 @@ describe("serializeCollectionParams", () => {
       reverse: false,
     });
     expect(result.get("filter.p.vendor")).toBe("Nike");
+  });
+});
+
+describe("round-trip: serialize → parse", () => {
+  const SORT_KEYS: Record<ProductCollectionSortKeys, true> = {
+    BEST_SELLING: true,
+    COLLECTION_DEFAULT: true,
+    CREATED: true,
+    ID: true,
+    MANUAL: true,
+    PRICE: true,
+    RELEVANCE: true,
+    TITLE: true,
+  };
+  const DIRECTIONAL_SORT_KEYS: ReadonlySet<string> = new Set(["CREATED", "ID", "PRICE", "TITLE"]);
+
+  // One filter of every type, in the order parseCollectionParams returns them.
+  const ALL_FILTERS: ProductFilter[] = [
+    { price: { min: 10.5, max: 200 } },
+    { available: true },
+    { productType: "Sneakers" },
+    { productVendor: "Nike" },
+    { tag: "men" },
+    { category: { id: "gid://shopify/TaxonomyCategory/1" } },
+    { variantOption: { name: "Shoe size", value: "10.5" } },
+    { productMetafield: { namespace: "custom", key: "material", value: "leather" } },
+    { variantMetafield: { namespace: "custom", key: "weight", value: "100g" } },
+    {
+      taxonomyMetafield: {
+        namespace: "shopify",
+        key: "color-pattern",
+        value: "gid://shopify/Value/1",
+      },
+    },
+  ];
+
+  const cases = (Object.keys(SORT_KEYS) as ProductCollectionSortKeys[]).flatMap((sortKey) =>
+    [false, true].map((reverse) => ({ sortKey, reverse })),
+  );
+
+  it.each(cases)("round-trips sortKey $sortKey with reverse $reverse", ({ sortKey, reverse }) => {
+    const state = { filters: ALL_FILTERS, sortKey, reverse };
+
+    expect(parseCollectionParams(serializeCollectionParams(state))).toEqual({
+      filters: ALL_FILTERS,
+      sortKey,
+      // Only directional sort keys write a direction suffix.
+      reverse: DIRECTIONAL_SORT_KEYS.has(sortKey) && reverse,
+    });
   });
 });
 
@@ -686,10 +776,26 @@ describe("parseSortByValue", () => {
     });
   });
 
+  it.each([
+    ["best-selling-descending", "BEST_SELLING"],
+    ["relevance-descending", "RELEVANCE"],
+    ["manual-descending", "MANUAL"],
+    ["collection-default-descending", "COLLECTION_DEFAULT"],
+  ] as const)("parses %s as reverse false (no direction)", (value, sortKey) => {
+    expect(parseSortByValue(value)).toEqual({ sortKey, reverse: false });
+  });
+
   it("returns undefined sortKey for unrecognized value", () => {
     expect(parseSortByValue("unknown")).toEqual({
       sortKey: undefined,
       reverse: false,
+    });
+  });
+
+  it("keeps reverse true for an unrecognized -descending value", () => {
+    expect(parseSortByValue("foo-descending")).toEqual({
+      sortKey: undefined,
+      reverse: true,
     });
   });
 
@@ -924,47 +1030,74 @@ describe("category filter", () => {
   });
 });
 
-describe("price bounds under window.Shopify.locale", () => {
-  const state = {
-    filters: [{ price: { min: 12.5, max: 1234.5 } }],
-    sortKey: undefined,
-    reverse: false,
-  };
-
+describe("price bounds", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it.each(["en", "fr", "de", "nl", "tr"])(
-    "reads its own serialized price bounds back unchanged when the shop locale is %s",
-    (locale) => {
-      vi.stubGlobal("window", { Shopify: { locale } });
+  it.each([
+    ["0", 0],
+    ["12", 12],
+    ["12.5", 12.5],
+    [".5", 0.5],
+    ["1.000", 1],
+    ["1e3", 1000],
+    ["1E+3", 1000],
+    ["2.5e-1", 0.25],
+  ])("reads %s as %s", (value, expected) => {
+    const result = parseCollectionParams(params(`filter.v.price.gte=${encodeURIComponent(value)}`));
 
-      const result = parseCollectionParams(serializeCollectionParams(state));
+    expect(result.filters).toEqual([{ price: { min: expected } }]);
+  });
 
-      expect(result.filters).toEqual(state.filters);
-    },
-  );
+  it.each([
+    "12,50",
+    "1.234,50",
+    "12,50 €",
+    "abc",
+    "Infinity",
+    "-Infinity",
+    "NaN",
+    "0x10",
+    " 12",
+    "12.50.30",
+    "5.",
+    "-5",
+    "1".repeat(400),
+  ])("drops the bound %s", (value) => {
+    const result = parseCollectionParams(params(`filter.v.price.lte=${encodeURIComponent(value)}`));
 
-  it("treats the URL it wrote as matching its own state when the shop locale groups with a dot", () => {
-    vi.stubGlobal("window", { Shopify: { locale: "de" } });
+    expect(result.filters).toEqual([]);
+  });
 
+  it("keeps a valid bound when the other bound is dropped", () => {
+    const result = parseCollectionParams(params("filter.v.price.gte=10&filter.v.price.lte=12,50"));
+
+    expect(result.filters).toEqual([{ price: { min: 10 } }]);
+  });
+
+  it("reads its own serialized price bounds back unchanged", () => {
+    const state = {
+      filters: [{ price: { min: 1e-7, max: 1e21 } }],
+      sortKey: undefined,
+      reverse: false,
+    };
+
+    expect(parseCollectionParams(serializeCollectionParams(state)).filters).toEqual(state.filters);
     expect(collectionParamsMatchState(serializeCollectionParams(state), state)).toBe(true);
   });
 
-  it("parses a locale-formatted comma decimal under de", () => {
-    vi.stubGlobal("window", { Shopify: { locale: "de" } });
+  const mixedQuery = "filter.v.price.gte=12.5&filter.v.price.lte=1.234,50";
 
-    const result = parseCollectionParams(params("filter.v.price.gte=12,50"));
+  it.each(["en", "fr", "de", "nl", "tr", "pt_br", "x_bogus!"])(
+    "reads price bounds the same under window.Shopify.locale %s as with no window",
+    (locale) => {
+      expect(typeof window).toBe("undefined");
+      const serverResult = parseCollectionParams(params(mixedQuery));
 
-    expect(result.filters).toEqual([{ price: { min: 12.5 } }]);
-  });
+      vi.stubGlobal("window", { Shopify: { locale } });
 
-  it("treats a dot-only numeric string as a canonical decimal under de, not a grouped thousand", () => {
-    vi.stubGlobal("window", { Shopify: { locale: "de" } });
-
-    const result = parseCollectionParams(params("filter.v.price.gte=1.000"));
-
-    expect(result.filters).toEqual([{ price: { min: 1 } }]);
-  });
+      expect(parseCollectionParams(params(mixedQuery))).toEqual(serverResult);
+    },
+  );
 });

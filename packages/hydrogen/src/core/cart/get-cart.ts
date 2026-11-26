@@ -52,16 +52,16 @@ type CartQueryGraphql = (
   options: { variables: { id: string } },
 ) => Promise<CartQueryResult>;
 
-/** A request, or a request context with a `Cookie` header and a URL. */
-type CartIdSource = Request | Pick<ShopifyRequestContext, "cookie" | "url">;
+/** A request, or a request context with a `Cookie` header. */
+type CartIdSource = Request | Pick<ShopifyRequestContext, "cookie">;
 
 /**
- * Reads the cart ID from a request.
+ * Reads the cart ID from the `cart` cookie of a request.
  *
- * The function checks the `cartId` search parameter first, then the `cart` cookie. The function returns a search parameter value unchanged and adds the `gid://shopify/Cart/` prefix to a cookie value.
+ * The function adds the `gid://shopify/Cart/` prefix to the cookie value.
  *
- * @param input The request or request context that carries the cart ID.
- * @returns The cart ID, or `null` when neither the search parameter nor the cookie has one.
+ * @param input The request or request context that carries the cart cookie.
+ * @returns The cart ID, or `null` when the request has no `cart` cookie.
  * @example
  * ```ts
  * // In a framework loader
@@ -73,12 +73,6 @@ type CartIdSource = Request | Pick<ShopifyRequestContext, "cookie" | "url">;
  * @publicDocs
  */
 export function getCartId(input: CartIdSource): string | null {
-  if (input.url) {
-    const parsedUrl = new URL(input.url, "https://hydrogen.local");
-    const cartId = parsedUrl.searchParams.get("cartId");
-    if (cartId) return cartId;
-  }
-
   return getCartIdFromCookie(input);
 }
 
@@ -88,6 +82,8 @@ export function getCartId(input: CartIdSource): string | null {
  * Pass a custom cart query to get a cart with that query's fields. Declare an `$id` variable in the query. The function passes the cart ID as the query's only variable.
  *
  * When the cart ID is `null`, the function returns a `null` cart without a network request. The function throws when the Storefront API request fails.
+ *
+ * The function doesn't mark the response as personalized. When a page renders the cart, call `markResponseAsPersonalized()` on the request context, or read the cart with the GET handler from `createCartServerHandlers()`, which marks the response for you.
  *
  * @param cartId The ID of the cart to fetch, or `null` to skip the request.
  * @param storefront The Storefront API client that runs the cart query.
@@ -135,6 +131,8 @@ export async function getCart<TQuery extends AnyStorefrontQueryString = typeof c
  * Pass a custom cart query to get a cart with that query's fields. Declare an `$id` variable in the query. The function passes the cart ID as the query's only variable.
  *
  * When the cart ID is `null`, the function returns a `null` cart without a network request. The function throws when the Storefront API request fails.
+ *
+ * The function doesn't mark the response as personalized. When a page renders the cart, call `markResponseAsPersonalized()` on the request context, or read the cart with the GET handler from `createCartServerHandlers()`, which marks the response for you.
  *
  * @example
  * ```ts

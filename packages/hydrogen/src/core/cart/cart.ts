@@ -23,6 +23,7 @@ import {
   SHOPIFY_STOREFRONT_STANDARD_ACTIONS_SCRIPT,
   VISITOR_CONSENT_COLLECTED_EVENT,
 } from "../shopify-scripts/index";
+import { applyI18nPathPrefix } from "../standard-routes/path";
 import { getCartAttributeFormEntries } from "./form";
 import { DEFAULT_MINIMUM_QUANTITY, sanitizeQuantity } from "./quantity";
 import type {
@@ -86,6 +87,7 @@ const FNV1A_OFFSET_BASIS = 0x811c9dc5;
 const FNV1A_PRIME = 0x01000193;
 const CART_REVALIDATION_ERROR_MESSAGE =
   "Something went wrong refreshing your cart. Please try again.";
+const DEFAULT_CART_ENDPOINT = "/api/cart";
 
 /** The timeout in milliseconds for cart loads and mutations. */
 export const STANDARD_ACTION_TIMEOUT_IN_MS = 30_000;
@@ -146,7 +148,7 @@ export type CartStore = {
   /** Stops the store. Cancels in-flight cart requests and stops handling cart events. */
   destroy(): void;
 
-  /** Replaces the store's cart with a different cart that the server loaded. The method ignores data for the cart that the store already holds, and ignores data while cart changes are in flight. */
+  /** Replaces the store's cart with a different cart that the server loaded. The method ignores data for the cart that the store already holds, and ignores data while a cart change request is in flight. Changes that wait for a cart load to finish show on top of the new cart and are then sent to it. */
   hydrate(data: CartData): void;
 
   /** Returns the current cart state, including changes that the server hasn't confirmed yet. */
@@ -255,10 +257,13 @@ type SetAttributesPayload = {
 
 type TransactionDefinition<TPayload> = {
   payload: TPayload;
+  // Only `add_to_cart` reads `cartId`: an add made without a cart joins the cart the store has
+  // by the time the request is sent.
   transport(
     payload: TPayload,
     signal: AbortSignal,
     updateCart: UpdateCartTransport,
+    cartId?: string,
   ): Promise<UpdateCartResult>;
   projectPayload(state: CartState, payload: TPayload, ownsKey: (key: string) => boolean): CartState;
   projectPromise(
@@ -272,6 +277,10 @@ type TransactionDefinition<TPayload> = {
   getPendingKeys?(state: CartState, payload: TPayload): KeyResult;
   getErrorKeys?(state: CartState, payload: TPayload): KeyResult;
   removeSupersededPayload?(older: TPayload, successful: TPayload): TPayload | undefined;
+  // A held payload that restates cart data was built on the settled cart `from`. When the store
+  // adopts the cart `to` before sending it, this moves the payload onto `to`. Without it, the
+  // payload replays unchanged.
+  rebasePayload?(payload: TPayload, from: CartState, to: CartState): TPayload;
 };
 
 function defineTransactionTypes<const TPayloads extends Record<string, unknown>>(definitions: {
@@ -316,6 +325,12 @@ type PendingTransaction = {
     requestRevalidation: () => void,
   ): CartState;
   trimAfter(successful: PendingTransaction): PendingTransaction | undefined;
+  rebaseOnto(from: CartState, to: CartState): PendingTransaction;
+  send(
+    signal: AbortSignal,
+    updateCart: UpdateCartTransport,
+    cartId?: string,
+  ): Promise<UpdateCartResult>;
 };
 
 type ProjectedError = {
@@ -324,8 +339,10 @@ type ProjectedError = {
 };
 
 type ActiveCartLoad = {
-  state: CartState;
+  /** Rejects when the load fails. `fetch()` returns it. */
   promise: Promise<void>;
+  /** Published as `CartState.readyPromise`. Never rejects. */
+  readyPromise: Promise<void>;
   resolveReadyPromise: () => void;
 };
 
@@ -350,27 +367,27 @@ type DeferredCartMutation = {
   reject(error: unknown): void;
 };
 
-type QueuedInitialAdd = {
+/** A projected change whose request the store has not sent yet. */
+type HeldTransport = {
   deferred: DeferredCartMutation;
   generation: number;
-  payload: AddToCartPayload;
-  reservation: TransactionReservation;
-  signal: AbortSignal;
+  owner: TransactionOwner | null;
+  // An add made while the store had no cart ID. It must not start while another add is creating
+  // the cart, and it joins the cart the store has by then.
+  awaitsCartId: boolean;
 };
 
-type CartIdentityTransportGate = {
-  active: QueuedInitialAdd | null;
-  waiting: QueuedInitialAdd[];
+type TransportGate = {
+  held: HeldTransport[];
+  /** The add that is creating the cart. */
+  creatingCart: HeldTransport | null;
 };
 
 type TransactionReservation = {
-  type: TransactionType;
-  payload: unknown;
   signalKeys: string[];
   pendingKeys: string[];
   errorKeys: string[];
   owner: TransactionOwner | null;
-  consumed: boolean;
 };
 
 type ExpectedTransactionEvent = {
@@ -382,10 +399,8 @@ type TransactionIdentity = Pick<
   "id" | "sequence" | "generation" | "owner" | "signalKeys" | "requiresRevalidation"
 > & { pendingKeys?: string[]; errorKeys?: string[] };
 
-type CartObservable = ReturnType<typeof createCartObservable>;
-
 type CartStoreContext = {
-  observable: CartObservable;
+  observable: ReturnType<typeof createObservable<CartState>>;
   settled: CartState;
   transactions: PendingTransaction[];
   projectedErrors: ProjectedError[];
@@ -399,10 +414,9 @@ type CartStoreContext = {
   activeCartLoad: ActiveCartLoad | null;
   revalidation: CartRevalidation;
   mutationRevision: number;
-  identityTransportGate: CartIdentityTransportGate;
+  transportGate: TransportGate;
   cartSyncAttached: boolean;
   revalidateOnConnect: boolean;
-  reservation: TransactionReservation | null;
   lastSnapshotSequence: number;
 };
 
@@ -413,9 +427,18 @@ type CartEventHandlers = {
   attributes: EventListener;
 };
 
+// The cart route as the app configured it: without a locale prefix under the framework cart
+// providers, already prefixed without them. Requests go to `getCartRequestUrl()`.
 let configuredCartEndpoint: string | null = null;
+// The locale path prefix of the document. The framework cart providers set it in the browser
+// only, so server renders for different locales never share it. A document has one cart
+// provider, as it has one Standard Actions `updateCart` handler: the last provider to mount
+// decides where the document's cart requests go.
+let cartPathPrefix: string | undefined;
 let hasConfiguredUpdateCart = false;
 let standardActionsPromise: Promise<ShopifyStandardActions> | null = null;
+// Set once Standard Actions has loaded, so a change can send its request in the task that made it.
+let standardActions: ShopifyStandardActions | null = null;
 const connectedCartStores = new Set<CartStoreContext>();
 let cartConsentListenerAttached = false;
 
@@ -599,6 +622,7 @@ function reuseVisibleReferences(previous: CartState, next: CartState): CartState
   if (
     previous.data === data &&
     previous.loading === next.loading &&
+    previous.readyPromise === next.readyPromise &&
     previous.revalidating === next.revalidating &&
     previous.errors === next.errors &&
     previous.pending === pending
@@ -618,6 +642,13 @@ function getVisiblePendingKeys(store: CartStoreContext, transaction: PendingTran
   );
 }
 
+// An add's placeholder line is gone once the add replays onto a line the load brought.
+function isReplacedPlaceholderKey(state: CartState, key: string): boolean {
+  if (!key.startsWith(`${LINE_KEY_PREFIX}${OPTIMISTIC_LINE_ID_PREFIX}`)) return false;
+  const lineId = key.slice(LINE_KEY_PREFIX.length);
+  return !getLines(state.data).some((line) => line.id === lineId);
+}
+
 function derivePending(store: CartStoreContext, state: CartState): CartState["pending"] {
   const lines = new Set<string>();
   const discountCodes = new Set<string>();
@@ -627,6 +658,7 @@ function derivePending(store: CartStoreContext, state: CartState): CartState["pe
 
   for (const transaction of store.transactions) {
     for (const key of getVisiblePendingKeys(store, transaction)) {
+      if (isReplacedPlaceholderKey(state, key)) continue;
       if (key === NOTE_KEY) note = true;
       if (key === ATTRIBUTES_KEY) attributes = true;
       if (key.startsWith(LINE_KEY_PREFIX)) {
@@ -657,19 +689,26 @@ function projectVisibleState(store: CartStoreContext): CartState {
   state = { ...state, pending: derivePending(store, state) };
   for (const error of store.projectedErrors) state = error.project(state);
   if (store.revalidation.visible) state = { ...state, revalidating: true };
+  if (store.activeCartLoad) state = { ...state, readyPromise: store.activeCartLoad.readyPromise };
   return state;
 }
 
-function publishVisibleState(store: CartStoreContext): void {
+function publishVisibleState(
+  store: CartStoreContext,
+  visible: CartState = projectVisibleState(store),
+): void {
   const previous = store.observable.state;
-  const next = reuseVisibleReferences(previous, projectVisibleState(store));
-  if (configuredCartEndpoint && previous !== next) {
+  const next = reuseVisibleReferences(previous, visible);
+  // The server publishes state too, when streamed initial data resolves, and has no inputs to sync.
+  const cartRequestUrl =
+    previous === next || typeof document === "undefined" ? null : getCartRequestUrl();
+  if (cartRequestUrl) {
     const previousLines = new Map(getLines(previous.data).map((line) => [line.id, line]));
     const changedQuantities = getLines(next.data)
       .filter((line) => previousLines.get(line.id)?.quantity !== line.quantity)
       .map((line) => ({ id: line.id, quantity: line.quantity }));
     if (changedQuantities.length > 0) {
-      syncQuantityInputs(changedQuantities, configuredCartEndpoint);
+      syncQuantityInputs(changedQuantities, cartRequestUrl);
     }
   }
   store.observable.setState(next);
@@ -1212,23 +1251,44 @@ function projectLineQuantity(state: CartState, payload: ChangeLineQuantityPayloa
 }
 
 // A response can return a line under another ID (Standard Actions may add a `?cart=` suffix), so a
-// missing line only means removal for a removal. Otherwise keep it and revalidate.
+// missing line only means removal for a removal. Otherwise revalidate to pick up its new ID. Until
+// then, a line the server accepted keeps its requested quantity, since the response's totals already
+// include it. A line the response reports a problem for keeps its previous quantity, because the
+// server may have rejected or adjusted the change.
 function settleLineQuantity(
   state: CartState,
   serverLines: CartLine[],
   payload: ChangeLineQuantityPayload,
   requestRevalidation: () => void,
+  accepted: boolean,
 ): CartState {
   const previous = getLines(state.data);
   const matching = serverLines.find((line) => line.id === payload.lineId);
   if (!matching && payload.quantity > 0) {
     requestRevalidation();
-    return state;
+    return accepted ? projectLineQuantity(state, payload) : state;
   }
   const lines = matching
     ? previous.map((line) => (line.id === payload.lineId ? mergeServerLine(line, matching) : line))
     : previous.filter((line) => line.id !== payload.lineId);
   return { ...state, data: reconcileCartLines(state.data, lines) };
+}
+
+// Whether a batch's response confirms that the server applied a line's requested quantity. An
+// error or warning for the line, or one the store can't tie to a requested line (cart-level, or
+// targeting a renamed line), means the server may have rejected or adjusted it.
+function getAcceptedLineCheck(
+  result: CartActionFailure,
+  lineIds: string[],
+): (lineId: string) => boolean {
+  if (!hasProjectedErrors(result)) return () => true;
+  const grouped = groupLineErrors(result, lineIds);
+  const hasUnscopedProblem =
+    grouped.cart.userErrors.length > 0 ||
+    grouped.cart.warnings.length > 0 ||
+    [...grouped.lines.keys()].some((lineId) => !lineIds.includes(lineId));
+  if (hasUnscopedProblem) return () => false;
+  return (lineId) => !grouped.lines.has(lineId);
 }
 
 export const CART_TRANSACTION_TYPES = defineTransactionTypes({
@@ -1332,18 +1392,7 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
     payload: {} as ChangeLineQuantityPayload,
     transport: (payload, signal, updateCart) =>
       updateCart({ lines: [{ id: payload.lineId, quantity: payload.quantity }] }, { signal }),
-    projectPayload: (state, payload) => {
-      const previous = getLines(state.data);
-      const existing = previous.find((line) => line.id === payload.lineId);
-      if (!existing) return state;
-      const lines =
-        payload.quantity === 0
-          ? previous.filter((line) => line.id !== payload.lineId)
-          : previous.map((line) =>
-              line.id === payload.lineId ? { ...line, quantity: payload.quantity } : line,
-            );
-      return { ...state, data: reconcileCartLines(state.data, lines) };
-    },
+    projectPayload: (state, payload) => projectLineQuantity(state, payload),
     projectPromise: (state, result, payload, addError, options) => {
       if (hasProjectedErrors(result)) {
         addError((current, timestampMs) =>
@@ -1402,8 +1451,19 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       if (!result.cart) return state;
 
       const serverLines = getLines(cartResponseFromStandardEvent(result.cart));
+      const isAccepted = getAcceptedLineCheck(
+        result,
+        payload.lines.map(({ lineId }) => lineId),
+      );
       return owned.reduce(
-        (current, line) => settleLineQuantity(current, serverLines, line, requestRevalidation),
+        (current, line) =>
+          settleLineQuantity(
+            current,
+            serverLines,
+            line,
+            requestRevalidation,
+            isAccepted(line.lineId),
+          ),
         state,
       );
     },
@@ -1436,6 +1496,19 @@ export const CART_TRANSACTION_TYPES = defineTransactionTypes({
       return { ...state, data: { ...data, discountCodes: cart.discountCodes } };
     },
     getSignalKeys: () => DISCOUNT_CODES_KEY,
+    // The list replaces the cart's codes, so keep what the change did to the codes it saw.
+    rebasePayload: (payload, from, to): SetDiscountCodesPayload => {
+      const fromCodes = from.data.discountCodes.map(({ code }) => code);
+      const removed = fromCodes.filter((code) => !payload.discountCodes.includes(code));
+      const kept = to.data.discountCodes
+        .map(({ code }) => code)
+        .filter((code) => !removed.includes(code));
+      // The loaded cart can already have a code the shopper applied before they could see it.
+      const added = payload.discountCodes.filter(
+        (code) => !fromCodes.includes(code) && !kept.includes(code),
+      );
+      return { discountCodes: [...kept, ...added] };
+    },
     getPendingKeys: (state, payload) => {
       const current = new Set(state.data.discountCodes.map((discount) => discount.code));
       const next = new Set(payload.discountCodes);
@@ -1516,11 +1589,12 @@ function resolveTransactionIdentity<TType extends TransactionType>(
     return { ...identity, pendingKeys, errorKeys };
   }
   if (reservation) {
-    const id = store.nextTransactionId++;
+    // No response can include a request that does not exist yet. The real sequence is assigned
+    // when the request is sent.
     return {
       ...reservation,
-      id,
-      sequence: id,
+      id: store.nextTransactionId++,
+      sequence: Number.POSITIVE_INFINITY,
       generation: store.generation,
       requiresRevalidation: false,
     };
@@ -1592,19 +1666,31 @@ function createPendingTransaction<TType extends TransactionType>(
         definition,
         payload,
         promise,
-        {
-          id,
-          sequence,
-          generation,
-          owner,
-          signalKeys,
-          pendingKeys,
-          errorKeys,
-          requiresRevalidation: transaction.requiresRevalidation,
-        },
+        currentIdentity(),
         successful,
       ),
+    rebaseOnto: (from, to) => {
+      if (!definition.rebasePayload) return transaction;
+      const rebased = definition.rebasePayload(payload, from, to);
+      return createPendingTransaction(store, type, definition, rebased, promise, undefined, {
+        ...currentIdentity(),
+        ...getTransactionProjectionKeys(definition, to, rebased, signalKeys),
+      });
+    },
+    send: (signal, updateCart, cartId) => definition.transport(payload, signal, updateCart, cartId),
   };
+  function currentIdentity(): TransactionIdentity {
+    return {
+      id,
+      sequence: transaction.sequence,
+      generation,
+      owner,
+      signalKeys,
+      pendingKeys,
+      errorKeys,
+      requiresRevalidation: transaction.requiresRevalidation,
+    };
+  }
   return transaction;
 }
 
@@ -1771,7 +1857,8 @@ function enqueueTransaction<TType extends TransactionType>(
   type: TType,
   payload: TransactionPayload<TType>,
   promise: PromiseLike<CartMutationResult>,
-  reservedTransaction?: TransactionReservation,
+  // Present exactly when the store holds the transport.
+  reservation?: TransactionReservation,
   eventToken?: string,
 ): void {
   const expectedEventIndex = store.expectedEvents.findIndex(
@@ -1789,22 +1876,22 @@ function enqueueTransaction<TType extends TransactionType>(
     store.observedPromises.delete(promise);
   };
   promise.then(releaseObservedPromise, releaseObservedPromise);
-  const activeReservation = store.reservation?.type === type ? store.reservation : undefined;
-  const reservation = reservedTransaction ?? activeReservation;
-  if (reservation) reservation.consumed = true;
   const transaction = createPendingTransaction(
     store,
     type,
     getTransactionDefinition(type),
-    reservation ? (reservation.payload as TransactionPayload<TType>) : payload,
+    payload,
     promise,
     reservation,
   );
   store.mutationRevision += 1;
-  markOverlappingTransactionForRevalidation(store, transaction);
+  markOverlappingTransactionForRevalidation(store, transaction, reservation !== undefined);
   clearProjectedErrors(store, transaction.errorKeys);
   store.transactions.push(transaction);
-  if (!reservation) observeMutationTransport(store, promise);
+  if (!reservation) {
+    observeMutationTransport(store, promise);
+    finishCartLoad(store, store.activeCartLoad);
+  }
   publishVisibleState(store);
   promise.then(
     (result) => fulfillTransaction(store, transaction.id, result),
@@ -1815,17 +1902,21 @@ function enqueueTransaction<TType extends TransactionType>(
 function markOverlappingTransactionForRevalidation(
   store: CartStoreContext,
   transaction: PendingTransaction,
+  transportHeld: boolean,
 ): void {
+  // A held request starts after the load, so only a request the store could not hold overlaps it.
+  const overlapsLoad = store.activeCartLoad !== null && !transportHeld;
   if (
     store.transactions.length === 0 &&
     !store.revalidation.active &&
     store.activeMutationTransports.size === 0 &&
-    !store.activeCartLoad
+    !overlapsLoad
   ) {
     return;
   }
-  // Publishing this transaction discards an in-flight load, so the revalidation stands in for it.
-  if (store.activeCartLoad) store.settled = { ...store.settled, loading: false };
+  // The store cannot tell whether the load read the cart before or after this request, so the
+  // caller ends the load and the revalidation stands in for it.
+  if (overlapsLoad) store.settled = { ...store.settled, loading: false };
   transaction.requiresRevalidation = true;
   for (const pending of store.transactions) pending.requiresRevalidation = true;
   requestCartRevalidation(store);
@@ -1843,10 +1934,18 @@ function observeMutationTransport(
 ): void {
   if (store.activeMutationTransports.has(promise)) return;
   store.activeMutationTransports.add(promise);
+  let released = false;
+  // Teardown keeps observing requests the store doesn't own, so revalidation waits for them after a
+  // reconnect. A request that never settles would block it forever, so stop waiting once it has
+  // outlived the timeout the store gives its own requests.
   const releaseTransport = () => {
+    if (released) return;
+    released = true;
+    clearTimeout(timeout);
     store.activeMutationTransports.delete(promise);
     revalidateCartWhenIdle(store);
   };
+  const timeout = setTimeout(releaseTransport, STANDARD_ACTION_TIMEOUT_IN_MS);
   promise.then(releaseTransport, releaseTransport);
 }
 
@@ -1887,70 +1986,70 @@ function reserveTransaction<TType extends TransactionType>(
   const pendingKeys = normalizeKeys(definition.getPendingKeys?.(state, payload) ?? signalKeys);
   const errorKeys = normalizeKeys(definition.getErrorKeys?.(state, payload) ?? signalKeys);
   clearProjectedErrors(store, errorKeys);
-  return {
-    type,
-    payload,
-    signalKeys,
-    pendingKeys,
-    errorKeys,
-    owner: createOwner(store, signalKeys),
-    consumed: false,
-  };
+  return { signalKeys, pendingKeys, errorKeys, owner: createOwner(store, signalKeys) };
 }
 
 function createTransactionSignal(
   store: CartStoreContext,
-  reservation: TransactionReservation,
+  owner: TransactionOwner | null,
 ): AbortSignal {
   const signals = [
     store.lifecycleController.signal,
     AbortSignal.timeout(STANDARD_ACTION_TIMEOUT_IN_MS),
   ];
-  if (reservation.owner) signals.push(reservation.owner.controller.signal);
+  if (owner) signals.push(owner.controller.signal);
   return AbortSignal.any(signals);
 }
 
+function createAbortError(): DOMException {
+  return new DOMException("The operation was aborted.", "AbortError");
+}
+
+// Every change the store starts projects at once and sends its request when the gate lets it.
 async function dispatchTransaction<TType extends TransactionType>(
   store: CartStoreContext,
   type: TType,
   payload: TransactionPayload<TType>,
 ): Promise<void> {
-  if (type === "add_to_cart" && !store.observable.state.data.id) {
-    return dispatchInitialCartAdd(store, payload as AddToCartPayload);
-  }
-  return dispatchTransactionNow(store, type, payload);
-}
-
-async function dispatchTransactionNow<TType extends TransactionType>(
-  store: CartStoreContext,
-  type: TType,
-  payload: TransactionPayload<TType>,
-): Promise<void> {
-  const generation = store.generation;
-  const { updateCart } = await getShopifyStandardActions();
-  if (generation !== store.generation) return;
+  const gate = store.transportGate;
+  const deferred = createDeferredCartMutation();
+  const awaitsCartId = type === "add_to_cart" && !store.observable.state.data.id;
   const reservation = reserveTransaction(store, type, payload);
-  store.reservation = reservation;
-  const signal = createTransactionSignal(store, reservation);
-  const eventToken = createTransactionEventToken();
-  // Standard Events can arrive asynchronously, so the reservation keeps signal ownership alive
-  // until the correlated event consumes it.
-  const correlatedUpdateCart = withTransactionEventToken(updateCart, eventToken);
-  let promise: Promise<UpdateCartResult>;
+  const held: HeldTransport = {
+    deferred,
+    generation: store.generation,
+    owner: reservation.owner,
+    awaitsCartId,
+  };
+  // A newer change to the same key replaces this one before its request exists. A subscriber can
+  // make that change while this one is published, so listen and hold before enqueueing.
+  reservation.owner?.controller.signal.addEventListener(
+    "abort",
+    () => {
+      const index = gate.held.indexOf(held);
+      if (index === -1) return;
+      gate.held.splice(index, 1);
+      // Drop it now rather than a microtask later, so the change replacing it, or a cart that
+      // `hydrate()` passes in the same task, doesn't count it as a request in flight. The
+      // replacing change publishes, so this doesn't, and a subscriber can't re-enter here.
+      const transaction = store.transactions.find(
+        (candidate) => candidate.promise === deferred.promise,
+      );
+      if (transaction) {
+        removeTransaction(store, transaction.id);
+        releaseSignalKeys(store, transaction);
+        store.observedPromises.delete(deferred.promise);
+      }
+      deferred.reject(createAbortError());
+    },
+    { once: true },
+  );
+  gate.held.push(held);
+  enqueueTransaction(store, type, payload, deferred.promise, reservation);
+  releaseHeldTransports(store);
 
   try {
-    promise = getTransactionDefinition(type).transport(payload, signal, correlatedUpdateCart);
-  } finally {
-    store.reservation = null;
-  }
-  if (!reservation.consumed) {
-    enqueueTransaction(store, type, payload, promise, reservation);
-    store.expectedEvents.push({ token: eventToken });
-  }
-  observeMutationTransport(store, promise);
-
-  try {
-    await promise;
+    await deferred.promise;
   } catch (error) {
     if (isAbortError(error)) return;
     throw error;
@@ -1971,100 +2070,85 @@ function createDeferredCartMutation(): DeferredCartMutation {
   };
 }
 
-function startQueuedInitialAdd(
+function startHeldTransport(
   store: CartStoreContext,
-  queued: QueuedInitialAdd,
+  held: HeldTransport,
+  { updateCart }: ShopifyStandardActions,
   cartId?: string,
 ): void {
-  if (queued.generation !== store.generation || queued.signal.aborted) {
-    queued.deferred.reject(new DOMException("The operation was aborted.", "AbortError"));
-    return;
-  }
-
-  void getShopifyStandardActions().then(({ updateCart }) => {
-    if (queued.generation !== store.generation || queued.signal.aborted) {
-      queued.deferred.reject(new DOMException("The operation was aborted.", "AbortError"));
-      return;
-    }
-    const eventToken = createTransactionEventToken();
-    const expectedEvent = { token: eventToken };
-    store.expectedEvents.push(expectedEvent);
-    let transport: Promise<UpdateCartResult>;
-    try {
-      transport = transportAddToCart(
-        queued.payload,
-        queued.signal,
-        withTransactionEventToken(updateCart, eventToken),
-        cartId,
-      );
-    } catch (error) {
-      const expectedIndex = store.expectedEvents.indexOf(expectedEvent);
-      if (expectedIndex !== -1) store.expectedEvents.splice(expectedIndex, 1);
-      queued.deferred.reject(error);
-      return;
-    }
-    observeMutationTransport(store, transport);
-    transport.then(queued.deferred.resolve, queued.deferred.reject);
-  }, queued.deferred.reject);
-}
-
-function releaseQueuedInitialAdds(store: CartStoreContext): void {
-  const gate = store.identityTransportGate;
-  if (gate.active || gate.waiting.length === 0) return;
-
-  const cartId = store.settled.data.id;
-  if (cartId) {
-    const waiting = gate.waiting.splice(0);
-    for (const queued of waiting) startQueuedInitialAdd(store, queued, cartId);
-    return;
-  }
-
-  const queued = gate.waiting.shift();
-  if (!queued) return;
-  gate.active = queued;
-  const releaseNext = () => {
-    if (gate.active !== queued) return;
-    gate.active = null;
-    releaseQueuedInitialAdds(store);
-  };
-  queued.deferred.promise.then(releaseNext, releaseNext);
-  startQueuedInitialAdd(store, queued, store.settled.data.id ?? undefined);
-}
-
-async function dispatchInitialCartAdd(
-  store: CartStoreContext,
-  payload: AddToCartPayload,
-): Promise<void> {
-  const gate = store.identityTransportGate;
-  const deferred = createDeferredCartMutation();
-  const reservation = reserveTransaction(store, "add_to_cart", payload);
-  const signal = createTransactionSignal(store, reservation);
-  const queued = {
-    deferred,
-    generation: store.generation,
-    payload,
-    reservation,
-    signal,
-  };
-  enqueueTransaction(store, "add_to_cart", payload, deferred.promise, reservation);
-  gate.waiting.push(queued);
-  releaseQueuedInitialAdds(store);
-  signal.addEventListener(
-    "abort",
-    () => {
-      const index = gate.waiting.indexOf(queued);
-      if (index === -1) return;
-      gate.waiting.splice(index, 1);
-      deferred.reject(new DOMException("The operation was aborted.", "AbortError"));
-    },
-    { once: true },
+  const transaction = store.transactions.find(
+    (candidate) => candidate.promise === held.deferred.promise,
   );
-
+  if (
+    !transaction ||
+    held.generation !== store.generation ||
+    held.owner?.controller.signal.aborted
+  ) {
+    held.deferred.reject(createAbortError());
+    return;
+  }
+  // Requests reach the server in the order they are sent, not the order they were made.
+  transaction.sequence = store.nextTransactionId++;
+  const eventToken = createTransactionEventToken();
+  const expectedEvent = { token: eventToken };
+  store.expectedEvents.push(expectedEvent);
+  let transport: Promise<UpdateCartResult>;
   try {
-    await deferred.promise;
+    // The timeout starts here, so time spent held does not count against the request.
+    transport = transaction.send(
+      createTransactionSignal(store, held.owner),
+      withTransactionEventToken(updateCart, eventToken),
+      cartId,
+    );
   } catch (error) {
-    if (isAbortError(error)) return;
-    throw error;
+    const expectedIndex = store.expectedEvents.indexOf(expectedEvent);
+    if (expectedIndex !== -1) store.expectedEvents.splice(expectedIndex, 1);
+    held.deferred.reject(error);
+    return;
+  }
+  observeMutationTransport(store, transport);
+  transport.then(held.deferred.resolve, held.deferred.reject);
+}
+
+/**
+ * Sends every held transport that may start. None may start while a cart load is active: the
+ * store could not tell whether the load read the cart before or after the request. They also
+ * stay held until Standard Actions loads, so a load that starts in the meantime still holds
+ * them. While the store has no cart ID, one add that awaits a cart ID starts alone and every
+ * other change waits for it, so two adds never create two carts and a note or discount doesn't
+ * reach the cart route before a cart exists.
+ */
+function releaseHeldTransports(store: CartStoreContext): void {
+  if (store.activeCartLoad) return;
+  const gate = store.transportGate;
+  if (gate.held.length === 0) return;
+  const actions = standardActions;
+  if (!actions) {
+    void getShopifyStandardActions().then(
+      () => releaseHeldTransports(store),
+      (error: unknown) => {
+        if (store.activeCartLoad) return;
+        for (const held of gate.held.splice(0)) held.deferred.reject(error);
+      },
+    );
+    return;
+  }
+  const cartId = store.settled.data.id ?? undefined;
+  const creator = cartId || gate.creatingCart ? undefined : gate.held.find((h) => h.awaitsCartId);
+  if (creator) {
+    gate.held.splice(gate.held.indexOf(creator), 1);
+    gate.creatingCart = creator;
+    const releaseNext = () => {
+      if (gate.creatingCart !== creator) return;
+      gate.creatingCart = null;
+      releaseHeldTransports(store);
+    };
+    creator.deferred.promise.then(releaseNext, releaseNext);
+    startHeldTransport(store, creator, actions);
+  }
+  if (!cartId && gate.creatingCart) return;
+  for (const held of gate.held.splice(0)) {
+    startHeldTransport(store, held, actions, held.awaitsCartId ? cartId : undefined);
   }
 }
 
@@ -2188,20 +2272,16 @@ function clearPendingTransactions(store: CartStoreContext): void {
   store.projectedErrors = [];
   store.observedPromises.clear();
   store.expectedEvents = [];
-  store.reservation = null;
-  store.identityTransportGate.active = null;
-  for (const queued of store.identityTransportGate.waiting) {
-    queued.deferred.reject(new DOMException("The operation was aborted.", "AbortError"));
-  }
-  store.identityTransportGate.waiting = [];
+  store.transportGate.creatingCart = null;
+  for (const held of store.transportGate.held.splice(0)) held.deferred.reject(createAbortError());
   cancelCartRevalidation(store);
 }
 
 function destroyCartStore(store: CartStoreContext, handlers: CartEventHandlers): void {
   // Teardown cancels a needed revalidation, which may be the only way back to the server cart
-  // (for example after a change discarded the initial load), so resume it on reconnect. Mutation
-  // transports stay observed: requests the store doesn't own keep running, and the resumed
-  // revalidation must wait for them.
+  // (for example after a change the store could not hold ended the initial load), so resume it
+  // on reconnect. Mutation transports stay observed: requests the store doesn't own keep
+  // running, and the resumed revalidation must wait for them.
   store.revalidateOnConnect ||= store.revalidation.requested || store.revalidation.active !== null;
   clearPendingTransactions(store);
   if (typeof document !== "undefined" && store.cartSyncAttached) {
@@ -2237,48 +2317,6 @@ function detachCartConsentListenerIfIdle(): void {
   cartConsentListenerAttached = false;
 }
 
-function createCartObservable(initialState: CartState, onReadyPromiseRemoved: () => void) {
-  const observable = createObservable<CartState>(initialState);
-
-  return {
-    get state() {
-      return observable.state;
-    },
-    subscribe: observable.subscribe,
-    setState(next: CartState | ((prev: CartState) => CartState)): void {
-      observable.setState((prev) => {
-        const nextState = typeof next === "function" ? next(prev) : next;
-        if (Object.is(nextState, prev)) return prev;
-        if (prev.readyPromise) {
-          onReadyPromiseRemoved();
-          return withoutReadyPromise({ ...nextState, loading: false });
-        }
-        return withoutReadyPromise(nextState);
-      });
-    },
-    setReadyState(next: CartState): void {
-      observable.setState(next);
-    },
-    clearReadyState(): void {
-      observable.setState(withoutReadyPromise(observable.state));
-    },
-  };
-}
-
-function withoutReadyPromise(state: CartState): CartState {
-  if (!state.readyPromise) return state;
-  const nextState = { ...state, loading: false };
-  delete nextState.readyPromise;
-  return nextState;
-}
-
-function invalidateActiveCartLoad(store: CartStoreContext): void {
-  const activeCartLoad = store.activeCartLoad;
-  if (!activeCartLoad) return;
-  store.activeCartLoad = null;
-  activeCartLoad.resolveReadyPromise();
-}
-
 function hasLocalCartData(state: CartState): boolean {
   return (
     state.data.id !== null ||
@@ -2287,20 +2325,62 @@ function hasLocalCartData(state: CartState): boolean {
   );
 }
 
-function hydrateCartInStore(store: CartStoreContext, data: CartData): void {
-  const current = store.observable.state;
-  invalidateActiveCartLoad(store);
-  if (current.data.id !== null && current.data.id === data.id) {
-    store.observable.clearReadyState();
-    return;
+function isHeldTransaction(store: CartStoreContext, transaction: PendingTransaction): boolean {
+  return store.transportGate.held.some((held) => held.deferred.promise === transaction.promise);
+}
+
+/**
+ * Makes `data` the settled cart and returns whether it did. Held changes move onto it and replay
+ * there. It declines the cart the store already has, and any cart while a request is in flight:
+ * that request targets the current cart.
+ */
+function adoptCart(store: CartStoreContext, data: CartData): boolean {
+  const current = store.settled;
+  if (current.data.id !== null && current.data.id === data.id) return false;
+  if (!store.transactions.every((transaction) => isHeldTransaction(store, transaction))) {
+    return false;
   }
-  if (store.transactions.length > 0) {
-    store.observable.clearReadyState();
-    return;
-  }
-  cancelCartRevalidation(store);
   store.settled = createCartState(data);
+  store.transactions = store.transactions.map((transaction) =>
+    transaction.rebaseOnto(current, store.settled),
+  );
   store.projectedErrors = [];
+  // A running revalidation started before this cart was read, so the cart supersedes it. A
+  // revalidation requested since then still runs.
+  if (store.revalidation.active) {
+    store.revalidation.active.controller.abort();
+    store.revalidation.active = null;
+    store.revalidation.visible = store.revalidation.requested;
+  }
+  // Subscribers such as the analytics tracker take the adopted cart as their baseline, which they
+  // can't do once held changes show on it. Publish it on its own first, in the same task.
+  if (store.transactions.length > 0) publishVisibleState(store, store.settled);
+  return true;
+}
+
+/**
+ * Ends `load` if it is still the active one: publishes, resolves the ready promise, sends the
+ * held transports, and runs a revalidation that was waiting. Calling it twice, or with a load
+ * that `reset()` or `hydrate()` already ended, does nothing.
+ */
+function finishCartLoad(store: CartStoreContext, load: ActiveCartLoad | null): void {
+  if (!load || store.activeCartLoad !== load) return;
+  store.activeCartLoad = null;
+  publishVisibleState(store);
+  load.resolveReadyPromise();
+  releaseHeldTransports(store);
+  revalidateCartWhenIdle(store);
+}
+
+function hydrateCartInStore(store: CartStoreContext, data: CartData): void {
+  if (adoptCart(store, data)) {
+    // A held change that needs the revalidation still needs it on the new cart.
+    if (store.transactions.length === 0) cancelCartRevalidation(store);
+  } else if (store.activeCartLoad) {
+    store.settled = { ...store.settled, loading: false };
+  }
+  // Explicit data supersedes a running load.
+  finishCartLoad(store, store.activeCartLoad);
   publishVisibleState(store);
 }
 
@@ -2314,10 +2394,13 @@ function resetCartStore(store: CartStoreContext): void {
 
   clearPendingTransactions(store);
   store.activeMutationTransports.clear();
-  invalidateActiveCartLoad(store);
   cancelCartRevalidation(store);
   store.lastSnapshotSequence = 0;
-  store.settled = createEmptyCartState();
+  // Without a reload, nothing would end `loading` for the load this reset ends.
+  store.settled = createEmptyCartState({
+    loading: shouldReloadAfterReset || !hadActiveCartLoad,
+  });
+  finishCartLoad(store, store.activeCartLoad);
   publishVisibleState(store);
 
   if (shouldReloadAfterReset) {
@@ -2327,48 +2410,50 @@ function resetCartStore(store: CartStoreContext): void {
   }
 }
 
-function isCurrentCartLoad(store: CartStoreContext, request: ActiveCartLoad): boolean {
-  return store.activeCartLoad === request && store.observable.state === request.state;
+// Changes wait for the load, so a streamed cart that never arrives would hold them forever. It
+// gets the same limit as a browser read of the cart.
+function withLoadTimeout<T>(promise: PromiseLike<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(
+      reject,
+      STANDARD_ACTION_TIMEOUT_IN_MS,
+      new DOMException("The cart load timed out.", "TimeoutError"),
+    );
+    Promise.resolve(promise)
+      .then(resolve, reject)
+      .finally(() => clearTimeout(timeout));
+  });
 }
 
 function loadCartInStore(
   store: CartStoreContext,
   cartPromise?: PromiseLike<CartData | null>,
 ): Promise<void> {
-  const existing = store.activeCartLoad;
-  if (existing?.state === store.observable.state) return existing.promise;
-
-  invalidateActiveCartLoad(store);
+  if (store.activeCartLoad) return store.activeCartLoad.promise;
 
   let resolveReadyPromise = NOOP;
   const readyPromise = new Promise<void>((resolve) => {
     resolveReadyPromise = resolve;
   });
   let request: ActiveCartLoad;
-  const state = { ...store.observable.state, readyPromise };
-  const promise = Promise.resolve(cartPromise ?? fetchCartData(state.data.id))
+  const promise = (
+    cartPromise ? withLoadTimeout(cartPromise) : fetchCartData(store.settled.data.id)
+  )
     .then((data) => {
-      if (!isCurrentCartLoad(store, request)) return;
-      if (data) hydrateCartInStore(store, data);
-      if (!data) {
-        store.settled = { ...store.settled, loading: false };
-        publishVisibleState(store);
-      }
+      if (store.activeCartLoad !== request) return;
+      if (data && adoptCart(store, data)) return;
+      store.settled = { ...store.settled, loading: false };
     })
     .catch((error) => {
-      if (isCurrentCartLoad(store, request)) {
+      if (store.activeCartLoad === request) {
         store.settled = { ...store.settled, loading: false };
-        publishVisibleState(store);
       }
       throw error;
     })
-    .finally(() => {
-      if (store.activeCartLoad === request) store.activeCartLoad = null;
-      request.resolveReadyPromise();
-    });
-  request = { state, promise, resolveReadyPromise };
+    .finally(() => finishCartLoad(store, request));
+  request = { promise, readyPromise, resolveReadyPromise };
   store.activeCartLoad = request;
-  store.observable.setReadyState(state);
+  publishVisibleState(store);
   return promise;
 }
 
@@ -2408,12 +2493,8 @@ export function createCartStore<TData extends CartData = CartData>(
     : syncInitialData
       ? createEmptyCartState({ loading: false })
       : createEmptyCartState();
-  let context: CartStoreContext | null = null;
-  const observable = createCartObservable(settled, () => {
-    if (context) invalidateActiveCartLoad(context);
-  });
   const store: CartStoreContext = {
-    observable,
+    observable: createObservable(settled),
     settled,
     transactions: [],
     projectedErrors: [],
@@ -2427,13 +2508,11 @@ export function createCartStore<TData extends CartData = CartData>(
     activeCartLoad: null,
     revalidation: { requested: false, active: null, visible: false },
     mutationRevision: 0,
-    identityTransportGate: { active: null, waiting: [] },
+    transportGate: { held: [], creatingCart: null },
     cartSyncAttached: false,
     revalidateOnConnect: false,
-    reservation: null,
     lastSnapshotSequence: 0,
   };
-  context = store;
   const handlers: CartEventHandlers = {
     lines: ((event: Event) =>
       handleLinesEvent(store, event as CartLinesUpdateEvent)) as EventListener,
@@ -2504,7 +2583,9 @@ function getLineQuantityPayload(
   const rawQuantity = Number(formData.get("quantity"));
   const explicitQuantity = Number.isNaN(rawQuantity) ? DEFAULT_MINIMUM_QUANTITY : rawQuantity;
   if (explicitQuantity <= 0) return { lineId, quantity: 0 };
-  const maxQuantity = line?.merchandise?.quantityAvailable ?? undefined;
+  const quantityAvailable = line?.merchandise?.quantityAvailable;
+  const maxQuantity =
+    typeof quantityAvailable === "number" && quantityAvailable > 0 ? quantityAvailable : undefined;
   return {
     lineId,
     quantity: sanitizeQuantity(explicitQuantity, {
@@ -2607,7 +2688,11 @@ async function handleFormSubmitInStore(
 /**
  * Sends every cart load and cart change on the page to your cart endpoint. Without an endpoint, Standard Actions handles cart requests with its default handler.
  *
- * Call the function before you connect a cart store. The first cart load then goes to your endpoint. A later call with a different endpoint replaces the first endpoint and logs a warning. In React, `CartProvider` sets the endpoint to `/api/cart` when the provider mounts.
+ * Call the function before you connect a cart store. The first cart load then goes to your endpoint. A later call with a different endpoint replaces the first endpoint and logs a warning.
+ *
+ * The React and Vue cart providers use `/api/cart` unless you set an endpoint first. They render the endpoint as the cart form action and put a path that starts with `/` under the locale path prefix from `LocaleProvider`. With those providers, pass the path without a locale prefix, and call the function at module scope in code that runs on the server and in the browser, so the server-rendered form action matches.
+ *
+ * Without those providers, call the function in the browser only and include the page's locale path prefix in the endpoint, such as `/fr-ca/api/cart`.
  *
  * @param endpoint The URL path of your cart route.
  * @returns Nothing. Later cart loads and changes on the page go to the endpoint.
@@ -2625,6 +2710,28 @@ export function configureCartEndpoint(endpoint: string): void {
     );
   }
   configuredCartEndpoint = endpoint;
+}
+
+/**
+ * The URL that cart forms post to under a locale path prefix: the configured endpoint, or
+ * `/api/cart`. The framework cart providers render it as the form action.
+ */
+export function getCartEndpoint(pathPrefix: string | undefined): string {
+  return applyI18nPathPrefix(configuredCartEndpoint ?? DEFAULT_CART_ENDPOINT, pathPrefix);
+}
+
+/**
+ * Sends the document's cart requests to the cart route under its locale path prefix. The
+ * framework cart providers call it when they mount, which also moves cart requests from the
+ * Standard Actions default handler to `/api/cart` unless the app configured an endpoint.
+ */
+export function configureCartRequests(pathPrefix: string | undefined): void {
+  configuredCartEndpoint ??= DEFAULT_CART_ENDPOINT;
+  cartPathPrefix = pathPrefix;
+}
+
+function getCartRequestUrl(): string | null {
+  return configuredCartEndpoint === null ? null : getCartEndpoint(cartPathPrefix);
 }
 
 async function postCartUpdateToEndpoint(
@@ -2649,8 +2756,9 @@ function configureUpdateCartOnce(actions: ShopifyStandardActions): void {
   const configured = actions.updateCart.configure({
     eventTarget: () => document,
     handler: (defaultHandler, payload, options) => {
-      if (!configuredCartEndpoint || !payload) return defaultHandler();
-      return postCartUpdateToEndpoint(configuredCartEndpoint, payload, options);
+      const cartRequestUrl = getCartRequestUrl();
+      if (!cartRequestUrl || !payload) return defaultHandler();
+      return postCartUpdateToEndpoint(cartRequestUrl, payload, options);
     },
   });
   if (configured === false) {
@@ -2666,12 +2774,17 @@ function hasShopifyStandardActionsScript(): boolean {
   );
 }
 
+function getStandardActionsGlobal(): ShopifyStandardActions | undefined {
+  return typeof window === "undefined" ? undefined : window.Shopify?.actions;
+}
+
 export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
   return (standardActionsPromise ??= new Promise<ShopifyStandardActions>((resolve, reject) => {
     const configure = () => {
-      const actions = typeof window === "undefined" ? undefined : window.Shopify?.actions;
+      const actions = getStandardActionsGlobal();
       if (actions?.updateCart) {
         configureUpdateCartOnce(actions);
+        standardActions = actions;
         resolve(actions);
         return;
       }
@@ -2681,15 +2794,30 @@ export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
       reject(new Error(message));
     };
 
-    if (typeof document !== "undefined" && document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", configure, {
-        once: true,
-      });
+    // Deferred scripts run after readyState turns "interactive" but before DOMContentLoaded.
+    // If DOMContentLoaded already fired, the script has failed and window load only ends the wait.
+    if (
+      typeof document !== "undefined" &&
+      (document.readyState === "loading" ||
+        (document.readyState === "interactive" && !getStandardActionsGlobal()?.updateCart))
+    ) {
+      const listeners = new AbortController();
+      const onReady = () => {
+        listeners.abort();
+        try {
+          configure();
+        } catch (error) {
+          reject(error);
+        }
+      };
+      document.addEventListener("DOMContentLoaded", onReady, { signal: listeners.signal });
+      window.addEventListener("load", onReady, { signal: listeners.signal });
       return;
     }
     configure();
-  }).catch((error) => {
+  }).catch((error: unknown) => {
     standardActionsPromise = null;
+    log.error("standard actions setup failed", { error });
     throw error;
   }));
 }
@@ -2697,8 +2825,10 @@ export function getShopifyStandardActions(): Promise<ShopifyStandardActions> {
 /** @internal */
 export function resetStandardActionsForTests(): void {
   configuredCartEndpoint = null;
+  cartPathPrefix = undefined;
   hasConfiguredUpdateCart = false;
   standardActionsPromise = null;
+  standardActions = null;
 }
 
 function extractNoteFromCart(cart: CartResponse): string {
@@ -2711,8 +2841,9 @@ async function fetchCart(
 ): Promise<{ cart: CartResponse | null }> {
   const timeoutSignal = AbortSignal.timeout(STANDARD_ACTION_TIMEOUT_IN_MS);
   const signal = callerSignal ? AbortSignal.any([callerSignal, timeoutSignal]) : timeoutSignal;
-  if (configuredCartEndpoint) {
-    const response = await fetch(configuredCartEndpoint, {
+  const cartRequestUrl = getCartRequestUrl();
+  if (cartRequestUrl) {
+    const response = await fetch(cartRequestUrl, {
       cache: "no-store",
       signal,
     });
@@ -2838,18 +2969,9 @@ function applyCartRevalidation(
 }
 
 function refreshCartInStore(store: CartStoreContext): void {
-  // Publishing over an in-flight initial load invalidates it (the ready state
-  // carries the load's identity), which would discard the fetched cart. Wait
-  // for the load to settle, then reconcile against whatever cart it produced.
-  const activeCartLoad = store.activeCartLoad;
-  if (activeCartLoad) {
-    const runAfterLoad = () => refreshCartInStore(store);
-    activeCartLoad.promise.then(runAfterLoad, runAfterLoad);
-    return;
-  }
-  // Reconcile through the queue so the refresh stays non-blocking. With no cart
-  // id, revalidateCartWhenIdle waits for in-flight work then discovers a cart
-  // created out of band.
+  // Reconcile through the queue so the refresh stays non-blocking. revalidateCartWhenIdle
+  // waits for a running load and in-flight work, then revalidates the cart the store has by
+  // then, or with no cart id discovers a cart created out of band.
   requestCartRevalidation(store);
   publishVisibleState(store);
   revalidateCartWhenIdle(store);
@@ -2859,6 +2981,7 @@ function revalidateCartWhenIdle(store: CartStoreContext): void {
   if (
     !store.revalidation.requested ||
     store.revalidation.active ||
+    store.activeCartLoad ||
     store.transactions.length > 0 ||
     store.activeMutationTransports.size > 0
   ) {

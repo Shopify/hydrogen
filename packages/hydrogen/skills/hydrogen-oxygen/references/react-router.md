@@ -77,7 +77,7 @@ Do not add classic Hydrogen's Vite plugin or unrelated development plugins solel
 
 ## React Router Configuration
 
-Keep SSR enabled. Preserve existing future flags and app behavior. Middleware-based apps generally need:
+Keep SSR enabled. Preserve existing future flags and app behavior, and make sure middleware is enabled for your version of React Router. Middleware-based apps generally need:
 
 ```ts
 import type { Config } from "@react-router/dev/config";
@@ -86,7 +86,6 @@ export default {
   ssr: true,
   subResourceIntegrity: false,
   future: {
-    v8_middleware: true,
     unstable_optimizeDeps: true,
   },
 } satisfies Config;

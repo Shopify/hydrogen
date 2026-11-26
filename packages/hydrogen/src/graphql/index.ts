@@ -1,6 +1,7 @@
 export { gql } from "./graphql";
 export type {
   AnyStorefrontQueryString,
+  ComposedDocument,
   ComposedSource,
   SourceOf,
   StorefrontQueryString,

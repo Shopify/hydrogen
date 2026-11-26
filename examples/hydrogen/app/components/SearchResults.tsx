@@ -2,6 +2,7 @@ import { Link } from "react-router";
 
 import { Image } from "~/components/Image";
 import { PaginatedResourceSection } from "~/components/PaginatedResourceSection";
+import { useLocalizedPath } from "~/lib/locale-path";
 import { formatMoney } from "~/lib/money";
 import { urlWithTrackingParams, type RegularSearchReturn } from "~/lib/search";
 
@@ -31,6 +32,7 @@ SearchResults.Products = SearchResultsProducts;
 SearchResults.Empty = SearchResultsEmpty;
 
 function SearchResultsArticles({ term, articles }: PartialSearchResult<"articles">) {
+  const localizedPath = useLocalizedPath();
   if (!articles?.nodes.length) {
     return null;
   }
@@ -41,7 +43,7 @@ function SearchResultsArticles({ term, articles }: PartialSearchResult<"articles
       <div>
         {articles?.nodes?.map((article) => {
           const articleUrl = urlWithTrackingParams({
-            baseUrl: `/blogs/${article.handle}`,
+            baseUrl: localizedPath(`/blogs/${article.handle}`),
             trackingParams: article.trackingParameters,
             term,
           });
@@ -61,6 +63,7 @@ function SearchResultsArticles({ term, articles }: PartialSearchResult<"articles
 }
 
 function SearchResultsPages({ term, pages }: PartialSearchResult<"pages">) {
+  const localizedPath = useLocalizedPath();
   if (!pages?.nodes.length) {
     return null;
   }
@@ -71,7 +74,7 @@ function SearchResultsPages({ term, pages }: PartialSearchResult<"pages">) {
       <div>
         {pages?.nodes?.map((page) => {
           const pageUrl = urlWithTrackingParams({
-            baseUrl: `/pages/${page.handle}`,
+            baseUrl: localizedPath(`/pages/${page.handle}`),
             trackingParams: page.trackingParameters,
             term,
           });
@@ -115,8 +118,9 @@ function SearchResultProduct({
   product: PartialSearchResult<"products">["products"]["nodes"][number];
   term: string;
 }) {
+  const localizedPath = useLocalizedPath();
   const productUrl = urlWithTrackingParams({
-    baseUrl: `/products/${product.handle}`,
+    baseUrl: localizedPath(`/products/${product.handle}`),
     trackingParams: product.trackingParameters,
     term,
   });

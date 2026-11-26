@@ -1,6 +1,10 @@
+import { trimTrailingSlashes } from "./standard-routes/path";
+
 export const SFAPI_RE = /^\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
 export const SHOPIFY_API_PROXY_PREFIX = "/__shopify";
 export const SHOPIFY_API_PROXY_RE = /^\/__shopify(?:\/|$)/;
+// Served by Hydrogen itself, so it must be matched before the API proxy claims `/__shopify`.
+export const HYDROGEN_MANIFEST_PATH = `${SHOPIFY_API_PROXY_PREFIX}/hydrogen/manifest.json`;
 export const MCP_RE = /^\/api\/mcp$/;
 export const UCP_MCP_RE = /^\/api\/ucp\/mcp$/;
 export const CHECKOUT_RE = /^\/checkout$/;
@@ -13,11 +17,16 @@ export const CUSTOMER_ACCOUNT_PATHS = {
   login: "/account/login",
   logout: "/account/logout",
   refresh: "/account/refresh",
+  widgetData: "/account/widget-data",
 } as const;
 
-const CUSTOMER_ACCOUNT_HANDOFF_PATHS: ReadonlySet<string> = new Set(
-  Object.values(CUSTOMER_ACCOUNT_PATHS),
-);
+// The widget data route answers `fetch()` with JSON, so it isn't a navigation destination.
+const CUSTOMER_ACCOUNT_HANDOFF_PATHS: ReadonlySet<string> = new Set([
+  CUSTOMER_ACCOUNT_PATHS.authorize,
+  CUSTOMER_ACCOUNT_PATHS.login,
+  CUSTOMER_ACCOUNT_PATHS.logout,
+  CUSTOMER_ACCOUNT_PATHS.refresh,
+]);
 
 /**
  * Returns whether the pathname conventionally represents a Hydrogen document-level server handoff.
@@ -81,7 +90,7 @@ export function normalizeStoreDomain(domain: string): string {
   }
 
   if (domain.startsWith("http://") || domain.startsWith("https://")) {
-    return domain.replace(/\/+$/, "");
+    return trimTrailingSlashes(domain);
   }
-  return `https://${domain}`.replace(/\/+$/, "");
+  return trimTrailingSlashes(`https://${domain}`);
 }

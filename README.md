@@ -104,8 +104,11 @@ Create a Storefront API client for each request, in server code. `getBuyerIp()` 
 import {
   createShopifyRequestContext,
   createStorefrontClient,
+  defineShopifyI18n,
   gql,
 } from "@shopify/hydrogen";
+
+const i18n = defineShopifyI18n({ defaultLocale: { country: "US", language: "EN" } });
 
 const storeDomain = process.env.PUBLIC_STORE_DOMAIN;
 const privateStorefrontToken = process.env.PRIVATE_STOREFRONT_API_TOKEN;
@@ -117,7 +120,7 @@ const storefront = createStorefrontClient({
   type: "private",
   requestContext: createShopifyRequestContext({
     request,
-    i18n: { country: "US", language: "EN" },
+    i18n,
     buyerIp: getBuyerIp(request.headers),
   }),
   config: { storeDomain, privateStorefrontToken },
@@ -158,7 +161,7 @@ The core depends on web platform APIs (`fetch`, `Request`, `Response`, and Web C
 `setup` and `skills sync` copy these skills into your project. Each skill covers one part of a storefront:
 
 - **Setup and verification**: `hydrogen-setup`, `hydrogen-smoke-test`
-- **Data and requests**: `hydrogen-storefront-client`, `hydrogen-request-handlers`, `hydrogen-routing`, `hydrogen-markets`
+- **Data and requests**: `hydrogen-storefront-client`, `hydrogen-request-handlers`, `hydrogen-routing`, `hydrogen-markets`, `hydrogen-robots-txt`
 - **Cart**: `hydrogen-cart-ui`, `hydrogen-cart-drawer`, `hydrogen-cart-metafields`
 - **Products, collections, and search**: `hydrogen-variant-form`, `hydrogen-collection-browser`, `hydrogen-predictive-search`, `hydrogen-image`, `hydrogen-money`
 - **Checkout, accounts, and analytics**: `hydrogen-shop-pay`, `hydrogen-customer-account`, `hydrogen-analytics`

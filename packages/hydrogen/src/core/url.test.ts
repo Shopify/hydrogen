@@ -64,7 +64,7 @@ describe("isHydrogenServerHandoffPath", () => {
     },
   );
 
-  it.each(["/cart", "/buy", "/account", "/products/snowboard"])(
+  it.each(["/cart", "/buy", "/account", "/account/widget-data", "/products/snowboard"])(
     "keeps %s with the app",
     (pathname) => {
       expect(isHydrogenServerHandoffPath(pathname)).toBe(false);

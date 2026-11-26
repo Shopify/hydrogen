@@ -1,9 +1,18 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+} from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 import packageJson from "../package.json" with { type: "json" };
@@ -14,7 +23,10 @@ const PACKAGE_ROOT = resolve(import.meta.dirname, "..");
 const TS_PLUGIN_EXPORT_PATH = "./ts-plugin";
 // pack + tar + spawn on a cold CI runner can exceed vitest's 5s default.
 const TS_PLUGIN_PACK_TIMEOUT_MS = 30_000;
+// Type-checking a consumer loads every published declaration, gql.tada's included.
+const DEVELOPMENT_TYPES_TIMEOUT_MS = 30_000;
 const STANDARD_EVENTS_SCRIPT_URL = "https://cdn.shopify.com/storefront/standard-events.js";
+const URL_IMPORT = /\bimport\((?:\s|\/\*.*?\*\/|\/\/[^\n]*)*["'`]https?:[^)]*\)/gs;
 const STANDARD_EVENTS_INSPECTOR_ID = "shopify-standard-events-inspector";
 const COPY_GENERATED_GRAPHQL_ASSETS_SCRIPT_PATH = resolve(
   PACKAGE_ROOT,
@@ -52,6 +64,27 @@ describe("package metadata", () => {
 
   it("exports package metadata", () => {
     expect(packageJson.exports["./package.json"]).toBe("./package.json");
+  });
+
+  it("resolves every ESM entry point for require-based resolvers", () => {
+    const esmEntries = Object.entries(packageJson.exports).flatMap(([exportPath, target]) =>
+      typeof target === "object" && "import" in target
+        ? [
+            {
+              exportPath,
+              importTargets:
+                typeof target.import === "string" ? [target.import] : Object.values(target.import),
+            },
+          ]
+        : [],
+    );
+    expect(esmEntries.map(({ exportPath }) => exportPath)).toContain("./react");
+
+    for (const { exportPath, importTargets } of esmEntries) {
+      expect(importTargets.map((target) => resolve(PACKAGE_ROOT, target))).toContain(
+        require.resolve(`@shopify/hydrogen${exportPath.slice(1)}`),
+      );
+    }
   });
 
   it("exports copied generated GraphQL assets from dist", () => {
@@ -248,6 +281,143 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     }
   });
 
+  it("selects shared CSP defaults through the development package condition", () => {
+    const script = `
+      import { createContentSecurityPolicy, getShopifyCspDirectives } from "@shopify/hydrogen";
+      process.stdout.write(JSON.stringify({
+        header: createContentSecurityPolicy({ nonce: false }).header,
+        extendedHeader: createContentSecurityPolicy({
+          nonce: false,
+          directives: { connectSrc: ["https://analytics.example"] },
+        }).header,
+        defaults: getShopifyCspDirectives(),
+      }));
+    `;
+    const readPolicy = (
+      conditions: string[],
+      nodeEnv: string,
+    ): {
+      header: string;
+      extendedHeader: string;
+      defaults: { connectSrc: string[]; scriptSrc: string[]; styleSrc: string[] };
+    } =>
+      JSON.parse(
+        execFileSync(process.execPath, [...conditions, "--input-type=module", "-e", script], {
+          cwd: PACKAGE_ROOT,
+          encoding: "utf8",
+          env: { ...process.env, NODE_ENV: nodeEnv, NODE_OPTIONS: undefined },
+        }),
+      );
+
+    // The package condition, not NODE_ENV, selects the compiled CSP behavior.
+    const production = readPolicy([], "development");
+    const development = readPolicy(["--conditions=development"], "production");
+    for (const host of ["localhost", "127.0.0.1", "tryhydrogen.dev"]) {
+      expect(production.header).not.toContain(host);
+      expect(development.header).toContain(host);
+      expect(production.extendedHeader).not.toContain(host);
+      expect(development.extendedHeader).toContain(host);
+      expect(production.defaults.connectSrc.some((source) => source.includes(host))).toBe(false);
+      expect(development.defaults.connectSrc.some((source) => source.includes(host))).toBe(true);
+    }
+    expect(production.extendedHeader).toContain("https://analytics.example");
+    expect(development.extendedHeader).toContain("https://analytics.example");
+    expect(development.header).toContain("wss://*.tryhydrogen.dev:*");
+    expect(development.defaults.scriptSrc).toEqual(production.defaults.scriptSrc);
+    expect(development.defaults.styleSrc).toEqual(production.defaults.styleSrc);
+    const scriptSrc = development.header
+      .split(";")
+      .find((part) => part.trim().startsWith("script-src "));
+    assert(scriptSrc, "expected the development script-src directive");
+    expect(scriptSrc).not.toMatch(/unsafe-inline|unsafe-eval/);
+  });
+
+  it(
+    "types the development condition's entries, including the GraphiQL route option",
+    () => {
+      const consumerPath = resolve(PACKAGE_ROOT, "development-types-consumer.ts");
+      const consumer = `
+        import { handleShopifyRoutes } from "@shopify/hydrogen";
+        import { ShopifyScripts as ReactShopifyScripts } from "@shopify/hydrogen/react";
+        import { ShopifyScripts as VueShopifyScripts } from "@shopify/hydrogen/vue";
+        export type Entries = [typeof ReactShopifyScripts, typeof VueShopifyScripts];
+        type RouteOptions = Parameters<typeof handleShopifyRoutes>[0];
+        export const hasGraphiqlOption: "graphiql" extends keyof RouteOptions ? true : false = true;
+      `;
+      const typeErrors = (customConditions: string[]) => {
+        const options: ts.CompilerOptions = {
+          module: ts.ModuleKind.ESNext,
+          moduleResolution: ts.ModuleResolutionKind.Bundler,
+          target: ts.ScriptTarget.ES2024,
+          strict: true,
+          noEmit: true,
+          skipLibCheck: false,
+          jsx: ts.JsxEmit.ReactJSX,
+          customConditions,
+        };
+        const host = ts.createCompilerHost(options);
+        const { fileExists, readFile, getSourceFile } = host;
+        host.fileExists = (file) => file === consumerPath || fileExists(file);
+        host.readFile = (file) => (file === consumerPath ? consumer : readFile(file));
+        host.getSourceFile = (file, languageVersion, ...rest) =>
+          file === consumerPath
+            ? ts.createSourceFile(file, consumer, languageVersion)
+            : getSourceFile(file, languageVersion, ...rest);
+        const program = ts.createProgram([consumerPath], options, host);
+        return ts
+          .getPreEmitDiagnostics(program)
+          .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
+      };
+
+      expect(typeErrors(["development"])).toEqual([]);
+      expect(typeErrors([])).toEqual([`Type 'true' is not assignable to type 'false'.`]);
+    },
+    DEVELOPMENT_TYPES_TIMEOUT_MS,
+  );
+
+  it.each([
+    { build: "default", conditions: [] },
+    { build: "development", conditions: ["--conditions=development"] },
+  ])(
+    "sends the account widget's marketing consent query to the unstable API with a client from the $build build",
+    ({ conditions }) => {
+      const script = `
+        import { createShopifyRequestContext, createStorefrontClient } from "@shopify/hydrogen";
+        import { queryAccountWidgetShop } from "./dist/customer-account/widget-data.mjs";
+
+        const urls = [];
+        const shop = { id: "gid://shopify/Shop/1", socialLoginProviders: [], customerAccountTranslations: [] };
+        const fetch = async (url) => {
+          urls.push(String(url));
+          return new Response(JSON.stringify({ data: { shop } }), {
+            headers: { "content-type": "application/json" },
+          });
+        };
+        const requestContext = createShopifyRequestContext({
+          request: new Request("https://example.com/"),
+          i18n: { defaultLocale: { country: "US", language: "EN" } },
+          buyerIp: "127.0.0.1",
+        });
+        const storefrontClient = createStorefrontClient({
+          type: "private",
+          requestContext,
+          config: { storeDomain: "test-store.myshopify.com", privateStorefrontToken: "token", fetch },
+        });
+        await queryAccountWidgetShop(storefrontClient, new AbortController().signal);
+        process.stdout.write(JSON.stringify(urls));
+      `;
+      const urls: string[] = JSON.parse(
+        execFileSync(process.execPath, [...conditions, "--input-type=module", "-e", script], {
+          cwd: PACKAGE_ROOT,
+          encoding: "utf8",
+          env: { ...process.env, NODE_OPTIONS: undefined },
+        }),
+      );
+
+      expect(urls.filter((url) => url.includes("/api/unstable/"))).toHaveLength(1);
+    },
+  );
+
   it("only includes the standard events inspector in the development build", () => {
     const productionShopifyScripts = readFileSync(
       resolve(PACKAGE_ROOT, "dist/core/shopify-scripts/index.mjs"),
@@ -262,12 +432,47 @@ if (typeof result.module !== "function" || typeof result.module({typescript}).cr
     expect(developmentShopifyScripts).toContain(STANDARD_EVENTS_INSPECTOR_ID);
   });
 
-  it("preserves the standard events URL as a literal dynamic import", () => {
-    const pageViewScript = readFileSync(
-      resolve(PACKAGE_ROOT, "dist/core/shopify-scripts/page-view.mjs"),
-      "utf8",
+  it("only includes the locale checks in the development build", () => {
+    // One unguarded call to a check is enough for the production build to emit their module.
+    const localeCheckModules = readdirSync(resolve(PACKAGE_ROOT, "dist"), {
+      encoding: "utf8",
+      recursive: true,
+    }).filter((file) => file.endsWith("locale-checks.mjs"));
+
+    expect(localeCheckModules).toEqual([
+      join("development", "core", "shopify-scripts", "locale-checks.mjs"),
+    ]);
+  });
+
+  it("only ships the development entry's JavaScript in the development build", () => {
+    // The production build types the development entry but must not emit its code.
+    const developmentOnlyModules = readdirSync(resolve(PACKAGE_ROOT, "dist"), {
+      encoding: "utf8",
+      recursive: true,
+    }).filter((file) =>
+      /(?:^|[/\\])(?:development|graphiql|[^/\\]+\.development)\.mjs$/.test(file),
     );
 
-    expect(pageViewScript).toContain(`import("${STANDARD_EVENTS_SCRIPT_URL}")`);
+    expect(developmentOnlyModules.toSorted()).toEqual([
+      join("development", "core", "development.mjs"),
+      join("development", "core", "request-routing", "handle-shopify-routes.development.mjs"),
+      join("development", "core", "request-routing", "interceptors", "graphiql.mjs"),
+    ]);
+  });
+
+  it("tells consumer bundlers to leave URL imports to the browser", () => {
+    const distDirectory = resolve(PACKAGE_ROOT, "dist");
+    const urlImports = readdirSync(distDirectory, { encoding: "utf8", recursive: true })
+      .filter((file) => file.endsWith(".mjs"))
+      .flatMap(
+        (file) => readFileSync(resolve(distDirectory, file), "utf8").match(URL_IMPORT) ?? [],
+      );
+
+    expect(urlImports).toEqual(
+      expect.arrayContaining([expect.stringContaining(STANDARD_EVENTS_SCRIPT_URL)]),
+    );
+    for (const urlImport of urlImports) {
+      expect(urlImport).toContain("/* webpackIgnore: true */");
+    }
   });
 });

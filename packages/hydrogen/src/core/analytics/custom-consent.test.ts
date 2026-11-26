@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
 import type { ShopifyGlobal } from "../../globals";
 import { configureLogging } from "../logging";
-import { getShopifyScriptTags, initializeShopifyScripts } from "../shopify-scripts";
+import { initializeShopifyScripts, renderShopifyScriptTags } from "../shopify-scripts";
 import {
   CONSENT_TRACKING_API_LOADED_EVENT,
   VISITOR_CONSENT_COLLECTED_EVENT,
@@ -354,14 +354,16 @@ describe("custom banner consent", () => {
       await setupComplete.promise;
     });
     const consent = { mode: "custom-banner", setup } as const;
-    const { scripts } = getShopifyScriptTags({
+    const html = renderShopifyScriptTags({
       shop: { shopId: "42", storefrontId: "1", myshopifyDomain: "test.myshopify.com" },
       consent,
     });
-    const bootstrap = scripts.find(
-      (script) => script.attributes?.id === "shopify-analytics-bus",
-    )?.innerHTML;
-    assert(bootstrap, "Expected the serialized analytics bootstrap");
+    const script = new DOMParser()
+      .parseFromString(html.join("\n"), "text/html")
+      .querySelector<HTMLScriptElement>("#shopify-analytics-bus");
+    assert(script, "Expected the serialized analytics bootstrap");
+    const bootstrap = script.textContent;
+    vi.spyOn(document, "currentScript", "get").mockReturnValue(script);
     expect(bootstrap).not.toContain("browserOnlyConsentProvider");
     expect(setup).not.toHaveBeenCalled();
 

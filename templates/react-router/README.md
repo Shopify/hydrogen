@@ -2,7 +2,7 @@
 
 [![Deploy to Oxygen](../../.github/images/deploy-to-oxygen.svg)](https://admin.shopify.com/hydrogen/new?template=react-router)
 
-A React Router 7 (framework mode, SSR) storefront built on
+A React Router 8 (framework mode, SSR) storefront built on
 [`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen) and the
 Oxygen runtime through Vite and Mini Oxygen. It's a starting point you can clone
 and build your store on top of — five pages on a shared layout, with a real cart,
@@ -38,7 +38,7 @@ analytics, and a consent banner wired up.
 
 ## Run it
 
-Requires Node.js 22 (22.12 or later) or Node.js 24.
+Requires Node.js 22 (22.22 or later) or Node.js 24.
 
 ```bash
 npm install
@@ -117,6 +117,60 @@ const ANNOUNCEMENTS: Announcement[] = [
 You can connect metafields or a CMS later with your own data loading and rendering.
 No specific metafield format is required.
 
+## Storefront rate limits
+
+When the Storefront API rate limits a page loader, this template returns HTTP `429`, not `500`.
+The response keeps a valid `Retry-After` value and disables caching. It doesn't retry the
+request or show the upstream error body.
+
+The template makes three changes. Keep all three when you change the template, and make all three
+when you copy this behavior to another app:
+
+1. Each Storefront page loader uses the wrapper from `@shopify/hydrogen`. Without the wrapper, the
+   loader still returns `500`.
+
+   ```ts
+   import { withStorefrontRateLimit } from "@shopify/hydrogen";
+
+   export const loader = withStorefrontRateLimit(async ({ context }: Route.LoaderArgs) => {
+     const { data } = await context.get(storefrontClientContext).graphql(QUERY);
+     return data;
+   });
+   ```
+
+2. React Router drops the headers of a thrown response. So the root middleware in `app/root.tsx`
+   passes the response status as well:
+
+   ```ts
+   requestContext.applyResponseHeaders(response.headers, response.status);
+   ```
+
+3. The root middleware calls the method on the request context of the Storefront API client that
+   the loaders use: `const requestContext = storefrontClient.requestContext`.
+
+After a Storefront API rate limit, the method adds `Cache-Control: no-store` and `Retry-After` to the
+`429` page response and to client-navigation `.data` responses. Routes don't need a `headers`
+export. Without the status argument, or with a different request context, the response stays `429`
+but loses these headers. The `applyResponseHeaders` documentation describes how `Retry-After` is
+chosen.
+
+React Router doesn't report thrown responses to `handleError`. So the wrapper logs the original
+error at `error` level through Hydrogen's logger. To send these entries to your error reporting,
+pass your logger to `configureLogging`.
+
+The template also opts its server handlers into `429` responses. Set `rateLimitHandling: "response"`
+on `createCartServerHandlers`, `createPredictiveSearchServerHandlers`, and `handleShopifyRoutes`.
+Without the option, each API keeps its previous error handling. The cart error code stays
+`cart_mutation_failed`; the predictive search code stays `invalid_predictive_search_request`.
+The cart option covers mutations only, and a rate-limited native cart form gets a plain-text `429`
+page with the message. The router option maps thrown errors from registered handlers, including
+cart reads, using the generic code `rate_limited`. A direct `cartHandlers.get()` call still throws.
+
+Other HTTP errors and network failures keep their existing error handling. GraphQL `THROTTLED`
+results use the `errors` field of the result and aren't HTTP `429` errors. Only work that the
+loader awaits can change its status. Give deferred promises a local fallback, such as
+`<Await errorElement>`: a failure after streaming starts can't change a `200` response to `429`.
+
 ## Scripts
 
 | Script | Does |
@@ -131,8 +185,10 @@ No specific metafield format is required.
 ## Where to start
 
 - Swap the store in `app/lib/shop.ts` + `.env`.
-- Routes live in `app/routes/`; shared UI in `app/components/`; data/query helpers
-  in `app/lib/`.
+- Routes live in `app/routes/` and use file-based routing
+  ([`@react-router/fs-routes`](https://reactrouter.com/how-to/file-route-conventions)):
+  `products.$handle.tsx` serves `/products/:handle`. Shared UI lives in
+  `app/components/`; data/query helpers in `app/lib/`.
 - The design is yours to change — `app/tokens.css` holds the design tokens; the
   components use them via semantic classes.
 

@@ -60,7 +60,7 @@
 	}
 </script>
 
-{#if $loading}
+{#if $loading && $lines.length === 0}
 	<div bind:this={cartLinesRegion} role="status" aria-live="polite" class="mt-8 animate-pulse space-y-6">
 		<span class="sr-only">Loading cart items</span>
 		{#each [1, 2] as i (i)}
@@ -136,6 +136,7 @@
 								type="submit"
 								aria-label={`Decrease quantity for ${line.merchandise?.product.title ?? 'cart item'}`}
 								{...register('decrease')}
+								disabled={line.id.startsWith('optimistic:')}
 								class="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-sm hover:border-black"
 							>
 								-
@@ -143,6 +144,7 @@
 
 							<input
 								{...register('quantity', { value: line.quantity, interactive: true })}
+								disabled={line.id.startsWith('optimistic:')}
 								aria-label={`Quantity for ${line.merchandise?.product.title ?? 'cart item'}`}
 								aria-invalid={Boolean(lineError)}
 								class={$pendingLines.has(line.id)
@@ -154,6 +156,7 @@
 								type="submit"
 								aria-label={`Increase quantity for ${line.merchandise?.product.title ?? 'cart item'}`}
 								{...register('increase')}
+								disabled={line.id.startsWith('optimistic:')}
 								class="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-sm hover:border-black"
 							>
 								+
@@ -164,6 +167,7 @@
 							type="submit"
 							aria-label={`Remove ${line.merchandise?.product.title ?? 'cart item'} from cart`}
 							{...register('remove')}
+							disabled={line.id.startsWith('optimistic:')}
 							class="min-h-6 py-1 text-sm text-red-600 underline hover:text-red-800"
 						>
 							Remove
@@ -179,4 +183,8 @@
 			</li>
 		{/each}
 	</ul>
+	<!-- A change made during the first load shows before the rest of the cart arrives. -->
+	{#if $loading}
+		<p class="mt-4 text-sm text-black/60">Loading the rest of your cart…</p>
+	{/if}
 {/if}

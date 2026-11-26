@@ -11,13 +11,13 @@ import {
   CUSTOMER_ACCOUNT_REFRESH_PATH,
 } from "./index";
 import type * as CustomerAccountExports from "./index";
-import type { CustomerAccountDocument } from "./index";
+import type { CustomerAccountDocument, SourceOf } from "./index";
 
 const storefront = createStorefrontClient({
   type: "public",
   requestContext: createShopifyRequestContext({
     request: new Request("https://example.com"),
-    i18n: { country: "US", language: "EN" },
+    i18n: { defaultLocale: { country: "US", language: "EN" } },
   }),
   config: {
     storeDomain: "test.myshopify.com",
@@ -28,7 +28,7 @@ const customerAccount = createCustomerAccountClient({
   shopId: "123456789",
   requestContext: createShopifyRequestContext({
     request: new Request("https://example.com/account"),
-    i18n: { country: "US", language: "EN" },
+    i18n: { defaultLocale: { country: "US", language: "EN" } },
   }),
 });
 const customerAccountAccessToken = "customer-token";
@@ -38,6 +38,24 @@ const CUSTOMER_QUERY = customerAccountGql(`query { customer { firstName } }`);
 const CUSTOMER_ORDER_QUERY = customerAccountGql(`query Order($orderId: ID!) { order(id: $orderId) { id } }`);
 const CUSTOMER_LANGUAGE_QUERY = customerAccountGql(
   `query CustomerDetails($language: LanguageCode) @inContext(language: $language) { customer { id } }`,
+);
+const MONEY_FRAGMENT = customerAccountGql(`fragment Money on MoneyV2 { amount currencyCode }`);
+const LINE_ITEM_FRAGMENT = customerAccountGql(
+  `fragment LineItem on LineItem { title price { ...Money } }`,
+  [MONEY_FRAGMENT],
+);
+const ORDER_FIELDS_FRAGMENT = customerAccountGql(
+  `fragment OrderFields on Order { id totalPrice { ...Money } }`,
+  [MONEY_FRAGMENT],
+);
+const ORDERS_WITH_SHARED_SUB_FRAGMENT_QUERY = customerAccountGql(
+  `query Orders { customer { orders(first: 1) { nodes { ...OrderFields lineItems(first: 1) { nodes { ...LineItem } } } } } }`,
+  [LINE_ITEM_FRAGMENT, ORDER_FIELDS_FRAGMENT],
+);
+const MONEY_FRAGMENT_LIST: (typeof MONEY_FRAGMENT)[] = [MONEY_FRAGMENT];
+const ORDER_TOTAL_WITH_FRAGMENT_LIST_QUERY = customerAccountGql(
+  `query OrderTotal { customer { orders(first: 1) { nodes { totalPrice { ...Money } } } } }`,
+  MONEY_FRAGMENT_LIST,
 );
 
 describe("Customer Account API type boundary", () => {
@@ -69,6 +87,23 @@ describe("Customer Account API type boundary", () => {
     expectTypeOf(call).toBeFunction();
   });
 
+  it("infers fields when two composed fragments share a sub-fragment", () => {
+    const call = () =>
+      customerAccount.graphql(ORDERS_WITH_SHARED_SUB_FRAGMENT_QUERY, {
+        accessToken: customerAccountAccessToken,
+      });
+    type Data = NonNullable<Awaited<ReturnType<typeof call>>["data"]>;
+    type Order = Data["customer"]["orders"]["nodes"][number];
+    type LineItem = Order["lineItems"]["nodes"][number];
+
+    expectTypeOf<Order["totalPrice"]>().toHaveProperty("amount");
+    expectTypeOf<NonNullable<LineItem["price"]>>().toHaveProperty("currencyCode");
+  });
+
+  it("widens the source to string when the fragment array is not a tuple", () => {
+    expectTypeOf<SourceOf<typeof ORDER_TOTAL_WITH_FRAGMENT_LIST_QUERY>>().toEqualTypeOf<string>();
+  });
+
   it("requires per-call access tokens", () => {
     const call = () => {
       // @ts-expect-error accessToken is required per request
@@ -96,6 +131,83 @@ describe("Customer Account API type boundary", () => {
     expectTypeOf(call).toBeFunction();
   });
 
+  it("keeps caller values optional for LanguageCode language variables", () => {
+    const REQUIRED_LANGUAGE_QUERY = customerAccountGql(
+      `query CustomerDetails($language: LanguageCode!, $orderId: ID!) @inContext(language: $language) { order(id: $orderId) { id } }`,
+    );
+    const call = () => {
+      customerAccount.graphql(REQUIRED_LANGUAGE_QUERY, {
+        accessToken: customerAccountAccessToken,
+        variables: { orderId: "gid://shopify/Order/1" },
+      });
+      customerAccount.graphql(REQUIRED_LANGUAGE_QUERY, {
+        accessToken: customerAccountAccessToken,
+        variables: { orderId: "gid://shopify/Order/1", language: "DE" },
+      });
+      customerAccount.graphql(REQUIRED_LANGUAGE_QUERY, {
+        accessToken: customerAccountAccessToken,
+        // @ts-expect-error language is a LanguageCode
+        variables: { orderId: "gid://shopify/Order/1", language: "not-a-language" },
+      });
+    };
+    expectTypeOf(call).toBeFunction();
+  });
+
+  it("keeps language variables of other types caller-owned and required", () => {
+    const STRING_LANGUAGE_QUERY = customerAccountGql(
+      `query CustomerMetafield($language: String!) { customer { metafield(namespace: "custom", key: $language) { value } } }`,
+    );
+    const LIST_LANGUAGE_QUERY = customerAccountGql(
+      `query CustomerDetails($language: [LanguageCode!]!) { customer { id } }`,
+    );
+    const call = () => {
+      customerAccount.graphql(STRING_LANGUAGE_QUERY, {
+        accessToken: customerAccountAccessToken,
+        variables: { language: "promo-key" },
+      });
+      // @ts-expect-error language is a caller-owned String here
+      customerAccount.graphql(STRING_LANGUAGE_QUERY, { accessToken: customerAccountAccessToken });
+      customerAccount.graphql(STRING_LANGUAGE_QUERY, {
+        accessToken: customerAccountAccessToken,
+        // @ts-expect-error language is a String here
+        variables: { language: 5 },
+      });
+
+      customerAccount.graphql(LIST_LANGUAGE_QUERY, {
+        accessToken: customerAccountAccessToken,
+        variables: { language: ["EN"] },
+      });
+      // @ts-expect-error a LanguageCode list is caller-owned
+      customerAccount.graphql(LIST_LANGUAGE_QUERY, { accessToken: customerAccountAccessToken });
+    };
+    expectTypeOf(call).toBeFunction();
+  });
+
+  it("matches the exact LanguageCode enum for documents without a source literal", () => {
+    type Language =
+      import("../graphql/generated/customer-account-graphql-env").introspection["types"]["LanguageCode"]["enumValues"];
+    const LANGUAGE_DOC = null as unknown as CustomerAccountDocument<
+      { customer: { id: string } },
+      { language: Language },
+      string
+    >;
+    const STRING_DOC = null as unknown as CustomerAccountDocument<
+      { customer: { id: string } },
+      { language: string },
+      string
+    >;
+    const call = () => {
+      customerAccount.graphql(LANGUAGE_DOC, { accessToken: customerAccountAccessToken });
+      customerAccount.graphql(STRING_DOC, {
+        accessToken: customerAccountAccessToken,
+        variables: { language: "promo-key" },
+      });
+      // @ts-expect-error language is a caller-owned String here
+      customerAccount.graphql(STRING_DOC, { accessToken: customerAccountAccessToken });
+    };
+    expectTypeOf(call).toBeFunction();
+  });
+
   it("requires requestContext from the Shopify request context factory", () => {
     const call = () => {
       const options = {
@@ -117,6 +229,7 @@ describe("Customer Account API type boundary", () => {
         requestContext: {
           url: "https://example.com/account",
           signal: new AbortController().signal,
+          locale: { country: "US", language: "EN", pathPrefix: "" },
           i18n: { country: "US", language: "EN", pathPrefix: "" },
         },
       });

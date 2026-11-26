@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getI18nVariableNames } from "./i18n-variables";
+import { getI18nVariableNames, getVariableNamesDeclaredAs } from "./i18n-variables";
 
 describe("getI18nVariableNames", () => {
   it.each([
@@ -59,6 +59,21 @@ describe("getI18nVariableNames", () => {
     ).toEqual([]);
     expect(
       getI18nVariableNames(`{ shop { name } }\nquery B($country: CountryCode) { shop { name } }`),
+    ).toEqual([]);
+  });
+});
+
+describe("getVariableNamesDeclaredAs", () => {
+  it("matches only the names and types in the given map", () => {
+    const types = { language: "LanguageCode" } as const;
+    expect(
+      getVariableNamesDeclaredAs(
+        `query Q($country: CountryCode, $language: LanguageCode!) { customer { id } }`,
+        types,
+      ),
+    ).toEqual(["language"]);
+    expect(
+      getVariableNamesDeclaredAs(`query Q($language: String) { customer { id } }`, types),
     ).toEqual([]);
   });
 });

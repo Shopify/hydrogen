@@ -1,4 +1,11 @@
-import {mkdtempSync, mkdirSync, rmSync, writeFileSync} from 'node:fs';
+import {
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {afterEach, describe, expect, it, vi} from 'vitest';
@@ -20,8 +27,9 @@ vi.mock('../common/find-port.js', () => ({
   findPort: vi.fn(async () => 9100),
 }));
 
-import type {Plugin} from 'vite';
+import {build, createBuilder, type Plugin} from 'vite';
 import {createMiniOxygen} from '../worker/index.js';
+import {getOxygenCompatibilityDate} from '../common/compat.js';
 import {oxygen, type OxygenPluginOptions} from './plugin.js';
 
 const tempRoots: string[] = [];
@@ -36,32 +44,22 @@ function getOxygenPlugin(options?: OxygenPluginOptions) {
   }>;
 }
 
-function createRootWithHydrogenPackageJson(source: string) {
-  const root = mkdtempSync(join(tmpdir(), 'mini-oxygen-'));
-  tempRoots.push(root);
-
-  const hydrogenPackageRoot = join(
-    root,
-    'node_modules',
-    '@shopify',
-    'hydrogen',
+function createRootWithBuildEntries() {
+  const root = createRoot();
+  writeFileSync(join(root, 'client.js'), 'console.log(1);');
+  writeFileSync(
+    join(root, 'server.js'),
+    'export default {fetch: () => new Response()};',
   );
-
-  mkdirSync(hydrogenPackageRoot, {recursive: true});
-  writeFileSync(join(root, 'package.json'), JSON.stringify({}));
-  writeFileSync(join(hydrogenPackageRoot, 'package.json'), source);
 
   return root;
 }
 
-function createRootWithHydrogenVersion(version: string) {
-  return createRootWithHydrogenPackageJson(
-    JSON.stringify({
-      name: '@shopify/hydrogen',
-      version,
-      exports: {'./package.json': './package.json'},
-    }),
-  );
+function expectOxygenJsonInServerOutputOnly(root: string) {
+  expect(
+    JSON.parse(readFileSync(join(root, 'dist/server/oxygen.json'), 'utf8')),
+  ).toEqual({version: 1, compatibility_date: getOxygenCompatibilityDate()});
+  expect(existsSync(join(root, 'dist/client/oxygen.json'))).toBe(false);
 }
 
 function createRoot() {
@@ -89,46 +87,29 @@ function runConfigHook(
   });
 }
 
-function runGenerateBundle(plugin: Plugin) {
+function runGenerateBundle(
+  plugin: Plugin,
+  environment: {consumer: 'client' | 'server'; root: string},
+) {
   if (typeof plugin.generateBundle !== 'function') {
     throw new Error('Expected oxygen plugin to expose a generateBundle hook.');
   }
 
   const emitFile = vi.fn();
-  plugin.generateBundle.call({emitFile} as any, {} as any, {} as any, false);
+  plugin.generateBundle.call(
+    {emitFile, environment: {config: environment}} as any,
+    {} as any,
+    {} as any,
+    false,
+  );
 
   return emitFile;
 }
 
 function runSsrBuildHooks(plugin: Plugin, root: string) {
   runConfigHook(plugin, {}, {isSsrBuild: true});
-  runConfigResolvedHook(plugin, root, {build: {ssr: true}});
 
-  return runGenerateBundle(plugin);
-}
-
-function runConfigResolvedHook(
-  plugin: Plugin,
-  root: string,
-  resolvedConfig: Record<string, any> = {},
-) {
-  const hook =
-    typeof plugin.configResolved === 'function'
-      ? plugin.configResolved
-      : plugin.configResolved?.handler;
-
-  if (!hook) {
-    throw new Error('Expected oxygen plugin to expose a configResolved hook.');
-  }
-
-  (hook as any)({
-    root,
-    ...resolvedConfig,
-    build: {
-      ssr: false,
-      ...resolvedConfig.build,
-    },
-  });
+  return runGenerateBundle(plugin, {consumer: 'server', root});
 }
 
 function runConfigEnvironmentHook(plugin: Plugin, name: string) {
@@ -268,18 +249,17 @@ describe('oxygen Vite plugin', () => {
 
   it('does not emit oxygen.json during client builds', () => {
     const plugin = getOxygenPlugin();
-    const root = createRootWithHydrogenVersion('2026.4.4');
+    const root = createRoot();
 
     runConfigHook(plugin, {}, {isSsrBuild: false});
-    runConfigResolvedHook(plugin, root);
-    const emitFile = runGenerateBundle(plugin);
+    const emitFile = runGenerateBundle(plugin, {consumer: 'client', root});
 
     expect(emitFile).not.toHaveBeenCalled();
   });
 
-  it('emits oxygen.json from the installed Hydrogen version during SSR builds', () => {
+  it('emits oxygen.json with the Workers runtime compatibility date during SSR builds', () => {
     const plugin = getOxygenPlugin();
-    const root = createRootWithHydrogenVersion('2026.4.4');
+    const root = createRoot();
 
     const emitFile = runSsrBuildHooks(plugin, root);
 
@@ -287,40 +267,73 @@ describe('oxygen Vite plugin', () => {
       type: 'asset',
       fileName: 'oxygen.json',
       source: JSON.stringify(
-        {version: 1, compatibility_date: '2026-04-01'},
+        {version: 1, compatibility_date: getOxygenCompatibilityDate()},
         null,
         2,
       ),
     });
   });
 
-  it('emits oxygen.json when the resolved config is an SSR build', () => {
-    const plugin = getOxygenPlugin();
-    const root = createRootWithHydrogenVersion('2026.4.4');
+  it('writes oxygen.json to the server output when every environment shares one build config', async () => {
+    const root = createRootWithBuildEntries();
 
-    runConfigHook(plugin, {}, {isSsrBuild: false});
-    runConfigResolvedHook(plugin, root, {build: {ssr: true}});
-    const emitFile = runGenerateBundle(plugin);
-
-    expect(emitFile).toHaveBeenCalledWith({
-      type: 'asset',
-      fileName: 'oxygen.json',
-      source: JSON.stringify(
-        {version: 1, compatibility_date: '2026-04-01'},
-        null,
-        2,
-      ),
+    const builder = await createBuilder({
+      root,
+      configFile: false,
+      logLevel: 'silent',
+      plugins: [oxygen()],
+      builder: {sharedConfigBuild: true, sharedPlugins: true},
+      environments: {
+        client: {
+          build: {
+            outDir: 'dist/client',
+            rollupOptions: {input: join(root, 'client.js')},
+          },
+        },
+        ssr: {
+          build: {
+            outDir: 'dist/server',
+            rollupOptions: {input: join(root, 'server.js')},
+          },
+        },
+      },
     });
+    await builder.buildApp();
+
+    expectOxygenJsonInServerOutputOnly(root);
   });
 
-  it('uses explicit compatibility dates before inferred dates', () => {
+  it('writes oxygen.json to the server output in two-pass builds', async () => {
+    const root = createRootWithBuildEntries();
+    const sharedConfig = {
+      root,
+      configFile: false as const,
+      logLevel: 'silent' as const,
+      plugins: [oxygen()],
+    };
+
+    await build({
+      ...sharedConfig,
+      build: {
+        outDir: 'dist/client',
+        rollupOptions: {input: join(root, 'client.js')},
+      },
+    });
+    await build({
+      ...sharedConfig,
+      build: {outDir: 'dist/server', ssr: join(root, 'server.js')},
+    });
+
+    expectOxygenJsonInServerOutputOnly(root);
+  });
+
+  it('uses explicit compatibility dates before the runtime date', () => {
     const plugin = getOxygenPlugin();
-    const root = createRootWithHydrogenVersion('2026.4.4');
+    const root = createRoot();
 
     runConfigHook(plugin, {}, {isSsrBuild: true});
-    runConfigResolvedHook(plugin, root, {build: {ssr: true}});
     plugin.api?.registerPluginOptions({compatibilityDate: '2025-04-01'});
-    const emitFile = runGenerateBundle(plugin);
+    const emitFile = runGenerateBundle(plugin, {consumer: 'server', root});
 
     expect(emitFile).toHaveBeenCalledWith({
       type: 'asset',
@@ -331,15 +344,6 @@ describe('oxygen Vite plugin', () => {
         2,
       ),
     });
-  });
-
-  it('does not emit oxygen.json when resolved Hydrogen metadata cannot be read', () => {
-    const plugin = getOxygenPlugin();
-    const root = createRootWithHydrogenPackageJson('{');
-
-    const emitFile = runSsrBuildHooks(plugin, root);
-
-    expect(emitFile).not.toHaveBeenCalled();
   });
 
   it('uses the server directory next to the Vite client output for preview', async () => {

@@ -80,23 +80,23 @@ export async function createErrorFromLog(
   ro: Protocol.Runtime.RemoteObject,
   inspector: InspectorConnection,
 ) {
-  if (ro.subtype !== 'error' || ro.preview?.subtype !== 'error') {
+  if (ro.subtype !== 'error') {
     throw new Error('Not an error object');
   }
 
   const errorProperties = {
     message:
-      ro.preview.description
+      (ro.preview?.description ?? ro.description)
         ?.split('\n')
         .filter((line) => !/^\s+at\s/.test(line))
         .join('\n') ??
-      ro.preview.properties.find(({name}) => name === 'message')?.value ??
+      ro.preview?.properties.find(({name}) => name === 'message')?.value ??
       '',
     stack:
-      ro.preview.description ??
+      ro.preview?.description ??
       ro.description ??
-      ro.preview.properties.find(({name}) => name === 'stack')?.value,
-    cause: ro.preview.properties.find(({name}) => name === 'cause')
+      ro.preview?.properties.find(({name}) => name === 'stack')?.value,
+    cause: ro.preview?.properties.find(({name}) => name === 'cause')
       ?.value as unknown,
   } satisfies ErrorProperties;
 
@@ -163,7 +163,9 @@ async function logConsoleMessage(
         args.push(`[Function: ${ro.description ?? '<no-description>'}]`);
         break;
       case 'object':
-        if (!ro.preview) {
+        if (!ro.preview && ro.subtype === 'error') {
+          args.push(await createErrorFromLog(ro, inspector));
+        } else if (!ro.preview) {
           args.push(
             ro.subtype === 'null'
               ? 'null'

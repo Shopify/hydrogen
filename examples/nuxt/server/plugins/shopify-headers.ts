@@ -1,12 +1,11 @@
 export default defineNitroPlugin((nitroApp) => {
   nitroApp.hooks.hook("beforeResponse", (event) => {
-    const requestContext = event.context.shopifyRequestContext;
-    if (!requestContext) return;
-
+    const { csp, shopifyRequestContext } = event.context;
     const response = event.node.res;
     const headers = createHeaders(response.getHeaders());
 
-    requestContext.applyResponseHeaders(headers);
+    shopifyRequestContext?.applyResponseHeaders(headers);
+    csp?.applyResponseHeaders(headers);
     syncHeaders(response, headers);
   });
 });

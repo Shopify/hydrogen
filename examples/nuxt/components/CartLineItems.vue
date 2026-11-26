@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { attachQuantityInput } from "@shopify/hydrogen";
+import type { Directive } from "vue";
+
 import { useCart, useCartForm } from "~/storefront/cart";
 import { closeCartDrawer } from "~/storefront/cart-drawer";
 import { formatMoney } from "~/storefront/money";
@@ -46,6 +49,16 @@ watch(
   },
   { flush: "post" },
 );
+
+const detachQuantityInputs = new WeakMap<HTMLInputElement, () => void>();
+const vQuantityInput: Directive<HTMLInputElement> = {
+  mounted(el) {
+    if (el.form) detachQuantityInputs.set(el, attachQuantityInput(el, el.form));
+  },
+  beforeUnmount(el) {
+    detachQuantityInputs.get(el)?.();
+  },
+};
 
 function errorIdForLine(lineId: string) {
   return `${props.errorIdPrefix}-${lineId.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
@@ -96,6 +109,7 @@ function errorIdForLine(lineId: string) {
         class="space-y-3"
       >
         <div class="flex items-center gap-6">
+          <button v-bind="register('set')" />
           <input type="hidden" v-bind="register('lineId', { value: line.id })" />
 
           <img
@@ -138,15 +152,16 @@ function errorIdForLine(lineId: string) {
               type="submit"
               :aria-label="`Decrease quantity for ${line.merchandise?.product.title ?? 'cart item'}`"
               v-bind="register('decrease')"
+              :disabled="line.id.startsWith('optimistic:')"
               class="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-sm hover:border-black"
             >
               -
             </button>
 
             <input
-              type="text"
-              inputmode="numeric"
-              v-bind="register('quantity', { value: line.quantity })"
+              v-quantity-input
+              v-bind="register('quantity', { value: line.quantity, interactive: true })"
+              :disabled="line.id.startsWith('optimistic:')"
               :aria-label="`Quantity for ${line.merchandise?.product.title ?? 'cart item'}`"
               :aria-invalid="
                 Boolean(
@@ -161,6 +176,7 @@ function errorIdForLine(lineId: string) {
               type="submit"
               :aria-label="`Increase quantity for ${line.merchandise?.product.title ?? 'cart item'}`"
               v-bind="register('increase')"
+              :disabled="line.id.startsWith('optimistic:')"
               class="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-sm hover:border-black"
             >
               +
@@ -171,6 +187,7 @@ function errorIdForLine(lineId: string) {
             type="submit"
             :aria-label="`Remove ${line.merchandise?.product.title ?? 'cart item'} from cart`"
             v-bind="register('remove')"
+            :disabled="line.id.startsWith('optimistic:')"
             class="min-h-6 py-1 text-sm text-red-600 underline hover:text-red-800"
           >
             Remove

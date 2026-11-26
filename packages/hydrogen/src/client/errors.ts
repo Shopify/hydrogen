@@ -1,6 +1,7 @@
 interface StorefrontApiErrorOptions {
   requestId?: string;
   status?: number;
+  retryAfter?: string;
   cause?: unknown;
   queryText?: string;
   variables?: Record<string, unknown>;
@@ -24,6 +25,8 @@ export class StorefrontApiError extends Error {
   readonly requestId?: string;
   /** The HTTP status code of the response, when the request reached the server. */
   readonly status?: number;
+  /** The raw `retry-after` header on a non-OK response. Validate the value before you send it as a header; `withStorefrontRateLimit` does this for you. */
+  readonly retryAfter?: string;
   /** The GraphQL query that failed. Hydrogen sets the value only in development builds. */
   readonly queryText?: string;
   /** The variables that the client sent with the request. Hydrogen sets the value only in development builds. */
@@ -41,6 +44,7 @@ export class StorefrontApiError extends Error {
     this.name = "StorefrontApiError";
     this.requestId = options?.requestId;
     this.status = options?.status;
+    this.retryAfter = options?.retryAfter;
 
     if (__DEV__) {
       this.queryText = options?.queryText;
@@ -53,13 +57,20 @@ export class StorefrontApiError extends Error {
     return this.name;
   }
 
-  /** Returns the error name, message, request ID, and status for logging. The output leaves out the query text, variables, cause, and stack. */
-  toJSON(): { name: string; message: string; requestId?: string; status?: number } {
+  /** Returns the error name, message, request ID, status, and retry-after value for logging. The output leaves out the query text, variables, cause, and stack. */
+  toJSON(): {
+    name: string;
+    message: string;
+    requestId?: string;
+    status?: number;
+    retryAfter?: string;
+  } {
     return {
       name: this.name,
       message: this.message,
       ...(this.requestId != null && { requestId: this.requestId }),
       ...(this.status != null && { status: this.status }),
+      ...(this.retryAfter != null && { retryAfter: this.retryAfter }),
     };
   }
 }

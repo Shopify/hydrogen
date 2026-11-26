@@ -29,6 +29,9 @@
     "test": {
       "dependsOn": ["^build"]
     },
+    "@shopify/agentic-e2e#test": {
+      "dependsOn": ["^build", "@shopify/hydrogen#test"]
+    },
     "test:e2e": {
       "dependsOn": ["^build"],
       "cache": false,

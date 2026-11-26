@@ -1,3 +1,4 @@
+export { ShopifyAccount } from "./account";
 export { createCartComponents, useCartAnalytics } from "./cart";
 export type { CartActions } from "./cart";
 export type { ShopifyGlobal } from "../globals";
@@ -8,6 +9,7 @@ export {
   useCollectionForm,
 } from "./collection";
 export type { CollectionActions, CollectionData } from "./collection";
+export { LocaleProvider, useLocale } from "./locale";
 export {
   PredictiveSearchProvider,
   usePredictiveSearch,

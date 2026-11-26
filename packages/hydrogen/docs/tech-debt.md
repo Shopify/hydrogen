@@ -4,6 +4,24 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 
 ---
 
+## `defineShopifyI18n` cannot detect `pathSegment` colliding with app routes
+
+**Status:** Open
+**Added:** 2026-09-09
+
+**What:** Under `routing.type: "pathname"`, a locale's URL segment (derived `fr-ca` or an explicit `pathSegment`) is matched against the first path segment of every request before framework routing runs. `defineShopifyI18n` validates segments against each other (uniqueness, no slashes) but has no knowledge of the app's routes or route templates, so `pathSegment: "cart"` or `"products"` passes validation and silently shadows `/cart` and `/products/*`: those requests resolve to that locale with the segment stripped, and the app renders the locale root instead of the page.
+
+**Why it matters:** The failure is quiet. Nothing throws, and a whole route tree disappears behind a locale prefix. The `pathSegment` override is the realistic trigger (`"br"` today, `"shop"` tomorrow), and the collision only shows up when someone visits the shadowed route.
+
+**Possible approaches:**
+1. Accept `routeTemplates` (from `defineShopifyRouteTemplates`) as an optional second argument to `defineShopifyI18n`, or add a `validateShopifyI18n(i18n, routeTemplates)` helper, and throw when a locale segment equals the first segment of any default or custom standard route (`cart`, `products`, `collections`, `search`, `policies`, `pages`, `blogs`, `account`, `api`, `__shopify`).
+2. Maintain a reserved-segment list inside the package covering Hydrogen-owned paths (`api`, `account`, `__shopify`, `cart`, Ajax API paths) and reject those unconditionally; app-defined routes remain the app's responsibility and are documented as such.
+3. Document only: JSDoc on `pathSegment` and the routing skill state that segments must not collide with top-level app routes.
+
+**Done when:** Either Hydrogen-owned path collisions are rejected at define time (approach 1 or 2), or the constraint is documented on `ShopifyPathnameLocale.pathSegment` and in `hydrogen-routing/SKILL.md` (approach 3) and the decision is recorded here.
+
+---
+
 ## Local Shop Pay button does not emit shop-js impression analytics
 
 **Status:** Open
@@ -97,3 +115,5 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 **Done when:** We decide on an approach and either implement the escape hatch or document the separate-client workaround.
 
 **Resolution:** Approach #2 was chosen: create a separate `createStorefrontClient` instance with a different `apiVersion` for queries that need a different Storefront API version (e.g. `unstable`). This is already supported via the client config and keeps version routing explicit. The escape-hatch parameter (approach #1) was rejected as a type-safety footgun: a query running against a different version would have types that don't match the actual response shape, with no compiler warning. Hydrogen's bundled `gql.tada` schema still controls type inference, so queries against fields outside that schema need their own typing. The workaround is documented in the JSDoc on the `apiVersion` field of `CommonOptions` in `src/client/types.ts`.
+
+**Internal exception (2026-11-19):** Hydrogen's own code can't create a second client, because a handler receives a built client without its token or fetch. For that case `src/client/client.ts` has an internal `withStorefrontApiVersion(options, apiVersion)` helper that sends one `graphql()` call to another version. It isn't exported from the package. Its only caller is the account widget data route, which reads the shop's marketing consent settings from `unstable` with a plain query string and checks the result by hand.

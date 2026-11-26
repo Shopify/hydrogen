@@ -6,6 +6,7 @@ import { Image } from "~/components/Image";
 import { MockShopNotice } from "~/components/MockShopNotice";
 import { ProductItem } from "~/components/ProductItem";
 import type { ProductItemData } from "~/components/ProductItem";
+import { useLocalizedPath } from "~/lib/locale-path";
 
 import type { Route } from "./+types/($locale)._index";
 
@@ -75,10 +76,11 @@ export default function Homepage() {
 }
 
 function FeaturedCollection({ collection }: { collection: FeaturedCollectionFragment }) {
+  const localizedPath = useLocalizedPath();
   if (!collection) return null;
   const image = collection?.image;
   return (
-    <Link className="featured-collection" to={`/collections/${collection.handle}`}>
+    <Link className="featured-collection" to={localizedPath(`/collections/${collection.handle}`)}>
       {image && (
         <div className="featured-collection-image">
           <Image data={image} sizes="100vw" alt={image.altText || collection.title} />

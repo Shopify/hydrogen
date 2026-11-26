@@ -1,5 +1,5 @@
-import { Cache, type ConsentConfig } from "@shopify/hydrogen";
-import { ShopifyScripts } from "@shopify/hydrogen/react";
+import { Cache, type ConsentConfig, getHtmlLang, matchLocale } from "@shopify/hydrogen";
+import { LocaleProvider, ShopifyScripts } from "@shopify/hydrogen/react";
 import { useState } from "react";
 import {
   Outlet,
@@ -17,14 +17,15 @@ import {
 import favicon from "~/assets/favicon.svg";
 import { CartAnalyticsSync, HydrogenAnalyticsProvider } from "~/lib/analytics";
 import { CartProvider } from "~/lib/cart";
-import { cartHandlers } from "~/lib/cart-handlers";
 import { useNonce } from "~/lib/csp";
 import { FOOTER_QUERY, HEADER_QUERY, type HeaderQuery } from "~/lib/fragments";
+import { i18n } from "~/lib/i18n";
 import { routeTemplates } from "~/lib/route-templates";
 
 import type { Route } from "./+types/root";
 import { useCustomConsentBanner } from "./components/CustomConsentBanner";
 import { PageLayout } from "./components/PageLayout";
+import type { loader as cartLoader } from "./routes/($locale).cart";
 
 import tailwindCss from "./styles/tailwind.css?url";
 import appStyles from "~/styles/app.css?url";
@@ -43,6 +44,13 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({ formMethod, current
 
   // revalidate when manually revalidating via useRevalidator
   if (currentUrl.toString() === nextUrl.toString()) return true;
+
+  // The root data (locale, menus) belongs to one locale. Locale changes are full page
+  // loads, so this only keeps that data from going stale if a client-side navigation crosses
+  // locales by mistake.
+  if (matchLocale(currentUrl, i18n).pathPrefix !== matchLocale(nextUrl, i18n).pathPrefix) {
+    return true;
+  }
 
   // Defaulting to no revalidation for root loader data to improve performance.
   // When using this feature, you risk your UI getting out of sync with your server.
@@ -79,17 +87,17 @@ export async function loader(args: Route.LoaderArgs) {
     storefrontId: env.PUBLIC_STOREFRONT_ID || FALLBACK_STOREFRONT_ID,
     myshopifyDomain: env.PUBLIC_STORE_DOMAIN,
   };
-  const i18n = {
-    country: storefront.i18n.country,
-    language: storefront.i18n.language,
-    pathPrefix: storefront.i18n.pathPrefix,
+  const locale = {
+    country: storefront.locale.country,
+    language: storefront.locale.language,
+    pathPrefix: storefront.locale.pathPrefix,
     ...(analyticsCurrency ? { currency: analyticsCurrency } : {}),
   };
 
   return {
     ...deferredData,
     ...criticalData,
-    i18n,
+    locale,
     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
     shop,
     consent: {
@@ -108,17 +116,14 @@ async function loadCriticalData(args: Route.LoaderArgs) {
   const { context } = args;
   const { storefront } = context;
 
-  const [header, cartData] = await Promise.all([
-    storefront.query(HEADER_QUERY, {
-      cache: Cache.long(),
-      variables: {
-        headerMenuHandle: "main-menu", // Adjust to your header menu handle
-      },
-    }),
-    cartHandlers.get({ storefrontClient: storefront }).then(({ data }) => data),
-  ]);
+  const header = await storefront.query(HEADER_QUERY, {
+    cache: Cache.long(),
+    variables: {
+      headerMenuHandle: "main-menu", // Adjust to your header menu handle
+    },
+  });
 
-  return { cartData, header };
+  return { header };
 }
 
 function getAnalyticsCurrency(header: HeaderQuery): string | null {
@@ -165,7 +170,7 @@ export function Layout({ children }: { children?: React.ReactNode }) {
   const usesCustomBanner = consentMode === "custom-banner";
 
   return (
-    <html lang={toHtmlLang(data?.i18n)}>
+    <html lang={data ? getHtmlLang(data.locale.language) : "en"}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -177,7 +182,7 @@ export function Layout({ children }: { children?: React.ReactNode }) {
         {data ? (
           <ShopifyScripts
             nonce={nonce}
-            i18n={data.i18n}
+            i18n={data.locale}
             routes={routeTemplates}
             shop={data.shop}
             consent={
@@ -199,15 +204,11 @@ export function Layout({ children }: { children?: React.ReactNode }) {
   );
 }
 
-function toHtmlLang(i18n: { country?: string; language?: string } | null | undefined) {
-  if (!i18n?.language) return "en";
-  const language = i18n.language.toLowerCase();
-  const country = i18n.country ? `-${i18n.country.toUpperCase()}` : "";
-  return `${language}${country}`;
-}
-
 export default function App() {
   const data = useRouteLoaderData<RootLoader>("root");
+  // Only the cart page reads the cart on the server, so other routes don't mark their
+  // responses as personalized. Everywhere else the provider loads the cart in the browser.
+  const cartRoute = useRouteLoaderData<typeof cartLoader>("routes/($locale).cart");
 
   if (!data) {
     return <Outlet />;
@@ -215,12 +216,14 @@ export default function App() {
 
   return (
     <HydrogenAnalyticsProvider>
-      <CartProvider initialData={data.cartData}>
-        <CartAnalyticsSync />
-        <PageLayout {...data}>
-          <Outlet />
-        </PageLayout>
-      </CartProvider>
+      <LocaleProvider locale={data.locale}>
+        <CartProvider initialData={cartRoute?.cartData}>
+          <CartAnalyticsSync />
+          <PageLayout {...data}>
+            <Outlet />
+          </PageLayout>
+        </CartProvider>
+      </LocaleProvider>
     </HydrogenAnalyticsProvider>
   );
 }

@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { useAside } from "~/components/Aside";
 import { CartLineItem } from "~/components/CartLineItem";
 import { useCart } from "~/lib/cart";
+import { useLocalizedPath } from "~/lib/locale-path";
 
 import { CartSummary } from "./CartSummary";
 
@@ -48,8 +49,10 @@ export function CartMain({ layout }: CartMainProps) {
           ))}
         </div>
       ) : null}
+      {/* Outside /cart the cart loads in the browser, so no lines can mean "not loaded yet". */}
       <div aria-busy={cartState.revalidating === true}>
-        <CartEmpty hidden={linesCount} layout={layout} />
+        <CartEmpty hidden={linesCount || cartState.loading} layout={layout} />
+        {cartState.loading && !linesCount ? <p>Loading cart…</p> : null}
       </div>
       <div className="cart-details">
         <p id="cart-lines" className="sr-only">
@@ -68,6 +71,8 @@ export function CartMain({ layout }: CartMainProps) {
               );
             })}
           </ul>
+          {/* A change made during the first load shows before the rest of the cart arrives. */}
+          {cartState.loading && linesCount ? <p>Loading the rest of your cart…</p> : null}
         </div>
         {cartHasItems && <CartSummary cart={cart} layout={layout} totalsPending={totalsPending} />}
       </div>
@@ -98,12 +103,13 @@ function getParentLineId(line: object): string | undefined {
 
 function CartEmpty({ hidden = false }: { hidden: boolean; layout?: CartMainProps["layout"] }) {
   const { close } = useAside();
+  const localizedPath = useLocalizedPath();
   return (
     <div hidden={hidden}>
       <br />
       <p>Looks like you haven&rsquo;t added anything yet, let&rsquo;s get you started!</p>
       <br />
-      <Link to="/collections" onClick={close} prefetch="viewport">
+      <Link to={localizedPath("/collections")} onClick={close} prefetch="viewport">
         Continue shopping →
       </Link>
     </div>

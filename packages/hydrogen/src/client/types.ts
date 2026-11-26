@@ -12,7 +12,11 @@ import type {
 import type { AnyStorefrontQueryString, SourceOf, StorefrontQueryString } from "../graphql";
 import type { InferResult, InferVariables } from "../graphql";
 import type { introspection } from "../graphql/generated/graphql-env";
-import type { InferOperationKind, InferVariableNamesDeclaredAs } from "../graphql/type-resolver";
+import type {
+  InferOperationKind,
+  InferVariableNamesByEnumValue,
+  InferVariableNamesDeclaredAs,
+} from "../graphql/type-resolver";
 import type { I18N_VARIABLE_TYPES } from "./i18n-variables";
 
 export type { I18nConfig } from "../core/request-context";
@@ -97,7 +101,10 @@ type CommonOptions = {
   defaultTimeoutInMs?: number;
   /**
    * The cache that stores query results. The client caches only queries that pass a `cache`
-   * strategy. The client never caches mutations or results with GraphQL errors.
+   * strategy. The client never caches mutations, results with GraphQL errors, or responses whose
+   * `Cache-Control` header contains `private` or `no-store`. A response with either directive also
+   * makes the final response private when you call `applyResponseHeaders()`, whether or not the
+   * query passes a `cache` strategy.
    */
   // Mirrored by the `cache?: CacheConfig` inference hole in
   // CreateStorefrontClientArgs — keep the key and type in sync.
@@ -196,19 +203,11 @@ export type CreateStorefrontClientArgs<
       config: PrivateNoBuyerContextClientOptions<AnyFetch | undefined> & { cache?: CacheConfig };
     };
 type I18nVariableTypes = typeof I18N_VARIABLE_TYPES;
-type I18nEnum<K extends keyof I18nVariableTypes> =
-  introspection["types"][I18nVariableTypes[K]]["enumValues"];
-type IsExactly<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
-// Documents without source text only expose resolved variable types, so an
-// exact enum match stands in for the declared type.
-type I18nVariableNamesByValue<Variables> = {
-  [K in keyof Variables & keyof I18nVariableTypes]-?: IsExactly<
-    NonNullable<Variables[K]>,
-    I18nEnum<K>
-  > extends true
-    ? K
-    : never;
-}[keyof Variables & keyof I18nVariableTypes];
+type I18nVariableNamesByValue<Variables> = InferVariableNamesByEnumValue<
+  Variables,
+  I18nVariableTypes,
+  introspection
+>;
 type I18nVariableNamesOfDoc<Doc> = [SourceText<Doc>] extends [never]
   ? I18nVariableNamesByValue<VariablesOfDoc<Doc>>
   : string extends SourceText<Doc>
@@ -302,7 +301,12 @@ export type StorefrontClient<
 > = {
   /** The client type that you passed to `createStorefrontClient`. */
   type: Type;
-  /** The country and language that the client sends for `$country` and `$language` variables. */
+  /** The locale resolved for this request. The client sends its country and language for `$country` and `$language` variables. */
+  locale: RequestContext["locale"];
+  /**
+   * The locale resolved for this request.
+   * @deprecated Use `locale` instead. Removed in the next major release.
+   */
   i18n: RequestContext["i18n"];
   /**
    * Runs a Storefront API query or mutation and returns a typed result. Pass a `gql` document or a

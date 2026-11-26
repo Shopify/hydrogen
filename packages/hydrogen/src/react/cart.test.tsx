@@ -3,18 +3,12 @@ import { createElement, Suspense } from "react";
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import {
-  configureCartEndpoint as configureCoreCartEndpoint,
-  createCartStore,
-  type CreateCartStoreOptions,
-  type CartStore,
-} from "../core/cart/cart";
+import { createCartStore, type CreateCartStoreOptions, type CartStore } from "../core/cart/cart";
 import type { CartData, CartState } from "../core/cart/state";
 import { EMPTY_CART_DATA, EMPTY_CART_STATE, createEmptyCartErrors } from "../core/cart/state";
 import { assert } from "../core/test-utils";
 import {
   CartProvider,
-  configureCartEndpoint,
   createCartComponents,
   useCart,
   useCartActions,
@@ -23,8 +17,8 @@ import {
   useOptionalCart,
 } from "./cart";
 
-vi.mock("../core/cart/cart", () => ({
-  configureCartEndpoint: vi.fn(),
+vi.mock("../core/cart/cart", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../core/cart/cart")>()),
   createCartStore: vi.fn(),
 }));
 
@@ -93,6 +87,10 @@ function createDeferred<T = unknown>(): Deferred<T> {
   };
 }
 
+function macrotask(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve));
+}
+
 function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
   return (
     value !== null &&
@@ -145,7 +143,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   subscribeListener = null;
   vi.mocked(createCartStore).mockImplementation((options) => createMockStore(options?.initialData));
-  configureCartEndpoint("/api/cart");
 });
 
 describe("CartProvider", () => {
@@ -488,6 +485,101 @@ describe("useSuspenseCart", () => {
     expect(screen.getByTestId("qty").textContent).toBe("8");
   });
 
+  it("keeps the suspense fallback through a click during the first load", async () => {
+    const actual = await vi.importActual<typeof import("../core/cart/cart")>("../core/cart/cart");
+    const typedCart = createCartComponents<{
+      get: () => Promise<{ data: { cart: CartData } }>;
+    }>();
+    const cartResponse = createDeferred<Response>();
+    const merchandiseId = "gid://shopify/ProductVariant/1";
+    let realStore: CartStore | undefined;
+    const updateCart = Object.assign(
+      vi.fn(() => new Promise(() => {})),
+      { configure: vi.fn(() => true), isDefault: vi.fn(() => false) },
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => cartResponse.promise),
+    );
+    vi.stubGlobal("Shopify", { actions: { updateCart } });
+    actual.resetStandardActionsForTests();
+    vi.mocked(createCartStore).mockImplementation((options) => {
+      realStore = actual.createCartStore(options);
+      return realStore;
+    });
+
+    function Consumer() {
+      const qty = typedCart.useSuspenseCart((s) => s.data.totalQuantity);
+      return createElement("span", { "data-testid": "qty" }, qty);
+    }
+
+    const form = document.createElement("form");
+    const input = Object.assign(document.createElement("input"), {
+      type: "hidden",
+      name: "merchandiseId",
+      value: merchandiseId,
+    });
+    const button = Object.assign(document.createElement("button"), {
+      type: "submit",
+      name: "intent",
+      value: "add",
+    });
+    form.append(input, button);
+    document.body.append(form);
+    let submitEvent: SubmitEvent | undefined;
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      submitEvent = event;
+    });
+
+    const view = render(
+      createElement(
+        CartProvider,
+        null,
+        createElement(
+          Suspense,
+          { fallback: createElement("span", { "data-testid": "fallback" }, "Loading") },
+          createElement(Consumer),
+        ),
+      ),
+    );
+
+    try {
+      await act(macrotask);
+      expect(screen.getByTestId("fallback").textContent).toBe("Loading");
+
+      await act(async () => {
+        button.click();
+        assert(realStore, "Expected CartProvider to create the store");
+        assert(submitEvent, "Expected the add form to submit");
+        void realStore.handleFormSubmit(submitEvent, {
+          products: [{ id: merchandiseId, title: "Small", product: { title: "T-Shirt" } }],
+        });
+        await macrotask();
+      });
+      assert(realStore, "Expected CartProvider to create the store");
+      expect(realStore.getState().data.totalQuantity).toBe(1);
+      expect(screen.getByTestId("fallback").textContent).toBe("Loading");
+      expect(updateCart).not.toHaveBeenCalled();
+
+      await act(async () => {
+        cartResponse.resolve(Response.json({ cart: makeCartData({ totalQuantity: 3 }) }));
+        await macrotask();
+      });
+      expect(screen.getByTestId("qty").textContent).toBe("4");
+      expect(updateCart).toHaveBeenCalledTimes(1);
+      expect(updateCart).toHaveBeenCalledWith(
+        expect.objectContaining({ cartId: "gid://shopify/Cart/123" }),
+        expect.anything(),
+      );
+    } finally {
+      view.unmount();
+      form.remove();
+      vi.unstubAllGlobals();
+      actual.resetStandardActionsForTests();
+    }
+  });
+
   it("returns selected cart state when no readyPromise is visible", () => {
     const typedCart = createCartComponents<{
       get: () => Promise<{ data: { cart: CartData } }>;
@@ -656,7 +748,7 @@ describe("useCartForm", () => {
       value: "increase",
     });
     expect(register("add")).toEqual({ name: "intent", value: "add" });
-    expect(register("remove")).toEqual({ name: "intent", value: "remove" });
+    expect(register("remove")).toEqual({ name: "intent", value: "remove", formNoValidate: true });
   });
 
   it("interactive quantity register returns defaultValue instead of value", () => {
@@ -679,47 +771,5 @@ describe("useCartForm", () => {
     expect(result.name).toBe("quantity");
     expect(result.type).toBe("text");
     expect(result.ref).toBeTypeOf("function");
-  });
-});
-
-describe("cartEndpoint option", () => {
-  it("defaults formProps.action to /api/cart", async () => {
-    // The shared beforeEach configures the endpoint, so load an unconfigured binding.
-    vi.resetModules();
-    const core = await import("../core/cart/cart");
-    vi.mocked(core.createCartStore).mockImplementation((options) =>
-      createMockStore(options?.initialData),
-    );
-    const fresh = await import("./cart");
-    let result: ReturnType<ReturnType<typeof fresh.useCartForm>["formProps"]> | undefined;
-
-    function Consumer() {
-      const { formProps } = fresh.useCartForm();
-      result = formProps();
-      return null;
-    }
-
-    render(createElement(fresh.CartProvider, null, createElement(Consumer)));
-    assert(result, "expected formProps to be assigned");
-
-    expect(result.action).toBe("/api/cart");
-    expect(core.configureCartEndpoint).toHaveBeenCalledWith("/api/cart");
-  });
-
-  it("custom cartEndpoint configures transport and flows to formProps.action", () => {
-    configureCartEndpoint("/custom/cart");
-    let result: ReturnType<ReturnType<typeof useCartForm>["formProps"]> | undefined;
-
-    function Consumer() {
-      const { formProps } = useCartForm();
-      result = formProps();
-      return null;
-    }
-
-    render(createElement(CartProvider, null, createElement(Consumer)));
-    assert(result, "expected formProps to be assigned");
-
-    expect(result.action).toBe("/custom/cart");
-    expect(configureCoreCartEndpoint).toHaveBeenCalledWith("/custom/cart");
   });
 });

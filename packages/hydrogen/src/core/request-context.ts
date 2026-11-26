@@ -1,13 +1,6 @@
-import type {
-  CountryCode as CustomerAccountCountryCode,
-  LanguageCode as CustomerAccountLanguageCode,
-} from "../graphql/generated/customer-account-api-types";
-import type {
-  CountryCode as StorefrontCountryCode,
-  LanguageCode as StorefrontLanguageCode,
-} from "../graphql/generated/storefront-api-types";
 import { STOREFRONT_API_VERSION } from "./constants";
 import {
+  applyNoStoreResponseCacheHeaders,
   applyPrivateResponseCacheHeaders,
   CONSENT_MANAGEMENT_HEADER,
   HYDROGEN_VERSION_HEADER,
@@ -19,20 +12,36 @@ import {
   SHOPIFY_STOREFRONT_ORIGIN_HEADER,
   STOREFRONT_URL_HEADER,
 } from "./headers";
+import { matchLocale, resolveSupportedLocale } from "./i18n/match";
+import type {
+  ShopifyCountryCode,
+  ShopifyI18n,
+  ShopifyLanguageCode,
+  ShopifyLocale,
+  ShopifyMatchedLocale,
+} from "./i18n/types";
+import { getLogger } from "./logging";
+import { getSafeRetryAfterValue, RATE_LIMITED_STATUS } from "./request-routing/rate-limit";
 import { normalizePathPrefix } from "./standard-routes/path";
 
-const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
+export type { ShopifyCountryCode, ShopifyLanguageCode } from "./i18n/types";
 
-/** The incoming request's headers, plus its method, abort signal, and URL when the framework provides them. */
-type StorefrontRequest = Pick<Request, "headers"> &
-  Partial<Pick<Request, "method" | "signal" | "url">>;
+const log = getLogger("rate-limit");
+// UCP discovery (Web Linking): every response links to the shop's UCP profile on the storefront
+// origin, matching Liquid storefronts and Oxygen. Omitting `version` selects the latest stable
+// profile. This exact form matches Oxygen's own rel pattern, so Oxygen recognizes this link and
+// does not add its own. Existing links are detected by parsing real `rel` parameters, which
+// accepts every well-formed link Oxygen's pattern does, plus relation lists and spaced `=`.
+const UCP_PROFILE_LINK = '</.well-known/ucp>; rel="ucp"';
+// Oxygen deployment hostnames route `/.well-known/ucp` to the Online Store, which cannot resolve
+// the shop from them, so a link there would advertise a profile that does not exist.
+// Deliberately unlike the HTML `<link rel="ucp">` tag, which renders here without request context.
+const OXYGEN_DEPLOYMENT_HOST_SUFFIX = ".myshopify.dev";
 
-/** A language code that both the Storefront API and the Customer Account API accept. */
-export type ShopifyLanguageCode = Extract<StorefrontLanguageCode, CustomerAccountLanguageCode>;
-/** A country code that both the Storefront API and the Customer Account API accept. */
-export type ShopifyCountryCode = Extract<StorefrontCountryCode, CustomerAccountCountryCode>;
-
-/** The language, country, and optional localized path prefix for a request. */
+/**
+ * Deprecated: a fixed request locale with an optional path prefix. Removed in the next major release.
+ * @deprecated Pass a definition from `defineShopifyI18n` to `createShopifyRequestContext` instead. Use `ShopifyLocale` for `{language, country}` and `ShopifyMatchedLocale` for the resolved locale. Removed in the next major release.
+ */
 export type I18nConfig = {
   /** The request's language. */
   language: ShopifyLanguageCode;
@@ -44,26 +53,57 @@ export type I18nConfig = {
   pathPrefix?: string;
 };
 
-/** The request's locale, with a path prefix that starts with `/` or is an empty string. */
-type NormalizedI18nConfig<I18n extends I18nConfig = I18nConfig> = Omit<I18n, "pathPrefix"> & {
+type NormalizedI18nConfig<TConfig extends I18nConfig> = Omit<TConfig, "pathPrefix"> & {
   pathPrefix: string;
 };
 
-/** The incoming request and its locale. */
-type ShopifyRequestContextInputBase<I18n extends I18nConfig = I18nConfig> = {
+/** The locale a request context resolves: matched from a definition, or the legacy fixed locale. */
+type RequestLocale<TI18n extends ShopifyI18n | I18nConfig> = TI18n extends ShopifyI18n
+  ? ShopifyMatchedLocale<TI18n>
+  : TI18n extends I18nConfig
+    ? NormalizedI18nConfig<TI18n>
+    : never;
+
+const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
+
+/** The incoming request's headers, plus its method, abort signal, and URL when the framework provides them. */
+type StorefrontRequest = Pick<Request, "headers"> &
+  Partial<Pick<Request, "method" | "signal" | "url">>;
+
+/** The incoming request and the storefront's i18n definition. */
+type ShopifyRequestContextInputBase<TI18n extends ShopifyI18n = ShopifyI18n> = {
   /**
    * The incoming request from your framework. When the framework exposes no request, such as during prerendering, pass `{ headers: new Headers() }`.
    */
   request: StorefrontRequest;
-  /** The request's language, country, and optional localized path prefix. */
-  i18n: I18n;
+  /** The storefront's i18n definition from `defineShopifyI18n`. Hydrogen matches the request's locale against it. */
+  i18n: TI18n;
+  /**
+   * The locale to use instead of matching the request URL. The locale must be one of the definition's supported locales.
+   * Pass it when the request has no meaningful URL, such as during static rendering.
+   */
+  locale?: ShopifyLocale;
 };
 
-type ShopifyRequestContextInput<I18n extends I18nConfig = I18nConfig> =
-  ShopifyRequestContextInputBase<I18n> & { buyerIp?: never };
+type ShopifyRequestContextInput<TI18n extends ShopifyI18n = ShopifyI18n> =
+  ShopifyRequestContextInputBase<TI18n> & { buyerIp?: never };
 
-type ShopifyRequestContextWithBuyerIpInput<I18n extends I18nConfig = I18nConfig> =
-  ShopifyRequestContextInputBase<I18n> & { buyerIp: string };
+type ShopifyRequestContextWithBuyerIpInput<TI18n extends ShopifyI18n = ShopifyI18n> =
+  ShopifyRequestContextInputBase<TI18n> & { buyerIp: string };
+
+/**
+ * Deprecated: the request and a fixed locale, used for every request with no URL matching. Pass a definition from `defineShopifyI18n` as `i18n` instead. Removed in the next major release.
+ */
+type LegacyShopifyRequestContextInput<TConfig extends I18nConfig> = {
+  request: StorefrontRequest;
+  /** Deprecated: the fixed `{language, country, pathPrefix}` for every request. */
+  i18n: TConfig;
+  locale?: never;
+};
+
+type RequestContextInput =
+  | ShopifyRequestContextInputBase
+  | LegacyShopifyRequestContextInput<I18nConfig>;
 
 /** The fields and methods on every request context. */
 type ShopifyRequestContextBase = {
@@ -83,6 +123,11 @@ type ShopifyRequestContextBase = {
    * @internal
    */
   readonly buyerIp?: string;
+  /**
+   * The i18n definition the context matched its locale against. Absent for the deprecated fixed-locale input.
+   * @internal
+   */
+  readonly i18nDefinition?: ShopifyI18n;
   /**
    * The ID that groups this request's Shopify API calls. Hydrogen reads the ID from the request headers or generates one.
    * @internal
@@ -122,11 +167,12 @@ type ShopifyRequestContextBase = {
    */
   consumeStorefrontResponseHeaders(headers: Headers): void;
   /**
-   * Marks the final response as private and uncacheable because the response holds customer data.
-   * The Customer Account API client and the customer session call the method for you.
+   * Tracks Storefront API `429` responses and the latest valid retry deadline, independent of
+   * completion order. Delay-seconds start at capture time; HTTP dates specify absolute deadlines.
+   * Invalid values do not replace valid advice. The Storefront API client calls the method for you.
    * @internal
    */
-  markResponseAsPersonalized(reason: string): void;
+  captureStorefrontRateLimit?(retryAfter: string | undefined): void;
   /**
    * Lets the final response set Shopify cookies before the customer has a Shopify session, and
    * marks the response as private and uncacheable. The UCP MCP proxy calls the method for you.
@@ -135,30 +181,42 @@ type ShopifyRequestContextBase = {
   markResponseAsSessionEstablishing(reason: string): void;
 
   // -- Public fields --
-  /** The request's language, country, and path prefix. The path prefix starts with `/` and has no trailing slash, or is an empty string when you don't set one. */
-  i18n: NormalizedI18nConfig;
   /** Returns the incoming request's headers with Shopify's request headers added. Pass the headers when you forward the request to a proxy or another origin. */
   getForwardedRequestHeaders(): Headers;
   /**
+   * Marks the final response as private and uncacheable because the response holds customer data, such as a cart from `getCart()`. `applyResponseHeaders()` then sets `Cache-Control: private, no-store, max-age=0, must-revalidate` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. Call the method before `applyResponseHeaders()`, and only on requests whose response holds customer data, so other responses stay cacheable. Pass a short `reason` that names the customer data. The Customer Account API client, the customer session, and the cart GET handler call the method for you.
+   */
+  markResponseAsPersonalized(reason: string): void;
+  /**
    * Adds the headers that a Hydrogen storefront needs to the final response. Call the method on each response that your app builds. Responses from `handleShopifyRoutes` and `handleShopifyRedirects` already carry these headers.
    *
-   * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses that hold customer data private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.
+   * Append your committed session headers before you call the method. The method makes any response that sets a cookie private and uncacheable. The method also sets the `powered-by` header, makes responses marked with `markResponseAsPersonalized()` private and uncacheable, and adds eligible Shopify cookies only to non-document responses for methods other than `GET` and `HEAD`.
+   *
+   * Pass the response's `status` as well. When the status is `429` and the Storefront API rate limited a request that used this context, the method sets `Cache-Control: no-store` and removes `Surrogate-Control` and every vendor `*-Cache-Control` header. A response that `markResponseAsPersonalized()` also marked gets the private value instead. It also sets `Retry-After` to the later of the response's own valid `Retry-After` value and the latest valid retry deadline from all Storefront API `429` responses on this context, including recovered errors. Delay-seconds and IMF-fixdates are accepted. The value is the remaining delay-seconds, rounded up and never negative. React Router doesn't copy the headers of a thrown response, so this keeps the headers of a `429` from `withStorefrontRateLimit`. Responses with other statuses keep their cache headers.
+   *
+   * When you omit `status` after a Storefront API rate limit, the method logs one warning and adds no rate-limit headers.  The `429` response can then lose `Retry-After` and `Cache-Control: no-store`.
    */
-  applyResponseHeaders(headers: Headers): void;
+  applyResponseHeaders(headers: Headers, status?: number): void;
 };
 
 /** The context for one request. Pass the context to Hydrogen's API clients and route handlers for that request. */
-export type ShopifyRequestContext<I18n extends I18nConfig = I18nConfig> =
+export type ShopifyRequestContext<TI18n extends ShopifyI18n | I18nConfig = ShopifyI18n> =
   ShopifyRequestContextBase & {
-    i18n: NormalizedI18nConfig<I18n>;
+    /** The locale resolved for this request, with the path prefix it is served under. */
+    locale: RequestLocale<TI18n>;
+    /**
+     * The locale resolved for this request.
+     * @deprecated Use `locale` instead. Removed in the next major release.
+     */
+    i18n: RequestLocale<TI18n>;
   };
 
 /** A request context that includes the customer's IP address. Private Storefront API clients require this context. */
-export type ShopifyRequestContextWithBuyerIp<I18n extends I18nConfig = I18nConfig> =
-  ShopifyRequestContext<I18n> & { readonly buyerIp: string };
+export type ShopifyRequestContextWithBuyerIp<TI18n extends ShopifyI18n | I18nConfig = ShopifyI18n> =
+  ShopifyRequestContext<TI18n> & { readonly buyerIp: string };
 
 /** The values that the request context reads from the incoming request. */
-type Context<I18n extends I18nConfig = I18nConfig> = {
+type Context<TI18n extends ShopifyI18n | I18nConfig = ShopifyI18n> = {
   /** The incoming request's `Cookie` header. */
   cookie?: string;
   /** The incoming request's `Sec-GPC` header value, which carries the customer's Global Privacy Control signal. */
@@ -173,57 +231,73 @@ type Context<I18n extends I18nConfig = I18nConfig> = {
   url?: string;
   /** The origin of the incoming request's URL. */
   storefrontOrigin?: string;
-  /** The request's language, country, and path prefix. */
-  i18n: NormalizedI18nConfig<I18n>;
+  /** The locale resolved for this request. */
+  locale: RequestLocale<TI18n>;
+  /** The same locale, under its deprecated name. */
+  i18n: RequestLocale<TI18n>;
+  /** The i18n definition the locale was matched against. */
+  i18nDefinition?: ShopifyI18n;
   /** Whether the incoming request asks for an HTML document. */
   documentRequest?: boolean;
 };
 
 /**
+ * @deprecated Pass a definition from `defineShopifyI18n` as `i18n` instead of a fixed `{language, country, pathPrefix}`. Removed in the next major release.
+ */
+export function createShopifyRequestContext<const TConfig extends I18nConfig>(
+  input: LegacyShopifyRequestContextInput<TConfig> & { buyerIp: string },
+): ShopifyRequestContextWithBuyerIp<TConfig>;
+/**
+ * @deprecated Pass a definition from `defineShopifyI18n` as `i18n` instead of a fixed `{language, country, pathPrefix}`. Removed in the next major release.
+ */
+export function createShopifyRequestContext<const TConfig extends I18nConfig>(
+  input: LegacyShopifyRequestContextInput<TConfig> & { buyerIp?: never },
+): ShopifyRequestContext<TConfig>;
+/**
  * Creates the context for one incoming request. Pass the same context to the Storefront API
- * client, the Customer Account API client, and `handleShopifyRoutes`. The context forwards the
- * customer's cookies, locale, and privacy signal to Shopify, and adds Shopify's cookies and cache
- * headers to your response.
+ * client, the Customer Account API client, and `handleShopifyRoutes`. The context resolves the
+ * request's locale from your i18n definition, forwards the customer's cookies, locale, and privacy
+ * signal to Shopify, and adds Shopify's cookies and cache headers to your response.
  *
- * Call `applyResponseHeaders()` on each response that your app builds. Pass `buyerIp` with the customer's trusted IP address when you use a private Storefront API client. The function throws when `i18n` lacks a country or language, and when `buyerIp` is an empty string.
+ * Call `applyResponseHeaders()` on each response that your app builds. Pass `buyerIp` with the customer's trusted IP address when you use a private Storefront API client. The function throws when `i18n` doesn't come from `defineShopifyI18n`, when `locale` isn't one of the definition's supported locales, and when `buyerIp` is an empty string.
  *
  * @publicDocs
  */
-export function createShopifyRequestContext<const I18n extends I18nConfig>(
-  input: ShopifyRequestContextWithBuyerIpInput<I18n>,
-): ShopifyRequestContextWithBuyerIp<I18n>;
-export function createShopifyRequestContext<const I18n extends I18nConfig>(
-  input: ShopifyRequestContextInput<I18n>,
-): ShopifyRequestContext<I18n>;
+export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
+  input: ShopifyRequestContextWithBuyerIpInput<TI18n>,
+): ShopifyRequestContextWithBuyerIp<TI18n>;
+export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
+  input: ShopifyRequestContextInput<TI18n>,
+): ShopifyRequestContext<TI18n>;
 /**
- * @param input The incoming request, its locale, and the customer's IP address for private Storefront API clients.
+ * @param input The incoming request, the storefront's i18n definition, and the customer's IP address for private Storefront API clients.
  * @returns The context to pass to Hydrogen's API clients and route handlers for this request.
  */
-export function createShopifyRequestContext<const I18n extends I18nConfig>(
-  input: ShopifyRequestContextInputBase<I18n> & { buyerIp?: string },
-): ShopifyRequestContext<I18n> {
+export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
+  input: (ShopifyRequestContextInputBase<TI18n> | LegacyShopifyRequestContextInput<I18nConfig>) & {
+    buyerIp?: string;
+  },
+): ShopifyRequestContext<TI18n> {
   const { request } = input;
-
-  if (!input.i18n?.country || !input.i18n?.language) {
-    throw new Error("i18n with country and language is required for Shopify request contexts.");
-  }
 
   if (input.buyerIp !== undefined && !input.buyerIp) {
     throw new Error("buyerIp must be non-empty when provided");
   }
 
   const requestMethod = request.method?.toUpperCase();
-  const i18n = normalizeI18n(input.i18n);
   const cookieHeader = request.headers.get("cookie") || undefined;
   const inboundCookies = parseCookieHeader(cookieHeader);
   const hasEssentialCookie = inboundCookies.has(SHOPIFY_ESSENTIAL_COOKIE);
   const isConsentManagementRequest = request.headers.get(CONSENT_MANAGEMENT_HEADER) === "1";
   const url = request.url ?? request.headers.get(STOREFRONT_URL_HEADER) ?? undefined;
   const storefrontOrigin = getUrlOrigin(url);
+  const locale = resolveRequestLocale(input, url);
   const context = {
     ...(cookieHeader && { cookie: cookieHeader }),
     globalPrivacyControl: request.headers.get(SEC_GPC_HEADER) ?? undefined,
-    i18n,
+    locale,
+    i18n: locale,
+    ...(isI18nDefinition(input.i18n) && { i18nDefinition: input.i18n }),
     ...(url && { url }),
     ...(storefrontOrigin && { storefrontOrigin }),
     ...(input.buyerIp && { buyerIp: input.buyerIp }),
@@ -234,11 +308,15 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
       crypto.randomUUID(),
     ...(isDocumentRequest(request) && { documentRequest: true }),
     ...(request.signal && { signal: request.signal }),
-  } as Context<I18n>;
+  } as Context<ShopifyI18n | I18nConfig>;
+  const advertisesUcpProfile = isUcpProfileHost(url);
 
   let capturedCookies: string[] | undefined;
   let personalizedResponseReason: string | undefined;
   let sessionEstablishingReason: string | undefined;
+  let storefrontRateLimited = false;
+  let storefrontRetryDeadline: bigint | undefined;
+  let warnedMissingStatus = false;
 
   const captureSubrequestHeaders = (headers: Headers): void => {
     // Capture the first fresh response cookies to increase the
@@ -265,14 +343,54 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
       captureSubrequestHeaders(headers);
       headers.delete("set-cookie");
     },
+    captureStorefrontRateLimit(retryAfter) {
+      storefrontRateLimited = true;
+      const value = getSafeRetryAfterValue(retryAfter);
+      if (value === undefined) return;
+
+      const deadline = getRetryDeadline(value);
+      if (storefrontRetryDeadline === undefined || deadline > storefrontRetryDeadline) {
+        storefrontRetryDeadline = deadline;
+      }
+    },
     markResponseAsPersonalized(reason) {
       personalizedResponseReason ??= reason;
     },
     markResponseAsSessionEstablishing(reason) {
       sessionEstablishingReason ??= reason;
     },
-    applyResponseHeaders(headers) {
+    applyResponseHeaders(headers, status) {
       headers.set("powered-by", "Shopify, Hydrogen");
+
+      // Without the status, the method cannot tell a `429` from a recovered page, and a framework
+      // can drop the rate-limit headers silently. Warn once so the omission is visible.
+      if (status === undefined && storefrontRateLimited && !warnedMissingStatus) {
+        warnedMissingStatus = true;
+        log.warn(
+          "storefront api rate limited this request; pass response.status to applyResponseHeaders to keep rate-limit headers on a 429",
+        );
+      }
+
+      // A framework can drop the headers of a thrown `429` response, as React Router does, so add
+      // them here. Only a `429` changes: a page that recovered from the rate limit keeps its cache
+      // headers.
+      if (status === RATE_LIMITED_STATUS && storefrontRateLimited) {
+        applyNoStoreResponseCacheHeaders(headers);
+        // The retry advice is the later of the response's own valid header and the latest captured
+        // deadline, so one rule applies whichever path produced the `429`.
+        const existing = getSafeRetryAfterValue(headers.get("retry-after"));
+        let deadline = storefrontRetryDeadline;
+        if (existing !== undefined) {
+          const existingDeadline = getRetryDeadline(existing);
+          if (deadline === undefined || existingDeadline > deadline) deadline = existingDeadline;
+        }
+        if (deadline !== undefined) {
+          const remaining = deadline - BigInt(Date.now());
+          const seconds = remaining > 0n ? (remaining + 999n) / 1000n : 0n;
+          headers.set("Retry-After", seconds.toString());
+        }
+      }
+      if (advertisesUcpProfile) applyUcpProfileLink(headers);
 
       // Documents may be shared or streamed, so they must not carry buyer-specific state.
       const isDocumentResponse =
@@ -309,14 +427,38 @@ export function createShopifyRequestContext<const I18n extends I18nConfig>(
         applyPrivateResponseCacheHeaders(headers);
       }
     },
-  } as ShopifyRequestContext<I18n>;
+  } as ShopifyRequestContext<TI18n>;
 }
 
-function normalizeI18n<I18n extends I18nConfig>(i18n: I18n): NormalizedI18nConfig<I18n> {
-  return {
-    ...i18n,
-    pathPrefix: normalizePathPrefix(i18n.pathPrefix),
-  } as NormalizedI18nConfig<I18n>;
+// BigInt preserves valid delays without rounding or overflow, including very large values.
+// `value` must come from `getSafeRetryAfterValue`.
+function getRetryDeadline(value: string): bigint {
+  return value.endsWith("GMT")
+    ? BigInt(Date.parse(value))
+    : BigInt(Date.now()) + BigInt(value) * 1000n;
+}
+
+function resolveRequestLocale(
+  input: RequestContextInput,
+  url: string | undefined,
+): RequestLocale<ShopifyI18n | I18nConfig> {
+  const { i18n } = input;
+  if (isI18nDefinition(i18n)) {
+    return input.locale ? resolveSupportedLocale(input.locale, i18n) : matchLocale(url, i18n);
+  }
+  // Legacy `I18nConfig` input pins one locale, exactly as before definitions existed.
+  if (i18n && "country" in i18n && i18n.country && i18n.language) {
+    return { ...i18n, pathPrefix: normalizePathPrefix(i18n.pathPrefix) };
+  }
+  throw new Error(
+    "i18n from defineShopifyI18n (with a defaultLocale) is required for Shopify request contexts.",
+  );
+}
+
+function isI18nDefinition(i18n: RequestContextInput["i18n"] | undefined): i18n is ShopifyI18n {
+  return Boolean(
+    i18n && "defaultLocale" in i18n && i18n.defaultLocale?.country && i18n.defaultLocale.language,
+  );
 }
 
 function applyStorefrontRequestHeaders(context: Context, headers: Headers): void {
@@ -334,6 +476,72 @@ function applyStorefrontRequestHeaders(context: Context, headers: Headers): void
   if (context.storefrontOrigin) {
     headers.set(SHOPIFY_STOREFRONT_ORIGIN_HEADER, context.storefrontOrigin);
   } else headers.delete(SHOPIFY_STOREFRONT_ORIGIN_HEADER);
+}
+
+function isUcpProfileHost(url: string | undefined): boolean {
+  if (!url) return true;
+  try {
+    const { hostname } = new URL(url);
+    return !`.${hostname}`.endsWith(OXYGEN_DEPLOYMENT_HOST_SUFFIX);
+  } catch {
+    return true;
+  }
+}
+
+function applyUcpProfileLink(headers: Headers): void {
+  if (linkHeaderIncludesRel(headers.get("link"), "ucp")) return;
+  headers.append("link", UCP_PROFILE_LINK);
+}
+
+/**
+ * Whether any link in a `Link` header lists `rel` among its relation types (RFC 8288). Parameter
+ * names and relation types compare case-insensitively; values may be tokens or quoted strings.
+ */
+function linkHeaderIncludesRel(header: string | null, rel: string): boolean {
+  if (!header) return false;
+  const relationType = rel.toLowerCase();
+  return splitLinkHeader(header, ",").some((linkValue) =>
+    // The first segment is the `<URI-Reference>`; the rest are `name [= value]` parameters.
+    splitLinkHeader(linkValue, ";")
+      .slice(1)
+      .some((param) => {
+        const equals = param.indexOf("=");
+        if (equals === -1 || param.slice(0, equals).trim().toLowerCase() !== "rel") return false;
+        return unquoteLinkParam(param.slice(equals + 1).trim())
+          .toLowerCase()
+          .split(/\s+/)
+          .includes(relationType);
+      }),
+  );
+}
+
+/** Splits on `separator` outside `<URI-Reference>`s and quoted strings. */
+function splitLinkHeader(value: string, separator: "," | ";"): string[] {
+  const parts: string[] = [];
+  let start = 0;
+  let inQuotes = false;
+  let inUri = false;
+  for (let index = 0; index < value.length; index++) {
+    const char = value[index];
+    if (inQuotes) {
+      if (char === "\\") index++;
+      else if (char === '"') inQuotes = false;
+    } else if (inUri) {
+      if (char === ">") inUri = false;
+    } else if (char === '"') inQuotes = true;
+    else if (char === "<") inUri = true;
+    else if (char === separator) {
+      parts.push(value.slice(start, index));
+      start = index + 1;
+    }
+  }
+  parts.push(value.slice(start));
+  return parts;
+}
+
+function unquoteLinkParam(value: string): string {
+  if (!value.startsWith('"')) return value;
+  return value.slice(1, value.endsWith('"') ? -1 : undefined).replace(/\\(.)/g, "$1");
 }
 
 function getUrlOrigin(url: string | undefined): string | undefined {

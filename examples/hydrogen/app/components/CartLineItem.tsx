@@ -90,19 +90,20 @@ function CartLineQuantity({ line }: { line: CartLine }) {
   const { id: lineId, quantity } = line;
   const pendingLines = useCart((cart) => cart.pending.lines);
   const isPending = pendingLines.has(lineId);
+  const isNew = lineId.startsWith("optimistic:");
 
   return (
     <div className="cart-line-quantity">
       <small>Quantity: {quantity} &nbsp;&nbsp;</small>
-      <CartLineUpdateButton lineId={lineId} intent="decrease" disabled={quantity <= 1}>
+      <CartLineUpdateButton lineId={lineId} intent="decrease" disabled={isNew || quantity <= 1}>
         <span>&#8722; </span>
       </CartLineUpdateButton>
       &nbsp;
-      <CartLineUpdateButton lineId={lineId} intent="increase" disabled={false}>
+      <CartLineUpdateButton lineId={lineId} intent="increase" disabled={isNew}>
         <span>&#43;</span>
       </CartLineUpdateButton>
       &nbsp;
-      <CartLineRemoveButton lineId={lineId} disabled={isPending} />
+      <CartLineRemoveButton lineId={lineId} disabled={isNew || isPending} />
     </div>
   );
 }

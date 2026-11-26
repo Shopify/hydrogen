@@ -523,3 +523,24 @@ export type InferVariableNamesDeclaredAs<T extends string, Types extends Record<
         : never
       : never
     : never;
+
+type IsExactly<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+
+/**
+ * Names of the variables whose resolved type is exactly the enum `Types` maps
+ * them to in `Introspection`. Documents without source text only expose
+ * resolved variable types, so an exact enum match stands in for the declared
+ * type that `InferVariableNamesDeclaredAs` reads from the source.
+ */
+export type InferVariableNamesByEnumValue<
+  Variables,
+  Types extends Record<string, string>,
+  Introspection extends { types: Record<Types[keyof Types], { enumValues: unknown }> },
+> = {
+  [K in keyof Variables & keyof Types]-?: IsExactly<
+    NonNullable<Variables[K]>,
+    Introspection["types"][Types[K]]["enumValues"]
+  > extends true
+    ? K
+    : never;
+}[keyof Variables & keyof Types];
