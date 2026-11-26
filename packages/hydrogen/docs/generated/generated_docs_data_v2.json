@@ -10672,7 +10672,7 @@
           "syntaxKind": "PropertySignature",
           "name": "borderRadius",
           "value": "string",
-          "description": "CSS border radius of the button, such as `8px`. Defaults to `12px`.\n\nPass a single CSS value. The Shop Pay functions throw an error when the radius contains a semicolon or a curly brace.",
+          "description": "CSS border radius of the button, such as `8px`. Defaults to the `--shop-pay-button-border-radius` CSS custom property, or `12px` when the property isn't set.\n\nThe `borderRadius` value takes precedence over the custom property. To change the button height, set the `--shop-pay-button-height` CSS custom property on the button or an ancestor, such as `:root`.\n\nPass a single CSS value. The Shop Pay functions throw an error when the radius contains a semicolon or a curly brace.",
           "isOptional": true
         },
         {
@@ -13519,7 +13519,7 @@
           "syntaxKind": "PropertySignature",
           "name": "borderRadius",
           "value": "string",
-          "description": "CSS border radius of the button, such as `8px`. Defaults to `12px`.\n\nPass a single CSS value. The Shop Pay functions throw an error when the radius contains a semicolon or a curly brace.",
+          "description": "CSS border radius of the button, such as `8px`. Defaults to the `--shop-pay-button-border-radius` CSS custom property, or `12px` when the property isn't set.\n\nThe `borderRadius` value takes precedence over the custom property. To change the button height, set the `--shop-pay-button-height` CSS custom property on the button or an ancestor, such as `:root`.\n\nPass a single CSS value. The Shop Pay functions throw an error when the radius contains a semicolon or a curly brace.",
           "isOptional": true
         },
         {

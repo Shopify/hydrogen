@@ -28,10 +28,16 @@ const SHOP_PAY_BUTTON_OBSERVED_ATTRIBUTES = [
   "width",
 ] as const;
 
-/** Button styles matching the hosted shop-js pay button. */
+/**
+ * Button styles matching the hosted shop-js pay button.
+ *
+ * The height and border radius read the `--shop-pay-button-height` and
+ * `--shop-pay-button-border-radius` custom properties that the shop-js button read, so themes can
+ * match their other buttons. The fallbacks keep the default look.
+ */
 export const SHOP_PAY_BUTTON_STYLES =
   `:host{display:block}` +
-  `.${SHOP_PAY_BUTTON_CLASS_NAME}{position:relative;display:flex;align-items:center;box-sizing:border-box;margin:0;padding:10px 16px;overflow:visible;width:260px;border:none;border-radius:12px;background-color:#5433eb;color:#fff;cursor:pointer;text-decoration:none;transition:all .15s cubic-bezier(.4,0,.2,1)}` +
+  `.${SHOP_PAY_BUTTON_CLASS_NAME}{position:relative;display:flex;align-items:center;box-sizing:border-box;margin:0;padding:10px 16px;overflow:visible;width:260px;height:var(--shop-pay-button-height,auto);border:none;border-radius:var(--shop-pay-button-border-radius,12px);background-color:#5433eb;color:#fff;cursor:pointer;text-decoration:none;transition:all .15s cubic-bezier(.4,0,.2,1)}` +
   `.${SHOP_PAY_BUTTON_CLASS_NAME}:hover{background-color:#4524db}` +
   `.${SHOP_PAY_BUTTON_CLASS_NAME}:focus-visible{outline:none;box-shadow:0 0 0 3px #9c83f8}` +
   `.${SHOP_PAY_BUTTON_CLASS_NAME}[aria-disabled=true]{opacity:.5;pointer-events:none;cursor:default}` +
@@ -91,7 +97,9 @@ type ShopPayButtonBaseOptions = {
    */
   width?: string;
   /**
-   * CSS border radius of the button, such as `8px`. Defaults to `12px`.
+   * CSS border radius of the button, such as `8px`. Defaults to the `--shop-pay-button-border-radius` CSS custom property, or `12px` when the property isn't set.
+   *
+   * The `borderRadius` value takes precedence over the custom property. To change the button height, set the `--shop-pay-button-height` CSS custom property on the button or an ancestor, such as `:root`.
    *
    * Pass a single CSS value. The Shop Pay functions throw an error when the radius contains a semicolon or a curly brace.
    */

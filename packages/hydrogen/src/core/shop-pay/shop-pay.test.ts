@@ -176,9 +176,30 @@ describe("renderShopPayButton", () => {
 
     expect(shadowRoot.querySelector("style")?.textContent).toContain(":host{display:block}");
     expect(shadowRoot.querySelector("style")?.textContent).toContain("background-color:#5433eb");
-    expect(shadowRoot.textContent).not.toContain("--shop-pay-button");
     expect(shadowRoot.textContent).not.toContain("--buttons-radius");
     expect(shadowRoot.host.querySelector("style")).toBeNull();
+  });
+
+  it("reads the shop-js height and border radius custom properties with default fallbacks", () => {
+    const anchor = renderToElement({});
+    const shadowRoot = anchor.getRootNode();
+    if (!(shadowRoot instanceof ShadowRoot)) throw new Error("expected a shadow root");
+    const css = shadowRoot.querySelector("style")?.textContent;
+
+    expect(css).toContain("border-radius:var(--shop-pay-button-border-radius,12px)");
+    expect(css).toContain("height:var(--shop-pay-button-height,auto)");
+    expect(css).toContain("width:260px");
+    expect(css).not.toContain("--shop-pay-button-width");
+    expect(anchor.style.borderRadius).toBe("");
+  });
+
+  it("lets borderRadius take precedence over the border radius custom property", () => {
+    const anchor = renderToElement({ borderRadius: "4px" });
+
+    expect(anchor.style.borderRadius).toBe("4px");
+    expect(anchor.getRootNode().textContent).toContain(
+      "border-radius:var(--shop-pay-button-border-radius,12px)",
+    );
   });
 
   it("updates the shadow tree when host attributes change", () => {

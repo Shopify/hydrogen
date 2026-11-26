@@ -12,6 +12,8 @@ describe("renderShopPayButton SSR", () => {
     expect(html).toContain('<template shadowrootmode="open" shadowroot="open">');
     expect(html).toContain('<style nonce="nonce-1">:host{display:block}');
     expect(html).toContain("background-color:#5433eb");
+    expect(html).toContain("border-radius:var(--shop-pay-button-border-radius,12px)");
+    expect(html).toContain("height:var(--shop-pay-button-height,auto)");
     expect(html).toContain('href="/cart/123:1?payment=shop_pay&amp;source=hydrogen"');
   });
 });
