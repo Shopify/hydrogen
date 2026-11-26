@@ -1,10 +1,14 @@
-import { createElement, type HTMLAttributes, type ReactElement } from "react";
+"use client";
 
+import { createElement, type HTMLAttributes, type ReactElement, useRef } from "react";
+
+import type { ViewEventElement } from "../../vendor/standard-events";
 import {
   getCollectionViewAttributes,
   type CollectionViewOptions,
 } from "../core/collection/collection-view";
 import { VIEW_EVENT_TAG_NAME } from "../core/shopify-scripts/view-event-element";
+import { useViewEvent } from "./use-view-event";
 
 /**
  * Props for the `CollectionView` component: the collection, the number of products that the page
@@ -21,7 +25,8 @@ export type CollectionViewProps = CollectionViewOptions & HTMLAttributes<HTMLEle
  *
  * The Storefront API has no product total for a collection, so pass the number of products that
  * the page loaded as `productsCount`. The element sends the event again when the collection
- * handle changes, but not when filters, sorting, or pagination change the products.
+ * handle changes, but not when filters, sorting, or pagination change the products. Inside a
+ * React `<Activity>`, the element sends the event again each time it is shown.
  *
  * @param props - The collection, the products count, the children, and HTML attributes for the element.
  * @returns The collection view element.
@@ -34,10 +39,20 @@ export function CollectionView({
   className,
   ...rest
 }: CollectionViewProps): ReactElement {
+  const ref = useRef<HTMLElement & ViewEventElement>(null);
+  // Sends the view on mount, when the handle changes, and when an <Activity> shows it again.
+  useViewEvent(ref, true, collection.handle);
+
   return createElement(
     VIEW_EVENT_TAG_NAME,
-    // React 18 doesn't map `className` to `class` on custom elements.
-    { ...rest, class: className, ...getCollectionViewAttributes({ collection, productsCount }) },
+    {
+      ...rest,
+      ref,
+      // React 18 doesn't map `className` to `class` on custom elements.
+      class: className,
+      ...getCollectionViewAttributes({ collection, productsCount }),
+      "view-event-trigger": "manual",
+    },
     children,
   );
 }

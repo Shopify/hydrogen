@@ -26,9 +26,10 @@ describe("getCollectionViewAttributes", () => {
     });
   });
 
-  it("uses the collection handle as the view event key", () => {
-    expect(getCollectionViewAttributes({ collection, productsCount: 1 })["view-event-key"]).toBe(
-      "shirts",
-    );
+  it("returns only the trigger and payload attributes", () => {
+    expect(getCollectionViewAttributes({ collection, productsCount: 1 })).toEqual({
+      "view-event-trigger": "connect",
+      "view-event-payload": expect.any(String),
+    });
   });
 });

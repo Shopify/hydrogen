@@ -20,15 +20,21 @@ export type CollectionViewProps = CollectionViewOptions;
  *
  * The Storefront API has no product total for a collection, so pass the number of products that
  * the page loaded as `productsCount`. The element sends the event again when the collection
- * handle changes, but not when filters, sorting, or pagination change the products. Attributes
- * such as `class` go on the element.
+ * handle changes, but not when filters, sorting, or pagination change the products.
+ * `<KeepAlive>` removes the element from the document and adds it again, so the element sends
+ * again when it is shown again. Attributes such as `class` go on the element.
  *
  * @publicDocs
  */
 export const CollectionView = defineComponent(
   (props: CollectionViewProps, { slots }) =>
     () =>
-      h(VIEW_EVENT_TAG_NAME, getCollectionViewAttributes(props), slots.default?.()),
+      // The key remounts the element for a new collection, so the element sends the view again.
+      h(
+        VIEW_EVENT_TAG_NAME,
+        { key: props.collection.handle, ...getCollectionViewAttributes(props) },
+        slots.default?.(),
+      ),
   {
     name: "CollectionView",
     props: {
