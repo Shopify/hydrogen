@@ -9,6 +9,7 @@ import {
   type ReactElement,
 } from "react";
 
+import type { ViewEventElement } from "../../vendor/standard-events";
 import { connectCollectionUpdates } from "../core/collection/collection-updates";
 import {
   getCollectionViewAttributes,
@@ -16,6 +17,7 @@ import {
 } from "../core/collection/collection-view";
 import { VIEW_EVENT_TAG_NAME } from "../core/shopify-scripts/view-event-element";
 import { useRegisterBrowseChangeListener, useRequiredStore } from "./collection";
+import { useViewEvent } from "./use-view-event";
 
 /**
  * Props for the `CollectionView` component: the collection, the number of products that the page
@@ -34,7 +36,8 @@ export type CollectionViewProps = CollectionViewOptions & HTMLAttributes<HTMLEle
  *
  * The Storefront API has no product total for a collection, so pass the number of products that
  * the page loaded as `productsCount`. The view event is sent again when the collection handle
- * changes, but not when filters, sorting, or pagination change the products. Each update event has
+ * changes, but not when filters, sorting, or pagination change the products. Inside a React
+ * `<Activity>`, the view event is sent again each time the element is shown. Each update event has
  * the products count before the change. Its promise resolves with the new `productsCount` when the
  * new results render, and rejects with an `AbortError` when the collection changes, when back or
  * forward navigation leaves the change, or when the component unmounts first. Back and forward
@@ -56,7 +59,8 @@ export function CollectionView({
 }: CollectionViewProps): ReactElement {
   const store = useRequiredStore("CollectionView");
   const registerBrowseChangeListener = useRegisterBrowseChangeListener("CollectionView");
-  const elementRef = useRef<HTMLElement>(null);
+  // One element sends the view and the update events.
+  const elementRef = useRef<HTMLElement & ViewEventElement>(null);
   const viewRef = useRef<CollectionViewOptions>({ collection, productsCount });
 
   // A child's layout effect runs before the provider's layout effect that settles the store, so
@@ -64,6 +68,9 @@ export function CollectionView({
   useLayoutEffect(() => {
     viewRef.current = { collection, productsCount };
   });
+
+  // Sends the view on mount, when the handle changes, and when an <Activity> shows it again.
+  useViewEvent(elementRef, true, collection.handle);
 
   useEffect(() => {
     const target = elementRef.current;
@@ -87,6 +94,7 @@ export function CollectionView({
       // React 18 doesn't map `className` to `class` on custom elements.
       class: className,
       ...getCollectionViewAttributes({ collection, productsCount }),
+      "view-event-trigger": "manual",
     },
     children,
   );

@@ -268,6 +268,28 @@ describe("Vue CollectionView updates", () => {
     wrapper.unmount();
   });
 
+  it("reconnects the updates to the new element after the collection handle changes", async () => {
+    const wrapper = await mountPage();
+    const element = wrapper.find(VIEW_EVENT_TAG_NAME).element;
+
+    await wrapper.setProps({
+      urlSearch: "",
+      loader: { handle: "pants", dataSearch: "", productsCount: 4 },
+    });
+    await flushPromises();
+    const next = wrapper.find(VIEW_EVENT_TAG_NAME).element;
+    expect(next).not.toBe(element);
+    expect(element.isConnected).toBe(false);
+
+    getActions().setSortKey("PRICE");
+
+    // One event, from the new element: the connection to the old element is gone.
+    expect(events).toHaveLength(1);
+    expect(eventAt(0).target).toBe(next);
+    expect(eventAt(0).collection.productsCount).toBe(4);
+    wrapper.unmount();
+  });
+
   it("doesn't settle in the same step when the change handler moves the URL right away", async () => {
     document.addEventListener("shopify:collection:update", record);
     // Like the Nuxt example: the change handler sets the URL search right away, and the loader data

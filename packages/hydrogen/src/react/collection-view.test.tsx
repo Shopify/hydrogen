@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 import { act, render } from "@testing-library/react";
-import { createElement, StrictMode, type ReactNode } from "react";
+import { Activity, createElement, StrictMode, type ActivityProps, type ReactNode } from "react";
 import { renderToString } from "react-dom/server";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CollectionActions } from "../core/collection";
 import {
@@ -31,7 +31,8 @@ vi.mock("react", async (importOriginal) => {
   return { ...react, createElement: vi.fn(react.createElement) };
 });
 
-// Mirrors the CDN element: `connect` sends the event after connecting, and each send re-reads the payload.
+// Mirrors the CDN element: `connect` sends the event after connecting, `manual` sends only on
+// `dispatchViewEvent()`, and each send re-reads the payload.
 class FakeViewEventElement extends HTMLElement {
   connectedCallback() {
     if (this.getAttribute("view-event-trigger") === "connect") {
@@ -61,6 +62,8 @@ function view(props: CollectionViewProps, children?: ReactNode) {
   return inProvider(createElement(CollectionView, props, children), props.collection.handle);
 }
 
+const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+
 function getElement(container: HTMLElement) {
   const element = container.querySelector(VIEW_EVENT_TAG_NAME);
   assert(element, "expected a collection view element");
@@ -72,12 +75,21 @@ function payloadOf(element: Element) {
 }
 
 describe("CollectionView", () => {
+  let events: CustomEvent[];
+  const record = (event: Event) => events.push(event as CustomEvent);
+
   beforeAll(async () => {
     defineViewEventElement();
     await customElements.whenDefined(VIEW_EVENT_TAG_NAME);
   });
 
+  beforeEach(() => {
+    events = [];
+    document.addEventListener("shopify:collection:view", record);
+  });
+
   afterEach(() => {
+    document.removeEventListener("shopify:collection:view", record);
     vi.restoreAllMocks();
   });
 
@@ -99,8 +111,7 @@ describe("CollectionView", () => {
     expect(element.getAttribute("class")).toBe("grid");
     expect(element.id).toBe("results");
     expect(element.getAttribute("data-testid")).toBe("x");
-    expect(element.getAttribute("view-event-trigger")).toBe("connect");
-    expect(element.getAttribute("view-event-key")).toBe("shirts");
+    expect(element.getAttribute("view-event-trigger")).toBe("manual");
     expect(payloadOf(element)).toEqual({
       collection: { id: collection.id, handle: "shirts", productsCount: 8 },
     });
@@ -118,35 +129,29 @@ describe("CollectionView", () => {
     expect(props).not.toHaveProperty("className");
   });
 
-  it("renders the element and payload on the server", () => {
+  it("renders a manual element and its payload on the server", () => {
     const html = renderToString(view({ collection, productsCount: 8, className: "grid" }));
 
     expect(html).toContain(`<${VIEW_EVENT_TAG_NAME}`);
     expect(html).toContain('class="grid"');
-    expect(html).toContain('view-event-trigger="connect"');
-    expect(html).toContain('view-event-key="shirts"');
+    expect(html).toContain('view-event-trigger="manual"');
     expect(html).toContain("view-event-payload=");
     expect(html).toContain("gid://shopify/Collection/1");
   });
 
-  it("lets the element send the event again only when the collection handle changes", async () => {
-    const events: CustomEvent[] = [];
-    const listener = (event: Event) => events.push(event as CustomEvent);
-    document.addEventListener("shopify:collection:view", listener);
-    const strictView = (props: CollectionViewProps) => createElement(StrictMode, null, view(props));
-
-    const { container, rerender } = render(strictView({ collection, productsCount: 8 }));
-    await vi.waitFor(() => expect(events).toHaveLength(1));
+  it("sends the view once on mount, again for a new handle, and not for a new productsCount", async () => {
+    const { container, rerender } = render(view({ collection, productsCount: 8 }));
+    await settle();
+    expect(events).toHaveLength(1);
     const element = getElement(container);
 
-    rerender(strictView({ collection: { ...collection }, productsCount: 16 }));
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    rerender(view({ collection: { ...collection }, productsCount: 16 }));
+    await settle();
     expect(events).toHaveLength(1);
     expect(payloadOf(element).collection.productsCount).toBe(16);
 
-    rerender(strictView({ collection: otherCollection, productsCount: 4 }));
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    document.removeEventListener("shopify:collection:view", listener);
+    rerender(view({ collection: otherCollection, productsCount: 4 }));
+    await settle();
 
     expect(events).toHaveLength(2);
     expect(getElement(container)).toBe(element);
@@ -154,6 +159,34 @@ describe("CollectionView", () => {
     expect(events[1]?.detail).toEqual({
       collection: { id: otherCollection.id, handle: "pants", productsCount: 4 },
     });
+  });
+
+  it("sends the view once in StrictMode", async () => {
+    render(createElement(StrictMode, null, view({ collection, productsCount: 8 })));
+    await settle();
+
+    expect(events).toHaveLength(1);
+  });
+
+  it("sends the view only while an <Activity> shows it, and again each time it is shown", async () => {
+    const hideable = (mode: "hidden" | "visible") =>
+      createElement(Activity, { mode } as ActivityProps, view({ collection, productsCount: 8 }));
+
+    const { rerender } = render(hideable("hidden"));
+    await settle();
+    expect(events).toHaveLength(0);
+
+    rerender(hideable("visible"));
+    await settle();
+    expect(events).toHaveLength(1);
+
+    rerender(hideable("hidden"));
+    await settle();
+    expect(events).toHaveLength(1);
+
+    rerender(hideable("visible"));
+    await settle();
+    expect(events).toHaveLength(2);
   });
 });
 
@@ -209,15 +242,23 @@ describe("CollectionView updates", () => {
 
   it("sends an update from the element for a sort change and resolves with the new count", async () => {
     document.addEventListener("shopify:collection:update", record);
+    const viewTargets: EventTarget[] = [];
+    const recordView = (viewEvent: Event) => {
+      if (viewEvent.target) viewTargets.push(viewEvent.target);
+    };
+    document.addEventListener("shopify:collection:view", recordView);
     const { container, rerender } = render(page("", "", 8));
     await flush();
+    document.removeEventListener("shopify:collection:view", recordView);
 
     act(() => getActions().setSortKey("PRICE"));
 
     expect(events.map((event) => event.collection.productsCount)).toEqual([8]);
     const event = events[0];
     assert(event, "expected an update event");
+    // The element that sent the view also sends the updates.
     expect(event.target).toBe(getElement(container));
+    expect(viewTargets).toEqual([getElement(container)]);
 
     // The router moves to the new URL first, then the loader data arrives.
     rerender(page("sort_by=price-ascending", "", 8));

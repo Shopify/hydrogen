@@ -28,7 +28,9 @@ export type CollectionViewProps = CollectionViewOptions;
  * the products count before the change. Its promise resolves with the new `productsCount` when the
  * new results render, and rejects with an `AbortError` when the collection changes, when back or
  * forward navigation leaves the change, or when the component unmounts first. Back and forward
- * navigation send no update event. Attributes such as `class` go on the element.
+ * navigation send no update event. `<KeepAlive>` removes the element from the document and adds it
+ * again, so the view event is sent again when it is shown again. Attributes such as `class` go on
+ * the element.
  *
  * On a page without filters and without the collection provider, render `VIEW_EVENT_TAG_NAME`
  * with the attributes from `getCollectionViewAttributes` from `@shopify/hydrogen` instead.
@@ -41,6 +43,7 @@ export const CollectionView = defineComponent(
     const registerBrowseChangeListener = useRegisterBrowseChangeListener("CollectionView");
     const elementRef = shallowRef<HTMLElement | null>(null);
 
+    // The key below gives a new collection a new element, so this reconnects to it.
     watch(
       [elementRef, storeRef],
       ([target, store], _, onCleanup) => {
@@ -64,7 +67,8 @@ export const CollectionView = defineComponent(
     return () =>
       h(
         VIEW_EVENT_TAG_NAME,
-        { ...getCollectionViewAttributes(props), ref: elementRef },
+        // The key remounts the element for a new collection, so the element sends the view again.
+        { key: props.collection.handle, ...getCollectionViewAttributes(props), ref: elementRef },
         slots.default?.(),
       );
   },

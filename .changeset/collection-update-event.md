@@ -8,4 +8,4 @@
 - It must now be inside `CollectionProvider`. It throws outside `CollectionProvider`.
 - Wrap the filter and sort controls, the results, and the empty state in `CollectionView`, not only the product grid.
 
-Frameworks without a binding can use the new `connectCollectionUpdates(store, { target, getView })` function. Call `notify()` in the store's browse change callback, before you navigate, and `disconnect()` on cleanup.
+Frameworks without a binding can use the new `connectCollectionUpdates(store, { target, getView })` function. Call `notify()` in the store's browse change callback, before you navigate, and `disconnect()` on cleanup. When the view element is keyed on the collection handle, connect to the new element after each collection change.
