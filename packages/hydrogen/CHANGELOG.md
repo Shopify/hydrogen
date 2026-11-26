@@ -1,5 +1,24 @@
 # @shopify/hydrogen
 
+## 2026.4.9
+
+### Patch Changes
+
+- `customerAccount.authorize()` now redirects to the normalized same-origin path of the saved post-sign-in redirect, and falls back to `defaultRedirectPath` when the saved value doesn't resolve to one. ([#4205](https://github.com/Shopify/hydrogen/pull/4205)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Fix the `/graphiql` route, which showed a blank page after GraphiQL 6 was released. The route now loads pinned versions of GraphiQL and its plugins from the CDN. ([#4290](https://github.com/Shopify/hydrogen/pull/4290)) by [@lucyxiang](https://github.com/lucyxiang)
+
+- Update React Router to 7.18. Hydrogen, `@shopify/remix-oxygen` and `@shopify/cli-hydrogen` now accept React Router `~7.18.5`, and new projects default to React Router 7.18.6. ([#4431](https://github.com/Shopify/hydrogen/pull/4431)) by [@fredericoo](https://github.com/fredericoo)
+
+  To upgrade an existing storefront, update `react-router`, `react-router-dom`, `@react-router/dev` and `@react-router/fs-routes` to `7.18.6` (or any later 7.18 patch) alongside Hydrogen.
+
+- `storefrontRedirect` and `customerAccount.login()` now use the normalized same-origin path of the `return_to` and `redirect` search params, and ignore values that don't resolve to one. Values without a leading `/` or a scheme, such as `return_to=some-page`, are no longer accepted. ([#4204](https://github.com/Shopify/hydrogen/pull/4204)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Render rich text links with unsupported protocols or malformed URLs as text in the default components while preserving their formatting. ([#4247](https://github.com/Shopify/hydrogen/pull/4247)) by [@karreiro](https://github.com/karreiro)
+
+- Updated dependencies [[`9f644d42b42a41f0a35395e27270a7a049fe439e`](https://github.com/Shopify/hydrogen/commit/9f644d42b42a41f0a35395e27270a7a049fe439e)]:
+  - @shopify/hydrogen-react@2026.4.6
+
 ## 2026.4.8
 
 ### Patch Changes

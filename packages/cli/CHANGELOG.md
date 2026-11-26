@@ -1,5 +1,31 @@
 # @shopify/cli-hydrogen
 
+## 13.2.0
+
+### Minor Changes
+
+- Add typed JSONL output for hydrogen debug cpu. ([#4257](https://github.com/Shopify/hydrogen/pull/4257)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Expose `hydrogen dev` status, URLs, and logs through Dev Instances. ([#4272](https://github.com/Shopify/hydrogen/pull/4272)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Add `--json` JSONL output to `shopify hydrogen dev`. ([#4273](https://github.com/Shopify/hydrogen/pull/4273)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Record session status and JSONL logs for `shopify hydrogen preview`, and clean up owned resources on shutdown or startup failure. ([#4274](https://github.com/Shopify/hydrogen/pull/4274)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Add `--json` JSONL output to `shopify hydrogen preview`. ([#4275](https://github.com/Shopify/hydrogen/pull/4275)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Add typed JSONL output for hydrogen codegen --watch. ([#4255](https://github.com/Shopify/hydrogen/pull/4255)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Add typed JSONL output for hydrogen build --watch. ([#4256](https://github.com/Shopify/hydrogen/pull/4256)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+### Patch Changes
+
+- Update Hydrogen CLI help output. ([#4233](https://github.com/Shopify/hydrogen/pull/4233)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Update React Router to 7.18. Hydrogen, `@shopify/remix-oxygen` and `@shopify/cli-hydrogen` now accept React Router `~7.18.5`, and new projects default to React Router 7.18.6. ([#4431](https://github.com/Shopify/hydrogen/pull/4431)) by [@fredericoo](https://github.com/fredericoo)
+
+  To upgrade an existing storefront, update `react-router`, `react-router-dom`, `@react-router/dev` and `@react-router/fs-routes` to `7.18.6` (or any later 7.18 patch) alongside Hydrogen.
+
 ## 13.1.0
 
 ### Minor Changes

@@ -1,5 +1,15 @@
 # @shopify/create-hydrogen
 
+## 5.1.1
+
+### Patch Changes
+
+- Update the bundled CLI Kit to 5.0.0. ([#4272](https://github.com/Shopify/hydrogen/pull/4272)) by [@gonzaloriestra](https://github.com/gonzaloriestra)
+
+- Update React Router to 7.18. Hydrogen, `@shopify/remix-oxygen` and `@shopify/cli-hydrogen` now accept React Router `~7.18.5`, and new projects default to React Router 7.18.6. ([#4431](https://github.com/Shopify/hydrogen/pull/4431)) by [@fredericoo](https://github.com/fredericoo)
+
+  To upgrade an existing storefront, update `react-router`, `react-router-dom`, `@react-router/dev` and `@react-router/fs-routes` to `7.18.6` (or any later 7.18 patch) alongside Hydrogen.
+
 ## 5.1.0
 
 ### Minor Changes
