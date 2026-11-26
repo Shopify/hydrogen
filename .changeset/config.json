@@ -1,5 +1,5 @@
 {
-  "$schema": "https://unpkg.com/@changesets/config@2.2.0/schema.json",
+  "$schema": "https://unpkg.com/@changesets/config@4.0.1/schema.json",
   "changelog": ["./hydrogen-changelog-config.js", {"repo": "shopify/hydrogen"}],
   "commit": false,
   "fixed": [],
@@ -8,5 +8,6 @@
   "baseBranch": "2026-04",
   "updateInternalDependencies": "patch",
   "ignore": ["cookbook"],
-  "privatePackages": {"version": true, "tag": true}
+  "privatePackages": {"version": true, "tag": true},
+  "format": false
 }
