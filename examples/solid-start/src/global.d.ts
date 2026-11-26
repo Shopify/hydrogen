@@ -14,7 +14,6 @@ declare module "solid-js" {
     interface ExplicitAttributes {
       "view-event-trigger": string;
       "view-event-payload": string;
-      "view-event-key": string;
     }
   }
 }
