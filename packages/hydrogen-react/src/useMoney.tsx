@@ -261,9 +261,14 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
         defaultFormatter()
           .formatToParts(amount)
           .filter((part) =>
-            ['decimal', 'fraction', 'group', 'integer', 'literal'].includes(
-              part.type,
-            ),
+            [
+              'decimal',
+              'fraction',
+              'group',
+              'integer',
+              'literal',
+              'minusSign',
+            ].includes(part.type),
           )
           .map((part) => part.value)
           .join(''),
