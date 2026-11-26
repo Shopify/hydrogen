@@ -301,9 +301,9 @@ jobs:
         uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
           version-script: pnpm run version
-          # No `--` before `publish`: unlike npm, pnpm passes it through to the
-          # script, and changeset rejects it as an extra argument
-          publish-script: pnpm changeset publish --tag ${{ github.ref_name }}
+          # Picks the npm tag per package: only packages also released from main
+          # use the branch tag, the rest move `latest`. See the script for why.
+          publish-script: node scripts/publish-backfix-release.mjs ${{ github.ref_name }}
           commit-message: '[ci] back-fix release ${{ github.ref_name }}'
           pr-title: '[ci] back-fix release ${{ github.ref_name }}'
           # Git tags are still pushed, because `push-git-tags` is a separate input
