@@ -63,7 +63,6 @@ describe("CollectionView", () => {
     expect(element.getAttribute("class")).toBe("grid");
     expect(element.id).toBe("results");
     expect(element.getAttribute("view-event-trigger")).toBe("connect");
-    expect(element.getAttribute("view-event-key")).toBe("shirts");
     expect(payloadOf(element)).toEqual({
       collection: { id: collection.id, handle: "shirts", productsCount: 8 },
     });
@@ -78,17 +77,17 @@ describe("CollectionView", () => {
     expect(html).toContain(`<${VIEW_EVENT_TAG_NAME}`);
     expect(html).toContain('class="grid"');
     expect(html).toContain('view-event-trigger="connect"');
-    expect(html).toContain('view-event-key="shirts"');
     expect(html).toContain("gid://shopify/Collection/1");
   });
 
-  it("lets the element send the event again only when the collection handle changes", async () => {
+  it("remounts the element for a new handle, but not for a new productsCount", async () => {
     const events: CustomEvent[] = [];
     const listener = (event: Event) => events.push(event as CustomEvent);
     document.addEventListener("shopify:collection:view", listener);
 
     const wrapper = mount(CollectionView, {
       props: { collection, productsCount: 8 },
+      attrs: { class: "grid" },
       attachTo: document.body,
     });
     await vi.waitFor(() => expect(events).toHaveLength(1));
@@ -96,6 +95,7 @@ describe("CollectionView", () => {
 
     await wrapper.setProps({ collection: { ...collection }, productsCount: 16 });
     await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(wrapper.find(VIEW_EVENT_TAG_NAME).element).toBe(element);
     expect(events).toHaveLength(1);
     expect(payloadOf(element).collection.productsCount).toBe(16);
 
@@ -103,9 +103,11 @@ describe("CollectionView", () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     document.removeEventListener("shopify:collection:view", listener);
 
+    const next = wrapper.find(VIEW_EVENT_TAG_NAME).element;
+    expect(next).not.toBe(element);
+    expect(next.getAttribute("class")).toBe("grid");
     expect(events).toHaveLength(2);
-    expect(wrapper.find(VIEW_EVENT_TAG_NAME).element).toBe(element);
-    expect(events[1]?.target).toBe(element);
+    expect(events[1]?.target).toBe(next);
     expect(events[1]?.detail).toEqual({
       collection: { id: otherCollection.id, handle: "pants", productsCount: 4 },
     });

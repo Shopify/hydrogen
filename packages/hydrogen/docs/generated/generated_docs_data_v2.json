@@ -9609,6 +9609,77 @@
       ]
     }
   },
+  "GetCollectionViewAttributesGeneratedType": {
+    "src/core/collection/collection-view.ts": {
+      "filePath": "src/core/collection/collection-view.ts",
+      "name": "GetCollectionViewAttributesGeneratedType",
+      "description": "Returns the attributes of the collection view element. Render the attributes on a `VIEW_EVENT_TAG_NAME` element on a framework without a Hydrogen binding.\n\nThe element sends the `shopify:collection:view` event once each time it connects. To send it again when the collection changes, re-key the element on the collection handle with your framework's primitive, such as `{#key collection.handle}` on Svelte or `<Show when={collection.handle} keyed>` on Solid. Set the values as HTML attributes, such as with `attr:` on Solid, because the element doesn't read properties.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "input1",
+          "description": "The collection and the number of products that the page loaded.",
+          "value": "CollectionViewOptions",
+          "filePath": "src/core/collection/collection-view.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/collection/collection-view.ts",
+        "description": "The `view-event-trigger` and `view-event-payload` attributes.",
+        "name": "Record<\"view-event-trigger\" | \"view-event-payload\", string>",
+        "value": "Record<\"view-event-trigger\" | \"view-event-payload\", string>"
+      },
+      "value": "export function getCollectionViewAttributes({\n  collection,\n  productsCount,\n}: CollectionViewOptions): Record<\"view-event-trigger\" | \"view-event-payload\", string> {\n  const payload: StandardEvents.CollectionViewPayload = {\n    collection: { id: collection.id, handle: collection.handle, productsCount },\n  };\n\n  return {\n    \"view-event-trigger\": \"connect\",\n    \"view-event-payload\": JSON.stringify(payload),\n  };\n}"
+    }
+  },
+  "CollectionViewOptions": {
+    "src/core/collection/collection-view.ts": {
+      "filePath": "src/core/collection/collection-view.ts",
+      "name": "CollectionViewOptions",
+      "description": "The collection that the page shows, and the number of its products that the page loaded.",
+      "members": [
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "collection",
+          "value": "CollectionViewCollection",
+          "description": "Collection fields from your Storefront API query."
+        },
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "productsCount",
+          "value": "number",
+          "description": "The Storefront API has no product total for a collection, so pass the number of products that the page loaded."
+        }
+      ],
+      "value": "export interface CollectionViewOptions {\n  /** Collection fields from your Storefront API query. */\n  collection: CollectionViewCollection;\n  /**\n   * The Storefront API has no product total for a collection, so pass the number of products that\n   * the page loaded.\n   */\n  productsCount: number;\n}"
+    }
+  },
+  "CollectionViewCollection": {
+    "src/core/collection/collection-view.ts": {
+      "filePath": "src/core/collection/collection-view.ts",
+      "name": "CollectionViewCollection",
+      "description": "Collection fields that the collection view event needs from your Storefront API query.\n\nPass your full query type, which can include more fields.",
+      "members": [
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "handle",
+          "value": "string",
+          "description": "Collection handle. The bindings send the event again when it changes."
+        },
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "id",
+          "value": "string | null",
+          "description": "Collection ID, or `null` for a page without a collection record, such as an all-products page."
+        }
+      ],
+      "value": "export interface CollectionViewCollection {\n  /** Collection ID, or `null` for a page without a collection record, such as an all-products page. */\n  id: string | null;\n  /** Collection handle. The bindings send the event again when it changes. */\n  handle: string;\n}"
+    }
+  },
   "GetSelectedProductOptionsGeneratedType": {
     "src/core/product/options.ts": {
       "filePath": "src/core/product/options.ts",
@@ -12619,6 +12690,39 @@
           ]
         }
       ]
+    }
+  },
+  "CollectionViewProps": {
+    "src/react/collection-view.tsx": {
+      "filePath": "src/react/collection-view.tsx",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "CollectionViewProps",
+      "value": "CollectionViewOptions & HTMLAttributes<HTMLElement>",
+      "description": "Props for the `CollectionView` component: the collection, the number of products that the page loaded, and HTML attributes such as `className` for the element.",
+      "isPublicDocs": true
+    }
+  },
+  "CollectionViewGeneratedType": {
+    "src/react/collection-view.tsx": {
+      "filePath": "src/react/collection-view.tsx",
+      "name": "CollectionViewGeneratedType",
+      "description": "Sends the `shopify:collection:view` event when the collection page renders. Wrap the product grid of the collection page. It renders a `VIEW_EVENT_TAG_NAME` element, which `ShopifyScripts` registers.\n\nThe Storefront API has no product total for a collection, so pass the number of products that the page loaded as `productsCount`. The element sends the event again when the collection handle changes, but not when filters, sorting, or pagination change the products. Inside a React `<Activity>`, the element sends the event again each time it is shown.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "input1",
+          "description": "The collection, the products count, the children, and HTML attributes for the element.",
+          "value": "CollectionViewProps",
+          "filePath": "src/react/collection-view.tsx"
+        }
+      ],
+      "returns": {
+        "filePath": "src/react/collection-view.tsx",
+        "description": "The collection view element.",
+        "name": "ReactElement",
+        "value": "ReactElement"
+      },
+      "value": "export function CollectionView({\n  collection,\n  productsCount,\n  children,\n  className,\n  ...rest\n}: CollectionViewProps): ReactElement {\n  const ref = useRef<HTMLElement & ViewEventElement>(null);\n  // Sends the view on mount, when the handle changes, and when an <Activity> shows it again.\n  useViewEvent(ref, true, collection.handle);\n\n  return createElement(\n    VIEW_EVENT_TAG_NAME,\n    {\n      ...rest,\n      ref,\n      // React 18 doesn't map `className` to `class` on custom elements.\n      class: className,\n      ...getCollectionViewAttributes({ collection, productsCount }),\n      \"view-event-trigger\": \"manual\",\n    },\n    children,\n  );\n}"
     }
   },
   "CollectionProviderGeneratedType": {
