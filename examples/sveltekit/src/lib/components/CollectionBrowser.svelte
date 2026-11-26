@@ -359,7 +359,7 @@
 				</div>
 			{/if}
 
-			<!-- The element sends the event again when its key, the collection handle, changes, not when products load. -->
+			<!-- The page keys this component by the collection handle, so each collection gets a new element, which sends the view. New products for the same collection don't send it again. -->
 			<shopify-view-event
 				{...getCollectionViewAttributes({
 					collection: { id, handle },
