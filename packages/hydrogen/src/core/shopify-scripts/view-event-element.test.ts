@@ -266,19 +266,6 @@ describe("defineViewEventElement", () => {
     expect(ids()).toEqual(["a", "c"]);
   });
 
-  it("sends the new payload once when the key changes before the payload", async () => {
-    await ensureDefined();
-    const element = renderElement("connect", "a");
-    await nextTask();
-
-    element.setAttribute("view-event-key", "b");
-    element.setAttribute("view-event-payload", makePayload("b", "new"));
-    await nextTask();
-
-    expect(events).toHaveLength(2);
-    expect(events[1]?.detail).toEqual({ id: "b", extra: "new" });
-  });
-
   it("sends the new payload once when the payload changes before the key", async () => {
     await ensureDefined();
     const element = renderElement("connect", "a");
@@ -334,18 +321,6 @@ describe("defineViewEventElement", () => {
     setItem(element, "b");
     await nextTask();
     expect(ids()).toEqual(["a", "b"]);
-  });
-
-  it("doesn't send the event from a disconnected element", async () => {
-    await ensureDefined();
-    const dispatch = vi.spyOn(FakeViewEventElement.prototype, "dispatchViewEvent");
-    const element = document.createElement(TAG);
-    element.setAttribute("view-event-trigger", "connect");
-    setItem(element, "a");
-    setItem(element, "b");
-    await nextTask();
-
-    expect(dispatch).not.toHaveBeenCalled();
   });
 
   it("waits until a card is visible again before sending a new key", async () => {

@@ -15,10 +15,11 @@ const log = getLogger("consent");
  * hydration, with the consent configuration that you passed to `getShopifyScriptTags`.
  *
  * The function sets up `window.Shopify.routes`, registers the `VIEW_EVENT_TAG_NAME` element, and
- * sends a page view event on load and after each navigation that changes the path or query. In the custom
- * banner consent mode, Hydrogen calls your setup callback after the Customer Privacy API loads. A custom banner configuration without a
- * setup callback logs a warning, and analytics events stay blocked. When the browser supports
- * WebMCP, the function also loads Shopify's WebMCP tools. Set `webMcp` to `false` to skip them.
+ * sends a page view event on load and after each navigation that changes the path or query. In the
+ * custom banner consent mode, Hydrogen calls your setup callback after the Customer Privacy API
+ * loads. A custom banner configuration without a setup callback logs a warning, and analytics
+ * events stay blocked. When the browser supports WebMCP, the function also loads Shopify's WebMCP
+ * tools. Set `webMcp` to `false` to skip them.
  *
  * @param options - The consent configuration, the route settings, and whether to load WebMCP tools.
  * @returns A promise that resolves after the WebMCP tools load or fail to load, or right away when the function skips WebMCP.

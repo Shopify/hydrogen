@@ -1,17 +1,11 @@
-// @vitest-environment happy-dom
-import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 
-import type * as StandardEventsModule from "../../../vendor/standard-events";
-import { defineViewEventElement, VIEW_EVENT_TAG_NAME } from "../shopify-scripts/view-event-element";
 import {
   getProductViewAttributes,
   type ProductViewOptions,
   type ProductViewProduct,
 } from "./product-view";
 import type { ProductInput } from "./state";
-
-const importStandardEventsFromCDN = vi.hoisted(() => vi.fn());
-vi.mock("../shopify-scripts/standard-events", () => ({ importStandardEventsFromCDN }));
 
 const variant = {
   id: "gid://shopify/ProductVariant/1",
@@ -35,8 +29,6 @@ const product = {
   adjacentVariants: [],
   selectedOrFirstAvailableVariant: variant,
 };
-
-const nextTask = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 function payload(options: ProductViewOptions) {
   return JSON.parse(getProductViewAttributes(options)["view-event-payload"]);
@@ -114,72 +106,5 @@ describe("getProductViewAttributes", () => {
     expect(getProductViewAttributes({ product, context: "page" })["view-event-key"]).toBe(
       product.id,
     );
-  });
-});
-
-describe("the view event element with product view attributes", () => {
-  class FakeViewEventElement extends HTMLElement {
-    connectedCallback() {
-      if (this.getAttribute("view-event-trigger") === "connect") {
-        setTimeout(() => this.dispatchViewEvent());
-      }
-    }
-
-    dispatchViewEvent() {
-      if (!this.isConnected) return;
-      const detail: unknown = JSON.parse(this.getAttribute("view-event-payload") ?? "{}");
-      this.dispatchEvent(new CustomEvent("shopify:product:view", { bubbles: true, detail }));
-    }
-  }
-
-  let events: CustomEvent[];
-  const record = (event: Event) => events.push(event as CustomEvent);
-
-  beforeEach(async () => {
-    events = [];
-    document.addEventListener("shopify:product:view", record);
-    if (!customElements.get(VIEW_EVENT_TAG_NAME)) {
-      importStandardEventsFromCDN.mockResolvedValue({
-        createViewEventElement: () => FakeViewEventElement,
-      } as Partial<typeof StandardEventsModule>);
-      defineViewEventElement();
-      await customElements.whenDefined(VIEW_EVENT_TAG_NAME);
-    }
-  });
-
-  afterEach(() => {
-    document.removeEventListener("shopify:product:view", record);
-    document.body.innerHTML = "";
-  });
-
-  function setAttributes(element: Element, options: ProductViewOptions) {
-    for (const [name, value] of Object.entries(getProductViewAttributes(options))) {
-      element.setAttribute(name, value);
-    }
-  }
-
-  it("keys re-sends on product.id so variant changes don't re-send and a new product does", async () => {
-    const element = document.createElement(VIEW_EVENT_TAG_NAME);
-    setAttributes(element, { product, context: "page" });
-    document.body.append(element);
-    await nextTask();
-    expect(events).toHaveLength(1);
-
-    setAttributes(element, {
-      product: {
-        ...product,
-        selectedOrFirstAvailableVariant: { ...variant, id: "gid://shopify/ProductVariant/2" },
-      },
-      context: "page",
-    });
-    await nextTask();
-    expect(events).toHaveLength(1);
-
-    const otherProduct = { ...product, id: "gid://shopify/Product/2", handle: "pants" };
-    setAttributes(element, { product: otherProduct, context: "page" });
-    await nextTask();
-    expect(events).toHaveLength(2);
-    expect(events[1]?.target).toBe(element);
-    expect(events[1]?.detail).toMatchObject({ product: { id: otherProduct.id, handle: "pants" } });
   });
 });

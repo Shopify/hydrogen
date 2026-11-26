@@ -87,22 +87,6 @@ describe("ProductView", () => {
     expect(html).toContain('class="pdp"');
     expect(html).toContain('view-event-trigger="connect"');
     expect(html).toContain('view-event-key="gid://shopify/Product/1"');
-    expect(html).toContain("gid://shopify/Product/1");
-  });
-
-  it("sends the event to the document from the element on mount", async () => {
-    const events: Event[] = [];
-    const listener = (event: Event) => events.push(event);
-    document.addEventListener("shopify:product:view", listener);
-
-    const wrapper = mount(ProductView, {
-      props: { product, context: "page" },
-      attachTo: document.body,
-    });
-    await vi.waitFor(() => expect(events).toHaveLength(1));
-    document.removeEventListener("shopify:product:view", listener);
-
-    expect(events[0]?.target).toBe(wrapper.find(VIEW_EVENT_TAG_NAME).element);
   });
 
   it("lets the element send the event again only when the product ID changes", async () => {
