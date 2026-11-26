@@ -64,8 +64,8 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-intersection-observer": "^8.32.0",
-    "react-router": "7.16.0",
-    "react-router-dom": "7.16.0",
+    "react-router": "7.18.6",
+    "react-router-dom": "7.18.6",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
@@ -76,8 +76,8 @@
     "@eslint/js": "9.19.0",
     "@playwright/test": "^1.57.0",
     "@qwik.dev/partytown": "^0.11.2",
-    "@react-router/dev": "7.16.0",
-    "@react-router/fs-routes": "7.16.0",
+    "@react-router/dev": "7.18.6",
+    "@react-router/fs-routes": "7.18.6",
     "@shopify/cli": "4.9.0",
     "@shopify/eslint-plugin-cli": "4.0.0",
     "@shopify/prettier-config": "catalog:",

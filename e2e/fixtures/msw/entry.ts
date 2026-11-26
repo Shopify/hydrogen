@@ -310,6 +310,11 @@ async function addMockCustomerSessionCookieIfNeeded(
   )[0];
   const headers = new Headers(requestWithTunnelHostname.headers);
   withCookie(headers, sessionCookiePair);
+  // React Router rejects actions whose Origin header differs from the request
+  // URL's origin, so same-origin browser requests must follow the URL rewrite.
+  if (headers.get('Origin') === new URL(request.url).origin) {
+    headers.set('Origin', new URL(requestWithTunnelHostname.url).origin);
+  }
 
   return new Request(requestWithTunnelHostname, {headers});
 }
