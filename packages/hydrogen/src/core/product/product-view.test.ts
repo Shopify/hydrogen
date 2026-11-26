@@ -102,9 +102,10 @@ describe("getProductViewAttributes", () => {
     expect(getProductViewAttributes({ product, context })["view-event-trigger"]).toBe(trigger);
   });
 
-  it("uses the product ID as the view event key", () => {
-    expect(getProductViewAttributes({ product, context: "page" })["view-event-key"]).toBe(
-      product.id,
-    );
+  it("returns only the trigger and payload attributes", () => {
+    expect(Object.keys(getProductViewAttributes({ product, context: "page" }))).toEqual([
+      "view-event-trigger",
+      "view-event-payload",
+    ]);
   });
 });

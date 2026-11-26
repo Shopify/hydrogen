@@ -75,7 +75,6 @@ describe("ProductView", () => {
     expect(element.getAttribute("class")).toBe("card");
     expect(element.id).toBe("card-1");
     expect(element.getAttribute("view-event-trigger")).toBe("intersect");
-    expect(element.getAttribute("view-event-key")).toBe(product.id);
     expect(payloadOf(element)).toMatchObject({ context: "search", product: { id: product.id } });
     expect(element.textContent).toBe("Shirt");
   });
@@ -86,16 +85,16 @@ describe("ProductView", () => {
     expect(html).toContain(`<${VIEW_EVENT_TAG_NAME}`);
     expect(html).toContain('class="pdp"');
     expect(html).toContain('view-event-trigger="connect"');
-    expect(html).toContain('view-event-key="gid://shopify/Product/1"');
   });
 
-  it("lets the element send the event again only when the product ID changes", async () => {
+  it("remounts the element for a new product ID, but not for a new variant", async () => {
     const events: CustomEvent[] = [];
     const listener = (event: Event) => events.push(event as CustomEvent);
     document.addEventListener("shopify:product:view", listener);
 
     const wrapper = mount(ProductView, {
       props: { product, context: "page" },
+      attrs: { class: "pdp" },
       attachTo: document.body,
     });
     await vi.waitFor(() => expect(events).toHaveLength(1));
@@ -107,15 +106,19 @@ describe("ProductView", () => {
         selectedOrFirstAvailableVariant: { ...variant, id: "gid://shopify/ProductVariant/2" },
       },
     });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(wrapper.find(VIEW_EVENT_TAG_NAME).element).toBe(element);
     expect(events).toHaveLength(1);
 
     await wrapper.setProps({ product: otherProduct });
     await new Promise((resolve) => setTimeout(resolve, 0));
     document.removeEventListener("shopify:product:view", listener);
 
+    const next = wrapper.find(VIEW_EVENT_TAG_NAME).element;
+    expect(next).not.toBe(element);
+    expect(next.getAttribute("class")).toBe("pdp");
     expect(events).toHaveLength(2);
-    expect(wrapper.find(VIEW_EVENT_TAG_NAME).element).toBe(element);
-    expect(events[1]?.target).toBe(element);
+    expect(events[1]?.target).toBe(next);
     expect(events[1]?.detail).toMatchObject({ product: { id: otherProduct.id, handle: "pants" } });
   });
 });

@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
-import { render } from "@testing-library/react";
-import { createElement, StrictMode } from "react";
+import { act, render } from "@testing-library/react";
+import { Activity, type ActivityProps, createElement, StrictMode } from "react";
 import { renderToString } from "react-dom/server";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type * as StandardEventsModule from "../../vendor/standard-events";
 import {
@@ -19,9 +19,13 @@ vi.mock("../core/shopify-scripts/standard-events", () => ({
     } as Partial<typeof StandardEventsModule>),
 }));
 
-// Mirrors the CDN element: `connect` sends the event after connecting, and each send re-reads the payload.
+const connected: Element[] = [];
+
+// Mirrors the CDN element: `connect` sends the event after connecting, `manual` sends only on
+// `dispatchViewEvent()`, and each send re-reads the payload. It records each connect.
 class FakeViewEventElement extends HTMLElement {
   connectedCallback() {
+    connected.push(this);
     if (this.getAttribute("view-event-trigger") === "connect") {
       setTimeout(() => this.dispatchViewEvent());
     }
@@ -47,7 +51,13 @@ const product = {
   handle: "shirt",
   selectedOrFirstAvailableVariant: variant,
 };
+const otherVariantProduct = {
+  ...product,
+  selectedOrFirstAvailableVariant: { ...variant, id: "gid://shopify/ProductVariant/2" },
+};
 const otherProduct = { ...product, id: "gid://shopify/Product/2", handle: "pants" };
+
+const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)));
 
 function getElement(container: HTMLElement) {
   const element = container.querySelector(VIEW_EVENT_TAG_NAME);
@@ -60,12 +70,22 @@ function payloadOf(element: Element) {
 }
 
 describe("ProductView", () => {
+  let events: CustomEvent[];
+  const record = (event: Event) => events.push(event as CustomEvent);
+
   beforeAll(async () => {
     defineViewEventElement();
     await customElements.whenDefined(VIEW_EVENT_TAG_NAME);
   });
 
+  beforeEach(() => {
+    events = [];
+    connected.length = 0;
+    document.addEventListener("shopify:product:view", record);
+  });
+
   afterEach(() => {
+    document.removeEventListener("shopify:product:view", record);
     vi.restoreAllMocks();
   });
 
@@ -89,7 +109,6 @@ describe("ProductView", () => {
     expect(element.id).toBe("card-1");
     expect(element.getAttribute("data-testid")).toBe("x");
     expect(element.getAttribute("view-event-trigger")).toBe("intersect");
-    expect(element.getAttribute("view-event-key")).toBe(product.id);
     expect(payloadOf(element)).toMatchObject({
       context: "collection",
       product: { id: product.id },
@@ -110,47 +129,102 @@ describe("ProductView", () => {
     expect(element.hasAttribute("class")).toBe(false);
   });
 
-  it("renders the element and payload on the server", () => {
+  it("renders a manual page element and its payload on the server", () => {
     const html = renderToString(
       createElement(ProductView, { product, context: "page", className: "pdp" }),
     );
 
     expect(html).toContain(`<${VIEW_EVENT_TAG_NAME}`);
     expect(html).toContain('class="pdp"');
-    expect(html).toContain('view-event-trigger="connect"');
-    expect(html).toContain('view-event-key="gid://shopify/Product/1"');
+    expect(html).toContain('view-event-trigger="manual"');
     expect(html).toContain("view-event-payload=");
   });
 
-  it("lets the element send the event again only when the product ID changes", async () => {
-    const events: CustomEvent[] = [];
-    const listener = (event: Event) => events.push(event as CustomEvent);
-    document.addEventListener("shopify:product:view", listener);
-    const view = (props: ProductViewProps) =>
-      createElement(StrictMode, null, createElement(ProductView, props));
-
-    const { container, rerender } = render(view({ product, context: "page" }));
-    await vi.waitFor(() => expect(events).toHaveLength(1));
-    const element = getElement(container);
-
-    rerender(
-      view({
-        product: {
-          ...product,
-          selectedOrFirstAvailableVariant: { ...variant, id: "gid://shopify/ProductVariant/2" },
-        },
-        context: "page",
-      }),
+  it("sends the page view once on mount, again for a new product ID, and not for a new variant", async () => {
+    const { container, rerender } = render(
+      createElement(ProductView, { product, context: "page" }),
     );
+    await settle();
+    expect(events).toHaveLength(1);
+    const element = getElement(container);
+    expect(element.getAttribute("view-event-trigger")).toBe("manual");
+
+    rerender(createElement(ProductView, { product: otherVariantProduct, context: "page" }));
+    await settle();
     expect(events).toHaveLength(1);
 
-    rerender(view({ product: otherProduct, context: "page" }));
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    document.removeEventListener("shopify:product:view", listener);
+    rerender(createElement(ProductView, { product: otherProduct, context: "page" }));
+    await settle();
 
     expect(events).toHaveLength(2);
     expect(getElement(container)).toBe(element);
     expect(events[1]?.target).toBe(element);
     expect(events[1]?.detail).toMatchObject({ product: { id: otherProduct.id, handle: "pants" } });
+  });
+
+  it("sends the page view once in StrictMode", async () => {
+    render(
+      createElement(StrictMode, null, createElement(ProductView, { product, context: "page" })),
+    );
+    await settle();
+
+    expect(events).toHaveLength(1);
+  });
+
+  it("sends the page view only while an <Activity> shows it, and again each time it is shown", async () => {
+    const view = (mode: "hidden" | "visible") =>
+      createElement(
+        Activity,
+        { mode } as ActivityProps,
+        createElement(ProductView, { product, context: "page" }),
+      );
+
+    const { rerender } = render(view("hidden"));
+    await settle();
+    expect(events).toHaveLength(0);
+
+    rerender(view("visible"));
+    await settle();
+    expect(events).toHaveLength(1);
+
+    rerender(view("hidden"));
+    await settle();
+    expect(events).toHaveLength(1);
+
+    rerender(view("visible"));
+    await settle();
+    expect(events).toHaveLength(2);
+  });
+
+  it("remounts a card element for a new product ID, but not for a new variant", () => {
+    const { container, rerender } = render(
+      createElement(ProductView, { product, context: "collection", className: "card" }),
+    );
+    const element = getElement(container);
+    expect(element.getAttribute("view-event-trigger")).toBe("intersect");
+    expect(connected).toEqual([element]);
+
+    rerender(
+      createElement(ProductView, {
+        product: otherVariantProduct,
+        context: "collection",
+        className: "card",
+      }),
+    );
+    expect(getElement(container)).toBe(element);
+    expect(connected).toEqual([element]);
+
+    rerender(
+      createElement(ProductView, {
+        product: otherProduct,
+        context: "collection",
+        className: "card",
+      }),
+    );
+    const next = getElement(container);
+    expect(next).not.toBe(element);
+    expect(connected).toEqual([element, next]);
+    expect(next.getAttribute("class")).toBe("card");
+    expect(payloadOf(next)).toMatchObject({ product: { id: otherProduct.id } });
   });
 });

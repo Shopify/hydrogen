@@ -5932,22 +5932,6 @@
       "members": []
     }
   },
-  "DefineViewEventElementGeneratedType": {
-    "src/core/shopify-scripts/view-event-element.ts": {
-      "filePath": "src/core/shopify-scripts/view-event-element.ts",
-      "name": "DefineViewEventElementGeneratedType",
-      "description": "Registers the `VIEW_EVENT_TAG_NAME` custom element in the browser. The function loads Shopify's Standard Events module and does nothing on the server. `initializeShopifyScripts` and the `ShopifyScripts` component call it for you. Call it yourself only when you use neither.\n\nThe element extends Shopify's view event element. It sends the event again when the `view-event-key` attribute changes to a new value. Without a key, it sends once each time it connects. A `connect` element sends only while it is shown, and sends again each time it is shown after it was hidden while connected.",
-      "isPublicDocs": true,
-      "params": [],
-      "returns": {
-        "filePath": "src/core/shopify-scripts/view-event-element.ts",
-        "description": "",
-        "name": "void",
-        "value": "void"
-      },
-      "value": "export function defineViewEventElement(): void {\n  if (typeof customElements === \"undefined\" || defined) return;\n  defined = true;\n  void importStandardEventsFromCDN()\n    .then(({ createViewEventElement }) => {\n      if (!customElements.get(VIEW_EVENT_TAG_NAME)) {\n        customElements.define(VIEW_EVENT_TAG_NAME, sendAgainOnKeyChange(createViewEventElement()));\n      }\n    })\n    .catch(() => {});\n}"
-    }
-  },
   "InitializeShopifyScriptsGeneratedType": {
     "src/core/shopify-scripts/initialize.ts": {
       "filePath": "src/core/shopify-scripts/initialize.ts",
@@ -10372,7 +10356,7 @@
     "src/core/product/product-view.ts": {
       "filePath": "src/core/product/product-view.ts",
       "name": "GetProductViewAttributesGeneratedType",
-      "description": "Returns the attributes of the product view element. Render the attributes on a `VIEW_EVENT_TAG_NAME` element on a framework without a Hydrogen binding.\n\nThe element sends the `shopify:product:view` event on connect for `page`, the first time half of a card element is visible, and each time the dialog opens, or on connect if it is already open. The `view-event-key` attribute is the product ID. The element sends the event again when the key changes, but not when only the variant changes. Set the values as HTML attributes, such as with `attr:` on Solid, because the element doesn't read properties.",
+      "description": "Returns the attributes of the product view element. Render the attributes on a `VIEW_EVENT_TAG_NAME` element on a framework without a Hydrogen binding.\n\nThe element sends the `shopify:product:view` event on connect for `page`, the first time half of a card element is visible, and each time the dialog opens, or on connect if it is already open. The element sends the event once per connection. To send it again when the product changes, re-key the element on the product ID with your framework's primitive, such as `{#key product.id}` on Svelte or `<Show when={product.id} keyed>` on Solid. Set the values as HTML attributes, such as with `attr:` on Solid, because the element doesn't read properties.",
       "isPublicDocs": true,
       "params": [
         {
@@ -10384,11 +10368,11 @@
       ],
       "returns": {
         "filePath": "src/core/product/product-view.ts",
-        "description": "The `view-event-trigger`, `view-event-payload`, and `view-event-key` attributes.",
-        "name": "Record<\"view-event-trigger\" | \"view-event-payload\" | \"view-event-key\", string>",
-        "value": "Record<\"view-event-trigger\" | \"view-event-payload\" | \"view-event-key\", string>"
+        "description": "The `view-event-trigger` and `view-event-payload` attributes.",
+        "name": "Record<\"view-event-trigger\" | \"view-event-payload\", string>",
+        "value": "Record<\"view-event-trigger\" | \"view-event-payload\", string>"
       },
-      "value": "export function getProductViewAttributes(\n  options: ProductViewOptions,\n): Record<\"view-event-trigger\" | \"view-event-payload\" | \"view-event-key\", string> {\n  const { product, context } = options;\n  const variant =\n    context === \"page\" || context === \"dialog\" ? product.selectedOrFirstAvailableVariant : null;\n  const selectedOptions =\n    variant?.selectedOptions.map(({ name, value }) => ({ name, value })) ?? [];\n  const payload: StandardEvents.ProductViewPayload = {\n    context,\n    selectedOptions,\n    product: {\n      id: product.id,\n      title: product.title,\n      handle: product.handle,\n      selectedVariant: variant\n        ? {\n            id: variant.id,\n            title: variant.title,\n            availableForSale: variant.availableForSale,\n            price: { amount: variant.price.amount, currencyCode: variant.price.currencyCode },\n            selectedOptions,\n          }\n        : null,\n    },\n  };\n\n  return {\n    \"view-event-trigger\": TRIGGERS[context],\n    \"view-event-payload\": JSON.stringify(payload),\n    \"view-event-key\": product.id,\n  };\n}"
+      "value": "export function getProductViewAttributes(\n  options: ProductViewOptions,\n): Record<\"view-event-trigger\" | \"view-event-payload\", string> {\n  const { product, context } = options;\n  const variant =\n    context === \"page\" || context === \"dialog\" ? product.selectedOrFirstAvailableVariant : null;\n  const selectedOptions =\n    variant?.selectedOptions.map(({ name, value }) => ({ name, value })) ?? [];\n  const payload: StandardEvents.ProductViewPayload = {\n    context,\n    selectedOptions,\n    product: {\n      id: product.id,\n      title: product.title,\n      handle: product.handle,\n      selectedVariant: variant\n        ? {\n            id: variant.id,\n            title: variant.title,\n            availableForSale: variant.availableForSale,\n            price: { amount: variant.price.amount, currencyCode: variant.price.currencyCode },\n            selectedOptions,\n          }\n        : null,\n    },\n  };\n\n  return {\n    \"view-event-trigger\": TRIGGERS[context],\n    \"view-event-payload\": JSON.stringify(payload),\n  };\n}"
     }
   },
   "ProductViewOptions": {
@@ -13287,7 +13271,7 @@
     "src/react/product-view.tsx": {
       "filePath": "src/react/product-view.tsx",
       "name": "ProductViewGeneratedType",
-      "description": "Sends the `shopify:product:view` event for a product that the storefront shows. Wrap the product page content with `context=\"page\"`, and each product card with `collection`, `search`, or `recommendation`. It renders a `VIEW_EVENT_TAG_NAME` element, which `ShopifyScripts` registers.\n\nThe element is inline by default. Give card elements a box, such as a class with `display: block`, because card contexts send the event when half of the element is visible. The element sends the event again when the product ID changes, but not when the variant changes.",
+      "description": "Sends the `shopify:product:view` event for a product that the storefront shows. Wrap the product page content with `context=\"page\"`, and each product card with `collection`, `search`, or `recommendation`. It renders a `VIEW_EVENT_TAG_NAME` element, which `ShopifyScripts` registers.\n\nThe element is inline by default. Give card elements a box, such as a class with `display: block`, because card contexts send the event when half of the element is visible. The element sends the event again when the product ID changes, but not when the variant changes. Inside a React `<Activity>`, a `page` element sends the event again each time it is shown.",
       "isPublicDocs": true,
       "params": [
         {
@@ -13303,7 +13287,7 @@
         "name": "ReactElement",
         "value": "ReactElement"
       },
-      "value": "export function ProductView(props: ProductViewProps): ReactElement {\n  const { product: _product, context: _context, children, className, ...rest } = props;\n  return createElement(\n    VIEW_EVENT_TAG_NAME,\n    // React 18 doesn't map `className` to `class` on custom elements.\n    { ...rest, class: className, ...getProductViewAttributes(props) },\n    children,\n  );\n}"
+      "value": "export function ProductView(props: ProductViewProps): ReactElement {\n  const { product, context, children, className, ...rest } = props;\n  const ref = useRef<HTMLElement & ViewEventElement>(null);\n  const isPage = context === \"page\";\n  useViewEvent(ref, isPage, product.id);\n\n  return createElement(\n    VIEW_EVENT_TAG_NAME,\n    {\n      ...rest,\n      ref,\n      // React 18 doesn't map `className` to `class` on custom elements.\n      class: className,\n      ...getProductViewAttributes(props),\n      ...(isPage\n        ? // `useViewEvent` sends the page view. It sends again when the product ID changes and\n          // when an <Activity> shows the page again.\n          { \"view-event-trigger\": \"manual\" }\n        : // React remounts the element for a new product, so the element's own trigger runs\n          // again. IntersectionObserver ignores elements in a hidden <Activity>.\n          { key: product.id }),\n    },\n    children,\n  );\n}"
     }
   },
   "UseProductFormGeneratedType": {

@@ -40,17 +40,18 @@ const TRIGGERS = {
  *
  * The element sends the `shopify:product:view` event on connect for `page`, the first time half of
  * a card element is visible, and each time the dialog opens, or on connect if it is already open.
- * The `view-event-key` attribute is the product ID. The element sends the event again when the key
- * changes, but not when only the variant changes. Set the values as HTML attributes, such as with
- * `attr:` on Solid, because the element doesn't read properties.
+ * The element sends the event once per connection. To send it again when the product changes,
+ * re-key the element on the product ID with your framework's primitive, such as
+ * `{#key product.id}` on Svelte or `<Show when={product.id} keyed>` on Solid. Set the values as
+ * HTML attributes, such as with `attr:` on Solid, because the element doesn't read properties.
  *
  * @param options - The product and where the storefront shows it.
- * @returns The `view-event-trigger`, `view-event-payload`, and `view-event-key` attributes.
+ * @returns The `view-event-trigger` and `view-event-payload` attributes.
  * @publicDocs
  */
 export function getProductViewAttributes(
   options: ProductViewOptions,
-): Record<"view-event-trigger" | "view-event-payload" | "view-event-key", string> {
+): Record<"view-event-trigger" | "view-event-payload", string> {
   const { product, context } = options;
   const variant =
     context === "page" || context === "dialog" ? product.selectedOrFirstAvailableVariant : null;
@@ -78,6 +79,5 @@ export function getProductViewAttributes(
   return {
     "view-event-trigger": TRIGGERS[context],
     "view-event-payload": JSON.stringify(payload),
-    "view-event-key": product.id,
   };
 }

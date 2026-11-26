@@ -173,7 +173,7 @@ export {
   renderShopifyScriptTags,
   getShopifyScriptHashes,
 } from "./shopify-scripts/index";
-export { defineViewEventElement, VIEW_EVENT_TAG_NAME } from "./shopify-scripts/view-event-element";
+export { VIEW_EVENT_TAG_NAME } from "./shopify-scripts/view-event-element";
 export type {
   ShopifyRoutesOptions,
   ShopifyScriptsAnalyticsConfig,

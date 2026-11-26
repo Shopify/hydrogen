@@ -19,14 +19,20 @@ export type ProductViewProps = ProductViewOptions;
  * The element is inline by default. Give card elements a box, such as a class with
  * `display: block`, because card contexts send the event when half of the element is visible.
  * The element sends the event again when the product ID changes, but not when the variant
- * changes. Attributes such as `class` go on the element.
+ * changes. `<KeepAlive>` removes the element from the document and adds it again, so the element
+ * sends again when it is shown again. Attributes such as `class` go on the element.
  *
  * @publicDocs
  */
 export const ProductView = defineComponent(
   (props: ProductViewProps, { slots }) =>
     () =>
-      h(VIEW_EVENT_TAG_NAME, getProductViewAttributes(props), slots.default?.()),
+      // The key remounts the element for a new product, so the element's trigger runs again.
+      h(
+        VIEW_EVENT_TAG_NAME,
+        { key: props.product.id, ...getProductViewAttributes(props) },
+        slots.default?.(),
+      ),
   {
     name: "ProductView",
     props: {
