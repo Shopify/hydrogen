@@ -79,10 +79,13 @@ export default function Collection() {
         wrapResources={(resources, nodes) =>
           // Count `nodes`: it includes the pages that Pagination restores on Back or reload.
           // The page has no filters or sort, so it renders the view element without
-          // `CollectionProvider`, which the `CollectionView` component needs.
+          // `CollectionProvider`, which the `CollectionView` component needs. React Router keeps
+          // this route mounted across collections, so the key gives each collection a new
+          // element, which sends the view.
           createElement(
             VIEW_EVENT_TAG_NAME,
             {
+              key: collection.handle,
               class: "block",
               ...getCollectionViewAttributes({ collection, productsCount: nodes.length }),
             },

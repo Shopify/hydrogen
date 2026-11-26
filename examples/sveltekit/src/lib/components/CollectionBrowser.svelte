@@ -285,8 +285,9 @@
 	</header>
 
 	<!-- Wraps the filter and sort controls, the results, and the empty state, because the
-	     collection update events start at this element. The element sends the view event again
-	     when its key, the collection handle, changes, not when products load. -->
+	     collection update events start at this element. The page keys this component by the
+	     collection handle, so a new collection gets a new element, which sends the view event,
+	     and a new update connection. New products for the same collection don't send it again. -->
 	<shopify-view-event
 		bind:this={viewElement}
 		{...getCollectionViewAttributes({
