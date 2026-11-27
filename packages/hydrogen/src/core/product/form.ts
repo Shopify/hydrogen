@@ -37,15 +37,23 @@ export interface ProductQuantityDefaultProps {
 }
 
 /**
- * Props for a control that selects one option value, such as a swatch or a radio button.
+ * HTML attributes for a control that selects one option value, such as a swatch or a radio button.
  *
  * @publicDocs
  */
-export interface ProductOptionValueProps {
+export interface ProductOptionValueAttributes {
   /** Option name, such as "Color". */
   name: string;
   /** Option value that the control selects, such as "Red". */
   value: string;
+}
+
+/**
+ * Props for a control that selects one option value, such as a swatch or a radio button.
+ *
+ * @publicDocs
+ */
+export interface ProductOptionValueProps extends ProductOptionValueAttributes {
   /** Selects the option value in the product form. */
   onChange: () => void;
   /** Selects the option value in the product form. Matches the change handler. */
@@ -96,13 +104,15 @@ export interface ProductAttributeDefaultValueProps {
  *
  * Pass `merchandiseId`, `quantity`, `optionValue`, `attributeValue`, or `addToCart` as the field. Any other field name throws an error. An attribute value field with an empty key throws a `TypeError`.
  *
- * Option value fields return the name, the value, and the selection handlers. Set the input type and the checked, disabled, and pressed states from the option state yourself.
+ * Option value fields return the name and the value, plus the selection handlers when the register function has a select function. Set the input type and the checked, disabled, and pressed states from the option state yourself.
  */
-export type ProductFormRegister = {
+export type ProductFormRegister<
+  TOptionValue extends ProductOptionValueAttributes = ProductOptionValueProps,
+> = {
   (field: "merchandiseId", opts: {}): ProductMerchandiseIdProps;
   (field: "quantity", opts: { value: number }): ProductQuantityProps;
   (field: "quantity", opts: { defaultValue: number }): ProductQuantityDefaultProps;
-  (field: "optionValue", opts: { optionName: string; value: string }): ProductOptionValueProps;
+  (field: "optionValue", opts: { optionName: string; value: string }): TOptionValue;
   (field: "attributeValue", opts: { key: string; value: string }): ProductAttributeValueProps;
   (
     field: "attributeValue",
@@ -116,6 +126,8 @@ export type ProductFormRegister = {
  *
  * The merchandise ID field submits the variant that you pass at creation. Create a new register function each time the product form state changes. The product form hooks create a new register function for you.
  *
+ * Pass `selectOption` to get `onChange` and `onClick` handlers on option value fields, for renderers that attach function props as event listeners, such as React and Vue. Without it, option value fields return HTML attributes only, so a renderer that drops function props, such as Remix 3's, gets no dead handlers. Call `store.selectOption()` from your own event listener instead.
+ *
  * @param selectedVariant The variant that the merchandise ID field submits, or `null` when the selection doesn't resolve to a variant.
  * @param selectOption The function that option value fields call with the option name and value.
  * @returns A register function for the merchandise ID, quantity, option value, attribute, and add-to-cart fields.
@@ -123,8 +135,15 @@ export type ProductFormRegister = {
  */
 export function createProductFormRegister(
   selectedVariant: ProductVariantInput | null,
+): ProductFormRegister<ProductOptionValueAttributes>;
+export function createProductFormRegister(
+  selectedVariant: ProductVariantInput | null,
   selectOption: (name: string, value: string) => void,
-): ProductFormRegister {
+): ProductFormRegister;
+export function createProductFormRegister(
+  selectedVariant: ProductVariantInput | null,
+  selectOption?: (name: string, value: string) => void,
+): ProductFormRegister<ProductOptionValueAttributes> {
   return ((field: string, opts?: Record<string, unknown>) => {
     if (field === "merchandiseId") {
       return { name: "merchandiseId", value: selectedVariant?.id ?? "" };
@@ -141,6 +160,7 @@ export function createProductFormRegister(
     if (field === "optionValue") {
       const optionName = String(opts?.optionName ?? "");
       const value = String(opts?.value ?? "");
+      if (!selectOption) return { name: optionName, value };
       const handleSelect = () => selectOption(optionName, value);
       return { name: optionName, value, onChange: handleSelect, onClick: handleSelect };
     }
@@ -160,5 +180,5 @@ export function createProductFormRegister(
     }
 
     throw new Error(`Unknown product form field: "${field}".`);
-  }) as ProductFormRegister;
+  }) as ProductFormRegister<ProductOptionValueAttributes>;
 }

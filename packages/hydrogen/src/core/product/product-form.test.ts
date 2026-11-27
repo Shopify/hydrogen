@@ -2000,3 +2000,37 @@ describe("createProductFormRegister — attributeValue", () => {
     expect(props.value).toBe("5");
   });
 });
+
+// ---------------------------------------------------------------------------
+// createProductFormRegister — optionValue
+// ---------------------------------------------------------------------------
+
+describe("createProductFormRegister — optionValue", () => {
+  it("returns selection handlers that call selectOption", () => {
+    const selectOption = vi.fn();
+    const props = createProductFormRegister(RED, selectOption)("optionValue", {
+      optionName: "Color",
+      value: "Blue",
+    });
+
+    expect(props).toEqual({
+      name: "Color",
+      value: "Blue",
+      onChange: expect.any(Function),
+      onClick: expect.any(Function),
+    });
+    props.onClick();
+    props.onChange();
+    expect(selectOption).toHaveBeenNthCalledWith(1, "Color", "Blue");
+    expect(selectOption).toHaveBeenNthCalledWith(2, "Color", "Blue");
+  });
+
+  it("returns HTML attributes only without selectOption", () => {
+    const props = createProductFormRegister(RED)("optionValue", {
+      optionName: "Color",
+      value: "Blue",
+    });
+
+    expect(props).toEqual({ name: "Color", value: "Blue" });
+  });
+});

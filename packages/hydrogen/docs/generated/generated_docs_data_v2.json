@@ -10427,6 +10427,31 @@
       "value": "export interface ProductQuantityDefaultProps {\n  /** Field name that the cart reads as the quantity to add. */\n  name: \"quantity\";\n  /** Starting quantity for the input. */\n  defaultValue: string;\n}"
     }
   },
+  "ProductOptionValueAttributes": {
+    "src/core/product/form.ts": {
+      "filePath": "src/core/product/form.ts",
+      "name": "ProductOptionValueAttributes",
+      "description": "HTML attributes for a control that selects one option value, such as a swatch or a radio button.",
+      "isPublicDocs": true,
+      "members": [
+        {
+          "filePath": "src/core/product/form.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "name",
+          "value": "string",
+          "description": "Option name, such as \"Color\"."
+        },
+        {
+          "filePath": "src/core/product/form.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "value",
+          "value": "string",
+          "description": "Option value that the control selects, such as \"Red\"."
+        }
+      ],
+      "value": "export interface ProductOptionValueAttributes {\n  /** Option name, such as \"Color\". */\n  name: string;\n  /** Option value that the control selects, such as \"Red\". */\n  value: string;\n}"
+    }
+  },
   "ProductOptionValueProps": {
     "src/core/product/form.ts": {
       "filePath": "src/core/product/form.ts",
@@ -10463,7 +10488,7 @@
           "description": "Option value that the control selects, such as \"Red\"."
         }
       ],
-      "value": "export interface ProductOptionValueProps {\n  /** Option name, such as \"Color\". */\n  name: string;\n  /** Option value that the control selects, such as \"Red\". */\n  value: string;\n  /** Selects the option value in the product form. */\n  onChange: () => void;\n  /** Selects the option value in the product form. Matches the change handler. */\n  onClick: () => void;\n}"
+      "value": "export interface ProductOptionValueProps extends ProductOptionValueAttributes {\n  /** Selects the option value in the product form. */\n  onChange: () => void;\n  /** Selects the option value in the product form. Matches the change handler. */\n  onClick: () => void;\n}"
     }
   },
   "ProductAddToCartProps": {
@@ -10554,29 +10579,30 @@
     "src/core/product/form.ts": {
       "filePath": "src/core/product/form.ts",
       "name": "CreateProductFormRegisterGeneratedType",
-      "description": "Creates the register function that returns props for each product form field.\n\nThe merchandise ID field submits the variant that you pass at creation. Create a new register function each time the product form state changes. The product form hooks create a new register function for you.",
+      "description": "Creates the register function that returns props for each product form field.\n\nThe merchandise ID field submits the variant that you pass at creation. Create a new register function each time the product form state changes. The product form hooks create a new register function for you.\n\nPass `selectOption` to get `onChange` and `onClick` handlers on option value fields, for renderers that attach function props as event listeners, such as React and Vue. Without it, option value fields return HTML attributes only, so a renderer that drops function props, such as Remix 3's, gets no dead handlers. Call `store.selectOption()` from your own event listener instead.",
       "isPublicDocs": true,
       "params": [
         {
           "name": "selectedVariant",
-          "description": "The variant that the merchandise ID field submits, or `null` when the selection doesn't resolve to a variant.",
+          "description": "",
           "value": "ProductVariantInput",
           "filePath": "src/core/product/form.ts"
         },
         {
           "name": "selectOption",
-          "description": "The function that option value fields call with the option name and value.",
+          "description": "",
           "value": "(name: string, value: string) => void",
+          "isOptional": true,
           "filePath": "src/core/product/form.ts"
         }
       ],
       "returns": {
         "filePath": "src/core/product/form.ts",
-        "description": "A register function for the merchandise ID, quantity, option value, attribute, and add-to-cart fields.",
-        "name": "ProductFormRegister",
-        "value": "ProductFormRegister"
+        "description": "",
+        "name": "ProductFormRegister<ProductOptionValueAttributes>",
+        "value": "ProductFormRegister<ProductOptionValueAttributes>"
       },
-      "value": "export function createProductFormRegister(\n  selectedVariant: ProductVariantInput | null,\n  selectOption: (name: string, value: string) => void,\n): ProductFormRegister {\n  return ((field: string, opts?: Record<string, unknown>) => {\n    if (field === \"merchandiseId\") {\n      return { name: \"merchandiseId\", value: selectedVariant?.id ?? \"\" };\n    }\n\n    if (field === \"quantity\") {\n      if (typeof opts?.defaultValue === \"number\") {\n        return { name: \"quantity\" as const, defaultValue: String(opts.defaultValue) };\n      }\n      const value = typeof opts?.value === \"number\" ? opts.value : 1;\n      return { name: \"quantity\" as const, value: String(value) };\n    }\n\n    if (field === \"optionValue\") {\n      const optionName = String(opts?.optionName ?? \"\");\n      const value = String(opts?.value ?? \"\");\n      const handleSelect = () => selectOption(optionName, value);\n      return { name: optionName, value, onChange: handleSelect, onClick: handleSelect };\n    }\n\n    if (field === \"attributeValue\") {\n      const key = String(opts?.key ?? \"\");\n      if (!key) throw new TypeError('Product attribute values require a non-empty \"key\".');\n      const name = `attributes.${key}` as AttributeValueName;\n      if (opts && \"defaultValue\" in opts) {\n        return { name, defaultValue: String(opts.defaultValue) };\n      }\n      return { name, value: String(opts?.value ?? \"\") };\n    }\n\n    if (field === \"addToCart\") {\n      return { name: \"add-to-cart\", type: \"submit\" } satisfies ProductAddToCartProps;\n    }\n\n    throw new Error(`Unknown product form field: \"${field}\".`);\n  }) as ProductFormRegister;\n}"
+      "value": "export function createProductFormRegister(\n  selectedVariant: ProductVariantInput | null,\n  selectOption?: (name: string, value: string) => void,\n): ProductFormRegister<ProductOptionValueAttributes> {\n  return ((field: string, opts?: Record<string, unknown>) => {\n    if (field === \"merchandiseId\") {\n      return { name: \"merchandiseId\", value: selectedVariant?.id ?? \"\" };\n    }\n\n    if (field === \"quantity\") {\n      if (typeof opts?.defaultValue === \"number\") {\n        return { name: \"quantity\" as const, defaultValue: String(opts.defaultValue) };\n      }\n      const value = typeof opts?.value === \"number\" ? opts.value : 1;\n      return { name: \"quantity\" as const, value: String(value) };\n    }\n\n    if (field === \"optionValue\") {\n      const optionName = String(opts?.optionName ?? \"\");\n      const value = String(opts?.value ?? \"\");\n      if (!selectOption) return { name: optionName, value };\n      const handleSelect = () => selectOption(optionName, value);\n      return { name: optionName, value, onChange: handleSelect, onClick: handleSelect };\n    }\n\n    if (field === \"attributeValue\") {\n      const key = String(opts?.key ?? \"\");\n      if (!key) throw new TypeError('Product attribute values require a non-empty \"key\".');\n      const name = `attributes.${key}` as AttributeValueName;\n      if (opts && \"defaultValue\" in opts) {\n        return { name, defaultValue: String(opts.defaultValue) };\n      }\n      return { name, value: String(opts?.value ?? \"\") };\n    }\n\n    if (field === \"addToCart\") {\n      return { name: \"add-to-cart\", type: \"submit\" } satisfies ProductAddToCartProps;\n    }\n\n    throw new Error(`Unknown product form field: \"${field}\".`);\n  }) as ProductFormRegister<ProductOptionValueAttributes>;\n}"
     }
   },
   "ProductFormRegister": {
