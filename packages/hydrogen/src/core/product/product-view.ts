@@ -19,12 +19,21 @@ export interface ProductViewProduct {
  * it when the closest dialog opens, and the card contexts send it when half of the element is visible.
  * Card contexts need only the product ID, title, and handle.
  */
-export type ProductViewOptions =
+export type ProductViewOptions = (
   | { context: "page" | "dialog"; product: ProductViewProduct }
   | {
       context: "collection" | "search" | "recommendation";
       product: Pick<ProductViewProduct, "id" | "title" | "handle">;
-    };
+    }
+) & {
+  /**
+   * When the element sends the event. Defaults to the trigger of the context: `connect` for
+   * `page`, `dialog` for `dialog`, and `intersect` for the card contexts. Set it when CSS stops the
+   * default trigger, such as `connect` for a card with no box, or `manual` to send the event
+   * yourself with the element's `dispatchViewEvent()`.
+   */
+  trigger?: StandardEvents.ViewEventTrigger;
+};
 
 const TRIGGERS = {
   page: "connect",
@@ -40,6 +49,7 @@ const TRIGGERS = {
  *
  * The element sends the `shopify:product:view` event on connect for `page`, the first time half of
  * a card element is visible, and each time the dialog opens, or on connect if it is already open.
+ * Set `trigger` to change when the element sends the event.
  * The element sends the event once per connection. To send it again when the product changes,
  * re-key the element on the product ID with your framework's primitive, such as
  * `{#key product.id}` on Svelte or `<Show when={product.id} keyed>` on Solid. Set the values as
@@ -77,7 +87,7 @@ export function getProductViewAttributes(
   };
 
   return {
-    "view-event-trigger": TRIGGERS[context],
+    "view-event-trigger": options.trigger ?? TRIGGERS[context],
     "view-event-payload": JSON.stringify(payload),
   };
 }

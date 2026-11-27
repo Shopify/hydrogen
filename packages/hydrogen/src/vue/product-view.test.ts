@@ -121,4 +121,15 @@ describe("ProductView", () => {
     expect(events[1]?.target).toBe(next);
     expect(events[1]?.detail).toMatchObject({ product: { id: otherProduct.id, handle: "pants" } });
   });
+
+  it("passes the trigger to the element", () => {
+    const wrapper = mount(ProductView, {
+      props: { product, context: "page", trigger: "manual" },
+      attachTo: document.body,
+    });
+
+    const element = wrapper.find(VIEW_EVENT_TAG_NAME).element;
+    expect(element.getAttribute("view-event-trigger")).toBe("manual");
+    expect(element.hasAttribute("trigger")).toBe(false);
+  });
 });

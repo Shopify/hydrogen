@@ -22,6 +22,9 @@ export type ProductViewProps = ProductViewOptions;
  * changes. `<KeepAlive>` removes the element from the document and adds it again, so the element
  * sends again when it is shown again. Attributes such as `class` go on the element.
  *
+ * Set `trigger` when CSS stops the default trigger. With `trigger="manual"`, the component doesn't
+ * send the event: call `dispatchViewEvent()` on the element, which is the component's `$el`.
+ *
  * @publicDocs
  */
 export const ProductView = defineComponent(
@@ -38,6 +41,7 @@ export const ProductView = defineComponent(
     props: {
       product: { type: null, required: true },
       context: { type: null, required: true },
+      trigger: { type: null, required: false },
     },
   },
 );

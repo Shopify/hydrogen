@@ -102,6 +102,15 @@ describe("getProductViewAttributes", () => {
     expect(getProductViewAttributes({ product, context })["view-event-trigger"]).toBe(trigger);
   });
 
+  it.each(["connect", "intersect", "dialog", "manual"] as const)(
+    "uses the %s trigger when it is given",
+    (trigger) => {
+      expect(
+        getProductViewAttributes({ product, context: "collection", trigger })["view-event-trigger"],
+      ).toBe(trigger);
+    },
+  );
+
   it("returns only the trigger and payload attributes", () => {
     expect(Object.keys(getProductViewAttributes({ product, context: "page" }))).toEqual([
       "view-event-trigger",
