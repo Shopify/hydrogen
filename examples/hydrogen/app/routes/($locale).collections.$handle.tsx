@@ -1,11 +1,11 @@
 import { gql } from "@shopify/hydrogen";
-import { CollectionView as ShopifyCollectionView } from "@shopify/hydrogen/react";
+import { CollectionView } from "@shopify/hydrogen/react";
 import { redirect, useLoaderData } from "react-router";
 
 import { PaginatedResourceSection } from "~/components/PaginatedResourceSection";
 import { ProductItem } from "~/components/ProductItem";
 import type { ProductItemData } from "~/components/ProductItem";
-import { CollectionView } from "~/lib/analytics";
+import { CollectionView as CollectionViewedAnalytics } from "~/lib/analytics";
 import { localizePath } from "~/lib/locale-path";
 import { getPaginationVariables } from "~/lib/pagination";
 import { redirectIfHandleIsLocalized } from "~/lib/redirect";
@@ -78,13 +78,13 @@ export default function Collection() {
         resourcesClassName="products-grid"
         wrapResources={(resources, nodes) => (
           // Count `nodes`: it includes the pages that Pagination restores on Back or reload.
-          <ShopifyCollectionView
+          <CollectionView
             collection={collection}
             productsCount={nodes.length}
             className="block"
           >
             {resources}
-          </ShopifyCollectionView>
+          </CollectionView>
         )}
       >
         {({ node: product, index }) => (
@@ -96,7 +96,7 @@ export default function Collection() {
           />
         )}
       </PaginatedResourceSection>
-      <CollectionView
+      <CollectionViewedAnalytics
         collection={{
           id: collection.id,
           handle: collection.handle,
