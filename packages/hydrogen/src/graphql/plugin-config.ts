@@ -5,6 +5,11 @@ const CUSTOMER_ACCOUNT_SCHEMA_FILE_NAME = "customer-account.schema.json";
 const STOREFRONT_OUTPUT_FILE_NAME = "storefront-graphql-env.d.ts";
 const CUSTOMER_ACCOUNT_OUTPUT_FILE_NAME = "customer-account-graphql-env.d.ts";
 
+export const GRAPHQL_SCHEMA_FILE_NAMES = [
+  STOREFRONT_SCHEMA_FILE_NAME,
+  CUSTOMER_ACCOUNT_SCHEMA_FILE_NAME,
+] as const;
+
 export function createGraphQLPluginConfig(schemaDirectory: string) {
   return {
     name: "gql.tada/ts-plugin",

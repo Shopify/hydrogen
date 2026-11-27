@@ -1,17 +1,20 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { existsSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join, parse, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, parse, relative, resolve } from "node:path";
+import type * as NodePath from "node:path";
 import { parseArgs } from "node:util";
 
-import { createGraphQLPluginConfig } from "../graphql/plugin-config";
+import { createGraphQLPluginConfig, GRAPHQL_SCHEMA_FILE_NAMES } from "../graphql/plugin-config";
 
 const GQL_TADA_CLI_PATH_FROM_PACKAGE_ROOT = "bin/cli.js";
 const PACKAGE_ROOT_FROM_CLI_MODULE = "../../";
 const SUCCESS_EXIT_CODE = 0;
 const TSCONFIG_FILE_NAME = "tsconfig.json";
 const TEMPORARY_TSCONFIG_PREFIX = ".hydrogen-gql-";
+const TEMPORARY_SCHEMA_DIRECTORY_SUFFIX = "-schemas";
+const PACKAGE_SCHEMA_DIRECTORY = "dist";
 const CHECK_LEVELS = new Set(["info", "warn", "error"]);
 
 interface RunCommandOptions {
@@ -91,6 +94,60 @@ function parseCheckArgs(args: string[]) {
   return values;
 }
 
+type PathApi = Pick<typeof NodePath, "basename" | "dirname" | "isAbsolute" | "join" | "relative">;
+
+const nodePathApi: PathApi = { basename, dirname, isAbsolute, join, relative };
+
+/**
+ * gql.tada tries `new URL(schema)` before falling back to a file read. On Windows an absolute
+ * path such as `C:\\x\\y.json` parses as a URL (protocol `c:`), so the schema would be fetched
+ * over the network. A relative path is not a valid URL and is read from disk instead.
+ */
+export function getSchemaDirectory(
+  temporaryTsconfigPath: string,
+  packageRoot: string,
+  pathApi: PathApi = nodePathApi,
+): string {
+  return pathApi.relative(
+    pathApi.dirname(temporaryTsconfigPath),
+    pathApi.join(packageRoot, PACKAGE_SCHEMA_DIRECTORY),
+  );
+}
+
+interface SchemaLocation {
+  /** The schema directory to give gql.tada, relative to the temporary tsconfig. */
+  schemaDirectory: string;
+  /** Whether the schemas must first be copied to `temporarySchemaDirectoryPath`. */
+  copySchemas: boolean;
+}
+
+/**
+ * `path.relative` cannot go from one Windows drive to another, so when the project and the
+ * Hydrogen package are on different drives the schema directory stays absolute, and gql.tada
+ * would fetch it as a URL. In that case the schemas are copied next to the temporary tsconfig
+ * and referenced by the relative name of their temporary directory.
+ */
+export function getSchemaLocation(
+  temporaryTsconfigPath: string,
+  packageRoot: string,
+  temporarySchemaDirectoryPath: string,
+  pathApi: PathApi = nodePathApi,
+): SchemaLocation {
+  const schemaDirectory = getSchemaDirectory(temporaryTsconfigPath, packageRoot, pathApi);
+  if (!pathApi.isAbsolute(schemaDirectory)) return { schemaDirectory, copySchemas: false };
+
+  return { schemaDirectory: pathApi.basename(temporarySchemaDirectoryPath), copySchemas: true };
+}
+
+function copySchemaFiles(packageRoot: string, temporarySchemaDirectoryPath: string): void {
+  for (const fileName of GRAPHQL_SCHEMA_FILE_NAMES) {
+    copyFileSync(
+      join(packageRoot, PACKAGE_SCHEMA_DIRECTORY, fileName),
+      join(temporarySchemaDirectoryPath, fileName),
+    );
+  }
+}
+
 export async function checkGraphQL(options: CheckGraphQLOptions = {}): Promise<void> {
   const cwd = options.cwd ?? process.cwd();
   const packageRoot = options.packageRoot ?? getPackageRoot();
@@ -98,34 +155,56 @@ export async function checkGraphQL(options: CheckGraphQLOptions = {}): Promise<v
   const runCommand = options.runCommand ?? spawnRunCommand;
   const values = parseCheckArgs(options.args ?? []);
   const tsconfigPath = findTsconfig(cwd, values.tsconfig);
-  const temporaryTsconfigPath = join(
+  const temporaryPathPrefix = join(
     dirname(tsconfigPath),
-    `${TEMPORARY_TSCONFIG_PREFIX}${randomUUID()}.json`,
+    `${TEMPORARY_TSCONFIG_PREFIX}${randomUUID()}`,
   );
-  const pluginConfig = createGraphQLPluginConfig(join(packageRoot, "dist"));
-
-  writeFileSync(
+  const temporaryTsconfigPath = `${temporaryPathPrefix}.json`;
+  const temporarySchemaDirectoryPath = `${temporaryPathPrefix}${TEMPORARY_SCHEMA_DIRECTORY_SUFFIX}`;
+  const schemaLocation = getSchemaLocation(
     temporaryTsconfigPath,
-    JSON.stringify({
-      extends: tsconfigPath,
-      compilerOptions: { plugins: [pluginConfig] },
-    }),
-    { flag: "wx" },
+    packageRoot,
+    temporarySchemaDirectoryPath,
   );
+  const pluginConfig = createGraphQLPluginConfig(schemaLocation.schemaDirectory);
 
-  const cliArgs = [
-    gqlTadaCliPath,
-    "check",
-    "--tsconfig",
-    temporaryTsconfigPath,
-    "--level",
-    values.level,
-  ];
-  if (values["fail-on-warn"]) cliArgs.push("--fail-on-warn");
-
-  const cleanup = () => rmSync(temporaryTsconfigPath, { force: true });
+  // Only remove what this run created, so a name clash never deletes someone else's files.
+  let createdTsconfig = false;
+  let createdSchemaDirectory = false;
+  const cleanup = () => {
+    if (createdTsconfig) rmSync(temporaryTsconfigPath, { force: true });
+    if (createdSchemaDirectory) {
+      rmSync(temporarySchemaDirectoryPath, { recursive: true, force: true });
+    }
+  };
   process.once("exit", cleanup);
   try {
+    if (schemaLocation.copySchemas) {
+      mkdirSync(temporarySchemaDirectoryPath);
+      createdSchemaDirectory = true;
+      copySchemaFiles(packageRoot, temporarySchemaDirectoryPath);
+    }
+
+    writeFileSync(
+      temporaryTsconfigPath,
+      JSON.stringify({
+        extends: tsconfigPath,
+        compilerOptions: { plugins: [pluginConfig] },
+      }),
+      { flag: "wx" },
+    );
+    createdTsconfig = true;
+
+    const cliArgs = [
+      gqlTadaCliPath,
+      "check",
+      "--tsconfig",
+      temporaryTsconfigPath,
+      "--level",
+      values.level,
+    ];
+    if (values["fail-on-warn"]) cliArgs.push("--fail-on-warn");
+
     await runCommand(process.execPath, cliArgs, { cwd });
   } finally {
     process.off("exit", cleanup);
