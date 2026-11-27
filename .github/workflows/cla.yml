@@ -6,18 +6,31 @@ on:
   issue_comment:
     types: [created]
 
+permissions:
+  contents: read
+
 jobs:
   cla:
     runs-on: ubuntu-latest
+    # The CLA action comments on and labels the pull request, and re-runs its own check once the
+    # author signs
+    permissions:
+      actions: write
+      issues: write
+      pull-requests: write
+    # shopify-build-cli[bot] is Shopify automation and can't sign the CLA
     if: |
-      (github.event.issue.pull_request
-        && !github.event.issue.pull_request.merged_at
-        && contains(github.event.comment.body, 'signed')
-      )
-      || (github.event.pull_request
-        && !github.event.pull_request.merged
-        && !contains(github.event.commits.*.message, '[ci] release')
-        && !contains(github.event.commits.*.message, '[ci] Update pnpm-lock.yaml')
+      github.actor != 'shopify-build-cli[bot]'
+      && (
+        (github.event.issue.pull_request
+          && !github.event.issue.pull_request.merged_at
+          && contains(github.event.comment.body, 'signed')
+        )
+        || (github.event.pull_request
+          && !github.event.pull_request.merged
+          && !contains(github.event.commits.*.message, '[ci] release')
+          && !contains(github.event.commits.*.message, '[ci] Update pnpm-lock.yaml')
+        )
       )
     steps:
       - uses: Shopify/shopify-cla-action@1af529ae29b29b6083963ff22425ea64749261bc # v1.9.0
