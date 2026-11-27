@@ -24,12 +24,16 @@ export type CollectionViewProps = CollectionViewOptions;
  * `<KeepAlive>` removes the element from the document and adds it again, so the element sends
  * again when it is shown again. Attributes such as `class` go on the element.
  *
+ * Set `trigger` when the page needs another trigger, such as `intersect`. With
+ * `trigger="manual"`, the component doesn't send the event: call `dispatchViewEvent()` on the
+ * element, which is the component's `$el`.
+ *
  * @publicDocs
  */
 export const CollectionView = defineComponent(
   (props: CollectionViewProps, { slots }) =>
     () =>
-      // The key remounts the element for a new collection, so the element sends the view again.
+      // The key remounts the element for a new collection, so the element's trigger runs again.
       h(
         VIEW_EVENT_TAG_NAME,
         { key: props.collection.handle, ...getCollectionViewAttributes(props) },
@@ -40,6 +44,7 @@ export const CollectionView = defineComponent(
     props: {
       collection: { type: null, required: true },
       productsCount: { type: null, required: true },
+      trigger: { type: null, required: false },
     },
   },
 );

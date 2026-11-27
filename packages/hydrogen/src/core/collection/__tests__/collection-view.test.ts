@@ -23,6 +23,14 @@ describe("getCollectionViewAttributes", () => {
     });
   });
 
+  it("returns the given trigger", () => {
+    expect(
+      getCollectionViewAttributes({ collection, productsCount: 12, trigger: "intersect" })[
+        "view-event-trigger"
+      ],
+    ).toBe("intersect");
+  });
+
   it("sends a null ID for a page without a collection record", () => {
     expect(payload({ collection: { id: null, handle: "all" }, productsCount: 3 })).toEqual({
       collection: { id: null, handle: "all", productsCount: 3 },

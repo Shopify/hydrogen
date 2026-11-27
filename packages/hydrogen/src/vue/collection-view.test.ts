@@ -5,6 +5,7 @@ import { h } from "vue";
 import { renderToString } from "vue/server-renderer";
 
 import type * as StandardEventsModule from "../../vendor/standard-events";
+import type { ViewEventElement } from "../../vendor/standard-events";
 import {
   defineViewEventElement,
   VIEW_EVENT_TAG_NAME,
@@ -18,7 +19,8 @@ vi.mock("../core/shopify-scripts/standard-events", () => ({
     } as Partial<typeof StandardEventsModule>),
 }));
 
-// Mirrors the CDN element: `connect` sends the event after connecting, and each send re-reads the payload.
+// Mirrors the CDN element: `connect` sends the event after connecting, `manual` sends only on
+// `dispatchViewEvent()`, and each send re-reads the payload.
 class FakeViewEventElement extends HTMLElement {
   connectedCallback() {
     if (this.getAttribute("view-event-trigger") === "connect") {
@@ -111,5 +113,37 @@ describe("CollectionView", () => {
     expect(events[1]?.detail).toEqual({
       collection: { id: otherCollection.id, handle: "pants", productsCount: 4 },
     });
+  });
+
+  it("remounts the element with the intersect trigger for a new handle", async () => {
+    const wrapper = mount(CollectionView, {
+      props: { collection, productsCount: 8, trigger: "intersect" },
+      attachTo: document.body,
+    });
+    const element = wrapper.find(VIEW_EVENT_TAG_NAME).element;
+    expect(element.getAttribute("view-event-trigger")).toBe("intersect");
+    expect(element.hasAttribute("trigger")).toBe(false);
+
+    await wrapper.setProps({ collection: otherCollection, productsCount: 4 });
+
+    expect(wrapper.find(VIEW_EVENT_TAG_NAME).element).not.toBe(element);
+  });
+
+  it("sends nothing by itself with the manual trigger, and $el sends the view", async () => {
+    const events: CustomEvent[] = [];
+    const listener = (event: Event) => events.push(event as CustomEvent);
+    document.addEventListener("shopify:collection:view", listener);
+
+    const wrapper = mount(CollectionView, {
+      props: { collection, productsCount: 8, trigger: "manual" },
+      attachTo: document.body,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(wrapper.vm.$el.getAttribute("view-event-trigger")).toBe("manual");
+    expect(events).toHaveLength(0);
+
+    (wrapper.vm.$el as HTMLElement & ViewEventElement).dispatchViewEvent();
+    document.removeEventListener("shopify:collection:view", listener);
+    expect(events).toHaveLength(1);
   });
 });

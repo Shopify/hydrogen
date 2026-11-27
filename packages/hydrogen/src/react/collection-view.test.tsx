@@ -1,10 +1,11 @@
 // @vitest-environment happy-dom
 import { act, render } from "@testing-library/react";
-import { Activity, type ActivityProps, createElement, StrictMode } from "react";
+import { Activity, type ActivityProps, createElement, createRef, StrictMode } from "react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type * as StandardEventsModule from "../../vendor/standard-events";
+import type { ViewEventElement } from "../../vendor/standard-events";
 import {
   defineViewEventElement,
   VIEW_EVENT_TAG_NAME,
@@ -185,5 +186,44 @@ describe("CollectionView", () => {
     rerender(view("visible"));
     await settle();
     expect(events).toHaveLength(2);
+  });
+
+  it("remounts the element with the intersect trigger for a new handle", () => {
+    const { container, rerender } = render(
+      createElement(CollectionView, { collection, productsCount: 8, trigger: "intersect" }),
+    );
+    const element = getElement(container);
+    expect(element.getAttribute("view-event-trigger")).toBe("intersect");
+
+    rerender(
+      createElement(CollectionView, {
+        collection: otherCollection,
+        productsCount: 4,
+        trigger: "intersect",
+      }),
+    );
+
+    expect(getElement(container)).not.toBe(element);
+  });
+
+  it("sends nothing by itself with the manual trigger, and elementRef sends the view", async () => {
+    const elementRef = createRef<HTMLElement & ViewEventElement>();
+    const { container } = render(
+      createElement(CollectionView, {
+        collection,
+        productsCount: 8,
+        trigger: "manual",
+        elementRef,
+      }),
+    );
+    await settle();
+    const element = getElement(container);
+    expect(element.getAttribute("view-event-trigger")).toBe("manual");
+    expect(events).toHaveLength(0);
+
+    assert(elementRef.current, "expected elementRef to hold the element");
+    expect(elementRef.current).toBe(element);
+    elementRef.current.dispatchViewEvent();
+    expect(events).toHaveLength(1);
   });
 });
