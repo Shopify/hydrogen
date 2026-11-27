@@ -34,7 +34,7 @@ export function warnOnMissingLocaleProvider(): void {
 
   warnOnce(
     "missing-provider",
-    `this page is served under the locale path prefix "${pagePathPrefix}", but no LocaleProvider wraps the cart and predictive search providers, so their requests go to the default locale. Render LocaleProvider above them with the request's locale.`,
+    `this page is served under the locale path prefix "${pagePathPrefix}", but a component that sends requests under the locale's prefix has no LocaleProvider above it, so its requests go to the default locale. Render LocaleProvider at the root of your app with the request's locale.`,
   );
 }
 

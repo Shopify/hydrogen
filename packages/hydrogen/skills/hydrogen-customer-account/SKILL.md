@@ -57,7 +57,7 @@ const customerAccountHandlers = createCustomerAccountServerHandlers({
 With this wiring, Hydrogen owns the whole loop:
 
 - New carts are created with the current customer's buyer identity when the session has a usable access token or successfully refreshed access token, and authenticated cart reads mark checkout URLs with `logged_in=true` (from the cart handlers' `customerSession` option).
-- Authorization and refresh attach the customer to the cart from the request's cart cookie; a definitive refresh rejection detaches it. Transient refresh failures leave the cart untouched.
+- Authorization and refresh (including a refresh by the widget data route) attach the customer to the cart from the request's cart cookie; a definitive refresh rejection detaches it. Transient refresh failures leave the cart untouched.
 - Logout detaches the customer from the cart.
 
 Sync is best-effort: a failed cart mutation never blocks the route's redirect. Attach failures are logged and can be retried by a later refresh. If detach fails during logout or definitive refresh rejection, the handler expires the cart cookie so a shared device never keeps a cart bound to the previous customer.
@@ -70,6 +70,7 @@ The Customer Account handlers own:
 - `GET /account/authorize`
 - `GET /account/refresh`
 - `POST /account/logout`
+- `GET /account/widget-data`, the JSON data for Shopify's `<shopify-account>` component
 
 Do not reimplement login, authorize, refresh, or logout unless the app needs custom behavior that preserves the same safeguards: `return_to` limited to the same origin, same-origin logout POST checks, `cache-control: no-store`, committed session cookies on the returned response, and request-context response headers.
 
@@ -88,13 +89,27 @@ Wrap header/account-link UI in the framework's streaming primitive when possible
 
 ## Account Page
 
-Hydrogen ships no account UI yet — the app owns it. A storefront with the handlers wired but no account page has working auth endpoints a buyer can never reach. Build at least a minimal `/account` route:
+Hydrogen ships no account page yet — the app owns it. A storefront with the handlers wired but no account page has working auth endpoints a buyer can never reach. Build at least a minimal `/account` route:
 
 - **Signed out** — render a sign-in panel linking to `/account/login?return_to=/account`. The login link must be a full-document navigation (plain `<a>` or the framework link's reload-document mode): the handler returns a raw redirect to Shopify's hosted login page that client-side routing cannot follow.
 - **Signed in** — fetch and render a minimal profile (`customer { firstName lastName emailAddress { emailAddress } }`). Check GraphQL `errors` and render an error state instead of crashing.
 - **Logout** — a plain HTML `<form method="post" action="/account/logout">` with a submit button. The handler enforces same-origin POST and returns a raw redirect (to Shopify's logout endpoint when an `id_token` exists); a native browser submit follows it, a client-side form component or fetch call does not. This also keeps logout working without JavaScript. An optional `return_to` search param on the action URL controls the post-logout destination.
 - **Navbar** — link to `/account`. A static link is enough; the page handles both states. If showing signed-in state in the header, use `isLoggedIn()` behind the framework's streaming primitive per the Server Rendering rules above.
 - Never serialize tokens or session objects into loader data or HTML; render only derived profile fields.
+
+## Account Widget
+
+Shopify's `<shopify-account>` component shows an avatar that opens an account sheet. Load its script with `<ShopifyScripts account />` (or `account: true` on the script helpers), and render it with `ShopifyAccount`:
+
+```tsx
+import { ShopifyAccount } from "@shopify/hydrogen/react";
+
+<ShopifyAccount signedOutAvatar="Sign in" />;
+```
+
+In Vue, pass the signed-out content in the `signedOutAvatar` slot: `<ShopifyAccount><template #signedOutAvatar>Sign in</template></ShopifyAccount>`. `ShopifyAccount` puts it in the component's `signed-out-avatar` slot and points the component at the widget data and login routes. Inside `LocaleProvider`, both carry the page's locale prefix, such as `/fr-ca/account/widget-data`, so the account sheet shows in the page's language and sign-in starts in the locale's country. Don't hard-code `<shopify-account>` URLs in React or Vue. Without the bindings, render `<shopify-account account-data-url="{pathPrefix}/account/widget-data" sign-in-url="{pathPrefix}/account/login">` with the `pathPrefix` of `requestContext.locale`.
+
+The route returns the signed-in customer's name and email (or `customer: null`), the shop's sign-in providers, and its translations for the request's locale. It sends no avatar URL, so the component shows the customer's initials. The access token stays on the server. The response is private and uncacheable. When the Customer Account API rejects the access token with `401`, the route refreshes once and retries; it clears the tokens and returns `customer: null` only when the refresh or the retry is rejected too, or when it rejects a token the route just refreshed; any other upstream failure returns `502`, so `<shopify-account>` logs it and keeps its current state on `refresh()` instead of quietly signing the customer out.
 
 ## Typed Queries
 

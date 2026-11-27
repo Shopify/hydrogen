@@ -72,6 +72,9 @@ const REQUEST_IDENTITY_HEADERS = new Set([
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const CACHE_ENABLED_GRAPHQL_CLIENTS = new WeakSet<StorefrontClient["graphql"]>();
 const SHOULD_CACHE_RESULT = Symbol();
+// A registered symbol, because the `development` build has its own copy of this module. A client
+// from `@shopify/hydrogen` and an option set by `@shopify/hydrogen/customer-account` must agree.
+const API_VERSION = Symbol.for("shopify.hydrogen.storefront-api-version");
 const PRIVATE_RESPONSE_DIRECTIVES = new Set(["private", "no-store"]);
 const STOREFRONT_PRIVATE_RESPONSE_PERSONALIZATION_REASON = "storefront-api-private-response";
 
@@ -88,6 +91,18 @@ export function withStorefrontClientCache<TOptions extends object>(
   if (!CACHE_ENABLED_GRAPHQL_CLIENTS.has(client.graphql)) return options;
 
   return { ...options, cache: strategy, [SHOULD_CACHE_RESULT]: shouldCacheResult };
+}
+
+/**
+ * Sends one `graphql()` call to another Storefront API version, such as `unstable`, for fields
+ * that Hydrogen's bundled version doesn't have yet. The bundled schema doesn't type those fields,
+ * so pass the query as a plain string and check the result by hand.
+ */
+export function withStorefrontApiVersion<TOptions extends object>(
+  options: TOptions,
+  apiVersion: string,
+): TOptions {
+  return { ...options, [API_VERSION]: apiVersion };
 }
 
 /**
@@ -224,7 +239,11 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       signal?: AbortSignal;
       cache?: CachingStrategy;
       [SHOULD_CACHE_RESULT]?: ShouldCacheResult;
+      [API_VERSION]?: string;
     };
+    const requestUrl = opts[API_VERSION]
+      ? `${storeUrl}/api/${opts[API_VERSION]}/graphql.json`
+      : apiUrl;
 
     const queryText = typeof doc === "string" ? doc : (doc as unknown as string);
     if (typeof queryText !== "string") {
@@ -281,14 +300,18 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       };
 
       const cacheOptions = createStorefrontCacheOptions(
-        apiUrl,
+        requestUrl,
         init,
         queryText,
         opts.cache,
         opts[SHOULD_CACHE_RESULT],
         timeoutInMs > 0 ? timeoutInMs : DEFAULT_TIMEOUT_IN_MS,
       );
-      const response = await (resolvedFetch as ResolvedStorefrontFetch)(apiUrl, init, cacheOptions);
+      const response = await (resolvedFetch as ResolvedStorefrontFetch)(
+        requestUrl,
+        init,
+        cacheOptions,
+      );
 
       responseHeaders = response.headers;
       requestId = responseHeaders.get("x-request-id") ?? undefined;
@@ -302,7 +325,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
         void response.body?.cancel().catch(() => {});
         // Name only the target origin, which diagnoses a misconfigured `storeDomain` (e.g. an
         // `http://` domain redirected to https) without logging the target's path or query.
-        const locationOrigin = getLocationOrigin(responseHeaders.get("location"), apiUrl);
+        const locationOrigin = getLocationOrigin(responseHeaders.get("location"), requestUrl);
         throw new StorefrontApiError(
           isOpaqueRedirect
             ? "SFAPI responded with a redirect; redirects are not followed"
@@ -355,7 +378,7 @@ export function createStorefrontClient(args: CreateStorefrontClientArgs): Storef
       json = JSON.parse(responseText);
     } catch (cause) {
       throw new StorefrontApiError(
-        `Failed to parse SFAPI response as JSON (${apiUrl}, status ${status})` +
+        `Failed to parse SFAPI response as JSON (${requestUrl}, status ${status})` +
           (responseText ? `: ${responseText.slice(0, 200)}` : ""),
         { status, requestId, cause, queryText, variables },
       );

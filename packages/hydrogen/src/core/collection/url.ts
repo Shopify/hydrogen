@@ -14,7 +14,7 @@ export interface CollectionParams {
   filters: ProductFilter[];
   /** Storefront API sort key from the `sort_by` param, or `undefined` when the param is missing or unrecognized. */
   sortKey: ProductCollectionSortKeys | undefined;
-  /** `true` when the `sort_by` value ends with `-descending`. */
+  /** `true` when the `sort_by` value is a descending price, title, created, or ID sort. For other sort keys, the value is `false`, also when the `sort_by` value ends with `-descending`. */
   reverse: boolean;
 }
 
@@ -33,30 +33,21 @@ const SORT_KEY_TO_SORT_BY: Record<string, string> = {
   COLLECTION_DEFAULT: "collection-default",
 };
 
-const SORT_BY_TO_SORT_KEY: Record<string, ProductCollectionSortKeys> = Object.fromEntries(
+// A Map, not a plain object, so `sort_by` values such as `constructor` don't match
+// `Object.prototype` members.
+const SORT_BY_TO_SORT_KEY = new Map<string, ProductCollectionSortKeys>(
   Object.entries(SORT_KEY_TO_SORT_BY).map(([key, value]) => [
     value,
     key as ProductCollectionSortKeys,
   ]),
 );
 
-const STANDARD_EVENTS_COLLECTION_SORT_KEY: Record<string, ProductCollectionSortKeys> = {
-  "best-selling": "BEST_SELLING",
-  "created-ascending": "CREATED",
-  "created-descending": "CREATED",
-  "price-ascending": "PRICE",
-  "price-descending": "PRICE",
-  "title-ascending": "TITLE",
-  "title-descending": "TITLE",
-  manual: "MANUAL",
-};
-
 /**
  * Reads collection filters and sort from URL search params. Pass the result to your Storefront API collection query.
  *
  * The function reads Liquid-compatible `filter.p.*` and `filter.v.*` keys and the `sort_by` param.
  *
- * A URL that sets availability to both in stock and out of stock produces no availability filter. A price bound must be a non-negative number as `<input type="number">` submits it, such as `12.5`; the function ignores any other value, such as `12,50`, the same way on the server and in the browser. The function recognizes the best-selling and manual sort values, plus created, price, and title with an ascending or descending suffix. For other sort values, the sort key is `undefined`. The `parseSortByValue` function also recognizes relevance, collection default, and ID.
+ * A URL that sets availability to both in stock and out of stock produces no availability filter. A price bound must be a non-negative number as `<input type="number">` submits it, such as `12.5`; the function ignores any other value, such as `12,50`, the same way on the server and in the browser. The function reads the `sort_by` param with `parseSortByValue`, so it reads every value that `getSortByValue` writes. For unrecognized values, the sort key is `undefined`.
  *
  * @param searchParams - URL search params to read.
  * @returns The filters, sort key, and sort direction from the URL.
@@ -64,9 +55,7 @@ const STANDARD_EVENTS_COLLECTION_SORT_KEY: Record<string, ProductCollectionSortK
  */
 export function parseCollectionParams(searchParams: URLSearchParams): CollectionParams {
   const filters = parseProductFilters(searchParams);
-  const sortKey = parseCollectionSortKey(searchParams);
-  const rawSortBy = searchParams.get("sort_by");
-  const reverse = rawSortBy?.endsWith(SORT_BY_DESCENDING_SUFFIX) ?? false;
+  const { sortKey, reverse } = parseSortByValue(searchParams.get("sort_by") ?? "");
 
   return { filters, sortKey, reverse };
 }
@@ -74,9 +63,9 @@ export function parseCollectionParams(searchParams: URLSearchParams): Collection
 /**
  * Converts collection filters and sort to URL search params with Liquid-compatible keys. Use the result to build collection URLs.
  *
- * The result holds only the `filter.*` and `sort_by` keys. The function leaves out `sort_by` for the collection's default sort.
+ * The result holds only the `filter.*` and `sort_by` keys. The function leaves out `sort_by` when the sort key is `undefined`. The `COLLECTION_DEFAULT` sort key writes `collection-default`.
  *
- * Category filters convert to `filter.p.category`, which `parseCollectionParams` doesn't read. A price filter with a minimum and a maximum produces two params. To build a filter checkbox, parse a filter value's `input` string and convert the parsed filter. The resulting entries give the checkbox name and value.
+ * A price filter with a minimum and a maximum produces two params. To build a filter checkbox, parse a filter value's `input` string and convert the parsed filter. The resulting entries give the checkbox name and value.
  *
  * @param state - The filters, sort key, and sort direction to convert.
  * @returns URL search params that hold the filters and sort.
@@ -217,7 +206,7 @@ export function getSortByValue(sortKey: ProductCollectionSortKeys, reverse: bool
  * For unrecognized values, the sort key is `undefined`.
  *
  * @param value - A `sort_by` value, such as `price-ascending` or `best-selling`.
- * @returns The sort key and `reverse`, which reads `true` for descending values.
+ * @returns The sort key and `reverse`. `reverse` reads `true` for descending price, title, created, and ID values. For other sort keys, such as `best-selling-descending`, `reverse` reads `false`.
  * @publicDocs
  */
 export function parseSortByValue(value: string): {
@@ -225,20 +214,21 @@ export function parseSortByValue(value: string): {
   reverse: boolean;
 } {
   if (value.endsWith(SORT_BY_DESCENDING_SUFFIX)) {
-    const base = value.slice(0, -SORT_BY_DESCENDING_SUFFIX.length);
-    return { sortKey: SORT_BY_TO_SORT_KEY[base], reverse: true };
+    const sortKey = SORT_BY_TO_SORT_KEY.get(value.slice(0, -SORT_BY_DESCENDING_SUFFIX.length));
+    return { sortKey, reverse: sortKey === undefined || isDirectionalSortKey(sortKey) };
   }
 
   if (value.endsWith(SORT_BY_ASCENDING_SUFFIX)) {
     const base = value.slice(0, -SORT_BY_ASCENDING_SUFFIX.length);
-    return { sortKey: SORT_BY_TO_SORT_KEY[base], reverse: false };
+    return { sortKey: SORT_BY_TO_SORT_KEY.get(base), reverse: false };
   }
 
-  return { sortKey: SORT_BY_TO_SORT_KEY[value], reverse: false };
+  return { sortKey: SORT_BY_TO_SORT_KEY.get(value), reverse: false };
 }
 
 /**
- * Mirrors `parseProductFilters` from storefront-standard-events.
+ * Based on `parseProductFilters` from storefront-standard-events. Also reads
+ * the `filter.p.category` param that Hydrogen writes for category filters.
  *
  * Keep this local because Hydrogen only vendors Standard Events
  * declarations, so importing CollectionUpdateEvent would require runtime JS.
@@ -269,6 +259,10 @@ function parseProductFilters(searchParams: URLSearchParams): ProductFilter[] {
 
   for (const tag of searchParams.getAll("filter.p.tag")) {
     filters.push({ tag });
+  }
+
+  for (const id of searchParams.getAll("filter.p.category")) {
+    filters.push({ category: { id } });
   }
 
   for (const [key, value] of searchParams) {
@@ -312,14 +306,6 @@ function parseProductFilters(searchParams: URLSearchParams): ProductFilter[] {
   }
 
   return filters;
-}
-
-/** Mirrors `getCollectionSortKey` from storefront-standard-events. */
-function parseCollectionSortKey(
-  searchParams: URLSearchParams,
-): ProductCollectionSortKeys | undefined {
-  const rawSortBy = searchParams.get("sort_by");
-  return rawSortBy ? STANDARD_EVENTS_COLLECTION_SORT_KEY[rawSortBy] : undefined;
 }
 
 // The HTML valid floating-point number grammar, which <input type="number"> submits and

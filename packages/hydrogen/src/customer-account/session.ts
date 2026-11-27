@@ -12,11 +12,25 @@ import {
   type CallableRouteHandler,
   type ShopifyRouteErrorResult,
   type ShopifyRouteHandlerContext,
+  type ShopifyRouteJsonResult,
   type ShopifyRouteRedirectResult,
   type ShopifyRouteSessionManager,
 } from "../core/request-routing/registered-routes";
 import { CUSTOMER_ACCOUNT_PATHS, getSameOriginPath } from "../core/url";
-import { CustomerAccountApiError, CustomerAccountOAuthError } from "./errors";
+import { createCustomerAccountClient, type CustomerAccountClient } from "./client";
+import {
+  CustomerAccountApiError,
+  CustomerAccountOAuthError,
+  CustomerAccountTimeoutError,
+} from "./errors";
+import {
+  getAccountWidgetVisitor,
+  queryAccountWidgetCustomer,
+  queryAccountWidgetShop,
+  type AccountWidgetCustomer,
+  type AccountWidgetData,
+  type AccountWidgetShop,
+} from "./widget-data";
 
 const log = getLogger("customer-account");
 
@@ -44,6 +58,12 @@ export const CUSTOMER_ACCOUNT_LOGOUT_PATH = CUSTOMER_ACCOUNT_PATHS.logout;
  * @publicDocs
  */
 export const CUSTOMER_ACCOUNT_REFRESH_PATH = CUSTOMER_ACCOUNT_PATHS.refresh;
+/**
+ * Account widget data route path: `"/account/widget-data"`.
+ *
+ * @publicDocs
+ */
+export const CUSTOMER_ACCOUNT_WIDGET_DATA_PATH = CUSTOMER_ACCOUNT_PATHS.widgetData;
 
 const CUSTOMER_ACCOUNT_SESSION_KEY = "customerAccount";
 const DEFAULT_LOGIN_RETURN_TO_PATH = "/account";
@@ -53,6 +73,8 @@ const FAILED_LOGIN_PATH = "/account?login=failed";
 const FORBIDDEN_STATUS = 403;
 const FORBIDDEN_ERROR_CODE = "forbidden";
 const FORBIDDEN_ERROR_MESSAGE = "Forbidden";
+const BAD_GATEWAY_STATUS = 502;
+const WIDGET_DATA_DEADLINE_IN_MS = 8_000;
 const NO_STORE_CACHE_CONTROL = "no-store";
 const AUTHORIZATION_CODE_GRANT_TYPE = "authorization_code";
 const REFRESH_TOKEN_GRANT_TYPE = "refresh_token";
@@ -143,6 +165,8 @@ export type PrepareLoginUrlOptions = {
   loginHintMode?: string;
   /** The authentication context class to request, sent as the `acr_values` search param. */
   acrValues?: string;
+  /** The customer's choice on the sign-in form's marketing consent checkbox, sent as the `marketing_consent` search param. Shopify subscribes a consenting customer to email marketing when the shop collects marketing consent at sign-in, and ignores the value otherwise. */
+  marketingConsent?: boolean;
 };
 
 /**
@@ -230,7 +254,7 @@ export type CustomerSession = {
 };
 
 /**
- * The login, authorize, refresh, and logout routes for customer accounts. Add the object to the `handlers` option of `handleShopifyRoutes`.
+ * The login, authorize, refresh, logout, and account widget data routes for customer accounts. Add the object to the `handlers` option of `handleShopifyRoutes`.
  */
 export type CustomerAccountServerHandlers<
   TContext extends CustomerAccountRouteHandlerContext = CustomerAccountRouteHandlerContext,
@@ -242,7 +266,7 @@ export type CustomerAccountServerHandlers<
     typeof CUSTOMER_ACCOUNT_AUTHORIZE_PATH,
     "GET"
   >;
-  /** Starts sign-in at `/account/login` and redirects the customer to Shopify's login page. Accepts `GET`. Pass `return_to`, `locale`, `acr_values`, `login_hint`, and `login_hint_mode` as search params. The route sends the request context's country to Shopify. */
+  /** Starts sign-in at `/account/login` and redirects the customer to Shopify's login page. Accepts `GET`. Pass `return_to`, `locale`, `acr_values`, `login_hint`, `login_hint_mode`, and `marketing_consent` as search params. The route forwards `marketing_consent` only when the value is `true` or `false`. The route sends the request context's country to Shopify. */
   login: CallableRouteHandler<
     TContext,
     CustomerAccountRouteResult,
@@ -265,6 +289,17 @@ export type CustomerAccountServerHandlers<
     TContext,
     CustomerAccountRouteResult,
     typeof CUSTOMER_ACCOUNT_REFRESH_PATH,
+    "GET"
+  >;
+  /**
+   * Returns the data for `<shopify-account account-data-url>` at `/account/widget-data`: the signed-in customer's name and email, or `null` for signed-out visitors, plus the shop's sign-in providers, marketing consent settings, and account sheet translations for the request's locale. Accepts `GET`. The customer's access token stays on the server. Under a locale path prefix, point `account-data-url` at the prefixed path, such as `/fr-ca/account/widget-data`, to get that locale's translations.
+   *
+   * The route refreshes an expired access token and commits the session. The response is private and uncacheable. When the Customer Account API rejects the access token with a `401` status, the route refreshes the token once and retries. It clears the stored tokens and returns `customer: null` when the refresh or the retried request is rejected too, or when the API rejects a token the route just refreshed. When the Storefront API or Customer Account API request fails otherwise, or a signed-in customer's token can't be refreshed for a temporary reason, the route returns a `502` error instead of partial data. The marketing consent settings come from the `unstable` Storefront API, and the route turns them off when that request fails or takes longer than 2 seconds. The token refresh and the API requests share an 8-second deadline, within the component's 10-second timeout. The route needs `storefrontClient` in the handler context, and throws when the customer session doesn't come from `createCustomerSession`.
+   */
+  widgetData: CallableRouteHandler<
+    TContext & Pick<ShopifyRouteHandlerContext, "storefrontClient">,
+    CustomerAccountWidgetDataResult,
+    typeof CUSTOMER_ACCOUNT_WIDGET_DATA_PATH,
     "GET"
   >;
 };
@@ -299,7 +334,7 @@ interface CustomerAccountServerHandlersOptionsWithoutCart extends CreateCustomer
   /**
    * The cart server handlers that `createCartServerHandlers` returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.
    *
-   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the `cart` cookie. The sync needs `storefrontClient` in the handler context.
+   * The authorize and refresh routes, and a widget data request that refreshes the token, attach the customer to the cart. The logout route, and a refresh or widget data request that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still responds. When a detach fails, the route also expires the `cart` cookie. The sync needs `storefrontClient` in the handler context.
    *
    * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from `createCustomerSession`.
    */
@@ -313,7 +348,7 @@ interface CustomerAccountServerHandlersOptionsWithCart extends CreateCustomerAcc
   /**
    * The cart server handlers that `createCartServerHandlers` returns with its `customerSession` option. Pass the cart handlers to keep the cart's buyer identity in step with the signed-in customer.
    *
-   * The authorize and refresh routes attach the customer to the cart. The logout route, and a refresh that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still redirects. When a detach fails, the route also expires the `cart` cookie. The sync needs `storefrontClient` in the handler context.
+   * The authorize and refresh routes, and a widget data request that refreshes the token, attach the customer to the cart. The logout route, and a refresh or widget data request that ends the session, detach the customer from the cart. When a sync fails, the route logs the error and still responds. When a detach fails, the route also expires the `cart` cookie. The sync needs `storefrontClient` in the handler context.
    *
    * Creating the handlers throws when the cart handlers lack the `customerSession` option, or when the customer session doesn't come from `createCustomerSession`.
    */
@@ -348,36 +383,52 @@ type TokenRefreshResult =
       /** A usable access token is available. */
       status: "authenticated";
       accessToken: string;
+      /** The access token came from a refresh, which wrote new tokens to the session. */
+      tokensChanged?: true;
     }
   | {
       /** Refresh failed transiently, but the refreshable session remains. */
       status: "transient";
       accessToken: undefined;
+      tokensChanged?: never;
     }
   | {
       /** No usable or refreshable customer session remains. */
       status: "unauthenticated";
       accessToken: undefined;
+      /** Shopify rejected the refresh token, so the stored tokens were cleared. */
+      tokensChanged?: true;
     };
 type OAuthCallbackResult = {
   location: string;
   accessToken: string;
 };
+type InternalRefreshOptions = RequestOriginOptions & {
+  /** Stops waiting for the refresh, which then counts as a transient failure. The shared refresh request keeps running. */
+  signal?: AbortSignal;
+  /** Refreshes even when the stored access token hasn't expired, such as after the Customer Account API rejected it. */
+  forceRefresh?: boolean;
+};
 type CustomerSessionInternals = {
   getOrRefreshAccessToken(
     sessionManager: WritableCustomerSessionManager,
     requestContext: ShopifyRequestContext,
-    options?: RequestOriginOptions,
+    options?: InternalRefreshOptions,
   ): Promise<TokenRefreshResult>;
   handleOAuthCallback(
     sessionManager: WritableCustomerSessionManager,
     requestContext: ShopifyRequestContext,
     request: Request,
   ): Promise<OAuthCallbackResult>;
+  createCustomerAccountClient(requestContext: ShopifyRequestContext): CustomerAccountClient;
 };
 const customerSessionInternals = new WeakMap<CustomerSession, CustomerSessionInternals>();
 /** A redirect, or a `403` error when a logout request comes from another origin. */
 type CustomerAccountRouteResult = ShopifyRouteRedirectResult | ShopifyRouteErrorResult;
+/** The account widget's data, or a `502` error when an upstream request fails. */
+type CustomerAccountWidgetDataResult =
+  | ShopifyRouteJsonResult<AccountWidgetData>
+  | ShopifyRouteErrorResult;
 type CustomerAccountRouteHandlerContext = {
   request: Request;
   sessionManager: WritableCustomerSessionManager;
@@ -386,11 +437,15 @@ type CustomerAccountRouteHandlerContext = {
 type CustomerAccountRuntimeRouteHandlerContext = CustomerAccountRouteHandlerContext & {
   storefrontClient?: StorefrontClient;
 };
+type CustomerAccountWidgetDataRouteHandlerContext = CustomerAccountRouteHandlerContext & {
+  storefrontClient: StorefrontClient;
+};
 type CustomerAccountServerHandlersForOptions<TOptions> = TOptions extends {
   cartServerHandlers: CartBuyerIdentitySyncSource;
 }
   ? CustomerAccountServerHandlersWithCartSync
   : CustomerAccountServerHandlers;
+type CartSyncRoute = "authorize" | "refresh" | "logout" | "widget-data";
 type TokenRequestParams = {
   url: string;
   origin: string;
@@ -467,12 +522,12 @@ export function createCustomerSession({
   async function getOrRefreshAccessTokenResult(
     sessionManager: WritableCustomerSessionManager,
     requestContext: ShopifyRequestContext,
-    options: RequestOriginOptions = {},
+    options: InternalRefreshOptions = {},
   ): Promise<TokenRefreshResult> {
     requestContext.markResponseAsPersonalized(CUSTOMER_SESSION_ACCESS_TOKEN_PERSONALIZATION_REASON);
     const sessionData = await readSessionData(sessionManager);
     const accessToken = getUsableAccessToken(sessionData);
-    if (accessToken) return { status: "authenticated", accessToken };
+    if (accessToken && !options.forceRefresh) return { status: "authenticated", accessToken };
 
     const refreshToken = getRefreshToken(sessionData);
     if (!refreshToken) return { status: "unauthenticated", accessToken: undefined };
@@ -488,6 +543,7 @@ export function createCustomerSession({
       customerAccountApiClientId,
       fetch,
       timeoutInMs: defaultTimeoutInMs,
+      signal: options.signal,
     });
 
     if (refreshResult.type === "success") {
@@ -499,12 +555,13 @@ export function createCustomerSession({
       return {
         status: "authenticated",
         accessToken: refreshedAccessToken,
+        tokensChanged: true,
       };
     }
 
     if (refreshResult.type === "invalid") {
       await clearTokens(sessionManager);
-      return { status: "unauthenticated", accessToken: undefined };
+      return { status: "unauthenticated", accessToken: undefined, tokensChanged: true };
     }
 
     return { status: "transient", accessToken: undefined };
@@ -614,6 +671,8 @@ export function createCustomerSession({
   customerSessionInternals.set(customerSession, {
     getOrRefreshAccessToken: getOrRefreshAccessTokenResult,
     handleOAuthCallback: handleOAuthCallbackResult,
+    createCustomerAccountClient: (requestContext) =>
+      createCustomerAccountClient({ shopId, requestContext, fetch, defaultTimeoutInMs }),
   });
   return customerSession;
 }
@@ -636,7 +695,15 @@ export async function getCustomerSessionRefreshResult(
  *
  * Link to these paths with full-page navigation, such as a plain `<a>` link or a `<form>`. Client-side navigation components can't follow these redirects.
  *
- * @returns The login, authorize, refresh, and logout routes.
+ * The widget data route at `/account/widget-data` returns JSON for Shopify's `<shopify-account>` component, so the component can show the signed-in customer without the access token reaching the page. Render the component with `ShopifyAccount` from `@shopify/hydrogen/react` or `@shopify/hydrogen/vue`, which points it at this route and the login route under the page's locale prefix, and load its script with `<ShopifyScripts account />`.
+ *
+ * @example
+ * ```tsx
+ * <ShopifyScripts shop={shop} account />
+ * <ShopifyAccount signedOutAvatar="Sign in" />
+ * ```
+ *
+ * @returns The login, authorize, refresh, logout, and account widget data routes.
  * @publicDocs
  */
 export function createCustomerAccountServerHandlers<
@@ -644,7 +711,7 @@ export function createCustomerAccountServerHandlers<
 >(options: TOptions): CustomerAccountServerHandlersForOptions<TOptions>;
 /**
  * @param options The customer session, the redirect paths, and optional cart handlers for the account routes.
- * @returns The login, authorize, refresh, and logout routes.
+ * @returns The login, authorize, refresh, logout, and account widget data routes.
  */
 export function createCustomerAccountServerHandlers(
   options: CreateCustomerAccountServerHandlersOptions,
@@ -707,6 +774,13 @@ export function createCustomerAccountServerHandlers(
         return handleRefreshRoute(customerSession, context, originOption, cartSync);
       },
     ),
+    widgetData: createCallableRouteHandler(
+      CUSTOMER_ACCOUNT_WIDGET_DATA_PATH,
+      "GET",
+      async (context: CustomerAccountWidgetDataRouteHandlerContext) => {
+        return handleWidgetDataRoute(customerSession, context, originOption, cartSync);
+      },
+    ),
   };
 }
 
@@ -755,6 +829,7 @@ async function handleLoginRoute(
     acrValues: getOptionalSearchParam(requestUrl, "acr_values"),
     loginHint: getOptionalSearchParam(requestUrl, "login_hint"),
     loginHintMode: getOptionalSearchParam(requestUrl, "login_hint_mode"),
+    marketingConsent: getMarketingConsentSearchParam(requestUrl),
   });
   return redirectResult(loginUrl, await commitSession(sessionManager));
 }
@@ -780,13 +855,9 @@ async function handleLogoutRoute(
 
   // The redirect must complete even when detach fails: skipping it would leave
   // the Shopify IdP session alive after the app session is already destroyed.
-  // Expiring the cart cookie is the fail-safe when the cart keeps the identity.
-  let detachFailed = false;
-  if (cartSync) {
-    detachFailed = !(await syncCartBuyerIdentity(cartSync, context, null, "logout"));
-  }
-  const headers = new Headers(await commitSession(sessionManager));
-  if (cartSync && detachFailed) headers.append("set-cookie", cartSync.expiredCartCookie);
+  const headers = cartSync
+    ? await commitSessionWithCartSync(cartSync, context, null, "logout")
+    : await commitSession(sessionManager);
   return redirectResult(logoutUrl, headers);
 }
 
@@ -851,20 +922,15 @@ async function handleRefreshRoute(
   );
   // Transient refresh failures keep the refreshable session, so the cart's
   // identity is left untouched; a definitive outcome attaches or detaches it.
-  let detachFailed = false;
-  if (refreshResult.status !== "transient") {
-    const customerAccessToken = refreshResult.accessToken ?? null;
-    const syncSucceeded = await syncCartBuyerIdentity(
-      cartSync,
-      context,
-      customerAccessToken,
-      "refresh",
-    );
-    detachFailed = customerAccessToken === null && !syncSucceeded;
-  }
-
-  const headers = new Headers(await commitSession(sessionManager));
-  if (detachFailed) headers.append("set-cookie", cartSync.expiredCartCookie);
+  const headers =
+    refreshResult.status === "transient"
+      ? await commitSession(sessionManager)
+      : await commitSessionWithCartSync(
+          cartSync,
+          context,
+          refreshResult.accessToken ?? null,
+          "refresh",
+        );
   return refreshRedirectResult(request, origin, headers);
 }
 
@@ -877,6 +943,232 @@ function refreshRedirectResult(
   const returnTo =
     requestUrl.searchParams.get("return_to") ?? requestUrl.searchParams.get("returnTo");
   return redirectResult(sanitizeReturnTo(returnTo, origin), headers);
+}
+
+async function handleWidgetDataRoute(
+  customerSession: CustomerSession,
+  context: CustomerAccountWidgetDataRouteHandlerContext,
+  originOption: string | ((request: Request) => string) | undefined,
+  cartSync: CartBuyerIdentitySync | undefined,
+): Promise<CustomerAccountWidgetDataResult> {
+  const internal = customerSessionInternals.get(customerSession);
+  if (!internal) {
+    throw new Error(
+      "The account widget data route requires the customerSession returned by createCustomerSession.",
+    );
+  }
+
+  const { request, sessionManager, requestContext, storefrontClient } = context;
+  const origin = await resolveRouteOrigin(sessionManager, request, originOption);
+  const deadline = createWidgetDataDeadline(requestContext.signal);
+  try {
+    const { signal } = deadline;
+    const shopRequest = settle(queryAccountWidgetShop(storefrontClient, signal));
+    const { customer, cartCustomerAccessToken } = await getWidgetCustomer(
+      internal,
+      sessionManager,
+      requestContext,
+      { origin, signal },
+    );
+    const shop = await shopRequest;
+
+    const headers = new Headers(
+      cartSync && cartCustomerAccessToken !== undefined
+        ? await commitSessionWithCartSync(
+            cartSync,
+            context,
+            cartCustomerAccessToken,
+            "widget-data",
+            signal,
+          )
+        : await commitSession(sessionManager),
+    );
+    headers.set("cache-control", NO_STORE_CACHE_CONTROL);
+    headers.set("x-content-type-options", "nosniff");
+    return createWidgetDataResult(shop, customer, requestContext, headers);
+  } finally {
+    deadline.clear();
+  }
+}
+
+/**
+ * Returns the signed-in customer, or `null` when signed out, and the access token the cart's
+ * customer must change to, if any.
+ */
+async function getWidgetCustomer(
+  internal: CustomerSessionInternals,
+  sessionManager: WritableCustomerSessionManager,
+  requestContext: ShopifyRequestContext,
+  options: InternalRefreshOptions & { signal: AbortSignal },
+): Promise<{
+  customer: PromiseSettledResult<AccountWidgetCustomer | null>;
+  cartCustomerAccessToken: string | null | undefined;
+}> {
+  const tokenResult = await internal.getOrRefreshAccessToken(
+    sessionManager,
+    requestContext,
+    options,
+  );
+  // The cart follows the customer only when the stored tokens change, so a page view doesn't
+  // send a cart mutation.
+  const cartCustomerAccessToken = tokenResult.tokensChanged
+    ? (tokenResult.accessToken ?? null)
+    : undefined;
+  if (tokenResult.status === "transient") {
+    const reason = new Error("The access token refresh failed temporarily");
+    return { customer: { status: "rejected", reason }, cartCustomerAccessToken };
+  }
+  if (!tokenResult.accessToken) {
+    return { customer: { status: "fulfilled", value: null }, cartCustomerAccessToken };
+  }
+
+  const customer = await queryWidgetCustomer(
+    internal,
+    requestContext,
+    tokenResult.accessToken,
+    options.signal,
+  );
+  if (!isRejectedAccessTokenResult(customer)) return { customer, cartCustomerAccessToken };
+  // A token refreshed for this request was rejected too, so another refresh wouldn't help.
+  if (tokenResult.tokensChanged) {
+    return signOutWidgetCustomer(sessionManager, "refreshed_token_rejected");
+  }
+
+  // The access token can be revoked or rejected before it expires while the refresh token is
+  // still good, so one refresh comes before signing the customer out.
+  const retry = await internal.getOrRefreshAccessToken(sessionManager, requestContext, {
+    ...options,
+    forceRefresh: true,
+  });
+  if (retry.status === "transient") {
+    const reason = new Error("The access token refresh failed temporarily");
+    return { customer: { status: "rejected", reason }, cartCustomerAccessToken: undefined };
+  }
+  if (!retry.accessToken) return signOutWidgetCustomer(sessionManager, "refresh_rejected");
+
+  const retried = await queryWidgetCustomer(
+    internal,
+    requestContext,
+    retry.accessToken,
+    options.signal,
+  );
+  if (isRejectedAccessTokenResult(retried)) {
+    return signOutWidgetCustomer(sessionManager, "retry_rejected");
+  }
+  return { customer: retried, cartCustomerAccessToken: retry.accessToken };
+}
+
+function queryWidgetCustomer(
+  internal: CustomerSessionInternals,
+  requestContext: ShopifyRequestContext,
+  accessToken: string,
+  signal: AbortSignal,
+): Promise<PromiseSettledResult<AccountWidgetCustomer>> {
+  // Creating the client throws for a non-HTTPS request URL, and a throw here would skip
+  // committing the tokens the refresh just wrote.
+  return settle(
+    Promise.resolve().then(() =>
+      queryAccountWidgetCustomer(
+        internal.createCustomerAccountClient(requestContext),
+        accessToken,
+        signal,
+      ),
+    ),
+  );
+}
+
+async function signOutWidgetCustomer(
+  sessionManager: WritableCustomerSessionManager,
+  reason: "refreshed_token_rejected" | "refresh_rejected" | "retry_rejected",
+) {
+  log.warn(
+    "account widget signed the customer out after the Customer Account API rejected the access token",
+    { reason },
+  );
+  await clearTokens(sessionManager);
+  return {
+    customer: { status: "fulfilled", value: null },
+    cartCustomerAccessToken: null,
+  } satisfies Awaited<ReturnType<typeof getWidgetCustomer>>;
+}
+
+function createWidgetDataResult(
+  shop: PromiseSettledResult<AccountWidgetShop>,
+  customer: PromiseSettledResult<AccountWidgetCustomer | null>,
+  requestContext: ShopifyRequestContext,
+  headers: Headers,
+): CustomerAccountWidgetDataResult {
+  if (shop.status === "rejected") {
+    log.error("account widget shop query failed", { error: shop.reason });
+  }
+  if (customer.status === "rejected") {
+    log.error("account widget customer query failed", { error: customer.reason });
+  }
+
+  if (shop.status === "rejected") {
+    return badGatewayResult(
+      "shop_unavailable",
+      "The shop's account settings are unavailable",
+      headers,
+    );
+  }
+  // An error, not `customer: null`, so `<shopify-account>` keeps its current state on `refresh()`
+  // and logs the failure instead of quietly signing the customer out.
+  if (customer.status === "rejected") {
+    return badGatewayResult(
+      "customer_unavailable",
+      "The customer's account is unavailable",
+      headers,
+    );
+  }
+
+  return {
+    type: "json",
+    data: {
+      customer: customer.value,
+      shop: shop.value,
+      visitor: getAccountWidgetVisitor(requestContext),
+    },
+    headers,
+  };
+}
+
+// `<shopify-account>` aborts its request after 10 seconds. Responding before then means tokens a
+// finished refresh wrote reach the browser's cookie instead of a response nobody reads. A shared
+// refresh still running at the deadline keeps going for any other request waiting on it.
+function createWidgetDataDeadline(requestSignal: AbortSignal | undefined) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort(new CustomerAccountTimeoutError(WIDGET_DATA_DEADLINE_IN_MS));
+  }, WIDGET_DATA_DEADLINE_IN_MS);
+  return {
+    signal: requestSignal ? AbortSignal.any([controller.signal, requestSignal]) : controller.signal,
+    clear: () => clearTimeout(timeoutId),
+  };
+}
+
+function isRejectedAccessTokenResult(result: PromiseSettledResult<unknown>): boolean {
+  return (
+    result.status === "rejected" &&
+    result.reason instanceof CustomerAccountApiError &&
+    result.reason.status === 401
+  );
+}
+
+// Settled up front so a rejection that happens before it is awaited isn't reported as unhandled.
+function settle<T>(promise: Promise<T>): Promise<PromiseSettledResult<T>> {
+  return promise.then(
+    (value) => ({ status: "fulfilled", value }),
+    (reason: unknown) => ({ status: "rejected", reason }),
+  );
+}
+
+function badGatewayResult(
+  code: string,
+  message: string,
+  headers: Headers,
+): ShopifyRouteErrorResult {
+  return { type: "error", status: BAD_GATEWAY_STATUS, error: { code, message }, headers };
 }
 
 async function handleOAuthCallbackWithAccessToken(
@@ -905,11 +1197,32 @@ async function getOrRefreshAccessTokenWithStatus(
   return internal.getOrRefreshAccessToken(sessionManager, requestContext, options);
 }
 
+/**
+ * Attaches the customer to the cart, or detaches them when the token is `null`, then commits the
+ * session. When a detach fails, the headers also expire the cart cookie, so a shared device never
+ * keeps a cart bound to the previous customer.
+ */
+async function commitSessionWithCartSync(
+  cartSync: CartBuyerIdentitySync,
+  context: CustomerAccountRuntimeRouteHandlerContext,
+  customerAccessToken: string | null,
+  route: CartSyncRoute,
+  signal?: AbortSignal,
+): Promise<Headers> {
+  const synced = await syncCartBuyerIdentity(cartSync, context, customerAccessToken, route, signal);
+  const headers = new Headers(await commitSession(context.sessionManager));
+  if (customerAccessToken === null && !synced) {
+    headers.append("set-cookie", cartSync.expiredCartCookie);
+  }
+  return headers;
+}
+
 async function syncCartBuyerIdentity(
   cartSync: CartBuyerIdentitySync,
   context: CustomerAccountRuntimeRouteHandlerContext,
   customerAccessToken: string | null,
-  route: "authorize" | "refresh" | "logout",
+  route: CartSyncRoute,
+  signal?: AbortSignal,
 ): Promise<boolean> {
   try {
     if (!context.storefrontClient) {
@@ -918,7 +1231,7 @@ async function syncCartBuyerIdentity(
       );
     }
     await cartSync.updateBuyerIdentity(
-      { request: context.request, storefrontClient: context.storefrontClient },
+      { request: context.request, storefrontClient: context.storefrontClient, signal },
       customerAccessToken,
     );
     return true;
@@ -946,6 +1259,13 @@ async function getResolvedOrigin(
 
 function getOptionalSearchParam(url: URL, name: string): string | undefined {
   return url.searchParams.get(name) ?? undefined;
+}
+
+function getMarketingConsentSearchParam(url: URL): boolean | undefined {
+  const value = url.searchParams.get("marketing_consent");
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return undefined;
 }
 
 function redirectResult(location: string, headers?: HeadersInit): ShopifyRouteRedirectResult {
@@ -1125,6 +1445,7 @@ async function getRefreshResult({
   customerAccountApiClientId,
   fetch,
   timeoutInMs,
+  signal,
 }: {
   refreshFlights: Map<string, Promise<RefreshResult>>;
   refreshToken: string;
@@ -1134,27 +1455,33 @@ async function getRefreshResult({
   customerAccountApiClientId: string;
   fetch: typeof globalThis.fetch;
   timeoutInMs: number;
-}) {
+  signal: AbortSignal | undefined;
+}): Promise<RefreshResult> {
   const flightKey = `${origin}\n${refreshToken}`;
-  const existingFlight = refreshFlights.get(flightKey);
-  if (existingFlight) return existingFlight;
-
-  const flight = refreshAccessToken({
-    endpoints,
-    customerAccountApiClientId,
-    refreshToken,
-    idToken,
-    origin,
-    fetch,
-    timeoutInMs,
-  });
-  refreshFlights.set(flightKey, flight);
-
-  try {
-    return await flight;
-  } finally {
-    refreshFlights.delete(flightKey);
+  let flight = refreshFlights.get(flightKey);
+  if (!flight) {
+    flight = refreshAccessToken({
+      endpoints,
+      customerAccountApiClientId,
+      refreshToken,
+      idToken,
+      origin,
+      fetch,
+      timeoutInMs,
+    }).finally(() => refreshFlights.delete(flightKey));
+    refreshFlights.set(flightKey, flight);
   }
+  return waitForRefresh(flight, signal);
+}
+
+// The flight is shared and runs on its own timeout, so a caller's signal, including the signal of
+// the caller that started it, stops only that caller's wait. Callers still waiting get the result.
+function waitForRefresh(
+  flight: Promise<RefreshResult>,
+  signal: AbortSignal | undefined,
+): Promise<RefreshResult> {
+  if (!signal) return flight;
+  return withAbort(flight, signal).catch((): RefreshResult => ({ type: "transient" }));
 }
 
 async function refreshAccessToken({
@@ -1554,6 +1881,9 @@ function setOptionalLoginParams(loginUrl: URL, options: PrepareLoginUrlOptions):
   if (options.locale) loginUrl.searchParams.set("locale", options.locale);
   if (options.countryCode) loginUrl.searchParams.set("region_country", options.countryCode);
   if (options.acrValues) loginUrl.searchParams.set("acr_values", options.acrValues);
+  if (options.marketingConsent !== undefined) {
+    loginUrl.searchParams.set("marketing_consent", String(options.marketingConsent));
+  }
   if (!options.loginHint) return;
 
   loginUrl.searchParams.set("login_hint", options.loginHint);

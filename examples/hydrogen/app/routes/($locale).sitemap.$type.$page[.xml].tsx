@@ -1,12 +1,14 @@
-import { getLocalizedHref, getSupportedLocales, type ShopifyLocale } from "@shopify/hydrogen";
+import {
+  getLocalizedHref,
+  getSupportedLocales,
+  withStorefrontRateLimit,
+  type ShopifyLocale,
+} from "@shopify/hydrogen";
 
 import { i18n } from "~/lib/i18n";
 import { createSitemapResponse } from "~/lib/sitemap";
 
 import type { Route } from "./+types/($locale).sitemap.$type.$page[.xml]";
-
-const SITEMAP_MAX_AGE_SECONDS = 86_400;
-const SITEMAP_CACHE_CONTROL = `max-age=${SITEMAP_MAX_AGE_SECONDS}`;
 
 // Declared before `LOCALES_BY_HREFLANG`, which calls `toHreflang` at module load.
 const HREFLANG_LANGUAGE_OVERRIDES: Partial<Record<ShopifyLocale["language"], string>> = {
@@ -19,26 +21,24 @@ const LOCALES_BY_HREFLANG = new Map(
   getSupportedLocales(i18n).map((locale) => [toHreflang(locale), locale] as const),
 );
 
-export async function loader({ request, params, context: { storefront } }: Route.LoaderArgs) {
-  const response = await createSitemapResponse({
-    storefront,
-    request,
-    params,
-    locales: [...LOCALES_BY_HREFLANG.keys()],
-    getLink: ({ type, baseUrl, handle, locale: hreflang }) => {
-      const path = `/${type}/${handle}`;
-      const locale = hreflang ? LOCALES_BY_HREFLANG.get(hreflang) : undefined;
-      const href = locale ? getLocalizedHref(path, { i18n, locale }) : path;
-      // Domain routing returns an absolute URL on the locale's host; resolving against
-      // `baseUrl` keeps that host and only fills in the origin for pathname hrefs.
-      return new URL(href, baseUrl).toString();
-    },
-  });
-
-  response.headers.set("Cache-Control", SITEMAP_CACHE_CONTROL);
-
-  return response;
-}
+export const loader = withStorefrontRateLimit(
+  async ({ request, params, context: { storefront } }: Route.LoaderArgs) => {
+    return createSitemapResponse({
+      storefront,
+      request,
+      params,
+      locales: [...LOCALES_BY_HREFLANG.keys()],
+      getLink: ({ type, baseUrl, handle, locale: hreflang }) => {
+        const path = `/${type}/${handle}`;
+        const locale = hreflang ? LOCALES_BY_HREFLANG.get(hreflang) : undefined;
+        const href = locale ? getLocalizedHref(path, { i18n, locale }) : path;
+        // Domain routing returns an absolute URL on the locale's host; resolving against
+        // `baseUrl` keeps that host and only fills in the origin for pathname hrefs.
+        return new URL(href, baseUrl).toString();
+      },
+    });
+  },
+);
 
 // BCP 47 allows one region subtag. Shopify's regional language codes (`PT_BR`, `ZH_TW`) already
 // carry one, so keep only the primary language and let `country` name the targeted region:

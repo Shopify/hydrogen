@@ -1,6 +1,7 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
 
 import type { ProductFilter } from "../../../../vendor/standard-events";
+import type { ProductCollectionSortKeys } from "../../../graphql/generated/storefront-api-types";
 import {
   parseCollectionParams,
   parseSortByValue,
@@ -130,6 +131,18 @@ describe("parseCollectionParams", () => {
       ]);
     });
 
+    it("parses category filters", () => {
+      const result = parseCollectionParams(
+        params(
+          "filter.p.category=gid%3A%2F%2Fshopify%2FTaxonomyCategory%2F1&filter.p.category=gid%3A%2F%2Fshopify%2FTaxonomyCategory%2F2",
+        ),
+      );
+      expect(result.filters).toEqual([
+        { category: { id: "gid://shopify/TaxonomyCategory/1" } },
+        { category: { id: "gid://shopify/TaxonomyCategory/2" } },
+      ]);
+    });
+
     it("parses combined filters", () => {
       const result = parseCollectionParams(
         params(
@@ -194,6 +207,28 @@ describe("parseCollectionParams", () => {
       expect(result.reverse).toBe(false);
     });
 
+    it.each([
+      ["collection-default", "COLLECTION_DEFAULT", false],
+      ["id-ascending", "ID", false],
+      ["id-descending", "ID", true],
+      ["relevance", "RELEVANCE", false],
+    ] as const)("parses %s", (sortBy, sortKey, reverse) => {
+      const result = parseCollectionParams(params(`sort_by=${sortBy}`));
+      expect(result.sortKey).toBe(sortKey);
+      expect(result.reverse).toBe(reverse);
+    });
+
+    it.each([
+      ["best-selling-descending", "BEST_SELLING"],
+      ["relevance-descending", "RELEVANCE"],
+      ["manual-descending", "MANUAL"],
+      ["collection-default-descending", "COLLECTION_DEFAULT"],
+    ] as const)("parses %s as reverse false (no direction)", (sortBy, sortKey) => {
+      const result = parseCollectionParams(params(`sort_by=${sortBy}`));
+      expect(result.sortKey).toBe(sortKey);
+      expect(result.reverse).toBe(false);
+    });
+
     it("returns undefined sortKey when sort_by is missing", () => {
       const result = parseCollectionParams(params("filter.p.tag=men"));
       expect(result.sortKey).toBeUndefined();
@@ -204,6 +239,12 @@ describe("parseCollectionParams", () => {
       const result = parseCollectionParams(params("sort_by=unknown-value"));
       expect(result.sortKey).toBeUndefined();
       expect(result.reverse).toBe(false);
+    });
+
+    it("returns undefined sortKey for a sort_by value that names an Object.prototype property", () => {
+      const result = parseCollectionParams(params("sort_by=constructor-descending"));
+      expect(result.sortKey).toBeUndefined();
+      expect(result.reverse).toBe(true);
     });
   });
 });
@@ -368,6 +409,49 @@ describe("serializeCollectionParams", () => {
       reverse: false,
     });
     expect(result.get("filter.p.vendor")).toBe("Nike");
+  });
+});
+
+describe("round-trip: serialize → parse", () => {
+  const SORT_KEYS: Record<ProductCollectionSortKeys, true> = {
+    BEST_SELLING: true,
+    COLLECTION_DEFAULT: true,
+    CREATED: true,
+    ID: true,
+    MANUAL: true,
+    PRICE: true,
+    RELEVANCE: true,
+    TITLE: true,
+  };
+  const DIRECTIONAL_SORT_KEYS: ReadonlySet<string> = new Set(["CREATED", "ID", "PRICE", "TITLE"]);
+
+  // One filter of every type, in the order parseCollectionParams returns them.
+  const ALL_FILTERS: ProductFilter[] = [
+    { price: { min: 10.5, max: 200 } },
+    { available: true },
+    { productType: "Sneakers" },
+    { productVendor: "Nike" },
+    { tag: "men" },
+    { category: { id: "gid://shopify/TaxonomyCategory/1" } },
+    { variantOption: { name: "Shoe size", value: "10.5" } },
+    { productMetafield: { namespace: "custom", key: "material", value: "leather" } },
+    { variantMetafield: { namespace: "custom", key: "weight", value: "100g" } },
+    { taxonomyMetafield: { key: "shopify.color-pattern", value: "gid://shopify/Value/1" } },
+  ];
+
+  const cases = (Object.keys(SORT_KEYS) as ProductCollectionSortKeys[]).flatMap((sortKey) =>
+    [false, true].map((reverse) => ({ sortKey, reverse })),
+  );
+
+  it.each(cases)("round-trips sortKey $sortKey with reverse $reverse", ({ sortKey, reverse }) => {
+    const state = { filters: ALL_FILTERS, sortKey, reverse };
+
+    expect(parseCollectionParams(serializeCollectionParams(state))).toEqual({
+      filters: ALL_FILTERS,
+      sortKey,
+      // Only directional sort keys write a direction suffix.
+      reverse: DIRECTIONAL_SORT_KEYS.has(sortKey) && reverse,
+    });
   });
 });
 
@@ -672,10 +756,26 @@ describe("parseSortByValue", () => {
     });
   });
 
+  it.each([
+    ["best-selling-descending", "BEST_SELLING"],
+    ["relevance-descending", "RELEVANCE"],
+    ["manual-descending", "MANUAL"],
+    ["collection-default-descending", "COLLECTION_DEFAULT"],
+  ] as const)("parses %s as reverse false (no direction)", (value, sortKey) => {
+    expect(parseSortByValue(value)).toEqual({ sortKey, reverse: false });
+  });
+
   it("returns undefined sortKey for unrecognized value", () => {
     expect(parseSortByValue("unknown")).toEqual({
       sortKey: undefined,
       reverse: false,
+    });
+  });
+
+  it("keeps reverse true for an unrecognized -descending value", () => {
+    expect(parseSortByValue("foo-descending")).toEqual({
+      sortKey: undefined,
+      reverse: true,
     });
   });
 

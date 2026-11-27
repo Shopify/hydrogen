@@ -473,6 +473,78 @@ scenarios.set("subscriptions-logged-in", {
   mocksCustomerAccountApi: true,
 });
 
+/** Sitemap page numbers and how the `sitemapReads` scenario answers each. */
+export const SITEMAP_PAGES = { throttled: 1, failed: 2, listed: 3, http429: 4 } as const;
+export const SITEMAP_LISTED_PRODUCT_HANDLE = "e2e-sitemap-snowboard";
+// Differs from the throttled page's fixed `30`, so the specs prove the routes forward this value.
+export const SITEMAP_RATE_LIMIT_RETRY_AFTER = "7";
+
+scenarios.set(MSW_SCENARIOS.sitemapReads, {
+  handlers: [
+    graphql.query("SitemapIndex", () => {
+      return HttpResponse.json({ data: { sitemap: { pagesCount: { count: 1 } } } });
+    }),
+    graphql.query("SitemapResources", ({ variables }) => {
+      if (variables.page === SITEMAP_PAGES.throttled) {
+        // The Storefront API's answer once a shop makes more than 80 `sitemap.resources` calls in
+        // 20 seconds: HTTP 200 with a field error.
+        return HttpResponse.json({
+          data: { sitemap: { resources: null } },
+          errors: [
+            {
+              message: "Sitemaps are currently not available. Please try again later.",
+              path: ["sitemap", "resources"],
+              extensions: { code: "THROTTLED" },
+            },
+          ],
+        });
+      }
+      if (variables.page === SITEMAP_PAGES.failed) {
+        return HttpResponse.json({
+          data: { sitemap: { resources: null } },
+          errors: [{ message: "Internal error", path: ["sitemap", "resources"] }],
+        });
+      }
+      if (variables.page === SITEMAP_PAGES.http429) {
+        return new HttpResponse(null, {
+          status: 429,
+          headers: { "Retry-After": SITEMAP_RATE_LIMIT_RETRY_AFTER },
+        });
+      }
+      return HttpResponse.json({
+        data: {
+          sitemap: {
+            resources: {
+              items: [
+                {
+                  __typename: "SitemapResource",
+                  handle: SITEMAP_LISTED_PRODUCT_HANDLE,
+                  updatedAt: "2026-11-01T00:00:00Z",
+                },
+              ],
+            },
+          },
+        },
+      });
+    }),
+  ],
+  mocksCustomerAccountApi: false,
+  mocksLegacyCustomerAuth: false,
+});
+
+scenarios.set(MSW_SCENARIOS.sitemapIndexRateLimited, {
+  handlers: [
+    graphql.query("SitemapIndex", () => {
+      return new HttpResponse(null, {
+        status: 429,
+        headers: { "Retry-After": SITEMAP_RATE_LIMIT_RETRY_AFTER },
+      });
+    }),
+  ],
+  mocksCustomerAccountApi: false,
+  mocksLegacyCustomerAuth: false,
+});
+
 function isMswScenario(scenario: string): scenario is MswScenario {
   return scenarios.has(scenario);
 }
