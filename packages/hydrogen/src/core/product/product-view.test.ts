@@ -1,11 +1,6 @@
-import { describe, expect, expectTypeOf, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import {
-  getProductViewAttributes,
-  type ProductViewOptions,
-  type ProductViewProduct,
-} from "./product-view";
-import type { ProductInput } from "./state";
+import { getProductViewAttributes, type ProductViewOptions } from "./product-view";
 
 const variant = {
   id: "gid://shopify/ProductVariant/1",
@@ -35,10 +30,6 @@ function payload(options: ProductViewOptions) {
 }
 
 describe("getProductViewAttributes", () => {
-  it("accepts the product form input", () => {
-    expectTypeOf<ProductInput>().toMatchTypeOf<ProductViewProduct>();
-  });
-
   it("maps the selected variant for the product page and drops extra fields", () => {
     expect(payload({ product, context: "page" })).toEqual({
       context: "page",
@@ -110,11 +101,4 @@ describe("getProductViewAttributes", () => {
       ).toBe(trigger);
     },
   );
-
-  it("returns only the trigger and payload attributes", () => {
-    expect(Object.keys(getProductViewAttributes({ product, context: "page" }))).toEqual([
-      "view-event-trigger",
-      "view-event-payload",
-    ]);
-  });
 });

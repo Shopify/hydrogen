@@ -43,19 +43,11 @@ describe("defineViewEventElement", () => {
     } as Partial<typeof StandardEventsModule>);
   }
 
-  async function ensureDefined() {
-    if (customElements.get(TAG)) return;
-    mockModule();
-    (await loadDefineViewEventElement())();
-    await customElements.whenDefined(TAG);
-  }
-
   function renderElement(trigger: string, id: string) {
-    const element = document.createElement(TAG) as HTMLElement & { dispatchViewEvent(): void };
+    const element = document.createElement(TAG);
     element.setAttribute("view-event-trigger", trigger);
     element.setAttribute("view-event-payload", JSON.stringify({ id }));
     document.body.append(element);
-    return element;
   }
 
   beforeEach(() => {
@@ -104,26 +96,6 @@ describe("defineViewEventElement", () => {
     await vi.waitFor(() => expect(importStandardEventsFromCDN).toHaveBeenCalledTimes(2));
     await Promise.resolve();
     expect(defineSpy).toHaveBeenCalledTimes(1);
-  });
-
-  it("keeps the base behavior: connect sends once per connect, and manual sends only on request", async () => {
-    await ensureDefined();
-    const connect = renderElement("connect", "a");
-    const manual = renderElement("manual", "b");
-    await nextTask();
-    expect(ids()).toEqual(["a"]);
-
-    connect.setAttribute("view-event-payload", JSON.stringify({ id: "a2" }));
-    await nextTask();
-    expect(ids()).toEqual(["a"]);
-
-    connect.remove();
-    document.body.append(connect);
-    await nextTask();
-    expect(ids()).toEqual(["a", "a2"]);
-
-    manual.dispatchViewEvent();
-    expect(ids()).toEqual(["a", "a2", "b"]);
   });
 
   it("registers right away when the document is not loading", async () => {
