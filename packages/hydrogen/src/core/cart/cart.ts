@@ -2748,7 +2748,15 @@ async function postCartUpdateToEndpoint(
     signal,
   });
   if (!response.ok) throw new CartNetworkError(response.status);
-  return response.json();
+  const result: UpdateCartResult = await response.json();
+  // A first add that the Storefront API refuses returns `cart: null`. Standard Actions results
+  // need a cart, so reject the way Standard Actions' own handler does, with the user errors as the cause.
+  if (!result.cart && result.userErrors?.length) {
+    throw new Error(result.userErrors.map(({ message }) => message).join(", "), {
+      cause: { cartId: null, userErrors: result.userErrors, warnings: result.warnings },
+    });
+  }
+  return result;
 }
 
 function configureUpdateCartOnce(actions: ShopifyStandardActions): void {
