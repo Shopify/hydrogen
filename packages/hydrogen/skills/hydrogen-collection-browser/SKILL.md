@@ -53,6 +53,7 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 - Clear both `before` and `after` whenever filters or sorting change so the new browse state starts from its first page.
 - Show stale products with a pending visual state while `state.status === "loading"`; do not replace the grid with a skeleton.
 - Serialize active filter chips from `serializeCollectionParams(state)` and remove filters with `getFilterRemovalUrl(...)`.
+- Label each active filter chip with the `label` of the available `FilterValue` whose `input` matches it (`isFilterInputActive([filter], value.input)`), so category chips show the category name, not a taxonomy ID. Keep the formatted range for price chips, and fall back to a description of the filter when no value matches.
 - Use `isFilterInputActive(state.filters, value.input)` to mark checked filter inputs.
 - Treat each Storefront API `FilterValue.input` JSON string as the authoritative filter identity. To render one checkbox, parse that JSON into a `ProductFilter`, wrap it as `{ filters: [filter], sortKey: undefined, reverse: false }`, and pass it to `serializeCollectionParams(...)` for the field name/value. Do not derive filter shapes or param names from filter IDs, labels, or types.
 - Build sort option values with `getSortByValue(...)`; it emits the Liquid-compatible `sort_by` strings that `parseCollectionParams()` understands.

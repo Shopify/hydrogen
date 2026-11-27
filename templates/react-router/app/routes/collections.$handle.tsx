@@ -197,6 +197,7 @@ function CollectionResults({ loaderData }: { loaderData: Route.ComponentProps["l
         defaultSortValue={defaultSortValue}
       />
       <ActiveFilterChips
+        availableFilters={loaderData.availableFilters}
         basePath={collectionPath}
         clearAllTo={collectionPath}
         currencyCode={loaderData.currencyCode}

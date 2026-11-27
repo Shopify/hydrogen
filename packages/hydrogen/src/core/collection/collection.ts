@@ -227,7 +227,7 @@ function buildInitialState(options: CreateCollectionStoreOptions): CollectionSta
     const parsed = parseCollectionParams(new URLSearchParams(search));
     base.filters = parsed.filters;
     base.sortKey = parsed.sortKey;
-    base.reverse = normalizeReverse(parsed.sortKey, parsed.reverse);
+    base.reverse = parsed.reverse;
   }
 
   return base;
@@ -324,7 +324,7 @@ function syncFromParams(context: CollectionStoreContext, searchParams: URLSearch
       ...prev,
       filters: parsed.filters,
       sortKey: parsed.sortKey,
-      reverse: normalizeReverse(parsed.sortKey, parsed.reverse),
+      reverse: parsed.reverse,
       status: "loading",
     }));
     return;

@@ -230,6 +230,7 @@ function SearchResults({ loaderData }: { loaderData: PerformedSearchData }) {
             extraHiddenInputs={hiddenQuery}
           />
           <ActiveFilterChips
+            availableFilters={loaderData.availableFilters}
             basePath={searchPath}
             clearAllTo={searchPath}
             currencyCode={loaderData.currencyCode}
