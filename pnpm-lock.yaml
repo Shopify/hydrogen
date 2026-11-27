@@ -446,8 +446,8 @@ importers:
         specifier: ^1.0.0-pre2
         version: 1.0.0
       undici:
-        specifier: 7.30.1
-        version: 7.30.1
+        specifier: 7.30.2
+        version: 7.30.2
       ws:
         specifier: ^8.18.0
         version: 8.20.0(bufferutil@4.1.0)
@@ -10530,8 +10530,8 @@ packages:
     resolution: {integrity: sha512-cRZYrTDwWznlnRiPjggAGxZXanty6M8RV1ff8Wm4LWXBp7/IG8v5DnOm74DtUBp9OONpK75YlPnIjQqX0dBDtA==}
     engines: {node: '>=20.18.1'}
 
-  undici@7.30.1:
-    resolution: {integrity: sha512-03KrMbjIFDWQR5RNPrSw3bd1r12JpyFQl9/yxjUbJtqkjmllqC5lFjZh6ujeuJCKr8EOQvRW872Oy/az+nLYxg==}
+  undici@7.30.2:
+    resolution: {integrity: sha512-mLyPQnHwUxaM/rideoK/+KL8DaAJLRl4aBCfmX444aCSLnIaomqPLtNRe2jdCYcsk5wZzXrDIQC8ZeYNRAYyIA==}
     engines: {node: '>=20.18.1'}
 
   unenv@1.10.0:
@@ -22588,7 +22588,7 @@ snapshots:
 
   undici@7.28.0: {}
 
-  undici@7.30.1: {}
+  undici@7.30.2: {}
 
   unenv@1.10.0:
     dependencies:
