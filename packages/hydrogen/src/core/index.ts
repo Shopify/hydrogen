@@ -215,6 +215,8 @@ export {
 } from "./collection";
 export { getCollectionViewAttributes } from "./collection";
 export type { CollectionViewCollection, CollectionViewOptions } from "./collection";
+export { connectCollectionUpdates } from "./collection";
+export type { CollectionUpdatesConnection, ConnectCollectionUpdatesOptions } from "./collection";
 
 export {
   canAddToCart,

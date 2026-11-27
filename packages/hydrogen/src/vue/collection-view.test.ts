@@ -1,22 +1,28 @@
 // @vitest-environment happy-dom
-import { mount } from "@vue/test-utils";
+import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { h } from "vue";
+import { defineComponent, h, nextTick, ref, type PropType } from "vue";
 import { renderToString } from "vue/server-renderer";
 
-import type * as StandardEventsModule from "../../vendor/standard-events";
+import type { CollectionActions } from "../core/collection";
 import {
   defineViewEventElement,
   VIEW_EVENT_TAG_NAME,
 } from "../core/shopify-scripts/view-event-element";
-import { CollectionView } from "./collection-view";
+import { assert } from "../core/test-utils";
+import { CollectionProvider, useCollection, useCollectionActions } from "./collection";
+import { CollectionView, type CollectionViewProps } from "./collection-view";
 
-vi.mock("../core/shopify-scripts/standard-events", () => ({
-  importStandardEventsFromCDN: () =>
-    Promise.resolve({
-      createViewEventElement: () => FakeViewEventElement,
-    } as Partial<typeof StandardEventsModule>),
-}));
+vi.mock("../core/shopify-scripts/standard-events", async () => {
+  const { fakeStandardEvents } = await import("../core/collection/__tests__/fake-standard-events");
+  return {
+    importStandardEventsFromCDN: () =>
+      Promise.resolve({
+        ...fakeStandardEvents,
+        createViewEventElement: () => FakeViewEventElement,
+      }),
+  };
+});
 
 // Mirrors the CDN element: `connect` sends the event after connecting, and each send re-reads the payload.
 class FakeViewEventElement extends HTMLElement {
@@ -40,6 +46,21 @@ function payloadOf(element: Element) {
   return JSON.parse(element.getAttribute("view-event-payload") ?? "null");
 }
 
+/** Renders `CollectionView` inside a provider for the same collection. */
+const View = defineComponent({
+  inheritAttrs: false,
+  props: {
+    collection: { type: Object as PropType<CollectionViewProps["collection"]>, required: true },
+    productsCount: { type: Number, required: true },
+  },
+  setup(props, { attrs, slots }) {
+    return () =>
+      h(CollectionProvider, { data: { handle: props.collection.handle, dataSearch: "" } }, () =>
+        h(CollectionView, { ...attrs, ...props }, slots),
+      );
+  },
+});
+
 describe("CollectionView", () => {
   beforeAll(async () => {
     defineViewEventElement();
@@ -52,7 +73,7 @@ describe("CollectionView", () => {
   });
 
   it("renders the element with the view attributes, slot content, and attributes", () => {
-    const wrapper = mount(CollectionView, {
+    const wrapper = mount(View, {
       props: { collection, productsCount: 8 },
       attrs: { class: "grid", id: "results" },
       slots: { default: () => h("span", "Products") },
@@ -70,9 +91,7 @@ describe("CollectionView", () => {
   });
 
   it("renders the element and payload on the server", async () => {
-    const html = await renderToString(
-      h(CollectionView, { collection, productsCount: 8, class: "grid" }),
-    );
+    const html = await renderToString(h(View, { collection, productsCount: 8, class: "grid" }));
 
     expect(html).toContain(`<${VIEW_EVENT_TAG_NAME}`);
     expect(html).toContain('class="grid"');
@@ -85,7 +104,7 @@ describe("CollectionView", () => {
     const listener = (event: Event) => events.push(event as CustomEvent);
     document.addEventListener("shopify:collection:view", listener);
 
-    const wrapper = mount(CollectionView, {
+    const wrapper = mount(View, {
       props: { collection, productsCount: 8 },
       attrs: { class: "grid" },
       attachTo: document.body,
@@ -111,5 +130,214 @@ describe("CollectionView", () => {
     expect(events[1]?.detail).toEqual({
       collection: { id: otherCollection.id, handle: "pants", productsCount: 4 },
     });
+  });
+});
+
+type UpdateEvent = Event & {
+  collection: { productsCount: number };
+  promise: Promise<{ productsCount: number }>;
+};
+
+let actions: CollectionActions | undefined;
+const Controls = defineComponent(() => {
+  actions = useCollectionActions();
+  return () => null;
+});
+
+function getActions() {
+  assert(actions, "expected the collection actions");
+  return actions;
+}
+
+type Loader = { handle: string; dataSearch: string; productsCount: number };
+
+const Page = defineComponent({
+  props: {
+    loader: { type: Object as PropType<Loader>, required: true },
+    urlSearch: { type: String, required: true },
+  },
+  setup(props) {
+    return () =>
+      h(
+        CollectionProvider,
+        {
+          data: { handle: props.loader.handle, dataSearch: props.loader.dataSearch },
+          urlSearch: props.urlSearch,
+        },
+        () =>
+          h(
+            CollectionView,
+            {
+              collection: { id: null, handle: props.loader.handle },
+              productsCount: props.loader.productsCount,
+            },
+            () => h(Controls),
+          ),
+      );
+  },
+});
+
+describe("Vue CollectionView updates", () => {
+  const events: UpdateEvent[] = [];
+  const record = (event: Event) => events.push(event as UpdateEvent);
+
+  function eventAt(index: number): UpdateEvent {
+    const event = events[index];
+    assert(event, `expected update event ${index}`);
+    return event;
+  }
+
+  async function mountPage(urlSearch = "") {
+    document.addEventListener("shopify:collection:update", record);
+    const wrapper = mount(Page, {
+      props: { loader: { handle: "shirts", dataSearch: urlSearch, productsCount: 8 }, urlSearch },
+      attachTo: document.body,
+    });
+    await flushPromises();
+    return wrapper;
+  }
+
+  beforeAll(async () => {
+    defineViewEventElement();
+    await customElements.whenDefined(VIEW_EVENT_TAG_NAME);
+  });
+
+  afterEach(() => {
+    document.removeEventListener("shopify:collection:update", record);
+    events.length = 0;
+    actions = undefined;
+    document.body.innerHTML = "";
+    vi.restoreAllMocks();
+  });
+
+  it("throws outside a collection provider", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    expect(() =>
+      mount(CollectionView, {
+        props: { collection: { id: null, handle: "all" }, productsCount: 1 },
+      }),
+    ).toThrow("CollectionView must be used inside a <CollectionProvider>.");
+  });
+
+  it("sends an update from the element for a sort change and resolves with the new count", async () => {
+    const wrapper = await mountPage();
+
+    getActions().setSortKey("PRICE");
+
+    expect(events.map((event) => event.collection.productsCount)).toEqual([8]);
+    expect(eventAt(0).target).toBe(wrapper.find(VIEW_EVENT_TAG_NAME).element);
+
+    // The router moves to the new URL first, then the loader data arrives.
+    await wrapper.setProps({ urlSearch: "sort_by=price-ascending" });
+    await wrapper.setProps({
+      loader: { handle: "shirts", dataSearch: "sort_by=price-ascending", productsCount: 3 },
+    });
+
+    await expect(eventAt(0).promise).resolves.toEqual({ productsCount: 3 });
+    wrapper.unmount();
+  });
+
+  it("resolves with the new count when the URL, the data, and the count arrive in one render", async () => {
+    const wrapper = await mountPage();
+
+    getActions().setSortKey("PRICE");
+    // The provider settles the store while it gets the new props, before CollectionView gets the
+    // new count.
+    await wrapper.setProps({
+      urlSearch: "sort_by=price-ascending",
+      loader: { handle: "shirts", dataSearch: "sort_by=price-ascending", productsCount: 3 },
+    });
+
+    await expect(eventAt(0).promise).resolves.toEqual({ productsCount: 3 });
+    wrapper.unmount();
+  });
+
+  it("rejects a pending update with an AbortError when a new collection replaces the store", async () => {
+    const wrapper = await mountPage();
+
+    getActions().setSortKey("PRICE");
+    await wrapper.setProps({
+      urlSearch: "",
+      loader: { handle: "pants", dataSearch: "", productsCount: 4 },
+    });
+
+    await expect(eventAt(0).promise).rejects.toMatchObject({ name: "AbortError" });
+    getActions().setSortKey("TITLE");
+    expect(events).toHaveLength(2);
+    wrapper.unmount();
+  });
+
+  it("reconnects the updates to the new element after the collection handle changes", async () => {
+    const wrapper = await mountPage();
+    const element = wrapper.find(VIEW_EVENT_TAG_NAME).element;
+
+    await wrapper.setProps({
+      urlSearch: "",
+      loader: { handle: "pants", dataSearch: "", productsCount: 4 },
+    });
+    await flushPromises();
+    const next = wrapper.find(VIEW_EVENT_TAG_NAME).element;
+    expect(next).not.toBe(element);
+    expect(element.isConnected).toBe(false);
+
+    getActions().setSortKey("PRICE");
+
+    // One event, from the new element: the connection to the old element is gone.
+    expect(events).toHaveLength(1);
+    expect(eventAt(0).target).toBe(next);
+    expect(eventAt(0).collection.productsCount).toBe(4);
+    wrapper.unmount();
+  });
+
+  it("doesn't settle in the same step when the change handler moves the URL right away", async () => {
+    document.addEventListener("shopify:collection:update", record);
+    // Like the Nuxt example: the change handler sets the URL search right away, and the loader data
+    // arrives later.
+    const urlSearch = ref("");
+    const loader = ref<Loader>({ handle: "shirts", dataSearch: "", productsCount: 8 });
+    const statuses: string[] = [];
+    const Status = defineComponent(() => {
+      const state = useCollection();
+      return () => {
+        statuses.push(state.value.status);
+        return null;
+      };
+    });
+    const RoutedPage = defineComponent(
+      () => () =>
+        h(
+          CollectionProvider,
+          {
+            data: { handle: loader.value.handle, dataSearch: loader.value.dataSearch },
+            urlSearch: urlSearch.value,
+            onChange: (search: string) => (urlSearch.value = search.replace(/^\?/, "")),
+          },
+          () =>
+            h(
+              CollectionView,
+              {
+                collection: { id: null, handle: "shirts" },
+                productsCount: loader.value.productsCount,
+              },
+              () => [h(Controls), h(Status)],
+            ),
+        ),
+    );
+    const wrapper = mount(RoutedPage, { attachTo: document.body });
+    await flushPromises();
+    statuses.length = 0;
+
+    getActions().setSortKey("PRICE");
+    await nextTick();
+
+    // The provider gets the new URL and a new `data` object with the old values in the same render.
+    // It must not settle the store with the old data in between.
+    expect(statuses).toEqual(["loading"]);
+
+    loader.value = { handle: "shirts", dataSearch: "sort_by=price-ascending", productsCount: 3 };
+
+    await expect(eventAt(0).promise).resolves.toEqual({ productsCount: 3 });
+    wrapper.unmount();
   });
 });

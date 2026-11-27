@@ -8,6 +8,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   useSyncExternalStore,
   type FormHTMLAttributes,
   type ReactNode,
@@ -23,8 +24,16 @@ import {
   type CollectionStore,
 } from "../core/collection";
 import type { CollectionState } from "../core/collection";
+import { getLogger } from "../core/logging";
+
+const log = getLogger("collection");
 
 const CollectionContext = createContext<CollectionStore | null>(null);
+
+/** Adds a function that runs before each navigation of the provider. Returns a function that removes it. */
+type RegisterBrowseChangeListener = (listener: () => void) => () => void;
+
+const BrowseChangeContext = createContext<RegisterBrowseChangeListener | null>(null);
 
 /**
  * Props for `CollectionProvider`.
@@ -81,6 +90,18 @@ export function CollectionProvider({
 
   const reconcilerRef = useRef<CollectionReconciler | null>(null);
 
+  // `CollectionView` adds its update events here, so they start before the navigation.
+  const [browseChangeListeners] = useState(() => new Set<() => void>());
+  const registerBrowseChangeListener = useCallback<RegisterBrowseChangeListener>(
+    (listener) => {
+      browseChangeListeners.add(listener);
+      return () => {
+        browseChangeListeners.delete(listener);
+      };
+    },
+    [browseChangeListeners],
+  );
+
   useLayoutEffect(() => {
     reconcilerRef.current = createCollectionReconciler(
       {
@@ -90,25 +111,59 @@ export function CollectionProvider({
       },
       urlSearchRef.current,
     );
-    store.setOnBrowseChange(() => reconcilerRef.current?.handleBrowseChange());
+    store.setOnBrowseChange(() => {
+      for (const listener of browseChangeListeners) {
+        // Analytics must never stop the navigation.
+        try {
+          listener();
+        } catch (error) {
+          log.error("collection browse change listener failed", { error });
+        }
+      }
+      reconcilerRef.current?.handleBrowseChange();
+    });
     return () => {
       store.setOnBrowseChange(null);
     };
-  }, [store]);
+  }, [store, browseChangeListeners]);
 
   useLayoutEffect(() => {
     reconcilerRef.current?.reconcile(urlSearch, dataRef.current.dataSearch);
   }, [urlSearch, store, collectionHandle, dataSearch]);
 
-  return createElement(CollectionContext.Provider, { value: store }, children);
+  return createElement(
+    CollectionContext.Provider,
+    { value: store },
+    createElement(BrowseChangeContext.Provider, { value: registerBrowseChangeListener }, children),
+  );
 }
 
-function useRequiredStore(hookName: string): CollectionStore {
+/**
+ * Returns the store of the nearest `CollectionProvider`. Throws outside a provider, with the name
+ * of the caller in the message.
+ *
+ * @internal
+ */
+export function useRequiredStore(hookName: string): CollectionStore {
   const store = useContext(CollectionContext);
   if (!store) {
     throw new Error(`${hookName} must be used inside a <CollectionProvider>.`);
   }
   return store;
+}
+
+/**
+ * Returns the function that adds a listener for the filter and sort changes of the nearest
+ * `CollectionProvider`. The provider calls each listener before it navigates.
+ *
+ * @internal
+ */
+export function useRegisterBrowseChangeListener(hookName: string): RegisterBrowseChangeListener {
+  const register = useContext(BrowseChangeContext);
+  if (!register) {
+    throw new Error(`${hookName} must be used inside a <CollectionProvider>.`);
+  }
+  return register;
 }
 
 /**
