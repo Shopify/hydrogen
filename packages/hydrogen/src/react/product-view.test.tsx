@@ -69,6 +69,38 @@ function payloadOf(element: Element) {
   return JSON.parse(element.getAttribute("view-event-payload") ?? "null");
 }
 
+// Runs before the `ProductView` suite, which registers the element for its tests.
+describe("ProductView before the element registers", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("sends the page view once, after the element registers on DOMContentLoaded", async () => {
+    const readyState = vi.spyOn(document, "readyState", "get").mockReturnValue("loading");
+
+    defineViewEventElement();
+    const { container } = render(createElement(ProductView, { product, context: "page" }));
+    // happy-dom replaces an element when it upgrades it, while browsers upgrade it in place, so
+    // the ref keeps the element that React rendered. A spy on it stands in for the upgraded method.
+    const rendered = getElement(container);
+    const dispatchViewEvent = vi.fn();
+    Object.assign(rendered, { dispatchViewEvent });
+    await settle();
+    await settle();
+    expect(customElements.get(VIEW_EVENT_TAG_NAME)).toBeUndefined();
+    expect(dispatchViewEvent).not.toHaveBeenCalled();
+
+    readyState.mockReturnValue("interactive");
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await customElements.whenDefined(VIEW_EVENT_TAG_NAME);
+    await settle();
+
+    expect(dispatchViewEvent).toHaveBeenCalledTimes(1);
+    // Puts back the element that React rendered, so that React can unmount it.
+    getElement(container).replaceWith(rendered);
+  });
+});
+
 describe("ProductView", () => {
   let events: CustomEvent[];
   const record = (event: Event) => events.push(event as CustomEvent);

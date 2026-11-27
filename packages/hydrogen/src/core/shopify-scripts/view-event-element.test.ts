@@ -74,17 +74,26 @@ describe("defineViewEventElement", () => {
   });
 
   // Runs first: the registry keeps the element for the other tests.
-  it("registers Shopify's element once and upgrades an element that is already rendered", async () => {
+  it("registers Shopify's element once after DOMContentLoaded while the document is loading, and then upgrades an element that is already rendered", async () => {
+    const readyState = vi.spyOn(document, "readyState", "get").mockReturnValue("loading");
     renderElement("connect", "a");
     mockModule();
     const defineViewEventElement = await loadDefineViewEventElement();
 
     defineViewEventElement();
     defineViewEventElement();
-    await customElements.whenDefined(TAG);
+    await nextTask();
     await nextTask();
 
     expect(importStandardEventsFromCDN).toHaveBeenCalledTimes(1);
+    expect(customElements.get(TAG)).toBeUndefined();
+    expect(ids()).toEqual([]);
+
+    readyState.mockReturnValue("interactive");
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    expect(customElements.get(TAG)).toBe(FakeViewEventElement);
+    await nextTask();
+
     expect(defineSpy).toHaveBeenCalledTimes(1);
     expect(defineSpy).toHaveBeenCalledWith(TAG, FakeViewEventElement);
     expect(ids()).toEqual(["a"]);
@@ -115,6 +124,19 @@ describe("defineViewEventElement", () => {
 
     manual.dispatchViewEvent();
     expect(ids()).toEqual(["a", "a2", "b"]);
+  });
+
+  it("registers right away when the document is not loading", async () => {
+    // An empty registry, so the factory runs even though an earlier test defined the element.
+    const define = vi.fn();
+    vi.stubGlobal("customElements", { get: () => undefined, define });
+    vi.spyOn(document, "readyState", "get").mockReturnValue("complete");
+    mockModule();
+
+    (await loadDefineViewEventElement())();
+    await nextTask();
+
+    expect(define).toHaveBeenCalledWith(TAG, FakeViewEventElement);
   });
 
   it("does nothing on the server", async () => {
