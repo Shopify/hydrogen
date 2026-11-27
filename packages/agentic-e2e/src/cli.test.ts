@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   attachStagehand,
   STOPPED_AFTER_CART_CHANGES,
+  STOPPED_AT_PRODUCT_PAGE,
   type AgentOutcome,
   type AgentRunInput,
 } from "./agent/stagehand-agent.ts";
@@ -16,11 +17,19 @@ import {
   USAGE,
   type RunResult,
 } from "./cli.ts";
-import { ADD_EVENT_NAME, AddEventLog, observeAddEvents } from "./shopify/add-events.ts";
 import {
+  ADD_EVENT_NAME,
+  AddEventLog,
+  COLLECTION_VIEW_EVENT_NAME,
+  observeAddEvents,
+  PRODUCT_VIEW_EVENT_NAME,
+} from "./shopify/add-events.ts";
+import {
+  pinCollectionProduct,
   pinNonDefaultVariant,
   pinVariant,
   pinVariantWithTwoUnits,
+  type PinnedCollectionProduct,
   type PinnedVariant,
 } from "./shopify/catalog.ts";
 import { discoverContext, type StorefrontContext } from "./shopify/storefront.ts";
@@ -41,6 +50,7 @@ vi.mock("./shopify/catalog.ts", async (importOriginal) => ({
   pinVariant: vi.fn(),
   pinNonDefaultVariant: vi.fn(),
   pinVariantWithTwoUnits: vi.fn(),
+  pinCollectionProduct: vi.fn(),
 }));
 
 const KEY = "sk-secret-proxy-key-123";
@@ -73,7 +83,27 @@ const THIRD_PINNED: PinnedVariant = {
 };
 const PASS_REASON =
   "One add event held exactly 1 unit of the pinned variant and resolved with a cart, without cart user errors or stock or availability warnings.";
-const VALID_TESTS = "Valid tests: add-to-cart, choose-a-variant, change-quantity-and-remove.";
+const VALID_TESTS =
+  "Valid tests: add-to-cart, choose-a-variant, change-quantity-and-remove, browse-from-collection.";
+const ALL_TESTS = [
+  "add-to-cart",
+  "choose-a-variant",
+  "change-quantity-and-remove",
+  "browse-from-collection",
+];
+/** The pin of browse-from-collection. */
+const BROWSE_PINNED: PinnedCollectionProduct = {
+  collectionHandle: "frontpage",
+  productHandle: "lamp",
+  productTitle: "Lamp",
+};
+const BROWSE_PASS_REASON =
+  "The collection page dispatched shopify:collection:view for the pinned collection, and then the pinned product's page dispatched shopify:product:view.";
+/** The `agent` field of a browse-from-collection run that the product page view stopped. */
+const STOPPED_AT_PRODUCT: AgentOutcome = {
+  completed: false,
+  reason: "Stopped by the command after the product page opened.",
+};
 const NO_ADD = "No add Standard Event was recorded by the time Stagehand was disconnected.";
 const CLAIMED_ADD =
   "The agent reports that it added the item, but no shopify:cart:lines-update event was dispatched.";
@@ -125,6 +155,10 @@ beforeEach(() => {
     calls.push("pin two units");
     return { status: "pinned", pinned: PINNED };
   });
+  vi.mocked(pinCollectionProduct).mockImplementation(async () => {
+    calls.push("pin collection product");
+    return { status: "pinned", pinned: BROWSE_PINNED };
+  });
   vi.mocked(observeAddEvents).mockImplementation(async () => {
     calls.push("observe");
     log = new AddEventLog();
@@ -155,6 +189,7 @@ afterEach(() => {
   vi.mocked(pinVariant).mockReset();
   vi.mocked(pinNonDefaultVariant).mockReset();
   vi.mocked(pinVariantWithTwoUnits).mockReset();
+  vi.mocked(pinCollectionProduct).mockReset();
   vi.mocked(observeAddEvents).mockReset();
 });
 
@@ -175,7 +210,7 @@ describe("parseCliArgs", () => {
     expect(parseCliArgs(["https://shop.example"])).toEqual({
       kind: "run",
       url: new URL("https://shop.example"),
-      tests: ["add-to-cart", "choose-a-variant", "change-quantity-and-remove"],
+      tests: ALL_TESTS,
       json: false,
     });
   });
@@ -205,7 +240,7 @@ describe("parseCliArgs", () => {
     expect(parseCliArgs(argv)).toEqual({
       kind: "run",
       url: new URL("https://shop.example"),
-      tests: ["add-to-cart", "choose-a-variant", "change-quantity-and-remove"],
+      tests: ALL_TESTS,
       json: true,
     });
   });
@@ -1025,20 +1060,300 @@ describe("main", () => {
   });
 });
 
+describe("main with browse-from-collection", () => {
+  const ARGS = ["https://shop.example/?x=1", "--test", "browse-from-collection", "--json"];
+  const NO_PAGE_VIEW =
+    'No shopify:product:view event with context "page" was recorded by the time Stagehand was disconnected.';
+  const CLAIMED_PAGE_VIEW =
+    'The agent reports that it opened the product page, but no shopify:product:view event with context "page" was dispatched.';
+
+  it("pins with pinCollectionProduct, opens the collection page, stops at the product page view, and passes", async () => {
+    const { session, agent } = fakes();
+
+    await expect(main(ARGS)).resolves.toBe(0);
+
+    expect(results()).toEqual([
+      {
+        test: "browse-from-collection",
+        status: "pass",
+        reason: BROWSE_PASS_REASON,
+        context: CONTEXT,
+        pinned: {
+          collectionHandle: "frontpage",
+          productHandle: "lamp",
+          productTitle: "Lamp",
+        },
+        agent: STOPPED_AT_PRODUCT,
+      },
+    ]);
+    // No wait: these events have no promise.
+    expect(calls).toEqual([
+      "context",
+      "pin collection product",
+      "observe",
+      "attach",
+      "goto",
+      "ready",
+      "run",
+      "collection view frontpage",
+      "product view page lamp",
+      "stop",
+      "detach",
+      "detach",
+      "close",
+    ]);
+    expect(waits).toEqual([]);
+    expect(pinCollectionProduct).toHaveBeenCalledWith(
+      new URL("https://shop.example/?x=1"),
+      CONTEXT,
+      expect.any(AbortSignal),
+    );
+    expect(pinVariant).not.toHaveBeenCalled();
+    expect(pinNonDefaultVariant).not.toHaveBeenCalled();
+    expect(pinVariantWithTwoUnits).not.toHaveBeenCalled();
+    expect(session.page.goto).toHaveBeenCalledWith(
+      "https://shop.example/collections/frontpage",
+      expect.anything(),
+    );
+    expect(agent.run).toHaveBeenCalledWith({
+      page: session.page,
+      task: expect.stringContaining(
+        'Open the product page of the product titled "Lamp" by using a link or card on this page.',
+      ),
+      model: expect.objectContaining({ apiKey: KEY }),
+      interrupt: expect.any(AbortSignal),
+      stop: expect.any(AbortSignal),
+      stopReason: "Stopped by the command after the product page opened.",
+    });
+    expect(agent.run.mock.calls[0]?.[0].task).toContain(
+      'Shop in the "Canada" store (language "Français", prices in "CAD")',
+    );
+    expect(stderr).toEqual([
+      "Running test browse-from-collection\n",
+      "Storefront API context: CA FR\n",
+      "Pinned product lamp in collection frontpage for browse-from-collection\n",
+      "Opening https://shop.example/collections/frontpage\n",
+      "Running the agent task.\n",
+      "The agent ended: Stopped by the command after the product page opened.\n",
+    ]);
+  });
+
+  it("does not stop the agent at a product view with another context, only at the page view", async () => {
+    fakes({
+      views: [
+        { collection: "frontpage" },
+        { context: "collection", product: "lamp" },
+        { context: "recommendation", product: "lamp" },
+        { context: "page", product: "lamp" },
+      ],
+    });
+
+    await expect(main(ARGS)).resolves.toBe(0);
+
+    expect(results()).toEqual([
+      expect.objectContaining({
+        status: "pass",
+        reason: BROWSE_PASS_REASON,
+        agent: STOPPED_AT_PRODUCT,
+      }),
+    ]);
+    expect(calls.slice(calls.indexOf("run"), calls.indexOf("stop") + 1)).toEqual([
+      "run",
+      "collection view frontpage",
+      "product view collection lamp",
+      "product view recommendation lamp",
+      "product view page lamp",
+      "stop",
+    ]);
+  });
+
+  it("ignores a product page view recorded before the agent start", async () => {
+    // The page load dispatches both views before the agent starts. The agent then reports done.
+    fakes({
+      adds: false,
+      outcome: { completed: true, summary: "Opened." },
+      page: {
+        goto: async () => {
+          calls.push("goto");
+          recordView({ collection: "frontpage" });
+          recordView({ context: "page", product: "lamp" });
+          return { status: () => 200 };
+        },
+      },
+    });
+
+    await expect(main(ARGS)).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        test: "browse-from-collection",
+        status: "fail",
+        reason: CLAIMED_PAGE_VIEW,
+        context: CONTEXT,
+        pinned: BROWSE_PINNED,
+        agent: { completed: true, summary: "Opened." },
+      },
+    ]);
+    expect(calls).not.toContain("stop");
+  });
+
+  it("passes with the collection view from the page load and the page view in the agent run", async () => {
+    fakes({
+      views: [{ context: "page", product: "lamp" }],
+      page: {
+        goto: async () => {
+          calls.push("goto");
+          recordView({ collection: "frontpage" });
+          return { status: () => 200 };
+        },
+      },
+    });
+
+    await expect(main(ARGS)).resolves.toBe(0);
+
+    expect(results()).toEqual([
+      expect.objectContaining({ status: "pass", reason: BROWSE_PASS_REASON }),
+    ]);
+  });
+
+  it.each([
+    {
+      case: "another product's page opened",
+      views: [{ collection: "frontpage" }, { context: "page", product: "desk" }],
+      reason: "The product page that opened is not the pinned product.",
+    },
+    {
+      case: "no view of the pinned collection came before the page view",
+      views: [{ collection: "sale" }, { context: "page", product: "lamp" }],
+      reason:
+        "No shopify:collection:view event for the pinned collection was dispatched before the product page opened.",
+    },
+  ])("stops the agent and fails with exit 1 when $case", async ({ views, reason }) => {
+    fakes({ views });
+
+    await expect(main(ARGS)).resolves.toBe(1);
+
+    expect(results()).toEqual([
+      {
+        test: "browse-from-collection",
+        status: "fail",
+        reason,
+        context: CONTEXT,
+        pinned: BROWSE_PINNED,
+        agent: STOPPED_AT_PRODUCT,
+      },
+    ]);
+    expect(calls).toContain("stop");
+  });
+
+  it.each([
+    {
+      outcome: { completed: true, summary: "Opened." } as AgentOutcome,
+      code: 1,
+      status: "fail",
+      reason: CLAIMED_PAGE_VIEW,
+    },
+    {
+      outcome: {
+        completed: false,
+        reason: "The agent reached the 20-step limit.",
+        message: "I could not find the product.",
+      } as AgentOutcome,
+      code: 2,
+      status: "indeterminate",
+      reason: NO_PAGE_VIEW,
+    },
+  ])(
+    "gives $status without a product page view when the agent outcome is $outcome.completed",
+    async ({ outcome, code, status, reason }) => {
+      fakes({ views: [{ collection: "frontpage" }], outcome });
+
+      await expect(main(ARGS)).resolves.toBe(code);
+
+      expect(results()).toEqual([
+        {
+          test: "browse-from-collection",
+          status,
+          reason,
+          context: CONTEXT,
+          pinned: BROWSE_PINNED,
+          agent: outcome,
+        },
+      ]);
+      expect(calls).not.toContain("stop");
+    },
+  );
+
+  it("reports skipped, exits 3, and starts no browser when no collection is eligible", async () => {
+    const reason =
+      "No collection has a product that is available for sale and has a unique title among its first 50 products (2 collections searched).";
+    vi.mocked(pinCollectionProduct).mockResolvedValue({ status: "skipped", reason });
+
+    await expect(main(ARGS)).resolves.toBe(3);
+
+    expect(results()).toEqual([
+      { test: "browse-from-collection", status: "skipped", reason, context: CONTEXT },
+    ]);
+    expect(createBrowserSession).not.toHaveBeenCalled();
+  });
+
+  it("reports a pin error as indeterminate and starts no browser", async () => {
+    vi.mocked(pinCollectionProduct).mockRejectedValue(new Error("GraphQL errors: Down"));
+
+    await expect(main(ARGS)).resolves.toBe(2);
+
+    expect(results()).toEqual([
+      {
+        test: "browse-from-collection",
+        status: "indeterminate",
+        reason: "Storefront API catalog pin failed: GraphQL errors: Down",
+      },
+    ]);
+    expect(createBrowserSession).not.toHaveBeenCalled();
+  });
+
+  it("reports an HTTP error on the collection page as indeterminate without running the agent", async () => {
+    const { agent, session } = fakes({ page: { goto: async () => ({ status: () => 404 }) } });
+
+    await expect(main(ARGS)).resolves.toBe(2);
+
+    expect(results()).toEqual([
+      {
+        test: "browse-from-collection",
+        status: "indeterminate",
+        reason: "HTTP 404",
+        context: CONTEXT,
+        pinned: BROWSE_PINNED,
+      },
+    ]);
+    expect(agent.run).not.toHaveBeenCalled();
+    expect(session.close).toHaveBeenCalledOnce();
+  });
+});
+
 describe("main with every test", () => {
   const SUITE = ["https://shop.example", "--json"];
   /** The pass line of `test` with the fake pin and agent. */
-  const passLine = (test: string, pinned = PINNED) =>
-    test === "change-quantity-and-remove"
+  const passLine = (test: string, pinned: PinnedVariant | PinnedCollectionProduct = PINNED) =>
+    test === "browse-from-collection"
       ? {
           test,
           status: "pass",
-          reason: LINE_PASS_REASON,
+          reason: BROWSE_PASS_REASON,
           context: CONTEXT,
-          pinned,
-          agent: STOPPED_AFTER_CHANGES,
+          pinned: BROWSE_PINNED,
+          agent: STOPPED_AT_PRODUCT,
         }
-      : { test, status: "pass", reason: PASS_REASON, context: CONTEXT, pinned, agent: STOPPED };
+      : test === "change-quantity-and-remove"
+        ? {
+            test,
+            status: "pass",
+            reason: LINE_PASS_REASON,
+            context: CONTEXT,
+            pinned,
+            agent: STOPPED_AFTER_CHANGES,
+          }
+        : { test, status: "pass", reason: PASS_REASON, context: CONTEXT, pinned, agent: STOPPED };
 
   it("runs every test in list order, each with its own pin and browser session, and reads the context once", async () => {
     // Each run adds its own pinned variant, as the page of that pin would.
@@ -1049,6 +1364,7 @@ describe("main with every test", () => {
     const listenersInRun: number[] = [];
     let printedBeforeSecondPin: unknown[] = [];
     let printedBeforeThirdPin: unknown[] = [];
+    let printedBeforeFourthPin: unknown[] = [];
     vi.mocked(pinVariant).mockImplementation(async () => {
       calls.push("pin");
       listenersInRun.push(process.listenerCount("SIGINT"));
@@ -1066,6 +1382,12 @@ describe("main with every test", () => {
       printedBeforeThirdPin = results();
       return { status: "pinned", pinned: THIRD_PINNED };
     });
+    vi.mocked(pinCollectionProduct).mockImplementation(async () => {
+      calls.push("pin collection product");
+      listenersInRun.push(process.listenerCount("SIGINT"));
+      printedBeforeFourthPin = results();
+      return { status: "pinned", pinned: BROWSE_PINNED };
+    });
 
     await expect(main(SUITE)).resolves.toBe(0);
 
@@ -1074,8 +1396,9 @@ describe("main with every test", () => {
       passLine("add-to-cart"),
       passLine("choose-a-variant", OTHER_PINNED),
       passLine("change-quantity-and-remove", THIRD_PINNED),
+      passLine("browse-from-collection"),
     ]);
-    expect(session.page.goto).toHaveBeenCalledTimes(3);
+    expect(session.page.goto).toHaveBeenCalledTimes(4);
     expect(session.page.goto).toHaveBeenNthCalledWith(
       1,
       "https://shop.example/products/board",
@@ -1091,7 +1414,14 @@ describe("main with every test", () => {
       "https://shop.example/products/mug",
       expect.anything(),
     );
-    const [firstTask, secondTask, thirdTask] = agent.run.mock.calls.map(([input]) => input.task);
+    expect(session.page.goto).toHaveBeenNthCalledWith(
+      4,
+      "https://shop.example/collections/frontpage",
+      expect.anything(),
+    );
+    const [firstTask, secondTask, thirdTask, fourthTask] = agent.run.mock.calls.map(
+      ([input]) => input.task,
+    );
     expect(firstTask).toContain('the product titled "Board"');
     expect(firstTask).not.toContain('the product titled "Tee"');
     expect(firstTask).not.toContain('the product titled "Mug"');
@@ -1103,8 +1433,10 @@ describe("main with every test", () => {
     expect(thirdTask).not.toContain('the product titled "Board"');
     expect(thirdTask).not.toContain('the product titled "Tee"');
     expect(thirdTask).toContain(JSON.stringify(THIRD_PINNED.selectedOptions));
+    expect(fourthTask).toContain('the product titled "Lamp"');
+    expect(fourthTask).not.toContain('the product titled "Mug"');
     expect(stdout.join("")).toMatch(
-      /^\{"test":"add-to-cart","status":"pass",.*\n\{"test":"choose-a-variant","status":"pass",.*\n\{"test":"change-quantity-and-remove","status":"pass",.*\n$/,
+      /^\{"test":"add-to-cart","status":"pass",.*\n\{"test":"choose-a-variant","status":"pass",.*\n\{"test":"change-quantity-and-remove","status":"pass",.*\n\{"test":"browse-from-collection","status":"pass",.*\n$/,
     );
     // Each line is printed when its test ends, before the next test starts.
     expect(printedBeforeSecondPin).toEqual([passLine("add-to-cart")]);
@@ -1112,11 +1444,24 @@ describe("main with every test", () => {
       passLine("add-to-cart"),
       passLine("choose-a-variant", OTHER_PINNED),
     ]);
+    expect(printedBeforeFourthPin).toEqual([
+      passLine("add-to-cart"),
+      passLine("choose-a-variant", OTHER_PINNED),
+      passLine("change-quantity-and-remove", THIRD_PINNED),
+    ]);
     // One context read. Each test pins with its own function, in its own browser session, and
     // each session is closed before the next test starts.
     expect(
       calls.filter((call) =>
-        ["context", "pin", "pin non-default", "pin two units", "observe", "close"].includes(call),
+        [
+          "context",
+          "pin",
+          "pin non-default",
+          "pin two units",
+          "pin collection product",
+          "observe",
+          "close",
+        ].includes(call),
       ),
     ).toEqual([
       "context",
@@ -1129,23 +1474,34 @@ describe("main with every test", () => {
       "pin two units",
       "observe",
       "close",
+      "pin collection product",
+      "observe",
+      "close",
     ]);
     expect(discoverContext).toHaveBeenCalledOnce();
     expect(pinVariant).toHaveBeenCalledOnce();
     expect(pinNonDefaultVariant).toHaveBeenCalledOnce();
     expect(pinVariantWithTwoUnits).toHaveBeenCalledOnce();
-    expect(createBrowserSession).toHaveBeenCalledTimes(3);
-    expect(session.close).toHaveBeenCalledTimes(3);
-    expect(agent.run).toHaveBeenCalledTimes(3);
+    expect(pinCollectionProduct).toHaveBeenCalledOnce();
+    expect(createBrowserSession).toHaveBeenCalledTimes(4);
+    expect(session.close).toHaveBeenCalledTimes(4);
+    expect(agent.run).toHaveBeenCalledTimes(4);
     expect(stderr.filter((line) => line.startsWith("Running test "))).toEqual([
       "Running test add-to-cart\n",
       "Running test choose-a-variant\n",
       "Running test change-quantity-and-remove\n",
+      "Running test browse-from-collection\n",
     ]);
     // One set of interrupt handlers for the whole run: every agent run gets the same interrupt.
-    expect(listenersInRun).toEqual([listenersBefore + 1, listenersBefore + 1, listenersBefore + 1]);
+    expect(listenersInRun).toEqual([
+      listenersBefore + 1,
+      listenersBefore + 1,
+      listenersBefore + 1,
+      listenersBefore + 1,
+    ]);
     expect(agent.run.mock.calls[1]?.[0].interrupt).toBe(agent.run.mock.calls[0]?.[0].interrupt);
     expect(agent.run.mock.calls[2]?.[0].interrupt).toBe(agent.run.mock.calls[0]?.[0].interrupt);
+    expect(agent.run.mock.calls[3]?.[0].interrupt).toBe(agent.run.mock.calls[0]?.[0].interrupt);
     expect(process.listenerCount("SIGINT")).toBe(listenersBefore);
   });
 
@@ -1160,8 +1516,9 @@ describe("main with every test", () => {
       { test: "add-to-cart", status: "skipped", reason, context: CONTEXT },
       passLine("choose-a-variant"),
       passLine("change-quantity-and-remove"),
+      passLine("browse-from-collection"),
     ]);
-    expect(createBrowserSession).toHaveBeenCalledTimes(2);
+    expect(createBrowserSession).toHaveBeenCalledTimes(3);
   });
 
   it("prints one indeterminate line for each test without SHOPIFY_PROXY_KEY, with no request and no browser", async () => {
@@ -1174,11 +1531,13 @@ describe("main with every test", () => {
       `${JSON.stringify({ test: "add-to-cart", status: "indeterminate", reason })}\n`,
       `${JSON.stringify({ test: "choose-a-variant", status: "indeterminate", reason })}\n`,
       `${JSON.stringify({ test: "change-quantity-and-remove", status: "indeterminate", reason })}\n`,
+      `${JSON.stringify({ test: "browse-from-collection", status: "indeterminate", reason })}\n`,
     ]);
     expect(discoverContext).not.toHaveBeenCalled();
     expect(pinVariant).not.toHaveBeenCalled();
     expect(pinNonDefaultVariant).not.toHaveBeenCalled();
     expect(pinVariantWithTwoUnits).not.toHaveBeenCalled();
+    expect(pinCollectionProduct).not.toHaveBeenCalled();
     expect(createBrowserSession).not.toHaveBeenCalled();
   });
 
@@ -1196,11 +1555,12 @@ describe("main with every test", () => {
       },
       passLine("choose-a-variant"),
       passLine("change-quantity-and-remove"),
+      passLine("browse-from-collection"),
     ]);
-    // The second read succeeded: the third test uses it.
+    // The second read succeeded: the later tests use it.
     expect(discoverContext).toHaveBeenCalledTimes(2);
     expect(pinVariant).not.toHaveBeenCalled();
-    expect(createBrowserSession).toHaveBeenCalledTimes(2);
+    expect(createBrowserSession).toHaveBeenCalledTimes(3);
   });
 
   it("exits 2 when SIGINT after the first verdict stops the run before the second test", async () => {
@@ -1273,10 +1633,11 @@ describe("main without --json", () => {
       "  fail           add-to-cart                  An add event promise was rejected.\n",
       "  pass           choose-a-variant\n",
       "  pass           change-quantity-and-remove\n",
+      "  pass           browse-from-collection\n",
     ]);
     expect(stderr).toEqual([]);
     // The same run as with --json.
-    expect(createBrowserSession).toHaveBeenCalledTimes(3);
+    expect(createBrowserSession).toHaveBeenCalledTimes(4);
     expect(discoverContext).toHaveBeenCalledOnce();
   });
 
@@ -1287,6 +1648,10 @@ describe("main without --json", () => {
       status: "skipped",
       reason: "No variant could be added to a cart with 2 units.",
     });
+    vi.mocked(pinCollectionProduct).mockResolvedValue({
+      status: "skipped",
+      reason: "No collection has a product that is available for sale.",
+    });
 
     await expect(main(URL_ONLY)).resolves.toBe(2);
 
@@ -1294,6 +1659,7 @@ describe("main without --json", () => {
       "  skipped        add-to-cart                  No eligible variant.\n",
       "  indeterminate  choose-a-variant             Storefront API catalog pin failed: GraphQL errors: Down\n",
       "  skipped        change-quantity-and-remove   No variant could be added to a cart with 2 units.\n",
+      "  skipped        browse-from-collection       No collection has a product that is available for sale.\n",
     ]);
     expect(stderr).toEqual([]);
   });
@@ -1307,6 +1673,7 @@ describe("main without --json", () => {
       "  indeterminate  add-to-cart                  SHOPIFY_PROXY_KEY is not set.\n",
       "  indeterminate  choose-a-variant             SHOPIFY_PROXY_KEY is not set.\n",
       "  indeterminate  change-quantity-and-remove   SHOPIFY_PROXY_KEY is not set.\n",
+      "  indeterminate  browse-from-collection       SHOPIFY_PROXY_KEY is not set.\n",
     ]);
     expect(stderr).toEqual([]);
   });
@@ -1382,6 +1749,9 @@ describe("main on an interactive terminal", () => {
       ["stderr", runningLine("change-quantity-and-remove")],
       ["stderr", eraseLine("change-quantity-and-remove")],
       ["stdout", "  pass           change-quantity-and-remove\n"],
+      ["stderr", runningLine("browse-from-collection")],
+      ["stderr", eraseLine("browse-from-collection")],
+      ["stdout", "  pass           browse-from-collection\n"],
     ]);
     // The test name is in the same column as in the result line.
     expect(runningLine("add-to-cart").indexOf("add-to-cart")).toBe(
@@ -1426,6 +1796,9 @@ describe("main on an interactive terminal", () => {
       ["stderr", "  ⠋ running      ch"],
       ["stderr", `\r${" ".repeat(19)}\r`],
       ["stdout", "  pass           change-quantity-and-remove\n"],
+      ["stderr", "  ⠋ running      br"],
+      ["stderr", `\r${" ".repeat(19)}\r`],
+      ["stdout", "  pass           browse-from-collection\n"],
     ]);
     expect(vi.getTimerCount()).toBe(0);
   });
@@ -1499,13 +1872,14 @@ describe("main on an interactive terminal", () => {
     await expect(main([...URL_ONLY, ...argv])).resolves.toBe(0);
 
     expect(stderr.join("")).not.toMatch(/\r| running /);
-    expect(stdout).toHaveLength(3);
+    expect(stdout).toHaveLength(4);
     expect(vi.getTimerCount()).toBe(0);
     if (argv.length === 0) {
       expect(stdout).toEqual([
         "  pass           add-to-cart\n",
         "  pass           choose-a-variant\n",
         "  pass           change-quantity-and-remove\n",
+        "  pass           browse-from-collection\n",
       ]);
       expect(stderr).toEqual([]);
     }
@@ -1580,6 +1954,8 @@ async function runUntilInterrupted(agent: ReturnType<typeof fakes>["agent"]): Pr
  * line, then the run records one resolved change of that line to each quantity in `cartSteps`
  * (default: 2, 1, then its remove).
  * `addedVariants` is the variant that each run adds, in run order. Default: `PINNED`.
+ * In a browse-from-collection run, the agent run records `views` instead (default: the view of
+ * the pinned collection, then the page view of the pinned product).
  */
 function fakes({
   page: pageOverrides = {},
@@ -1588,6 +1964,10 @@ function fakes({
   settle = "in-run",
   addedVariants = [],
   cartSteps = [2, 1, 0],
+  views = [
+    { collection: BROWSE_PINNED.collectionHandle },
+    { context: "page", product: BROWSE_PINNED.productHandle },
+  ],
 }: {
   page?: Record<string, unknown>;
   outcome?: AgentOutcome;
@@ -1595,6 +1975,7 @@ function fakes({
   settle?: "in-run" | "in-wait" | "rejected";
   addedVariants?: string[];
   cartSteps?: number[];
+  views?: View[];
 } = {}) {
   let runs = 0;
   const track =
@@ -1632,6 +2013,10 @@ function fakes({
       calls.push("run");
       if (!adds) return outcome;
       stop.addEventListener("abort", () => calls.push("stop"), { once: true });
+      if (stopReason === STOPPED_AT_PRODUCT_PAGE) {
+        for (const view of views) recordView(view);
+        return stop.aborted ? { completed: false, reason: stopReason } : outcome;
+      }
       recordAdd(addedVariants[runs++] ?? PINNED.variantId);
       if (stopReason === STOPPED_AFTER_CART_CHANGES) {
         recordOutcome("settled", [{ id: LINE_ID, quantity: 1 }]);
@@ -1652,6 +2037,22 @@ function fakes({
     return agent as unknown as Awaited<ReturnType<typeof attachStagehand>>;
   });
   return { session, agent };
+}
+
+/** A collection view of a handle, or a product view with a context and a product handle. */
+type View = { collection: string } | { context: string; product: string };
+
+/** Records one collection or product view in the current log, as the page would. */
+function recordView(view: View): void {
+  if ("collection" in view) {
+    calls.push(`collection view ${view.collection}`);
+    log.receive(JSON.stringify({ name: COLLECTION_VIEW_EVENT_NAME, handle: view.collection }));
+    return;
+  }
+  calls.push(`product view ${view.context} ${view.product}`);
+  log.receive(
+    JSON.stringify({ name: PRODUCT_VIEW_EVENT_NAME, context: view.context, handle: view.product }),
+  );
 }
 
 /** Records one 1-unit add input of `variantId` in the current log, as the page would. */

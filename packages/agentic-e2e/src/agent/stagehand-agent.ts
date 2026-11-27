@@ -31,6 +31,8 @@ const FAILURE_PREFIX = "Failed to execute task:";
 export const STOPPED_AT_ADD = "Stopped by the command after the add event.";
 /** The stop reason of `change-quantity-and-remove`: the command stops it after the cart changes. */
 export const STOPPED_AFTER_CART_CHANGES = "Stopped by the command after the cart changes.";
+/** The stop reason of `browse-from-collection`: the command stops it when the product page opens. */
+export const STOPPED_AT_PRODUCT_PAGE = "Stopped by the command after the product page opened.";
 
 /** What the agent run reports. It feeds the `agent` field of the result, never the verdict. */
 export type AgentOutcome =

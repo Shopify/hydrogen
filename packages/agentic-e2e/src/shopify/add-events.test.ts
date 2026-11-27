@@ -3,9 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ADD_EVENT_NAME,
   AddEventLog,
+  COLLECTION_VIEW_EVENT_NAME,
   MAX_LINES,
   MAX_STRING,
   parseAddEventMessage,
+  PRODUCT_VIEW_EVENT_NAME,
   recordAddEvents,
 } from "./add-events.ts";
 
@@ -31,6 +33,60 @@ const settled = {
   warningCodes: ["MERCHANDISE_OUT_OF_STOCK", null],
   lines: [{ id: LINE, quantity: 1 }],
 };
+const collectionView = { name: COLLECTION_VIEW_EVENT_NAME, handle: "frontpage" };
+const productView = { name: PRODUCT_VIEW_EVENT_NAME, context: "page", handle: "board" };
+
+describe("parseAddEventMessage for view messages", () => {
+  it("parses collection and product view messages with the receive order", () => {
+    expect(parseAddEventMessage(JSON.stringify(collectionView), 2)).toEqual({
+      ...collectionView,
+      order: 2,
+    });
+    expect(parseAddEventMessage(JSON.stringify(productView), 3)).toEqual({
+      ...productView,
+      order: 3,
+    });
+  });
+
+  it("keeps null fields", () => {
+    const nullCollection = { ...collectionView, handle: null };
+    const nullProduct = { ...productView, context: null, handle: null };
+
+    expect(parseAddEventMessage(JSON.stringify(nullCollection), 0)).toEqual({
+      ...nullCollection,
+      order: 0,
+    });
+    expect(parseAddEventMessage(JSON.stringify(nullProduct), 0)).toEqual({
+      ...nullProduct,
+      order: 0,
+    });
+  });
+
+  it("keeps a product view context that the contract does not list, as a string", () => {
+    const message = { ...productView, context: "quick-buy" };
+
+    expect(parseAddEventMessage(JSON.stringify(message), 0)).toEqual({ ...message, order: 0 });
+  });
+
+  it.each([
+    ["a too long collection handle", { ...collectionView, handle: "x".repeat(MAX_STRING + 1) }],
+    ["a missing collection handle", { name: COLLECTION_VIEW_EVENT_NAME }],
+    ["a numeric collection handle", { ...collectionView, handle: 1 }],
+    ["a too long product handle", { ...productView, handle: "x".repeat(MAX_STRING + 1) }],
+    ["a too long product context", { ...productView, context: "x".repeat(MAX_STRING + 1) }],
+    ["a missing product context", { name: PRODUCT_VIEW_EVENT_NAME, handle: "board" }],
+    ["a numeric product context", { ...productView, context: 1 }],
+    ["an unknown view event name", { ...collectionView, name: "shopify:page:view" }],
+  ])("drops a view message with %s", (_case, message) => {
+    expect(parseAddEventMessage(JSON.stringify(message), 0)).toBeUndefined();
+  });
+
+  it("drops an oversized view message", () => {
+    const padded = JSON.stringify({ ...productView, padding: "x".repeat(40_000) });
+
+    expect(parseAddEventMessage(padded, 0)).toBeUndefined();
+  });
+});
 
 describe("parseAddEventMessage", () => {
   it("parses input, settled, and failed messages with the receive order", () => {
@@ -105,10 +161,37 @@ describe("AddEventLog", () => {
     log.receive(JSON.stringify(input));
     log.receive(JSON.stringify({ name: ADD_EVENT_NAME, phase: "failed", id: "abc-1" }));
 
-    expect(log.events.map((event) => [event.order, event.phase])).toEqual([
-      [0, "input"],
-      [1, "failed"],
+    expect(log.events).toEqual([
+      expect.objectContaining({ order: 0, phase: "input" }),
+      expect.objectContaining({ order: 1, phase: "failed" }),
     ]);
+  });
+
+  it("gives view messages a receive order in the same sequence as cart messages", () => {
+    const log = new AddEventLog();
+
+    log.receive(JSON.stringify(collectionView));
+    log.receive(JSON.stringify(input));
+    log.receive(JSON.stringify(productView));
+
+    expect(log.events).toEqual([
+      { ...collectionView, order: 0 },
+      { ...input, order: 1 },
+      { ...productView, order: 2 },
+    ]);
+  });
+
+  it("does not call onFirstAdd for view messages", () => {
+    const log = new AddEventLog();
+    const calls: number[] = [];
+    log.onFirstAdd(0, () => calls.push(log.events.length));
+
+    log.receive(JSON.stringify(collectionView));
+    log.receive(JSON.stringify(productView));
+    expect(calls).toEqual([]);
+    log.receive(JSON.stringify(input));
+
+    expect(calls).toEqual([3]);
   });
 
   it("calls onFirstAdd once, for the first add input at or after the given order", () => {
@@ -461,6 +544,66 @@ describe("recordAddEvents", () => {
 
     expect(target.dispatchEvent(hostile)).toBe(true);
     await flush();
+    expect(messages).toEqual([]);
+  });
+
+  it("sends only the collection handle of a collection view, and the message parses", () => {
+    dispatch(
+      { collection: { id: "gid://shopify/Collection/1", handle: "frontpage", productsCount: 3 } },
+      COLLECTION_VIEW_EVENT_NAME,
+    );
+
+    expect(messages).toEqual([{ name: COLLECTION_VIEW_EVENT_NAME, handle: "frontpage" }]);
+    expect(parseAddEventMessage(JSON.stringify(messages[0]), 0)).toBeDefined();
+  });
+
+  it("sends only the context and product handle of a product view, and the message parses", () => {
+    dispatch(
+      {
+        context: "page",
+        product: { id: "gid://shopify/Product/1", title: "Board", handle: "board" },
+        promise: Promise.resolve({}),
+      },
+      PRODUCT_VIEW_EVENT_NAME,
+    );
+
+    expect(messages).toEqual([{ name: PRODUCT_VIEW_EVENT_NAME, context: "page", handle: "board" }]);
+    expect(parseAddEventMessage(JSON.stringify(messages[0]), 0)).toBeDefined();
+  });
+
+  it("sends null for missing or non-string view fields, and bounds long strings", () => {
+    dispatch({}, COLLECTION_VIEW_EVENT_NAME);
+    dispatch({ collection: { handle: 7 } }, COLLECTION_VIEW_EVENT_NAME);
+    dispatch({ context: 1, product: null }, PRODUCT_VIEW_EVENT_NAME);
+    dispatch(
+      { context: "c".repeat(MAX_STRING + 5), product: { handle: "h".repeat(MAX_STRING + 5) } },
+      PRODUCT_VIEW_EVENT_NAME,
+    );
+
+    expect(messages).toEqual([
+      { name: COLLECTION_VIEW_EVENT_NAME, handle: null },
+      { name: COLLECTION_VIEW_EVENT_NAME, handle: null },
+      { name: PRODUCT_VIEW_EVENT_NAME, context: null, handle: null },
+      {
+        name: PRODUCT_VIEW_EVENT_NAME,
+        context: "c".repeat(MAX_STRING),
+        handle: "h".repeat(MAX_STRING),
+      },
+    ]);
+    for (const message of messages) {
+      expect(parseAddEventMessage(JSON.stringify(message), 0)).toBeDefined();
+    }
+  });
+
+  it("does not throw into the page when a view field throws on read", () => {
+    const hostile = new Event(PRODUCT_VIEW_EVENT_NAME);
+    Object.defineProperty(hostile, "product", {
+      get() {
+        throw new Error("getter");
+      },
+    });
+
+    expect(target.dispatchEvent(hostile)).toBe(true);
     expect(messages).toEqual([]);
   });
 });

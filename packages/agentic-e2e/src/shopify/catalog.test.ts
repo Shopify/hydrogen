@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  collectionUrl,
   PAGE_LIMIT,
+  pinCollectionProduct,
   pinNonDefaultVariant,
   pinVariant,
   pinVariantWithTwoUnits,
@@ -584,6 +586,168 @@ describe("productUrl", () => {
   it("encodes the handle", () => {
     expect(productUrl(new URL("https://shop.example"), "a/b c").href).toBe(
       "https://shop.example/products/a%2Fb%20c",
+    );
+  });
+});
+
+type CollectionProduct = { handle: string; title: string; availableForSale: boolean };
+
+function collectionProduct(handle: string, fields: Partial<CollectionProduct> = {}) {
+  return { handle, title: `Title ${handle}`, availableForSale: true, ...fields };
+}
+
+function collection(handle: string, products: CollectionProduct[]) {
+  return { handle, products: { nodes: products } };
+}
+
+function collectionsAnswer(nodes: unknown[]) {
+  return { body: { data: { collections: { nodes } } } };
+}
+
+describe("pinCollectionProduct", () => {
+  it("sends the collection and product counts and the discovered context with an explicit @inContext", async () => {
+    const requests = stubFetch([
+      collectionsAnswer([collection("frontpage", [collectionProduct("board")])]),
+    ]);
+
+    await pinCollectionProduct(STOREFRONT_URL, { country: "CA", language: "LA" }, signal);
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.url).toMatch(/^https:\/\/shop\.example\/api\/[^/]+\/graphql\.json$/);
+    expect(requests[0]?.query).toContain("query AgenticE2ECollectionProduct(");
+    expect(requests[0]?.query).toContain(
+      "@inContext(country: $storefrontCountry, language: $storefrontLanguage)",
+    );
+    expect(requests[0]?.query).toContain("collections(first: $collections)");
+    // No filter and no sort key: the collection's default order.
+    expect(requests[0]?.query).toContain("products(first: $products) {");
+    expect(requests[0]?.variables).toEqual({
+      collections: 20,
+      products: 50,
+      storefrontCountry: "CA",
+      storefrontLanguage: "LA",
+    });
+  });
+
+  it("pins the first eligible product of the first collection that has one", async () => {
+    stubFetch([
+      collectionsAnswer([
+        collection("empty", []),
+        collection("frontpage", [
+          collectionProduct("sold-out", { availableForSale: false }),
+          collectionProduct("board"),
+          collectionProduct("tee"),
+        ]),
+        collection("later", [collectionProduct("mug")]),
+      ]),
+    ]);
+
+    await expect(pinCollectionProduct(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
+      status: "pinned",
+      pinned: {
+        collectionHandle: "frontpage",
+        productHandle: "board",
+        productTitle: "Title board",
+      },
+    });
+  });
+
+  it("passes over a collection whose only available product has a duplicate title", async () => {
+    stubFetch([
+      collectionsAnswer([
+        collection("duplicates", [
+          collectionProduct("board", { title: "Board" }),
+          // The duplicate is not available, but its title still makes "Board" ambiguous.
+          collectionProduct("board-old", { title: "Board", availableForSale: false }),
+        ]),
+        collection("frontpage", [collectionProduct("tee")]),
+      ]),
+    ]);
+
+    await expect(pinCollectionProduct(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
+      status: "pinned",
+      pinned: { collectionHandle: "frontpage", productHandle: "tee", productTitle: "Title tee" },
+    });
+  });
+
+  it("passes over products with a duplicate title within the same collection", async () => {
+    stubFetch([
+      collectionsAnswer([
+        collection("frontpage", [
+          collectionProduct("board", { title: "Board" }),
+          collectionProduct("board-2", { title: "Board" }),
+          collectionProduct("tee"),
+        ]),
+      ]),
+    ]);
+
+    const pin = await pinCollectionProduct(STOREFRONT_URL, CA_FR, signal);
+
+    expect(pin.status === "pinned" && pin.pinned.productHandle).toBe("tee");
+  });
+
+  it("skips with the number of searched collections when no collection is eligible", async () => {
+    stubFetch([
+      collectionsAnswer([
+        collection("sold-out", [collectionProduct("board", { availableForSale: false })]),
+        collection("empty", []),
+        collection("duplicates", [
+          collectionProduct("a", { title: "Same" }),
+          collectionProduct("b", { title: "Same" }),
+        ]),
+      ]),
+    ]);
+
+    await expect(pinCollectionProduct(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
+      status: "skipped",
+      reason:
+        "No collection has a product that is available for sale and has a unique title among its first 50 products (3 collections searched).",
+    });
+  });
+
+  it.each([
+    { nodes: [], searched: "0 collections searched" },
+    { nodes: [collection("empty", [])], searched: "1 collection searched" },
+  ])("skips with $searched", async ({ nodes, searched }) => {
+    stubFetch([collectionsAnswer(nodes)]);
+
+    await expect(pinCollectionProduct(STOREFRONT_URL, CA_FR, signal)).resolves.toEqual({
+      status: "skipped",
+      reason: `No collection has a product that is available for sale and has a unique title among its first 50 products (${searched}).`,
+    });
+  });
+
+  it("throws on GraphQL errors", async () => {
+    stubFetch([{ body: { data: null, errors: [{ message: "Bad country" }] } }]);
+
+    await expect(pinCollectionProduct(STOREFRONT_URL, CA_FR, signal)).rejects.toThrow(
+      "GraphQL errors: Bad country",
+    );
+  });
+
+  it("throws on a bad shape", async () => {
+    const { availableForSale: _dropped, ...withoutAvailability } = collectionProduct("board");
+    stubFetch([
+      collectionsAnswer([{ handle: "frontpage", products: { nodes: [withoutAvailability] } }]),
+    ]);
+
+    await expect(pinCollectionProduct(STOREFRONT_URL, CA_FR, signal)).rejects.toThrow(
+      "Invalid response data: collections.nodes.0.products.nodes.0.availableForSale: ",
+    );
+  });
+});
+
+describe("collectionUrl", () => {
+  it.each([
+    ["https://shop.example/?q=1#top", "https://shop.example/collections/frontpage"],
+    ["http://127.0.0.1:3000", "http://127.0.0.1:3000/collections/frontpage"],
+  ])("builds the collection URL for %s", (input, expected) => {
+    expect(collectionUrl(new URL(input), "frontpage").href).toBe(expected);
+  });
+
+  it("encodes the handle", () => {
+    expect(collectionUrl(new URL("https://shop.example"), "a/b c").href).toBe(
+      "https://shop.example/collections/a%2Fb%20c",
     );
   });
 });
