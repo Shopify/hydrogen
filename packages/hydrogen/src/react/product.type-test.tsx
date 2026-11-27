@@ -1,8 +1,9 @@
-import type { ButtonHTMLAttributes, InputHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, InputHTMLAttributes, RefObject } from "react";
 import { describe, expectTypeOf, it } from "vitest";
 
+import type { ViewEventElement } from "../../vendor/standard-events";
 import type { ProductFormStore, ProductInput, ProductVariantInput } from "../core/product";
-import { getProductViewAttributes, type ProductViewProduct } from "../core/product/product-view";
+import type { ProductViewProduct } from "../core/product/product-view";
 import { useProductForm } from "./product";
 import type { ProductViewProps } from "./product-view";
 
@@ -96,21 +97,43 @@ describe("react product form types", () => {
 
 describe("react product view types", () => {
   type CardProduct = Pick<ProductViewProduct, "id" | "title" | "handle">;
+  type ElementRef = RefObject<(HTMLElement & ViewEventElement) | null>;
 
-  it("rejects the manual trigger in ProductView, and the helper options accept it", () => {
-    expectTypeOf<ProductViewProps["trigger"]>().toEqualTypeOf<
-      "connect" | "intersect" | "dialog" | undefined
-    >();
+  it("requires elementRef with the manual trigger, and only with it", () => {
     expectTypeOf<{
       product: CardProduct;
       context: "collection";
       trigger: "manual";
     }>().not.toMatchTypeOf<ProductViewProps>();
-    expectTypeOf(getProductViewAttributes).toBeCallableWith({
-      product: { id: "1", title: "Shirt", handle: "shirt" },
-      context: "collection",
-      trigger: "manual",
-    });
+    expectTypeOf<{
+      product: CardProduct;
+      context: "collection";
+      elementRef: ElementRef;
+    }>().not.toMatchTypeOf<ProductViewProps>();
+    expectTypeOf<{
+      product: CardProduct;
+      context: "collection";
+      trigger: "connect";
+      elementRef: ElementRef;
+    }>().not.toMatchTypeOf<ProductViewProps>();
+    expectTypeOf<{
+      product: CardProduct;
+      context: "collection";
+      trigger: "manual";
+      elementRef: ElementRef;
+    }>().toMatchTypeOf<ProductViewProps>();
+    expectTypeOf<{
+      product: ProductViewProduct;
+      context: "page";
+      trigger: "manual";
+      elementRef: (element: (HTMLElement & ViewEventElement) | null) => void;
+    }>().toMatchTypeOf<ProductViewProps>();
+    expectTypeOf<{
+      product: CardProduct;
+      context: "page";
+      trigger: "manual";
+      elementRef: ElementRef;
+    }>().not.toMatchTypeOf<ProductViewProps>();
   });
 
   it("keeps the context and product union", () => {
