@@ -1,10 +1,10 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, isAbsolute, join, relative, win32 } from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { checkGraphQL } from "./gql";
+import { checkGraphQL, getSchemaDirectory } from "./gql";
 
 const TSCONFIG_PATH_ARGUMENT_INDEX = 3;
 const tempDirectories: string[] = [];
@@ -61,12 +61,18 @@ describe("checkGraphQL", () => {
                 schemas: [
                   {
                     name: "storefront",
-                    schema: join(packageRoot, "dist/storefront.schema.json"),
+                    schema: join(
+                      relative(dirname(temporaryTsconfigPath), join(packageRoot, "dist")),
+                      "storefront.schema.json",
+                    ),
                     tadaOutputLocation: "storefront-graphql-env.d.ts",
                   },
                   {
                     name: "customer-account",
-                    schema: join(packageRoot, "dist/customer-account.schema.json"),
+                    schema: join(
+                      relative(dirname(temporaryTsconfigPath), join(packageRoot, "dist")),
+                      "customer-account.schema.json",
+                    ),
                     tadaOutputLocation: "customer-account-graphql-env.d.ts",
                   },
                 ],
@@ -111,5 +117,45 @@ describe("checkGraphQL", () => {
     await expect(checkGraphQL({ args: ["--level", "verbose"] })).rejects.toThrow(
       "Invalid diagnostic level: verbose",
     );
+  });
+});
+
+function isUrl(value: string): boolean {
+  return URL.canParse(value);
+}
+
+describe("getSchemaDirectory (Windows paths)", () => {
+  it("documents why absolute Windows paths are a problem", () => {
+    expect(isUrl("C:\\pkg\\dist\\storefront.schema.json")).toBe(true);
+  });
+
+  it("returns a backslash relative path that gql.tada will not treat as a URL (same drive)", () => {
+    const result = getSchemaDirectory(
+      "C:\\proj\\app\\.hydrogen-gql-1.json",
+      "C:\\proj\\node_modules\\@shopify\\hydrogen",
+      win32,
+    );
+
+    expect(result).toBe("..\\node_modules\\@shopify\\hydrogen\\dist");
+    expect(win32.isAbsolute(result)).toBe(false);
+    expect(isUrl(win32.join(result, "storefront.schema.json"))).toBe(false);
+  });
+
+  it("is case-insensitive about the drive letter", () => {
+    const result = getSchemaDirectory("c:\\proj\\.t.json", "C:\\pkg", win32);
+    expect(win32.isAbsolute(result)).toBe(false);
+  });
+
+  it("KNOWN LIMITATION: stays absolute when the project and package are on different drives", () => {
+    const result = getSchemaDirectory("D:\\proj\\.t.json", "C:\\pkg", win32);
+
+    expect(result).toBe("C:\\pkg\\dist");
+    expect(win32.isAbsolute(result)).toBe(true);
+    expect(isUrl(win32.join(result, "storefront.schema.json"))).toBe(true);
+  });
+
+  it("returns a relative POSIX path on POSIX", () => {
+    const result = getSchemaDirectory("/proj/.t.json", "/pkg");
+    expect(isAbsolute(result)).toBe(false);
   });
 });
