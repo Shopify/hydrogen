@@ -19,6 +19,7 @@
     "noEmit": true,
     "types": ["vinxi/types/client"],
     "isolatedModules": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "paths": {
       "@shared/*": ["../shared/*"],

@@ -1,4 +1,4 @@
-import type { StorefrontModeConfig } from "../storefront/storefront-config";
+import type { StorefrontModeConfig } from "@shared/storefront-mode";
 
 export default defineNuxtPlugin((nuxtApp) => {
   const storefrontConfig = useState<StorefrontModeConfig>("storefront-config");

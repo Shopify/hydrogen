@@ -6,5 +6,6 @@ export const load: LayoutServerLoad = async ({ locals }) => {
   const { data } = await locals.storefrontClient.graphql(HEADER_COLLECTIONS_QUERY);
   return {
     headerCollections: normalizeHeaderCollections(data?.collections?.nodes),
+    shopIdentity: locals.storefront.shopIdentity,
   };
 };

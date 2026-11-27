@@ -65,8 +65,9 @@ export const customerAccountConfig = {
 
 /**
  * Single-locale storefront: every request resolves to the default locale. Structurally a
- * `ShopifyI18n` for `createShopifyRequestContext({i18n})`; this shared module stays free of
- * package imports so every example can alias it, hence no `defineShopifyI18n` call here.
+ * `ShopifyI18n` for `createShopifyRequestContext({i18n})`. Repo scripts such as
+ * `scripts/decrypt-example-secrets.ts` load this file with plain Node, before packages are
+ * built, so it has no package imports, hence no `defineShopifyI18n` call here.
  */
 export const i18n = {
   defaultLocale: { country: "US", language: "EN" },

@@ -1,17 +1,11 @@
-import { getBuyerIp } from "@shared/buyer-ip";
-import { i18n, storefrontConfig } from "@shared/config";
-import { getPrivateStorefrontToken } from "@shared/private-env";
+import { getRuntimeEnv } from "@shared/private-env";
+import { createRequestSessionManager } from "@shared/request-session";
+import { createRequestStorefront } from "@shared/request-storefront";
 import {
   STOREFRONT_CACHE_MAX_ENTRIES,
   createStorefrontCacheAdapter,
 } from "@shared/storefront-cache";
-import { handleShopifyRoutes } from "@shopify/hydrogen";
-import {
-  createCartServerHandlers,
-  createStorefrontClient,
-  createShopifyRequestContext,
-  type ShopifyRequestContextWithBuyerIp,
-} from "@shopify/hydrogen";
+import { createCartServerHandlers, handleShopifyRoutes } from "@shopify/hydrogen";
 import { createMiddleware } from "@solidjs/start/middleware";
 import { LRUCache } from "lru-cache";
 
@@ -38,15 +32,16 @@ const storefrontCache = createStorefrontCacheAdapter(
 export default createMiddleware({
   onRequest: [
     async (event) => {
-      const buyerIp = getBuyerIp(event.request.headers);
-      const requestContext = createShopifyRequestContext({
+      const { requestContext, storefrontClient, storefront } = createRequestStorefront({
+        env: getRuntimeEnv(),
         request: event.request,
-        i18n,
-        buyerIp,
+        cache: storefrontCache,
       });
-      const storefrontClient = createPrivateStorefrontClient(requestContext);
-      const sessionManager = await createCustomerSessionManager(event.request);
-      const customerAccountClient = createRequestCustomerAccountClient(requestContext);
+
+      const { customerAccountsEnabled } = storefront;
+      const sessionManager = customerAccountsEnabled
+        ? await createCustomerSessionManager(event.request)
+        : createRequestSessionManager(event.request);
 
       const shopifyRoute = handleShopifyRoutes({
         request: event.request,
@@ -54,14 +49,19 @@ export default createMiddleware({
         sessionManager,
         storefrontClient,
         routeTemplates,
-        handlers: [cartHandlers, customerSessionHandlers],
+        handlers: customerAccountsEnabled
+          ? [cartHandlers, customerSessionHandlers]
+          : [cartHandlers],
       });
       if (shopifyRoute) return shopifyRoute;
 
+      event.locals.storefront = storefront;
       event.locals.shopifyRequestContext = requestContext;
       event.locals.storefrontClient = storefrontClient;
-      event.locals.customerSessionManager = sessionManager;
-      event.locals.customerAccountClient = customerAccountClient;
+      if (customerAccountsEnabled) {
+        event.locals.customerSessionManager = sessionManager;
+        event.locals.customerAccountClient = createRequestCustomerAccountClient(requestContext);
+      }
     },
   ],
   onBeforeResponse: [
@@ -75,15 +75,3 @@ export default createMiddleware({
     },
   ],
 });
-
-function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
-  return createStorefrontClient({
-    type: "private",
-    requestContext,
-    config: {
-      storeDomain: storefrontConfig.storeDomain,
-      privateStorefrontToken: getPrivateStorefrontToken(),
-      cache: storefrontCache,
-    },
-  });
-}

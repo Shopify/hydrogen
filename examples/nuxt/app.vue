@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { defaultI18n } from "@shared/config";
+import { resolveShopIdentity, type StorefrontModeConfig } from "@shared/storefront-mode";
 import { getShopifyScriptTags, initializeShopifyScripts } from "@shopify/hydrogen";
 
 import { CartProvider, useServerRenderedCart } from "~/storefront/cart";
-import { resolveShopIdentity } from "~/storefront/shop-identity";
-import type { StorefrontModeConfig } from "~/storefront/storefront-config";
 import { routeTemplates } from "~/utils/route-templates";
 
 const route = useRoute();

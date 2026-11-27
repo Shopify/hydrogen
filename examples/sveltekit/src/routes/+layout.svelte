@@ -3,7 +3,7 @@
 	import { afterNavigate, goto } from '$app/navigation';
 	import { routeTemplates } from '$lib/route-templates';
 	import { onMount, tick } from 'svelte';
-	import { analyticsConsent, defaultI18n, shop } from '@shared/config';
+	import { defaultI18n } from '@shared/config';
 	import {
 		initializeShopifyScripts,
 		renderShopifyScriptTags,
@@ -16,11 +16,12 @@
 
 	let { children, data } = $props();
 
-	const shopifyScriptTagsHtml = renderShopifyScriptTags({
-		consent: analyticsConsent,
-		i18n: defaultI18n,
-		shop
-	}).join('\n');
+	const shopifyScriptTagsHtml = $derived(
+		renderShopifyScriptTags({
+			...data.shopIdentity,
+			i18n: defaultI18n
+		}).join('\n')
+	);
 
 	onMount(() => {
 		connectCartStore();

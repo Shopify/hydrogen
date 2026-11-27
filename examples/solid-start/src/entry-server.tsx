@@ -1,5 +1,5 @@
 // @refresh reload
-import { analyticsConsent, defaultI18n, shop, storefrontConfig } from "@shared/config";
+import { defaultI18n } from "@shared/config";
 import { createContentSecurityPolicy, getShopifyScriptTags } from "@shopify/hydrogen";
 import { createHandler, StartServer } from "@solidjs/start/server";
 import { For } from "solid-js";
@@ -8,11 +8,12 @@ export default createHandler(
   (event) => {
     const nonce = event.locals.csp?.nonce;
     if (!nonce) throw new Error("CSP nonce was not created for this document.");
+    const storefront = event.locals.storefront;
+    if (!storefront) throw new Error("Storefront mode was not resolved for this document.");
     const shopifyScriptTags = getShopifyScriptTags({
-      consent: analyticsConsent,
+      ...storefront.shopIdentity,
       i18n: defaultI18n,
       nonce,
-      shop,
     });
 
     return (
@@ -50,8 +51,10 @@ export default createHandler(
     );
   },
   (event) => {
+    const storeDomain = event.locals.storefront?.storeDomain;
+    if (!storeDomain) throw new Error("Storefront mode was not resolved for this document.");
     const csp = createContentSecurityPolicy({
-      shop: { storeDomain: storefrontConfig.storeDomain },
+      shop: { storeDomain },
       directives: {
         styleSrc: ["https://fonts.googleapis.com"],
         fontSrc: ["https://fonts.gstatic.com"],

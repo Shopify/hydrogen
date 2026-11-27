@@ -33,9 +33,18 @@ Port of the canonical `examples/core` design to [Astro](https://astro.build/) ru
 - **Live**: product data, collection data, prices, images, options, news articles, article body HTML, Customer Account login/session state, basic customer identity, logout.
 - **Stubbed**: hero links, cart count badge, search, add-to-cart button (no cart mutation), newsletter form, color swatch hex values (mapped server-side from option name → CSS color in `src/pages/products/[handle].astro`).
 
+## Storefront mode
+
+The example runs with no setup against `mock.shop`. `examples/shared/storefront-mode.ts` picks the mode from server environment variables, the same way as the [Nuxt example](../nuxt/README.md#storefront-mode):
+
+- **Mock mode** uses `mock.shop` when `PRIVATE_STOREFRONT_API_TOKEN` is absent, `MOCK_SHOP=1`, or `PUBLIC_STORE_DOMAIN` is a `mock.shop` domain. Customer Account and Shopify analytics are off, and `/account` says accounts are unavailable. The server logs one warning when it falls back.
+- **Private mode** uses the shared store from `examples/shared/config.ts`. Authorized developers with the ejson key can run `pnpm run examples:secrets:decrypt` to write the token to the Git-ignored `examples/astro/.env`.
+
+The Content-Security-Policy is fixed in the framework config, so it allows both the shared store and `mock.shop`.
+
 ## Customer Account setup
 
-The account flow uses `createCustomerSession` and `createCustomerAccountServerHandlers` from `@shopify/hydrogen/customer-account`, Customer Account values from `examples/shared/config.ts`, and an encrypted HttpOnly `__Host-` cookie adapter from `examples/shared/customer-session.ts`.
+The account flow uses `createCustomerSession` and `createCustomerAccountServerHandlers` from `@shopify/hydrogen/customer-account`, Customer Account values from `examples/shared/config.ts`, and an encrypted HttpOnly `__Host-` cookie adapter from `examples/shared/customer-session.ts`. It is only available in private mode.
 
 Customer Account OAuth requires a public HTTPS origin. To test locally without a tunnel, run:
 

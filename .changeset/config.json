@@ -9,6 +9,7 @@
   "updateInternalDependencies": "patch",
   "ignore": [
     "@shopify/hydrogen-example-*",
+    "@shopify/hydrogen-examples-shared",
     "@shopify/hydrogen-template-react-router",
     "hydrogen",
     "@shopify/storefront-e2e"

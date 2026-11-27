@@ -1,0 +1,13 @@
+{
+  "name": "@shopify/hydrogen-examples-shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Code shared by the framework examples. Examples import it through the @shared/* alias and list this package as a dependency so the workspace graph knows they use it.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test __test__/*.test.ts"
+  },
+  "dependencies": {
+    "@shopify/hydrogen": "workspace:*"
+  }
+}

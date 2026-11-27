@@ -22,7 +22,7 @@ export function getOptionalSharedSecret(key: string, env?: object | null): strin
   return isPresentString(value) ? value : undefined;
 }
 
-function getRuntimeEnv(env?: object | null): RuntimeEnv {
+export function getRuntimeEnv(env?: object | null): RuntimeEnv {
   const globalEnv = (
     globalThis as {
       process?: { env?: RuntimeEnv };

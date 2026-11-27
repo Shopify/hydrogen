@@ -1,0 +1,98 @@
+name: Examples (mock.shop)
+
+# Kept out of storefront-e2e.yml so this paths filter can't skip that workflow's required checks.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "examples/**"
+      - "packages/hydrogen/**"
+      - ".github/workflows/examples-mock-shop.yml"
+      - "scripts/examples-mock-smoke.ts"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+  pull_request:
+    branches: [main]
+    paths:
+      - "examples/**"
+      - "packages/hydrogen/**"
+      - ".github/workflows/examples-mock-shop.yml"
+      - "scripts/examples-mock-smoke.ts"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+
+concurrency:
+  group: examples-mock-shop-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  examples:
+    # Examples must run against mock.shop with no secrets or .env file.
+    name: Examples render against mock.shop with no secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      npm_config_registry: https://registry.npmjs.org/
+      TURBO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm run build:pkgs
+
+      - name: Build, start, and check each example
+        env:
+          HOST: localhost
+        run: |
+          status=0
+          port=4210
+          for example in astro nuxt solid-start sveltekit; do
+            port=$((port + 1))
+            package="@shopify/hydrogen-example-$example"
+            log="example-$example.log"
+            echo "::group::$example"
+
+            if pnpm --filter "$package" build \
+              && { PORT=$port setsid pnpm --filter "$package" start > "$log" 2>&1 & pid=$!; } \
+              && node scripts/examples-mock-smoke.ts "http://localhost:$port/" \
+              && grep -q "Using mock.shop" "$log"; then
+              echo "$example passed"
+            else
+              echo "::error::$example failed in mock.shop mode"
+              cat "$log" 2>/dev/null || true
+              status=1
+            fi
+
+            if [ -n "${pid:-}" ]; then kill -- -"$pid" 2>/dev/null || true; fi
+            pid=
+            echo "::endgroup::"
+          done
+          exit $status
+
+      - name: Upload example logs
+        if: failure()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: mock-shop-example-logs
+          path: example-*.log
+          if-no-files-found: ignore
+          retention-days: 7

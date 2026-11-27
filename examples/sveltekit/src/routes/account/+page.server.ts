@@ -3,7 +3,11 @@ import { redirect } from "@sveltejs/kit";
 
 import type { PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ request, setHeaders }) => {
+export const load: PageServerLoad = async ({ locals, request, setHeaders }) => {
+  if (!locals.storefront.customerAccountsEnabled) {
+    return { isCustomerAccountAvailable: false, customer: null, error: null, loginFailed: false };
+  }
+
   const accountData = await getCustomerAccountPageData({
     request,
   });
@@ -21,6 +25,7 @@ export const load: PageServerLoad = async ({ request, setHeaders }) => {
   }
 
   return {
+    isCustomerAccountAvailable: true,
     customer: accountData.customer,
     error: accountData.error,
     loginFailed: accountData.loginFailed,

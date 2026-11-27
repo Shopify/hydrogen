@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     throw new Error("Storefront configuration was not created for this server request.");
   }
   if (storefrontConfig.mode === "mock") {
-    return { available: false, customer: null, error: null, loginFailed: false };
+    return { isCustomerAccountAvailable: false, customer: null, error: null, loginFailed: false };
   }
 
   const { customerAccountClient, customerSessionManager, shopifyRequestContext } = event.context;
@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
   applyNuxtResponseHeaders(event, accountData.headers);
 
   return {
-    available: true,
+    isCustomerAccountAvailable: true,
     customer: accountData.customer,
     error: accountData.error,
     loginFailed: accountData.loginFailed,

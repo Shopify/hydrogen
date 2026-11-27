@@ -1,19 +1,17 @@
 import { env } from "$env/dynamic/private";
 import { createCustomerSessionManager, customerSessionHandlers } from "$lib/customer-account";
 import { routeTemplates } from "$lib/route-templates";
-import { getBuyerIp } from "@shared/buyer-ip";
-import { i18n, storefrontConfig } from "@shared/config";
-import { getPrivateStorefrontToken } from "@shared/private-env";
+import { getRuntimeEnv } from "@shared/private-env";
+import { createRequestSessionManager } from "@shared/request-session";
+import { createRequestStorefront } from "@shared/request-storefront";
 import {
   STOREFRONT_CACHE_MAX_ENTRIES,
   createStorefrontCacheAdapter,
 } from "@shared/storefront-cache";
-import { handleShopifyRedirects, handleShopifyRoutes } from "@shopify/hydrogen";
 import {
   createCartServerHandlers,
-  createStorefrontClient,
-  createShopifyRequestContext,
-  type ShopifyRequestContextWithBuyerIp,
+  handleShopifyRedirects,
+  handleShopifyRoutes,
 } from "@shopify/hydrogen";
 import type { Handle } from "@sveltejs/kit";
 import { LRUCache } from "lru-cache";
@@ -24,14 +22,14 @@ const storefrontCache = createStorefrontCacheAdapter(
 );
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const buyerIp = getBuyerIp(event.request.headers);
-  const requestContext = createShopifyRequestContext({
+  const { requestContext, storefrontClient, storefront } = createRequestStorefront({
+    env: getRuntimeEnv(env),
     request: event.request,
-    i18n,
-    buyerIp,
+    cache: storefrontCache,
   });
-  const storefrontClient = createPrivateStorefrontClient(requestContext);
-  const sessionManager = await createCustomerSessionManager(event.request);
+  const sessionManager = storefront.customerAccountsEnabled
+    ? await createCustomerSessionManager(event.request)
+    : createRequestSessionManager(event.request);
 
   const shopifyRoute = handleShopifyRoutes({
     request: event.request,
@@ -39,10 +37,13 @@ export const handle: Handle = async ({ event, resolve }) => {
     sessionManager,
     storefrontClient,
     routeTemplates,
-    handlers: [cartHandlers, customerSessionHandlers],
+    handlers: storefront.customerAccountsEnabled
+      ? [cartHandlers, customerSessionHandlers]
+      : [cartHandlers],
   });
   if (shopifyRoute) return shopifyRoute;
 
+  event.locals.storefront = storefront;
   event.locals.shopifyRequestContext = requestContext;
   event.locals.storefrontClient = storefrontClient;
 
@@ -62,15 +63,3 @@ export const handle: Handle = async ({ event, resolve }) => {
   requestContext.applyResponseHeaders(finalResponse.headers);
   return finalResponse;
 };
-
-function createPrivateStorefrontClient(requestContext: ShopifyRequestContextWithBuyerIp) {
-  return createStorefrontClient({
-    type: "private",
-    requestContext,
-    config: {
-      storeDomain: storefrontConfig.storeDomain,
-      privateStorefrontToken: getPrivateStorefrontToken(env),
-      cache: storefrontCache,
-    },
-  });
-}
