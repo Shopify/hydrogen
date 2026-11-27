@@ -3,9 +3,10 @@ import { normalizeCollectionSearch } from "@shopify/hydrogen";
 
 import { collectionRouteSearch } from "~/utils/collection-route-search";
 import { toFetchQuery } from "~/utils/fetch-query";
+import { routeSearchTerm } from "~/utils/route-search-term";
 
 const route = useRoute();
-const term = computed(() => (route.query.q as string)?.trim() ?? "");
+const term = computed(() => routeSearchTerm(route));
 
 const searchQueryKey = computed(() => collectionRouteSearch(route));
 const fetchSearchOverride = ref<string | null>(null);
