@@ -92,9 +92,11 @@ Invoke the `hydrogen-request-handlers` skill to wire `handleShopifyRoutes` befor
 
 Then invoke the `hydrogen-robots-txt` skill to serve `/robots.txt`, so crawlers stay off the cart, account, checkout, and Hydrogen handler paths.
 
+Development mode means Hydrogen's development build, which Node loads through the `development` export condition. Bundler dev servers such as Vite set the condition. A server that runs on Node without a bundler does not, so add `--conditions=development` to the app's `dev` script. Without it, `/graphiql` falls through to the app and development warnings stay off.
+
 ### Continue when
 
-- [ ] `/api/graphiql` returns 200 in development mode
+- [ ] `/graphiql` returns 200 in development mode
 - [ ] `/admin` redirects to the Shopify Admin in development mode
 - [ ] `/robots.txt` returns 200 `text/plain` with the `hydrogen-robots-txt` rules adjusted to the app's routes
 
