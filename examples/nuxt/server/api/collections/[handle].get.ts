@@ -3,6 +3,7 @@ import { gql, parseCollectionParams, type AvailableFilter } from "@shopify/hydro
 import { getNuxtRequestSearchParams, toStorefrontApiFilters } from "~/server/utils/storefront";
 
 type ProductCardData = {
+  id: string;
   handle: string;
   title: string;
   featuredImage: { url: string; altText: string | null } | null;
@@ -39,6 +40,7 @@ const COLLECTION_QUERY = gql(`
       description
       products(first: 24, filters: $filters, sortKey: $sortKey, reverse: $reverse) {
         nodes {
+          id
           handle
           title
           featuredImage {

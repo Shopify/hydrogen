@@ -1,12 +1,12 @@
 import { getSelectedProductOptions } from "@shopify/hydrogen";
 import { gql } from "@shopify/hydrogen";
-import { useLocale } from "@shopify/hydrogen/react";
+import { ProductView, useLocale } from "@shopify/hydrogen/react";
 import { redirect, useLoaderData, useLocation, useNavigate } from "react-router";
 
 import { ProductForm } from "~/components/ProductForm";
 import { ProductImage } from "~/components/ProductImage";
 import { ProductPrice } from "~/components/ProductPrice";
-import { ProductView } from "~/lib/analytics";
+import { ProductView as ProductViewedAnalytics } from "~/lib/analytics";
 import { localizePath } from "~/lib/locale-path";
 import { ProductProvider, useProductForm } from "~/lib/product";
 import { redirectIfHandleIsLocalized } from "~/lib/redirect";
@@ -131,7 +131,7 @@ function ProductDetails() {
   const analyticsVariant = selectedVariant ?? product.selectedOrFirstAvailableVariant;
 
   return (
-    <div className="product">
+    <ProductView product={product} context="page" className="product">
       <ProductImage image={selectedVariant?.image ?? null} />
       <div className="product-main">
         <h1>{title}</h1>
@@ -151,7 +151,7 @@ function ProductDetails() {
         <br />
       </div>
       {analyticsVariant ? (
-        <ProductView
+        <ProductViewedAnalytics
           products={[
             {
               id: product.id,
@@ -165,7 +165,7 @@ function ProductDetails() {
           ]}
         />
       ) : null}
-    </div>
+    </ProductView>
   );
 }
 
