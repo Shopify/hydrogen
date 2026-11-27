@@ -64,7 +64,7 @@ type RequestLocale<TI18n extends ShopifyI18n | I18nConfig> = TI18n extends Shopi
     ? NormalizedI18nConfig<TI18n>
     : never;
 
-const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
+export const SHOPIFY_ESSENTIAL_COOKIE = "_shopify_essential";
 
 /** The incoming request's headers, plus its method, abort signal, and URL when the framework provides them. */
 type StorefrontRequest = Pick<Request, "headers"> &
@@ -175,7 +175,8 @@ type ShopifyRequestContextBase = {
   captureStorefrontRateLimit?(retryAfter: string | undefined): void;
   /**
    * Lets the final response set Shopify cookies before the customer has a Shopify session, and
-   * marks the response as private and uncacheable. The UCP MCP proxy calls the method for you.
+   * marks the response as private and uncacheable. The UCP MCP proxy and the cart POST handler's
+   * rollouts assignment call the method for you.
    * @internal
    */
   markResponseAsSessionEstablishing(reason: string): void;
@@ -397,7 +398,7 @@ export function createShopifyRequestContext<const TI18n extends ShopifyI18n>(
         context.documentRequest || (headers.get("content-type")?.startsWith("text/html") ?? false);
 
       // Keep GET and HEAD responses cacheable, and fail closed when the request method is unknown.
-      // Cold sessions may only be established by the explicitly marked consent request.
+      // Cold sessions may only be established by the marked consent request or a session-establishing response.
       const mayReturnShopifyState =
         requestMethod !== undefined &&
         requestMethod !== "GET" &&
@@ -562,7 +563,7 @@ function isDocumentRequest(request: StorefrontRequest): boolean {
   return request.headers.get("accept")?.includes("text/html") ?? false;
 }
 
-function parseCookieHeader(cookieHeader: string | undefined): Map<string, string> {
+export function parseCookieHeader(cookieHeader: string | undefined): Map<string, string> {
   const cookies = new Map<string, string>();
   if (!cookieHeader) return cookies;
 
