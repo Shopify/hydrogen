@@ -4669,6 +4669,53 @@
       "value": "export function withStorefrontRateLimit<Args extends unknown[], Result>(\n  loader: (...args: Args) => Result,\n): (...args: Args) => Promise<Awaited<Result>> {\n  return async (...args): Promise<Awaited<Result>> => {\n    try {\n      return await loader(...args);\n    } catch (error) {\n      if (!isStorefrontRateLimitError(error)) throw error;\n\n      // React Router doesn't pass a thrown `Response` to `handleError`, so report the cause here.\n      log.error(\"storefront api rate limited the request\", { error });\n\n      throw new Response(TOO_MANY_REQUESTS_BODY, {\n        status: RATE_LIMITED_STATUS,\n        headers: createRateLimitResponseHeaders(error),\n      });\n    }\n  };\n}"
     }
   },
+  "AssignRolloutsOnDocumentGeneratedType": {
+    "src/core/rollouts/document-assignment.ts": {
+      "filePath": "src/core/rollouts/document-assignment.ts",
+      "name": "AssignRolloutsOnDocumentGeneratedType",
+      "description": "Assigns a buyer with no Shopify session to the shop's checkout rollouts while a page request runs, so the HTML document that the request answers with already carries the buyer's session.\n\nCall the function in root middleware before you render the page, and await `applySetCookies()` on the response headers after rendering, before `requestContext.applyResponseHeaders()`. The method appends the `_shopify_essential` cookie from the `rolloutsAssign` mutation and nothing else, and the request context then makes the response private and uncacheable.\n\nThe helper only assigns a `GET` document request from a browser, with a private Storefront API client, when the request carries no `_shopify_essential` cookie, and when the shop's cached `rolloutsAssignmentActive` field is true. It waits at most half a second and never throws: a failed, slow, or empty assignment leaves the response unchanged.\n\nSkip the call for bots, and for anything but a page load. React Router passes client data requests through the same middleware.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "storefrontClient",
+          "description": "The client for this request. The helper uses its request context for the\nrequest headers and its cookies.",
+          "value": "StorefrontClient",
+          "filePath": "src/core/rollouts/document-assignment.ts"
+        },
+        {
+          "name": "request",
+          "description": "The incoming request, which names the method and the prefetch headers.",
+          "value": "Request",
+          "filePath": "src/core/rollouts/document-assignment.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/rollouts/document-assignment.ts",
+        "description": "The headers to update once the page rendered.",
+        "name": "DocumentRolloutsAssignment",
+        "value": "DocumentRolloutsAssignment"
+      },
+      "value": "export function assignRolloutsOnDocument(\n  storefrontClient: StorefrontClient,\n  request: Request,\n): DocumentRolloutsAssignment {\n  const assignment = drive(storefrontClient, factsOf(storefrontClient, request));\n\n  return {\n    async applySetCookies(headers) {\n      const state = await assignment;\n      if (state.status === \"Done\" && state.setCookie) headers.append(\"set-cookie\", state.setCookie);\n    },\n  };\n}"
+    }
+  },
+  "DocumentRolloutsAssignment": {
+    "src/core/rollouts/document-assignment.ts": {
+      "filePath": "src/core/rollouts/document-assignment.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "DocumentRolloutsAssignment",
+      "value": "{\n  applySetCookies(headers: Headers): Promise<void>;\n}",
+      "description": "The cookies that `applySetCookies()` adds to the response of one document request.",
+      "members": [
+        {
+          "filePath": "src/core/rollouts/document-assignment.ts",
+          "syntaxKind": "MethodSignature",
+          "name": "applySetCookies",
+          "value": "(headers: Headers) => Promise<void>",
+          "description": ""
+        }
+      ]
+    }
+  },
   "ShopifyScriptsOptions": {
     "src/core/shopify-scripts/types.ts": {
       "filePath": "src/core/shopify-scripts/types.ts",
@@ -6505,6 +6552,15 @@
           "isOptional": true
         }
       ]
+    }
+  },
+  "State": {
+    "src/core/rollouts/document-assignment.ts": {
+      "filePath": "src/core/rollouts/document-assignment.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "State",
+      "value": "{ status: \"Skipped\" } | { status: \"CheckingShop\" } | { status: \"Assigning\" } | { status: \"Done\"; setCookie?: string }",
+      "description": "The state of one document assignment."
     }
   },
   "CartState": {

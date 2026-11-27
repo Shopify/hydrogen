@@ -4,12 +4,12 @@ import { getLogger } from "../logging";
 import { parseCookieHeader, SHOPIFY_ESSENTIAL_COOKIE } from "../request-context";
 import { isObjectRecord } from "../utils/record";
 
-const ROLLOUTS_ASSIGN_API_VERSION = "unstable";
+export const ROLLOUTS_ASSIGN_API_VERSION = "unstable";
 const ROLLOUTS_ASSIGN_TIMEOUT_IN_MS = 1_000;
 const ROLLOUTS_ASSIGNED_COOKIE = "_shopify_rollouts_assigned";
 const ROLLOUTS_ASSIGNED_MAX_AGE_IN_SECONDS = 1_800;
 const ROLLOUTS_ASSIGNED_SET_COOKIE = `${ROLLOUTS_ASSIGNED_COOKIE}=1; Max-Age=${ROLLOUTS_ASSIGNED_MAX_AGE_IN_SECONDS}; Path=/; HttpOnly; Secure; SameSite=Lax`;
-const ROLLOUTS_ASSIGN_MUTATION: string = `
+export const ROLLOUTS_ASSIGN_MUTATION: string = `
   mutation RolloutsAssign {
     rolloutsAssign {
       userErrors {
@@ -51,7 +51,7 @@ export async function assignRollouts(
         ),
       ),
     );
-    const userErrorCodes = getUserErrorCodes(result.data);
+    const userErrorCodes = getRolloutsAssignUserErrorCodes(result.data);
     if (result.errors || userErrorCodes.length > 0) {
       log.warn("rollouts assignment returned errors", {
         errors: result.errors?.map(({ message }) => message),
@@ -62,16 +62,15 @@ export async function assignRollouts(
 
     storefrontClient.requestContext.captureSubrequestHeaders(result.headers);
     const setCookies = result.headers.getSetCookie();
-    const prefix = `${SHOPIFY_ESSENTIAL_COOKIE}=`;
-    const essential = setCookies
-      .map((setCookie) => setCookie.split(";", 1)[0]?.trim() ?? "")
-      .find((pair) => pair.startsWith(prefix) && pair.length > prefix.length);
+    const essential = findEssentialSetCookie(setCookies);
     if (essential && !hasSession) {
       storefrontClient.requestContext.markResponseAsSessionEstablishing("rollouts assignment");
     }
     return {
       setCookies: hasSession ? [...setCookies, ROLLOUTS_ASSIGNED_SET_COOKIE] : setCookies,
-      ...(essential && { cookie: replaceCookie(cookie, SHOPIFY_ESSENTIAL_COOKIE, essential) }),
+      ...(essential && {
+        cookie: replaceCookie(cookie, SHOPIFY_ESSENTIAL_COOKIE, cookiePair(essential)),
+      }),
     };
   } catch (error) {
     log.warn("rollouts assignment failed", { error });
@@ -79,11 +78,23 @@ export async function assignRollouts(
   }
 }
 
-function getUserErrorCodes(data: unknown): unknown[] {
+export function findEssentialSetCookie(setCookies: string[]): string | undefined {
+  const prefix = `${SHOPIFY_ESSENTIAL_COOKIE}=`;
+  return setCookies.find((setCookie) => {
+    const pair = cookiePair(setCookie);
+    return pair.startsWith(prefix) && pair.length > prefix.length;
+  });
+}
+
+export function getRolloutsAssignUserErrorCodes(data: unknown): unknown[] {
   const payload = isObjectRecord(data) ? data.rolloutsAssign : undefined;
   const userErrors = isObjectRecord(payload) ? payload.userErrors : undefined;
   if (!Array.isArray(userErrors)) return [];
   return userErrors.map((userError) => (isObjectRecord(userError) ? userError.code : undefined));
+}
+
+function cookiePair(setCookie: string): string {
+  return setCookie.split(";", 1)[0]?.trim() ?? "";
 }
 
 function replaceCookie(header: string | undefined, name: string, pair: string): string {

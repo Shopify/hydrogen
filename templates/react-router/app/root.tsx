@@ -1,10 +1,14 @@
 import {
+  assignRolloutsOnDocument,
   getHtmlLang,
   handleShopifyRedirects,
   handleShopifyRoutes,
   withStorefrontRateLimit,
+  type DocumentRolloutsAssignment,
+  type StorefrontClient,
 } from "@shopify/hydrogen";
 import { LocaleProvider, ShopifyScripts } from "@shopify/hydrogen/react";
+import { isbot } from "isbot";
 import type { ReactNode } from "react";
 import {
   isRouteErrorResponse,
@@ -47,6 +51,17 @@ export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
 ];
 
+const NO_DOCUMENT_ROLLOUTS: DocumentRolloutsAssignment = { applySetCookies: async () => {} };
+
+function documentRollouts(
+  request: Request,
+  storefrontClient: StorefrontClient,
+): DocumentRolloutsAssignment {
+  return isbot(request.headers.get("user-agent"))
+    ? NO_DOCUMENT_ROLLOUTS
+    : assignRolloutsOnDocument(storefrontClient, request);
+}
+
 export const middleware: Route.MiddlewareFunction[] = [
   async ({ context, request: rawRequest, url }, next) => {
     const request = toRoutedRequest(rawRequest, url);
@@ -79,6 +94,8 @@ export const middleware: Route.MiddlewareFunction[] = [
     context.set(storefrontClientContext, storefrontClient);
     context.set(customerAccountContext, customerAccount?.customerAccount ?? null);
 
+    const rollouts = documentRollouts(request, storefrontClient);
+
     const response = await next();
     const sessionHeaders = new Headers((await sessionManager.commit?.()) ?? undefined);
     for (const [name, value] of sessionHeaders) response.headers.append(name, value);
@@ -92,6 +109,7 @@ export const middleware: Route.MiddlewareFunction[] = [
       if (redirect) return redirect;
     }
 
+    await rollouts.applySetCookies(response.headers);
     requestContext.applyResponseHeaders(response.headers, response.status);
     return response;
   },
