@@ -11,11 +11,12 @@ import {
   CollectionProvider,
   CollectionView,
   useCollection,
+  useCollectionActions,
   useCollectionForm,
 } from "@shopify/hydrogen/react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, type MouseEvent } from "react";
 
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ProductCard, type ProductCardData } from "@/components/ProductCard";
@@ -181,36 +182,38 @@ function CollectionPage(props: CollectionPageProps) {
         </p>
       ) : null}
 
-      <form
-        {...formProps()}
-        method="get"
-        action={collectionPath}
-        className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8"
-      >
-        <FilterSidebar
-          key={collection.handle}
-          availableFilters={availableFilters}
-          activeFilters={state.filters}
-          isLoading={isLoading}
-          currencyCode={currencyCode}
-        />
-
-        <div key="results" className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-4">
-            <p className="type-body-sm text-on-surface-secondary" aria-live="polite">
-              {showingCount}
-            </p>
-            <SortSelect isLoading={isLoading} options={COLLECTION_SORT_OPTIONS} />
-          </div>
-
-          <ActiveFilterChips
+      {/* Wraps the filter and sort controls, the results, and the empty state, because the
+          collection update events start at this element. */}
+      <CollectionView collection={collection} productsCount={products.length} className="block">
+        <form
+          {...formProps()}
+          method="get"
+          action={collectionPath}
+          className="lg:grid lg:grid-cols-[240px_1fr] lg:gap-8"
+        >
+          <FilterSidebar
+            key={collection.handle}
+            availableFilters={availableFilters}
             activeFilters={state.filters}
-            collectionPath={collectionPath}
-            onNavigate={onNavigate}
+            isLoading={isLoading}
             currencyCode={currencyCode}
           />
 
-          <CollectionView collection={collection} productsCount={products.length} className="block">
+          <div key="results" className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-4">
+              <p className="type-body-sm text-on-surface-secondary" aria-live="polite">
+                {showingCount}
+              </p>
+              <SortSelect isLoading={isLoading} options={COLLECTION_SORT_OPTIONS} />
+            </div>
+
+            <ActiveFilterChips
+              activeFilters={state.filters}
+              collectionPath={collectionPath}
+              onNavigate={onNavigate}
+              currencyCode={currencyCode}
+            />
+
             {products.length === 0 ? (
               <p className="text-on-surface-secondary py-12 text-center">
                 {content.collection.noProducts}
@@ -232,18 +235,18 @@ function CollectionPage(props: CollectionPageProps) {
                 ))}
               </ul>
             )}
-          </CollectionView>
 
-          <LoadMore pageInfo={pageInfo} collectionPath={collectionPath} onNavigate={onNavigate} />
+            <LoadMore pageInfo={pageInfo} collectionPath={collectionPath} onNavigate={onNavigate} />
 
-          {/* No-JS submit so the GET filter/sort form is submittable without JS (F4). */}
-          <noscript>
-            <button type="submit" className="rounded-button button-primary h-11 px-4">
-              {content.collection.showResults}
-            </button>
-          </noscript>
-        </div>
-      </form>
+            {/* No-JS submit so the GET filter/sort form is submittable without JS (F4). */}
+            <noscript>
+              <button type="submit" className="rounded-button button-primary h-11 px-4">
+                {content.collection.showResults}
+              </button>
+            </noscript>
+          </div>
+        </form>
+      </CollectionView>
     </div>
   );
 }
@@ -484,6 +487,7 @@ function ActiveFilterChips({
   onNavigate: () => void;
   currencyCode: string;
 }) {
+  const { toggleFilter, reset } = useCollectionActions();
   if (activeFilters.length === 0) return null;
 
   return (
@@ -503,7 +507,7 @@ function ActiveFilterChips({
             <li key={`${filter.toString()}-${index}`}>
               <Link
                 href={href}
-                onClick={onNavigate}
+                onClick={onPlainClick(() => toggleFilter(filter), onNavigate)}
                 aria-label={`Remove filter: ${filterLabel}`}
                 className="chip-filled inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm no-underline"
               >
@@ -516,7 +520,7 @@ function ActiveFilterChips({
       <li>
         <Link
           href={collectionPath}
-          onClick={onNavigate}
+          onClick={onPlainClick(reset, onNavigate)}
           className="text-link inline-flex items-center rounded-full px-3 py-1 text-sm no-underline underline"
         >
           {content.collection.clearAll}
@@ -524,6 +528,22 @@ function ActiveFilterChips({
       </li>
     </ul>
   );
+}
+
+/**
+ * Returns a link click handler that runs a collection action instead of following the link, so the
+ * change counts as a customer change and sends an update event. The link still works without
+ * JavaScript. A click with a modifier key or another button goes to the link as usual.
+ */
+function onPlainClick(action: () => void, onOtherClick: () => void) {
+  return (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      onOtherClick();
+      return;
+    }
+    event.preventDefault();
+    action();
+  };
 }
 
 function describeFilter(filter: ProductFilter, currencyCode = "USD"): string {

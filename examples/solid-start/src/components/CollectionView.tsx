@@ -7,7 +7,11 @@ import type { JSX } from "solid-js";
  * as with `<Show when={collection.handle} keyed>`, where one component shows different collections.
  */
 export function CollectionView(
-  props: CollectionViewOptions & { class?: string; children: JSX.Element },
+  props: CollectionViewOptions & {
+    class?: string;
+    ref?: (element: HTMLElement) => void;
+    children: JSX.Element;
+  },
 ) {
   const attributes = () =>
     getCollectionViewAttributes({
@@ -21,6 +25,7 @@ export function CollectionView(
       attr:view-event-trigger={attributes()["view-event-trigger"]}
       attr:view-event-payload={attributes()["view-event-payload"]}
       class={props.class}
+      ref={props.ref}
     >
       {props.children}
     </shopify-view-event>

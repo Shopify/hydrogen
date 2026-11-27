@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import type { AvailableFilter, ProductFilter } from '@shopify/hydrogen';
+	import type { AvailableFilter, CollectionUpdatesConnection, ProductFilter } from '@shopify/hydrogen';
 	import { onDestroy, untrack } from 'svelte';
 	import {
 		getCollectionViewAttributes,
@@ -14,6 +14,7 @@
 
 	import {
 		collectionState,
+		connectControllerUpdates,
 		createCollectionForm,
 		createCollectionStoreController
 	} from '$lib/collection';
@@ -66,7 +67,8 @@
 	const currentParams = $derived(serializeCollectionParams($browseState));
 	const priceMin = $derived($browseState.filters.find((filter) => filter.price)?.price?.min ?? '');
 	const priceMax = $derived($browseState.filters.find((filter) => filter.price)?.price?.max ?? '');
-	let hasInitialisedController = false;
+	let viewElement = $state<HTMLElement>();
+	let updates: CollectionUpdatesConnection | undefined;
 	let priceTimer: ReturnType<typeof setTimeout> | undefined;
 
 	function cancelPriceSubmit() {
@@ -92,16 +94,32 @@
 	});
 
 	$effect(() => {
-		const data = { handle, dataSearch };
-		if (!hasInitialisedController) {
-			hasInitialisedController = true;
-			return;
-		}
+		// Replace the store only for a new collection. A new store aborts pending collection update
+		// events, so new data for the same collection goes to the effect that settles the store.
+		const nextHandle = handle;
+		if (untrack(() => controller.store.getState().handle) === nextHandle) return;
 		controller.reset({
-			data,
+			data: { handle: nextHandle, dataSearch: untrack(() => dataSearch) },
 			urlSearch: untrack(() => urlSearch),
 			onChange: handleBrowseChange
 		});
+	});
+
+	$effect(() => {
+		const target = viewElement;
+		if (!target) return;
+		const connection = connectControllerUpdates(controller, {
+			target,
+			// The store settles in an effect after the new props arrive, so this reads the new count.
+			// Untracked, so the effect that settles the store doesn't depend on the props.
+			getView: () =>
+				untrack(() => ({ collection: { id, handle }, productsCount: products.length }))
+		});
+		updates = connection;
+		return () => {
+			connection.disconnect();
+			updates = undefined;
+		};
 	});
 
 	$effect(() => {
@@ -119,6 +137,8 @@
 	});
 
 	async function handleBrowseChange(search: string) {
+		// Send the update event before the navigation, with the products count before the change.
+		updates?.notify();
 		const normalizedSearch = normalizeCollectionSearch(search);
 		urlSearchOverride = normalizedSearch;
 		try {
@@ -128,7 +148,8 @@
 				keepFocus: true
 			});
 		} finally {
-			urlSearchOverride = null;
+			// A newer change may own the override now.
+			if (urlSearchOverride === normalizedSearch) urlSearchOverride = null;
 		}
 	}
 
@@ -211,6 +232,31 @@
 		return 'Filter';
 	}
 
+	/**
+	 * Returns a link click handler that runs a collection action instead of following the link, so
+	 * the change counts as a customer change and sends an update event. The link still works without
+	 * JavaScript, and a click with a modifier key or another button goes to the link as usual.
+	 */
+	function onPlainClick(action: () => void) {
+		return (event: MouseEvent) => {
+			if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+				return;
+			}
+			event.preventDefault();
+			action();
+		};
+	}
+
+	function removeFilter(filter: ProductFilter) {
+		cancelPriceSubmit();
+		controller.store.toggleFilter(filter);
+	}
+
+	function clearAll() {
+		cancelPriceSubmit();
+		controller.store.reset();
+	}
+
 	function filterRemovalHref(filter: ProductFilter): string {
 		const removal = getFilterRemovalUrl(currentParams, filter);
 		return removal === '?' ? collectionPath : `${collectionPath}${removal}`;
@@ -238,135 +284,146 @@
 		</p>
 	</header>
 
-	<form
-		{...formProps({ beforeSubmit: cancelPriceSubmit })}
-		method="get"
-		action={collectionPath}
-		class="mt-12 flex gap-12"
+	<!-- Wraps the filter and sort controls, the results, and the empty state, because the
+	     collection update events start at this element. The page keys this component by the
+	     collection handle, so a new collection gets a new element, which sends the view event,
+	     and a new update connection. New products for the same collection don't send it again. -->
+	<shopify-view-event
+		bind:this={viewElement}
+		{...getCollectionViewAttributes({
+			collection: { id, handle },
+			productsCount: products.length
+		})}
+		class="mt-12 block"
 	>
-		{#if availableFilters.length > 0}
-			<aside class="hidden w-60 shrink-0 md:block">
-				<h2 class="text-sm font-semibold tracking-wider text-black/50 uppercase">Filters</h2>
-				<div class="mt-6 space-y-8">
-					{#each visibleFilters(availableFilters) as filter (filter.id)}
-						<fieldset
-							aria-busy={isLoading}
-							class={isLoading ? 'opacity-60' : undefined}
-						>
-							<legend class="text-sm font-semibold">{filter.label}</legend>
-							{#if filter.type === 'PRICE_RANGE'}
-								<div class="mt-3 flex items-center gap-2">
-									<input
-										type="number"
-										name="filter.v.price.gte"
-										min="0"
-										step="any"
-										placeholder="Min"
-										aria-label="Minimum price"
-										value={activePriceValue('min')}
-										class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
-										oninput={onPriceInput}
-									/>
-									<span class="text-sm text-black/40">to</span>
-									<input
-										type="number"
-										name="filter.v.price.lte"
-										min="0"
-										step="any"
-										placeholder="Max"
-										aria-label="Maximum price"
-										value={activePriceValue('max')}
-										class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
-										oninput={onPriceInput}
-									/>
-								</div>
-							{:else if visibleValues(filter).length > 0}
-								<div class="mt-3 space-y-2">
-									{#each visibleValues(filter) as value (value.id)}
-										{@const entry = filterInputToParamEntries(value.input)[0]}
-										{#if entry}
-											<label class="flex cursor-pointer items-center gap-2 text-sm">
-												<input
-													type="checkbox"
-													name={entry.name}
-													value={entry.value}
-													checked={isFilterInputActive($browseState.filters, value.input)}
-													class="h-4 w-4 rounded border-black/20"
-													onchange={(event) => onFilterChange(event, filter)}
-												/>
-												<span class={isFilterInputActive($browseState.filters, value.input) ? 'font-medium' : ''}>
-													{value.label}
-												</span>
-												<span class="ml-auto text-xs text-black/40">({value.count})</span>
-											</label>
-										{/if}
-									{/each}
-								</div>
-							{/if}
-						</fieldset>
-					{/each}
-				</div>
-				<noscript>
-					<button
-						type="submit"
-						class="mt-8 w-full rounded bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/80"
-					>
-						Apply
-					</button>
-				</noscript>
-			</aside>
-		{/if}
-
-		<div class="flex-1">
-			<div class="flex items-center justify-between border-b border-black/10 pb-4">
-				<div class="flex items-center gap-4">
-					{#if hasActiveFilters}
-						<a href={collectionPath} class="text-sm text-black/60 underline hover:text-black">Clear all</a>
-					{/if}
-					<span role="status" aria-live="polite" aria-atomic="true" class="text-sm text-black/40">
-						{isLoading ? 'Updating...' : ''}
-					</span>
-				</div>
-
-				<label class="flex items-center gap-2 text-sm">
-					<span class="text-black/60">Sort by</span>
-					<select
-						name="sort_by"
-						value={currentSortValue}
-						aria-busy={isLoading}
-						class="rounded border border-black/15 bg-white px-3 py-1.5 text-sm font-medium"
-						class:opacity-50={isLoading}
-						onchange={onSortChange}
-					>
-						{#each SORT_OPTIONS as option (option.value)}
-							<option value={option.value}>{option.label}</option>
+		<form
+			{...formProps({ beforeSubmit: cancelPriceSubmit })}
+			method="get"
+			action={collectionPath}
+			class="flex gap-12"
+		>
+			{#if availableFilters.length > 0}
+				<aside class="hidden w-60 shrink-0 md:block">
+					<h2 class="text-sm font-semibold tracking-wider text-black/50 uppercase">Filters</h2>
+					<div class="mt-6 space-y-8">
+						{#each visibleFilters(availableFilters) as filter (filter.id)}
+							<fieldset
+								aria-busy={isLoading}
+								class={isLoading ? 'opacity-60' : undefined}
+							>
+								<legend class="text-sm font-semibold">{filter.label}</legend>
+								{#if filter.type === 'PRICE_RANGE'}
+									<div class="mt-3 flex items-center gap-2">
+										<input
+											type="number"
+											name="filter.v.price.gte"
+											min="0"
+											step="any"
+											placeholder="Min"
+											aria-label="Minimum price"
+											value={activePriceValue('min')}
+											class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
+											oninput={onPriceInput}
+										/>
+										<span class="text-sm text-black/40">to</span>
+										<input
+											type="number"
+											name="filter.v.price.lte"
+											min="0"
+											step="any"
+											placeholder="Max"
+											aria-label="Maximum price"
+											value={activePriceValue('max')}
+											class="min-w-0 rounded border border-black/15 px-3 py-1.5 text-sm"
+											oninput={onPriceInput}
+										/>
+									</div>
+								{:else if visibleValues(filter).length > 0}
+									<div class="mt-3 space-y-2">
+										{#each visibleValues(filter) as value (value.id)}
+											{@const entry = filterInputToParamEntries(value.input)[0]}
+											{#if entry}
+												<label class="flex cursor-pointer items-center gap-2 text-sm">
+													<input
+														type="checkbox"
+														name={entry.name}
+														value={entry.value}
+														checked={isFilterInputActive($browseState.filters, value.input)}
+														class="h-4 w-4 rounded border-black/20"
+														onchange={(event) => onFilterChange(event, filter)}
+													/>
+													<span class={isFilterInputActive($browseState.filters, value.input) ? 'font-medium' : ''}>
+														{value.label}
+													</span>
+													<span class="ml-auto text-xs text-black/40">({value.count})</span>
+												</label>
+											{/if}
+										{/each}
+									</div>
+								{/if}
+							</fieldset>
 						{/each}
-					</select>
-				</label>
-			</div>
-
-			{#if hasActiveFilters}
-				<div class="mt-4 flex flex-wrap gap-2">
-					{#each $browseState.filters as filter (JSON.stringify(filter))}
-						<a
-							href={filterRemovalHref(filter)}
-							class="inline-flex items-center gap-1.5 rounded-full bg-black/5 px-3 py-1 text-sm hover:bg-black/10"
+					</div>
+					<noscript>
+						<button
+							type="submit"
+							class="mt-8 w-full rounded bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/80"
 						>
-							{describeFilter(filter)}
-							<span aria-hidden="true">x</span>
-						</a>
-					{/each}
-				</div>
+							Apply
+						</button>
+					</noscript>
+				</aside>
 			{/if}
 
-			<!-- The page keys this component by the collection handle, so each collection gets a new element, which sends the view. New products for the same collection don't send it again. -->
-			<shopify-view-event
-				{...getCollectionViewAttributes({
-					collection: { id, handle },
-					productsCount: products.length
-				})}
-				class="block"
-			>
+			<div class="flex-1">
+				<div class="flex items-center justify-between border-b border-black/10 pb-4">
+					<div class="flex items-center gap-4">
+						{#if hasActiveFilters}
+							<a
+								href={collectionPath}
+								class="text-sm text-black/60 underline hover:text-black"
+								onclick={onPlainClick(clearAll)}
+							>
+								Clear all
+							</a>
+						{/if}
+						<span role="status" aria-live="polite" aria-atomic="true" class="text-sm text-black/40">
+							{isLoading ? 'Updating...' : ''}
+						</span>
+					</div>
+
+					<label class="flex items-center gap-2 text-sm">
+						<span class="text-black/60">Sort by</span>
+						<select
+							name="sort_by"
+							value={currentSortValue}
+							aria-busy={isLoading}
+							class="rounded border border-black/15 bg-white px-3 py-1.5 text-sm font-medium"
+							class:opacity-50={isLoading}
+							onchange={onSortChange}
+						>
+							{#each SORT_OPTIONS as option (option.value)}
+								<option value={option.value}>{option.label}</option>
+							{/each}
+						</select>
+					</label>
+				</div>
+
+				{#if hasActiveFilters}
+					<div class="mt-4 flex flex-wrap gap-2">
+						{#each $browseState.filters as filter (JSON.stringify(filter))}
+							<a
+								href={filterRemovalHref(filter)}
+								onclick={onPlainClick(() => removeFilter(filter))}
+								class="inline-flex items-center gap-1.5 rounded-full bg-black/5 px-3 py-1 text-sm hover:bg-black/10"
+							>
+								{describeFilter(filter)}
+								<span aria-hidden="true">x</span>
+							</a>
+						{/each}
+					</div>
+				{/if}
+
 				<section
 					class={isLoading
 						? 'mt-8 grid grid-cols-2 gap-x-6 gap-y-12 opacity-50 transition-opacity duration-200 md:grid-cols-3'
@@ -381,13 +438,17 @@
 					<div class="mt-16 text-center">
 						<p class="text-lg text-black/60">No products found matching your filters.</p>
 						{#if hasActiveFilters}
-							<a href={collectionPath} class="mt-4 inline-block text-sm font-semibold underline">
+							<a
+								href={collectionPath}
+								class="mt-4 inline-block text-sm font-semibold underline"
+								onclick={onPlainClick(clearAll)}
+							>
 								Clear all filters
 							</a>
 						{/if}
 					</div>
 				{/if}
-			</shopify-view-event>
-		</div>
-	</form>
+			</div>
+		</form>
+	</shopify-view-event>
 </main>

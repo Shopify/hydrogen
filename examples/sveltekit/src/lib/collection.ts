@@ -1,8 +1,11 @@
 import {
+  connectCollectionUpdates,
   createCollectionStore,
   type CollectionData,
   type CollectionState,
   type CollectionStore,
+  type CollectionUpdatesConnection,
+  type ConnectCollectionUpdatesOptions,
 } from "@shopify/hydrogen";
 import { readable, type Readable } from "svelte/store";
 
@@ -69,6 +72,30 @@ export function collectionState(controller: CollectionStoreController): Readable
       unsubscribeController();
     };
   });
+}
+
+/**
+ * Connects the collection update events to the current store of the controller. When the
+ * controller replaces the store, the function disconnects the old store, which aborts its pending
+ * updates, and connects the new store. `notify()` goes to the current store.
+ */
+export function connectControllerUpdates(
+  controller: CollectionStoreController,
+  options: ConnectCollectionUpdatesOptions,
+): CollectionUpdatesConnection {
+  let updates: CollectionUpdatesConnection | undefined;
+  const unsubscribe = controller.subscribe((store) => {
+    updates?.disconnect();
+    updates = connectCollectionUpdates(store, options);
+  });
+  return {
+    notify: () => updates?.notify(),
+    disconnect: () => {
+      unsubscribe();
+      updates?.disconnect();
+      updates = undefined;
+    },
+  };
 }
 
 export function createCollectionForm(controller: CollectionStoreController) {
