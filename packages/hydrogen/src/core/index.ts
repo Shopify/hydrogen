@@ -213,6 +213,8 @@ export {
   parseSortByValue,
   serializeCollectionParams,
 } from "./collection";
+export { getCollectionViewAttributes } from "./collection";
+export type { CollectionViewCollection, CollectionViewOptions } from "./collection";
 
 export {
   canAddToCart,

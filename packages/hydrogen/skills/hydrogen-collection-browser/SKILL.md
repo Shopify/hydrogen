@@ -52,7 +52,8 @@ Use `parseCollectionParams(searchParams)` before Storefront API queries. Pass pa
 - Render "load more" / pagination as a GET link (the framework's link component) carrying the next-page cursor (e.g. `?after=<endCursor>`), so it works without JavaScript. Hydration may upgrade it to append-in-place; the bare link must still load the next page server-side (it replaces the page rather than appending when JS is off).
 - Clear both `before` and `after` whenever filters or sorting change so the new browse state starts from its first page.
 - Show stale products with a pending visual state while `state.status === "loading"`; do not replace the grid with a skeleton.
-- Wrap each product card root in `ProductView` with `context="collection"` on collection pages or `context="search"` on search pages, and give it a block or grid item class. See the product view element section of `hydrogen-analytics`.
+- Wrap each product card root in `ProductView` with `context="collection"` on collection pages or `context="search"` on search pages, and give it a block or grid item class. See the product and collection view elements section of `hydrogen-analytics`.
+- Wrap the product grid of a collection page in `CollectionView`, with `productsCount` set to the number of loaded products, and keep the grid classes on the element or give it a block class. See the product and collection view elements section of `hydrogen-analytics`.
 - Serialize active filter chips from `serializeCollectionParams(state)` and remove filters with `getFilterRemovalUrl(...)`.
 - Label each active filter chip with the `label` of the available `FilterValue` whose `input` matches it (`isFilterInputActive([filter], value.input)`), so category chips show the category name, not a taxonomy ID. Keep the formatted range for price chips, and fall back to a description of the filter when no value matches.
 - Use `isFilterInputActive(state.filters, value.input)` to mark checked filter inputs.

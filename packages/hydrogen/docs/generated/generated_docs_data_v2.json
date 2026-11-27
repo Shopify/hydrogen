@@ -9609,6 +9609,85 @@
       ]
     }
   },
+  "GetCollectionViewAttributesGeneratedType": {
+    "src/core/collection/collection-view.ts": {
+      "filePath": "src/core/collection/collection-view.ts",
+      "name": "GetCollectionViewAttributesGeneratedType",
+      "description": "Returns the attributes of the collection view element. Render the attributes on a `VIEW_EVENT_TAG_NAME` element on a framework without a Hydrogen binding.\n\nThe element sends the `shopify:collection:view` event on connect. Set `trigger` to change when the element sends the event. The element sends the event once per connection. To send it again when the collection changes, re-key the element on the collection handle with your framework's primitive, such as `{#key collection.handle}` on Svelte or `<Show when={collection.handle} keyed>` on Solid. Set the values as HTML attributes, such as with `attr:` on Solid, because the element doesn't read properties.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "input1",
+          "description": "The collection, the number of products that the page loaded, and the trigger.",
+          "value": "CollectionViewOptions",
+          "filePath": "src/core/collection/collection-view.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/collection/collection-view.ts",
+        "description": "The `view-event-trigger` and `view-event-payload` attributes.",
+        "name": "Record<\"view-event-trigger\" | \"view-event-payload\", string>",
+        "value": "Record<\"view-event-trigger\" | \"view-event-payload\", string>"
+      },
+      "value": "export function getCollectionViewAttributes({\n  collection,\n  productsCount,\n  trigger,\n}: CollectionViewOptions): Record<\"view-event-trigger\" | \"view-event-payload\", string> {\n  const payload: StandardEvents.CollectionViewPayload = {\n    collection: { id: collection.id, handle: collection.handle, productsCount },\n  };\n\n  return {\n    \"view-event-trigger\": trigger ?? \"connect\",\n    \"view-event-payload\": JSON.stringify(payload),\n  };\n}"
+    }
+  },
+  "CollectionViewOptions": {
+    "src/core/collection/collection-view.ts": {
+      "filePath": "src/core/collection/collection-view.ts",
+      "name": "CollectionViewOptions",
+      "description": "The collection that the page shows, the number of its products that the page loaded, and when the element sends the event.",
+      "members": [
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "collection",
+          "value": "CollectionViewCollection",
+          "description": "Collection fields from your Storefront API query."
+        },
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "productsCount",
+          "value": "number",
+          "description": "The Storefront API has no product total for a collection, so pass the number of products that the page loaded."
+        },
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "trigger",
+          "value": "StandardEvents.ViewEventTrigger",
+          "description": "When the element sends the event. Defaults to `connect`. Set it when the page needs another trigger, such as `intersect`, or `manual` to send the event yourself with the element's `dispatchViewEvent()`.",
+          "isOptional": true
+        }
+      ],
+      "value": "export interface CollectionViewOptions {\n  /** Collection fields from your Storefront API query. */\n  collection: CollectionViewCollection;\n  /**\n   * The Storefront API has no product total for a collection, so pass the number of products that\n   * the page loaded.\n   */\n  productsCount: number;\n  /**\n   * When the element sends the event. Defaults to `connect`. Set it when the page needs another\n   * trigger, such as `intersect`, or `manual` to send the event yourself with the element's\n   * `dispatchViewEvent()`.\n   */\n  trigger?: StandardEvents.ViewEventTrigger;\n}"
+    }
+  },
+  "CollectionViewCollection": {
+    "src/core/collection/collection-view.ts": {
+      "filePath": "src/core/collection/collection-view.ts",
+      "name": "CollectionViewCollection",
+      "description": "Collection fields that the collection view event needs from your Storefront API query.\n\nPass your full query type, which can include more fields.",
+      "members": [
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "handle",
+          "value": "string",
+          "description": "Collection handle. The bindings send the event again when it changes."
+        },
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "id",
+          "value": "string | null",
+          "description": "Collection ID, or `null` for a page without a collection record, such as an all-products page."
+        }
+      ],
+      "value": "export interface CollectionViewCollection {\n  /** Collection ID, or `null` for a page without a collection record, such as an all-products page. */\n  id: string | null;\n  /** Collection handle. The bindings send the event again when it changes. */\n  handle: string;\n}"
+    }
+  },
   "GetSelectedProductOptionsGeneratedType": {
     "src/core/product/options.ts": {
       "filePath": "src/core/product/options.ts",
@@ -12619,6 +12698,39 @@
           ]
         }
       ]
+    }
+  },
+  "CollectionViewProps": {
+    "src/react/collection-view.tsx": {
+      "filePath": "src/react/collection-view.tsx",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "CollectionViewProps",
+      "value": "CollectionViewOptions & (\n    | {\n        /** Sends the event only when you call the element's `dispatchViewEvent()`. */\n        trigger: \"manual\";\n        /**\n         * Ref to the element. Required with `trigger=\"manual\"`: call\n         * `elementRef.current.dispatchViewEvent()` to send the event. It is a normal prop, not\n         * `ref`, so it works on React 18 without `forwardRef` and can be required.\n         */\n        elementRef: Ref<HTMLElement & ViewEventElement>;\n      }\n    | {\n        /**\n         * When the element sends the event. Defaults to `connect`. Set it when the page needs\n         * another trigger, such as `intersect`.\n         */\n        trigger?: \"connect\" | \"intersect\" | \"dialog\";\n        elementRef?: never;\n      }\n  ) & HTMLAttributes<HTMLElement>",
+      "description": "Props for the `CollectionView` component: the collection, the number of products that the page loaded, the trigger, the element ref, and HTML attributes such as `className` for the element.",
+      "isPublicDocs": true
+    }
+  },
+  "CollectionViewGeneratedType": {
+    "src/react/collection-view.tsx": {
+      "filePath": "src/react/collection-view.tsx",
+      "name": "CollectionViewGeneratedType",
+      "description": "Sends the `shopify:collection:view` event when the collection page renders. Wrap the product grid of the collection page. It renders a `VIEW_EVENT_TAG_NAME` element, which `ShopifyScripts` registers.\n\nThe Storefront API has no product total for a collection, so pass the number of products that the page loaded as `productsCount`. The element sends the event again when the collection handle changes, but not when filters, sorting, or pagination change the products. Inside a React `<Activity>`, an element with the `connect` trigger sends the event again each time it is shown.\n\nSet `trigger` when the page needs another trigger, such as `intersect`. With `trigger=\"manual\"`, the component doesn't send the event: pass an `elementRef` and call `elementRef.current.dispatchViewEvent()`.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "props",
+          "description": "The collection, the products count, the trigger, the element ref, the children, and HTML attributes for the element.",
+          "value": "CollectionViewProps",
+          "filePath": "src/react/collection-view.tsx"
+        }
+      ],
+      "returns": {
+        "filePath": "src/react/collection-view.tsx",
+        "description": "The collection view element.",
+        "name": "ReactElement",
+        "value": "ReactElement"
+      },
+      "value": "export function CollectionView(props: CollectionViewProps): ReactElement {\n  // `productsCount` and `trigger` go into the view attributes, and `elementRef` into the ref, not\n  // onto the element.\n  const {\n    collection,\n    productsCount: _productsCount,\n    trigger: _trigger,\n    elementRef,\n    children,\n    className,\n    ...rest\n  } = props;\n  const ref = useRef<HTMLElement & ViewEventElement>(null);\n  const attributes = getCollectionViewAttributes(props);\n  const effectiveTrigger = attributes[\"view-event-trigger\"];\n  const sendsOnConnect = effectiveTrigger === \"connect\";\n  useViewEvent(ref, sendsOnConnect, collection.handle);\n\n  const mergedRef = useCallback(\n    (element: (HTMLElement & ViewEventElement) | null) => {\n      ref.current = element;\n      if (typeof elementRef === \"function\") elementRef(element);\n      else if (elementRef) elementRef.current = element;\n    },\n    [elementRef],\n  );\n\n  return createElement(\n    VIEW_EVENT_TAG_NAME,\n    {\n      ...rest,\n      ref: mergedRef,\n      // React 18 doesn't map `className` to `class` on custom elements.\n      class: className,\n      ...attributes,\n      ...(sendsOnConnect\n        ? // `useViewEvent` sends the view. It sends again when the collection handle changes and\n          // when an <Activity> shows the element again.\n          { \"view-event-trigger\": \"manual\" }\n        : effectiveTrigger === \"manual\"\n          ? // The app sends the view with `elementRef.current.dispatchViewEvent()`.\n            {}\n          : // React remounts the element for a new collection, so the element's own trigger runs\n            // again. IntersectionObserver ignores elements in a hidden <Activity>.\n            { key: collection.handle }),\n    },\n    children,\n  );\n}"
     }
   },
   "CollectionProviderGeneratedType": {
