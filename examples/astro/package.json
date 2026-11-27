@@ -11,7 +11,7 @@
     "typecheck": "astro check"
   },
   "dependencies": {
-    "@astrojs/node": "^10.0.6",
+    "@astrojs/node": "^11.1.12",
     "@shopify/hydrogen": "workspace:*",
     "astro": "^6.1.10",
     "lru-cache": "^11.3.6"
