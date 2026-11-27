@@ -32,7 +32,8 @@ jobs:
     timeout-minutes: 30
     if: github.event_name == 'push' && github.repository_owner == 'shopify'
     permissions:
-      contents: write # create git tags and GitHub releases
+      # Tags and GitHub releases go through the API with SHOPIFY_GH_ACCESS_TOKEN
+      contents: read
       id-token: write # generate an ID token for npm Trusted Publishing
     env:
       npm_config_registry: https://registry.npmjs.org/
@@ -44,6 +45,8 @@ jobs:
         with:
           # Changesets reads the existing release tags to decide what still needs one
           fetch-depth: 0
+          # Nothing here pushes with git, so keep the token out of install and build
+          persist-credentials: false
 
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
         with:
