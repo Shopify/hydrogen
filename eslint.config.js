@@ -11,9 +11,6 @@ const simpleImportSort = require('eslint-plugin-simple-import-sort');
 const tsParser = require('@typescript-eslint/parser');
 const globals = require('globals');
 const cliPlugin = require('@shopify/eslint-plugin-cli');
-const {
-  commandExceptions,
-} = require('./packages/cli/json-output-command-exceptions.cjs');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -110,10 +107,7 @@ module.exports = [
     ignores: ['**/*.test.ts'],
     plugins: {'@shopify/cli': cliPlugin},
     rules: {
-      '@shopify/cli/command-json-output': [
-        'error',
-        {exceptions: commandExceptions},
-      ],
+      '@shopify/cli/command-json-output': 'error',
     },
   },
   // Global ignores
@@ -126,6 +120,7 @@ module.exports = [
       '**/storefront-api-types.d.ts',
       '**/customer-account-api-types.d.ts',
       '**/codegen.ts',
+      '!packages/cli/src/commands/**/codegen.ts',
       '**/dist/**/*',
       '**/coverage/**/*',
       '**/docs/**/*',
@@ -138,7 +133,6 @@ module.exports = [
       '**/scripts/**/*',
       'bin/',
       '*.d.ts',
-      '**/codegen.ts',
       '**/vite.config.ts',
       '**/vitest.setup.ts',
       '**/vitest.config.ts',
