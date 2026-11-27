@@ -18,7 +18,7 @@ The store holds a `ProductFormStoreState` and notifies subscribers on change. It
 On initialization:
 1. The store uses the encoded fields, when present, to determine which option-value combinations **exist** and which are **available** (in stock). Matching is symmetric: every option value is evaluated against all selected options that belong to the current product option matrix, regardless of option order.
 2. It stitches together the sparse variant cache (`adjacentVariants` + `firstSelectableVariant` per option value + `selectedOrFirstAvailableVariant`) to resolve a concrete `variant` object per option value where possible.
-3. It sets the initial selection from `selectedOrFirstAvailableVariant` (server-resolved), falling back to explicitly provided `selectedOptions`, falling back to empty selection.
+3. It sets the initial selection from `selectedOrFirstAvailableVariant` (server-resolved), falling back to explicitly provided `selectedOptions`, falling back to empty selection. With `requireSelection: true`, it sets the initial selection from `selectedOptions` (pass the URL selection from `getSelectedProductOptions`) plus every option that has one value, and leaves the other options unselected. Use it when the shopper must choose an option such as size themselves. The Storefront API answers a partial selection with the first available variant, so without it a page can preselect a size the shopper never chose. `hydrate()` follows the same policy.
 4. It subscribes to the `CartStore` to derive `matchedLineItem` and `errors` reactively.
 
 On `selectOption(name, value)`:

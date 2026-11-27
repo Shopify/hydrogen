@@ -2000,3 +2000,86 @@ describe("createProductFormRegister — attributeValue", () => {
     expect(props.value).toBe("5");
   });
 });
+
+// ---------------------------------------------------------------------------
+// createProductFormStore — requireSelection
+// ---------------------------------------------------------------------------
+
+function selectedValueNames(store: ReturnType<typeof createProductFormStore>): string[] {
+  return store
+    .getState()
+    .options.flatMap((o) => o.values.filter((v) => v.selected).map((v) => v.name));
+}
+
+describe("createProductFormStore — requireSelection", () => {
+  const coatVariant = (size: string) =>
+    makeVariant({
+      id: `v-coat-${size}`,
+      title: `${size} / Stone`,
+      selectedOptions: [
+        { name: "Size", value: size },
+        { name: "Colour", value: "Stone" },
+      ],
+      product: { handle: "coat" },
+    });
+  const [S, M, L] = ["S", "M", "L"].map(coatVariant);
+
+  // The Storefront API answers a partial selection, such as `Size=L` alone, with the first variant.
+  const COAT: ProductInput = {
+    id: "gid://shopify/Product/coat",
+    title: "Coat",
+    handle: "coat",
+    options: [
+      {
+        name: "Size",
+        optionValues: [
+          { name: "S", firstSelectableVariant: S },
+          { name: "M", firstSelectableVariant: M },
+          { name: "L", firstSelectableVariant: L },
+        ],
+      },
+      { name: "Colour", optionValues: [{ name: "Stone", firstSelectableVariant: S }] },
+    ],
+    selectedOrFirstAvailableVariant: S,
+    adjacentVariants: [],
+  };
+
+  it("selects the options that have one value instead of the first available variant", () => {
+    const store = createProductFormStore(COAT, createMockCartStore(), { requireSelection: true });
+
+    expect(store.getState().selectedOptions).toEqual([{ name: "Colour", value: "Stone" }]);
+    expect(store.getState().selectedVariant).toBeNull();
+    expect(selectedValueNames(store)).toEqual(["Stone"]);
+  });
+
+  it("starts from the selection that you pass and resolves it from the loaded variants", () => {
+    const store = createProductFormStore(COAT, createMockCartStore(), {
+      requireSelection: true,
+      selectedOptions: [{ name: "Size", value: "L" }],
+    });
+
+    expect(store.getState().selectedVariant).toBe(L);
+    expect(selectedValueNames(store)).toEqual(["L", "Stone"]);
+  });
+
+  it("resolves the variant once the customer chooses the remaining options", () => {
+    const store = createProductFormStore(COAT, createMockCartStore(), { requireSelection: true });
+
+    expect(store.selectOption("Size", "M")).toMatchObject({
+      status: "resolved",
+      selectedVariant: M,
+    });
+  });
+
+  it("keeps requiring a selection after hydrate", () => {
+    const store = createProductFormStore(COAT, createMockCartStore(), {
+      requireSelection: true,
+      selectedOptions: [{ name: "Size", value: "L" }],
+    });
+
+    store.hydrate(COAT, { selectedOptions: [] });
+
+    expect(store.getState().selectedVariant).toBeNull();
+    expect(selectedValueNames(store)).toEqual(["Stone"]);
+  });
+});
