@@ -115,6 +115,14 @@ type RunAndMaybeStoreOptions = {
  */
 export class StaleFallbackDisabledError extends Error {}
 
+// Background refreshes in flight in this isolate, by cache key. Module scope so
+// runners created per request (`caches.open` returns a new object each call)
+// share the lock. Locks expire, so a refresh whose `waitUntil` was cancelled
+// cannot block its key forever. Keys from different caches can collide, which
+// only skips a refresh until the next stale window.
+const REVALIDATION_LOCK_MS = 30_000;
+const revalidationLocks = new Map<string, number>();
+
 /**
  * Creates a function that caches the result of any async work, such as data that several API calls
  * produce together. For a single fetch response, use `createFetchWithCache`.
@@ -168,11 +176,21 @@ export function createRunWithCache({ cache, waitUntil }: CreateRunWithCacheOptio
     options: RunWithCacheOptions,
     run: RunCallback<T>,
   ) {
+    // A stale entry is refreshed once per window, not once per stale hit.
+    const now = Date.now();
+    const startedAt = revalidationLocks.get(cacheKey);
+    if (startedAt !== undefined && now - startedAt < REVALIDATION_LOCK_MS) return;
+    revalidationLocks.set(cacheKey, now);
+
     const entry = runAndMaybeStore(cacheKey, options, run, {
       scheduleCacheWrite: false,
       background: true,
     });
-    schedule(entry.complete);
+    schedule(
+      entry.complete.finally(() => {
+        if (revalidationLocks.get(cacheKey) === now) revalidationLocks.delete(cacheKey);
+      }),
+    );
   }
 
   async function refreshWithStaleFallback<T extends SerializableCacheValue>(
