@@ -13257,21 +13257,11 @@
       "value": "<S = PredictiveSearchState>(\n    selector?: (state: PredictiveSearchState) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ) => S"
     }
   },
-  "ProductViewProps": {
-    "src/react/product-view.tsx": {
-      "filePath": "src/react/product-view.tsx",
-      "syntaxKind": "TypeAliasDeclaration",
-      "name": "ProductViewProps",
-      "value": "ProductViewOptions & HTMLAttributes<HTMLElement> & {\n    /** Ref to the element. With `trigger=\"manual\"`, call its `dispatchViewEvent()` to send the event. */\n    ref?: Ref<HTMLElement & ViewEventElement>;\n  }",
-      "description": "Props for the `ProductView` component: the product, where the storefront shows it, an optional trigger, a ref to the element, and HTML attributes such as `className` for the element.",
-      "isPublicDocs": true
-    }
-  },
   "ProductViewGeneratedType": {
     "src/react/product-view.tsx": {
       "filePath": "src/react/product-view.tsx",
       "name": "ProductViewGeneratedType",
-      "description": "Sends the `shopify:product:view` event for a product that the storefront shows. Wrap the product page content with `context=\"page\"`, and each product card with `collection`, `search`, or `recommendation`. It renders a `VIEW_EVENT_TAG_NAME` element, which `ShopifyScripts` registers.\n\nThe element is inline by default. Give card elements a box, such as a class with `display: block`, because card contexts send the event when half of the element is visible. The element sends the event again when the product ID changes, but not when the variant changes. Inside a React `<Activity>`, an element with the `connect` trigger, such as a `page` element, sends the event again each time it is shown.\n\nSet `trigger` when CSS stops the default trigger. With `trigger=\"manual\"`, the component doesn't send the event: pass a `ref` and call the element's `dispatchViewEvent()`.",
+      "description": "Sends the `shopify:product:view` event for a product that the storefront shows. Wrap the product page content with `context=\"page\"`, and each product card with `collection`, `search`, or `recommendation`. It renders a `VIEW_EVENT_TAG_NAME` element, which `ShopifyScripts` registers.\n\nThe element is inline by default. Give card elements a box, such as a class with `display: block`, because card contexts send the event when half of the element is visible. The element sends the event again when the product ID changes, but not when the variant changes. Inside a React `<Activity>`, an element with the `connect` trigger, such as a `page` element, sends the event again each time it is shown.\n\nSet `trigger` when CSS stops the default trigger. To send the event yourself, render a `VIEW_EVENT_TAG_NAME` element with the attributes from `getProductViewAttributes({ product, context, trigger: \"manual\" })` and your own ref, and call the element's `dispatchViewEvent()`.",
       "isPublicDocs": true,
       "params": [
         {
@@ -13284,10 +13274,19 @@
       "returns": {
         "filePath": "src/react/product-view.tsx",
         "description": "The product view element.",
-        "name": "ReactNode",
-        "value": "ReactNode"
+        "name": "ReactElement",
+        "value": "ReactElement"
       },
-      "value": "ProductView: (props: ProductViewProps) => ReactNode = forwardRef<\n  HTMLElement & ViewEventElement,\n  ProductViewProps\n>(function ProductView(props, forwardedRef): ReactElement {\n  // `forwardRef` passes `ref` on React 18, which doesn't pass `ref` to function components. The\n  // function type on the export keeps the generated docs for a function.\n  // `context` and `trigger` go into the view attributes, not onto the element.\n  const { product, context: _context, trigger: _trigger, children, className, ...rest } = props;\n  const ref = useRef<HTMLElement & ViewEventElement>(null);\n  const attributes = getProductViewAttributes(props);\n  const effectiveTrigger = attributes[\"view-event-trigger\"];\n  const sendsOnConnect = effectiveTrigger === \"connect\";\n  useViewEvent(ref, sendsOnConnect, product.id);\n\n  const mergedRef = useCallback(\n    (element: (HTMLElement & ViewEventElement) | null) => {\n      ref.current = element;\n      if (typeof forwardedRef === \"function\") forwardedRef(element);\n      else if (forwardedRef) forwardedRef.current = element;\n    },\n    [forwardedRef],\n  );\n\n  return createElement(\n    VIEW_EVENT_TAG_NAME,\n    {\n      ...rest,\n      ref: mergedRef,\n      // React 18 doesn't map `className` to `class` on custom elements.\n      class: className,\n      ...attributes,\n      ...(sendsOnConnect\n        ? // `useViewEvent` sends the view. It sends again when the product ID changes and\n          // when an <Activity> shows the element again.\n          { \"view-event-trigger\": \"manual\" }\n        : effectiveTrigger === \"manual\"\n          ? // The app sends the view with the element's `dispatchViewEvent()`.\n            {}\n          : // React remounts the element for a new product, so the element's own trigger runs\n            // again. IntersectionObserver ignores elements in a hidden <Activity>.\n            { key: product.id }),\n    },\n    children,\n  );\n})"
+      "value": "export function ProductView(props: ProductViewProps): ReactElement {\n  // `context` and `trigger` go into the view attributes, not onto the element.\n  const { product, context: _context, trigger: _trigger, children, className, ...rest } = props;\n  const ref = useRef<HTMLElement & ViewEventElement>(null);\n  const attributes = getProductViewAttributes(props);\n  const sendsOnConnect = attributes[\"view-event-trigger\"] === \"connect\";\n  useViewEvent(ref, sendsOnConnect, product.id);\n\n  return createElement(\n    VIEW_EVENT_TAG_NAME,\n    {\n      ...rest,\n      ref,\n      // React 18 doesn't map `className` to `class` on custom elements.\n      class: className,\n      ...attributes,\n      ...(sendsOnConnect\n        ? // `useViewEvent` sends the view. It sends again when the product ID changes and\n          // when an <Activity> shows the element again.\n          { \"view-event-trigger\": \"manual\" }\n        : // React remounts the element for a new product, so the element's own trigger runs\n          // again. IntersectionObserver ignores elements in a hidden <Activity>.\n          { key: product.id }),\n    },\n    children,\n  );\n}"
+    }
+  },
+  "ProductViewProps": {
+    "src/react/product-view.tsx": {
+      "filePath": "src/react/product-view.tsx",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ProductViewProps",
+      "value": "ProductViewOptions & {\n  /**\n   * When the element sends the event. Defaults to the trigger of the context: `connect` for\n   * `page`, `dialog` for `dialog`, and `intersect` for the card contexts. Set it when CSS stops the\n   * default trigger, such as `connect` for a card with no box.\n   */\n  trigger?: \"connect\" | \"intersect\" | \"dialog\";\n} & HTMLAttributes<HTMLElement>",
+      "description": ""
     }
   },
   "UseProductFormGeneratedType": {

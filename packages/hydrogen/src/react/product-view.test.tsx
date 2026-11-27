@@ -1,11 +1,10 @@
 // @vitest-environment happy-dom
 import { act, render } from "@testing-library/react";
-import { Activity, type ActivityProps, createElement, createRef, StrictMode } from "react";
+import { Activity, type ActivityProps, createElement, StrictMode } from "react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type * as StandardEventsModule from "../../vendor/standard-events";
-import type { ViewEventElement } from "../../vendor/standard-events";
 import {
   defineViewEventElement,
   VIEW_EVENT_TAG_NAME,
@@ -259,47 +258,6 @@ describe("ProductView", () => {
     expect(connected).toEqual([element, next]);
     expect(next.getAttribute("class")).toBe("card");
     expect(payloadOf(next)).toMatchObject({ product: { id: otherProduct.id } });
-  });
-
-  it("sends nothing by itself with the manual trigger, and the forwarded ref sends the view", async () => {
-    const ref = createRef<HTMLElement & ViewEventElement>();
-    const { container, rerender } = render(
-      createElement(ProductView, { product, context: "page", trigger: "manual", ref }),
-    );
-    await settle();
-    const element = getElement(container);
-    expect(element.getAttribute("view-event-trigger")).toBe("manual");
-    expect(element.hasAttribute("trigger")).toBe(false);
-    expect(events).toHaveLength(0);
-
-    rerender(
-      createElement(ProductView, {
-        product: otherProduct,
-        context: "page",
-        trigger: "manual",
-        ref,
-      }),
-    );
-    await settle();
-    expect(getElement(container)).toBe(element);
-    expect(events).toHaveLength(0);
-
-    assert(ref.current, "expected the forwarded ref to hold the element");
-    expect(ref.current).toBe(element);
-    ref.current.dispatchViewEvent();
-    expect(events).toHaveLength(1);
-    expect(events[0]?.detail).toMatchObject({ product: { id: otherProduct.id } });
-  });
-
-  it("forwards a callback ref", () => {
-    const ref = vi.fn();
-    const { container, unmount } = render(
-      createElement(ProductView, { product, context: "page", trigger: "manual", ref }),
-    );
-    expect(ref).toHaveBeenLastCalledWith(getElement(container));
-
-    unmount();
-    expect(ref).toHaveBeenLastCalledWith(null);
   });
 
   it("sends a card view from the hook with the connect trigger, and again for a new product ID", async () => {

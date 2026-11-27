@@ -2,7 +2,9 @@ import type { ButtonHTMLAttributes, InputHTMLAttributes } from "react";
 import { describe, expectTypeOf, it } from "vitest";
 
 import type { ProductFormStore, ProductInput, ProductVariantInput } from "../core/product";
+import { getProductViewAttributes, type ProductViewProduct } from "../core/product/product-view";
 import { useProductForm } from "./product";
+import type { ProductViewProps } from "./product-view";
 
 declare const store: ProductFormStore<ProductInput<ProductVariantInput>>;
 
@@ -89,5 +91,34 @@ describe("react product form types", () => {
     }
 
     void Consumer;
+  });
+});
+
+describe("react product view types", () => {
+  type CardProduct = Pick<ProductViewProduct, "id" | "title" | "handle">;
+
+  it("rejects the manual trigger in ProductView, and the helper options accept it", () => {
+    expectTypeOf<ProductViewProps["trigger"]>().toEqualTypeOf<
+      "connect" | "intersect" | "dialog" | undefined
+    >();
+    expectTypeOf<{
+      product: CardProduct;
+      context: "collection";
+      trigger: "manual";
+    }>().not.toMatchTypeOf<ProductViewProps>();
+    expectTypeOf(getProductViewAttributes).toBeCallableWith({
+      product: { id: "1", title: "Shirt", handle: "shirt" },
+      context: "collection",
+      trigger: "manual",
+    });
+  });
+
+  it("keeps the context and product union", () => {
+    expectTypeOf<{
+      product: CardProduct;
+      context: "collection";
+      trigger: "connect";
+    }>().toMatchTypeOf<ProductViewProps>();
+    expectTypeOf<{ product: CardProduct; context: "page" }>().not.toMatchTypeOf<ProductViewProps>();
   });
 });
