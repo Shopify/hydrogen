@@ -13,6 +13,14 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    poolOptions: {
+      forks: {
+        // Node 25+ defines its own `localStorage` global, which is undefined without
+        // --localstorage-file. Vitest 3 won't overwrite a global that already exists,
+        // so it hides happy-dom's Storage. Fixed upstream in Vitest 5.
+        execArgv: ["--no-experimental-webstorage"],
+      },
+    },
     typecheck: {
       enabled: true,
       include: ["src/**/*.type-test.ts", "src/**/*.type-test.tsx"],
