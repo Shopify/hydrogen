@@ -1,7 +1,9 @@
 import { gql } from "@shopify/hydrogen/customer-account";
+import { useLocale } from "@shopify/hydrogen/react";
 import { Link, useNavigation } from "react-router";
 
 import { customerAccountContext } from "~/lib/customer-account";
+import { useLocalizePath } from "~/lib/locale";
 import { formatPrice } from "~/lib/money";
 
 import type { Route } from "./+types/account";
@@ -124,7 +126,18 @@ function Unavailable() {
   );
 }
 
+// The customer account handlers fall back to unprefixed redirect targets, which would drop the
+// shopper into the default locale after sign-in or logout.
+function useAccountHandlerPath(path: string, returnTo: string): string {
+  const { pathPrefix } = useLocale();
+  const localizePath = useLocalizePath();
+  if (!pathPrefix) return path;
+  return `${localizePath(path)}?return_to=${encodeURIComponent(localizePath(returnTo))}`;
+}
+
 function SignIn({ loginFailed }: { loginFailed: boolean }) {
+  const loginPath = useAccountHandlerPath("/account/login", "/account");
+
   return (
     <section className="border-border rounded border p-8" aria-labelledby="sign-in-heading">
       <h2 id="sign-in-heading" className="type-heading-md text-on-surface mb-3">
@@ -137,7 +150,7 @@ function SignIn({ loginFailed }: { loginFailed: boolean }) {
         </p>
       ) : null}
       {/* A plain <a>: the OAuth redirect needs a full page navigation. */}
-      <a href="/account/login" className={`button-primary ${buttonClass}`}>
+      <a href={loginPath} className={`button-primary ${buttonClass}`}>
         Sign in
       </a>
     </section>
@@ -145,9 +158,11 @@ function SignIn({ loginFailed }: { loginFailed: boolean }) {
 }
 
 function LogoutForm() {
+  const logoutPath = useAccountHandlerPath("/account/logout", "/");
+
   // A plain <form>: the logout redirect needs a full page navigation.
   return (
-    <form method="post" action="/account/logout" className="mt-6">
+    <form method="post" action={logoutPath} className="mt-6">
       <button type="submit" className={`button-outline cursor-pointer ${buttonClass}`}>
         Log out
       </button>
@@ -178,7 +193,9 @@ function Customer({ customer }: { customer: Customer }) {
 
 function Orders({ orders }: { orders: Customer["orders"] }) {
   const navigation = useNavigation();
-  const isPaging = navigation.state === "loading" && navigation.location?.pathname === "/account";
+  const localizePath = useLocalizePath();
+  const isPaging =
+    navigation.state === "loading" && navigation.location?.pathname === localizePath("/account");
   const { pageInfo } = orders;
 
   return (
@@ -189,7 +206,7 @@ function Orders({ orders }: { orders: Customer["orders"] }) {
       {orders.nodes.length === 0 ? (
         <div>
           <p className="text-on-surface font-medium">You haven&apos;t placed any orders yet.</p>
-          <Link to="/collections" className={`button-primary mt-6 ${buttonClass}`}>
+          <Link to={localizePath("/collections")} className={`button-primary mt-6 ${buttonClass}`}>
             Start shopping
           </Link>
         </div>

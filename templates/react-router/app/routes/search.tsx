@@ -18,6 +18,7 @@ import {
   useLoadMore,
 } from "~/components/CollectionBrowse";
 import { ProductCard } from "~/components/ProductCard";
+import { useLocalizePath } from "~/lib/locale";
 import { loadSearchPage, type SearchPageData } from "~/lib/search";
 import { storefrontClientContext } from "~/lib/storefront";
 import { formatPageTitle, getShopNameFromRootMatch } from "~/lib/storefront-shop";
@@ -63,6 +64,7 @@ function SearchViewedTracker({
 }
 
 function BreadcrumbJsonLd({ origin }: { origin: string }) {
+  const localizePath = useLocalizePath();
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -71,13 +73,13 @@ function BreadcrumbJsonLd({ origin }: { origin: string }) {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: `${origin}/`,
+        item: `${origin}${localizePath("/")}`,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "Search",
-        item: `${origin}/search`,
+        item: `${origin}${localizePath("/search")}`,
       },
     ],
   };
@@ -86,12 +88,14 @@ function BreadcrumbJsonLd({ origin }: { origin: string }) {
 }
 
 function Breadcrumb() {
+  const localizePath = useLocalizePath();
+
   return (
     <nav aria-label="Breadcrumb" className="mb-6">
       <ol className="text-on-surface-secondary flex items-center gap-1.5 text-sm">
         <li>
           <Link
-            to="/"
+            to={localizePath("/")}
             className="hover:text-on-surface rounded-sm py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current motion-safe:transition-colors"
           >
             Home
@@ -113,11 +117,13 @@ function Breadcrumb() {
 const registerSearchForm = createPredictiveSearchFormRegister();
 
 function SearchHeader({ term }: { term: string }) {
+  const localizePath = useLocalizePath();
+
   return (
     <div className="mb-8">
       <h1 className="type-display text-on-surface mb-6">Search</h1>
       <form
-        action="/search"
+        action={localizePath("/search")}
         method="get"
         role="search"
         aria-label="Search"
@@ -143,7 +149,7 @@ function SearchHeader({ term }: { term: string }) {
           />
           {term ? (
             <Link
-              to="/search"
+              to={localizePath("/search")}
               aria-label="Clear search"
               className="text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent min-h-touch-target min-w-touch-target absolute end-1 top-1/2 inline-flex -translate-y-1/2 cursor-pointer items-center justify-center rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors"
             >
@@ -191,6 +197,7 @@ function NoResults({ term }: { term: string }) {
 }
 
 function SearchResults({ loaderData }: { loaderData: PerformedSearchData }) {
+  const localizePath = useLocalizePath();
   const location = useLocation();
   const navigation = useNavigation();
   const isUpdating =
@@ -204,7 +211,7 @@ function SearchResults({ loaderData }: { loaderData: PerformedSearchData }) {
   );
   const defaultSortValue = getSortByValue("RELEVANCE", false);
   const countText = `${nodes.length} results found for “${loaderData.searchTerm}”`;
-  const searchPath = `/search?q=${encodeURIComponent(loaderData.searchTerm)}`;
+  const searchPath = localizePath(`/search?q=${encodeURIComponent(loaderData.searchTerm)}`);
   const hiddenQuery = searchTermHiddenInput(loaderData.searchTerm);
 
   if (nodes.length === 0) return <NoResults term={loaderData.searchTerm} />;

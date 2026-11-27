@@ -28,12 +28,14 @@ import { cartHandlers } from "~/lib/cart-handlers";
 import { useNonce } from "~/lib/csp";
 import { createRequestCustomerAccount, customerAccountContext } from "~/lib/customer-account";
 import { envContext } from "~/lib/env";
+import { getLocaleOptions } from "~/lib/locale";
+import { getLocalizedRouteId } from "~/lib/locale-routes";
 import { predictiveSearchHandlers } from "~/lib/predictive-search-handlers";
 import { loadRootLayout } from "~/lib/root-layout";
 import { routeTemplates } from "~/lib/route-templates";
 import { toRoutedRequest } from "~/lib/routed-request";
 import { createEphemeralSessionManager } from "~/lib/session";
-import { analyticsConsent, resolveShopIdentity } from "~/lib/shop";
+import { analyticsConsent, i18n, resolveShopIdentity } from "~/lib/shop";
 import { createRequestStorefrontClient, storefrontClientContext } from "~/lib/storefront";
 import { cacheContext, waitUntilContext } from "~/lib/worker-context";
 
@@ -107,6 +109,7 @@ export const loader = withStorefrontRateLimit(async ({ context }: Route.LoaderAr
     shopIdentity: resolveShopIdentity(env, layout.shopId),
     currency: layout.currency,
     locale: storefrontClient.locale,
+    localeOptions: getLocaleOptions(i18n),
   };
 });
 
@@ -154,7 +157,9 @@ export function Layout({ children }: { children: ReactNode }) {
 export default function App({ loaderData }: Route.ComponentProps) {
   // Only /cart reads the cart on the server, so other routes don't mark their responses as
   // personalized. Everywhere else the provider loads the cart in the browser.
-  const cartRoute = useRouteLoaderData<typeof cartLoader>("routes/cart");
+  const cartRoute = useRouteLoaderData<typeof cartLoader>(
+    getLocalizedRouteId("routes/cart", loaderData.locale.pathPrefix),
+  );
 
   return (
     // Keeps cart and predictive search requests under the locale's path prefix once the i18n
@@ -164,7 +169,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <PageViewedTracker />
         <CartAnalyticsTracker />
         <AnnouncementBar />
-        <Header shopInfo={loaderData.shopInfo} />
+        <Header shopInfo={loaderData.shopInfo} localeOptions={loaderData.localeOptions} />
         <Outlet />
         <Footer shopInfo={loaderData.shopInfo} />
         <CartDrawer />

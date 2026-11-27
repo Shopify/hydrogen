@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 
+import { useLocalizePath } from "~/lib/locale";
 import type { StorefrontShop } from "~/lib/storefront-shop";
 
 import { PaymentMethodIcon } from "./PaymentMethodIcon";
@@ -8,6 +9,8 @@ const linkClass =
   "min-h-touch-target text-on-surface-secondary hover:text-on-surface focus-visible:outline-accent inline-flex items-center font-normal no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 motion-safe:transition-colors";
 
 export function Footer({ shopInfo }: { shopInfo: StorefrontShop }) {
+  const localizePath = useLocalizePath();
+
   return (
     <footer className="max-w-page px-margin mx-auto w-full">
       <div
@@ -25,12 +28,12 @@ export function Footer({ shopInfo }: { shopInfo: StorefrontShop }) {
           </h2>
           <ul role="list" className="flex flex-col gap-2">
             <li>
-              <Link to="/search" className={linkClass}>
+              <Link to={localizePath("/search")} className={linkClass}>
                 Search
               </Link>
             </li>
             <li>
-              <Link to="/account" className={linkClass}>
+              <Link to={localizePath("/account")} className={linkClass}>
                 Account
               </Link>
             </li>
