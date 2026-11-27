@@ -4,24 +4,6 @@ Tracked items that are known shortcomings, deferred decisions, or missing guardr
 
 ---
 
-## No `shopify:search:update` Standard Event
-
-**Status:** Open
-**Added:** 2026-11-24
-
-**What:** `CollectionView` sends `shopify:collection:update` for filter and sort changes on collection pages, but search pages send no `shopify:search:update`. Search pages reuse the collection store and `CollectionProvider` with a handle such as `search:<term>`, and nothing sends an update event there. Shopify's Horizon theme sends `search:update` from the same filter form code as `collection:update`, with `{ search: { query, productFilters?, sortKey? }, promise }`, and resolves the promise with `{ totalCount }`.
-
-**Why it matters:** Standard Events consumers see filter and sort changes on collection pages but not on search pages.
-
-**Possible approaches:**
-1. Add a `connectSearchUpdates` function next to `connectCollectionUpdates` in `core/collection/collection-updates.ts`, with `SearchUpdateEvent` and the query instead of the collection, and call it from a search view binding.
-2. Resolve the promise with the search `totalCount`. The Storefront API search query returns `totalCount`, so the page passes it instead of a loaded-products count.
-3. Decide whether to omit the default `RELEVANCE` sort the way `collection:update` omits an unset sort key.
-
-**Done when:** A filter or sort change on a search page sends one `shopify:search:update` event with the query, filters, and sort key, and its promise resolves with the new `totalCount`, with tests and the `hydrogen-analytics` skill updated.
-
----
-
 ## `defineShopifyI18n` cannot detect `pathSegment` colliding with app routes
 
 **Status:** Open

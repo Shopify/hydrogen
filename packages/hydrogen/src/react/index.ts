@@ -56,6 +56,8 @@ export { CollectionView } from "./collection-view";
 export type { CollectionViewProps } from "./collection-view";
 export { ProductView } from "./product-view";
 export type { ProductViewProps } from "./product-view";
+export { SearchUpdates } from "./search-updates";
+export type { SearchUpdatesProps } from "./search-updates";
 export { ShopPayButton } from "./shop-pay";
 export type { ShopPayButtonProps } from "./shop-pay";
 export { ShopifyScripts } from "./shopify-scripts";

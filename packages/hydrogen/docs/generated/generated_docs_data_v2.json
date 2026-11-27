@@ -9706,7 +9706,7 @@
         "name": "CollectionUpdatesConnection",
         "value": "CollectionUpdatesConnection"
       },
-      "value": "export function connectCollectionUpdates(\n  store: CollectionStore,\n  options: ConnectCollectionUpdatesOptions,\n): CollectionUpdatesConnection {\n  const { target, getView, afterRender = (callback) => callback() } = options;\n  let connected = true;\n  let loaded: Pick<typeof StandardEvents, \"CollectionUpdateEvent\"> | undefined;\n  let loadFailed = false;\n  // The filters and sort of the last update, or of the last change without an update.\n  let notified: BrowseState = store.getState();\n  let checkScheduled = false;\n  // Updates whose promise waits for the store to settle.\n  let pending: Update[] = [];\n  // Events that wait for the Standard Events module.\n  let queue: {\n    payload: EventPayload;\n    promise: Promise<StandardEvents.CollectionUpdateResult>;\n    update: Update;\n  }[] = [];\n\n  const remove = (update: Update) => {\n    pending = pending.filter((candidate) => candidate !== update);\n  };\n\n  const abort = (updates: Update[]) => {\n    pending = pending.filter((update) => !updates.includes(update));\n    for (const update of updates) update.reject(new DOMException(ABORT_MESSAGE, \"AbortError\"));\n  };\n\n  const abortOtherCollections = () => {\n    const { handle } = getView().collection;\n    abort(pending.filter((update) => update.handle !== handle));\n  };\n\n  // A filter or sort change without `notify()`, such as back or forward navigation, leaves the\n  // pending changes.\n  const checkChangeWithoutNotify = () => {\n    const state = store.getState();\n    if (browseStateEqual(state, notified)) return;\n    notified = state;\n    abort(pending);\n  };\n\n  const resolvePending = () => {\n    const updates = pending.slice();\n    if (updates.length === 0) return;\n    afterRender(() =>\n      guard(() => {\n        const { collection, productsCount } = getView();\n        for (const update of updates) {\n          if (!pending.includes(update)) continue;\n          if (update.handle !== collection.handle) {\n            abort([update]);\n            continue;\n          }\n          remove(update);\n          update.resolve({ productsCount });\n        }\n      }),\n    );\n  };\n\n  const dispatchQueued = () => {\n    const CollectionUpdateEvent = loaded?.CollectionUpdateEvent;\n    if (!CollectionUpdateEvent) return;\n    for (const { payload, promise, update } of queue.splice(0)) {\n      try {\n        target.dispatchEvent(new CollectionUpdateEvent({ ...payload, promise }));\n      } catch (error) {\n        remove(update);\n        update.reject(error);\n        log.error(\"collection update event failed\", { error });\n      }\n    }\n  };\n\n  importStandardEventsFromCDN().then(\n    (module) => {\n      loaded = module;\n      if (connected) dispatchQueued();\n    },\n    (error: unknown) => {\n      loadFailed = true;\n      for (const { update } of queue.splice(0)) {\n        remove(update);\n        update.reject(error);\n      }\n    },\n  );\n\n  // The store calls its subscribers before the browse change callback, so a change waits one\n  // microtask for `notify()`.\n  const unsubscribe = store.subscribe((state) =>\n    guard(() => {\n      if (pending.length > 0) abortOtherCollections();\n      if (!checkScheduled && !browseStateEqual(state, notified)) {\n        checkScheduled = true;\n        queueMicrotask(() => {\n          checkScheduled = false;\n          if (connected) guard(checkChangeWithoutNotify);\n        });\n      }\n      if (state.status === \"idle\") {\n        checkChangeWithoutNotify();\n        resolvePending();\n      }\n    }),\n  );\n\n  return {\n    notify() {\n      if (!connected || loadFailed) return;\n      guard(() => {\n        const state = store.getState();\n        if (browseStateEqual(state, notified)) return;\n        notified = state;\n\n        const { collection, productsCount } = getView();\n        const payload: EventPayload = {\n          collection: { id: collection.id, handle: collection.handle, productsCount },\n        };\n        if (state.filters.length > 0) payload.productFilters = state.filters;\n        if (state.sortKey !== undefined) payload.sortKey = state.sortKey;\n\n        // Not `Promise.withResolvers`, which older Safari versions don't have.\n        let settlers: Pick<Update, \"resolve\" | \"reject\"> | undefined;\n        const promise = new Promise<StandardEvents.CollectionUpdateResult>((resolve, reject) => {\n          settlers = { resolve, reject };\n        });\n        if (!settlers) return;\n        const { resolve, reject } = settlers;\n        // Listeners still see the rejection. The empty handler keeps an AbortError without\n        // listeners from being reported as an unhandled rejection.\n        promise.catch(() => {});\n        const update: Update = { handle: collection.handle, resolve, reject };\n        pending.push(update);\n        queue.push({ payload, promise, update });\n        dispatchQueued();\n      });\n    },\n\n    disconnect() {\n      if (!connected) return;\n      connected = false;\n      unsubscribe();\n      queue = [];\n      abort(pending);\n    },\n  };\n}",
+      "value": "export function connectCollectionUpdates(\n  store: CollectionStore,\n  options: ConnectCollectionUpdatesOptions,\n): CollectionUpdatesConnection {\n  return connectUpdateEvents(store, options, collectionUpdatesSpec);\n}",
       "examples": [
         {
           "title": "Example",
@@ -9775,6 +9775,127 @@
         }
       ],
       "value": "export interface CollectionUpdatesConnection {\n  /**\n   * Sends one `shopify:collection:update` event for the current filters and sort of the store.\n   * Call it in the store's browse change callback, before you navigate. It does nothing when the\n   * filters and sort didn't change, and it never throws.\n   */\n  notify(): void;\n  /** Stops the updates and rejects the pending update promises with an `AbortError`. */\n  disconnect(): void;\n}"
+    }
+  },
+  "ConnectSearchUpdatesGeneratedType": {
+    "src/core/collection/search-updates.ts": {
+      "filePath": "src/core/collection/search-updates.ts",
+      "name": "ConnectSearchUpdatesGeneratedType",
+      "description": "Sends Shopify's `shopify:search:update` event for each filter or sort change that the customer makes on the search page. Use the function on a framework without a Hydrogen binding. In React and Vue, `SearchUpdates` calls it for you.\n\nCall `notify()` in the store's browse change callback, before your navigation. Each event has the search term, the active filters, and the sort key: `PRICE` for price sorts, `RELEVANCE` for other sorts, left out for the default sort. Its promise resolves with `{ totalCount }` from `getView()` when the store settles, including `0`. The promise rejects with an `AbortError` when the search term changes, when the filters or sort change without `notify()`, such as on back and forward navigation, and on `disconnect()`.\n\nThe function loads Shopify's Standard Events module. Events wait for the module and keep their order. When the module can't load, the function sends no events.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "store",
+          "description": "The collection store of the search page.",
+          "value": "CollectionStore",
+          "filePath": "src/core/collection/search-updates.ts"
+        },
+        {
+          "name": "options",
+          "description": "The element to dispatch the events from, and a function that returns the search term and the total count.",
+          "value": "ConnectSearchUpdatesOptions",
+          "filePath": "src/core/collection/search-updates.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/collection/search-updates.ts",
+        "description": "A connection with `notify()` and `disconnect()`.",
+        "name": "SearchUpdatesConnection",
+        "value": "SearchUpdatesConnection"
+      },
+      "value": "export function connectSearchUpdates(\n  store: CollectionStore,\n  options: ConnectSearchUpdatesOptions,\n): SearchUpdatesConnection {\n  return connectUpdateEvents(store, options, searchUpdatesSpec);\n}",
+      "examples": [
+        {
+          "title": "Example",
+          "description": "",
+          "tabs": [
+            {
+              "code": "const updates = connectSearchUpdates(store, {\n  target: filtersAndResultsElement,\n  getView: () => ({ query: term, totalCount }),\n});\nstore.setOnBrowseChange(() => {\n  updates.notify();\n  reconciler.handleBrowseChange();\n});\n// On cleanup:\nupdates.disconnect();",
+              "title": "Example"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "ConnectSearchUpdatesOptions": {
+    "src/core/collection/search-updates.ts": {
+      "filePath": "src/core/collection/search-updates.ts",
+      "name": "ConnectSearchUpdatesOptions",
+      "description": "Options for `connectSearchUpdates`.",
+      "members": [
+        {
+          "filePath": "src/core/collection/search-updates.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "afterRender",
+          "value": "(callback: () => void) => void",
+          "description": "Runs the callback after the page renders the new total count. The function calls it when the store settles, to resolve the update promises. Defaults to calling it right away. Pass a function such as Vue's `nextTick` when the store settles before the page renders the new count.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/core/collection/search-updates.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "getView",
+          "value": "() => SearchUpdatesView",
+          "description": "Returns the search term and the total number of results that the page shows now. Read the count from the same data as the results, not from the DOM."
+        },
+        {
+          "filePath": "src/core/collection/search-updates.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "target",
+          "value": "HTMLElement",
+          "description": "The element that contains the search filters, the results, and the empty state. The events are dispatched from this element and bubble to the document."
+        }
+      ],
+      "value": "export interface ConnectSearchUpdatesOptions {\n  /**\n   * The element that contains the search filters, the results, and the empty state. The events are\n   * dispatched from this element and bubble to the document.\n   */\n  target: HTMLElement;\n  /**\n   * Returns the search term and the total number of results that the page shows now. Read the\n   * count from the same data as the results, not from the DOM.\n   */\n  getView: () => SearchUpdatesView;\n  /**\n   * Runs the callback after the page renders the new total count. The function calls it when the\n   * store settles, to resolve the update promises. Defaults to calling it right away. Pass a\n   * function such as Vue's `nextTick` when the store settles before the page renders the new\n   * count.\n   */\n  afterRender?: (callback: () => void) => void;\n}"
+    }
+  },
+  "SearchUpdatesView": {
+    "src/core/collection/search-updates.ts": {
+      "filePath": "src/core/collection/search-updates.ts",
+      "name": "SearchUpdatesView",
+      "description": "The search term and the total number of results that the search page shows.",
+      "members": [
+        {
+          "filePath": "src/core/collection/search-updates.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "query",
+          "value": "string",
+          "description": "Search term of the results. The search update events send it as `search.query`."
+        },
+        {
+          "filePath": "src/core/collection/search-updates.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "totalCount",
+          "value": "number",
+          "description": "Total number of results, from the `totalCount` field of the Storefront API `search` query."
+        }
+      ],
+      "value": "export interface SearchUpdatesView {\n  /** Search term of the results. The search update events send it as `search.query`. */\n  query: string;\n  /** Total number of results, from the `totalCount` field of the Storefront API `search` query. */\n  totalCount: number;\n}"
+    }
+  },
+  "SearchUpdatesConnection": {
+    "src/core/collection/search-updates.ts": {
+      "filePath": "src/core/collection/search-updates.ts",
+      "name": "SearchUpdatesConnection",
+      "description": "The connection that `connectSearchUpdates` returns.",
+      "members": [
+        {
+          "filePath": "src/core/collection/search-updates.ts",
+          "syntaxKind": "MethodSignature",
+          "name": "disconnect",
+          "value": "() => void",
+          "description": "Stops the updates and rejects the pending update promises with an `AbortError`."
+        },
+        {
+          "filePath": "src/core/collection/search-updates.ts",
+          "syntaxKind": "MethodSignature",
+          "name": "notify",
+          "value": "() => void",
+          "description": "Sends one `shopify:search:update` event for the current filters and sort of the store. Call it in the store's browse change callback, before you navigate. It does nothing when the filters and sort didn't change, and it never throws."
+        }
+      ],
+      "value": "export interface SearchUpdatesConnection {\n  /**\n   * Sends one `shopify:search:update` event for the current filters and sort of the store. Call it\n   * in the store's browse change callback, before you navigate. It does nothing when the filters\n   * and sort didn't change, and it never throws.\n   */\n  notify(): void;\n  /** Stops the updates and rejects the pending update promises with an `AbortError`. */\n  disconnect(): void;\n}"
     }
   },
   "GetSelectedProductOptionsGeneratedType": {
@@ -13756,6 +13877,39 @@
         "value": "UseProductFormResult<ProductInput>"
       },
       "value": "(\n    store: ProductFormStore,\n    options?: UseProductFormOptions<ProductInput>,\n  ) => UseProductFormResult<ProductInput>"
+    }
+  },
+  "SearchUpdatesProps": {
+    "src/react/search-updates.tsx": {
+      "filePath": "src/react/search-updates.tsx",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "SearchUpdatesProps",
+      "value": "SearchUpdatesView & HTMLAttributes<HTMLDivElement>",
+      "description": "Props for the `SearchUpdates` component: the search term, the total number of results, and HTML attributes such as `className` for the `div`.",
+      "isPublicDocs": true
+    }
+  },
+  "SearchUpdatesGeneratedType": {
+    "src/react/search-updates.tsx": {
+      "filePath": "src/react/search-updates.tsx",
+      "name": "SearchUpdatesGeneratedType",
+      "description": "Sends the `shopify:search:update` event for each filter or sort change that the customer makes on the search page. Render it inside the search page's `CollectionProvider`. It throws outside a provider.\n\nThe component renders a `div`, and the events start at it. Wrap the filters, the results, and the empty state, so the `div` stays on the page when a filter matches no products.\n\nThe event has the search term, the active filters, and the sort key (`PRICE` or `RELEVANCE`). Its promise resolves with the `totalCount` that the component renders after the provider settles, and rejects with an `AbortError` when the search term changes or the component unmounts first. Pass the `totalCount` of the Storefront API `search` query, from the same data as the results. Back and forward navigation send no update event.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "input1",
+          "description": "The search term, the total number of results, the children, and HTML attributes for the `div`.",
+          "value": "SearchUpdatesProps",
+          "filePath": "src/react/search-updates.tsx"
+        }
+      ],
+      "returns": {
+        "filePath": "src/react/search-updates.tsx",
+        "description": "The `div` that wraps the children.",
+        "name": "ReactElement",
+        "value": "ReactElement"
+      },
+      "value": "export function SearchUpdates({\n  query,\n  totalCount,\n  children,\n  ...rest\n}: SearchUpdatesProps): ReactElement {\n  const store = useRequiredStore(\"SearchUpdates\");\n  const registerBrowseChangeListener = useRegisterBrowseChangeListener(\"SearchUpdates\");\n  const elementRef = useRef<HTMLDivElement>(null);\n  const viewRef = useRef<SearchUpdatesView>({ query, totalCount });\n\n  // A child's layout effect runs before the provider's layout effect that settles the store, so\n  // the update promises resolve with the new count.\n  useLayoutEffect(() => {\n    viewRef.current = { query, totalCount };\n  });\n\n  useEffect(() => {\n    const target = elementRef.current;\n    if (!target) return;\n    const updates = connectSearchUpdates(store, {\n      target,\n      getView: () => viewRef.current,\n    });\n    const unregister = registerBrowseChangeListener(updates.notify);\n    return () => {\n      unregister();\n      updates.disconnect();\n    };\n  }, [store, registerBrowseChangeListener]);\n\n  return createElement(\"div\", { ...rest, ref: elementRef }, children);\n}"
     }
   },
   "ShopPayButtonProps": {

@@ -40,3 +40,10 @@ export type {
   CollectionUpdatesConnection,
   ConnectCollectionUpdatesOptions,
 } from "./collection-updates";
+
+export { connectSearchUpdates } from "./search-updates";
+export type {
+  ConnectSearchUpdatesOptions,
+  SearchUpdatesConnection,
+  SearchUpdatesView,
+} from "./search-updates";

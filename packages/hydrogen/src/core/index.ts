@@ -217,6 +217,12 @@ export { getCollectionViewAttributes } from "./collection";
 export type { CollectionViewCollection, CollectionViewOptions } from "./collection";
 export { connectCollectionUpdates } from "./collection";
 export type { CollectionUpdatesConnection, ConnectCollectionUpdatesOptions } from "./collection";
+export { connectSearchUpdates } from "./collection";
+export type {
+  ConnectSearchUpdatesOptions,
+  SearchUpdatesConnection,
+  SearchUpdatesView,
+} from "./collection";
 
 export {
   canAddToCart,
