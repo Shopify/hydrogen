@@ -27,7 +27,6 @@ const ROLLOUTS_ASSIGNMENT_ACTIVE_STRATEGY = Cache({ maxAge: 30, staleWhileRevali
 
 const log = getLogger("rollouts");
 
-/** The facts about the incoming request that decide whether the helper assigns a buyer. */
 export type DocumentRolloutsFacts = {
   method?: string;
   documentRequest: boolean;
@@ -36,14 +35,12 @@ export type DocumentRolloutsFacts = {
   hasEssentialCookie: boolean;
 };
 
-/** The state of one document assignment. */
 export type State =
   | { status: "Skipped" }
   | { status: "CheckingShop" }
   | { status: "Assigning" }
   | { status: "Done"; setCookie?: string };
 
-/** What the steps of one document assignment can learn. */
 export type Event =
   | { type: "Started"; facts: DocumentRolloutsFacts }
   | { type: "ShopSignal"; result: "active" | "inactive" | "failed" }
@@ -51,7 +48,6 @@ export type Event =
   | { type: "NoAssignment" }
   | { type: "AssignmentFailed"; reason: "error" | "timedOut" };
 
-/** The work that answers one event. */
 export type Effect = { type: "FetchShopSignal" } | { type: "CallRolloutsAssign" };
 
 /** The cookies that `applySetCookies()` adds to the response of one document request. */
@@ -86,7 +82,15 @@ export function assignRolloutsOnDocument(
   storefrontClient: StorefrontClient,
   request: Request,
 ): DocumentRolloutsAssignment {
-  const assignment = drive(storefrontClient, factsOf(storefrontClient, request));
+  const deadline = new AbortController();
+  const timeoutId = setTimeout(() => {
+    deadline.abort(new StorefrontTimeoutError(ROLLOUTS_DOCUMENT_TIMEOUT_IN_MS));
+  }, ROLLOUTS_DOCUMENT_TIMEOUT_IN_MS);
+  const assignment = drive(
+    storefrontClient,
+    factsOf(storefrontClient, request),
+    deadline.signal,
+  ).finally(() => clearTimeout(timeoutId));
 
   return {
     async applySetCookies(headers) {
@@ -96,10 +100,6 @@ export function assignRolloutsOnDocument(
   };
 }
 
-/**
- * The state machine of one document assignment. Pure and total: an event that the current state
- * doesn't expect leaves the state unchanged and returns no effects.
- */
 export function step(state: State, event: Event): [State, Effect[]] {
   switch (event.type) {
     case "Started":
@@ -120,36 +120,44 @@ export function step(state: State, event: Event): [State, Effect[]] {
   }
 }
 
-/** Runs one effect against the Storefront API and returns the event that answers it. */
-export async function perform(effect: Effect, storefrontClient: StorefrontClient): Promise<Event> {
+export async function perform(
+  effect: Effect,
+  storefrontClient: StorefrontClient,
+  signal: AbortSignal,
+): Promise<Event> {
   try {
-    return await withDeadline((signal) =>
-      effect.type === "FetchShopSignal"
-        ? fetchShopSignal(storefrontClient, signal)
-        : callRolloutsAssign(storefrontClient, signal),
-    );
+    return effect.type === "FetchShopSignal"
+      ? await fetchShopSignal(storefrontClient, signal)
+      : await callRolloutsAssign(storefrontClient, signal);
   } catch (error) {
-    if (effect.type === "FetchShopSignal") {
-      log.warn("rollouts assignment signal failed", { error });
-      return { type: "ShopSignal", result: "failed" };
-    }
-
-    log.warn("rollouts assignment failed", { error });
-    return {
-      type: "AssignmentFailed",
-      reason: error instanceof StorefrontTimeoutError ? "timedOut" : "error",
-    };
+    return effect.type === "FetchShopSignal"
+      ? failedShopSignal(error)
+      : failedAssignment(error, signal);
   }
 }
 
-async function drive(storefrontClient: StorefrontClient, facts: DocumentRolloutsFacts) {
+function failedShopSignal(error: unknown): Event {
+  log.warn("rollouts assignment signal failed", { error });
+  return { type: "ShopSignal", result: "failed" };
+}
+
+function failedAssignment(error: unknown, signal: AbortSignal): Event {
+  log.warn("rollouts assignment failed", { error });
+  return { type: "AssignmentFailed", reason: signal.aborted ? "timedOut" : "error" };
+}
+
+async function drive(
+  storefrontClient: StorefrontClient,
+  facts: DocumentRolloutsFacts,
+  signal: AbortSignal,
+): Promise<State> {
   let state: State = { status: "Skipped" };
   const events: Event[] = [{ type: "Started", facts }];
 
   for (let event = events.shift(); event; event = events.shift()) {
     const [next, effects] = step(state, event);
     state = next;
-    for (const effect of effects) events.push(await perform(effect, storefrontClient));
+    for (const effect of effects) events.push(await perform(effect, storefrontClient, signal));
   }
 
   return state;
@@ -170,8 +178,10 @@ function factsOf(storefrontClient: StorefrontClient, request: Request): Document
 }
 
 function isDocumentRequest(request: Request): boolean {
-  if (request.method !== "GET" && request.method !== "HEAD") return false;
-  if (request.headers.get("sec-fetch-dest") === "document") return true;
+  if (request.method !== "GET") return false;
+
+  const destination = request.headers.get("sec-fetch-dest");
+  if (destination) return destination === "document";
 
   return request.headers.get("accept")?.includes("text/html") ?? false;
 }
@@ -237,23 +247,6 @@ async function callRolloutsAssign(
     return { type: "AssignmentFailed", reason: "error" };
   }
 
-  storefrontClient.requestContext.captureSubrequestHeaders(result.headers);
   const setCookie = findEssentialSetCookie(result.headers.getSetCookie());
-  if (!setCookie) return { type: "NoAssignment" };
-
-  storefrontClient.requestContext.markResponseAsSessionEstablishing("rollouts assignment");
-  return { type: "Assigned", setCookie };
-}
-
-async function withDeadline<T>(work: (signal: AbortSignal) => Promise<T>): Promise<T> {
-  const deadline = new AbortController();
-  const timeoutId = setTimeout(() => {
-    deadline.abort(new StorefrontTimeoutError(ROLLOUTS_DOCUMENT_TIMEOUT_IN_MS));
-  }, ROLLOUTS_DOCUMENT_TIMEOUT_IN_MS);
-
-  try {
-    return await work(deadline.signal);
-  } finally {
-    clearTimeout(timeoutId);
-  }
+  return setCookie ? { type: "Assigned", setCookie } : { type: "NoAssignment" };
 }

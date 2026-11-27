@@ -4695,7 +4695,7 @@
         "name": "DocumentRolloutsAssignment",
         "value": "DocumentRolloutsAssignment"
       },
-      "value": "export function assignRolloutsOnDocument(\n  storefrontClient: StorefrontClient,\n  request: Request,\n): DocumentRolloutsAssignment {\n  const assignment = drive(storefrontClient, factsOf(storefrontClient, request));\n\n  return {\n    async applySetCookies(headers) {\n      const state = await assignment;\n      if (state.status === \"Done\" && state.setCookie) headers.append(\"set-cookie\", state.setCookie);\n    },\n  };\n}"
+      "value": "export function assignRolloutsOnDocument(\n  storefrontClient: StorefrontClient,\n  request: Request,\n): DocumentRolloutsAssignment {\n  const deadline = new AbortController();\n  const timeoutId = setTimeout(() => {\n    deadline.abort(new StorefrontTimeoutError(ROLLOUTS_DOCUMENT_TIMEOUT_IN_MS));\n  }, ROLLOUTS_DOCUMENT_TIMEOUT_IN_MS);\n  const assignment = drive(\n    storefrontClient,\n    factsOf(storefrontClient, request),\n    deadline.signal,\n  ).finally(() => clearTimeout(timeoutId));\n\n  return {\n    async applySetCookies(headers) {\n      const state = await assignment;\n      if (state.status === \"Done\" && state.setCookie) headers.append(\"set-cookie\", state.setCookie);\n    },\n  };\n}"
     }
   },
   "DocumentRolloutsAssignment": {
@@ -6560,7 +6560,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "State",
       "value": "{ status: \"Skipped\" } | { status: \"CheckingShop\" } | { status: \"Assigning\" } | { status: \"Done\"; setCookie?: string }",
-      "description": "The state of one document assignment."
+      "description": ""
     }
   },
   "CartState": {

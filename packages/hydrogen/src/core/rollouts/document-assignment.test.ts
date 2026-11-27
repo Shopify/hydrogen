@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createStorefrontClient } from "../../client/client";
+import type { KeyValueCacheLike } from "../cache/store";
 import { configureLogging } from "../logging";
 import { createShopifyRequestContext } from "../request-context";
 import { assert, createTestLogger } from "../test-utils";
+import { isObjectRecord } from "../utils/record";
 import {
   assignRolloutsOnDocument,
   perform,
@@ -19,6 +21,29 @@ const ESSENTIAL = "_shopify_essential=new; Path=/; HttpOnly; Secure; SameSite=La
 const OTHER_COOKIE = "_shopify_analytics=b; Path=/; Secure";
 const I18N = { defaultLocale: { country: "US", language: "EN" } } as const;
 const PRIVATE_CACHE_CONTROL = "private, no-store, max-age=0, must-revalidate";
+const SIGNAL_STRATEGY = { mode: "public", maxAge: 30, staleWhileRevalidate: 300 };
+
+class RecordingCache implements KeyValueCacheLike {
+  readonly keys: string[] = [];
+  readonly values = new Map<string, unknown>();
+  readonly ttls: (number | undefined)[] = [];
+
+  get(key: string) {
+    this.keys.push(key);
+    return this.values.get(key);
+  }
+
+  set(key: string, value: unknown, options?: { ttl?: number }) {
+    this.keys.push(key);
+    this.values.set(key, value);
+    this.ttls.push(options?.ttl);
+  }
+}
+
+function storedStrategy(cache: RecordingCache): unknown {
+  const [entry] = [...cache.values.values()];
+  return isObjectRecord(entry) ? entry.strategy : undefined;
+}
 
 function documentRequest(headers: Record<string, string> = {}, method = "GET"): Request {
   return new Request("https://my-app.com/products/hat", {
@@ -41,7 +66,11 @@ function assignResponse(setCookies: string[] = [ESSENTIAL]): Response {
   return jsonResponse({ data: { rolloutsAssign: { userErrors: [] } } }, setCookies);
 }
 
-function createClient(request: Request, clientType: "private" | "public" = "private") {
+function createClient(
+  request: Request,
+  clientType: "private" | "public" = "private",
+  cache?: KeyValueCacheLike,
+) {
   return clientType === "private"
     ? createStorefrontClient({
         type: "private",
@@ -50,12 +79,20 @@ function createClient(request: Request, clientType: "private" | "public" = "priv
           i18n: I18N,
           buyerIp: "127.0.0.1",
         }),
-        config: { storeDomain: STORE_DOMAIN, privateStorefrontToken: "private-token" },
+        config: {
+          storeDomain: STORE_DOMAIN,
+          privateStorefrontToken: "private-token",
+          ...(cache && { cache }),
+        },
       })
     : createStorefrontClient({
         type: "public",
         requestContext: createShopifyRequestContext({ request, i18n: I18N }),
-        config: { storeDomain: STORE_DOMAIN, publicStorefrontToken: "public-token" },
+        config: {
+          storeDomain: STORE_DOMAIN,
+          publicStorefrontToken: "public-token",
+          ...(cache && { cache }),
+        },
       });
 }
 
@@ -79,6 +116,14 @@ async function assignAndApply(
   return headers;
 }
 
+function abortRejectingFetch(_url: string, init: RequestInit) {
+  return new Promise((_resolve, reject) => {
+    const signal = init.signal;
+    assert(signal, "expected an abort signal");
+    signal.addEventListener("abort", () => reject(signal.reason));
+  });
+}
+
 let mockFetch: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
@@ -88,6 +133,7 @@ beforeEach(() => {
 
 afterEach(() => {
   configureLogging({});
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -258,7 +304,11 @@ describe("perform", () => {
   it("reads an inactive shop from a response without the field", async () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({ data: { shop: { name: "Test" } } }));
 
-    const event = await perform({ type: "FetchShopSignal" }, createClient(documentRequest()));
+    const event = await perform(
+      { type: "FetchShopSignal" },
+      createClient(documentRequest()),
+      new AbortController().signal,
+    );
 
     expect(event).toEqual({ type: "ShopSignal", result: "inactive" });
   });
@@ -266,9 +316,30 @@ describe("perform", () => {
   it("reads the essential cookie of an assignment", async () => {
     mockFetch.mockResolvedValueOnce(assignResponse([OTHER_COOKIE, ESSENTIAL]));
 
-    const event = await perform({ type: "CallRolloutsAssign" }, createClient(documentRequest()));
+    const event = await perform(
+      { type: "CallRolloutsAssign" },
+      createClient(documentRequest()),
+      new AbortController().signal,
+    );
 
     expect(event).toEqual({ type: "Assigned", setCookie: ESSENTIAL });
+  });
+
+  it("reports a timed out assignment once the shared deadline aborts", async () => {
+    configureLogging({ logger: createTestLogger() });
+    const controller = new AbortController();
+    controller.abort(new Error("deadline"));
+    mockFetch.mockImplementationOnce(() =>
+      Promise.reject(new DOMException("The operation was aborted.", "AbortError")),
+    );
+
+    const event = await perform(
+      { type: "CallRolloutsAssign" },
+      createClient(documentRequest()),
+      controller.signal,
+    );
+
+    expect(event).toEqual({ type: "AssignmentFailed", reason: "timedOut" });
   });
 });
 
@@ -311,6 +382,7 @@ describe("assignRolloutsOnDocument", () => {
     ["a HEAD request", documentRequest({}, "HEAD"), "private"],
     ["a prefetch", documentRequest({ "sec-purpose": "prefetch" }), "private"],
     ["an upper case prefetch", documentRequest({ purpose: "PREFETCH" }), "private"],
+    ["an iframe", documentRequest({ "sec-fetch-dest": "iframe" }), "private"],
     ["a public client", undefined, "public"],
     [
       "a client navigation",
@@ -325,6 +397,18 @@ describe("assignRolloutsOnDocument", () => {
 
     expect(mockFetch).not.toHaveBeenCalled();
     expect(headers.getSetCookie()).toEqual([]);
+  });
+
+  it("assigns a document request that only accepts HTML", async () => {
+    mockFetch.mockResolvedValueOnce(signalResponse(true)).mockResolvedValueOnce(assignResponse());
+
+    const request = new Request("https://my-app.com/products/hat", {
+      headers: { accept: "text/html" },
+    });
+    const headers = await assignAndApply({ request });
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(headers.getSetCookie()).toEqual([ESSENTIAL]);
   });
 
   it("does not assign when the shop has no live rollouts", async () => {
@@ -407,22 +491,90 @@ describe("assignRolloutsOnDocument", () => {
     expect(headers.getSetCookie()).toEqual([]);
   });
 
-  it("appends nothing when the assignment times out", async () => {
-    const logger = createTestLogger();
-    configureLogging({ logger });
-    mockFetch.mockResolvedValueOnce(signalResponse(true)).mockImplementationOnce(
-      (_url: string, init: RequestInit) =>
-        new Promise((_resolve, reject) => {
-          const signal = init.signal;
-          assert(signal, "expected an abort signal");
-          signal.addEventListener("abort", () => reject(signal.reason));
-        }),
-    );
+  it("shares one deadline between the shop signal and the assignment", async () => {
+    const timeoutSpy = vi.spyOn(globalThis, "setTimeout");
+    const clearSpy = vi.spyOn(globalThis, "clearTimeout");
+    mockFetch.mockResolvedValueOnce(signalResponse(true)).mockResolvedValueOnce(assignResponse());
 
     const headers = await assignAndApply();
 
-    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(headers.getSetCookie()).toEqual([ESSENTIAL]);
+    expect(timeoutSpy.mock.calls.filter(([, ms]) => ms === 500)).toHaveLength(1);
+    expect(clearSpy).toHaveBeenCalledOnce();
+  });
+
+  it("stops at the deadline when a slow shop signal uses the budget, without assigning", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    vi.useFakeTimers();
+    mockFetch.mockImplementationOnce(abortRejectingFetch);
+    const request = documentRequest();
+    const client = createClient(request);
+    const headers = new Headers({ "content-type": "text/html" });
+
+    const applied = assignRolloutsOnDocument(client, request).applySetCookies(headers);
+    await vi.advanceTimersByTimeAsync(500);
+    await applied;
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    expect(storefrontCall(0).query).toContain("rolloutsAssignmentActive");
     expect(headers.getSetCookie()).toEqual([]);
+    expect(vi.getTimerCount()).toBe(0);
     expect(logger.warn).toHaveBeenCalledOnce();
+  });
+
+  it("stops at the deadline while the assignment hangs, without a cookie", async () => {
+    const logger = createTestLogger();
+    configureLogging({ logger });
+    vi.useFakeTimers();
+    mockFetch
+      .mockResolvedValueOnce(signalResponse(true))
+      .mockImplementationOnce(abortRejectingFetch);
+    const request = documentRequest();
+    const client = createClient(request);
+    const headers = new Headers({ "content-type": "text/html" });
+
+    const applied = assignRolloutsOnDocument(client, request).applySetCookies(headers);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    await vi.advanceTimersByTimeAsync(500);
+    await applied;
+
+    expect(headers.getSetCookie()).toEqual([]);
+    expect(vi.getTimerCount()).toBe(0);
+    expect(logger.warn).toHaveBeenCalledOnce();
+  });
+});
+
+describe("the shop signal cache", () => {
+  it("caches the shop signal for 30 seconds and 300 seconds of stale-while-revalidate", async () => {
+    const cache = new RecordingCache();
+    mockFetch.mockResolvedValueOnce(signalResponse(true));
+
+    await perform(
+      { type: "FetchShopSignal" },
+      createClient(documentRequest(), "private", cache),
+      new AbortController().signal,
+    );
+
+    expect(storedStrategy(cache)).toEqual(SIGNAL_STRATEGY);
+    expect(cache.ttls).toEqual([330]);
+  });
+
+  it("keys the shop signal without the cookie header", async () => {
+    const cache = new RecordingCache();
+    mockFetch.mockResolvedValue(signalResponse(true));
+
+    for (const cookie of ["_shopify_analytics=a", "_shopify_marketing=b; other=c"]) {
+      const request = documentRequest({ cookie });
+      await perform(
+        { type: "FetchShopSignal" },
+        createClient(request, "private", cache),
+        new AbortController().signal,
+      );
+    }
+
+    expect(new Set(cache.keys).size).toBe(1);
+    expect(mockFetch).toHaveBeenCalledOnce();
   });
 });
