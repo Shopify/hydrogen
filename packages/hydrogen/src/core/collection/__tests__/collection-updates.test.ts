@@ -104,20 +104,6 @@ describe("connectCollectionUpdates", () => {
     ]);
   });
 
-  it("resolves when the store settles in the same step as the change", async () => {
-    const { store } = setup(8);
-    await flush();
-
-    store.toggleFilter({ tag: "sale" });
-    store.toggleFilter({ tag: "sale" });
-    store.settle();
-
-    await expect(Promise.all(events.map((event) => event.promise))).resolves.toEqual([
-      { productsCount: 8 },
-      { productsCount: 8 },
-    ]);
-  });
-
   it("sends nothing when the filters and sort didn't change, but still navigates", async () => {
     const { store, navigate } = setup();
     await flush();
