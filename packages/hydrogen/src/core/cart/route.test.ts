@@ -107,14 +107,14 @@ function createJsonPostRequest(
 
 function createFormPostRequest(
   fields: Record<string, string>,
-  opts?: { cookies?: string; referer?: string },
+  opts?: { cookies?: string; referer?: string; url?: string },
 ): Request {
   const headers: Record<string, string> = {
     "content-type": "application/x-www-form-urlencoded",
   };
   if (opts?.cookies) headers.cookie = opts.cookies;
   if (opts?.referer) headers.referer = opts.referer;
-  return new Request("https://my-app.com/api/cart", {
+  return new Request(opts?.url ?? "https://my-app.com/api/cart", {
     method: "POST",
     headers,
     body: new URLSearchParams(fields).toString(),
@@ -1815,6 +1815,50 @@ describe("createCartServerHandlers", () => {
         createFormPostRequest(
           { intent: "remove", lineId: "gid://shopify/CartLine/1" },
           { cookies: "cart=123" },
+        ),
+        defaultConfig,
+      );
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(303);
+      expect(result.headers.get("location")).toBe(`${APP_ORIGIN}/`);
+    });
+
+    it.each([
+      ["/products/widget?color=red", `${APP_ORIGIN}/products/widget?color=red`],
+      ["https://evil.example/products/widget", `${APP_ORIGIN}/cart`],
+    ])("redirects to the same-origin return_to search param %s", async (returnTo, location) => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartLinesRemove: { cart: MOCK_CART, userErrors: [] } }),
+      );
+
+      const result = await handleCartRequest(
+        createFormPostRequest(
+          { intent: "remove", lineId: "gid://shopify/CartLine/1" },
+          {
+            cookies: "cart=123",
+            referer: "https://my-app.com/cart",
+            url: `https://my-app.com/api/cart?return_to=${encodeURIComponent(returnTo)}`,
+          },
+        ),
+        defaultConfig,
+      );
+
+      assert(result, "expected a response");
+      expect(result.status).toBe(303);
+      expect(result.headers.get("location")).toBe(location);
+    });
+
+    it("redirects to / when the Referer is the cart endpoint", async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockGqlResponse({ cartLinesRemove: { cart: MOCK_CART, userErrors: [] } }),
+      );
+
+      // A client router that commits the URL before it fetches sends the form's action as the Referer.
+      const result = await handleCartRequest(
+        createFormPostRequest(
+          { intent: "remove", lineId: "gid://shopify/CartLine/1" },
+          { cookies: "cart=123", referer: "https://my-app.com/api/cart" },
         ),
         defaultConfig,
       );
