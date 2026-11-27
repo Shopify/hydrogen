@@ -5,6 +5,7 @@ import { warnOnLocaleChangingNavigation } from "./locale-checks";
 import { initializeShopifyPageViewEvents } from "./page-view";
 import type { InitializeShopifyScriptsOptions } from "./types";
 import { observeNavigation } from "./utils/navigation";
+import { defineViewEventElement } from "./view-event-element";
 import { loadShopifyWebMcpTools } from "./webmcp";
 
 const log = getLogger("consent");
@@ -13,11 +14,12 @@ const log = getLogger("consent");
  * Starts Shopify's scripts in the browser for frameworks without a Hydrogen binding. Call it after
  * hydration, with the consent configuration that you passed to `getShopifyScriptTags`.
  *
- * The function sets up `window.Shopify.routes`, and sends a page view event on load and after each
- * navigation that changes the path or query. In the custom banner consent mode, Hydrogen calls your
- * setup callback after the Customer Privacy API loads. A custom banner configuration without a
- * setup callback logs a warning, and analytics events stay blocked. When the browser supports
- * WebMCP, the function also loads Shopify's WebMCP tools. Set `webMcp` to `false` to skip them.
+ * The function sets up `window.Shopify.routes`, registers the `VIEW_EVENT_TAG_NAME` element, and
+ * sends a page view event on load and after each navigation that changes the path or query. In the
+ * custom banner consent mode, Hydrogen calls your setup callback after the Customer Privacy API
+ * loads. A custom banner configuration without a setup callback logs a warning, and analytics
+ * events stay blocked. When the browser supports WebMCP, the function also loads Shopify's WebMCP
+ * tools. Set `webMcp` to `false` to skip them.
  *
  * @param options - The consent configuration, the route settings, and whether to load WebMCP tools.
  * @returns A promise that resolves after the WebMCP tools load or fail to load, or right away when the function skips WebMCP.
@@ -33,6 +35,7 @@ export function initializeShopifyScripts({
 }: InitializeShopifyScriptsOptions): Promise<boolean | void> {
   configureShopifyRouting({ navigate, routes });
   initializeShopifyPageViewEvents();
+  defineViewEventElement();
   if (__DEV__) observeNavigation(warnOnLocaleChangingNavigation);
 
   if (consent?.mode === "custom-banner") {

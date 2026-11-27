@@ -173,6 +173,7 @@ export {
   renderShopifyScriptTags,
   getShopifyScriptHashes,
 } from "./shopify-scripts/index";
+export { VIEW_EVENT_TAG_NAME } from "./shopify-scripts/view-event-element";
 export type {
   ShopifyRoutesOptions,
   ShopifyScriptsAnalyticsConfig,
@@ -232,6 +233,8 @@ export type {
 export { buildProductSelectionSearchParams } from "./product";
 export type { ProductSelectionLinkStyle } from "./product";
 export { getSelectedProductOptions } from "./product";
+export { getProductViewAttributes } from "./product";
+export type { ProductViewOptions, ProductViewProduct } from "./product";
 export type {
   ProductInput,
   ProductAddToCartProps,
