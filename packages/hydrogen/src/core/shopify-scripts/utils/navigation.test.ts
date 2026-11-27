@@ -20,9 +20,12 @@ describe("observeNavigation", () => {
     Object.defineProperty(window, "navigation", { configurable: true, value: navigation });
 
     const cleanup = subscribe(callback);
-    navigation.dispatchEvent(new Event("currententrychange"));
+    navigation.dispatchEvent(
+      Object.assign(new Event("currententrychange"), { navigationType: "replace" }),
+    );
 
     expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledWith("replace");
 
     cleanup();
     navigation.dispatchEvent(new Event("currententrychange"));
@@ -39,7 +42,7 @@ describe("observeNavigation", () => {
     window.history.replaceState({}, "", "/replaced");
     window.dispatchEvent(new PopStateEvent("popstate"));
 
-    expect(callback).toHaveBeenCalledTimes(3);
+    expect(callback.mock.calls).toEqual([["push"], ["replace"], ["traverse"]]);
 
     cleanup();
     expect(window.history.pushState).toBe(originalPushState);

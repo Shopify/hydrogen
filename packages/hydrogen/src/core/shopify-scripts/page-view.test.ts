@@ -151,6 +151,67 @@ describe("Shopify page view events", () => {
     expect(pageViews).toHaveLength(0);
   });
 
+  it("ignores a query replaced in place", async () => {
+    initialize();
+    await flushPageViews();
+    pageViews.length = 0;
+
+    window.history.replaceState({}, "", "/?Size=m");
+    await flushPageViews();
+
+    expect(pageViews).toHaveLength(0);
+  });
+
+  it("ignores a query replaced in place with the Navigation API", async () => {
+    const navigation = new EventTarget();
+    Object.defineProperty(window, "navigation", { configurable: true, value: navigation });
+    initialize();
+    await flushPageViews();
+    pageViews.length = 0;
+
+    window.history.replaceState({}, "", "/?Size=m");
+    navigation.dispatchEvent(
+      Object.assign(new Event("currententrychange"), { navigationType: "replace" }),
+    );
+    await flushPageViews();
+
+    expect(pageViews).toHaveLength(0);
+  });
+
+  it("emits a page view for a query pushed or a path replaced", async () => {
+    initialize();
+    await flushPageViews();
+    pageViews.length = 0;
+
+    window.history.pushState({}, "", "/?q=snowboard");
+    await flushPageViews();
+    window.history.replaceState({}, "", "/redirected");
+    await flushPageViews();
+
+    expect(pageViews.map((event) => event.page.url)).toEqual([
+      new URL("/?q=snowboard", window.location.origin).href,
+      new URL("/redirected", window.location.origin).href,
+    ]);
+  });
+
+  it("emits a page view for a traversal that changes only the query", async () => {
+    const navigation = new EventTarget();
+    Object.defineProperty(window, "navigation", { configurable: true, value: navigation });
+    initialize();
+    await flushPageViews();
+    pageViews.length = 0;
+
+    window.history.replaceState({}, "", "/?page=2");
+    navigation.dispatchEvent(
+      Object.assign(new Event("currententrychange"), { navigationType: "traverse" }),
+    );
+    await flushPageViews();
+
+    expect(pageViews.map((event) => event.page.url)).toEqual([
+      new URL("/?page=2", window.location.origin).href,
+    ]);
+  });
+
   it("initializes only once", () => {
     initialize();
     const firstCleanup = cleanup;

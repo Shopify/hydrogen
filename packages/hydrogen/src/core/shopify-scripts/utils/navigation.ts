@@ -1,7 +1,12 @@
-const navigationCallbacks = new Set<() => void>();
+/** How the current history entry changed, when the browser reports it. */
+type HistoryChangeType = "push" | "replace" | "reload" | "traverse";
+
+type NavigationCallback = (type: HistoryChangeType | undefined) => void;
+
+const navigationCallbacks = new Set<NavigationCallback>();
 let stopObservingNavigation: (() => void) | undefined;
 
-export function observeNavigation(callback: () => void) {
+export function observeNavigation(callback: NavigationCallback) {
   navigationCallbacks.add(callback);
   stopObservingNavigation ??= startObservingNavigation();
 
@@ -17,30 +22,39 @@ export function observeNavigation(callback: () => void) {
 function startObservingNavigation() {
   const navigation = Reflect.get(window, "navigation");
   if (navigation instanceof EventTarget) {
-    navigation.addEventListener("currententrychange", notifyNavigationCallbacks);
-    return () => navigation.removeEventListener("currententrychange", notifyNavigationCallbacks);
+    const onCurrentEntryChange = (event: Event) =>
+      notifyNavigationCallbacks(toHistoryChangeType(Reflect.get(event, "navigationType")));
+    navigation.addEventListener("currententrychange", onCurrentEntryChange);
+    return () => navigation.removeEventListener("currententrychange", onCurrentEntryChange);
   }
 
   const restorePushState = patchHistoryMethod("pushState");
   const restoreReplaceState = patchHistoryMethod("replaceState");
-  window.addEventListener("popstate", notifyNavigationCallbacks);
+  const onPopState = () => notifyNavigationCallbacks("traverse");
+  window.addEventListener("popstate", onPopState);
 
   return () => {
     restorePushState();
     restoreReplaceState();
-    window.removeEventListener("popstate", notifyNavigationCallbacks);
+    window.removeEventListener("popstate", onPopState);
   };
 }
 
-function notifyNavigationCallbacks() {
-  for (const callback of navigationCallbacks) callback();
+function toHistoryChangeType(value: unknown): HistoryChangeType | undefined {
+  return value === "push" || value === "replace" || value === "reload" || value === "traverse"
+    ? value
+    : undefined;
+}
+
+function notifyNavigationCallbacks(type: HistoryChangeType | undefined) {
+  for (const callback of navigationCallbacks) callback(type);
 }
 
 function patchHistoryMethod(method: "pushState" | "replaceState") {
   const original = window.history[method];
   const patched: History[typeof method] = function (this: History, data, unused, url) {
     original.call(this, data, unused, url);
-    notifyNavigationCallbacks();
+    notifyNavigationCallbacks(method === "pushState" ? "push" : "replace");
   };
 
   window.history[method] = patched;
