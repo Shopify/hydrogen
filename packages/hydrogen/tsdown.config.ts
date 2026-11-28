@@ -19,7 +19,12 @@ const productionEntries = [
   "src/vite/index.ts",
   "src/vue/index.ts",
 ];
-const developmentEntries = ["src/core/development.ts", "src/react/index.ts", "src/vue/index.ts"];
+const developmentEntries = [
+  "src/core/development.ts",
+  "src/customer-account/index.ts",
+  "src/react/index.ts",
+  "src/vue/index.ts",
+];
 const developmentOnlyEntries = developmentEntries.filter(
   (entry) => !productionEntries.includes(entry),
 );
