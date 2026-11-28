@@ -78,11 +78,7 @@ export default function Collection() {
         resourcesClassName="products-grid"
         wrapResources={(resources, nodes) => (
           // Count `nodes`: it includes the pages that Pagination restores on Back or reload.
-          <CollectionView
-            collection={collection}
-            productsCount={nodes.length}
-            className="block"
-          >
+          <CollectionView collection={collection} productsCount={nodes.length} className="block">
             {resources}
           </CollectionView>
         )}
