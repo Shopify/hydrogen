@@ -5,6 +5,7 @@ import {
   type PredictiveSearchResourceItem,
   type MoneyV2,
 } from "@shopify/hydrogen";
+import { ProductView } from "@shopify/hydrogen/vue";
 
 import { formatMoney } from "~/storefront/money";
 import {
@@ -144,27 +145,29 @@ const showPanel = computed(() => isOpen.value && term.value);
           <h2 class="mb-2 text-xs font-bold tracking-wider text-black/40 uppercase">Products</h2>
           <ul class="space-y-1">
             <li v-for="product in result.items.products" :key="product.id">
-              <NuxtLink
-                :to="getPredictiveSearchResourceUrl(product, term)"
-                class="flex items-center gap-3 rounded-lg p-2 hover:bg-black/5"
-                @click="closeSearch"
-              >
-                <img
-                  v-if="variantImageUrl(product)"
-                  :src="variantImageUrl(product)"
-                  :alt="variantImageAlt(product)"
-                  :width="THUMBNAIL_SIZE_IN_PIXELS"
-                  :height="THUMBNAIL_SIZE_IN_PIXELS"
-                  class="size-14 shrink-0 rounded object-cover"
-                />
-                <span v-else class="block size-14 shrink-0 rounded bg-black/5" />
-                <span class="min-w-0">
-                  <span class="block truncate text-sm font-medium">{{ product.title }}</span>
-                  <span v-if="variantPrice(product)" class="block text-xs text-black/50">
-                    {{ formatMoney(variantPrice(product)!) }}
+              <ProductView :product="product" context="search" class="block">
+                <NuxtLink
+                  :to="getPredictiveSearchResourceUrl(product, term)"
+                  class="flex items-center gap-3 rounded-lg p-2 hover:bg-black/5"
+                  @click="closeSearch"
+                >
+                  <img
+                    v-if="variantImageUrl(product)"
+                    :src="variantImageUrl(product)"
+                    :alt="variantImageAlt(product)"
+                    :width="THUMBNAIL_SIZE_IN_PIXELS"
+                    :height="THUMBNAIL_SIZE_IN_PIXELS"
+                    class="size-14 shrink-0 rounded object-cover"
+                  />
+                  <span v-else class="block size-14 shrink-0 rounded bg-black/5" />
+                  <span class="min-w-0">
+                    <span class="block truncate text-sm font-medium">{{ product.title }}</span>
+                    <span v-if="variantPrice(product)" class="block text-xs text-black/50">
+                      {{ formatMoney(variantPrice(product)!) }}
+                    </span>
                   </span>
-                </span>
-              </NuxtLink>
+                </NuxtLink>
+              </ProductView>
             </li>
           </ul>
         </section>

@@ -1,3 +1,4 @@
+import { ProductView } from "@shopify/hydrogen/react";
 import type { CurrencyCode } from "@shopify/hydrogen/storefront-api-types";
 import { Link } from "react-router";
 
@@ -26,26 +27,30 @@ export type ProductItemData = {
 
 export function ProductItem({
   product,
+  context,
   loading,
 }: {
   product: ProductItemData;
+  context: "collection" | "search" | "recommendation";
   loading?: "eager" | "lazy";
 }) {
   const variantUrl = useVariantUrl(product.handle);
   const image = product.featuredImage;
   return (
-    <Link className="product-item" key={product.id} prefetch="intent" to={variantUrl}>
-      {image && (
-        <Image
-          alt={image.altText || product.title}
-          aspectRatio="1/1"
-          data={image}
-          loading={loading}
-          sizes="(min-width: 45em) 400px, 100vw"
-        />
-      )}
-      <h4>{product.title}</h4>
-      <small>{formatMoney(product.priceRange.minVariantPrice)}</small>
-    </Link>
+    <ProductView product={product} context={context} className="block">
+      <Link className="product-item block" prefetch="intent" to={variantUrl}>
+        {image && (
+          <Image
+            alt={image.altText || product.title}
+            aspectRatio="1/1"
+            data={image}
+            loading={loading}
+            sizes="(min-width: 45em) 400px, 100vw"
+          />
+        )}
+        <h4>{product.title}</h4>
+        <small>{formatMoney(product.priceRange.minVariantPrice)}</small>
+      </Link>
+    </ProductView>
   );
 }

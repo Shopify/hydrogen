@@ -10,6 +10,7 @@ const HOME_QUERY = gql(`
   query Home {
     products(first: 3) {
       nodes {
+        id
         handle
         title
         featuredImage {
@@ -82,7 +83,9 @@ export default function Home() {
           <div class="mt-16 grid grid-cols-1 gap-8 text-left md:grid-cols-3">
             <Show when={products()}>
               {(items) => (
-                <For each={items()}>{(product) => <ProductCard product={product} />}</For>
+                <For each={items()}>
+                  {(product) => <ProductCard product={product} context="collection" />}
+                </For>
               )}
             </Show>
           </div>

@@ -31,3 +31,6 @@ export {
   serializeCollectionParams,
 } from "./url";
 export type { CollectionParams } from "./url";
+
+export { getCollectionViewAttributes } from "./collection-view";
+export type { CollectionViewCollection, CollectionViewOptions } from "./collection-view";

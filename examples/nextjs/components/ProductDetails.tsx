@@ -5,7 +5,7 @@ import {
   canAddToCart,
   type SelectedOption,
 } from "@shopify/hydrogen";
-import { ShopPayButton } from "@shopify/hydrogen/react";
+import { ProductView, ShopPayButton } from "@shopify/hydrogen/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRef } from "react";
@@ -67,7 +67,9 @@ export function ProductDetails({ product }: { product: ProductData }) {
       }}
     >
       <ProductViewedTracker product={product} />
-      <ProductPage product={product} />
+      <ProductView product={product} context="page" className="block">
+        <ProductPage product={product} />
+      </ProductView>
     </ProductProvider>
   );
 }

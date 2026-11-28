@@ -147,7 +147,7 @@ function ProductGrid({ products }: { products: readonly ProductNode[] }) {
       >
         {products.map((product, index) => (
           <li key={`${product.handle}-${index}`}>
-            <ProductCard product={product} priority={index < 3} />
+            <ProductCard product={product} context="collection" priority={index < 3} />
           </li>
         ))}
       </ul>
@@ -197,6 +197,7 @@ function CollectionResults({ loaderData }: { loaderData: Route.ComponentProps["l
         defaultSortValue={defaultSortValue}
       />
       <ActiveFilterChips
+        availableFilters={loaderData.availableFilters}
         basePath={collectionPath}
         clearAllTo={collectionPath}
         currencyCode={loaderData.currencyCode}

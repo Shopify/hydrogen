@@ -5,6 +5,7 @@ import { getNuxtRequestSearchParams, toStorefrontApiFilters } from "~/server/uti
 const PRODUCTS_PER_PAGE = 24;
 
 type ProductCardData = {
+  id: string;
   handle: string;
   title: string;
   featuredImage: { url: string; altText: string | null } | null;
@@ -54,6 +55,7 @@ const SEARCH_QUERY = gql(`
       nodes {
         __typename
         ... on Product {
+          id
           handle
           title
           featuredImage {
@@ -103,6 +105,7 @@ export default defineEventHandler(async (event) => {
     if (node.__typename !== "Product" || !node.handle || !node.title || !node.priceRange) return [];
     return [
       {
+        id: node.id,
         handle: node.handle,
         title: node.title,
         featuredImage: node.featuredImage ?? null,

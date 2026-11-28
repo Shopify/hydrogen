@@ -5,6 +5,7 @@ import {
   usePredictiveSearch,
   usePredictiveSearchActions,
   usePredictiveSearchForm,
+  ProductView,
 } from "@shopify/hydrogen/react";
 import { useRef } from "react";
 import { Link, useNavigate } from "react-router";
@@ -166,7 +167,9 @@ function SuggestionList({ products, term, stale = false }: SuggestionListProps) 
     <ul role="list" className={stale ? "grid gap-1 opacity-60" : "grid gap-1"}>
       {products.map((product) => (
         <li key={product.id}>
-          <SuggestionLink product={product} term={term} />
+          <ProductView product={product} context="search" className="block">
+            <SuggestionLink product={product} term={term} />
+          </ProductView>
         </li>
       ))}
     </ul>

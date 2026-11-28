@@ -5936,7 +5936,7 @@
     "src/core/shopify-scripts/initialize.ts": {
       "filePath": "src/core/shopify-scripts/initialize.ts",
       "name": "InitializeShopifyScriptsGeneratedType",
-      "description": "Starts Shopify's scripts in the browser for frameworks without a Hydrogen binding. Call it after hydration, with the consent configuration that you passed to `getShopifyScriptTags`.\n\nThe function sets up `window.Shopify.routes`, and sends a page view event on load and after each navigation that changes the path or query. In the custom banner consent mode, Hydrogen calls your setup callback after the Customer Privacy API loads. A custom banner configuration without a setup callback logs a warning, and analytics events stay blocked. When the browser supports WebMCP, the function also loads Shopify's WebMCP tools. Set `webMcp` to `false` to skip them.",
+      "description": "Starts Shopify's scripts in the browser for frameworks without a Hydrogen binding. Call it after hydration, with the consent configuration that you passed to `getShopifyScriptTags`.\n\nThe function sets up `window.Shopify.routes`, registers the `VIEW_EVENT_TAG_NAME` element, and sends a page view event on load and after each navigation that changes the path or query. In the custom banner consent mode, Hydrogen calls your setup callback after the Customer Privacy API loads. A custom banner configuration without a setup callback logs a warning, and analytics events stay blocked. When the browser supports WebMCP, the function also loads Shopify's WebMCP tools. Set `webMcp` to `false` to skip them.",
       "isPublicDocs": true,
       "params": [
         {
@@ -5952,7 +5952,7 @@
         "name": "Promise<boolean | void>",
         "value": "Promise<boolean | void>"
       },
-      "value": "export function initializeShopifyScripts({\n  consent,\n  navigate,\n  nonce,\n  routes,\n  webMcp = true,\n}: InitializeShopifyScriptsOptions): Promise<boolean | void> {\n  configureShopifyRouting({ navigate, routes });\n  initializeShopifyPageViewEvents();\n  if (__DEV__) observeNavigation(warnOnLocaleChangingNavigation);\n\n  if (consent?.mode === \"custom-banner\") {\n    if (typeof consent.setup !== \"function\") {\n      log.warn(\n        \"custom-banner requires a consent.setup callback; analytics delivery remains blocked until setup completes\",\n      );\n    } else {\n      try {\n        initializeCustomConsent(consent.setup);\n      } catch (error) {\n        log.error(\"custom consent initialization failed\", { error });\n      }\n    }\n  }\n\n  if (!webMcp) return Promise.resolve();\n\n  return loadShopifyWebMcpTools(nonce);\n}"
+      "value": "export function initializeShopifyScripts({\n  consent,\n  navigate,\n  nonce,\n  routes,\n  webMcp = true,\n}: InitializeShopifyScriptsOptions): Promise<boolean | void> {\n  configureShopifyRouting({ navigate, routes });\n  initializeShopifyPageViewEvents();\n  defineViewEventElement();\n  if (__DEV__) observeNavigation(warnOnLocaleChangingNavigation);\n\n  if (consent?.mode === \"custom-banner\") {\n    if (typeof consent.setup !== \"function\") {\n      log.warn(\n        \"custom-banner requires a consent.setup callback; analytics delivery remains blocked until setup completes\",\n      );\n    } else {\n      try {\n        initializeCustomConsent(consent.setup);\n      } catch (error) {\n        log.error(\"custom consent initialization failed\", { error });\n      }\n    }\n  }\n\n  if (!webMcp) return Promise.resolve();\n\n  return loadShopifyWebMcpTools(nonce);\n}"
     }
   },
   "GetShopifyScriptTagsGeneratedType": {
@@ -9069,7 +9069,7 @@
     "src/core/collection/url.ts": {
       "filePath": "src/core/collection/url.ts",
       "name": "ParseCollectionParamsGeneratedType",
-      "description": "Reads collection filters and sort from URL search params. Pass the result to your Storefront API collection query.\n\nThe function reads Liquid-compatible `filter.p.*` and `filter.v.*` keys and the `sort_by` param.\n\nA URL that sets availability to both in stock and out of stock produces no availability filter. A price bound must be a non-negative number as `<input type=\"number\">` submits it, such as `12.5`; the function ignores any other value, such as `12,50`, the same way on the server and in the browser. The function reads the `sort_by` param with `parseSortByValue`, so it reads every value that `getSortByValue` writes. For unrecognized values, the sort key is `undefined`.",
+      "description": "Reads collection filters and sort from URL search params. Pass the result to your Storefront API collection query.\n\nThe function reads Liquid-compatible `filter.p.*` and `filter.v.*` keys and the `sort_by` param.\n\nA URL that sets availability to both in stock and out of stock produces no availability filter. A price bound must be a non-negative number as `<input type=\"number\">` submits it, such as `12.5`; the function ignores any other value, such as `12,50`, the same way on the server and in the browser. The function reads the `sort_by` param with `parseSortByValue`, so it reads every value that `getSortByValue` writes. For unrecognized values, the sort key is `undefined` and `reverse` is `false`.",
       "isPublicDocs": true,
       "params": [
         {
@@ -9106,7 +9106,7 @@
           "syntaxKind": "PropertySignature",
           "name": "reverse",
           "value": "boolean",
-          "description": "`true` when the `sort_by` value is a descending price, title, created, or ID sort. For other sort keys, the value is `false`, also when the `sort_by` value ends with `-descending`."
+          "description": "`true` only when the `sort_by` value is a descending price, title, created, or ID sort. `false` for all other values, also for other sort keys that end with `-descending` and for unrecognized values."
         },
         {
           "filePath": "src/core/collection/url.ts",
@@ -9116,7 +9116,7 @@
           "description": "Storefront API sort key from the `sort_by` param, or `undefined` when the param is missing or unrecognized."
         }
       ],
-      "value": "export interface CollectionParams {\n  /**\n   * Active product filters from the `filter.*` URL params.\n   *\n   * The filters use the Storefront Standard Events filter type. When your query variables use generated Storefront API types, cast the filters to the generated filter type where you pass them as variables.\n   */\n  filters: ProductFilter[];\n  /** Storefront API sort key from the `sort_by` param, or `undefined` when the param is missing or unrecognized. */\n  sortKey: ProductCollectionSortKeys | undefined;\n  /** `true` when the `sort_by` value is a descending price, title, created, or ID sort. For other sort keys, the value is `false`, also when the `sort_by` value ends with `-descending`. */\n  reverse: boolean;\n}"
+      "value": "export interface CollectionParams {\n  /**\n   * Active product filters from the `filter.*` URL params.\n   *\n   * The filters use the Storefront Standard Events filter type. When your query variables use generated Storefront API types, cast the filters to the generated filter type where you pass them as variables.\n   */\n  filters: ProductFilter[];\n  /** Storefront API sort key from the `sort_by` param, or `undefined` when the param is missing or unrecognized. */\n  sortKey: ProductCollectionSortKeys | undefined;\n  /** `true` only when the `sort_by` value is a descending price, title, created, or ID sort. `false` for all other values, also for other sort keys that end with `-descending` and for unrecognized values. */\n  reverse: boolean;\n}"
     }
   },
   "SerializeCollectionParamsGeneratedType": {
@@ -9227,7 +9227,7 @@
     "src/core/collection/url.ts": {
       "filePath": "src/core/collection/url.ts",
       "name": "ParseSortByValueGeneratedType",
-      "description": "Converts a Liquid-compatible `sort_by` value to a Storefront API sort key and direction. The `getSortByValue` function does the opposite conversion.\n\nFor unrecognized values, the sort key is `undefined`.",
+      "description": "Converts a Liquid-compatible `sort_by` value to a Storefront API sort key and direction. The `getSortByValue` function does the opposite conversion.\n\nFor unrecognized values, the sort key is `undefined` and `reverse` is `false`.",
       "isPublicDocs": true,
       "params": [
         {
@@ -9239,11 +9239,11 @@
       ],
       "returns": {
         "filePath": "src/core/collection/url.ts",
-        "description": "The sort key and `reverse`. `reverse` reads `true` for descending price, title, created, and ID values. For other sort keys, such as `best-selling-descending`, `reverse` reads `false`.",
+        "description": "The sort key and `reverse`. `reverse` reads `true` only for descending price, title, created, and ID values. For all other values, `reverse` reads `false`. This includes other sort keys, such as `best-selling-descending`, and unrecognized values, such as `foo-descending`.",
         "name": "{\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n}",
         "value": "{\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n}"
       },
-      "value": "export function parseSortByValue(value: string): {\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n} {\n  if (value.endsWith(SORT_BY_DESCENDING_SUFFIX)) {\n    const sortKey = SORT_BY_TO_SORT_KEY.get(value.slice(0, -SORT_BY_DESCENDING_SUFFIX.length));\n    return { sortKey, reverse: sortKey === undefined || isDirectionalSortKey(sortKey) };\n  }\n\n  if (value.endsWith(SORT_BY_ASCENDING_SUFFIX)) {\n    const base = value.slice(0, -SORT_BY_ASCENDING_SUFFIX.length);\n    return { sortKey: SORT_BY_TO_SORT_KEY.get(base), reverse: false };\n  }\n\n  return { sortKey: SORT_BY_TO_SORT_KEY.get(value), reverse: false };\n}"
+      "value": "export function parseSortByValue(value: string): {\n  sortKey: ProductCollectionSortKeys | undefined;\n  reverse: boolean;\n} {\n  if (value.endsWith(SORT_BY_DESCENDING_SUFFIX)) {\n    const sortKey = SORT_BY_TO_SORT_KEY.get(value.slice(0, -SORT_BY_DESCENDING_SUFFIX.length));\n    return { sortKey, reverse: sortKey !== undefined && isDirectionalSortKey(sortKey) };\n  }\n\n  if (value.endsWith(SORT_BY_ASCENDING_SUFFIX)) {\n    const base = value.slice(0, -SORT_BY_ASCENDING_SUFFIX.length);\n    return { sortKey: SORT_BY_TO_SORT_KEY.get(base), reverse: false };\n  }\n\n  return { sortKey: SORT_BY_TO_SORT_KEY.get(value), reverse: false };\n}"
     }
   },
   "FilterEqualsGeneratedType": {
@@ -9607,6 +9607,85 @@
           "description": "Clears pending navigation. Call the method when you replace the store."
         }
       ]
+    }
+  },
+  "GetCollectionViewAttributesGeneratedType": {
+    "src/core/collection/collection-view.ts": {
+      "filePath": "src/core/collection/collection-view.ts",
+      "name": "GetCollectionViewAttributesGeneratedType",
+      "description": "Returns the attributes of the collection view element. Render the attributes on a `VIEW_EVENT_TAG_NAME` element on a framework without a Hydrogen binding.\n\nThe element sends the `shopify:collection:view` event on connect. Set `trigger` to change when the element sends the event. The element sends the event once per connection. To send it again when the collection changes, re-key the element on the collection handle with your framework's primitive, such as `{#key collection.handle}` on Svelte or `<Show when={collection.handle} keyed>` on Solid. Set the values as HTML attributes, such as with `attr:` on Solid, because the element doesn't read properties.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "input1",
+          "description": "The collection, the number of products that the page loaded, and the trigger.",
+          "value": "CollectionViewOptions",
+          "filePath": "src/core/collection/collection-view.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/collection/collection-view.ts",
+        "description": "The `view-event-trigger` and `view-event-payload` attributes.",
+        "name": "Record<\"view-event-trigger\" | \"view-event-payload\", string>",
+        "value": "Record<\"view-event-trigger\" | \"view-event-payload\", string>"
+      },
+      "value": "export function getCollectionViewAttributes({\n  collection,\n  productsCount,\n  trigger,\n}: CollectionViewOptions): Record<\"view-event-trigger\" | \"view-event-payload\", string> {\n  const payload: StandardEvents.CollectionViewPayload = {\n    collection: { id: collection.id, handle: collection.handle, productsCount },\n  };\n\n  return {\n    \"view-event-trigger\": trigger ?? \"connect\",\n    \"view-event-payload\": JSON.stringify(payload),\n  };\n}"
+    }
+  },
+  "CollectionViewOptions": {
+    "src/core/collection/collection-view.ts": {
+      "filePath": "src/core/collection/collection-view.ts",
+      "name": "CollectionViewOptions",
+      "description": "The collection that the page shows, the number of its products that the page loaded, and when the element sends the event.",
+      "members": [
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "collection",
+          "value": "CollectionViewCollection",
+          "description": "Collection fields from your Storefront API query."
+        },
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "productsCount",
+          "value": "number",
+          "description": "The Storefront API has no product total for a collection, so pass the number of products that the page loaded."
+        },
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "trigger",
+          "value": "StandardEvents.ViewEventTrigger",
+          "description": "When the element sends the event. Defaults to `connect`. Set it when the page needs another trigger, such as `intersect`, or `manual` to send the event yourself with the element's `dispatchViewEvent()`.",
+          "isOptional": true
+        }
+      ],
+      "value": "export interface CollectionViewOptions {\n  /** Collection fields from your Storefront API query. */\n  collection: CollectionViewCollection;\n  /**\n   * The Storefront API has no product total for a collection, so pass the number of products that\n   * the page loaded.\n   */\n  productsCount: number;\n  /**\n   * When the element sends the event. Defaults to `connect`. Set it when the page needs another\n   * trigger, such as `intersect`, or `manual` to send the event yourself with the element's\n   * `dispatchViewEvent()`.\n   */\n  trigger?: StandardEvents.ViewEventTrigger;\n}"
+    }
+  },
+  "CollectionViewCollection": {
+    "src/core/collection/collection-view.ts": {
+      "filePath": "src/core/collection/collection-view.ts",
+      "name": "CollectionViewCollection",
+      "description": "Collection fields that the collection view event needs from your Storefront API query.\n\nPass your full query type, which can include more fields.",
+      "members": [
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "handle",
+          "value": "string",
+          "description": "Collection handle. The bindings send the event again when it changes."
+        },
+        {
+          "filePath": "src/core/collection/collection-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "id",
+          "value": "string | null",
+          "description": "Collection ID, or `null` for a page without a collection record, such as an all-products page."
+        }
+      ],
+      "value": "export interface CollectionViewCollection {\n  /** Collection ID, or `null` for a page without a collection record, such as an all-products page. */\n  id: string | null;\n  /** Collection handle. The bindings send the event again when it changes. */\n  handle: string;\n}"
     }
   },
   "GetSelectedProductOptionsGeneratedType": {
@@ -10350,6 +10429,76 @@
           ]
         }
       ]
+    }
+  },
+  "GetProductViewAttributesGeneratedType": {
+    "src/core/product/product-view.ts": {
+      "filePath": "src/core/product/product-view.ts",
+      "name": "GetProductViewAttributesGeneratedType",
+      "description": "Returns the attributes of the product view element. Render the attributes on a `VIEW_EVENT_TAG_NAME` element on a framework without a Hydrogen binding.\n\nThe element sends the `shopify:product:view` event on connect for `page`, the first time half of a card element is visible, and each time the dialog opens, or on connect if it is already open. Set `trigger` to change when the element sends the event. The element sends the event once per connection. To send it again when the product changes, re-key the element on the product ID with your framework's primitive, such as `{#key product.id}` on Svelte or `<Show when={product.id} keyed>` on Solid. Set the values as HTML attributes, such as with `attr:` on Solid, because the element doesn't read properties.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "options",
+          "description": "The product and where the storefront shows it.",
+          "value": "ProductViewOptions",
+          "filePath": "src/core/product/product-view.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/core/product/product-view.ts",
+        "description": "The `view-event-trigger` and `view-event-payload` attributes.",
+        "name": "Record<\"view-event-trigger\" | \"view-event-payload\", string>",
+        "value": "Record<\"view-event-trigger\" | \"view-event-payload\", string>"
+      },
+      "value": "export function getProductViewAttributes(\n  options: ProductViewOptions,\n): Record<\"view-event-trigger\" | \"view-event-payload\", string> {\n  const { product, context } = options;\n  const variant =\n    context === \"page\" || context === \"dialog\" ? product.selectedOrFirstAvailableVariant : null;\n  const selectedOptions =\n    variant?.selectedOptions.map(({ name, value }) => ({ name, value })) ?? [];\n  const payload: StandardEvents.ProductViewPayload = {\n    context,\n    selectedOptions,\n    product: {\n      id: product.id,\n      title: product.title,\n      handle: product.handle,\n      selectedVariant: variant\n        ? {\n            id: variant.id,\n            title: variant.title,\n            availableForSale: variant.availableForSale,\n            price: { amount: variant.price.amount, currencyCode: variant.price.currencyCode },\n            selectedOptions,\n          }\n        : null,\n    },\n  };\n\n  return {\n    \"view-event-trigger\": options.trigger ?? TRIGGERS[context],\n    \"view-event-payload\": JSON.stringify(payload),\n  };\n}"
+    }
+  },
+  "ProductViewOptions": {
+    "src/core/product/product-view.ts": {
+      "filePath": "src/core/product/product-view.ts",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ProductViewOptions",
+      "value": "(\n  | { context: \"page\" | \"dialog\"; product: ProductViewProduct }\n  | {\n      context: \"collection\" | \"search\" | \"recommendation\";\n      product: Pick<ProductViewProduct, \"id\" | \"title\" | \"handle\">;\n    }\n) & {\n  /**\n   * When the element sends the event. Defaults to the trigger of the context: `connect` for\n   * `page`, `dialog` for `dialog`, and `intersect` for the card contexts. Set it when CSS stops the\n   * default trigger, such as `connect` for a card with no box, or `manual` to send the event\n   * yourself with the element's `dispatchViewEvent()`.\n   */\n  trigger?: StandardEvents.ViewEventTrigger;\n}",
+      "description": "The product and where the storefront shows it. `page` sends the event on render, `dialog` sends it when the closest dialog opens, and the card contexts send it when half of the element is visible. Card contexts need only the product ID, title, and handle."
+    }
+  },
+  "ProductViewProduct": {
+    "src/core/product/product-view.ts": {
+      "filePath": "src/core/product/product-view.ts",
+      "name": "ProductViewProduct",
+      "description": "Product fields that the product view event needs from your Storefront API query.\n\nPass your full query type, which can include more fields.",
+      "members": [
+        {
+          "filePath": "src/core/product/product-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "handle",
+          "value": "string",
+          "description": ""
+        },
+        {
+          "filePath": "src/core/product/product-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "id",
+          "value": "string",
+          "description": ""
+        },
+        {
+          "filePath": "src/core/product/product-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "selectedOrFirstAvailableVariant",
+          "value": "ProductVariantInput | null",
+          "description": "Variant that the product page or dialog shows, or `null` when none is selected."
+        },
+        {
+          "filePath": "src/core/product/product-view.ts",
+          "syntaxKind": "PropertySignature",
+          "name": "title",
+          "value": "string",
+          "description": ""
+        }
+      ],
+      "value": "export interface ProductViewProduct {\n  id: string;\n  title: string;\n  handle: string;\n  /** Variant that the product page or dialog shows, or `null` when none is selected. */\n  selectedOrFirstAvailableVariant: ProductVariantInput | null;\n}"
     }
   },
   "ProductMerchandiseIdProps": {
@@ -12551,6 +12700,39 @@
       ]
     }
   },
+  "CollectionViewProps": {
+    "src/react/collection-view.tsx": {
+      "filePath": "src/react/collection-view.tsx",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "CollectionViewProps",
+      "value": "CollectionViewOptions & (\n    | {\n        /** Sends the event only when you call the element's `dispatchViewEvent()`. */\n        trigger: \"manual\";\n        /**\n         * Ref to the element. Required with `trigger=\"manual\"`: call\n         * `elementRef.current.dispatchViewEvent()` to send the event. It is a normal prop, not\n         * `ref`, so it works on React 18 without `forwardRef` and can be required.\n         */\n        elementRef: Ref<HTMLElement & ViewEventElement>;\n      }\n    | {\n        /**\n         * When the element sends the event. Defaults to `connect`. Set it when the page needs\n         * another trigger, such as `intersect`.\n         */\n        trigger?: \"connect\" | \"intersect\" | \"dialog\";\n        elementRef?: never;\n      }\n  ) & HTMLAttributes<HTMLElement>",
+      "description": "Props for the `CollectionView` component: the collection, the number of products that the page loaded, the trigger, the element ref, and HTML attributes such as `className` for the element.",
+      "isPublicDocs": true
+    }
+  },
+  "CollectionViewGeneratedType": {
+    "src/react/collection-view.tsx": {
+      "filePath": "src/react/collection-view.tsx",
+      "name": "CollectionViewGeneratedType",
+      "description": "Sends the `shopify:collection:view` event when the collection page renders. Wrap the product grid of the collection page. It renders a `VIEW_EVENT_TAG_NAME` element, which `ShopifyScripts` registers.\n\nThe Storefront API has no product total for a collection, so pass the number of products that the page loaded as `productsCount`. The element sends the event again when the collection handle changes, but not when filters, sorting, or pagination change the products. Inside a React `<Activity>`, an element with the `connect` trigger sends the event again each time it is shown.\n\nSet `trigger` when the page needs another trigger, such as `intersect`. With `trigger=\"manual\"`, the component doesn't send the event: pass an `elementRef` and call `elementRef.current.dispatchViewEvent()`.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "props",
+          "description": "The collection, the products count, the trigger, the element ref, the children, and HTML attributes for the element.",
+          "value": "CollectionViewProps",
+          "filePath": "src/react/collection-view.tsx"
+        }
+      ],
+      "returns": {
+        "filePath": "src/react/collection-view.tsx",
+        "description": "The collection view element.",
+        "name": "ReactElement",
+        "value": "ReactElement"
+      },
+      "value": "export function CollectionView(props: CollectionViewProps): ReactElement {\n  // `productsCount` and `trigger` go into the view attributes, and `elementRef` into the ref, not\n  // onto the element.\n  const {\n    collection,\n    productsCount: _productsCount,\n    trigger: _trigger,\n    elementRef,\n    children,\n    className,\n    ...rest\n  } = props;\n  const ref = useRef<HTMLElement & ViewEventElement>(null);\n  const attributes = getCollectionViewAttributes(props);\n  const effectiveTrigger = attributes[\"view-event-trigger\"];\n  const sendsOnConnect = effectiveTrigger === \"connect\";\n  useViewEvent(ref, sendsOnConnect, collection.handle);\n\n  const mergedRef = useCallback(\n    (element: (HTMLElement & ViewEventElement) | null) => {\n      ref.current = element;\n      if (typeof elementRef === \"function\") elementRef(element);\n      else if (elementRef) elementRef.current = element;\n    },\n    [elementRef],\n  );\n\n  return createElement(\n    VIEW_EVENT_TAG_NAME,\n    {\n      ...rest,\n      ref: mergedRef,\n      // React 18 doesn't map `className` to `class` on custom elements.\n      class: className,\n      ...attributes,\n      ...(sendsOnConnect\n        ? // `useViewEvent` sends the view. It sends again when the collection handle changes and\n          // when an <Activity> shows the element again.\n          { \"view-event-trigger\": \"manual\" }\n        : effectiveTrigger === \"manual\"\n          ? // The app sends the view with `elementRef.current.dispatchViewEvent()`.\n            {}\n          : // React remounts the element for a new collection, so the element's own trigger runs\n            // again. IntersectionObserver ignores elements in a hidden <Activity>.\n            { key: collection.handle }),\n    },\n    children,\n  );\n}"
+    }
+  },
   "CollectionProviderGeneratedType": {
     "src/react/collection.tsx": {
       "filePath": "src/react/collection.tsx",
@@ -13185,6 +13367,38 @@
         "value": "S = PredictiveSearchState"
       },
       "value": "<S = PredictiveSearchState>(\n    selector?: (state: PredictiveSearchState) => S,\n    isEqual?: (a: S, b: S) => boolean,\n  ) => S"
+    }
+  },
+  "ProductViewGeneratedType": {
+    "src/react/product-view.tsx": {
+      "filePath": "src/react/product-view.tsx",
+      "name": "ProductViewGeneratedType",
+      "description": "Sends the `shopify:product:view` event for a product that the storefront shows. Wrap the product page content with `context=\"page\"`, and each product card with `collection`, `search`, or `recommendation`. It renders a `VIEW_EVENT_TAG_NAME` element, which `ShopifyScripts` registers.\n\nThe element is inline by default. Give card elements a box, such as a class with `display: block`, because card contexts send the event when half of the element is visible. The element sends the event again when the product ID changes, but not when the variant changes. Inside a React `<Activity>`, an element with the `connect` trigger, such as a `page` element, sends the event again each time it is shown.\n\nSet `trigger` when CSS stops the default trigger. With `trigger=\"manual\"`, the component doesn't send the event: pass an `elementRef` and call `elementRef.current.dispatchViewEvent()`.",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "props",
+          "description": "The product, where the storefront shows it, the trigger, the element ref, the children, and HTML attributes for the element.",
+          "value": "ProductViewProps",
+          "filePath": "src/react/product-view.tsx"
+        }
+      ],
+      "returns": {
+        "filePath": "src/react/product-view.tsx",
+        "description": "The product view element.",
+        "name": "ReactElement",
+        "value": "ReactElement"
+      },
+      "value": "export function ProductView(props: ProductViewProps): ReactElement {\n  // `context` and `trigger` go into the view attributes, and `elementRef` into the ref, not onto\n  // the element.\n  const {\n    product,\n    context: _context,\n    trigger: _trigger,\n    elementRef,\n    children,\n    className,\n    ...rest\n  } = props;\n  const ref = useRef<HTMLElement & ViewEventElement>(null);\n  const attributes = getProductViewAttributes(props);\n  const effectiveTrigger = attributes[\"view-event-trigger\"];\n  const sendsOnConnect = effectiveTrigger === \"connect\";\n  useViewEvent(ref, sendsOnConnect, product.id);\n\n  const mergedRef = useCallback(\n    (element: (HTMLElement & ViewEventElement) | null) => {\n      ref.current = element;\n      if (typeof elementRef === \"function\") elementRef(element);\n      else if (elementRef) elementRef.current = element;\n    },\n    [elementRef],\n  );\n\n  return createElement(\n    VIEW_EVENT_TAG_NAME,\n    {\n      ...rest,\n      ref: mergedRef,\n      // React 18 doesn't map `className` to `class` on custom elements.\n      class: className,\n      ...attributes,\n      ...(sendsOnConnect\n        ? // `useViewEvent` sends the view. It sends again when the product ID changes and\n          // when an <Activity> shows the element again.\n          { \"view-event-trigger\": \"manual\" }\n        : effectiveTrigger === \"manual\"\n          ? // The app sends the view with `elementRef.current.dispatchViewEvent()`.\n            {}\n          : // React remounts the element for a new product, so the element's own trigger runs\n            // again. IntersectionObserver ignores elements in a hidden <Activity>.\n            { key: product.id }),\n    },\n    children,\n  );\n}"
+    }
+  },
+  "ProductViewProps": {
+    "src/react/product-view.tsx": {
+      "filePath": "src/react/product-view.tsx",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ProductViewProps",
+      "value": "ProductViewOptions & (\n    | {\n        /** Sends the event only when you call the element's `dispatchViewEvent()`. */\n        trigger: \"manual\";\n        /**\n         * Ref to the element. Required with `trigger=\"manual\"`: call\n         * `elementRef.current.dispatchViewEvent()` to send the event. It is a normal prop, not\n         * `ref`, so it works on React 18 without `forwardRef` and can be required.\n         */\n        elementRef: Ref<HTMLElement & ViewEventElement>;\n      }\n    | {\n        /**\n         * When the element sends the event. Defaults to the trigger of the context: `connect` for\n         * `page`, `dialog` for `dialog`, and `intersect` for the card contexts. Set it when CSS\n         * stops the default trigger, such as `connect` for a card with no box.\n         */\n        trigger?: \"connect\" | \"intersect\" | \"dialog\";\n        elementRef?: never;\n      }\n  ) & HTMLAttributes<HTMLElement>",
+      "description": ""
     }
   },
   "UseProductFormGeneratedType": {

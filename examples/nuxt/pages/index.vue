@@ -45,7 +45,12 @@ useHead({ title: "Mock.shop — Hydrogen" });
         <p class="text-sm font-medium tracking-wide text-black/70">New Arrivals</p>
         <h2 class="mt-4 text-6xl font-black tracking-tight md:text-8xl">Spring '26</h2>
         <div class="mt-16 grid grid-cols-1 gap-8 text-left md:grid-cols-3">
-          <ProductCard v-for="product in products" :key="product.handle" :product="product" />
+          <ProductCard
+            v-for="product in products"
+            :key="product.handle"
+            :product="product"
+            context="collection"
+          />
         </div>
       </div>
     </section>

@@ -16,7 +16,7 @@ export interface CollectionParams {
   filters: ProductFilter[];
   /** Storefront API sort key from the `sort_by` param, or `undefined` when the param is missing or unrecognized. */
   sortKey: ProductCollectionSortKeys | undefined;
-  /** `true` when the `sort_by` value is a descending price, title, created, or ID sort. For other sort keys, the value is `false`, also when the `sort_by` value ends with `-descending`. */
+  /** `true` only when the `sort_by` value is a descending price, title, created, or ID sort. `false` for all other values, also for other sort keys that end with `-descending` and for unrecognized values. */
   reverse: boolean;
 }
 
@@ -49,7 +49,7 @@ const SORT_BY_TO_SORT_KEY = new Map<string, ProductCollectionSortKeys>(
  *
  * The function reads Liquid-compatible `filter.p.*` and `filter.v.*` keys and the `sort_by` param.
  *
- * A URL that sets availability to both in stock and out of stock produces no availability filter. A price bound must be a non-negative number as `<input type="number">` submits it, such as `12.5`; the function ignores any other value, such as `12,50`, the same way on the server and in the browser. The function reads the `sort_by` param with `parseSortByValue`, so it reads every value that `getSortByValue` writes. For unrecognized values, the sort key is `undefined`.
+ * A URL that sets availability to both in stock and out of stock produces no availability filter. A price bound must be a non-negative number as `<input type="number">` submits it, such as `12.5`; the function ignores any other value, such as `12,50`, the same way on the server and in the browser. The function reads the `sort_by` param with `parseSortByValue`, so it reads every value that `getSortByValue` writes. For unrecognized values, the sort key is `undefined` and `reverse` is `false`.
  *
  * @param searchParams - URL search params to read.
  * @returns The filters, sort key, and sort direction from the URL.
@@ -205,10 +205,10 @@ export function getSortByValue(sortKey: ProductCollectionSortKeys, reverse: bool
  * Converts a Liquid-compatible `sort_by` value to a Storefront API
  * sort key and direction. The `getSortByValue` function does the opposite conversion.
  *
- * For unrecognized values, the sort key is `undefined`.
+ * For unrecognized values, the sort key is `undefined` and `reverse` is `false`.
  *
  * @param value - A `sort_by` value, such as `price-ascending` or `best-selling`.
- * @returns The sort key and `reverse`. `reverse` reads `true` for descending price, title, created, and ID values. For other sort keys, such as `best-selling-descending`, `reverse` reads `false`.
+ * @returns The sort key and `reverse`. `reverse` reads `true` only for descending price, title, created, and ID values. For all other values, `reverse` reads `false`. This includes other sort keys, such as `best-selling-descending`, and unrecognized values, such as `foo-descending`.
  * @publicDocs
  */
 export function parseSortByValue(value: string): {
@@ -217,7 +217,7 @@ export function parseSortByValue(value: string): {
 } {
   if (value.endsWith(SORT_BY_DESCENDING_SUFFIX)) {
     const sortKey = SORT_BY_TO_SORT_KEY.get(value.slice(0, -SORT_BY_DESCENDING_SUFFIX.length));
-    return { sortKey, reverse: sortKey === undefined || isDirectionalSortKey(sortKey) };
+    return { sortKey, reverse: sortKey !== undefined && isDirectionalSortKey(sortKey) };
   }
 
   if (value.endsWith(SORT_BY_ASCENDING_SUFFIX)) {

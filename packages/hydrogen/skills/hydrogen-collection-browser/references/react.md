@@ -372,17 +372,26 @@ The symbol prefix sits outside the input, so the submitted value stays a plain n
 
 Use `filter.type` only to choose the control shape. For checkbox values, keep `filterValueInputParamEntries` as thin app glue: `JSON.parse(value.input)` plus `serializeCollectionParams(...)`. Do not derive checkbox params from IDs, labels, or filter types.
 
-For active chips, use parsed active `ProductFilter` values from collection state:
+For active chips, use parsed active `ProductFilter` values from collection state. Label each chip with the `label` of the available filter value whose `input` matches it, so a category chip reads "Stuffed Animals" instead of a taxonomy ID. Skip `PRICE_RANGE` groups: their value label is the group name, so price chips keep the formatted range. Fall back to your own description when no value matches, for example on a hand-typed URL:
 
 ```tsx
-function ActiveFilterChip({ collectionPath, filter, state }: Props) {
+function chipLabel(filter: ProductFilter, availableFilters: AvailableFilter[]): string {
+  for (const group of availableFilters) {
+    if (group.type === "PRICE_RANGE") continue;
+    const match = group.values.find((value) => isFilterInputActive([filter], value.input));
+    if (match) return match.label;
+  }
+  return describeFilter(filter);
+}
+
+function ActiveFilterChip({ availableFilters, collectionPath, filter, state }: Props) {
   const currentParams = serializeCollectionParams(state);
   const removal = getFilterRemovalUrl(currentParams, filter);
   const href = removal === "?" ? collectionPath : `${collectionPath}${removal}`;
 
   return (
     <a href={href}>
-      {describeFilter(filter)}
+      {chipLabel(filter, availableFilters)}
     </a>
   );
 }
