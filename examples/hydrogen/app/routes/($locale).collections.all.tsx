@@ -1,4 +1,5 @@
 import { gql } from "@shopify/hydrogen";
+import { CollectionView } from "@shopify/hydrogen/react";
 import { useLoaderData } from "react-router";
 
 import { PaginatedResourceSection } from "~/components/PaginatedResourceSection";
@@ -56,6 +57,17 @@ export default function Collection() {
       <PaginatedResourceSection<ProductItemData>
         connection={products}
         resourcesClassName="products-grid"
+        wrapResources={(resources, nodes) => (
+          // The all-products listing has no collection record, so the collection ID is null.
+          // Count `nodes`: it includes the pages that Pagination restores on Back or reload.
+          <CollectionView
+            collection={{ id: null, handle: "all" }}
+            productsCount={nodes.length}
+            className="block"
+          >
+            {resources}
+          </CollectionView>
+        )}
       >
         {({ node: product, index }) => (
           <ProductItem

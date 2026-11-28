@@ -7,7 +7,12 @@ import {
   serializeCollectionParams,
   type ProductFilter,
 } from "@shopify/hydrogen";
-import { CollectionProvider, useCollection, useCollectionForm } from "@shopify/hydrogen/react";
+import {
+  CollectionProvider,
+  CollectionView,
+  useCollection,
+  useCollectionForm,
+} from "@shopify/hydrogen/react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
@@ -205,27 +210,29 @@ function CollectionPage(props: CollectionPageProps) {
             currencyCode={currencyCode}
           />
 
-          {products.length === 0 ? (
-            <p className="text-on-surface-secondary py-12 text-center">
-              {content.collection.noProducts}
-            </p>
-          ) : (
-            <ul
-              role="list"
-              className="grid grid-cols-2 gap-x-1 gap-y-10 contain-paint lg:grid-cols-3"
-            >
-              {products.map((product, index) => (
-                <li key={product.id} className={isLoading ? "opacity-60" : ""}>
-                  <ProductCard
-                    product={product}
-                    context="collection"
-                    loading={index < 3 ? "eager" : "lazy"}
-                    fetchPriority={index === 0 ? "high" : "auto"}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
+          <CollectionView collection={collection} productsCount={products.length} className="block">
+            {products.length === 0 ? (
+              <p className="text-on-surface-secondary py-12 text-center">
+                {content.collection.noProducts}
+              </p>
+            ) : (
+              <ul
+                role="list"
+                className="grid grid-cols-2 gap-x-1 gap-y-10 contain-paint lg:grid-cols-3"
+              >
+                {products.map((product, index) => (
+                  <li key={product.id} className={isLoading ? "opacity-60" : ""}>
+                    <ProductCard
+                      product={product}
+                      context="collection"
+                      loading={index < 3 ? "eager" : "lazy"}
+                      fetchPriority={index === 0 ? "high" : "auto"}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CollectionView>
 
           <LoadMore pageInfo={pageInfo} collectionPath={collectionPath} onNavigate={onNavigate} />
 

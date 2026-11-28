@@ -1,5 +1,5 @@
 import { AnalyticsEvent, getSortByValue, withStorefrontRateLimit } from "@shopify/hydrogen";
-import { CollectionProvider } from "@shopify/hydrogen/react";
+import { CollectionProvider, CollectionView } from "@shopify/hydrogen/react";
 import { useEffect } from "react";
 import { Link, useLocation, useNavigate, useNavigation, useSearchParams } from "react-router";
 
@@ -203,16 +203,22 @@ function CollectionResults({ loaderData }: { loaderData: Route.ComponentProps["l
         currencyCode={loaderData.currencyCode}
       />
       <h2 className="sr-only">Products</h2>
-      <div
-        aria-busy={isUpdating}
-        className={`motion-safe:transition-opacity motion-safe:duration-150 ${isUpdating ? "opacity-60" : "opacity-100"}`}
+      <CollectionView
+        collection={loaderData.collection}
+        productsCount={nodes.length}
+        className="block"
       >
-        {nodes.length > 0 ? (
-          <ProductGrid products={nodes} />
-        ) : (
-          <EmptyState collectionPath={collectionPath} />
-        )}
-      </div>
+        <div
+          aria-busy={isUpdating}
+          className={`motion-safe:transition-opacity motion-safe:duration-150 ${isUpdating ? "opacity-60" : "opacity-100"}`}
+        >
+          {nodes.length > 0 ? (
+            <ProductGrid products={nodes} />
+          ) : (
+            <EmptyState collectionPath={collectionPath} />
+          )}
+        </div>
+      </CollectionView>
       <LoadMore
         pageInfo={pageInfo}
         loadedCount={nodes.length}
@@ -265,7 +271,8 @@ export default function CollectionRoute({ loaderData }: Route.ComponentProps) {
               </div>
             </aside>
             <div>
-              <CollectionResults loaderData={loaderData} />
+              {/* Key by handle so the loaded products and the collection view count reset with the collection. */}
+              <CollectionResults key={loaderData.collection.handle} loaderData={loaderData} />
             </div>
           </div>
         </div>
