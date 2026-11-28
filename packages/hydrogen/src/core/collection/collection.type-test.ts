@@ -1,7 +1,9 @@
 import { describe, expectTypeOf, it } from "vitest";
 
+import type { ProductFilter as StorefrontProductFilter } from "../../graphql/generated/storefront-api-types";
 import type { CollectionViewCollection, CollectionViewOptions } from "./collection-view";
-import type { AvailableFilter, AvailableFilterValue } from "./state";
+import type { AvailableFilter, AvailableFilterValue, CollectionState } from "./state";
+import type { CollectionParams } from "./url";
 
 type BaseFilterValue = {
   id: string;
@@ -20,6 +22,11 @@ type ValueWithSwatch = BaseFilterValue & {
 };
 
 describe("collection filter types", () => {
+  it("uses Storefront API product filters for collection state and URL params", () => {
+    expectTypeOf<CollectionState["filters"]>().toEqualTypeOf<StorefrontProductFilter[]>();
+    expectTypeOf<CollectionParams["filters"]>().toEqualTypeOf<StorefrontProductFilter[]>();
+  });
+
   it("preserves swatch only when selected by the query value type", () => {
     expectTypeOf<AvailableFilterValue>().toEqualTypeOf<BaseFilterValue>();
 

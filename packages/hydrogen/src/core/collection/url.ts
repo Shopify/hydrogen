@@ -1,5 +1,7 @@
-import type { ProductFilter } from "../../../vendor/standard-events";
-import type { ProductCollectionSortKeys } from "../../graphql/generated/storefront-api-types";
+import type {
+  ProductCollectionSortKeys,
+  ProductFilter,
+} from "../../graphql/generated/storefront-api-types";
 import type { CollectionState } from "./state";
 
 /**
@@ -9,7 +11,7 @@ export interface CollectionParams {
   /**
    * Active product filters from the `filter.*` URL params.
    *
-   * The filters use the Storefront Standard Events filter type. When your query variables use generated Storefront API types, cast the filters to the generated filter type where you pass them as variables.
+   * The filters use the generated Storefront API `ProductFilter` type.
    */
   filters: ProductFilter[];
   /** Storefront API sort key from the `sort_by` param, or `undefined` when the param is missing or unrecognized. */
@@ -227,6 +229,7 @@ export function parseSortByValue(value: string): {
 }
 
 /**
+ * Converts Liquid-compatible product filter params to Storefront API filters.
  * Based on `parseProductFilters` from storefront-standard-events. Also reads
  * the `filter.p.category` param that Hydrogen writes for category filters.
  *
@@ -298,7 +301,8 @@ function parseProductFilters(searchParams: URLSearchParams): ProductFilter[] {
     if ((match = key.match(/^filter\.v\.t\.([^.]+)\.(.+)$/))) {
       filters.push({
         taxonomyMetafield: {
-          key: `${decodeFilterKeyPart(match[1])}.${decodeFilterKeyPart(match[2])}`,
+          namespace: decodeFilterKeyPart(match[1]),
+          key: decodeFilterKeyPart(match[2]),
           value,
         },
       });
@@ -381,12 +385,8 @@ function getFilterParamEntries(filter: ProductFilter): Array<{ key: string; valu
   }
 
   if (filter.taxonomyMetafield) {
-    const fullKey = filter.taxonomyMetafield.key;
-    const dotIdx = fullKey.indexOf(".");
-    const ns = dotIdx >= 0 ? fullKey.slice(0, dotIdx) : fullKey;
-    const k = dotIdx >= 0 ? fullKey.slice(dotIdx + 1) : "";
     entries.push({
-      key: `filter.v.t.${encodeURIComponent(ns)}.${encodeURIComponent(k)}`,
+      key: `filter.v.t.${encodeURIComponent(filter.taxonomyMetafield.namespace)}.${encodeURIComponent(filter.taxonomyMetafield.key)}`,
       value: filter.taxonomyMetafield.value,
     });
   }
@@ -464,7 +464,11 @@ export function filterEquals(a: ProductFilter, b: ProductFilter): boolean {
       const aMeta = a.taxonomyMetafield;
       const bMeta = b.taxonomyMetafield;
       if (aMeta == null || bMeta == null) return false;
-      return aMeta.key === bMeta.key && aMeta.value === bMeta.value;
+      return (
+        aMeta.namespace === bMeta.namespace &&
+        aMeta.key === bMeta.key &&
+        aMeta.value === bMeta.value
+      );
     }
     case "category": {
       const aCat = a.category;
